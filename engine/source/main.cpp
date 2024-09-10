@@ -7,7 +7,7 @@
 std::shared_ptr<Application> g_app;
 std::unique_ptr<Engine> g_engine;
 
-int main(int argc, const char** argv)
+int main()
 {
     Application::CreateParameters parameters{ "Vulkan", true };
 

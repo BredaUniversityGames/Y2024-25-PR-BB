@@ -1,14 +1,39 @@
-cmake_minimum_required(VERSION 3.22.1)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+### PROJECT ###
 
+cmake_minimum_required(VERSION 3.22.1)
+project(Project)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(NAME ferrite)
+### COMPILER SETTINGS ###
 
-project(ferrite)
+add_library(Compiler INTERFACE)
 
-set(CMAKE_CXX_STANDARD 20)
+# USING C++ 20
+target_compile_features(Compiler INTERFACE cxx_std_20)
+
+# NEEDS TO BE CONFIGURED FOR BOTH GCC AND MSVC
+target_compile_options(Compiler INTERFACE 
+    "-W4"
+)
+
+### MAIN EXECUTABLE ###
+
+# SOURCE FILES
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS "engine/source/*.cpp")
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
+
+# TEST FILES (only for test builds)
+# file(GLOB_RECURSE tests CONFIGURE_DEPENDS "engine/tests/*.cpp")
+
+add_executable(Engine ${sources} ${headers})
+target_include_directories(Engine PRIVATE include)
+target_link_libraries(Engine PRIVATE Compiler)
+
+### EXTERNAL ###
 
 include_directories(external)
 
@@ -67,29 +92,26 @@ message(STATUS ${SOURCE_FILES})
 
 list(REMOVE_DUPLICATES SOURCE_FILES)
 
-# Create executable
-add_executable(ferrite ${SOURCE_FILES})
 
+target_link_libraries(Engine PRIVATE SDL3::SDL3-static)
+target_include_directories(Engine PRIVATE external/SDL/include PRIVATE engine/include)
 
-target_link_libraries(ferrite PRIVATE SDL3::SDL3-static)
-target_include_directories(ferrite PRIVATE external/SDL/include PRIVATE engine/include)
-
-target_include_directories(ferrite SYSTEM PRIVATE external/glm)
+target_include_directories(Engine SYSTEM PRIVATE external/glm)
 add_subdirectory(external/glm SYSTEM)
 
-target_link_libraries(ferrite PRIVATE magic_enum::magic_enum)
-target_include_directories(ferrite PUBLIC include)
-target_compile_options(ferrite PRIVATE -fexceptions -frtti $<$<CONFIG:Debug>:-O0 -g> $<$<CONFIG:Release>:-O3>)
+target_link_libraries(Engine PRIVATE magic_enum::magic_enum)
+target_include_directories(Engine PUBLIC include)
+target_compile_options(Engine PRIVATE -fexceptions -frtti $<$<CONFIG:Debug>:-O0 -g> $<$<CONFIG:Release>:-O3>)
 
 if(WIN32)
-	target_compile_options(ferrite PRIVATE -DVK_USE_PLATFORM_WIN32_KHR)
+	target_compile_options(Engine PRIVATE -DVK_USE_PLATFORM_WIN32_KHR)
 elseif(LINUX)
-    target_compile_options(ferrite PRIVATE -DVK_USE_PLATFORM_XLIB_KHR)
+    target_compile_options(Engine PRIVATE -DVK_USE_PLATFORM_XLIB_KHR)
 endif()
 
-target_compile_options(ferrite PUBLIC -DNOMINMAX)
+target_compile_options(Engine PUBLIC -DNOMINMAX)
 
-target_link_options(ferrite PRIVATE
+target_link_options(Engine PRIVATE
         $<$<CONFIG:Release>:-s>
 )
 
@@ -99,8 +121,8 @@ set(FREETYPE_DIR external/freetype/freetype2)
 
 add_subdirectory(${FREETYPE_DIR})
 
-target_link_libraries(ferrite PUBLIC ${FREETYPE_LIBRARY})
-target_include_directories(ferrite SYSTEM PUBLIC ${FREETYPE_DIR}/include)
+target_link_libraries(Engine PUBLIC ${FREETYPE_LIBRARY})
+target_include_directories(Engine SYSTEM PUBLIC ${FREETYPE_DIR}/include)
 
 # END FREETYPE
 
@@ -129,9 +151,9 @@ target_include_directories(imgui PUBLIC ${FREETYPE_DIR}/include)
 target_include_directories(imgui PUBLIC external/SDL/include)
 target_link_libraries(imgui PUBLIC SDL3::SDL3)
 
-target_link_libraries(ferrite PRIVATE imgui)
-target_link_libraries(ferrite PRIVATE ${XINPUT_LIBRARY})
-target_include_directories(ferrite PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_link_libraries(Engine PRIVATE imgui)
+target_link_libraries(Engine PRIVATE ${XINPUT_LIBRARY})
+target_include_directories(Engine PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)
 
 # END IMGUI
 
@@ -139,13 +161,13 @@ target_include_directories(ferrite PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)
 include_directories("external/stb")
 
 add_subdirectory(external/spdlog)
-target_link_libraries(ferrite PRIVATE spdlog::spdlog)
+target_link_libraries(Engine PRIVATE spdlog::spdlog)
 
 add_subdirectory(external/fastgltf)
-target_link_libraries(ferrite PRIVATE fastgltf::fastgltf)
+target_link_libraries(Engine PRIVATE fastgltf::fastgltf)
 
 add_subdirectory(external/VulkanMemoryAllocator)
-target_link_libraries(ferrite PRIVATE VulkanMemoryAllocator)
+target_link_libraries(Engine PRIVATE VulkanMemoryAllocator)
 
 # BUILD TYPE SETTINGS
 
@@ -154,9 +176,10 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(ferrite PRIVATE DEBUG_MODE)
+    target_compile_definitions(Engine PRIVATE DEBUG_MODE)
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_definitions(ferrite PRIVATE NDEBUG)
+    target_compile_definitions(Engine PRIVATE NDEBUG)
 endif()
 
 # END BUILD TYPE SETTINGS
+
