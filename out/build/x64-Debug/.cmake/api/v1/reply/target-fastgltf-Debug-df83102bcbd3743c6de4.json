@@ -1,0 +1,406 @@
+{
+	"archive" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/machine:x64",
+				"role" : "flags"
+			}
+		]
+	},
+	"artifacts" : 
+	[
+		{
+			"path" : "external/fastgltf/fastgltf.lib"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"install",
+			"target_compile_options",
+			"fastgltf_compiler_flags",
+			"fastgltf_enable_debug_inlining",
+			"target_compile_definitions",
+			"add_definitions",
+			"include_directories",
+			"target_include_directories",
+			"target_compile_features",
+			"target_sources",
+			"fastgltf_add_source_directory"
+		],
+		"files" : 
+		[
+			"external/fastgltf/CMakeLists.txt",
+			"external/fastgltf/cmake/compilers.cmake",
+			"CMakeLists.txt",
+			"external/fastgltf/cmake/add_source_directory.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 37,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 147,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 41,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 7,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 9,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 42,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 33,
+				"parent" : 6
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 110,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 109,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 111,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 108,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 105,
+				"parent" : 0
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 24,
+				"parent" : 13
+			},
+			{
+				"command" : 7,
+				"file" : 2,
+				"line" : 13,
+				"parent" : 13
+			},
+			{
+				"command" : 7,
+				"file" : 2,
+				"line" : 139,
+				"parent" : 13
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 44,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 100,
+				"parent" : 0
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 43,
+				"parent" : 0
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 99,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 3,
+				"line" : 11,
+				"parent" : 20
+			},
+			{
+				"command" : 10,
+				"file" : 3,
+				"line" : 14,
+				"parent" : 20
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/EHsc"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/utf-8"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "/external:W0"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "/external:anglebrackets"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "/Ob2"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 8,
+					"define" : "FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL=0"
+				},
+				{
+					"backtrace" : 9,
+					"define" : "FASTGLTF_ENABLE_DEPRECATED_EXT=0"
+				},
+				{
+					"backtrace" : 10,
+					"define" : "FASTGLTF_USE_64BIT_FLOAT=0"
+				},
+				{
+					"backtrace" : 11,
+					"define" : "FASTGLTF_USE_CUSTOM_SMALLVECTOR=0"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "SIMDJSON_TARGET_VERSION=\"3.9.4\""
+				},
+				{
+					"backtrace" : 14,
+					"define" : "WINDOWS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 15,
+					"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/external"
+				},
+				{
+					"backtrace" : 16,
+					"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/external/stb"
+				},
+				{
+					"backtrace" : 17,
+					"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/external/fastgltf/include"
+				},
+				{
+					"backtrace" : 18,
+					"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/external/fastgltf/deps/simdjson"
+				},
+				{
+					"backtrace" : 1,
+					"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/external/glfw/include"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					19
+				],
+				"standard" : "20"
+			},
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				11
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "glfw::@ca12bac854c2ac6b2230"
+		}
+	],
+	"id" : "fastgltf::@051691ae09d369e51b85",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 2,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "C:/Users/santi/Github/Y2024-25-PR-BB/out/install/x64-Debug"
+		}
+	},
+	"name" : "fastgltf",
+	"nameOnDisk" : "fastgltf.lib",
+	"paths" : 
+	{
+		"build" : "external/fastgltf",
+		"source" : "external/fastgltf"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				11
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				12
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "external/fastgltf/src/fastgltf.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "external/fastgltf/src/base64.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "external/fastgltf/src/io.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/base64.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/core.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/dxmath_element_traits.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/glm_element_traits.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/tools.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/types.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/util.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "external/fastgltf/include/fastgltf/math.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 21,
+			"compileGroupIndex" : 0,
+			"path" : "external/fastgltf/deps/simdjson/simdjson.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 22,
+			"path" : "external/fastgltf/deps/simdjson/simdjson.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

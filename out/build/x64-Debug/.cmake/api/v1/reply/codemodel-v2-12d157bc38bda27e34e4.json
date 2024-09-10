@@ -1,0 +1,497 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						6,
+						13,
+						14,
+						15,
+						16
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22.1"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						5,
+						9
+					]
+				},
+				{
+					"build" : "external/magic_enum",
+					"jsonFile" : "directory-external.magic_enum-Debug-1db8e45508d3ae4e1be9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.14"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "external/magic_enum"
+				},
+				{
+					"build" : "external/SDL",
+					"jsonFile" : "directory-external.SDL-Debug-d0edf57735263782969b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "external/SDL",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						11
+					]
+				},
+				{
+					"build" : "external/glfw",
+					"childIndexes" : 
+					[
+						4,
+						5
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-external.glfw-Debug-4c074f386fd7ff4c8f12.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.4"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "external/glfw"
+				},
+				{
+					"build" : "external/glfw/src",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-external.glfw.src-Debug-1b425fc9c3a86e0353df.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.4"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 3,
+					"source" : "external/glfw/src",
+					"targetIndexes" : 
+					[
+						7,
+						12
+					]
+				},
+				{
+					"build" : "external/glfw/docs",
+					"jsonFile" : "directory-external.glfw.docs-Debug-3599a25893434c91c723.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.4"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 3,
+					"source" : "external/glfw/docs"
+				},
+				{
+					"build" : "external/glm",
+					"childIndexes" : 
+					[
+						7,
+						8
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-external.glm-Debug-ceaf0ad7e55ff4c0bb68.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "external/glm"
+				},
+				{
+					"build" : "external/glm/glm",
+					"jsonFile" : "directory-external.glm.glm-Debug-abc7302ed9fa59a98343.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 4,
+					"source" : "external/glm/glm",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "external/glm/test",
+					"childIndexes" : 
+					[
+						9,
+						10,
+						11,
+						12
+					],
+					"jsonFile" : "directory-external.glm.test-Debug-b41eb8920a0f60f3a68c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 4,
+					"source" : "external/glm/test"
+				},
+				{
+					"build" : "external/glm/test/bug",
+					"jsonFile" : "directory-external.glm.test.bug-Debug-263d90cdb359d5cc25a6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 4,
+					"source" : "external/glm/test/bug"
+				},
+				{
+					"build" : "external/glm/test/core",
+					"jsonFile" : "directory-external.glm.test.core-Debug-1296b2e4a9e6a71af631.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 4,
+					"source" : "external/glm/test/core"
+				},
+				{
+					"build" : "external/glm/test/gtc",
+					"jsonFile" : "directory-external.glm.test.gtc-Debug-fc819e3541a6ab835937.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 4,
+					"source" : "external/glm/test/gtc"
+				},
+				{
+					"build" : "external/glm/test/gtx",
+					"jsonFile" : "directory-external.glm.test.gtx-Debug-09b289b042b2f72e91e1.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 4,
+					"source" : "external/glm/test/gtx"
+				},
+				{
+					"build" : "external/freetype/freetype2",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-external.freetype.freetype2-Debug-04c55eb50cc8d0f4b959.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 5,
+					"source" : "external/freetype/freetype2",
+					"targetIndexes" : 
+					[
+						3,
+						6
+					]
+				},
+				{
+					"build" : "external/spdlog",
+					"jsonFile" : "directory-external.spdlog-Debug-351335b5bd1298da4d3c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 6,
+					"source" : "external/spdlog",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "external/fastgltf",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-external.fastgltf-Debug-0ae7c70699ab20af1b60.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 7,
+					"source" : "external/fastgltf",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "external/VulkanMemoryAllocator",
+					"jsonFile" : "directory-external.VulkanMemoryAllocator-Debug-6c5184687b609d766564.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 8,
+					"source" : "external/VulkanMemoryAllocator"
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "ferrite",
+					"targetIndexes" : 
+					[
+						5,
+						9
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "magic_enum",
+					"parentIndex" : 0
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "SDL3",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						11
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3,
+						4,
+						5
+					],
+					"name" : "GLFW",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						7,
+						12
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12
+					],
+					"name" : "glm",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						13
+					],
+					"name" : "freetype",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						14
+					],
+					"name" : "spdlog",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						15
+					],
+					"name" : "fastgltf",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						16
+					],
+					"name" : "VMA",
+					"parentIndex" : 0
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3-static::@325f9cd2ad4d12a63863",
+					"jsonFile" : "target-SDL3-static-Debug-1515be8b17918d830d3f.json",
+					"name" : "SDL3-static",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3_test::@325f9cd2ad4d12a63863",
+					"jsonFile" : "target-SDL3_test-Debug-d6d06952db007e935e02.json",
+					"name" : "SDL3_test",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL_uclibc::@325f9cd2ad4d12a63863",
+					"jsonFile" : "target-SDL_uclibc-Debug-f38b8f5eb1d12f014a84.json",
+					"name" : "SDL_uclibc",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 13,
+					"id" : "dist::@4664784f1fafb7fda468",
+					"jsonFile" : "target-dist-Debug-12b1c66ca0ab10425ad6.json",
+					"name" : "dist",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 15,
+					"id" : "fastgltf::@051691ae09d369e51b85",
+					"jsonFile" : "target-fastgltf-Debug-df83102bcbd3743c6de4.json",
+					"name" : "fastgltf",
+					"projectIndex" : 7
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ferrite::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ferrite-Debug-ab914417f19c058d6a18.json",
+					"name" : "ferrite",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 13,
+					"id" : "freetype::@4664784f1fafb7fda468",
+					"jsonFile" : "target-freetype-Debug-49fe78a7ac1aa58ab3af.json",
+					"name" : "freetype",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "glfw::@ca12bac854c2ac6b2230",
+					"jsonFile" : "target-glfw-Debug-d09f197ff12c251b3209.json",
+					"name" : "glfw",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "glm_dummy::@d090a432591bc19a3a56",
+					"jsonFile" : "target-glm_dummy-Debug-c9664b7e2ba46720cadf.json",
+					"name" : "glm_dummy",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-Debug-2dc7688104d1f801b61a.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 14,
+					"id" : "spdlog::@e2ce52242414c9d53ee8",
+					"jsonFile" : "target-spdlog-Debug-28aebc4e2777429361f3.json",
+					"name" : "spdlog",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "uninstall::@325f9cd2ad4d12a63863",
+					"jsonFile" : "target-uninstall-Debug-cd9e49d946c5a88d38cf.json",
+					"name" : "uninstall",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "update_mappings::@ca12bac854c2ac6b2230",
+					"jsonFile" : "target-update_mappings-Debug-5f7b1ea14553ed12df86.json",
+					"name" : "update_mappings",
+					"projectIndex" : 3
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/santi/Github/Y2024-25-PR-BB/out/build/x64-Debug",
+		"source" : "C:/Users/santi/Github/Y2024-25-PR-BB"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

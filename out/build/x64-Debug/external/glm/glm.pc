@@ -1,0 +1,7 @@
+prefix=C:/Users/santi/Github/Y2024-25-PR-BB/out/install/x64-Debug
+includedir=${prefix}/include
+
+Name: GLM
+Description: OpenGL Mathematics
+Version: 0.9.9
+Cflags: -I${includedir}
