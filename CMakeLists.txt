@@ -1,5 +1,6 @@
 ### PROJECT ###
 
+
 cmake_minimum_required(VERSION 3.22.1)
 project(Project)
 
@@ -7,18 +8,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_FLAGS_INIT "/W4 /EHs /GR")
 
-### COMPILER SETTINGS ###
-
-add_library(Compiler INTERFACE)
-
-# USING C++ 20
-target_compile_features(Compiler INTERFACE cxx_std_20)
-
-# NEEDS TO BE CONFIGURED FOR BOTH GCC AND MSVC
-target_compile_options(Compiler INTERFACE 
-    "-W4"
-)
 
 ### MAIN EXECUTABLE ###
 
@@ -27,13 +18,17 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "engine/source/*.cpp")
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 
 # TEST FILES (only for test builds)
-# file(GLOB_RECURSE tests CONFIGURE_DEPENDS "engine/tests/*.cpp")
+file(GLOB_RECURSE tests CONFIGURE_DEPENDS "engine/tests/*.cpp")
 
+# EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
-target_include_directories(Engine PRIVATE include)
-target_link_libraries(Engine PRIVATE Compiler)
+
+target_include_directories(Engine PRIVATE engine/include external)
+target_compile_features(Engine PRIVATE cxx_std_20)
+
 
 ### EXTERNAL ###
+
 
 include_directories(external)
 
@@ -79,29 +74,15 @@ endif()
 # Link Vulkan to executable
 link_libraries(${Vulkan_LIBRARY})
 
-# Add and link glfw on Windows
-if(WIN32)
-    add_subdirectory(external/glfw)
-    link_libraries(glfw)
-endif()
-
-
-file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/engine/src/*.cpp)
-
-message(STATUS ${SOURCE_FILES})
-
-list(REMOVE_DUPLICATES SOURCE_FILES)
-
-
 target_link_libraries(Engine PRIVATE SDL3::SDL3-static)
 target_include_directories(Engine PRIVATE external/SDL/include PRIVATE engine/include)
 
+# GLM
+
 target_include_directories(Engine SYSTEM PRIVATE external/glm)
-add_subdirectory(external/glm SYSTEM)
+
 
 target_link_libraries(Engine PRIVATE magic_enum::magic_enum)
-target_include_directories(Engine PUBLIC include)
-target_compile_options(Engine PRIVATE -fexceptions -frtti $<$<CONFIG:Debug>:-O0 -g> $<$<CONFIG:Release>:-O3>)
 
 if(WIN32)
 	target_compile_options(Engine PRIVATE -DVK_USE_PLATFORM_WIN32_KHR)
@@ -169,17 +150,6 @@ target_link_libraries(Engine PRIVATE fastgltf::fastgltf)
 add_subdirectory(external/VulkanMemoryAllocator)
 target_link_libraries(Engine PRIVATE VulkanMemoryAllocator)
 
-# BUILD TYPE SETTINGS
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(Engine PRIVATE DEBUG_MODE)
-elseif(CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_definitions(Engine PRIVATE NDEBUG)
-endif()
 
 # END BUILD TYPE SETTINGS
 
