@@ -29,9 +29,7 @@ target_compile_features(Engine PRIVATE cxx_std_20)
 
 ### EXTERNAL ###
 
-
 include_directories(external)
-
 add_subdirectory(external/magic_enum)
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
@@ -80,8 +78,6 @@ target_include_directories(Engine PRIVATE external/SDL/include PRIVATE engine/in
 # GLM
 
 target_include_directories(Engine SYSTEM PRIVATE external/glm)
-
-
 target_link_libraries(Engine PRIVATE magic_enum::magic_enum)
 
 if(WIN32)
@@ -98,10 +94,8 @@ target_link_options(Engine PRIVATE
 
 # FREE TYPE
 
-set(FREETYPE_DIR external/freetype/freetype2)
-
+set(FREETYPE_DIR external/freetype)
 add_subdirectory(${FREETYPE_DIR})
-
 target_link_libraries(Engine PUBLIC ${FREETYPE_LIBRARY})
 target_include_directories(Engine SYSTEM PUBLIC ${FREETYPE_DIR}/include)
 
@@ -110,6 +104,7 @@ target_include_directories(Engine SYSTEM PUBLIC ${FREETYPE_DIR}/include)
 # IMGUI
 
 set(IMGUI_DIR external/imgui)
+set(IMPLOT_DIR external/implot)
 
 set(IMGUI_SOURCE_FILES
         ${IMGUI_DIR}/imgui.cpp
@@ -117,8 +112,8 @@ set(IMGUI_SOURCE_FILES
         ${IMGUI_DIR}/imgui_draw.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/imgui_widgets.cpp
-        ${IMGUI_DIR}/implot.cpp
-        ${IMGUI_DIR}/implot_items.cpp
+        ${IMPLOT_DIR}/implot.cpp
+        ${IMPLOT_DIR}/implot_items.cpp
         ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
         ${IMGUI_DIR}/misc/freetype/imgui_freetype.cpp
         ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
@@ -129,12 +124,15 @@ add_library(imgui STATIC ${IMGUI_SOURCE_FILES})
 
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
 target_include_directories(imgui PUBLIC ${FREETYPE_DIR}/include)
-target_include_directories(imgui PUBLIC external/SDL/include)
+target_include_directories(imgui PUBLIC external/Vulkan-Headers/include)
+target_include_directories(imgui PUBLIC external/)
 target_link_libraries(imgui PUBLIC SDL3::SDL3)
 
 target_link_libraries(Engine PRIVATE imgui)
 target_link_libraries(Engine PRIVATE ${XINPUT_LIBRARY})
 target_include_directories(Engine PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_include_directories(Engine PRIVATE external/Vulkan-Headers/include)
+target_include_directories(Engine PRIVATE ${IMPLOT_DIR})
 
 # END IMGUI
 
