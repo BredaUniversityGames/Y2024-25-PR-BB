@@ -1,4 +1,6 @@
 #pragma once
+#define NOMINMAX
+
 #include <iostream>
 #include <cstdint>
 #include <vector>
