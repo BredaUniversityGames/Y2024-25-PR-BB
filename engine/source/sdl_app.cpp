@@ -54,7 +54,6 @@ SDLApp::SDLApp(const CreateParameters& parameters) : Application(parameters)
 SDLApp::~SDLApp()
 {
     SDL_DestroyWindow(_window);
-    SDL_DestroyRenderer(_renderer);
     SDL_Quit();
 }
 
