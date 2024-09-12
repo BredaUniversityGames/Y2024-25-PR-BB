@@ -4,12 +4,12 @@
 
 struct Camera
 {
-    glm::vec3 position;
-    glm::quat rotation;
-    float fov;
+    glm::vec3 position{};
+    glm::vec3 euler_rotation{};
+    float fov{};
 
-    float nearPlane;
-    float farPlane;
+    float nearPlane{};
+    float farPlane{};
 };
 
 struct CameraUBO

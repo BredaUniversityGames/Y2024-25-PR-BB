@@ -5,6 +5,7 @@
 
 # Build output for the project
 build
+package
 
 # User-specific files
 *.rsuser

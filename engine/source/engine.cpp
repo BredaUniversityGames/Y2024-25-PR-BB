@@ -134,35 +134,42 @@ void Engine::Run()
         return;
     }
 
-    glm::ivec2 mousePos;
-    _application->GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    int x, y;
+    _application->GetInputManager().GetMousePosition(x, y);
 
-    float yaw = (mousePos.x - _lastMousePos.x) * -0.1f;
-    float pitch = (_lastMousePos.y - mousePos.y) * 0.1f;
-    pitch = std::clamp(pitch, -89.0f, 89.0f);
+    glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
+    _lastMousePos = { x, y };
+ 
+    constexpr float MOUSE_SENSITIVITY = 0.003f;
+    constexpr float CAM_SPEED = 0.003f;
 
-    glm::quat yawQuat = glm::angleAxis(glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::quat pitchQuat = glm::angleAxis(glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::quat rollQuat = glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
+    constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+    constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-    _scene.camera.rotation = yawQuat * _scene.camera.rotation;
-    _scene.camera.rotation = _scene.camera.rotation * pitchQuat;
-    _scene.camera.rotation = rollQuat * _scene.camera.rotation;
+    glm::vec3 eulerDelta{};
+    _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+    _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+  
+    glm::vec3 movement_dir{};
+    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+        movement_dir -= FORWARD;
 
-    _scene.camera.rotation = glm::normalize(_scene.camera.rotation);
+    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+        movement_dir += FORWARD;
 
-    const float speed = 0.0005f * deltaTimeMS;
-    glm::vec3 movement{ 0.0f };
-    if(_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-        movement += glm::vec3{0.0f, 0.0f, -1.0f};
-    else if(_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-        movement += glm::vec3{0.0f, 0.0f, 1.0f};
-    else if(_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-        movement += glm::vec3{-1.0f, 0.0f, 0.0f};
-    else if(_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-        movement += glm::vec3{1.0f, 0.0f, 0.0f};
+    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+        movement_dir += RIGHT;
 
-    _scene.camera.position += _scene.camera.rotation * movement * deltaTimeMS * speed;
+    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+        movement_dir -= RIGHT;
+
+    if (glm::length(movement_dir) != 0.0f)
+    {
+        movement_dir = glm::normalize(movement_dir);
+    }
+
+    _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
@@ -243,13 +250,13 @@ void Engine::Run()
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
     _performanceTracker.Update();
-    _lastMousePos = mousePos;
 }
 
 Engine::~Engine()
 {
-    _application->ShutdownImGui();
     ImGui_ImplVulkan_Shutdown();
+    _application->ShutdownImGui();
+
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
@@ -435,10 +442,11 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 {
     CameraUBO ubo{};
 
-    glm::mat4 cameraRotation = glm::toMat4(camera.rotation);
+    glm::mat4 cameraRotation = glm::mat4_cast(glm::quat(camera.euler_rotation));
     glm::mat4 cameraTranslation = glm::translate(glm::mat4{1.0f}, camera.position);
 
     ubo.view = glm::inverse(cameraTranslation * cameraRotation);
+
     ubo.proj = glm::perspective(camera.fov, _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y), camera.nearPlane, camera.farPlane);
     ubo.proj[1][1] *= -1;
 
