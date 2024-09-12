@@ -19,9 +19,11 @@ add_library(ImGui ${imgui_files} ${implot_files})
 
 target_include_directories(ImGui 
     PRIVATE freetype/include
+    PRIVATE Vulkan-Headers/include
+    PRIVATE SDL/include
     PUBLIC imgui
     PUBLIC imgui/backends
-    PUBLIC implot
+    PUBLIC implot 
 )
 
 # SDL
