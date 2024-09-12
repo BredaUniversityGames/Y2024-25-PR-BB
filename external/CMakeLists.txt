@@ -1,5 +1,5 @@
 
-# ImGUI
+# ImGUI and ImPlot
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
 file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
@@ -11,11 +11,18 @@ set(imgui_files ${imgui_sources} ${imgui_headers}
     imgui/backends/imgui_impl_sdl3.cpp
 )
 
-# ImPlot
-
 file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
 file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
 set(implot_files ${implot_sources} ${implot_headers})
+
+add_library(ImGui ${imgui_files} ${implot_files})
+
+target_include_directories(ImGui 
+    PRIVATE freetype/include
+    PUBLIC imgui
+    PUBLIC imgui/backends
+    PUBLIC implot
+)
 
 # SDL
 
@@ -33,7 +40,7 @@ add_subdirectory(spdlog)
 
 # Vulkan
 
-find_package(Vulkan)
+find_package(Vulkan REQUIRED)
 add_subdirectory(VulkanMemoryAllocator)
 
 if(NOT Vulkan_FOUND)
@@ -48,30 +55,27 @@ add_subdirectory(fastgltf)
 
 # Main External Library
 
-add_library(External ${imgui_files} ${implot_files})
+add_library(External INTERFACE)
 
 if(WIN32)
-	target_compile_options(External PUBLIC -DVK_USE_PLATFORM_WIN32_KHR)
+	target_compile_options(External INTERFACE -DVK_USE_PLATFORM_WIN32_KHR)
 elseif(LINUX)
-    target_compile_options(External PUBLIC -DVK_USE_PLATFORM_XLIB_KHR)
+    target_compile_options(External INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif()
 
 target_link_libraries(External
-    PUBLIC SDL3::SDL3-static
-    PUBLIC magic_enum::magic_enum
-    PUBLIC spdlog::spdlog
-    PUBLIC VulkanMemoryAllocator
-    PUBLIC fastgltf::fastgltf
-    PUBLIC ${Vulkan_LIBRARY}
+    INTERFACE ImGui
+    INTERFACE SDL3::SDL3-static
+    INTERFACE magic_enum::magic_enum
+    INTERFACE spdlog::spdlog
+    INTERFACE VulkanMemoryAllocator
+    INTERFACE fastgltf::fastgltf
+    INTERFACE ${Vulkan_LIBRARY}
 )
 
 target_include_directories(External 
-    PUBLIC external/SDL/include 
-    PUBLIC Vulkan-Headers/include
-    PUBLIC imgui
-    PUBLIC imgui/backends
-    PUBLIC implot
-    PUBLIC glm 
-    PUBLIC stb
-    PRIVATE freetype/include
+    INTERFACE external/SDL/include 
+    INTERFACE Vulkan-Headers/include
+    INTERFACE glm 
+    INTERFACE stb
 )

@@ -1,18 +1,11 @@
 ### PROJECT ###
-
 cmake_minimum_required(VERSION 3.22.1)
 project(Project)
-
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
-# WARN, these should be set on the preset or launch config than here
-set(CMAKE_CXX_FLAGS_INIT "/W4 /EHs /GR")
-
 
 ### MAIN EXECUTABLE ###
 
