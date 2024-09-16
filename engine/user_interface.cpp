@@ -10,7 +10,50 @@
 
 void user_interface::Draw()
 {
+}
 
+void Button::Evaluate(const InputManager& input)
+{
+	glm::ivec2 mousePos;
+	input.GetMousePosition(mousePos.x, mousePos.y);
+
+
+	//mouse inside boundary
+	if (mousePos.x > static_cast<int>(translation.x)
+		&& mousePos.x < static_cast<int>(translation.x + scale.x)
+		&& mousePos.y > static_cast<int>(translation.y)
+		&& mousePos.y < static_cast<int>(translation.y + scale.y))
+	{
+		switch (state)
+		{
+		case ButtonState::normal:
+
+			state = ButtonState::hovered;
+			OnBeginHoverCallBack();
+			[[fallthrough]];
+
+		case ButtonState::hovered:
+			{
+				if (input.IsMouseButtonPressed(InputManager::MouseButton::Left))
+				{
+					state = ButtonState::pressed;
+					OnMouseDownCallBack();
+				}
+			}
+			break;
+
+		case ButtonState::pressed:
+			{
+				if (input.IsMouseButtonReleased(InputManager::MouseButton::Left))
+				{
+					state = ButtonState::normal;
+				}
+			}
+			break;
+		}
+	}
+	else state = ButtonState::normal;
+	
 }
 
 void UIPipeLine::CreatePipeLine()
@@ -172,6 +215,11 @@ void UIPipeLine::CreatePipeLine()
 	
 //	vkDestroyShaderModule(m_brain.device, vertModule, nullptr);
 //	vkDestroyShaderModule(m_brain.device, fragModule, nullptr);
+}
+
+void UIPipeLine::CreateDescriptorSetLayout()
+{
+
 }
 
 void UIPipeLine::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,const   HDRTarget& _hdrTarget)
