@@ -20,14 +20,13 @@ public:
 
     void Resize(glm::uvec2 size);
 
-    vk::Image GBuffersImageArray() const { return _gBuffersImageArray; }
-    VmaAllocation GBufferAllocation() const { return _gBufferAllocation; }
-    const std::array<vk::ImageView, DEFERRED_ATTACHMENT_COUNT>& GBufferViews() const  { return _gBufferViews; }
-    vk::ImageView GBufferView(uint32_t viewIndex) const { return _gBufferViews[viewIndex]; }
+    vk::Image GBuffersImageArray() const { return _brain.AccessImage(_gBuffersImage).image; }
+    const std::vector<vk::ImageView>& GBufferViews() const  { return _brain.AccessImage(_gBuffersImage).views; }
+    vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.AccessImage(_gBuffersImage).views[viewIndex]; }
     vk::Format DepthFormat() const { return _depthFormat; }
     glm::uvec2 Size() const { return _size; }
-    vk::Image DepthImage() const { return _depthImage; }
-    vk::ImageView DepthImageView() const { return _depthImageView; }
+    vk::Image DepthImage() const { return _brain.AccessImage(_depthImage).image; }
+    vk::ImageView DepthImageView() const { return _brain.AccessImage(_depthImage).views[0]; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
 
@@ -37,13 +36,9 @@ private:
     const VulkanBrain& _brain;
     glm::uvec2 _size;
 
-    vk::Image _gBuffersImageArray;
-    VmaAllocation _gBufferAllocation;
-    std::array<vk::ImageView, DEFERRED_ATTACHMENT_COUNT> _gBufferViews;
+    ImageHandle _gBuffersImage;
+    ImageHandle _depthImage;
 
-    vk::Image _depthImage;
-    VmaAllocation _depthImageAllocation;
-    vk::ImageView _depthImageView;
     vk::Format _depthFormat;
 
     vk::Viewport _viewport;

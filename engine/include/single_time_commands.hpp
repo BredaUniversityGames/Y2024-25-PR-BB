@@ -14,7 +14,6 @@ public:
     ~SingleTimeCommands();
 
     void Submit();
-    void CreateTextureImage(const Texture& texture, TextureHandle& textureHandle, bool generateMips);
     void CreateLocalBuffer(const std::byte* vec, uint32_t count, vk::Buffer& buffer, VmaAllocation& allocation, vk::BufferUsageFlags usage, std::string_view name);
 
     template <typename T>

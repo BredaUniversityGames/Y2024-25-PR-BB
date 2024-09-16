@@ -39,45 +39,35 @@ void GBuffers::Resize(glm::uvec2 size)
 
 void GBuffers::CreateGBuffers()
 {
-    auto format = GBufferFormat();
-    util::CreateImage(_brain.vmaAllocator, _size.x, _size.y, format,
-                      vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _gBuffersImageArray, _gBufferAllocation, "GBuffer array", false, VMA_MEMORY_USAGE_GPU_ONLY, DEFERRED_ATTACHMENT_COUNT);
-    util::NameObject(_gBuffersImageArray, "[IMAGE] GBuffer Array", _brain.device, _brain.dldi);
+    ImageCreation gBufferCreation{};
+    gBufferCreation.SetFormat(GBufferFormat()).SetSize(_size.x, _size.y).SetName("GBuffer array").SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    gBufferCreation.layers = DEFERRED_ATTACHMENT_COUNT;
+    _gBuffersImage = _brain.CreateImage(gBufferCreation);
 
-    for(size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-    {
-        _gBufferViews[i] = util::CreateImageView(_brain.device, _gBuffersImageArray, format, vk::ImageAspectFlagBits::eColor, i);
-        util::NameObject(_gBufferViews[i], _names[i], _brain.device, _brain.dldi);
-    }
+    const Image& image = _brain.AccessImage(_gBuffersImage);
 
     vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(cb, _gBuffersImageArray, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, DEFERRED_ATTACHMENT_COUNT);
+    util::TransitionImageLayout(cb, image.image, image.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, image.layers);
     util::EndSingleTimeCommands(_brain, cb);
 }
 
 void GBuffers::CreateDepthResources()
 {
-    util::CreateImage(_brain.vmaAllocator, _size.x, _size.y,
-                      _depthFormat, vk::ImageTiling::eOptimal,
-                      vk::ImageUsageFlagBits::eDepthStencilAttachment,
-                      _depthImage, _depthImageAllocation, "Depth image", false, VMA_MEMORY_USAGE_GPU_ONLY);
+    ImageCreation depthCreation{};
+    depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
+    _depthImage = _brain.CreateImage(depthCreation);
 
-    _depthImageView = util::CreateImageView(_brain.device, _depthImage, _depthFormat, vk::ImageAspectFlagBits::eDepth);
+    const Image& image = _brain.AccessImage(_depthImage);
 
     vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(commandBuffer, _depthImage, _depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, image.image, _depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
 void GBuffers::CleanUp()
 {
-    vmaDestroyImage(_brain.vmaAllocator, _gBuffersImageArray, _gBufferAllocation);
-    for(size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        _brain.device.destroy(_gBufferViews[i]);
-
-    _brain.device.destroy(_depthImageView);
-    vmaDestroyImage(_brain.vmaAllocator, _depthImage, _depthImageAllocation);
+    _brain.DestroyImage(_gBuffersImage);
+    _brain.DestroyImage(_depthImage);
 }
 
 void GBuffers::CreateViewportAndScissor()

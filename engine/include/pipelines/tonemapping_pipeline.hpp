@@ -1,12 +1,11 @@
 #pragma once
 #include "include.hpp"
 #include "swap_chain.hpp"
-#include "hdr_target.hpp"
 
 class TonemappingPipeline
 {
 public:
-    TonemappingPipeline(const VulkanBrain& brain, const HDRTarget& hdrTarget, const SwapChain& _swapChain);
+    TonemappingPipeline(const VulkanBrain& brain, const ImageHandle hdrTarget, const SwapChain& _swapChain);
     ~TonemappingPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
@@ -17,7 +16,7 @@ public:
 private:
     const VulkanBrain& _brain;
     const SwapChain& _swapChain;
-    const HDRTarget& _hdrTarget;
+    const ImageHandle _hdrTarget;
 
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::PipelineLayout _pipelineLayout;

@@ -10,13 +10,13 @@ struct TextureHandle;
 class IBLPipeline
 {
 public:
-    IBLPipeline(const VulkanBrain& brain, const TextureHandle& environmentMap);
+    IBLPipeline(const VulkanBrain& brain, const ImageHandle environmentMap);
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
     const Cubemap& IrradianceMap() const { return _irradianceMap; }
     const Cubemap& PrefilterMap() const { return _prefilterMap; }
-    const TextureHandle& BRDFLUTMap() const { return _brdfLUT; }
+    const ImageHandle& BRDFLUTMap() const { return _brdfLUT; }
 
     NON_MOVABLE(IBLPipeline);
     NON_COPYABLE(IBLPipeline);
@@ -29,7 +29,7 @@ private:
     };
 
     const VulkanBrain& _brain;
-    const TextureHandle& _environmentMap;
+    const ImageHandle _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;
     vk::Pipeline _irradiancePipeline;
@@ -42,7 +42,7 @@ private:
 
     Cubemap _irradianceMap;
     Cubemap _prefilterMap;
-    TextureHandle _brdfLUT;
+    ImageHandle _brdfLUT;
 
     std::array<vk::ImageView, 6> _irradianceMapViews;
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;

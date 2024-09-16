@@ -4,7 +4,7 @@
 #include "single_time_commands.hpp"
 #include "stopwatch.hpp"
 
-IBLPipeline::IBLPipeline(const VulkanBrain& brain, const TextureHandle& environmentMap) :
+IBLPipeline::IBLPipeline(const VulkanBrain& brain, const ImageHandle environmentMap) :
     _brain(brain),
     _environmentMap(environmentMap)
 {
@@ -39,8 +39,7 @@ IBLPipeline::~IBLPipeline()
         for(const auto& view : mips)
             _brain.device.destroy(view);
 
-    vmaDestroyImage(_brain.vmaAllocator, _brdfLUT.image, _brdfLUT.imageAllocation);
-    _brain.device.destroy(_brdfLUT.imageView);
+    _brain.DestroyImage(_brdfLUT);
 
     _brain.device.destroy(_prefilterPipeline);
     _brain.device.destroy(_prefilterPipelineLayout);
@@ -110,7 +109,6 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
             uint32_t size = static_cast<uint32_t>(_prefilterMap.size >> i);
-            spdlog::info(size);
 
             vk::RenderingInfoKHR renderingInfo{};
             renderingInfo.renderArea.extent = vk::Extent2D{ size, size };
@@ -147,19 +145,18 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
+    const Image& brdfLUT = _brain.AccessImage(_brdfLUT);
     util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
-    util::TransitionImageLayout(commandBuffer, _brdfLUT.image, _brdfLUT.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT.image, brdfLUT.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _brdfLUT.imageView;
+    finalColorAttachmentInfo.imageView = _brain.AccessImage(_brdfLUT).views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
-    uint32_t size = static_cast<uint32_t>(_brdfLUT.width, _brdfLUT.height);
-
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ size, size };
+    renderingInfo.renderArea.extent = vk::Extent2D{ brdfLUT.width, brdfLUT.height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -171,11 +168,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
-    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
+    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(brdfLUT.width), static_cast<float>(brdfLUT.height), 0.0f,
                                           1.0f };
     commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(size), static_cast<uint32_t>(size)};
+    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(brdfLUT.width), static_cast<uint32_t>(brdfLUT.height)};
     vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
     commandBuffer.setScissor(0, 1, &scissor);
 
@@ -183,7 +180,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 
-    util::TransitionImageLayout(commandBuffer, _brdfLUT.image, _brdfLUT.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT.image, brdfLUT.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
@@ -555,7 +552,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brdfLUT.format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.AccessImage(_brdfLUT).format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -600,7 +597,7 @@ void IBLPipeline::CreateDescriptorSet()
     vk::DescriptorImageInfo imageInfo{};
     imageInfo.sampler = *_irradianceMap.sampler;
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _environmentMap.imageView;
+    imageInfo.imageView = _brain.AccessImage(_environmentMap).views[0];
 
     vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;
@@ -725,15 +722,7 @@ void IBLPipeline::CreatePrefilterCubemap()
 
 void IBLPipeline::CreateBRDFLUT()
 {
-    Texture texture;
-    _brdfLUT.width = texture.width = 512;
-    _brdfLUT.height = texture.height = 512;
-    _brdfLUT.format = texture.format = vk::Format::eR16G16Sfloat;
-    texture.numChannels = 2;
-
-    SingleTimeCommands commands{_brain};
-    util::CreateImage(_brain.vmaAllocator, texture.width, texture.height, texture.format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _brdfLUT.image, _brdfLUT.imageAllocation, "BRDF LUT", false, VMA_MEMORY_USAGE_GPU_ONLY);
-    _brdfLUT.imageView = util::CreateImageView(_brain.device, _brdfLUT.image, _brdfLUT.format, vk::ImageAspectFlagBits::eColor);
-    commands.Submit();
+    ImageCreation creation{};
+    creation.SetSize(512, 512).SetFormat(vk::Format::eR16G16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled).SetName("BRDF LUT");
+    _brdfLUT = _brain.CreateImage(creation);
 }

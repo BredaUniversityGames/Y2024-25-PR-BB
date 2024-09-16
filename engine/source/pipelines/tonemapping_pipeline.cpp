@@ -3,8 +3,7 @@
 #include "shaders/shader_loader.hpp"
 #include "imgui_impl_vulkan.h"
 
-
-TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, const HDRTarget& hdrTarget, const SwapChain& _swapChain) :
+TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, const ImageHandle hdrTarget, const SwapChain& _swapChain) :
     _brain(brain),
     _hdrTarget(hdrTarget),
     _swapChain(_swapChain)
@@ -210,7 +209,7 @@ void TonemappingPipeline::CreateDescriptorSets()
         vk::DescriptorImageInfo imageInfo{};
         imageInfo.sampler = *_sampler;
         imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfo.imageView = _hdrTarget.imageViews;
+        imageInfo.imageView = _brain.AccessImage(_hdrTarget).views[0];
 
         std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
         descriptorWrites[0].dstSet = _descriptorSets[i];

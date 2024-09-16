@@ -4,6 +4,7 @@
 #include "vk_mem_alloc.h"
 #include "engine_init_info.hpp"
 #include <optional>
+#include "gpu_resources.hpp"
 
 struct QueueFamilyIndices
 {
@@ -17,6 +18,9 @@ struct QueueFamilyIndices
 
     static QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 };
+
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 512;
+constexpr uint32_t BINDLESS_TEXTURES_BINDING = 10;
 
 class VulkanBrain
 {
@@ -39,8 +43,21 @@ public:
     QueueFamilyIndices queueFamilyIndices;
     uint32_t minUniformBufferOffsetAlignment;
 
+    vk::DescriptorPool bindlessPool;
+    vk::DescriptorSetLayout bindlessLayout;
+    vk::DescriptorSet bindlessSet;
+
+    ImageHandle CreateImage(const ImageCreation& creation) const;
+    const Image& AccessImage(ImageHandle handle) const;
+    void DestroyImage(ImageHandle handle) const;
+
+    void UpdateBindlessSet();
+
 private:
     vk::DebugUtilsMessengerEXT _debugMessenger;
+    vk::UniqueSampler _sampler;
+
+    ImageHandle _fallbackImage;
 
     const std::vector<const char*> _validationLayers =
     {
@@ -64,7 +81,10 @@ private:
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        "VK_EXT_descriptor_indexing"
     };
+
+    mutable std::vector<Image> _images;
 
     void CreateInstance(const InitInfo& initInfo);
     void PickPhysicalDevice();
@@ -76,5 +96,5 @@ private:
     void CreateDevice();
     void CreateCommandPool();
     void CreateDescriptorPool();
-
+    void CreateBindlessDescriptorSet();
 };
