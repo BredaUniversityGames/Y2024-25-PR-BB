@@ -16,9 +16,9 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 
-option(RUN_TESTS "Compile with Unit Tests" ON)
+option(ENABLE_TESTS "Compile with Unit Tests" ON)
 
-if (RUN_TESTS)
+if (ENABLE_TESTS)
 
 	message("-- Tests are Enabled (GoogleTest)")
 
