@@ -3,6 +3,7 @@
 #include "sdl_app.hpp"
 
 #include <memory>
+#include <filesystem>
 
 std::shared_ptr<Application> g_app;
 std::unique_ptr<Engine> g_engine;
