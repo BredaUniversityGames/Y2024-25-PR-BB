@@ -8,6 +8,7 @@
 #include "include.hpp"
 #include "camera.hpp"
 #include "hdr_target.hpp"
+#include "../user_interface.h"
 
 class Application;
 class GeometryPipeline;
@@ -78,4 +79,7 @@ private:
     CameraUBO CalculateCamera(const Camera& camera);
     void InitializeHDRTarget();
     void LoadEnvironmentMap();
+
+    std::unique_ptr<UIPipeLine> m_uiPipeLine;
+    void RecordUICommandbuffers();
 };

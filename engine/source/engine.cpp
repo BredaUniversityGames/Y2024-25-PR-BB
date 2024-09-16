@@ -57,13 +57,16 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _materialDescriptorSetLayout, _cameraStructure);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _environmentMap);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, *_swapChain);
+
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
-
+ 
     SingleTimeCommands commandBufferIBL{ _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
-
+    
+    m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
+    m_uiPipeLine->CreatePipeLine();
     CreateCommandBuffers();
     CreateSyncObjects();
 
@@ -337,10 +340,13 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+    
+    m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
 
     util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
@@ -497,4 +503,9 @@ void Engine::LoadEnvironmentMap()
     commandBuffer.Submit();
 
     util::NameObject(_environmentMap.image, "Environment HDRI", _brain.device, _brain.dldi);
+}
+
+void Engine::RecordUICommandbuffers(){
+
+   
 }

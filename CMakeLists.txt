@@ -20,7 +20,9 @@ file(GLOB_RECURSE tests CONFIGURE_DEPENDS "engine/tests/*.cpp")
 
 
 # EXECUTABLE TARGET
-add_executable(Engine ${sources} ${headers})
+add_executable(Engine ${sources} ${headers}
+        engine/user_interface.cpp
+        engine/user_interface.h)
 
 
 add_subdirectory(external)
