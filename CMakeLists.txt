@@ -20,9 +20,7 @@ file(GLOB_RECURSE tests CONFIGURE_DEPENDS "engine/tests/*.cpp")
 
 
 # EXECUTABLE TARGET
-add_executable(Engine ${sources} ${headers}
-        engine/include/resource_manager.hpp
-        engine/source/image_resource_manager.cpp)
+add_executable(Engine ${sources} ${headers})
 
 
 add_subdirectory(external)
