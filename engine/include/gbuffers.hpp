@@ -30,6 +30,7 @@ public:
     vk::ImageView DepthImageView() const { return _depthImageView; }
     vk::Image ShadowImage() const { return _shadowImage; }
     vk::ImageView ShadowImageView() const { return _shadowImageView; }
+    vk::Format ShadowFormat() const { return _shadowFormat; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
 

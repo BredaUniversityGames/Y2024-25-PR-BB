@@ -338,7 +338,7 @@ void GeometryPipeline::CreateUniformBuffers()
         util::CreateBuffer(_brain, bufferSize,
                            vk::BufferUsageFlagBits::eUniformBuffer,
                            _frameData[i].uniformBuffer, true, _frameData[i].uniformBufferAllocation,
-                           VMA_MEMORY_USAGE_CPU_ONLY,
+                           VMA_MEMORY_USAGE_CPU_ONLY,   
                            "Uniform buffer");
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].uniformBufferAllocation, &_frameData[i].uniformBufferMapped), "Failed mapping memory for UBO!");

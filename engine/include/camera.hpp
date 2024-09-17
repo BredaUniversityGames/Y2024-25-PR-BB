@@ -21,6 +21,8 @@ struct CameraUBO
 
     alignas(16)
     glm::vec3 cameraPosition;
+
+    glm::vec4 lightData;
 };
 
 struct CameraStructure
