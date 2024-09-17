@@ -67,13 +67,28 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-ImageHandle VulkanBrain::CreateImage(const ImageCreation& creation) const
+ResourceHandle<Image> VulkanBrain::CreateImage(const ImageCreation& creation) const
 {
-    ImageHandle handle{};
-    handle.handle = static_cast<ResourceHandle>(_images.size());
-    Image& imageResource = _images.emplace_back();
+    uint32_t index{};
+    if(!_imagesFreeList.empty())
+    {
+        index = _imagesFreeList.back();
+        _imagesFreeList.pop_back();
+    }
+    else
+    {
+        index = _images.size();
+        _images.emplace_back();
+    }
 
-    imageResource.handle = handle;
+    ResourceSlot<Image>& resource = _images[index];
+    resource.resource = Image{};
+
+    Image& imageResource = resource.resource.value();
+
+    ResourceHandle<Image> handle{};
+    handle.index = index;
+    handle.version = ++_images[index].version;
 
     imageResource.width = creation.width;
     imageResource.height = creation.height;
@@ -190,17 +205,34 @@ ImageHandle VulkanBrain::CreateImage(const ImageCreation& creation) const
     return handle;
 }
 
-const Image& VulkanBrain::AccessImage(ImageHandle handle) const
+const Image* VulkanBrain::AccessImage(ResourceHandle<Image> handle) const
 {
-    return _images[handle.handle];
+    uint32_t index = handle.index;
+    if(!IsValid(handle))
+        return nullptr;
+
+    return &_images[index].resource.value();
 }
 
-void VulkanBrain::DestroyImage(ImageHandle handle) const
+void VulkanBrain::DestroyImage(ResourceHandle<Image> handle) const
 {
-    const Image& image = AccessImage(handle);
-    vmaDestroyImage(vmaAllocator, image.image, image.allocation);
-    for(auto& view : image.views)
-        device.destroy(view);
+    uint32_t index = handle.index;
+    if(IsValid(handle))
+    {
+        const Image* image = AccessImage(handle);
+        vmaDestroyImage(vmaAllocator, image->image, image->allocation);
+        for(auto& view : image->views)
+            device.destroy(view);
+
+        _imagesFreeList.emplace_back(index);
+        _images[index].resource = std::nullopt;
+    }
+}
+
+bool VulkanBrain::IsValid(ResourceHandle<Image> handle) const
+{
+    uint32_t index = handle.index;
+    return index < _images.size() && _images[index].version == handle.version;
 }
 
 void VulkanBrain::UpdateBindlessSet()
@@ -210,7 +242,7 @@ void VulkanBrain::UpdateBindlessSet()
 
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image& image = i < _images.size() ? _images[i] : AccessImage(_fallbackImage);
+        const Image& image = i < _images.size() ? _images[i].resource.value() : *AccessImage(_fallbackImage);
 
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageInfos[i].imageView = image.views[0]; // TODO: Review later how to determine what view should be bound.

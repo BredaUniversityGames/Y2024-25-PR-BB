@@ -102,7 +102,7 @@ void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk:
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<ImageHandle, 5>& textures, const MaterialHandle::MaterialInfo& info, vk::Sampler sampler, vk::DescriptorSetLayout materialLayout, std::shared_ptr<MaterialHandle> defaultMaterial)
+MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<ResourceHandle<Image>, 5>& textures, const MaterialHandle::MaterialInfo& info, vk::Sampler sampler, vk::DescriptorSetLayout materialLayout, std::shared_ptr<MaterialHandle> defaultMaterial)
 {
     MaterialHandle materialHandle;
     materialHandle.textures = textures;
@@ -127,9 +127,9 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<I
     imageInfos[0].sampler = sampler;
     for(size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
     {
-        const MaterialHandle& material = textures[i - 1].handle != INVALID_RESOURCE_HANDLE ? materialHandle : *defaultMaterial;
+        const MaterialHandle& material = brain.IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
 
-        imageInfos[i].imageView = brain.AccessImage(material.textures[i - 1]).views[0];
+        imageInfos[i].imageView = brain.AccessImage(material.textures[i - 1])->views[0];
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     }
 

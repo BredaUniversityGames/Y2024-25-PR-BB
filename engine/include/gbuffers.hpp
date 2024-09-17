@@ -20,13 +20,13 @@ public:
 
     void Resize(glm::uvec2 size);
 
-    vk::Image GBuffersImageArray() const { return _brain.AccessImage(_gBuffersImage).image; }
-    const std::vector<vk::ImageView>& GBufferViews() const  { return _brain.AccessImage(_gBuffersImage).views; }
-    vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.AccessImage(_gBuffersImage).views[viewIndex]; }
+    vk::Image GBuffersImageArray() const { return _brain.AccessImage(_gBuffersImage)->image; }
+    const std::vector<vk::ImageView>& GBufferViews() const  { return _brain.AccessImage(_gBuffersImage)->views; }
+    vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.AccessImage(_gBuffersImage)->views[viewIndex]; }
     vk::Format DepthFormat() const { return _depthFormat; }
     glm::uvec2 Size() const { return _size; }
-    vk::Image DepthImage() const { return _brain.AccessImage(_depthImage).image; }
-    vk::ImageView DepthImageView() const { return _brain.AccessImage(_depthImage).views[0]; }
+    vk::Image DepthImage() const { return _brain.AccessImage(_depthImage)->image; }
+    vk::ImageView DepthImageView() const { return _brain.AccessImage(_depthImage)->views[0]; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
 
@@ -36,8 +36,8 @@ private:
     const VulkanBrain& _brain;
     glm::uvec2 _size;
 
-    ImageHandle _gBuffersImage;
-    ImageHandle _depthImage;
+    ResourceHandle<Image> _gBuffersImage;
+    ResourceHandle<Image> _depthImage;
 
     vk::Format _depthFormat;
 

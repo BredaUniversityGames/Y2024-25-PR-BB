@@ -2,15 +2,24 @@
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
 
-using ResourceHandle = uint32_t;
-static constexpr ResourceHandle INVALID_RESOURCE_HANDLE = 0xffffffff;
-
-struct ImageHandle
+template <typename T>
+struct ResourceHandle
 {
-    ResourceHandle handle;
-
-    static ImageHandle Invalid() { return ImageHandle{INVALID_RESOURCE_HANDLE}; }
+    ResourceHandle() : index(0xFFFFFF), version(0) {}
+    static ResourceHandle<T> Invalid() { return ResourceHandle<T>{}; }
+private:
+    friend class VulkanBrain;
+    uint32_t index : 24;
+    uint32_t version : 8;
 };
+
+template <typename T>
+struct ResourceSlot
+{
+    std::optional<T> resource;
+    uint8_t version;
+};
+
 struct ImageCreation
 {
     std::byte* initialData{ nullptr };
@@ -41,8 +50,6 @@ struct Image
     std::vector<vk::ImageView> views{};
     VmaAllocation allocation{};
 
-    ImageHandle handle;
-
     uint16_t width{ 1 };
     uint16_t height{ 1 };
     uint16_t depth{ 1 };
@@ -56,3 +63,5 @@ struct Image
 
     std::string name;
 };
+
+

@@ -15,7 +15,7 @@ ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout mater
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
                                    vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
-    std::array<ImageHandle, 5> textures{};
+    std::array<ResourceHandle<Image>, 5> textures{};
 
     auto data = std::vector<std::byte>( 2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation{};
@@ -369,12 +369,12 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
     // Load materials
     for(const auto& material : materials)
     {
-        std::array<ImageHandle, 5> textures;
-        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()] : ImageHandle::Invalid();
-        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()] : ImageHandle::Invalid();
-        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()] : ImageHandle::Invalid();
-        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()] : ImageHandle::Invalid();
-        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()] : ImageHandle::Invalid();
+        std::array<ResourceHandle<Image>, 5> textures;
+        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()] : ResourceHandle<Image>::Invalid();
 
         MaterialHandle::MaterialInfo info;
         info.useAlbedoMap = material.albedoIndex.has_value();

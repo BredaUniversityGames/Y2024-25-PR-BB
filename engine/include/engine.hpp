@@ -44,7 +44,7 @@ private:
     std::unique_ptr<ModelLoader> _modelLoader;
 
     SceneDescription _scene;
-    ImageHandle _environmentMap;
+    ResourceHandle<Image> _environmentMap;
 
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
@@ -55,7 +55,7 @@ private:
 
     CameraStructure _cameraStructure;
 
-    ImageHandle _hdrTarget;
+    ResourceHandle<Image> _hdrTarget;
 
     std::shared_ptr<Application> _application;
 

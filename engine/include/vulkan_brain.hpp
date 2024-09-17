@@ -47,9 +47,10 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageHandle CreateImage(const ImageCreation& creation) const;
-    const Image& AccessImage(ImageHandle handle) const;
-    void DestroyImage(ImageHandle handle) const;
+    ResourceHandle<Image> CreateImage(const ImageCreation& creation) const;
+    const Image* AccessImage(ResourceHandle<Image> handle) const;
+    void DestroyImage(ResourceHandle<Image> handle) const;
+    bool IsValid(ResourceHandle<Image> handle) const;
 
     void UpdateBindlessSet();
 
@@ -57,7 +58,7 @@ private:
     vk::DebugUtilsMessengerEXT _debugMessenger;
     vk::UniqueSampler _sampler;
 
-    ImageHandle _fallbackImage;
+    ResourceHandle<Image> _fallbackImage;
 
     const std::vector<const char*> _validationLayers =
     {
@@ -84,7 +85,8 @@ private:
         "VK_EXT_descriptor_indexing"
     };
 
-    mutable std::vector<Image> _images;
+    mutable std::vector<ResourceSlot<Image>> _images;
+    mutable std::vector<uint32_t> _imagesFreeList;
 
     void CreateInstance(const InitInfo& initInfo);
     void PickPhysicalDevice();

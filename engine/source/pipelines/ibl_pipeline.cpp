@@ -4,7 +4,7 @@
 #include "single_time_commands.hpp"
 #include "stopwatch.hpp"
 
-IBLPipeline::IBLPipeline(const VulkanBrain& brain, const ImageHandle environmentMap) :
+IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap) :
     _brain(brain),
     _environmentMap(environmentMap)
 {
@@ -145,18 +145,18 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    const Image& brdfLUT = _brain.AccessImage(_brdfLUT);
+    const Image* brdfLUT = _brain.AccessImage(_brdfLUT);
     util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
-    util::TransitionImageLayout(commandBuffer, brdfLUT.image, brdfLUT.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _brain.AccessImage(_brdfLUT).views[0];
+    finalColorAttachmentInfo.imageView = _brain.AccessImage(_brdfLUT)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ brdfLUT.width, brdfLUT.height };
+    renderingInfo.renderArea.extent = vk::Extent2D{ brdfLUT->width, brdfLUT->height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -168,11 +168,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
-    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(brdfLUT.width), static_cast<float>(brdfLUT.height), 0.0f,
+    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(brdfLUT->width), static_cast<float>(brdfLUT->height), 0.0f,
                                           1.0f };
     commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(brdfLUT.width), static_cast<uint32_t>(brdfLUT.height)};
+    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(brdfLUT->width), static_cast<uint32_t>(brdfLUT->height)};
     vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
     commandBuffer.setScissor(0, 1, &scissor);
 
@@ -180,7 +180,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 
-    util::TransitionImageLayout(commandBuffer, brdfLUT.image, brdfLUT.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
@@ -552,7 +552,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.AccessImage(_brdfLUT).format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.AccessImage(_brdfLUT)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -597,7 +597,7 @@ void IBLPipeline::CreateDescriptorSet()
     vk::DescriptorImageInfo imageInfo{};
     imageInfo.sampler = *_irradianceMap.sampler;
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _brain.AccessImage(_environmentMap).views[0];
+    imageInfo.imageView = _brain.AccessImage(_environmentMap)->views[0];
 
     vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;

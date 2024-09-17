@@ -7,7 +7,7 @@
 class SkydomePipeline
 {
 public:
-    SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, const ImageHandle hdrTarget, const ImageHandle environmentMap);
+    SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> environmentMap);
     ~SkydomePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
@@ -19,8 +19,8 @@ public:
 private:
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
-    const ImageHandle _hdrTarget;
-    const ImageHandle _environmentMap;
+    ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<Image> _environmentMap;
 
     MeshPrimitiveHandle _sphere;
     vk::UniqueSampler _sampler;
