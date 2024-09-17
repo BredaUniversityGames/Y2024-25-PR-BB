@@ -28,6 +28,8 @@ public:
     glm::uvec2 Size() const { return _size; }
     vk::Image DepthImage() const { return _depthImage; }
     vk::ImageView DepthImageView() const { return _depthImageView; }
+    vk::Image ShadowImage() const { return _shadowImage; }
+    vk::ImageView ShadowImageView() const { return _shadowImageView; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
 
@@ -46,6 +48,12 @@ private:
     vk::ImageView _depthImageView;
     vk::Format _depthFormat;
 
+    //shadow mapping
+    vk::Image _shadowImage;
+    VmaAllocation _shadowImageAllocation;
+    vk::ImageView _shadowImageView;
+    vk::Format _shadowFormat;
+
     vk::Viewport _viewport;
     vk::Rect2D _scissor;
 
@@ -56,6 +64,7 @@ private:
 
     void CreateGBuffers();
     void CreateDepthResources();
+    void CreateShadowMapResources();
     void CreateViewportAndScissor();
     void CleanUp();
 };

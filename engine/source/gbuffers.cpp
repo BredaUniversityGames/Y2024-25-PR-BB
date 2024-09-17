@@ -11,9 +11,11 @@ GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size) :
     assert(supportedDepthFormat.has_value() && "No supported depth format!");
 
     _depthFormat = supportedDepthFormat.value();
+    _shadowFormat = supportedDepthFormat.value();
 
     CreateGBuffers();
     CreateDepthResources();
+    CreateShadowMapResources();
     CreateViewportAndScissor();
 }
 
@@ -70,6 +72,18 @@ void GBuffers::CreateDepthResources()
     util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
+void GBuffers::CreateShadowMapResources()
+{
+    util::CreateImage(_brain.vmaAllocator,1024,1024,_shadowFormat,vk::ImageTiling::eOptimal,
+                      vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
+                      _shadowImage, _shadowImageAllocation, "Shadow image", false, VMA_MEMORY_USAGE_GPU_ONLY);
+
+    _shadowImageView = util::CreateImageView(_brain.device, _shadowImage, _shadowFormat, vk::ImageAspectFlagBits::eDepth);
+    vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
+    util::TransitionImageLayout(commandBuffer, _shadowImage, _shadowFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    util::EndSingleTimeCommands(_brain, commandBuffer);
+}
+
 void GBuffers::CleanUp()
 {
     vmaDestroyImage(_brain.vmaAllocator, _gBuffersImageArray, _gBufferAllocation);
@@ -78,6 +92,9 @@ void GBuffers::CleanUp()
 
     _brain.device.destroy(_depthImageView);
     vmaDestroyImage(_brain.vmaAllocator, _depthImage, _depthImageAllocation);
+
+    _brain.device.destroy(_shadowImageView);
+    vmaDestroyImage(_brain.vmaAllocator, _shadowImage, _shadowImageAllocation);
 }
 
 void GBuffers::CreateViewportAndScissor()
