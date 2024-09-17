@@ -1,6 +1,8 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 
+#include "tracy/Tracy.hpp"
+
 LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const HDRTarget& hdrTarget, const CameraStructure& camera, const Cubemap& irradianceMap, const Cubemap& prefilterMap, const TextureHandle& brdfLUT) :
     _brain(brain),
     _gBuffers(gBuffers),
@@ -236,6 +238,7 @@ void LightingPipeline::CreateDescriptorSets()
 
 void LightingPipeline::UpdateGBufferViews()
 {
+    ZoneScoped;
     vk::DescriptorImageInfo samplerInfo{};
     samplerInfo.sampler = *_sampler;
 

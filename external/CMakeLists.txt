@@ -55,6 +55,12 @@ endif()
 
 add_subdirectory(fastgltf)
 
+# Tracy Profiler
+
+set(TRACY_ENABLE "" ON)
+set(TRACY_ON_DEMAND "" ON)
+add_subdirectory(tracy)
+
 # Main External Library
 
 add_library(External INTERFACE)
@@ -72,6 +78,7 @@ target_link_libraries(External
     INTERFACE spdlog::spdlog
     INTERFACE VulkanMemoryAllocator
     INTERFACE fastgltf::fastgltf
+    INTERFACE TracyClient
     INTERFACE ${Vulkan_LIBRARY}
 )
 

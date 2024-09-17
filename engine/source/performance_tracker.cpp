@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 
+#include "tracy/Tracy.hpp"
+
 PerformanceTracker::PerformanceTracker()
 {
     _totalTime = 0;
@@ -16,6 +18,7 @@ PerformanceTracker::PerformanceTracker()
 
 void PerformanceTracker::Update()
 {
+    ZoneScoped;
     auto currentTime = std::chrono::steady_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - _lastFrameTime).count();
     _lastFrameTime = currentTime;
@@ -70,6 +73,8 @@ void PerformanceTracker::Update()
 
 void PerformanceTracker::Render()
 {
+    ZoneScoped;
+
     if(_timePoints.empty())
         return;
 

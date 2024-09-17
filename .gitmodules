@@ -32,3 +32,6 @@
 [submodule "external/freetype"]
 	path = external/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "external/tracy"]
+	path = external/tracy
+	url = https://github.com/wolfpld/tracy.git
