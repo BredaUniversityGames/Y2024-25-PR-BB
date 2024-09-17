@@ -401,10 +401,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-
-# JetBrains Rider
-*.sln.iml
-
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
@@ -414,6 +410,7 @@ FodyWeavers.xsd
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/
 
 # AWS User-specific
 .idea/**/aws.xml
@@ -493,106 +490,4 @@ fabric.properties
 
 # *.iml
 # modules.xml
-.clang-tidy
-.idea/editor.xml
-.idea/misc.xml
-cmake-build-debug/.cmake/api/v1/query/cache-v2
-cmake-build-debug/.cmake/api/v1/query/cmakeFiles-v1
-cmake-build-debug/.cmake/api/v1/query/codemodel-v2
-cmake-build-debug/.cmake/api/v1/query/toolchains-v1
-cmake-build-debug/.cmake/api/v1/reply/cache-v2-278509d2c846e13b008f.json
-cmake-build-debug/.cmake/api/v1/reply/cmakeFiles-v1-d2389a210b33b6ea0f86.json
-cmake-build-debug/.cmake/api/v1/reply/codemodel-v2-ff1727ad2bc1b1b48ebc.json
-cmake-build-debug/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external-Debug-d8969718d56d94ae4e32.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.fastgltf-Debug-4f6d1ddc4a53ded42a55.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.googletest-Debug-cadaf7995ce84f373e64.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.googletest.googlemock-Debug-b5fd47f8b248f4f328c5.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.googletest.googletest-Debug-aea40f2038db2d76e5c7.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.magic_enum-Debug-1db8e45508d3ae4e1be9.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.SDL-Debug-d0edf57735263782969b.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.spdlog-Debug-351335b5bd1298da4d3c.json
-cmake-build-debug/.cmake/api/v1/reply/directory-external.VulkanMemoryAllocator-Debug-6c5184687b609d766564.json
-cmake-build-debug/.cmake/api/v1/reply/index-2024-09-17T14-34-44-0338.json
-cmake-build-debug/.cmake/api/v1/reply/target-Engine-Debug-71f00421c972735eecb0.json
-cmake-build-debug/.cmake/api/v1/reply/target-fastgltf-Debug-630e7472456c6432a1d9.json
-cmake-build-debug/.cmake/api/v1/reply/target-gmock-Debug-b7560cd9ebadbd2ca6d4.json
-cmake-build-debug/.cmake/api/v1/reply/target-gmock_main-Debug-faaa1651b534182ccc70.json
-cmake-build-debug/.cmake/api/v1/reply/target-gtest-Debug-16a0739d1a55face3b6c.json
-cmake-build-debug/.cmake/api/v1/reply/target-gtest_main-Debug-d27b0fa4e3f314a5147c.json
-cmake-build-debug/.cmake/api/v1/reply/target-ImGui-Debug-407a6c27c23df14371db.json
-cmake-build-debug/.cmake/api/v1/reply/target-SDL3-static-Debug-9a2c770d93190b5a00ba.json
-cmake-build-debug/.cmake/api/v1/reply/target-SDL3_test-Debug-3be06ff820d2f7b96d04.json
-cmake-build-debug/.cmake/api/v1/reply/target-SDL_uclibc-Debug-b1037f1643de737602b9.json
-cmake-build-debug/.cmake/api/v1/reply/target-spdlog-Debug-eed666f53d89e3c3956e.json
-cmake-build-debug/.cmake/api/v1/reply/target-uninstall-Debug-0ad10e9cd9d1b7b6ee0c.json
-cmake-build-debug/.cmake/api/v1/reply/toolchains-v1-8ce3f78fc5758414dfe9.json
-cmake-build-debug/build.ninja
-cmake-build-debug/cmake_install.cmake
-cmake-build-debug/CMakeCache.txt
-cmake-build-debug/CMakeFiles/3.29.6/CMakeCCompiler.cmake
-cmake-build-debug/CMakeFiles/3.29.6/CMakeCXXCompiler.cmake
-cmake-build-debug/CMakeFiles/3.29.6/CMakeDetermineCompilerABI_C.bin
-cmake-build-debug/CMakeFiles/3.29.6/CMakeDetermineCompilerABI_CXX.bin
-cmake-build-debug/CMakeFiles/3.29.6/CMakeRCCompiler.cmake
-cmake-build-debug/CMakeFiles/3.29.6/CMakeSystem.cmake
-cmake-build-debug/CMakeFiles/3.29.6/CompilerIdC/a.exe
-cmake-build-debug/CMakeFiles/3.29.6/CompilerIdC/CMakeCCompilerId.c
-cmake-build-debug/CMakeFiles/3.29.6/CompilerIdCXX/a.exe
-cmake-build-debug/CMakeFiles/3.29.6/CompilerIdCXX/CMakeCXXCompilerId.cpp
-cmake-build-debug/CMakeFiles/clion-Debug-log.txt
-cmake-build-debug/CMakeFiles/clion-environment.txt
-cmake-build-debug/CMakeFiles/cmake.check_cache
-cmake-build-debug/CMakeFiles/cmake.verify_globs
-cmake-build-debug/CMakeFiles/CMakeConfigureLog.yaml
-cmake-build-debug/CMakeFiles/rules.ninja
-cmake-build-debug/CMakeFiles/TargetDirectories.txt
-cmake-build-debug/CMakeFiles/VerifyGlobs.cmake
-cmake-build-debug/compile_commands.json
-cmake-build-debug/CTestTestfile.cmake
-cmake-build-debug/external/cmake_install.cmake
-cmake-build-debug/external/CTestTestfile.cmake
-cmake-build-debug/external/fastgltf/cmake_install.cmake
-cmake-build-debug/external/fastgltf/CMakeFiles/Export/14b504216a8c2b5661a6a7c88f3023ae/fastgltfConfig-debug.cmake
-cmake-build-debug/external/fastgltf/CMakeFiles/Export/14b504216a8c2b5661a6a7c88f3023ae/fastgltfConfig.cmake
-cmake-build-debug/external/fastgltf/CTestTestfile.cmake
-cmake-build-debug/external/googletest/cmake_install.cmake
-cmake-build-debug/external/googletest/CTestTestfile.cmake
-cmake-build-debug/external/googletest/googlemock/cmake_install.cmake
-cmake-build-debug/external/googletest/googlemock/CTestTestfile.cmake
-cmake-build-debug/external/googletest/googletest/cmake_install.cmake
-cmake-build-debug/external/googletest/googletest/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets-debug.cmake
-cmake-build-debug/external/googletest/googletest/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets.cmake
-cmake-build-debug/external/googletest/googletest/CTestTestfile.cmake
-cmake-build-debug/external/googletest/googletest/generated/gmock.pc
-cmake-build-debug/external/googletest/googletest/generated/gmock_main.pc
-cmake-build-debug/external/googletest/googletest/generated/gtest.pc
-cmake-build-debug/external/googletest/googletest/generated/gtest_main.pc
-cmake-build-debug/external/googletest/googletest/generated/GTestConfig.cmake
-cmake-build-debug/external/googletest/googletest/generated/GTestConfigVersion.cmake
-cmake-build-debug/external/magic_enum/cmake_install.cmake
-cmake-build-debug/external/magic_enum/CTestTestfile.cmake
-cmake-build-debug/external/SDL/cmake_install.cmake
-cmake-build-debug/external/SDL/cmake_uninstall.cmake
-cmake-build-debug/external/SDL/CMakeFiles/CMakeTmp/SDL_detect_arch.c
-cmake-build-debug/external/SDL/CMakeFiles/CMakeTmp/SDL_detect_arch/bin
-cmake-build-debug/external/SDL/CMakeFiles/git-data/grabRef.cmake
-cmake-build-debug/external/SDL/CMakeFiles/git-data/HEAD
-cmake-build-debug/external/SDL/CMakeFiles/git-data/head-ref
-cmake-build-debug/external/SDL/CMakeFiles/SDL3-static.dir/cmake_pch.h
-cmake-build-debug/external/SDL/CMakeFiles/SDL3-static.dir/cmake_pch.h.c
-cmake-build-debug/external/SDL/CTestTestfile.cmake
-cmake-build-debug/external/SDL/dummy.sym
-cmake-build-debug/external/SDL/include-config-debug/build_config/SDL_build_config.h
-cmake-build-debug/external/SDL/include/SDL3/SDL_revision.h
-cmake-build-debug/external/SDL/SDL3Config.cmake
-cmake-build-debug/external/SDL/SDL3ConfigVersion.cmake
-cmake-build-debug/external/SDL/SDL3headersTargets.cmake
-cmake-build-debug/external/SDL/SDL3staticTargets.cmake
-cmake-build-debug/external/SDL/SDL3testTargets.cmake
-cmake-build-debug/external/SDL/SDL_build_config.h.intermediate
-cmake-build-debug/external/spdlog/cmake_install.cmake
-cmake-build-debug/external/spdlog/CTestTestfile.cmake
-cmake-build-debug/external/VulkanMemoryAllocator/cmake_install.cmake
-cmake-build-debug/external/VulkanMemoryAllocator/CTestTestfile.cmake
-CMakePresets.json
+
