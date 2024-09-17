@@ -42,9 +42,9 @@ void GBuffers::CreateGBuffers()
     ImageCreation gBufferCreation{};
     gBufferCreation.SetFormat(GBufferFormat()).SetSize(_size.x, _size.y).SetName("GBuffer array").SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
     gBufferCreation.layers = DEFERRED_ATTACHMENT_COUNT;
-    _gBuffersImage = _brain.CreateImage(gBufferCreation);
+    _gBuffersImage = _brain.ImageResourceManager().Create(gBufferCreation);
 
-    const Image* image = _brain.AccessImage(_gBuffersImage);
+    const Image* image = _brain.ImageResourceManager().Access(_gBuffersImage);
 
     vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
     util::TransitionImageLayout(cb, image->image, image->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, image->layers);
@@ -55,9 +55,9 @@ void GBuffers::CreateDepthResources()
 {
     ImageCreation depthCreation{};
     depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
-    _depthImage = _brain.CreateImage(depthCreation);
+    _depthImage = _brain.ImageResourceManager().Create(depthCreation);
 
-    const Image* image = _brain.AccessImage(_depthImage);
+    const Image* image = _brain.ImageResourceManager().Access(_depthImage);
 
     vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
     util::TransitionImageLayout(commandBuffer, image->image, _depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -66,8 +66,8 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CleanUp()
 {
-    _brain.DestroyImage(_gBuffersImage);
-    _brain.DestroyImage(_depthImage);
+    _brain.ImageResourceManager().Destroy(_gBuffersImage);
+    _brain.ImageResourceManager().Destroy(_depthImage);
 }
 
 void GBuffers::CreateViewportAndScissor()

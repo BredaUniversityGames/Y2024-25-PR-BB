@@ -127,9 +127,9 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     imageInfos[0].sampler = sampler;
     for(size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
     {
-        const MaterialHandle& material = brain.IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
+        const MaterialHandle& material = brain.ImageResourceManager().IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
 
-        imageInfos[i].imageView = brain.AccessImage(material.textures[i - 1])->views[0];
+        imageInfos[i].imageView = brain.ImageResourceManager().Access(material.textures[i - 1])->views[0];
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     }
 

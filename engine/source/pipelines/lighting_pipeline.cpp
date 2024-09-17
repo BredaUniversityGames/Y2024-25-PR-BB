@@ -19,7 +19,7 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
 {
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _brain.AccessImage(_hdrTarget)->views[0];
+    finalColorAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
@@ -160,7 +160,7 @@ void LightingPipeline::CreatePipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.AccessImage(_hdrTarget)->format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_hdrTarget)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -274,7 +274,7 @@ void LightingPipeline::UpdateGBufferViews()
     prefilterMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     prefilterMapInfo.sampler = *_prefilterMap.sampler;
     vk::DescriptorImageInfo brdfLUTMapInfo;
-    brdfLUTMapInfo.imageView = _brain.AccessImage(_brdfLUT)->views[0];
+    brdfLUTMapInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->views[0];
     brdfLUTMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     brdfLUTMapInfo.sampler = *_prefilterMap.sampler;
 

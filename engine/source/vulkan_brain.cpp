@@ -5,7 +5,7 @@
 #include <map>
 #include <set>
 
-VulkanBrain::VulkanBrain(const InitInfo& initInfo)
+VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this)
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic{ instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
@@ -42,7 +42,7 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     ImageCreation creation{};
     creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
 
-    _fallbackImage = CreateImage(creation);
+    _fallbackImage = _imageResourceManager.Create(creation);
 }
 
 VulkanBrain::~VulkanBrain()
@@ -50,7 +50,7 @@ VulkanBrain::~VulkanBrain()
     if(_enableValidationLayers)
         instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, dldi);
 
-    DestroyImage(_fallbackImage);
+    _imageResourceManager.Destroy(_fallbackImage);
 
     device.destroy(descriptorPool);
     device.destroy(commandPool);
@@ -67,174 +67,6 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-ResourceHandle<Image> VulkanBrain::CreateImage(const ImageCreation& creation) const
-{
-    uint32_t index{};
-    if(!_imagesFreeList.empty())
-    {
-        index = _imagesFreeList.back();
-        _imagesFreeList.pop_back();
-    }
-    else
-    {
-        index = _images.size();
-        _images.emplace_back();
-    }
-
-    ResourceSlot<Image>& resource = _images[index];
-    resource.resource = Image{};
-
-    Image& imageResource = resource.resource.value();
-
-    ResourceHandle<Image> handle{};
-    handle.index = index;
-    handle.version = ++_images[index].version;
-
-    imageResource.width = creation.width;
-    imageResource.height = creation.height;
-    imageResource.depth = creation.depth;
-    imageResource.layers = creation.layers;
-    imageResource.flags = creation.flags;
-    imageResource.type = creation.type;
-    imageResource.format = creation.format;
-    imageResource.mips = std::min(creation.mips, static_cast<uint8_t>(floor(log2(std::max(imageResource.width, imageResource.height))) + 1));
-    imageResource.name = creation.name;
-    imageResource.isHDR = creation.isHDR;
-
-    vk::ImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.imageType = creation.type;
-    imageCreateInfo.extent.width = creation.width;
-    imageCreateInfo.extent.height = creation.height;
-    imageCreateInfo.extent.depth = creation.depth;
-    imageCreateInfo.mipLevels = creation.mips;
-    imageCreateInfo.arrayLayers = creation.layers;
-    imageCreateInfo.format = creation.format;
-    imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-    imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-    imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-    imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-
-    imageCreateInfo.usage = creation.flags;
-
-    if(creation.initialData)
-        imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
-
-    VmaAllocationCreateInfo allocCreateInfo{};
-    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-    vmaCreateImage(vmaAllocator, (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&imageResource.image), &imageResource.allocation, nullptr);
-    std::string allocName = creation.name + " texture allocation";
-    vmaSetAllocationName(vmaAllocator, imageResource.allocation, allocName.c_str());
-
-    vk::ImageViewCreateInfo viewCreateInfo{};
-    viewCreateInfo.image = imageResource.image;
-    viewCreateInfo.viewType = static_cast<vk::ImageViewType>(creation.type);
-    viewCreateInfo.format = creation.format;
-    viewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(imageResource.format);
-    viewCreateInfo.subresourceRange.baseMipLevel = 0;
-    viewCreateInfo.subresourceRange.levelCount = creation.mips;
-    viewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    viewCreateInfo.subresourceRange.layerCount = 1;
-
-    for (size_t i = 0; i < creation.layers; ++i)
-    {
-        viewCreateInfo.subresourceRange.baseArrayLayer = i;
-        vk::ImageView imageView;
-        util::VK_ASSERT(device.createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
-        imageResource.views.emplace_back(imageView);
-    }
-
-    if(creation.initialData)
-    {
-        vk::DeviceSize imageSize = imageResource.width * imageResource.height * imageResource.depth * 4;
-        if (imageResource.isHDR)
-            imageSize *= sizeof(float);
-
-        vk::Buffer stagingBuffer;
-        VmaAllocation stagingBufferAllocation;
-
-        util::CreateBuffer(*this, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
-
-        vmaCopyMemoryToAllocation(vmaAllocator, creation.initialData, stagingBufferAllocation, 0, imageSize);
-
-        vk::ImageLayout oldLayout = vk::ImageLayout::eTransferDstOptimal;
-
-        vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(*this);
-
-        util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, vk::ImageLayout::eUndefined, oldLayout);
-
-        util::CopyBufferToImage(commandBuffer, stagingBuffer, imageResource.image, imageResource.width, imageResource.height);
-
-        if (creation.mips > 1)
-        {
-            util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
-
-            for (uint32_t i = 1; i < creation.mips; ++i)
-            {
-                vk::ImageBlit blit{};
-                blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-                blit.srcSubresource.layerCount = 1;
-                blit.srcSubresource.mipLevel = i - 1;
-                blit.srcOffsets[1].x = imageResource.width >> (i - 1);
-                blit.srcOffsets[1].y = imageResource.height >> (i - 1);
-                blit.srcOffsets[1].z = 1;
-
-                blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-                blit.dstSubresource.layerCount = 1;
-                blit.dstSubresource.mipLevel = i;
-                blit.dstOffsets[1].x = imageResource.width >> i;
-                blit.dstOffsets[1].y = imageResource.height >> i;
-                blit.dstOffsets[1].z = 1;
-
-                util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
-
-                commandBuffer.blitImage(imageResource.image, vk::ImageLayout::eTransferSrcOptimal, imageResource.image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
-
-                util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
-            }
-            oldLayout = vk::ImageLayout::eTransferSrcOptimal;
-        }
-
-        util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, imageResource.mips);
-
-        util::EndSingleTimeCommands(*this, commandBuffer);
-
-        vmaDestroyBuffer(vmaAllocator, stagingBuffer, stagingBufferAllocation);
-    }
-
-    return handle;
-}
-
-const Image* VulkanBrain::AccessImage(ResourceHandle<Image> handle) const
-{
-    uint32_t index = handle.index;
-    if(!IsValid(handle))
-        return nullptr;
-
-    return &_images[index].resource.value();
-}
-
-void VulkanBrain::DestroyImage(ResourceHandle<Image> handle) const
-{
-    uint32_t index = handle.index;
-    if(IsValid(handle))
-    {
-        const Image* image = AccessImage(handle);
-        vmaDestroyImage(vmaAllocator, image->image, image->allocation);
-        for(auto& view : image->views)
-            device.destroy(view);
-
-        _imagesFreeList.emplace_back(index);
-        _images[index].resource = std::nullopt;
-    }
-}
-
-bool VulkanBrain::IsValid(ResourceHandle<Image> handle) const
-{
-    uint32_t index = handle.index;
-    return index < _images.size() && _images[index].version == handle.version;
-}
-
 void VulkanBrain::UpdateBindlessSet()
 {
     vk::DescriptorImageInfo imageInfos[MAX_BINDLESS_RESOURCES];
@@ -242,7 +74,7 @@ void VulkanBrain::UpdateBindlessSet()
 
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image& image = i < _images.size() ? _images[i].resource.value() : *AccessImage(_fallbackImage);
+        const Image& image = i < _imageResourceManager.Resources().size() ? _imageResourceManager.Resources()[i].resource.value() : *_imageResourceManager.Access(_fallbackImage);
 
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageInfos[i].imageView = image.views[0]; // TODO: Review later how to determine what view should be bound.

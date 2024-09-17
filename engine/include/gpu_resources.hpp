@@ -2,24 +2,6 @@
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
 
-template <typename T>
-struct ResourceHandle
-{
-    ResourceHandle() : index(0xFFFFFF), version(0) {}
-    static ResourceHandle<T> Invalid() { return ResourceHandle<T>{}; }
-private:
-    friend class VulkanBrain;
-    uint32_t index : 24;
-    uint32_t version : 8;
-};
-
-template <typename T>
-struct ResourceSlot
-{
-    std::optional<T> resource;
-    uint8_t version;
-};
-
 struct ImageCreation
 {
     std::byte* initialData{ nullptr };

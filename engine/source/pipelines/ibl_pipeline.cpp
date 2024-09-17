@@ -39,7 +39,7 @@ IBLPipeline::~IBLPipeline()
         for(const auto& view : mips)
             _brain.device.destroy(view);
 
-    _brain.DestroyImage(_brdfLUT);
+    _brain.ImageResourceManager().Destroy(_brdfLUT);
 
     _brain.device.destroy(_prefilterPipeline);
     _brain.device.destroy(_prefilterPipelineLayout);
@@ -145,12 +145,12 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    const Image* brdfLUT = _brain.AccessImage(_brdfLUT);
+    const Image* brdfLUT = _brain.ImageResourceManager().Access(_brdfLUT);
     util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _brain.AccessImage(_brdfLUT)->views[0];
+    finalColorAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
@@ -552,7 +552,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.AccessImage(_brdfLUT)->format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_brdfLUT)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -597,7 +597,7 @@ void IBLPipeline::CreateDescriptorSet()
     vk::DescriptorImageInfo imageInfo{};
     imageInfo.sampler = *_irradianceMap.sampler;
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _brain.AccessImage(_environmentMap)->views[0];
+    imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->views[0];
 
     vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;
@@ -724,5 +724,5 @@ void IBLPipeline::CreateBRDFLUT()
 {
     ImageCreation creation{};
     creation.SetSize(512, 512).SetFormat(vk::Format::eR16G16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled).SetName("BRDF LUT");
-    _brdfLUT = _brain.CreateImage(creation);
+    _brdfLUT = _brain.ImageResourceManager().Create(creation);
 }

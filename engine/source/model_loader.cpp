@@ -21,7 +21,7 @@ ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout mater
     ImageCreation defaultImageCreation{};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    textures[0] = _brain.CreateImage(defaultImageCreation);
+    textures[0] = _brain.ImageResourceManager().Create(defaultImageCreation);
 
     std::fill(textures.begin() + 1, textures.end(), textures[0]);
 
@@ -33,7 +33,7 @@ ModelLoader::~ModelLoader()
 {
     vmaDestroyBuffer(_brain.vmaAllocator, _defaultMaterial->materialUniformBuffer, _defaultMaterial->materialUniformAllocation);
 
-    _brain.DestroyImage(_defaultMaterial->textures[0]);
+    _brain.ImageResourceManager().Destroy(_defaultMaterial->textures[0]);
 }
 
 ModelHandle ModelLoader::Load(std::string_view path)
@@ -363,7 +363,7 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
     // Load textures
     for(const auto& texture : textures)
     {
-        modelHandle.textures.emplace_back(_brain.CreateImage(texture));
+        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(texture));
     }
 
     // Load materials

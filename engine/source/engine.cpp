@@ -260,8 +260,8 @@ Engine::~Engine()
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
-    _brain.DestroyImage(_environmentMap);
-    _brain.DestroyImage(_hdrTarget);
+    _brain.ImageResourceManager().Destroy(_environmentMap);
+    _brain.ImageResourceManager().Destroy(_hdrTarget);
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -282,7 +282,7 @@ Engine::~Engine()
         }
         for(auto& texture : model->textures)
         {
-            _brain.DestroyImage(texture);
+            _brain.ImageResourceManager().Destroy(texture);
         }
         for(auto& material : model->materials)
         {
@@ -315,7 +315,7 @@ void Engine::CreateCommandBuffers()
 
 void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_t swapChainImageIndex)
 {
-    const Image* hdrImage = _brain.AccessImage(_hdrTarget);
+    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo{};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -461,7 +461,7 @@ void Engine::InitializeHDRTarget()
     ImageCreation hdrCreation{};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _brain.CreateImage(hdrCreation);
+    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
 }
 
 void Engine::LoadEnvironmentMap()
@@ -481,5 +481,5 @@ void Engine::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _brain.CreateImage(envMapCreation);
+    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
 }

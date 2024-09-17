@@ -5,6 +5,7 @@
 #include "engine_init_info.hpp"
 #include <optional>
 #include "gpu_resources.hpp"
+#include "image_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -47,10 +48,7 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ResourceHandle<Image> CreateImage(const ImageCreation& creation) const;
-    const Image* AccessImage(ResourceHandle<Image> handle) const;
-    void DestroyImage(ResourceHandle<Image> handle) const;
-    bool IsValid(ResourceHandle<Image> handle) const;
+    ImageResourceManager& ImageResourceManager() const { return _imageResourceManager; }
 
     void UpdateBindlessSet();
 
@@ -85,8 +83,7 @@ private:
         "VK_EXT_descriptor_indexing"
     };
 
-    mutable std::vector<ResourceSlot<Image>> _images;
-    mutable std::vector<uint32_t> _imagesFreeList;
+    mutable class ImageResourceManager _imageResourceManager;
 
     void CreateInstance(const InitInfo& initInfo);
     void PickPhysicalDevice();
