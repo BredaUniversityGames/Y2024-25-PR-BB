@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="WSL - Ubuntu" type="wsl" uuid="16710415-f839-413f-857c-a541b7b96716">
+        <config>
+          <option name="distributionMsId" value="Ubuntu" />
+          <option name="projectRootOnTarget" value="{exitCode=0, timeout=false, cancelled=false, stdout=/tmp/tmp.MrZ12cnUHY&#10;, stderr=}/Y2024-25-PR-BB" />
+        </config>
+      </target>
+    </targets>
+  </component>
+</project>
