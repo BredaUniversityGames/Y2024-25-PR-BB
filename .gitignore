@@ -6,7 +6,6 @@
 # Build output for the project
 build
 package
-.idea/
 
 # User-specific files
 *.rsuser
