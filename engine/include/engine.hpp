@@ -1,7 +1,6 @@
 #pragma once
 
 #include "swap_chain.hpp"
-#include <glm/glm.hpp>
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"

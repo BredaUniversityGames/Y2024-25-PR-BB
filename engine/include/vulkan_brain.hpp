@@ -1,8 +1,6 @@
 #pragma once
-#include "class_decorations.hpp"
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
-#include <optional>
 
 struct QueueFamilyIndices
 {

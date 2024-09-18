@@ -1,12 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include <magic_enum.hpp>
-#include <string>
 #include <glm/glm.hpp>
-#include <sstream>
-#include "spdlog/spdlog.h"
-#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 
