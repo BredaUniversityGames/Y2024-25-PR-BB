@@ -58,14 +58,76 @@ void Button::Evaluate(const InputManager& input)
 	
 }
 
+void Button::Render()
+{
+	
+}
+
 void user_interface::Update(const InputManager& input)
-{	
+{
 	for (auto& i : m_elements)
 	{
-		i->Evaluate(input);
+		i.Evaluate(input);
 	}
+}
+	
+void user_interface::SubmitCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
+	const ResourceHandle<Image>& _hdrTarget, const UIPipeLine& pipeline,const glm::mat4& projection)
+{
 
+		
+	vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
+	finalColorAttachmentInfo.imageView =  pipeline.m_brain.ImageResourceManager().Access(_hdrTarget)->views[0];
+	finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
+	finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+	finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
 
+	vk::RenderingInfoKHR renderingInfo{};
+	renderingInfo.renderArea.extent = vk::Extent2D{ pipeline.m_brain.ImageResourceManager().Access(_hdrTarget)->width,pipeline.m_brain.ImageResourceManager().Access(_hdrTarget)->height };
+	renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+	renderingInfo.colorAttachmentCount = 1;
+	renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
+	renderingInfo.layerCount = 1;
+	renderingInfo.pDepthAttachment = nullptr;
+	renderingInfo.pStencilAttachment = nullptr;
+
+	util::BeginLabel(commandBuffer, "ui", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, pipeline.m_brain.dldi);
+	commandBuffer.beginRenderingKHR(&renderingInfo,pipeline.m_brain.dldi);
+
+	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.m_uiPipeLine);
+
+	for (const auto& i : m_elements)
+	{
+		auto matrix = glm::mat4(1.f);
+		matrix = glm::translate(matrix, glm::vec3(i.Translation.x, i.Translation.y, 0));
+		matrix = glm::scale(matrix, glm::vec3(i.Scale.x, i.Scale.y, 1));
+	
+
+		matrix = projection * matrix;
+		switch (i.state)
+		{
+		case Button::ButtonState::normal:
+			pipeline.UpdateTexture(i.NormalImage);
+			break;
+
+		case Button::ButtonState::hovered:
+			pipeline.UpdateTexture(i.HoveredImage);
+			break;
+
+		case Button::ButtonState::pressed:
+			pipeline.UpdateTexture(i.PressedImage);
+			break;
+		}
+
+		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.m_pipelineLayout, 0, 1,
+										 &pipeline.m_descriptorSet, 0, nullptr);
+
+		vkCmdPushConstants(commandBuffer, pipeline.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &matrix);
+		commandBuffer.draw(6,1,0,0);
+	}
+	
+	commandBuffer.endRenderingKHR(pipeline.m_brain.dldi);
+	util::EndLabel(commandBuffer, pipeline.m_brain.dldi);
 }
 
 void UIPipeLine::CreatePipeLine()
@@ -73,7 +135,7 @@ void UIPipeLine::CreatePipeLine()
 
 	auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert.vert.spv");
 	auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag.frag.spv");
-	m_sampler = util::CreateSampler(m_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
+	m_sampler = util::CreateSampler(m_brain, vk::Filter::eNearest, vk::Filter::eNearest, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
 	vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);
 	vk::ShaderModule fragModule = shader::CreateShaderModule(fragShaderCode, m_brain.device);
@@ -268,7 +330,7 @@ void UIPipeLine::CreateDescriptorSetLayout()
 	
 }
 
-void UIPipeLine::UpdateTexture(ResourceHandle<Image> image)
+void UIPipeLine::UpdateTexture(ResourceHandle<Image> image) const
 {
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo.sampler = *m_sampler;
@@ -286,49 +348,7 @@ void UIPipeLine::UpdateTexture(ResourceHandle<Image> image)
 	m_brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
 }
 
-void UIPipeLine::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,const   ResourceHandle<Image>& _hdrTarget)
-{
- vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView =  m_brain.ImageResourceManager().Access(_hdrTarget)->views[0];
-    finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
-    finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
-
-    vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ m_brain.ImageResourceManager().Access(_hdrTarget)->width, m_brain.ImageResourceManager().Access(_hdrTarget)->height };
-    renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
-    renderingInfo.colorAttachmentCount = 1;
-    renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
-    renderingInfo.layerCount = 1;
-    renderingInfo.pDepthAttachment = nullptr;
-    renderingInfo.pStencilAttachment = nullptr;
-
-    util::BeginLabel(commandBuffer, "ui", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, m_brain.dldi);
-    commandBuffer.beginRenderingKHR(&renderingInfo, m_brain.dldi);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_uiPipeLine);
-	
-	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout, 0, 1,&m_descriptorSet, 0, nullptr);
-
-	
-	auto matrix = glm::mat4(1.f);
-	matrix = glm::scale(matrix,glm::vec3(0.2));
-	vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &matrix);
-
-	commandBuffer.draw(6,1,0,0);
-	
-
-	matrix = glm::translate(matrix,glm::vec3(0,2,0));
-	
-	vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &matrix);
-
-	commandBuffer.draw(6,1,0,0);
-
-	
-    commandBuffer.endRenderingKHR(m_brain.dldi);
-    util::EndLabel(commandBuffer, m_brain.dldi);
-}
-
 UIPipeLine::~UIPipeLine()
 {
 }
+

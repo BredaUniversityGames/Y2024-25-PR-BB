@@ -42,12 +42,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2{ initInfo.width, initInfo.height });
 
-    auto button = std::make_unique<Button>();
-    button->Translation = {0.f,0.f};
-    button->Scale = {100.f,100.f};
-    button->OnBeginHoverCallBack = [&](auto&... args) {spdlog::info("Button hovered!");};
-    button->OnMouseDownCallBack = [&](auto&... args) {spdlog::info("Button down!");};
-    _interface.m_elements.emplace_back(std::make_unique<Button>(*button));
+
     CreateDescriptorSetLayout();
     InitializeCameraUBODescriptors();
     InitializeHDRTarget();
@@ -71,20 +66,13 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
-    ImageCreation imageCreation;
-
-
-    int width;
-    int height;
-    int nrChannels;
     
-    const std::string imagePath = "assets/textures/button.png"; // Thanks C++.
-    stbi_uc* stbiData = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 4);
-    auto* data = reinterpret_cast<std::byte*>(stbiData);
-    auto texture = imageCreation.SetSize(width, height).SetData(data).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+  
+    auto buttonNormalTexture = ImageCreation().LoadFromFile("assets/textures/button.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+    auto buttonNormalImage = _brain.ImageResourceManager().Create(buttonNormalTexture);
 
-    auto image = _brain.ImageResourceManager().Create(texture);
-    stbi_image_free(stbiData);
+    auto buttonHoveredTexture = ImageCreation().LoadFromFile("assets/textures/buttonHovered.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+    auto buttonHoveredImage = _brain.ImageResourceManager().Create(buttonHoveredTexture);
 
     
     m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
@@ -94,6 +82,22 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     
     m_uiPipeLine->CreatePipeLine();
+
+    Button button{};
+    button.Translation = {300.f,300.f};
+    button.Scale = {910.f/2.0,290.f/2.0};
+    button.OnBeginHoverCallBack = [&](auto&... args) {spdlog::info("Button hovered!");};
+    button.OnMouseDownCallBack = [&](auto&... args) {spdlog::info("Button down!");};
+
+    button.NormalImage = buttonNormalImage;
+    button.HoveredImage = buttonHoveredImage;
+    button.PressedImage = buttonNormalImage;
+    _interface.m_elements.emplace_back(button);
+
+    button.Translation = {300.f,500.f};
+    button.OnMouseDownCallBack = [&](auto&... args) {_shouldQuit = true;};
+
+    _interface.m_elements.emplace_back(button);
     
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -148,7 +152,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(false);
 
-    m_uiPipeLine->UpdateTexture(image);
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -210,8 +213,8 @@ void Engine::Run()
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
-    CameraUBO cameraUBO = CalculateCamera(_scene.camera);
-    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
+    m_cameraMatrices = CalculateCamera(_scene.camera);
+    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &m_cameraMatrices, sizeof(CameraUBO));
 
     util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
                     "Failed waiting on in flight fence!");
@@ -371,8 +374,9 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
-    
-    m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
+
+    auto ortho = glm::ortho(0.0f,static_cast<float>(_gBuffers->Size().x),0.0f,static_cast<float>( _gBuffers->Size().y));
+    _interface.SubmitCommands(commandBuffer,_currentFrame,_hdrTarget,*m_uiPipeLine,ortho);
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

@@ -4,6 +4,7 @@
 
 struct ImageCreation
 {
+
     std::byte* initialData{ nullptr };
     uint16_t width{ 1 };
     uint16_t height{ 1 };
@@ -18,6 +19,8 @@ struct ImageCreation
 
     std::string name;
 
+    ImageCreation& LoadFromFile(std::string_view file_path);
+    
     ImageCreation& SetData(std::byte* data);
     ImageCreation& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
     ImageCreation& SetMips(uint8_t mips);

@@ -47,7 +47,8 @@ private:
 
     SceneDescription _scene;
     ResourceHandle<Image> _environmentMap;
-
+    CameraUBO m_cameraMatrices;
+    
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
 
