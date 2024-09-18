@@ -138,7 +138,7 @@ struct MaterialHandle
     VmaAllocation materialUniformAllocation;
 
 
-    std::array<std::shared_ptr<TextureHandle>, TEXTURE_COUNT> textures;
+    std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
 
     static std::array<vk::DescriptorSetLayoutBinding, 7> GetLayoutBindings()
     {
@@ -199,7 +199,7 @@ struct ModelHandle
 {
     std::vector<std::shared_ptr<MeshHandle>> meshes;
     std::vector<std::shared_ptr<MaterialHandle>> materials;
-    std::vector<std::shared_ptr<TextureHandle>> textures;
+    std::vector<ResourceHandle<Image>> textures;
 
     Hierarchy hierarchy;
 };

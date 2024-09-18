@@ -43,64 +43,6 @@ std::optional<vk::Format> util::FindSupportedFormat(const vk::PhysicalDevice phy
     return std::nullopt;
 }
 
-vk::ImageView util::CreateImageView(vk::Device device, vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t layer, uint32_t mipCount)
-{
-    vk::ImageViewCreateInfo createInfo{};
-    createInfo.image = image;
-    createInfo.viewType = vk::ImageViewType::e2D;
-    createInfo.format = format;
-    createInfo.subresourceRange.aspectMask = aspectFlags;
-    createInfo.subresourceRange.baseMipLevel = 0;
-    createInfo.subresourceRange.levelCount = mipCount;
-    createInfo.subresourceRange.baseArrayLayer = layer;
-    createInfo.subresourceRange.layerCount = 1;
-
-    vk::ImageView view;
-    util::VK_ASSERT(device.createImageView(&createInfo, nullptr, &view), "Failed creating image view!");
-
-    return view;
-}
-
-uint32_t util::FindMemoryType(vk::PhysicalDevice physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties)
-{
-    vk::PhysicalDeviceMemoryProperties memoryProperties;
-    physicalDevice.getMemoryProperties(&memoryProperties);
-
-    for(uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
-        if(typeFilter & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            return i;
-
-    throw std::runtime_error("Failed finding suitable memory type!");
-}
-
-void util::CreateImage(VmaAllocator allocator, uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::Image& image, VmaAllocation& allocation, std::string_view name, bool generateMips, VmaMemoryUsage memoryUsage, uint32_t numLayers)
-{
-    uint32_t mipCount = 1;
-    if(generateMips)
-        mipCount = static_cast<uint32_t>(floor(log2(std::max(width, height))) + 1);
-
-    vk::ImageCreateInfo createInfo{};
-    createInfo.imageType = vk::ImageType::e2D;
-    createInfo.extent.width = width;
-    createInfo.extent.height = height;
-    createInfo.extent.depth = 1;
-    createInfo.mipLevels = mipCount;
-    createInfo.arrayLayers = numLayers;
-    createInfo.format = format;
-    createInfo.tiling = tiling;
-    createInfo.initialLayout = vk::ImageLayout::eUndefined;
-    createInfo.usage = usage;
-    createInfo.sharingMode = vk::SharingMode::eExclusive;
-    createInfo.samples = vk::SampleCountFlagBits::e1;
-    createInfo.flags = vk::ImageCreateFlags{ 0 };
-
-    VmaAllocationCreateInfo allocationInfo{};
-    allocationInfo.usage = memoryUsage;
-
-    util::VK_ASSERT(vmaCreateImage(allocator, reinterpret_cast<VkImageCreateInfo*>(&createInfo), &allocationInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr), "Failed creating image!");
-    vmaSetAllocationName(allocator, allocation, name.data());
-}
-
 void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
 {
     vk::BufferCreateInfo bufferInfo{};
@@ -160,7 +102,7 @@ void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk:
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<std::shared_ptr<TextureHandle>, 5>& textures, const MaterialHandle::MaterialInfo& info, vk::Sampler sampler, vk::DescriptorSetLayout materialLayout, std::shared_ptr<MaterialHandle> defaultMaterial)
+MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<ResourceHandle<Image>, 5>& textures, const MaterialHandle::MaterialInfo& info, vk::Sampler sampler, vk::DescriptorSetLayout materialLayout, std::shared_ptr<MaterialHandle> defaultMaterial)
 {
     MaterialHandle materialHandle;
     materialHandle.textures = textures;
@@ -185,9 +127,9 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<s
     imageInfos[0].sampler = sampler;
     for(size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
     {
-        const MaterialHandle& material = textures[i - 1] != nullptr ? materialHandle : *defaultMaterial;
+        const MaterialHandle& material = brain.ImageResourceManager().IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
 
-        imageInfos[i].imageView = material.textures[i - 1]->imageView;
+        imageInfos[i].imageView = brain.ImageResourceManager().Access(material.textures[i - 1])->views[0];
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     }
 
@@ -392,5 +334,31 @@ void util::EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDyn
     return;
 #endif
     commandBuffer.endDebugUtilsLabelEXT(dldi);
+}
+
+vk::ImageAspectFlags util::GetImageAspectFlags(vk::Format format) {
+    switch (format) {
+        // Depth formats
+        case vk::Format::eD16Unorm:
+        case vk::Format::eX8D24UnormPack32:
+        case vk::Format::eD32Sfloat:
+            return vk::ImageAspectFlagBits::eDepth;
+
+        // Depth-stencil formats
+        case vk::Format::eD16UnormS8Uint:
+        case vk::Format::eD24UnormS8Uint:
+        case vk::Format::eD32SfloatS8Uint:
+            return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+
+        // Color formats
+        default:
+            // Most other formats are color formats
+            if (format >= vk::Format::eR4G4UnormPack8 && format <= vk::Format::eBc7UnormBlock) {
+                return vk::ImageAspectFlagBits::eColor;
+            } else {
+                // Handle error or unsupported format case
+                throw std::runtime_error("Unsupported format for aspect determination.");
+            }
+    }
 }
 

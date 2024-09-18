@@ -4,17 +4,11 @@
 #include "single_time_commands.hpp"
 #include "stopwatch.hpp"
 
-IBLPipeline::IBLPipeline(const VulkanBrain& brain, const TextureHandle& environmentMap) :
+IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap) :
     _brain(brain),
     _environmentMap(environmentMap)
 {
-    _irradianceMap.size = 32;
-    _irradianceMap.format = vk::Format::eR16G16B16A16Sfloat;
-    _irradianceMap.mipLevels = 1;
-
-    _prefilterMap.size = 128;
-    _prefilterMap.format = vk::Format::eR16G16B16A16Sfloat;
-    _prefilterMap.mipLevels = fmin(floor(log2(_prefilterMap.size)), 3.0);
+    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0);
 
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
@@ -28,19 +22,13 @@ IBLPipeline::IBLPipeline(const VulkanBrain& brain, const TextureHandle& environm
 
 IBLPipeline::~IBLPipeline()
 {
-    vmaDestroyImage(_brain.vmaAllocator, _irradianceMap.image, _irradianceMap.allocation);
-    _brain.device.destroy(_irradianceMap.view);
-    for(const auto& view : _irradianceMapViews)
-        _brain.device.destroy(view);
-
-    vmaDestroyImage(_brain.vmaAllocator, _prefilterMap.image, _prefilterMap.allocation);
-    _brain.device.destroy(_prefilterMap.view);
     for(const auto& mips : _prefilterMapViews)
         for(const auto& view : mips)
             _brain.device.destroy(view);
 
-    vmaDestroyImage(_brain.vmaAllocator, _brdfLUT.image, _brdfLUT.imageAllocation);
-    _brain.device.destroy(_brdfLUT.imageView);
+    _brain.ImageResourceManager().Destroy(_irradianceMap);
+    _brain.ImageResourceManager().Destroy(_brdfLUT);
+    _brain.ImageResourceManager().Destroy(_prefilterMap);
 
     _brain.device.destroy(_prefilterPipeline);
     _brain.device.destroy(_prefilterPipelineLayout);
@@ -53,20 +41,23 @@ IBLPipeline::~IBLPipeline()
 
 void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 {
+    const Image& irradianceMap = *_brain.ImageResourceManager().Access(_irradianceMap);
+    const Image& prefilterMap = *_brain.ImageResourceManager().Access(_prefilterMap);
+
     util::BeginLabel(commandBuffer, "Irradiance pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
 
-    util::TransitionImageLayout(commandBuffer, _irradianceMap.image, _irradianceMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, 1);
+    util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, 1);
 
     for(size_t i = 0; i < 6; ++i)
     {
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-        finalColorAttachmentInfo.imageView = _irradianceMapViews[i];
+        finalColorAttachmentInfo.imageView = irradianceMap.views[i];
         finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
         finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
         finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
         vk::RenderingInfoKHR renderingInfo{};
-        renderingInfo.renderArea.extent = vk::Extent2D{ static_cast<uint32_t>(_irradianceMap.size), static_cast<uint32_t>(_irradianceMap.size) };
+        renderingInfo.renderArea.extent = vk::Extent2D{ static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
         renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -80,11 +71,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _irradiancePipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _irradiancePipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
 
-        vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(_irradianceMap.size), static_cast<float>(_irradianceMap.size), 0.0f,
+        vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(irradianceMap.width), static_cast<float>(irradianceMap.height), 0.0f,
                                               1.0f };
         commandBuffer.setViewport(0, 1, &viewport);
 
-        vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(_irradianceMap.size), static_cast<uint32_t>(_irradianceMap.size)};
+        vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height)};
         vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
         commandBuffer.setScissor(0, 1, &scissor);
 
@@ -93,13 +84,13 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         commandBuffer.endRenderingKHR(_brain.dldi);
     }
 
-    util::TransitionImageLayout(commandBuffer, _irradianceMap.image, _irradianceMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, 1);
+    util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, 1);
     util::EndLabel(commandBuffer, _brain.dldi);
 
     util::BeginLabel(commandBuffer, "Prefilter pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
-    util::TransitionImageLayout(commandBuffer, _prefilterMap.image, _prefilterMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, _prefilterMap.mipLevels);
+    util::TransitionImageLayout(commandBuffer, prefilterMap.image, prefilterMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, prefilterMap.mips);
 
-    for(size_t i = 0; i < _prefilterMap.mipLevels; ++i)
+    for(size_t i = 0; i < prefilterMap.mips; ++i)
     {
         for(size_t j = 0; j < 6; ++j)
         {
@@ -109,8 +100,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
             finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
-            uint32_t size = static_cast<uint32_t>(_prefilterMap.size >> i);
-            spdlog::info(size);
+            uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
 
             vk::RenderingInfoKHR renderingInfo{};
             renderingInfo.renderArea.extent = vk::Extent2D{ size, size };
@@ -123,7 +113,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
-            PrefilterPushConstant pc{ static_cast<uint32_t>(j), static_cast<float>(i) / static_cast<float>(_prefilterMap.mipLevels - 1)};
+            PrefilterPushConstant pc{ static_cast<uint32_t>(j), static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1)};
 
             commandBuffer.pushConstants(_prefilterPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PrefilterPushConstant), &pc);
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _prefilterPipeline);
@@ -143,21 +133,22 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         }
     }
 
-    util::TransitionImageLayout(commandBuffer, _prefilterMap.image, _prefilterMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, _prefilterMap.mipLevels);
+    util::TransitionImageLayout(commandBuffer, prefilterMap.image, prefilterMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, prefilterMap.mips);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
+    const Image* brdfLUT = _brain.ImageResourceManager().Access(_brdfLUT);
     util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
-    util::TransitionImageLayout(commandBuffer, _brdfLUT.image, _brdfLUT.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _brdfLUT.imageView;
+    finalColorAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{_brdfLUT.width, _brdfLUT.height };
+    renderingInfo.renderArea.extent = vk::Extent2D{ brdfLUT->width, brdfLUT->height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -169,11 +160,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
-    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(_brdfLUT.width), static_cast<float>(_brdfLUT.height), 0.0f,
+    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(brdfLUT->width), static_cast<float>(brdfLUT->height), 0.0f,
                                           1.0f };
     commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(_brdfLUT.width), static_cast<uint32_t>(_brdfLUT.height)};
+    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(brdfLUT->width), static_cast<uint32_t>(brdfLUT->height)};
     vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
     commandBuffer.setScissor(0, 1, &scissor);
 
@@ -181,7 +172,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 
-    util::TransitionImageLayout(commandBuffer, _brdfLUT.image, _brdfLUT.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
@@ -301,7 +292,7 @@ void IBLPipeline::CreateIrradiancePipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_irradianceMap.format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_irradianceMap)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -322,7 +313,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
     vk::PushConstantRange pushConstantRange{};
-    pushConstantRange.size = sizeof(PrefilterPushConstant) * 6 * _prefilterMap.mipLevels;
+    pushConstantRange.size = sizeof(PrefilterPushConstant) * 6 * _brain.ImageResourceManager().Access(_prefilterMap)->mips;
     assert(pushConstantRange.size < 256);
     pushConstantRange.offset = 0;
     pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -430,7 +421,7 @@ void IBLPipeline::CreatePrefilterPipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_prefilterMap.format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_prefilterMap)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -553,7 +544,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brdfLUT.format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_brdfLUT)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -596,9 +587,9 @@ void IBLPipeline::CreateDescriptorSet()
                     "Failed allocating descriptor sets!");
 
     vk::DescriptorImageInfo imageInfo{};
-    imageInfo.sampler = *_irradianceMap.sampler;
+    imageInfo.sampler = _sampler.get();
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _environmentMap.imageView;
+    imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->view;
 
     vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;
@@ -613,89 +604,39 @@ void IBLPipeline::CreateDescriptorSet()
 
 void IBLPipeline::CreateIrradianceCubemap()
 {
-    vk::ImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.imageType = vk::ImageType::e2D;
-    imageCreateInfo.extent.width = _irradianceMap.size;
-    imageCreateInfo.extent.height = _irradianceMap.size;
-    imageCreateInfo.extent.depth = 1;
-    imageCreateInfo.mipLevels = 1;
-    imageCreateInfo.arrayLayers = 6;
-    imageCreateInfo.format = _irradianceMap.format;
-    imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-    imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-    imageCreateInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment;
-    imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-    imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-    imageCreateInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
+    ImageCreation creation{};
+    creation
+        .SetName("Irradiance cubemap")
+        .SetType(ImageType::eCubeMap)
+        .SetSize(32, 32)
+        .SetFormat(vk::Format::eR16G16B16A16Sfloat)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    VmaAllocationCreateInfo allocationInfo{};
-    allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-    util::VK_ASSERT(vmaCreateImage(_brain.vmaAllocator, reinterpret_cast<VkImageCreateInfo*>(&imageCreateInfo), &allocationInfo, reinterpret_cast<VkImage*>(&_irradianceMap.image), &_irradianceMap.allocation, nullptr), "Failed creating image!");
-    vmaSetAllocationName(_brain.vmaAllocator, _irradianceMap.allocation, "Irradiance map");
-
-    for(size_t i = 0; i < 6; ++i)
-    {
-        vk::ImageViewCreateInfo imageViewCreateInfo{};
-        imageViewCreateInfo.image = _irradianceMap.image;
-        imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-        imageViewCreateInfo.format = _irradianceMap.format;
-        imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        imageViewCreateInfo.subresourceRange.levelCount = 1;
-        imageViewCreateInfo.subresourceRange.baseArrayLayer = i;
-        imageViewCreateInfo.subresourceRange.layerCount = 1;
-
-        util::VK_ASSERT(_brain.device.createImageView(&imageViewCreateInfo, nullptr, &_irradianceMapViews[i]), "Failed creating irradiance map image view!");
-    }
-
-    vk::ImageViewCreateInfo imageViewCreateInfo{};
-    imageViewCreateInfo.image = _irradianceMap.image;
-    imageViewCreateInfo.viewType = vk::ImageViewType::eCube;
-    imageViewCreateInfo.format = _irradianceMap.format;
-    imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-    imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-    imageViewCreateInfo.subresourceRange.levelCount = 1;
-    imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewCreateInfo.subresourceRange.layerCount = 6;
-
-    util::VK_ASSERT(_brain.device.createImageView(&imageViewCreateInfo, nullptr, &_irradianceMap.view), "Failed creating irradiance map image view!");
-
-    _irradianceMap.sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0);
+    _irradianceMap = _brain.ImageResourceManager().Create(creation);
 }
 
 void IBLPipeline::CreatePrefilterCubemap()
 {
-    vk::ImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.imageType = vk::ImageType::e2D;
-    imageCreateInfo.extent.width = _prefilterMap.size;
-    imageCreateInfo.extent.height = _prefilterMap.size;
-    imageCreateInfo.extent.depth = 1;
-    imageCreateInfo.mipLevels = _prefilterMap.mipLevels;
-    imageCreateInfo.arrayLayers = 6;
-    imageCreateInfo.format = _prefilterMap.format;
-    imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-    imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-    imageCreateInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment;
-    imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-    imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-    imageCreateInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
+    ImageCreation creation{};
+    creation
+        .SetName("Prefilter cubemap")
+        .SetType(ImageType::eCubeMap)
+        .SetSize(128, 128)
+        .SetFormat(vk::Format::eR16G16B16A16Sfloat)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    creation.mips = fmin(floor(log2(creation.width)), 3.0);
 
-    VmaAllocationCreateInfo allocationInfo{};
-    allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    _prefilterMap = _brain.ImageResourceManager().Create(creation);
 
-    util::VK_ASSERT(vmaCreateImage(_brain.vmaAllocator, reinterpret_cast<VkImageCreateInfo*>(&imageCreateInfo), &allocationInfo, reinterpret_cast<VkImage*>(&_prefilterMap.image), &_prefilterMap.allocation, nullptr), "Failed creating image!");
-    vmaSetAllocationName(_brain.vmaAllocator, _prefilterMap.allocation, "Irradiance map");
-
-    _prefilterMapViews.resize(_prefilterMap.mipLevels);
-    for(size_t i = 0; i < _prefilterMap.mipLevels; ++i)
+    _prefilterMapViews.resize(creation.mips);
+    for(size_t i = 0; i < _prefilterMapViews.size(); ++i)
     {
         for(size_t j = 0; j < 6; ++j)
         {
             vk::ImageViewCreateInfo imageViewCreateInfo{};
-            imageViewCreateInfo.image = _prefilterMap.image;
+            imageViewCreateInfo.image = _brain.ImageResourceManager().Access(_prefilterMap)->image;
             imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-            imageViewCreateInfo.format = _prefilterMap.format;
+            imageViewCreateInfo.format = creation.format;
             imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
             imageViewCreateInfo.subresourceRange.baseMipLevel = i;
             imageViewCreateInfo.subresourceRange.levelCount = 1;
@@ -705,33 +646,15 @@ void IBLPipeline::CreatePrefilterCubemap()
             util::VK_ASSERT(_brain.device.createImageView(&imageViewCreateInfo, nullptr, &_prefilterMapViews[i][j]), "Failed creating irradiance map image view!");
         }
     }
-
-    vk::ImageViewCreateInfo imageViewCreateInfo{};
-    imageViewCreateInfo.image = _prefilterMap.image;
-    imageViewCreateInfo.viewType = vk::ImageViewType::eCube;
-    imageViewCreateInfo.format = _prefilterMap.format;
-    imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-    imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-    imageViewCreateInfo.subresourceRange.levelCount = 1;
-    imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewCreateInfo.subresourceRange.layerCount = 6;
-
-    util::VK_ASSERT(_brain.device.createImageView(&imageViewCreateInfo, nullptr, &_prefilterMap.view), "Failed creating irradiance map image view!");
-
-    _prefilterMap.sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 }
 
 void IBLPipeline::CreateBRDFLUT()
 {
-    Texture texture;
-    _brdfLUT.width = texture.width = 512;
-    _brdfLUT.height = texture.height = 512;
-    _brdfLUT.format = texture.format = vk::Format::eR16G16Sfloat;
-    texture.numChannels = 2;
-
-    SingleTimeCommands commands{_brain};
-    util::CreateImage(_brain.vmaAllocator, texture.width, texture.height, texture.format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _brdfLUT.image, _brdfLUT.imageAllocation, "BRDF LUT", false, VMA_MEMORY_USAGE_GPU_ONLY);
-    _brdfLUT.imageView = util::CreateImageView(_brain.device, _brdfLUT.image, _brdfLUT.format, vk::ImageAspectFlagBits::eColor);
-    commands.Submit();
+    ImageCreation creation{};
+    creation
+        .SetName("BRDF LUT")
+        .SetSize(512, 512)
+        .SetFormat(vk::Format::eR16G16Sfloat)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    _brdfLUT = _brain.ImageResourceManager().Create(creation);
 }
