@@ -1,7 +1,7 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraStructure& camera, const Cubemap& irradianceMap, const Cubemap& prefilterMap, ResourceHandle<Image> brdfLUT) :
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT) :
     _brain(brain),
     _gBuffers(gBuffers),
     _hdrTarget(hdrTarget),
@@ -10,7 +10,7 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     _prefilterMap(prefilterMap),
     _brdfLUT(brdfLUT)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
     CreateDescriptorSetLayout();
     CreateDescriptorSets();
     CreatePipeline();
@@ -266,17 +266,17 @@ void LightingPipeline::UpdateGBufferViews()
     }
 
     vk::DescriptorImageInfo irradianceMapInfo;
-    irradianceMapInfo.imageView = _irradianceMap.view;
+    irradianceMapInfo.imageView = _brain.ImageResourceManager().Access(_irradianceMap)->view;
     irradianceMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    irradianceMapInfo.sampler = *_irradianceMap.sampler;
+    irradianceMapInfo.sampler = _sampler.get();
     vk::DescriptorImageInfo prefilterMapInfo;
-    prefilterMapInfo.imageView = _prefilterMap.view;
+    prefilterMapInfo.imageView = _brain.ImageResourceManager().Access(_prefilterMap)->view;
     prefilterMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    prefilterMapInfo.sampler = *_prefilterMap.sampler;
+    prefilterMapInfo.sampler = _sampler.get();
     vk::DescriptorImageInfo brdfLUTMapInfo;
-    brdfLUTMapInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->views[0];
+    brdfLUTMapInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->view;
     brdfLUTMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    brdfLUTMapInfo.sampler = *_prefilterMap.sampler;
+    brdfLUTMapInfo.sampler = _sampler.get();
 
     descriptorWrites[5].dstSet = _descriptorSet;
     descriptorWrites[5].dstBinding = 5;

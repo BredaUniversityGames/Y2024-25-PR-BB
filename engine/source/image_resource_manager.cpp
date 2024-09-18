@@ -24,12 +24,12 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     imageResource.isHDR = creation.isHDR;
 
     vk::ImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.imageType = creation.type;
+    imageCreateInfo.imageType = ImageTypeConversion(creation.type);
     imageCreateInfo.extent.width = creation.width;
     imageCreateInfo.extent.height = creation.height;
     imageCreateInfo.extent.depth = creation.depth;
     imageCreateInfo.mipLevels = creation.mips;
-    imageCreateInfo.arrayLayers = creation.layers;
+    imageCreateInfo.arrayLayers = creation.type == ImageType::eCubeMap ? 6 : creation.layers;
     imageCreateInfo.format = creation.format;
     imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
     imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
@@ -41,6 +41,9 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     if(creation.initialData)
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
 
+    if(creation.type == ImageType::eCubeMap)
+        imageCreateInfo.flags |= vk::ImageCreateFlagBits::eCubeCompatible;
+
     VmaAllocationCreateInfo allocCreateInfo{};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
@@ -50,7 +53,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
 
     vk::ImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.image = imageResource.image;
-    viewCreateInfo.viewType = static_cast<vk::ImageViewType>(creation.type);
+    viewCreateInfo.viewType = vk::ImageViewType::e2D;
     viewCreateInfo.format = creation.format;
     viewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(imageResource.format);
     viewCreateInfo.subresourceRange.baseMipLevel = 0;
@@ -58,12 +61,28 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
     viewCreateInfo.subresourceRange.layerCount = 1;
 
-    for (size_t i = 0; i < creation.layers; ++i)
+    for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
     {
         viewCreateInfo.subresourceRange.baseArrayLayer = i;
         vk::ImageView imageView;
         util::VK_ASSERT(_brain.device.createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
         imageResource.views.emplace_back(imageView);
+    }
+    imageResource.view = *imageResource.views.begin();
+
+    if(creation.type == ImageType::eCubeMap)
+    {
+        vk::ImageViewCreateInfo cubeViewCreateInfo{};
+        cubeViewCreateInfo.image = imageResource.image;
+        cubeViewCreateInfo.viewType = ImageViewTypeConversion(creation.type);
+        cubeViewCreateInfo.format = creation.format;
+        cubeViewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(imageResource.format);
+        cubeViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        cubeViewCreateInfo.subresourceRange.levelCount = creation.mips;
+        cubeViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        cubeViewCreateInfo.subresourceRange.layerCount = 6;
+
+        util::VK_ASSERT(_brain.device.createImageView(&cubeViewCreateInfo, nullptr, &imageResource.view), "Failed creating image view!");
     }
 
     if(creation.initialData)
@@ -135,7 +154,37 @@ void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
         vmaDestroyImage(_brain.vmaAllocator, image->image, image->allocation);
         for(auto& view : image->views)
             _brain.device.destroy(view);
+        if(image->type == ImageType::eCubeMap)
+            _brain.device.destroy(image->view);
 
         ResourceManager::Destroy(handle);
+    }
+}
+
+vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)
+{
+   switch(type)
+   {
+       case ImageType::e2D:
+       case ImageType::e2DArray:
+       case ImageType::eCubeMap:
+           return vk::ImageType::e2D;
+       default:
+           throw std::runtime_error("Unsupported ImageType!");
+   }
+}
+
+vk::ImageViewType ImageResourceManager::ImageViewTypeConversion(ImageType type)
+{
+    switch(type)
+    {
+        case ImageType::e2D:
+            return vk::ImageViewType::e2D;
+        case ImageType::e2DArray:
+            return vk::ImageViewType::e2DArray;
+        case ImageType::eCubeMap:
+            return vk::ImageViewType::eCube;
+        default:
+            throw std::runtime_error("Unsupported ImageType!");
     }
 }

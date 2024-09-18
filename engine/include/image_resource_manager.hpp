@@ -15,4 +15,7 @@ public:
 
 private:
     const VulkanBrain& _brain;
+
+    vk::ImageType ImageTypeConversion(ImageType type);
+    vk::ImageViewType ImageViewTypeConversion(ImageType type);
 };

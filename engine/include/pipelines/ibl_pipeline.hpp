@@ -14,9 +14,9 @@ public:
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
-    const Cubemap& IrradianceMap() const { return _irradianceMap; }
-    const Cubemap& PrefilterMap() const { return _prefilterMap; }
-    const ResourceHandle<Image> BRDFLUTMap() const { return _brdfLUT; }
+    ResourceHandle<Image> IrradianceMap() const { return _irradianceMap; }
+    ResourceHandle<Image> PrefilterMap() const { return _prefilterMap; }
+    ResourceHandle<Image> BRDFLUTMap() const { return _brdfLUT; }
 
     NON_MOVABLE(IBLPipeline);
     NON_COPYABLE(IBLPipeline);
@@ -40,11 +40,12 @@ private:
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::DescriptorSet _descriptorSet;
 
-    Cubemap _irradianceMap;
-    Cubemap _prefilterMap;
+    ResourceHandle<Image> _irradianceMap;
+    ResourceHandle<Image> _prefilterMap;
     ResourceHandle<Image> _brdfLUT;
 
-    std::array<vk::ImageView, 6> _irradianceMapViews;
+    vk::UniqueSampler _sampler;
+
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;
 
     void CreateIrradiancePipeline();

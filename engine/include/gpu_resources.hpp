@@ -2,6 +2,11 @@
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
 
+enum class ImageType
+{
+    e2D, e2DArray, eCubeMap
+};
+
 struct ImageCreation
 {
     std::byte* initialData{ nullptr };
@@ -14,7 +19,7 @@ struct ImageCreation
     bool isHDR;
 
     vk::Format format{ vk::Format::eUndefined };
-    vk::ImageType type{ vk::ImageType::e2D };
+    ImageType type{ ImageType::e2D };
 
     std::string name;
 
@@ -24,12 +29,14 @@ struct ImageCreation
     ImageCreation& SetFlags(vk::ImageUsageFlags flags);
     ImageCreation& SetFormat(vk::Format format);
     ImageCreation& SetName(std::string_view name);
+    ImageCreation& SetType(ImageType type);
 };
 
 struct Image
 {
     vk::Image image{};
     std::vector<vk::ImageView> views{};
+    vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     VmaAllocation allocation{};
 
     uint16_t width{ 1 };
@@ -39,9 +46,10 @@ struct Image
     uint8_t mips{ 1 };
     vk::ImageUsageFlags flags{ 0 };
     bool isHDR;
+    ImageType type;
 
     vk::Format format{ vk::Format::eUndefined };
-    vk::ImageType type{vk::ImageType::e2D };
+    vk::ImageType vkType{vk::ImageType::e2D };
 
     std::string name;
 };
