@@ -16,7 +16,9 @@
     {
       "name": "WSL",
       "hidden" : true,
-      "inherits": "default",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "${sourceDir}/scripts/compile.cmake",
       "vendor": {
         "jetbrains.com/clion": {
           "toolchain": "WSL"
