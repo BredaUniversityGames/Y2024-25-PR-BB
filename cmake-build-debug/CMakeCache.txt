@@ -305,6 +305,9 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Compile with Unit Tests
+ENABLE_TESTS:BOOL=OFF
+
 //Have the library compile as C++20
 FASTGLTF_COMPILE_AS_CPP20:BOOL=OFF
 

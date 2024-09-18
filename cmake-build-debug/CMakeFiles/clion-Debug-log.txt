@@ -127,6 +127,6 @@
 -- C:/VulkanSDK/1.3.280.0/Lib/vulkan-1.lib
 -- Could NOT find simdjson (missing: simdjson_DIR)
 -- fastgltf: Found simdjson (Version 3.9.4)
--- Configuring done (1.1s)
+-- Configuring done (1.3s)
 -- Generating done (0.1s)
 -- Build files have been written to: C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug

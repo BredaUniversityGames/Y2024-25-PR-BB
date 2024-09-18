@@ -70,9 +70,11 @@ void user_interface::Update(const InputManager& input)
 
 void UIPipeLine::CreatePipeLine()
 {
+
 	auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert.vert.spv");
 	auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag.frag.spv");
-	
+	m_sampler = util::CreateSampler(m_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
+
 	vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);
 	vk::ShaderModule fragModule = shader::CreateShaderModule(fragShaderCode, m_brain.device);
 
@@ -163,8 +165,15 @@ void UIPipeLine::CreatePipeLine()
 	multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	
 	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_FALSE;
+	colorBlendAttachment.blendEnable = VK_TRUE;
 
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -174,19 +183,18 @@ void UIPipeLine::CreatePipeLine()
 	colorBlending.pAttachments = &colorBlendAttachment;
 
 
-	VkPushConstantRange bufferRange{};
+	vk::PushConstantRange bufferRange{};
 	bufferRange.offset = 0;
 	bufferRange.size = sizeof(glm::mat4);
-	bufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	bufferRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
 	
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0; // Optional
-	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.setLayoutCount = 1; // Optional
+	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout; // Optional
 	pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = &bufferRange; // Optional
 
-	if (vkCreatePipelineLayout(m_brain.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+	if (m_brain.device.createPipelineLayout(&pipelineLayoutInfo, nullptr, &m_pipelineLayout) != vk::Result::eSuccess) {
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
 	
@@ -228,22 +236,66 @@ void UIPipeLine::CreatePipeLine()
 //	vkDestroyShaderModule(m_brain.device, vertModule, nullptr);
 //	vkDestroyShaderModule(m_brain.device, fragModule, nullptr);
 }
-
+std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
 void UIPipeLine::CreateDescriptorSetLayout()
 {
 
+
+	vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
+	samplerLayoutBinding.binding = 0;
+	samplerLayoutBinding.descriptorCount = 1;
+	samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+	samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
+	samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+	vk::DescriptorSetLayoutCreateInfo createInfo{};
+	createInfo.bindingCount = bindings.size();
+	createInfo.pBindings = bindings.data();
+
+	util::VK_ASSERT(m_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &m_descriptorSetLayout),
+					"Failed creating skydome descriptor set layout!");
+	
+	vk::DescriptorSetAllocateInfo allocateInfo{};
+	allocateInfo.descriptorPool = m_brain.descriptorPool;
+	allocateInfo.descriptorSetCount = 1;
+	allocateInfo.pSetLayouts = &m_descriptorSetLayout;
+
+
+	util::VK_ASSERT(m_brain.device.allocateDescriptorSets(&allocateInfo, &m_descriptorSet),
+					"Failed allocating descriptor sets!");
+
+
+	
 }
 
-void UIPipeLine::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,const   HDRTarget& _hdrTarget)
+void UIPipeLine::UpdateTexture(ResourceHandle<Image> image)
+{
+	vk::DescriptorImageInfo imageInfo{};
+	imageInfo.sampler = *m_sampler;
+	imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	imageInfo.imageView = m_brain.ImageResourceManager().Access(image)->views[0];
+
+	vk::WriteDescriptorSet descriptorWrite{};
+	descriptorWrite.dstSet = m_descriptorSet;
+	descriptorWrite.dstBinding = 0;
+	descriptorWrite.dstArrayElement = 0;
+	descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+	descriptorWrite.descriptorCount = 1;
+	descriptorWrite.pImageInfo = &imageInfo;
+
+	m_brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
+}
+
+void UIPipeLine::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,const   ResourceHandle<Image>& _hdrTarget)
 {
  vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _hdrTarget.imageViews;
+    finalColorAttachmentInfo.imageView =  m_brain.ImageResourceManager().Access(_hdrTarget)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
 
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ _hdrTarget.size.x, _hdrTarget.size.y };
+    renderingInfo.renderArea.extent = vk::Extent2D{ m_brain.ImageResourceManager().Access(_hdrTarget)->width, m_brain.ImageResourceManager().Access(_hdrTarget)->height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -255,6 +307,10 @@ void UIPipeLine::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
     commandBuffer.beginRenderingKHR(&renderingInfo, m_brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_uiPipeLine);
+	
+	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout, 0, 1,&m_descriptorSet, 0, nullptr);
+
+	
 	auto matrix = glm::mat4(1.f);
 	matrix = glm::scale(matrix,glm::vec3(0.2));
 	vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &matrix);

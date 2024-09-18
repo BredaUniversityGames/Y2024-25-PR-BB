@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "hdr_target.hpp"
 #include "include.hpp"
 #include "input_manager.hpp"
 class SwapChain;
@@ -19,14 +18,14 @@ struct UI_Element
 	
 	//todo: update to also accept controller input
 	virtual void Evaluate(const InputManager& input) {}
-	virtual void Render() = 0;
+	virtual void Render() {}
 };
 
 
 class Text_Element : UI_Element
 {
 public:
-	Text_Element(const glm::vec2& translation) : UI_Element(translation, ) {}
+	Text_Element(const glm::vec2& translation,const glm::vec2& scale) : UI_Element(translation,scale ) {}
 
 	int GetFontSize() const {return m_fontSize;}
 	void SetFontSize(int new_size){m_fontSize = new_size;}
@@ -84,15 +83,19 @@ public:
 	UIPipeLine(const VulkanBrain& brain, const SwapChain& sc) : m_brain(brain),m_swapChain(sc) {};
 
 	void CreateDescriptorSetLayout();
-	void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const   HDRTarget& _hdrTarget);
+	void UpdateTexture(ResourceHandle<Image> image);
+	void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const   ResourceHandle<Image>& _hdrTarget);
 	NON_COPYABLE(UIPipeLine);;
 	NON_MOVABLE(UIPipeLine)
 	~UIPipeLine();
 
 	VkPipeline m_uiPipeLine;
-	VkPipelineLayout m_pipelineLayout;
+	vk::PipelineLayout  m_pipelineLayout;
+	vk::DescriptorSet m_descriptorSet;
+	vk::DescriptorSetLayout m_descriptorSetLayout;
 	const VulkanBrain& m_brain;
 	const SwapChain& m_swapChain;
+	vk::UniqueSampler m_sampler;
 };
 
 

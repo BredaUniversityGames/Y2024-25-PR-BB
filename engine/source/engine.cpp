@@ -70,9 +70,31 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     SingleTimeCommands commandBufferIBL{ _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
+
+    ImageCreation imageCreation;
+
+
+    int width;
+    int height;
+    int nrChannels;
+    
+    const std::string imagePath = "assets/textures/button.png"; // Thanks C++.
+    stbi_uc* stbiData = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 4);
+    auto* data = reinterpret_cast<std::byte*>(stbiData);
+    auto texture = imageCreation.SetSize(width, height).SetData(data).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+    auto image = _brain.ImageResourceManager().Create(texture);
+    stbi_image_free(stbiData);
+
     
     m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
+   
+
+   m_uiPipeLine->CreateDescriptorSetLayout();
+
+    
     m_uiPipeLine->CreatePipeLine();
+    
     CreateCommandBuffers();
     CreateSyncObjects();
 
@@ -105,7 +127,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     initInfoVulkan.Instance = _brain.instance;
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
     initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
+    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.             graphicsFamily.value();
     initInfoVulkan.DescriptorPool = _brain.descriptorPool;
     initInfoVulkan.MinImageCount = 2;
     initInfoVulkan.ImageCount = _swapChain->GetImageCount();
@@ -126,6 +148,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(false);
 
+    m_uiPipeLine->UpdateTexture(image);
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -349,7 +372,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
     
-  //  m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
+    m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

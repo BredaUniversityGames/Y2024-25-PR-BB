@@ -54,7 +54,7 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/CMakeFiles/cmake.verify_globs")
 endif()
 
-# headers at CMakeLists.txt:15 (file)
+# headers at CMakeLists.txt:14 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/*.hpp")
 set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/application.hpp"
@@ -63,7 +63,8 @@ set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/engine.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/engine_init_info.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/gbuffers.hpp"
-  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/hdr_target.hpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/gpu_resources.hpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/image_resource_manager.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/include.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/input_manager.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/mesh.hpp"
@@ -75,6 +76,7 @@ set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/pipelines/lighting_pipeline.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/pipelines/skydome_pipeline.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/pipelines/tonemapping_pipeline.hpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/resource_manager.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/sdl_app.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/shaders/shader_loader.hpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include/single_time_commands.hpp"
@@ -90,12 +92,14 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/CMakeFiles/cmake.verify_globs")
 endif()
 
-# sources at CMakeLists.txt:14 (file)
+# sources at CMakeLists.txt:13 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/*.cpp")
 set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/application.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/engine.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/gbuffers.cpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/gpu_resources.cpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/image_resource_manager.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/input_manager.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/main.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/mesh.cpp"
@@ -114,15 +118,6 @@ set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_brain.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_helper.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_validation.cpp"
-  )
-if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
-  message("-- GLOB mismatch!")
-  file(TOUCH_NOCREATE "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/CMakeFiles/cmake.verify_globs")
-endif()
-
-# tests at CMakeLists.txt:19 (file)
-file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/tests/*.cpp")
-set(OLD_GLOB
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")

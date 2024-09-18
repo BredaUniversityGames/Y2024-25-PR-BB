@@ -7,9 +7,6 @@
 #include "mesh.hpp"
 #include "include.hpp"
 #include "camera.hpp"
-#include "origin/feature/bindless"
-
-#include "hdr_target.hpp"
 #include "../user_interface.h"
 
 
