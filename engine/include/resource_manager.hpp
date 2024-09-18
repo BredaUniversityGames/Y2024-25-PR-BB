@@ -60,7 +60,7 @@ public:
         if(!IsValid(handle))
             return nullptr;
 
-        return &_resources[index].resource.value();
+        return _resources[index].resource.has_value() ? &_resources[index].resource.value() : nullptr;
     }
 
     virtual void Destroy(ResourceHandle<T> handle)
