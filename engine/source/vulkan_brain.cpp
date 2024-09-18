@@ -227,7 +227,7 @@ std::vector<const char*> VulkanBrain::GetRequiredExtensions(const InitInfo& init
     if(_enableValidationLayers)
         extensions.emplace_back(vk::EXTDebugUtilsExtensionName);
 
-#if LINUX
+#ifdef LINUX
     extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #endif
 
