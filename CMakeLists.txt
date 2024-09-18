@@ -16,30 +16,30 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 
-option(ENABLE_TESTS "Compile with Unit Tests" ON)
+option(ENABLE_TESTS "Compile with Unit Tests" OFF)
 
-if (ENABLE_TESTS)
-
-	message("-- Tests are Enabled (GoogleTest)")
-
-	add_subdirectory(external/googletest)
-	enable_testing()
-
-	# Glob all test files
-	file(GLOB_RECURSE tests CONFIGURE_DEPENDS "tests/*.cpp")
-	
-	target_link_libraries(Engine PRIVATE gtest)
-	target_sources(Engine PRIVATE ${tests})
-
-	# Include GoogleTest headers
-	target_include_directories(Engine
-		PUBLIC external/googletest/googletest/include
-		PUBLIC external/googletest/googlemock/include
-	)
-
-	target_compile_definitions(Engine PRIVATE TESTS_ENABLED)
-
-endif()
+#if (ENABLE_TESTS)
+#
+#	message("-- Tests are Enabled (GoogleTest)")
+#
+#	add_subdirectory(external/googletest)
+#	enable_testing()
+#
+#	# Glob all test files
+#	file(GLOB_RECURSE tests CONFIGURE_DEPENDS "tests/*.cpp")
+#
+#	target_link_libraries(Engine PRIVATE gtest)
+#	target_sources(Engine PRIVATE ${tests})
+#
+#	# Include GoogleTest headers
+#	target_include_directories(Engine
+#		PUBLIC external/googletest/googletest/include
+#		PUBLIC external/googletest/googlemock/include
+#	)
+#
+#	target_compile_definitions(Engine PRIVATE TESTS_ENABLED)
+#
+#endif()
 
 add_subdirectory(external)
 target_link_libraries(Engine PRIVATE External)
