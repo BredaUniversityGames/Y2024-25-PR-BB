@@ -36,6 +36,11 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     ImGui::CreateContext();
     ImPlot::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
     spdlog::info("Starting engine...");
 
     _application = std::move(application);
@@ -123,6 +128,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 void Engine::Run()
 {
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
+    static bool cursorHidden = false;
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
@@ -149,9 +155,13 @@ void Engine::Run()
     constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
     glm::vec3 eulerDelta{};
-    _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-    _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-  
+    _application->SetMouseHidden(cursorHidden);
+    if(cursorHidden)
+    {
+        _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+        _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+    }
+
     glm::vec3 movement_dir{};
     if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
         movement_dir -= FORWARD;
@@ -170,13 +180,15 @@ void Engine::Run()
         movement_dir = glm::normalize(movement_dir);
     }
 
+    if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+        cursorHidden = !cursorHidden;
+
     _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
-    CameraUBO cameraUBO = CalculateCamera(_scene.camera);
-    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
+
 
     util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
                     "Failed waiting on in flight fence!");
@@ -200,7 +212,8 @@ void Engine::Run()
     ImGui_ImplVulkan_NewFrame();
     _application->NewImGuiFrame();
     ImGui::NewFrame();
-
+    CameraUBO cameraUBO = CalculateCamera(_scene.camera);
+    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
     _performanceTracker.Render();
 
     ImGui::Render();
@@ -454,6 +467,25 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
+
+
+    static glm::vec3 lightPos = glm::vec3(8.0f, -10.0f, 8.0f);
+    static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
+    static float orthoSize = 10.0f;
+
+    static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    ImGui::Begin("Light Debug");
+    ImGui::DragFloat3("Light Position", &lightPos.x, 0.1f);
+    ImGui::DragFloat3("Target Position", &targetPos.x, 0.1f);
+    ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f);
+    ImGui::Image(textureID, ImVec2(512   , 512));
+
+    ImGui::End();
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,0.01,100);
+    depthProjectionMatrix[1][1] *= -1;
+    glm::mat4 depthViewMatrix = glm::lookAt(lightPos, targetPos, glm::vec3(0,1,0));
+    ubo.lightVP = depthProjectionMatrix * depthViewMatrix  ;
 
     return ubo;
 }

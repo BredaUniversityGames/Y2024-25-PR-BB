@@ -12,6 +12,9 @@ public:
         D = SDL_SCANCODE_D,
         Space = SDL_SCANCODE_SPACE,
         Escape = SDL_SCANCODE_ESCAPE,
+        F1 = SDL_SCANCODE_F1,
+        F2 = SDL_SCANCODE_F2,
+        H = SDL_SCANCODE_H,
         // Add other keys as needed
     };
 

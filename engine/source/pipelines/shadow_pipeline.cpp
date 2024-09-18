@@ -52,6 +52,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     // Set viewport and scissor for shadow map size
     vk::Viewport viewport{ 0.0f, 0.0f, 1024.0f, 1024.0f, 0.0f, 1.0f };
     vk::Rect2D scissor{ vk::Offset2D{ 0, 0 }, vk::Extent2D{ 1024, 1024 } };
+    //commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
+    //commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
     commandBuffer.setViewport(0, 1, &viewport);
     commandBuffer.setScissor(0, 1, &scissor);
 

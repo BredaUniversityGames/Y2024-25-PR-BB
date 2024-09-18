@@ -19,10 +19,12 @@ struct CameraUBO
     glm::mat4 view;
     glm::mat4 proj;
 
+    glm::mat4 lightVP;
+    glm::vec4 lightData;
     alignas(16)
     glm::vec3 cameraPosition;
+    float _padding;
 
-    glm::vec4 lightData;
 };
 
 struct CameraStructure
