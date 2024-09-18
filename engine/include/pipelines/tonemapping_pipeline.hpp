@@ -1,5 +1,4 @@
 #pragma once
-#include "include.hpp"
 #include "swap_chain.hpp"
 #include "hdr_target.hpp"
 

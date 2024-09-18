@@ -16,6 +16,12 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 
+option(ENABLE_PCH "Compile with precompiled header" ON)
+
+if (ENABLE_PCH)
+    target_precompile_headers(Engine PRIVATE [["include.hpp"]])
+endif ()
+
 option(ENABLE_TESTS "Compile with Unit Tests" OFF)
 
 #if (ENABLE_TESTS)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "include.hpp"
 #include <vulkan/vulkan.hpp>
 #include <magic_enum.hpp>
 #include <string>

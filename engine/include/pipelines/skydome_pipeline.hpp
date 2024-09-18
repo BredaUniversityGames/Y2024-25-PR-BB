@@ -1,6 +1,5 @@
 #pragma once
 
-#include "include.hpp"
 #include "swap_chain.hpp"
 #include "mesh.hpp"
 

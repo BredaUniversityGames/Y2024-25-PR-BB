@@ -1,7 +1,5 @@
 #pragma once
 
-#include "include.hpp"
-
 struct Camera
 {
     glm::vec3 position{};
