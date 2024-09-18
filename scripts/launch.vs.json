@@ -3,11 +3,41 @@
   "defaults": {},
   "configurations": [
     {
-      "type": "default",
+      "type": "cppvsdbg",
+      "name": "Launch (x64)",
       "project": "CMakeLists.txt",
       "projectTarget": "Engine.exe",
-      "name": "Run Project",
       "currentDir": ""
+    },
+
+    {
+      "type": "cppdbg",
+      "name": "Launch (WSL)",
+      "project": "CMakeLists.txt",
+      "projectTarget": "Engine",
+      "program": "${cmake.binaryDir}/Engine",
+      "currentDir": "/home/user/.vs/Y2024-25-PR-BB",
+      "cwd": "/home/user/.vs/Y2024-25-PR-BB",
+
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "externalConsole": false,
+
+      "pipeTransport": {
+        "pipeProgram": "wsl",
+        "pipeArgs": [],
+        "pipeCwd": "",
+        "debuggerPath": "/usr/bin/gdb",
+        "quoteArgs": false
+      },
+
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

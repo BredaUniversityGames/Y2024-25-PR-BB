@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 6,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 30,
@@ -12,9 +12,15 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/W4 /EHs /GR",
+
         "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_C_COMPILER": "cl"
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_FLAGS": "/W4 /EHs /GR",
+
+        "CMAKE_CXX_FLAGS_DEBUG": "/Od /Zi",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /DNDEBUG",
+        "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "/O2 /Zo /DNDEBUG"
+
       }
     },
     {
@@ -23,9 +29,14 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-fexceptions -frtti -Wall",
+
         "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-        "CMAKE_C_COMPILER": "/usr/bin/gcc"
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_FLAGS": "-fexceptions -frtti -Wall",
+
+        "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+        "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-02 -g -DNDEBUG"
       }
     },
     {
