@@ -10,7 +10,8 @@ class ImageResourceManager : public ResourceManager<Image>
 public:
     explicit ImageResourceManager(const VulkanBrain& brain);
     ResourceHandle<Image> Create(const ImageCreation& creation);
-    virtual void Destroy(ResourceHandle<Image> handle) override;
+    ResourceHandle<Image> Create(const Image& image) override { return ResourceManager<Image>::Create(image); }
+    void Destroy(ResourceHandle<Image> handle) override;
 
 private:
     const VulkanBrain& _brain;

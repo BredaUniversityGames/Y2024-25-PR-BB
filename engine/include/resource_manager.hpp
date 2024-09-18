@@ -68,8 +68,6 @@ public:
         uint32_t index = handle.index;
         if(IsValid(handle))
         {
-            const T* resource = Access(handle);
-
             _freeList.emplace_back(index);
             _resources[index].resource = std::nullopt;
         }
