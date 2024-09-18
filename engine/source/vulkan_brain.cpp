@@ -5,7 +5,7 @@
 #include <map>
 #include <set>
 
-VulkanBrain::VulkanBrain(const InitInfo& initInfo)
+VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this)
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic{ instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
@@ -32,6 +32,17 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     vk::PhysicalDeviceProperties properties;
     physicalDevice.getProperties(&properties);
     minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
+
+    _sampler = util::CreateSampler(*this, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
+                                   vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
+
+    CreateBindlessDescriptorSet();
+
+    std::vector<std::byte> data(2 * 2 * 4 * sizeof(std::byte));
+    ImageCreation creation{};
+    creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
+
+    _fallbackImage = _imageResourceManager.Create(creation);
 }
 
 VulkanBrain::~VulkanBrain()
@@ -39,15 +50,45 @@ VulkanBrain::~VulkanBrain()
     if(_enableValidationLayers)
         instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, dldi);
 
-    device.destroy(descriptorPool);
+    _imageResourceManager.Destroy(_fallbackImage);
 
+    device.destroy(descriptorPool);
     device.destroy(commandPool);
+
+    device.destroy(bindlessLayout);
+    device.destroy(bindlessPool);
+
+    _sampler.reset();
 
     vmaDestroyAllocator(vmaAllocator);
 
     instance.destroy(surface);
     device.destroy();
     instance.destroy();
+}
+
+void VulkanBrain::UpdateBindlessSet()
+{
+    vk::DescriptorImageInfo imageInfos[MAX_BINDLESS_RESOURCES];
+    vk::WriteDescriptorSet writes[MAX_BINDLESS_RESOURCES];
+
+    for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
+    {
+        const Image& image = i < _imageResourceManager.Resources().size() ? _imageResourceManager.Resources()[i].resource.value() : *_imageResourceManager.Access(_fallbackImage);
+
+        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        imageInfos[i].imageView = image.views[0]; // TODO: Review later how to determine what view should be bound.
+        imageInfos[i].sampler = *_sampler;
+
+        writes[i].dstSet = bindlessSet;
+        writes[i].dstBinding = BINDLESS_TEXTURES_BINDING;
+        writes[i].dstArrayElement = i;
+        writes[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        writes[i].descriptorCount = 1;
+        writes[i].pImageInfo = &imageInfos[i];
+    }
+
+    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, writes, 0, nullptr);
 }
 
 void VulkanBrain::CreateInstance(const InitInfo& initInfo)
@@ -110,17 +151,19 @@ void VulkanBrain::PickPhysicalDevice()
 
 uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
 {
+    vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
+    vk::PhysicalDeviceFeatures2 deviceFeatures;
+    deviceFeatures.pNext = &indexingFeatures;
     vk::PhysicalDeviceProperties deviceProperties;
-    vk::PhysicalDeviceFeatures deviceFeatures;
     deviceToRate.getProperties(&deviceProperties);
-    deviceToRate.getFeatures(&deviceFeatures);
+    deviceToRate.getFeatures2(&deviceFeatures);
 
     QueueFamilyIndices familyIndices = QueueFamilyIndices::FindQueueFamilies(deviceToRate, surface);
 
     uint32_t score{ 0 };
 
     // Failed if geometry shader is not supported.
-    if(!deviceFeatures.geometryShader)
+    if(!deviceFeatures.features.geometryShader)
         return 0;
 
     // Failed if graphics family queue is not supported.
@@ -129,6 +172,10 @@ uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRa
 
     // Failed if no extensions are supported.
     if(!ExtensionsSupported(deviceToRate))
+        return 0;
+
+    // Check for bindless rendering support.
+    if(!indexingFeatures.descriptorBindingPartiallyBound || !indexingFeatures.runtimeDescriptorArray)
         return 0;
 
     // Check support for swap chain.
@@ -203,8 +250,11 @@ void VulkanBrain::SetupDebugMessenger()
 void VulkanBrain::CreateDevice()
 {
     queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(physicalDevice, surface);
-    vk::PhysicalDeviceFeatures deviceFeatures;
-    physicalDevice.getFeatures(&deviceFeatures);
+
+    vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
+    vk::PhysicalDeviceFeatures2 deviceFeatures;
+    deviceFeatures.pNext = &indexingFeatures;
+    physicalDevice.getFeatures2(&deviceFeatures);
 
     std::vector <vk::DeviceQueueCreateInfo> queueCreateInfos{};
     std::set <uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
@@ -216,11 +266,18 @@ void VulkanBrain::CreateDevice()
     vk::PhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeaturesKhr{};
     dynamicRenderingFeaturesKhr.dynamicRendering = true;
 
+    indexingFeatures.runtimeDescriptorArray = true;
+    indexingFeatures.descriptorBindingPartiallyBound = true;
+
+    deviceFeatures.pNext = &dynamicRenderingFeaturesKhr;
+    dynamicRenderingFeaturesKhr.pNext = &indexingFeatures;
+
+
     vk::DeviceCreateInfo createInfo{};
-    createInfo.pNext = &dynamicRenderingFeaturesKhr;
+    createInfo.pNext = &deviceFeatures;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = nullptr; // Shouldn't be set because we already pass a pnext for DeviceFeatures2.
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
@@ -271,6 +328,56 @@ void VulkanBrain::CreateDescriptorPool()
     createInfo.maxSets = 200;
     createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     util::VK_ASSERT(device.createDescriptorPool(&createInfo, nullptr, &descriptorPool), "Failed creating descriptor pool!");
+}
+
+void VulkanBrain::CreateBindlessDescriptorSet()
+{
+    vk::DescriptorPoolSize poolSizes[] = {
+        { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+        { vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES }
+    };
+
+    vk::DescriptorPoolCreateInfo poolCreateInfo{};
+    poolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
+    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * std::size(poolSizes);
+    poolCreateInfo.poolSizeCount = std::size(poolSizes);
+    poolCreateInfo.pPoolSizes = poolSizes;
+    util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
+
+    vk::DescriptorSetLayoutBinding bindings[2];
+    vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
+    combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
+    combinedImageSampler.binding = BINDLESS_TEXTURES_BINDING;
+
+    vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[1];
+    storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
+    storageImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    storageImageBinding.binding = BINDLESS_TEXTURES_BINDING + 1;
+
+    vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
+    layoutCreateInfo.bindingCount = std::size(bindings);
+    layoutCreateInfo.pBindings = bindings;
+    layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
+
+    vk::DescriptorBindingFlags bindingFlags[2] = {
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
+        vk::DescriptorBindingFlagBits::eUpdateAfterBind
+    };
+
+    vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT extInfo{};
+    extInfo.bindingCount = std::size(bindings);
+    extInfo.pBindingFlags = bindingFlags;
+    layoutCreateInfo.pNext = &extInfo;
+
+    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout), "Failed creating bindless descriptor set layout.");
+
+    vk::DescriptorSetAllocateInfo allocInfo{};
+    allocInfo.descriptorPool = bindlessPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &bindlessLayout;
+
+    util::VK_ASSERT(device.allocateDescriptorSets(&allocInfo, &bindlessSet), "Failed creating bindless descriptor set!");
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)

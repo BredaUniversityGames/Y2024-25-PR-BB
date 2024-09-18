@@ -1,10 +1,9 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
-#include "hdr_target.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_helper.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, const HDRTarget& hdrTarget, const TextureHandle& environmentMap) :
+SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> environmentMap) :
     _brain(brain),
     _sphere(sphere),
     _camera(camera),
@@ -31,14 +30,14 @@ SkydomePipeline::~SkydomePipeline()
 void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
 {
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
-    finalColorAttachmentInfo.imageView = _hdrTarget.imageViews;
+    finalColorAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
     finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ _hdrTarget.size.x, _hdrTarget.size.y };
+    renderingInfo.renderArea.extent = vk::Extent2D{ _brain.ImageResourceManager().Access(_hdrTarget)->width, _brain.ImageResourceManager().Access(_hdrTarget)->height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -175,8 +174,7 @@ void SkydomePipeline::CreatePipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    vk::Format format = _hdrTarget.format;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_hdrTarget)->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -221,7 +219,7 @@ void SkydomePipeline::CreateDescriptorSet()
     vk::DescriptorImageInfo imageInfo{};
     imageInfo.sampler = *_sampler;
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _environmentMap.imageView;
+    imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->views[0];
 
     vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;
