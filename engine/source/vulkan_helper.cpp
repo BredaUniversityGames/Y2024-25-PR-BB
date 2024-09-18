@@ -258,7 +258,7 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
     else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
     {
         barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-        barrier.dstAccessMask = vk::AccessFlags{0  };
+        barrier.dstAccessMask = vk::AccessFlags{ 0 };
 
         sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
