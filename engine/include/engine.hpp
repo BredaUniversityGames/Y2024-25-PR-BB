@@ -80,6 +80,7 @@ private:
     void InitializeHDRTarget();
     void LoadEnvironmentMap();
 
+    user_interface _interface {}  ;
     std::unique_ptr<UIPipeLine> m_uiPipeLine;
     void RecordUICommandbuffers();
 };

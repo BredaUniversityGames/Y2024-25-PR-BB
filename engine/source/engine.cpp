@@ -42,6 +42,12 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2{ initInfo.width, initInfo.height });
 
+    auto button = std::make_unique<Button>();
+    button->Translation = {0.f,0.f};
+    button->Scale = {100.f,100.f};
+    button->OnBeginHoverCallBack = [&](auto&... args) {spdlog::info("Button hovered!");};
+    button->OnMouseDownCallBack = [&](auto&... args) {spdlog::info("Button down!");};
+    _interface.m_elements.emplace_back(std::make_unique<Button>(*button));
     CreateDescriptorSetLayout();
     InitializeCameraUBODescriptors();
     InitializeHDRTarget();
@@ -71,7 +77,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     CreateSyncObjects();
 
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+  //  _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/test.gltf")));
 
     glm::vec3 scale{0.05f};
     glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
@@ -117,7 +124,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _application->GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _application->SetMouseHidden(true);
+    _application->SetMouseHidden(false);
 
     spdlog::info("Successfully initialized engine!");
 }
@@ -139,7 +146,8 @@ void Engine::Run()
 
     int x, y;
     _application->GetInputManager().GetMousePosition(x, y);
-
+    
+    _interface.Update(_application->GetInputManager());
     glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
     _lastMousePos = { x, y };
  
@@ -171,6 +179,8 @@ void Engine::Run()
     {
         movement_dir = glm::normalize(movement_dir);
     }
+
+
 
     _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
@@ -341,7 +351,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
     
-    m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
+  //  m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
 
     util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

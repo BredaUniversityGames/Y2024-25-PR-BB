@@ -272,15 +272,15 @@
 	[
 		{
 			"backtrace" : 14,
+			"id" : "SDL3-static::@325f9cd2ad4d12a63863"
+		},
+		{
+			"backtrace" : 14,
 			"id" : "ImGui::@89556154f30252d09d22"
 		},
 		{
 			"backtrace" : 14,
 			"id" : "spdlog::@e2ce52242414c9d53ee8"
-		},
-		{
-			"backtrace" : 14,
-			"id" : "SDL3-static::@325f9cd2ad4d12a63863"
 		},
 		{
 			"backtrace" : 14,

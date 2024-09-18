@@ -10,14 +10,35 @@
 class SwapChain;
 
 
-
 struct UI_Element
 {
-	glm::vec2 translation {};
-	glm::vec2 scale {};
+	UI_Element() = default;
+	UI_Element(const glm::vec2& translation, const glm::vec2& scale) : Translation(translation), Scale(scale) {}
+	glm::vec2 Translation {};
+	glm::vec2 Scale {};
 	
 	//todo: update to also accept controller input
-	virtual void Evaluate(const InputManager& input) = 0;
+	virtual void Evaluate(const InputManager& input) {}
+	virtual void Render() = 0;
+};
+
+
+class Text_Element : UI_Element
+{
+public:
+	Text_Element(const glm::vec2& translation) : UI_Element(translation, ) {}
+
+	int GetFontSize() const {return m_fontSize;}
+	void SetFontSize(int new_size){m_fontSize = new_size;}
+
+	bool GetTextWrap() const {return m_textWrap;}
+	void SetTextWrap(bool wrap) {m_textWrap = wrap;}
+
+	void Render() override;
+protected:
+	bool m_textWrap = true;
+	int m_fontSize = 10;
+	std::string m_text = "placeholder";
 };
 
 struct Button : UI_Element
@@ -28,6 +49,9 @@ struct Button : UI_Element
 		hovered,
 		pressed
 	};
+
+	Button() = default;
+	Button(const glm::vec2& translation, const glm::vec2& scale) : UI_Element(translation, scale) {}
 	
 	void Evaluate(const InputManager& input) override;
 	std::function<void()> OnBeginHoverCallBack {};
@@ -38,17 +62,9 @@ struct Button : UI_Element
 
 class user_interface {
 public:
-	user_interface(){}
-
-	void Update(const InputManager& input)
-	{
-		for (auto& i : m_elements)
-		{
-			i->Evaluate(input);
-		}
-	}
 	
-private:
+	void Update(const InputManager& input);
+	
 	//todo: add children
 	std::vector<std::unique_ptr<UI_Element>>  m_elements;
 };

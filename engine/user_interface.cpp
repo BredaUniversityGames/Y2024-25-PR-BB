@@ -8,8 +8,10 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 
-void user_interface::Draw()
+
+void Text_Element::Render()
 {
+	
 }
 
 void Button::Evaluate(const InputManager& input)
@@ -19,10 +21,10 @@ void Button::Evaluate(const InputManager& input)
 
 
 	//mouse inside boundary
-	if (mousePos.x > static_cast<int>(translation.x)
-		&& mousePos.x < static_cast<int>(translation.x + scale.x)
-		&& mousePos.y > static_cast<int>(translation.y)
-		&& mousePos.y < static_cast<int>(translation.y + scale.y))
+	if (mousePos.x > static_cast<int>(Translation.x)
+		&& mousePos.x < static_cast<int>(Translation.x + Scale.x)
+		&& mousePos.y > static_cast<int>(Translation.y)
+		&& mousePos.y < static_cast<int>(Translation.y + Scale.y))
 	{
 		switch (state)
 		{
@@ -54,6 +56,16 @@ void Button::Evaluate(const InputManager& input)
 	}
 	else state = ButtonState::normal;
 	
+}
+
+void user_interface::Update(const InputManager& input)
+{	
+	for (auto& i : m_elements)
+	{
+		i->Evaluate(input);
+	}
+
+
 }
 
 void UIPipeLine::CreatePipeLine()
