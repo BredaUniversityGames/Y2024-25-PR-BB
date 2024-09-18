@@ -1,7 +1,6 @@
 #pragma once
 #include "application.hpp"
 #include "class_decorations.hpp"
-#include "SDL3/SDL.h"
 
 class SDLApp : public Application
 {

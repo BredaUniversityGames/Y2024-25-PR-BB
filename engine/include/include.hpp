@@ -22,7 +22,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullability-completeness"
+#pragma clang diagnostic ignored "-Wunused-variable"
+
 #include "vk_mem_alloc.h"
+
+#pragma clang diagnostic pop
 
 #include "class_decorations.hpp"
 #include "vulkan_brain.hpp"

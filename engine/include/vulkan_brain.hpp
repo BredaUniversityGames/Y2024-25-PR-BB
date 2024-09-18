@@ -1,7 +1,6 @@
 #pragma once
 #include "class_decorations.hpp"
 #include "vulkan/vulkan.hpp"
-#include "vk_mem_alloc.h"
 #include "engine_init_info.hpp"
 #include <optional>
 

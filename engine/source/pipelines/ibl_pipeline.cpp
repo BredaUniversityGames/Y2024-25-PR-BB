@@ -156,10 +156,8 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
-    uint32_t size = static_cast<uint32_t>(_brdfLUT.width, _brdfLUT.height);
-
     vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ size, size };
+    renderingInfo.renderArea.extent = vk::Extent2D{_brdfLUT.width, _brdfLUT.height };
     renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
@@ -171,11 +169,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
-    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
+    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(_brdfLUT.width), static_cast<float>(_brdfLUT.height), 0.0f,
                                           1.0f };
     commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(size), static_cast<uint32_t>(size)};
+    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(_brdfLUT.width), static_cast<uint32_t>(_brdfLUT.height)};
     vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
     commandBuffer.setScissor(0, 1, &scissor);
 

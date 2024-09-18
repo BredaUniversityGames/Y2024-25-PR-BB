@@ -58,6 +58,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
         severity = "[ERROR]";
         logLevel = spdlog::level::level_enum::err;
         break;
+    default:
+        break;
     }
 
     if(messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)

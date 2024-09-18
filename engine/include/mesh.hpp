@@ -3,7 +3,6 @@
 #include <array>
 #include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
-#include "vk_mem_alloc.h"
 #include "camera.hpp"
 #include <memory>
 #include <optional>

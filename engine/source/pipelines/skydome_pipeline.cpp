@@ -6,10 +6,10 @@
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, const HDRTarget& hdrTarget, const TextureHandle& environmentMap) :
     _brain(brain),
-    _sphere(sphere),
     _camera(camera),
     _hdrTarget(hdrTarget),
-    _environmentMap(environmentMap)
+    _environmentMap(environmentMap),
+    _sphere(sphere)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
