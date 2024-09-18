@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 22,
@@ -12,6 +12,16 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "toolchainFile": "${sourceDir}/scripts/compile.cmake"
+    },
+    {
+      "name": "WSL",
+      "hidden" : true,
+      "inherits": "default",
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "WSL"
+        }
+      }
     },
     {
       "name": "x64-Debug",
@@ -27,6 +37,11 @@
       "name": "x64-RelWithDebInfo",
       "inherits": "default",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "WSL-Debug",
+      "inherits": "WSL",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
     }
   ]
 }
