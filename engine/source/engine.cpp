@@ -273,8 +273,8 @@ Engine::~Engine()
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
-    _brain.device.destroy(_environmentMap.imageView);
-    vmaDestroyImage(_brain.vmaAllocator, _environmentMap.image, _environmentMap.imageAllocation);
+    _brain.ImageResourceManager().Destroy(_environmentMap);
+    _brain.ImageResourceManager().Destroy(_hdrTarget);
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -295,17 +295,13 @@ Engine::~Engine()
         }
         for(auto& texture : model->textures)
         {
-            _brain.device.destroy(texture->imageView);
-            vmaDestroyImage(_brain.vmaAllocator, texture->image, texture->imageAllocation);
+            _brain.ImageResourceManager().Destroy(texture);
         }
         for(auto& material : model->materials)
         {
             vmaDestroyBuffer(_brain.vmaAllocator, material->materialUniformBuffer, material->materialUniformAllocation);
         }
     }
-
-    _brain.device.destroy(_hdrTarget.imageViews);
-    vmaDestroyImage(_brain.vmaAllocator, _hdrTarget.images, _hdrTarget.allocations);
 
     _brain.device.destroy(_cameraStructure.descriptorSetLayout);
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -332,11 +328,13 @@ void Engine::CreateCommandBuffers()
 
 void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_t swapChainImageIndex)
 {
+    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
+
     vk::CommandBufferBeginInfo commandBufferBeginInfo{};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
                                 _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
                                 DEFERRED_ATTACHMENT_COUNT);
@@ -353,7 +351,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     
   //  m_uiPipeLine->RecordCommands(commandBuffer, _currentFrame, _hdrTarget );
 
-    util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
@@ -474,45 +472,32 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 
 void Engine::InitializeHDRTarget()
 {
-    _hdrTarget.format = vk::Format::eR32G32B32A32Sfloat;
-    _hdrTarget.size = _swapChain->GetImageSize();
+    auto size = _swapChain->GetImageSize();
 
-    util::CreateImage(_brain.vmaAllocator, _hdrTarget.size.x, _hdrTarget.size.y, _hdrTarget.format,
-                      vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _hdrTarget.images, _hdrTarget.allocations, "HDR Target", false, VMA_MEMORY_USAGE_GPU_ONLY);
-    util::NameObject(_hdrTarget.images, "[IMAGE] HDR Target", _brain.device, _brain.dldi);
+    ImageCreation hdrCreation{};
+    hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget.imageViews = util::CreateImageView(_brain.device, _hdrTarget.images, _hdrTarget.format, vk::ImageAspectFlagBits::eColor);
-    util::NameObject(_hdrTarget.imageViews, "HDR Target View", _brain.device, _brain.dldi);
-
-    vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(cb, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::EndSingleTimeCommands(_brain,cb);
+    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
 }
 
 void Engine::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* data = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
+    float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
 
-    if(data == nullptr)
+    if(stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");
 
-    Texture texture{};
-    texture.width = width;
-    texture.height = height;
-    texture.numChannels = 4;
-    texture.isHDR = true;
-    texture.data.resize(width * height * texture.numChannels * sizeof(float));
-    std::memcpy(texture.data.data(), data, texture.data.size());
+    std::vector<std::byte> data(width * height * 4 * sizeof(float));
+    std::memcpy(data.data(), stbiData, data.size());
 
-    stbi_image_free(data);
+    stbi_image_free(stbiData);
 
-    SingleTimeCommands commandBuffer{ _brain };
-    commandBuffer.CreateTextureImage(texture, _environmentMap, false);
-    commandBuffer.Submit();
+    ImageCreation envMapCreation{};
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
+    envMapCreation.isHDR = true;
 
-    util::NameObject(_environmentMap.image, "Environment HDRI", _brain.device, _brain.dldi);
+    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
 }
 
 void Engine::RecordUICommandbuffers(){

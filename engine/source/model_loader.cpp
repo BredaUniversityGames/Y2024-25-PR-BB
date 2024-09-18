@@ -15,17 +15,13 @@ ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout mater
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
                                    vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
-    Texture texture;
-    texture.width = 2;
-    texture.height = 2;
-    texture.numChannels = 4;
-    texture.data = std::vector<std::byte>(texture.width * texture.height * texture.numChannels * sizeof(float));
-    std::array<std::shared_ptr<TextureHandle>, 5> textures;
-    textures[0] = std::make_shared<TextureHandle>();
+    std::array<ResourceHandle<Image>, 5> textures{};
 
-    SingleTimeCommands commandBuffer{ _brain };
-    commandBuffer.CreateTextureImage(texture, *textures[0], false);
-    commandBuffer.Submit();
+    auto data = std::vector<std::byte>( 2 * 2 * sizeof(std::byte) * 4);
+    ImageCreation defaultImageCreation{};
+    defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+    textures[0] = _brain.ImageResourceManager().Create(defaultImageCreation);
 
     std::fill(textures.begin() + 1, textures.end(), textures[0]);
 
@@ -37,8 +33,7 @@ ModelLoader::~ModelLoader()
 {
     vmaDestroyBuffer(_brain.vmaAllocator, _defaultMaterial->materialUniformBuffer, _defaultMaterial->materialUniformAllocation);
 
-    vmaDestroyImage(_brain.vmaAllocator, _defaultMaterial->textures[0]->image, _defaultMaterial->textures[0]->imageAllocation);
-    _brain.device.destroy(_defaultMaterial->textures[0]->imageView);
+    _brain.ImageResourceManager().Destroy(_defaultMaterial->textures[0]);
 }
 
 ModelHandle ModelLoader::Load(std::string_view path)
@@ -60,14 +55,15 @@ ModelHandle ModelLoader::Load(std::string_view path)
         spdlog::warn("GLTF contains more than one scene, but we only load one scene!");
 
     std::vector<Mesh> meshes;
-    std::vector<Texture> textures;
+    std::vector<ImageCreation> textures;
+    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
     std::vector<Material> materials;
 
     for(auto& mesh : gltf.meshes)
         meshes.emplace_back(ProcessMesh(mesh, gltf));
 
     for(auto& image : gltf.images)
-        textures.emplace_back(ProcessImage(image, gltf));
+        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()]));
 
     for(auto& material : gltf.materials)
         materials.emplace_back(ProcessMaterial(material, gltf));
@@ -177,9 +173,9 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
     return primitive;
 }
 
-Texture ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf)
+ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data)
 {
-    Texture texture{};
+    ImageCreation imageCreation{};
 
     std::visit(fastgltf::visitor {
             [](auto& arg) {},
@@ -189,28 +185,26 @@ Texture ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgl
                 int32_t width, height, nrChannels;
 
                 const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
-                stbi_uc* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
-                if(!data) spdlog::error("Failed loading data from STBI at path: {}", path);
+                stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+                if(!stbiData) spdlog::error("Failed loading data from STBI at path: {}", path);
 
-                texture.data = std::vector<std::byte>(width * height * 4);
-                std::memcpy(texture.data.data(), reinterpret_cast<std::byte*>(data), texture.data.size());
-                texture.width = width;
-                texture.height = height;
-                texture.numChannels = 4;
+                data = std::vector<std::byte>(width * height * 4);
+                std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                stbi_image_free(data);
+                imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                stbi_image_free(stbiData);
             },
             [&](const fastgltf::sources::Array& vector) {
                 int32_t width, height, nrChannels;
-                stbi_uc* data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()), static_cast<int32_t>(vector.bytes.size()), &width, &height, &nrChannels, 4);
+                stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()), static_cast<int32_t>(vector.bytes.size()), &width, &height, &nrChannels, 4);
 
-                texture.data = std::vector<std::byte>(width * height * 4);
-                std::memcpy(texture.data.data(), reinterpret_cast<std::byte*>(data), texture.data.size());
-                texture.width = width;
-                texture.height = height;
-                texture.numChannels = 4;
+                data = std::vector<std::byte>(width * height * 4);
+                std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                stbi_image_free(data);
+                imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                stbi_image_free(stbiData);
             },
             [&](const fastgltf::sources::BufferView& view) {
                 auto& bufferView = gltf.bufferViews[view.bufferViewIndex];
@@ -222,22 +216,21 @@ Texture ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgl
                         [](auto& arg) {},
                         [&](const fastgltf::sources::Array& vector) {
                             int32_t width, height, nrChannels;
-                            stbi_uc* data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
+                            stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
                                                                         static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels, 4);
 
-                            texture.data = std::vector<std::byte>(width * height * 4);
-                            std::memcpy(texture.data.data(), reinterpret_cast<std::byte*>(data), texture.data.size());
-                            texture.width = width;
-                            texture.height = height;
-                            texture.numChannels = 4;
+                            data = std::vector<std::byte>(width * height * 4);
+                            std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                            stbi_image_free(data);
+                            imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                            stbi_image_free(stbiData);
                         }
                 }, buffer.data);
             },
     }, gltfImage.data);
 
-    return texture;
+    return imageCreation;
 }
 
 Material ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf)
@@ -361,7 +354,7 @@ glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2
     return glm::vec4(tangent.x, tangent.y, tangent.z, w);
 }
 
-ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<Texture>& textures, const std::vector<Material>& materials, const fastgltf::Asset& gltf)
+ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures, const std::vector<Material>& materials, const fastgltf::Asset& gltf)
 {
     SingleTimeCommands commandBuffer{ _brain };
 
@@ -370,25 +363,18 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
     // Load textures
     for(const auto& texture : textures)
     {
-        TextureHandle textureHandle{};
-        textureHandle.format = texture.GetFormat();
-        textureHandle.width = texture.width;
-        textureHandle.height = texture.height;
-
-        commandBuffer.CreateTextureImage(texture, textureHandle, true);
-
-        modelHandle.textures.emplace_back(std::make_shared<TextureHandle>(textureHandle));
+        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(texture));
     }
 
     // Load materials
     for(const auto& material : materials)
     {
-        std::array<std::shared_ptr<TextureHandle>, 5> textures;
-        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()] : nullptr;
-        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()] : nullptr;
-        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()] : nullptr;
-        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()] : nullptr;
-        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()] : nullptr;
+        std::array<ResourceHandle<Image>, 5> textures;
+        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()] : ResourceHandle<Image>::Invalid();
 
         MaterialHandle::MaterialInfo info;
         info.useAlbedoMap = material.albedoIndex.has_value();
