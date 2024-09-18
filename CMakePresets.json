@@ -25,6 +25,8 @@
         }
       }
     },
+
+
     {
       "name": "x64-Debug",
       "inherits": "default",
@@ -44,6 +46,16 @@
       "name": "WSL-Debug",
       "inherits": "WSL",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "WSL-Release",
+      "inherits": "WSL",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "WSL-RelWithDebInfo",
+      "inherits": "WSL",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
     }
   ]
 }
