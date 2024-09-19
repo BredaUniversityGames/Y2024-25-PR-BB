@@ -1,7 +1,4 @@
 #include "vulkan_validation.hpp"
-#include <string>
-#include <iostream>
-#include "spdlog/spdlog.h"
 
 void util::PopulateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo)
 {
@@ -57,6 +54,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
         severity = "[ERROR]";
         logLevel = spdlog::level::level_enum::err;
+        break;
+    default:
         break;
     }
 

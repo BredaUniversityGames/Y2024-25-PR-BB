@@ -1,11 +1,4 @@
 #include "performance_tracker.hpp"
-#include "imgui.h"
-#include "implot.h"
-#include <algorithm>
-#include <iostream>
-#include <string>
-
-#include "tracy/Tracy.hpp"
 
 PerformanceTracker::PerformanceTracker()
 {

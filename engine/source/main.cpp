@@ -1,6 +1,5 @@
 #include "engine.hpp"
 #include "sdl_app.hpp"
-#include <memory>
 #include <filesystem>
 
 #if defined(TESTS_ENABLED)

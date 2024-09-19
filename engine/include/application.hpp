@@ -1,10 +1,4 @@
 #pragma once
-#include <cstdint>
-#include <string_view>
-#include <functional>
-#include <memory>
-#include <glm/glm.hpp>
-#include "class_decorations.hpp"
 #include "engine_init_info.hpp"
 #include "input_manager.hpp"
 

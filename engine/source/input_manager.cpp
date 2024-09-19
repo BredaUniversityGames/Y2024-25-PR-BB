@@ -1,5 +1,4 @@
 #include "input_manager.hpp"
-#include <algorithm>
 
 InputManager::InputManager()
 {
