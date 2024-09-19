@@ -9,8 +9,8 @@ void util::VK_ASSERT(vk::Result result, std::string_view message)
     completeMessage = "[] ";
     auto resultStr = magic_enum::enum_name(result);
 
-    completeMessage.insert(0, resultStr);
-    completeMessage.insert(completeMessage.size() - 1, message);
+    completeMessage.insert(1, resultStr);
+    completeMessage.insert(completeMessage.size(), message);
 
     throw std::runtime_error(completeMessage.c_str());
 }
