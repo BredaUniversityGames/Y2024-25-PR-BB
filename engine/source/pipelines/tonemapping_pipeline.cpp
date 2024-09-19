@@ -51,7 +51,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
 
-    // TODO: Place more accordingly later.
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     commandBuffer.endRenderingKHR(_brain.dldi);

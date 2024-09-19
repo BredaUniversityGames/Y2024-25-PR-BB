@@ -257,6 +257,9 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
     }
     else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
     {
+        barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+        barrier.dstAccessMask = vk::AccessFlags{ 0 };
+
         sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
     }
@@ -296,9 +299,8 @@ void util::CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer,
 
 void util::BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi)
 {
-#if defined(NDEBUG)
-    return;
-#endif
+    if(!ENABLE_VALIDATION_LAYERS)
+        return;
     vk::DebugUtilsLabelEXT labelExt{};
     memcpy(labelExt.color.data(), &color.r, sizeof(glm::vec3));
     labelExt.color[3] = 1.0f;
@@ -309,17 +311,15 @@ void util::BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, 
 
 void util::EndLabel(vk::Queue queue, const vk::DispatchLoaderDynamic dldi)
 {
-#if defined(NDEBUG)
-    return;
-#endif
+    if(!ENABLE_VALIDATION_LAYERS)
+        return;
     queue.endDebugUtilsLabelEXT(dldi);
 }
 
 void util::BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi)
 {
-#if defined(NDEBUG)
-    return;
-#endif
+    if(!ENABLE_VALIDATION_LAYERS)
+        return;
     vk::DebugUtilsLabelEXT labelExt{};
     memcpy(labelExt.color.data(), &color.r, sizeof(glm::vec3));
     labelExt.color[3] = 1.0f;
@@ -330,9 +330,8 @@ void util::BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, g
 
 void util::EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDynamic dldi)
 {
-#if defined(NDEBUG)
-    return;
-#endif
+    if(!ENABLE_VALIDATION_LAYERS)
+        return;
     commandBuffer.endDebugUtilsLabelEXT(dldi);
 }
 

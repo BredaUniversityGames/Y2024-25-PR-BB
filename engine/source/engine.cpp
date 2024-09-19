@@ -15,6 +15,7 @@
 #include "vk_mem_alloc.h"
 
 #pragma clang diagnostic pop
+#include "tracy/Tracy.hpp"
 
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
@@ -125,6 +126,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
+    ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
@@ -138,64 +140,77 @@ void Engine::Run()
         return;
     }
 
-    int x, y;
-    _application->GetInputManager().GetMousePosition(x, y);
-
-    glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-    _lastMousePos = { x, y };
- 
-    constexpr float MOUSE_SENSITIVITY = 0.003f;
-    constexpr float CAM_SPEED = 0.003f;
-
-    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
-    constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-    //constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
-
-    _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-    _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-  
-    glm::vec3 movement_dir{};
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-        movement_dir -= FORWARD;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-        movement_dir += FORWARD;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-        movement_dir += RIGHT;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-        movement_dir -= RIGHT;
-
-    if (glm::length(movement_dir) != 0.0f)
     {
-        movement_dir = glm::normalize(movement_dir);
-    }
+        ZoneNamedN(zone, "Update Camera", true);
+        int x, y;
+        _application->GetInputManager().GetMousePosition(x, y);
 
-    _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+        glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
+        _lastMousePos = { x, y };
+ 
+        constexpr float MOUSE_SENSITIVITY = 0.003f;
+        constexpr float CAM_SPEED = 0.003f;
+
+        constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
+        constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+        constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+
+        glm::vec3 eulerDelta{};
+        _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+        _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+  
+        glm::vec3 movement_dir{};
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+            movement_dir -= FORWARD;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+            movement_dir += FORWARD;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+            movement_dir += RIGHT;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+            movement_dir -= RIGHT;
+
+        if (glm::length(movement_dir) != 0.0f)
+        {
+            movement_dir = glm::normalize(movement_dir);
+        }
+
+        _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+    }
 
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
     CameraUBO cameraUBO = CalculateCamera(_scene.camera);
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
-
-    util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
-                    "Failed waiting on in flight fence!");
-
-    uint32_t imageIndex;
-    vk::Result result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
-                                                    _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
-
-    if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
+    
     {
-        _swapChain->Resize(_application->DisplaySize());
-        _gBuffers->Resize(_application->DisplaySize());
-        _lightingPipeline->UpdateGBufferViews();
+        ZoneNamedN(zone, "Wait On Fence", true);
+        util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
+                    "Failed waiting on in flight fence!");
+    }
 
-        return;
-    } else
-        util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
+    uint32_t imageIndex{};
+    vk::Result result{};
+
+    {
+        ZoneNamedN(zone, "Acquire Next Image", true);
+
+        result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
+                                                        _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
+
+        if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
+        {
+            _swapChain->Resize(_application->DisplaySize());
+            _gBuffers->Resize(_application->DisplaySize());
+            _lightingPipeline->UpdateGBufferViews();
+
+            return;
+        } else
+            util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
+    }
 
     util::VK_ASSERT(_brain.device.resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
@@ -204,8 +219,11 @@ void Engine::Run()
     ImGui::NewFrame();
 
     _performanceTracker.Render();
-
-    ImGui::Render();
+    
+    {
+        ZoneNamedN(zone, "ImGui Render", true);
+        ImGui::Render();
+    }
 
     _commandBuffers[_currentFrame].reset();
 
@@ -223,8 +241,11 @@ void Engine::Run()
     vk::Semaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
-
-    util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+    
+    {
+        ZoneNamedN(zone, "Submit Commands", true);
+        util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+    }
 
     vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = 1;
@@ -234,10 +255,11 @@ void Engine::Run()
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapchains;
     presentInfo.pImageIndices = &imageIndex;
-
-    result = _brain.presentQueue.presentKHR(&presentInfo);
-
-    _brain.device.waitIdle();
+    
+    {
+        ZoneNamedN(zone, "Present Image", true);
+        result = _brain.presentQueue.presentKHR(&presentInfo);
+    }
 
     if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
     {
@@ -257,6 +279,8 @@ void Engine::Run()
 
 Engine::~Engine()
 {
+    _brain.device.waitIdle();
+
     ImGui_ImplVulkan_Shutdown();
     _application->ShutdownImGui();
 
@@ -318,6 +342,7 @@ void Engine::CreateCommandBuffers()
 
 void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_t swapChainImageIndex)
 {
+    ZoneScoped;
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo{};
