@@ -35,7 +35,7 @@ if (ENABLE_PCH)
     target_precompile_headers(Engine PRIVATE [["pch.hpp"]])
 endif ()
 
-option(ENABLE_TESTS "Compile with Unit Tests" OFF)
+option(ENABLE_TESTS "Compile with Unit Tests" ON)
 
 if (ENABLE_TESTS)
 	message("-- Tests are Enabled (GoogleTest)")
