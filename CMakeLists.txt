@@ -7,6 +7,17 @@ set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Check for build type and define macros
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG_BUILD)
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(RELEASE_BUILD)
+elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_definitions(RELWITHDEBINFO_BUILD)
+elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    add_compile_definitions(MINSIZEREL_BUILD)
+endif()
+
 ### MAIN EXECUTABLE ###
 
 # SOURCE FILES

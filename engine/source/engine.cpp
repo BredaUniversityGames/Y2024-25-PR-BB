@@ -256,10 +256,6 @@ void Engine::Run()
         ZoneNamedN(zone, "Present Image", true);
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
-    {
-        ZoneNamedN(zone, "Wait Idle", true);
-        _brain.device.waitIdle();
-    }
 
     if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
     {
@@ -279,6 +275,8 @@ void Engine::Run()
 
 Engine::~Engine()
 {
+    _brain.device.waitIdle();
+
     ImGui_ImplVulkan_Shutdown();
     _application->ShutdownImGui();
 
