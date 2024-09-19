@@ -76,13 +76,13 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale{0.05f};
+    glm::vec3 scale{10.0f};
     glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
     glm::vec3 translate{-0.275f, 0.06f, -0.025f};
     glm::mat4 transform = glm::translate(glm::mat4{1.0f}, translate) * rotation * glm::scale(glm::mat4{1.0f}, scale);
 
-    _scene.gameObjects.emplace_back(transform, _scene.models[0]);
-    _scene.gameObjects.emplace_back(glm::mat4{1.0f}, _scene.models[1]);
+    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
+    _scene.gameObjects.emplace_back(transform, _scene.models[1]);
 
     vk::Format format = _swapChain->GetFormat();
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
@@ -342,6 +342,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
                                 _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
                                 DEFERRED_ATTACHMENT_COUNT);
 
+    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
     _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
@@ -349,9 +350,14 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
                                 _gBuffers->GBufferFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
                                 DEFERRED_ATTACHMENT_COUNT);
+    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1,0,1,vk::ImageAspectFlagBits::eDepth);
+
+
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+
+    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
 
     util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
@@ -469,24 +475,42 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ubo.cameraPosition = camera.position;
 
 
-    static glm::vec3 lightPos = glm::vec3(8.0f, -10.0f, 8.0f);
+    //static glm::vec3 lightPos = glm::vec3(2.4f, 2.0f, 0.0f);
     static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    static float orthoSize = 10.0f;
+    static glm::vec3 lightDir = glm::vec3(0.5f, 0.5f, 0.5f);
+    static float sceneDistance = 10.0f;
+    static float orthoSize = 1.0f;
+    static float farPlane = 4.0f;
+    static float nearPlane = 0.1f;
+    glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
+
+    static glm::mat4 biasMatrix(
+0.5, 0.0, 0.0, 0.0,
+0.0, 0.5, 0.0, 0.0,
+0.0, 0.0, 0.5, 0.0,
+0.5, 0.5, 0.5, 1.0
+);
 
     static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     ImGui::Begin("Light Debug");
-    ImGui::DragFloat3("Light Position", &lightPos.x, 0.1f);
+    ImGui::Text("%f %f %f", camera.position.x, camera.position.y, camera.position.z);
+    ImGui::DragFloat3("Light dir", &lightDir.x, 0.1f);
+    ImGui::DragFloat("scene distance", &sceneDistance, 0.1f);
     ImGui::DragFloat3("Target Position", &targetPos.x, 0.1f);
     ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f);
+    ImGui::DragFloat("Far Plane", &farPlane, 0.1f);
+    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
     ImGui::Image(textureID, ImVec2(512   , 512));
 
     ImGui::End();
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,0.01,100);
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);
     depthProjectionMatrix[1][1] *= -1;
-    glm::mat4 depthViewMatrix = glm::lookAt(lightPos, targetPos, glm::vec3(0,1,0));
-    ubo.lightVP = depthProjectionMatrix * depthViewMatrix  ;
+    //glm::mat4 depthViewMatrix = glm::lookAt(lightPos, targetPos, glm::vec3(0,1,0));
+    ubo.lightVP = depthProjectionMatrix * lightView  ;
 
+    //ubo.lightVP = biasMatrix * ubo.lightVP;
+    ubo.depthBiasMVP = biasMatrix * ubo.lightVP;
     return ubo;
 }
 

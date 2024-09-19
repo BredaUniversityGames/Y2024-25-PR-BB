@@ -175,7 +175,7 @@ void LightingPipeline::CreatePipeline()
 
 void LightingPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, DEFERRED_ATTACHMENT_COUNT + 4> bindings{};
+    std::array<vk::DescriptorSetLayoutBinding, DEFERRED_ATTACHMENT_COUNT + 5> bindings{};
 
     vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
     samplerLayoutBinding.binding = 0;
@@ -213,6 +213,14 @@ void LightingPipeline::CreateDescriptorSetLayout()
     brdfLUTBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     brdfLUTBinding.pImmutableSamplers = nullptr;
 
+    vk::DescriptorSetLayoutBinding& shadowmapBinding{bindings[8]};
+    shadowmapBinding.binding = 8;
+    shadowmapBinding.descriptorCount = 1;
+    shadowmapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    shadowmapBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    shadowmapBinding.pImmutableSamplers = nullptr;
+
+
     vk::DescriptorSetLayoutCreateInfo createInfo{};
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
@@ -246,7 +254,7 @@ void LightingPipeline::UpdateGBufferViews()
         imageInfos[i].imageView = _gBuffers.GBufferView(i);
     }
 
-    std::array<vk::WriteDescriptorSet, DEFERRED_ATTACHMENT_COUNT + 4> descriptorWrites{};
+    std::array<vk::WriteDescriptorSet, DEFERRED_ATTACHMENT_COUNT + 5> descriptorWrites{};
     descriptorWrites[0].dstSet = _descriptorSet;
     descriptorWrites[0].dstBinding = 0;
     descriptorWrites[0].dstArrayElement = 0;
@@ -277,6 +285,10 @@ void LightingPipeline::UpdateGBufferViews()
     brdfLUTMapInfo.imageView = _brdfLUT.imageView;
     brdfLUTMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     brdfLUTMapInfo.sampler = *_prefilterMap.sampler;
+    vk::DescriptorImageInfo _shadowMapInfo;
+    _shadowMapInfo.imageView = _gBuffers.ShadowImageView();
+    _shadowMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    _shadowMapInfo.sampler = *_sampler;
 
     descriptorWrites[5].dstSet = _descriptorSet;
     descriptorWrites[5].dstBinding = 5;
@@ -296,6 +308,14 @@ void LightingPipeline::UpdateGBufferViews()
     descriptorWrites[7].descriptorType = vk::DescriptorType::eCombinedImageSampler;
     descriptorWrites[7].descriptorCount = 1;
     descriptorWrites[7].pImageInfo = &brdfLUTMapInfo;
+
+    //for shadowmap
+    descriptorWrites[8].dstSet = _descriptorSet;
+    descriptorWrites[8].dstBinding = 8;
+    descriptorWrites[8].dstArrayElement = 0;
+    descriptorWrites[8].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    descriptorWrites[8].descriptorCount = 1;
+    descriptorWrites[8].pImageInfo = &_shadowMapInfo;
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

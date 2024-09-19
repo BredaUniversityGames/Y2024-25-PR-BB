@@ -8,6 +8,7 @@ layout(set = 0, binding = 4) uniform texture2D gBufferPosition;   // RGB: Positi
 layout(set = 0, binding = 5) uniform samplerCube irradianceMap;
 layout(set = 0, binding = 6) uniform samplerCube prefilterMap;
 layout(set = 0, binding = 7) uniform sampler2D brdfLUT;
+layout(set = 0, binding = 8) uniform sampler2D shadowMap;
 
 layout(set = 1, binding = 0) uniform CameraUBO
 {
@@ -15,6 +16,7 @@ layout(set = 1, binding = 0) uniform CameraUBO
     mat4 view;
     mat4 proj;
     mat4 lightVP;
+    mat4 depthBiasMVP;
     vec4 lightData;
     vec3 cameraPosition;
     float _padding;
@@ -98,7 +100,16 @@ void main()
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
-    outColor = vec4(Lo + ambient + emissive, 1.0);
+    vec4 ShadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
+    vec4 TestCoord = cameraUbo.lightVP * vec4(position, 1.0);
+    float visibility = 1.0;
+    float textureResult = texture( shadowMap, ShadowCoord.xy ).r;
+    if ( textureResult  <  TestCoord.z - 0.005){
+    visibility = 0.1;
+}
+    outColor = vec4((Lo + ambient + emissive) * visibility, 1.0);
+    //outColor = vec4((visibility.r),0.0,0.0,1.0);
+
 }
 
 

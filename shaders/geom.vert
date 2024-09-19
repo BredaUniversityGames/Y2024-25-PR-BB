@@ -11,6 +11,7 @@ layout(set = 1, binding = 0) uniform CameraUBO
     mat4 view;
     mat4 proj;
     mat4 lightVP;
+    mat4 depthBiasMVP;
     vec4 lightData;
     vec3 cameraPosition;
     float _padding;
