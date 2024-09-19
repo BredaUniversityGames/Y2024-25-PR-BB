@@ -42,7 +42,7 @@ private:
     ResourceHandle<Image> _prefilterMap;
     ResourceHandle<Image> _brdfLUT;
 
-    vk::UniqueSampler _sampler;
+    vk::Sampler _sampler;
 
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;
 

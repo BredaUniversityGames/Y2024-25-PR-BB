@@ -107,6 +107,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(true);
 
+    _brain.UpdateBindlessSet();
+
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -190,7 +192,6 @@ void Engine::Run()
         {
             _swapChain->Resize(_application->DisplaySize());
             _gBuffers->Resize(_application->DisplaySize());
-            _lightingPipeline->UpdateGBufferViews();
 
             return;
         } else
@@ -211,8 +212,6 @@ void Engine::Run()
     }
 
     _commandBuffers[_currentFrame].reset();
-
-    _brain.UpdateBindlessSet();
 
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex);
 
@@ -252,7 +251,6 @@ void Engine::Run()
     {
         _swapChain->Resize(_application->DisplaySize());
         _gBuffers->Resize(_application->DisplaySize());
-        _lightingPipeline->UpdateGBufferViews();
     }
     else
     {

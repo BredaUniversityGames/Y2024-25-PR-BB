@@ -8,7 +8,7 @@ IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environ
     _brain(brain),
     _environmentMap(environmentMap)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0);
+    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0).release();
 
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
@@ -29,6 +29,8 @@ IBLPipeline::~IBLPipeline()
     _brain.ImageResourceManager().Destroy(_irradianceMap);
     _brain.ImageResourceManager().Destroy(_brdfLUT);
     _brain.ImageResourceManager().Destroy(_prefilterMap);
+
+    _brain.device.destroy(_sampler);
 
     _brain.device.destroy(_prefilterPipeline);
     _brain.device.destroy(_prefilterPipelineLayout);
@@ -587,7 +589,7 @@ void IBLPipeline::CreateDescriptorSet()
                     "Failed allocating descriptor sets!");
 
     vk::DescriptorImageInfo imageInfo{};
-    imageInfo.sampler = _sampler.get();
+    imageInfo.sampler = _sampler;
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->view;
 
@@ -623,8 +625,9 @@ void IBLPipeline::CreatePrefilterCubemap()
         .SetType(ImageType::eCubeMap)
         .SetSize(128, 128)
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
-        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-    creation.mips = fmin(floor(log2(creation.width)), 3.0);
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled)
+        .SetSampler(_sampler)
+        .SetMips(fmin(floor(log2(creation.width)), 3.0));
 
     _prefilterMap = _brain.ImageResourceManager().Create(creation);
 

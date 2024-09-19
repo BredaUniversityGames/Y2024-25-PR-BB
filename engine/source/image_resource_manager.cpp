@@ -22,6 +22,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     imageResource.mips = std::min(creation.mips, static_cast<uint8_t>(floor(log2(std::max(imageResource.width, imageResource.height))) + 1));
     imageResource.name = creation.name;
     imageResource.isHDR = creation.isHDR;
+    imageResource.sampler = creation.sampler;
 
     vk::ImageCreateInfo imageCreateInfo{};
     imageCreateInfo.imageType = ImageTypeConversion(creation.type);

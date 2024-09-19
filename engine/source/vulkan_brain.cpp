@@ -88,9 +88,12 @@ void VulkanBrain::UpdateBindlessSet() const
         if(image->flags & vk::ImageUsageFlagBits::eStorage)
             dstBinding = BindlessBinding::eStorage;
 
+        if(image->type == ImageType::eCubeMap)
+            dstBinding = BindlessBinding::eCubemap;
+
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
-        _bindlessImageInfos[i].sampler = *_sampler;
+        _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
 
         _bindlessWrites[i].dstSet = bindlessSet;
         _bindlessWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
@@ -346,10 +349,11 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 3> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
         vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize{ vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES }
+        vk::DescriptorPoolSize{ vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES },
+        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
     };
 
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
@@ -359,7 +363,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings;
+    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
@@ -376,6 +380,13 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
     storageImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     storageImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorage);
+    storageImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
+    vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[3];
+    cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
+    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
     layoutCreateInfo.bindingCount = bindings.size();

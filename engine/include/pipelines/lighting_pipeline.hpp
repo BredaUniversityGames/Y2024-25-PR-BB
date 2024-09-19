@@ -23,11 +23,13 @@ private:
         uint32_t normalRIndex;
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
+
+        uint32_t irradianceIndex;
+        uint32_t prefilterIndex;
+        uint32_t brdfLUTIndex;
     } _pushConstants;
 
     void CreatePipeline();
-    void CreateDescriptorSetLayout();
-    void CreateDescriptorSets();
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
@@ -37,8 +39,6 @@ private:
     const ResourceHandle<Image> _prefilterMap;
     const ResourceHandle<Image> _brdfLUT;
 
-    vk::DescriptorSetLayout _descriptorSetLayout;
-    vk::DescriptorSet _descriptorSet;
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 

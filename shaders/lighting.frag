@@ -3,19 +3,19 @@
 
 #include "bindless.glsl"
 
-layout(set = 1, binding = 0) uniform samplerCube irradianceMap;
-layout(set = 1, binding = 1) uniform samplerCube prefilterMap;
-layout(set = 1, binding = 2) uniform sampler2D brdfLUT;
-
 layout(push_constant) uniform PushConstants
 {
     uint albedoMIndex;    // RGB: Albedo,   A: Metallic
     uint normalRIndex;    // RGB: Normal,   A: Roughness
     uint emissiveAOIndex; // RGB: Emissive, A: AO
     uint positionIndex;   // RGB: Position, A: Unused
+
+    uint irradianceIndex;
+    uint prefilterIndex;
+    uint brdfLUTIndex;
 } pushConstants;
 
-layout(set = 2, binding = 0) uniform CameraUBO
+layout(set = 1, binding = 0) uniform CameraUBO
 {
     mat4 VP;
     mat4 view;
@@ -92,12 +92,12 @@ void main()
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
 
-    vec3 irradiance = texture(irradianceMap, -N).rgb;
+    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(pushConstants.irradianceIndex)], -N).rgb;
     vec3 diffuse = irradiance * albedo;
 
     const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(pushConstants.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(pushConstants.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;

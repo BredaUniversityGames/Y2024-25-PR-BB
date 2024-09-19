@@ -30,6 +30,7 @@ enum class BindlessBinding
     eColor = 10,
     eDepth,
     eStorage,
+    eCubemap,
 };
 
 class VulkanBrain
