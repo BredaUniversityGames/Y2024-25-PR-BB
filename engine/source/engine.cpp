@@ -234,8 +234,6 @@ void Engine::Run()
 
     result = _brain.presentQueue.presentKHR(&presentInfo);
 
-    _brain.device.waitIdle();
-
     if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
     {
         _swapChain->Resize(_application->DisplaySize());
@@ -254,6 +252,8 @@ void Engine::Run()
 
 Engine::~Engine()
 {
+    _brain.device.waitIdle();
+
     ImGui_ImplVulkan_Shutdown();
     _application->ShutdownImGui();
 

@@ -30,3 +30,9 @@
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT{ 3 };
 constexpr uint32_t DEFERRED_ATTACHMENT_COUNT{ 4 };
+
+#ifdef _WIN32
+#define WINDOWS
+#elif __linux__
+#define LINUX
+#endif
