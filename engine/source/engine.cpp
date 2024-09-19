@@ -32,8 +32,6 @@
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application) :
     _brain(initInfo)
 {
-    std::cout << "4\n" << std::endl;
-
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
 
@@ -41,13 +39,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     ImPlot::CreateContext();
     spdlog::info("Starting engine...");
 
-    std::cout << "5\n" << std::endl;
-
     _application = std::move(application);
 
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2{ initInfo.width, initInfo.height });
-
-    std::cout << "6\n" << std::endl;
 
     CreateDescriptorSetLayout();
     InitializeCameraUBODescriptors();
