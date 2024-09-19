@@ -2,7 +2,6 @@
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_vulkan.h"
 #include "imgui/backends/imgui_impl_sdl3.h"
-#include "include.hpp"
 
 SDLApp::SDLApp(const CreateParameters& parameters) : Application(parameters)
 {
@@ -92,6 +91,7 @@ void SDLApp::Run(std::function<bool()> updateLoop)
 
         if(updateLoop())
             running = false;
+        FrameMark;
     }
 }
 
@@ -102,6 +102,7 @@ void SDLApp::InitImGui()
 
 void SDLApp::NewImGuiFrame()
 {
+    ZoneScoped;
     ImGui_ImplSDL3_NewFrame();
 }
 

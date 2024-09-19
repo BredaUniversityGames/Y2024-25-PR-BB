@@ -1,7 +1,5 @@
 #pragma once
 
-#include "class_decorations.hpp"
-#include "include.hpp"
 #include "mesh.hpp"
 #include <string>
 #include <fastgltf/core.hpp>

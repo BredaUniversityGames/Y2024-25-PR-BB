@@ -21,12 +21,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullability-completeness"
+#pragma clang diagnostic ignored "-Wunused-variable"
+
 #include "vk_mem_alloc.h"
+
+#pragma clang diagnostic pop
 
 #include "class_decorations.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>
+#include "tracy/Tracy.hpp"
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT{ 3 };
 constexpr uint32_t DEFERRED_ATTACHMENT_COUNT{ 4 };

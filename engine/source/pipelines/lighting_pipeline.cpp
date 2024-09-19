@@ -236,6 +236,7 @@ void LightingPipeline::CreateDescriptorSets()
 
 void LightingPipeline::UpdateGBufferViews()
 {
+    ZoneScoped;
     vk::DescriptorImageInfo samplerInfo{};
     samplerInfo.sampler = *_sampler;
 

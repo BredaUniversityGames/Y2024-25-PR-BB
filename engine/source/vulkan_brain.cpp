@@ -3,7 +3,6 @@
 #include "swap_chain.hpp"
 #include "vulkan_validation.hpp"
 #include <map>
-#include <set>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this)
 {

@@ -1,9 +1,4 @@
 #include "performance_tracker.hpp"
-#include "imgui.h"
-#include "implot.h"
-#include <algorithm>
-#include <iostream>
-#include <string>
 
 PerformanceTracker::PerformanceTracker()
 {
@@ -16,6 +11,7 @@ PerformanceTracker::PerformanceTracker()
 
 void PerformanceTracker::Update()
 {
+    ZoneScoped;
     auto currentTime = std::chrono::steady_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - _lastFrameTime).count();
     _lastFrameTime = currentTime;
@@ -70,6 +66,8 @@ void PerformanceTracker::Update()
 
 void PerformanceTracker::Render()
 {
+    ZoneScoped;
+
     if(_timePoints.empty())
         return;
 

@@ -1,9 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <functional>
-#include <vulkan/vulkan.hpp>
-
 struct InitInfo
 {
     uint32_t extensionCount{ 0 };

@@ -1,7 +1,5 @@
 #pragma once
-#include "class_decorations.hpp"
 #include "vulkan/vulkan.hpp"
-#include "vk_mem_alloc.h"
 #include "mesh.hpp"
 
 class VulkanBrain;
