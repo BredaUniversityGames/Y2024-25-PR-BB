@@ -32,7 +32,7 @@ target_compile_options(Engine PRIVATE "-Wall")
 option(ENABLE_PCH "Compile with precompiled header" ON)
 
 if (ENABLE_PCH)
-    target_precompile_headers(Engine PRIVATE [["include.hpp"]])
+    target_precompile_headers(Engine PRIVATE [["pch.hpp"]])
 endif ()
 
 option(ENABLE_TESTS "Compile with Unit Tests" OFF)
