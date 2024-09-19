@@ -1,15 +1,21 @@
 #version 460
+#extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) uniform sampler gBufferSampler;
-layout(set = 0, binding = 1) uniform texture2D gBufferAlbedoM;    // RGB: Albedo,   A: Metallic
-layout(set = 0, binding = 2) uniform texture2D gBufferNormalR;    // RGB: Normal,   A: Roughness
-layout(set = 0, binding = 3) uniform texture2D gBufferEmissiveAO; // RGB: Emissive, A: AO
-layout(set = 0, binding = 4) uniform texture2D gBufferPosition;   // RGB: Position, A: Unused
-layout(set = 0, binding = 5) uniform samplerCube irradianceMap;
-layout(set = 0, binding = 6) uniform samplerCube prefilterMap;
-layout(set = 0, binding = 7) uniform sampler2D brdfLUT;
+#include "bindless.glsl"
 
-layout(set = 1, binding = 0) uniform CameraUBO
+layout(set = 1, binding = 0) uniform samplerCube irradianceMap;
+layout(set = 1, binding = 1) uniform samplerCube prefilterMap;
+layout(set = 1, binding = 2) uniform sampler2D brdfLUT;
+
+layout(push_constant) uniform PushConstants
+{
+    uint albedoMIndex;    // RGB: Albedo,   A: Metallic
+    uint normalRIndex;    // RGB: Normal,   A: Roughness
+    uint emissiveAOIndex; // RGB: Emissive, A: AO
+    uint positionIndex;   // RGB: Position, A: Unused
+} pushConstants;
+
+layout(set = 2, binding = 0) uniform CameraUBO
 {
     mat4 VP;
     mat4 view;
@@ -32,10 +38,10 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 
 void main()
 {
-    vec4 albedoM = texture(sampler2D(gBufferAlbedoM, gBufferSampler), texCoords);
-    vec4 normalR = texture(sampler2D(gBufferNormalR, gBufferSampler), texCoords);
-    vec4 emissiveAO = texture(sampler2D(gBufferEmissiveAO, gBufferSampler), texCoords);
-    vec3 position = texture(sampler2D(gBufferPosition, gBufferSampler), texCoords).xyz;
+    vec4 albedoM = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalR = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAO = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec3 position = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords).xyz;
 
     vec3 albedo = albedoM.rgb;
     float metallic = albedoM.a;

@@ -39,8 +39,11 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -59,13 +62,18 @@ LightingPipeline::~LightingPipeline()
 
 void LightingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _descriptorSetLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+
+    vk::PushConstantRange pcRange{};
+    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    pcRange.size = sizeof(PushConstants);
+
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
                     "Failed creating geometry pipeline layout!");
@@ -175,39 +183,22 @@ void LightingPipeline::CreatePipeline()
 
 void LightingPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, DEFERRED_ATTACHMENT_COUNT + 4> bindings{};
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    for(size_t i = 1; i < DEFERRED_ATTACHMENT_COUNT + 1; ++i)
-    {
-        vk::DescriptorSetLayoutBinding& binding{bindings[i]};
-        binding.binding = i;
-        binding.descriptorCount = 1;
-        binding.descriptorType = vk::DescriptorType::eSampledImage;
-        binding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-        binding.pImmutableSamplers = nullptr;
-    }
-
-    vk::DescriptorSetLayoutBinding& irradianceBinding{bindings[5]};
-    irradianceBinding.binding = 5;
+    vk::DescriptorSetLayoutBinding& irradianceBinding{bindings[0]};
+    irradianceBinding.binding = 1;
     irradianceBinding.descriptorCount = 1;
     irradianceBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     irradianceBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     irradianceBinding.pImmutableSamplers = nullptr;
-    vk::DescriptorSetLayoutBinding& prefilterBinding{bindings[6]};
-    prefilterBinding.binding = 6;
+    vk::DescriptorSetLayoutBinding& prefilterBinding{bindings[1]};
+    prefilterBinding.binding = 0;
     prefilterBinding.descriptorCount = 1;
     prefilterBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     prefilterBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     prefilterBinding.pImmutableSamplers = nullptr;
-    vk::DescriptorSetLayoutBinding& brdfLUTBinding{bindings[7]};
-    brdfLUTBinding.binding = 7;
+    vk::DescriptorSetLayoutBinding& brdfLUTBinding{bindings[2]};
+    brdfLUTBinding.binding = 2;
     brdfLUTBinding.descriptorCount = 1;
     brdfLUTBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     brdfLUTBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -240,31 +231,7 @@ void LightingPipeline::UpdateGBufferViews()
     vk::DescriptorImageInfo samplerInfo{};
     samplerInfo.sampler = *_sampler;
 
-    std::array<vk::DescriptorImageInfo, DEFERRED_ATTACHMENT_COUNT> imageInfos{};
-    for(size_t i = 0; i < imageInfos.size(); ++i)
-    {
-        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfos[i].imageView = _gBuffers.GBufferView(i);
-    }
-
-    std::array<vk::WriteDescriptorSet, DEFERRED_ATTACHMENT_COUNT + 4> descriptorWrites{};
-    descriptorWrites[0].dstSet = _descriptorSet;
-    descriptorWrites[0].dstBinding = 0;
-    descriptorWrites[0].dstArrayElement = 0;
-    descriptorWrites[0].descriptorType = vk::DescriptorType::eSampler;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pImageInfo = &samplerInfo;
-
-    for(size_t i = 1; i < DEFERRED_ATTACHMENT_COUNT + 1; ++i)
-    {
-        descriptorWrites[i].dstSet = _descriptorSet;
-        descriptorWrites[i].dstBinding = i;
-        descriptorWrites[i].dstArrayElement = 0;
-        descriptorWrites[i].descriptorType = vk::DescriptorType::eSampledImage;
-        descriptorWrites[i].descriptorCount = 1;
-        descriptorWrites[i].pImageInfo = &imageInfos[i - 1];
-
-    }
+    std::array<vk::WriteDescriptorSet, 3> descriptorWrites{};
 
     vk::DescriptorImageInfo irradianceMapInfo;
     irradianceMapInfo.imageView = _brain.ImageResourceManager().Access(_irradianceMap)->view;
@@ -279,24 +246,29 @@ void LightingPipeline::UpdateGBufferViews()
     brdfLUTMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     brdfLUTMapInfo.sampler = _sampler.get();
 
-    descriptorWrites[5].dstSet = _descriptorSet;
-    descriptorWrites[5].dstBinding = 5;
-    descriptorWrites[5].dstArrayElement = 0;
-    descriptorWrites[5].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    descriptorWrites[5].descriptorCount = 1;
-    descriptorWrites[5].pImageInfo = &irradianceMapInfo;
-    descriptorWrites[6].dstSet = _descriptorSet;
-    descriptorWrites[6].dstBinding = 6;
-    descriptorWrites[6].dstArrayElement = 0;
-    descriptorWrites[6].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    descriptorWrites[6].descriptorCount = 1;
-    descriptorWrites[6].pImageInfo = &prefilterMapInfo;
-    descriptorWrites[7].dstSet = _descriptorSet;
-    descriptorWrites[7].dstBinding = 7;
-    descriptorWrites[7].dstArrayElement = 0;
-    descriptorWrites[7].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    descriptorWrites[7].descriptorCount = 1;
-    descriptorWrites[7].pImageInfo = &brdfLUTMapInfo;
+    _pushConstants.albedoMIndex = _gBuffers.AlbedoM().index;
+    _pushConstants.normalRIndex = _gBuffers.NormalR().index;
+    _pushConstants.emissiveAOIndex = _gBuffers.EmissiveAO().index;
+    _pushConstants.positionIndex = _gBuffers.Position().index;
+
+    descriptorWrites[0].dstSet = _descriptorSet;
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].dstArrayElement = 0;
+    descriptorWrites[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pImageInfo = &irradianceMapInfo;
+    descriptorWrites[1].dstSet = _descriptorSet;
+    descriptorWrites[1].dstBinding = 1;
+    descriptorWrites[1].dstArrayElement = 0;
+    descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    descriptorWrites[1].descriptorCount = 1;
+    descriptorWrites[1].pImageInfo = &prefilterMapInfo;
+    descriptorWrites[2].dstSet = _descriptorSet;
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pImageInfo = &brdfLUTMapInfo;
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

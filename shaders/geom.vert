@@ -1,11 +1,11 @@
 #version 460
 
-layout(set = 0, binding = 0) uniform UBO
+layout(set = 1, binding = 0) uniform UBO
 {
     mat4 model;
 } ubo;
 
-layout(set = 1, binding = 0) uniform CameraUBO
+layout(set = 2, binding = 0) uniform CameraUBO
 {
     mat4 VP;
     mat4 view;

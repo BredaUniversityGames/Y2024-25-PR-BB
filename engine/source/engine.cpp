@@ -337,16 +337,11 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-                                _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-                                DEFERRED_ATTACHMENT_COUNT);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
-
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-                                _gBuffers->GBufferFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                                DEFERRED_ATTACHMENT_COUNT);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);

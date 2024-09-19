@@ -17,6 +17,14 @@ public:
     NON_COPYABLE(LightingPipeline);
 
 private:
+    struct PushConstants
+    {
+        uint32_t albedoMIndex;
+        uint32_t normalRIndex;
+        uint32_t emissiveAOIndex;
+        uint32_t positionIndex;
+    } _pushConstants;
+
     void CreatePipeline();
     void CreateDescriptorSetLayout();
     void CreateDescriptorSets();

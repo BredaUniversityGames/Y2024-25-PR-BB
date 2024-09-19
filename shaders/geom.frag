@@ -13,7 +13,7 @@ layout(location = 1) out vec4 outNormalR;    // RGB: Normal,   A: Roughness
 layout(location = 2) out vec4 outEmissiveAO; // RGB: Emissive, A: AO
 layout(location = 3) out vec4 outPosition;   // RGB: Position, A: Unused
 
-layout(set = 2, binding = 0) uniform MaterialInfoUBO
+layout(set = 3, binding = 0) uniform MaterialInfoUBO
 {
     vec4 albedoFactor;
 

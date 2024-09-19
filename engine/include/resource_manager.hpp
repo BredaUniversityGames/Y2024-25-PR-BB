@@ -61,7 +61,7 @@ public:
         if(!IsValid(handle))
             return nullptr;
 
-        return _resources[index].resource.has_value() ? &_resources[index].resource.value() : nullptr;
+        return &_resources[index].resource.value();
     }
 
     virtual void Destroy(ResourceHandle<T> handle)
@@ -77,7 +77,7 @@ public:
     virtual bool IsValid(ResourceHandle<T> handle) const
     {
         uint32_t index = handle.index;
-        return index < _resources.size() && _resources[index].version == handle.version;
+        return index < _resources.size() && _resources[index].version == handle.version && _resources[index].resource.has_value();
     }
 
     const std::vector<ResourceSlot<T>>& Resources() const { return _resources; }

@@ -34,15 +34,19 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     for(size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
         vk::RenderingAttachmentInfoKHR& info{ colorAttachmentInfos[i] };
-        info.imageView = _gBuffers.GBufferView(i);
         info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         info.storeOp = vk::AttachmentStoreOp::eStore;
         info.loadOp = vk::AttachmentLoadOp::eClear;
         info.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
     }
 
+    colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_gBuffers.AlbedoM())->view;
+    colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_gBuffers.NormalR())->view;
+    colorAttachmentInfos[2].imageView = _brain.ImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
+    colorAttachmentInfos[3].imageView = _brain.ImageResourceManager().Access(_gBuffers.Position())->view;
+
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo{};
-    depthAttachmentInfo.imageView = _gBuffers.DepthImageView();
+    depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
@@ -118,10 +122,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
                 uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
 
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &material.descriptorSet, 0, nullptr);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &_brain.bindlessSet, 0, nullptr);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0, nullptr);
 
                 vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
                 vk::DeviceSize offsets[] = { 0 };
@@ -141,7 +145,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 void GeometryPipeline::CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
-    std::array<vk::DescriptorSetLayout, 4> layouts = { _descriptorSetLayout, _camera.descriptorSetLayout, materialDescriptorSetLayout, _brain.bindlessLayout };
+    std::array<vk::DescriptorSetLayout, 4> layouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout, materialDescriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
