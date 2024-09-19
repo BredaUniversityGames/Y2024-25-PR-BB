@@ -104,7 +104,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
   //  _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
-    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/test.gltf")));
+    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/room.gltf")));
 
     glm::vec3 scale{0.05f};
     glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};

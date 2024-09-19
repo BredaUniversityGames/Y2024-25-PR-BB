@@ -1,0 +1,92 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"external/fastgltf/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 142,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 147,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 156,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/fastgltf",
+			"paths" : 
+			[
+				"external/fastgltf/include/fastgltf/base64.hpp",
+				"external/fastgltf/include/fastgltf/core.hpp",
+				"external/fastgltf/include/fastgltf/dxmath_element_traits.hpp",
+				"external/fastgltf/include/fastgltf/glm_element_traits.hpp",
+				"external/fastgltf/include/fastgltf/tools.hpp",
+				"external/fastgltf/include/fastgltf/types.hpp",
+				"external/fastgltf/include/fastgltf/util.hpp",
+				"external/fastgltf/include/fastgltf/math.hpp"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"external/fastgltf/fastgltf.lib"
+			],
+			"targetId" : "fastgltf::@051691ae09d369e51b85",
+			"targetIndex" : 5,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/fastgltf",
+			"exportName" : "fastgltf-targets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "fastgltf::@051691ae09d369e51b85",
+					"index" : 5
+				}
+			],
+			"paths" : 
+			[
+				"external/fastgltf/CMakeFiles/Export/14b504216a8c2b5661a6a7c88f3023ae/fastgltfConfig.cmake"
+			],
+			"type" : "export"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "external/fastgltf",
+		"source" : "external/fastgltf"
+	}
+}

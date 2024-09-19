@@ -149,6 +149,8 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
         writes[i].descriptorCount = 1;
         writes[i].pImageInfo = &imageInfos[i];
     }
+
+    
     writes[imageInfos.size()].dstSet = materialHandle.descriptorSet;
     writes[imageInfos.size()].dstBinding = imageInfos.size();
     writes[imageInfos.size()].dstArrayElement = 0;

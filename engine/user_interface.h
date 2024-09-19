@@ -32,6 +32,11 @@ public:
 	int GetFontSize() const {return m_fontSize;}
 	void SetFontSize(int new_size){m_fontSize = new_size;}
 
+	void SetText(std::string_view text)
+	{
+		m_text = text;
+	}
+	
 	bool GetTextWrap() const {return m_textWrap;}
 	void SetTextWrap(bool wrap) {m_textWrap = wrap;}
 
@@ -39,6 +44,8 @@ public:
 protected:
 	bool m_textWrap = true;
 	int m_fontSize = 10;
+
+	static ResourceHandle<Image> m_fontAtlas;
 	std::string m_text = "placeholder";
 };
 
@@ -78,10 +85,6 @@ public:
 
 
 
-//todo: move and implement this struct
-struct PipeLineConfigInfo
-{
-};
 
 class UIPipeLine
 {

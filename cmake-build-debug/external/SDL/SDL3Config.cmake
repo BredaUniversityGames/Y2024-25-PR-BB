@@ -11,7 +11,7 @@ set_package_properties(SDL3 PROPERTIES
 ####### Any changes to this file will be overwritten by the next CMake run ####
 ####### The input file was SDL3Config.cmake.in                            ########
 
-get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
+get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../" ABSOLUTE)
 
 macro(check_required_components _NAME)
   foreach(comp ${${_NAME}_FIND_COMPONENTS})

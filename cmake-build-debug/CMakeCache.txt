@@ -15,10 +15,10 @@
 ########################
 
 //Path to a program.
-CMAKE_ADDR2LINE:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/addr2line.exe
+CMAKE_ADDR2LINE:FILEPATH=CMAKE_ADDR2LINE-NOTFOUND
 
 //Path to a program.
-CMAKE_AR:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/ar.exe
+CMAKE_AR:FILEPATH=C:/Program Files/LLVM/bin/llvm-ar.exe
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
@@ -27,22 +27,23 @@ CMAKE_BUILD_TYPE:STRING=Debug
 //Enable colored diagnostics throughout.
 CMAKE_COLOR_DIAGNOSTICS:BOOL=ON
 
-//CXX compiler
-CMAKE_CXX_COMPILER:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/g++.exe
+//No help, variable specified on the command line.
+CMAKE_CXX_COMPILER:UNINITIALIZED=C:/Program Files/LLVM/bin/clang++.exe
 
-//A wrapper around 'ar' adding the appropriate '--plugin' option
-// for the GCC compiler
-CMAKE_CXX_COMPILER_AR:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc-ar.exe
+//LLVM archiver
+CMAKE_CXX_COMPILER_AR:FILEPATH=C:/Program Files/LLVM/bin/llvm-ar.exe
 
-//A wrapper around 'ranlib' adding the appropriate '--plugin' option
-// for the GCC compiler
-CMAKE_CXX_COMPILER_RANLIB:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc-ranlib.exe
+//`clang-scan-deps` dependency scanner
+CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=C:/Program Files/LLVM/bin/clang-scan-deps.exe
+
+//Generate index for LLVM archive
+CMAKE_CXX_COMPILER_RANLIB:FILEPATH=C:/Program Files/LLVM/bin/llvm-ranlib.exe
 
 //Flags used by the CXX compiler during all build types.
 CMAKE_CXX_FLAGS:STRING=
 
 //Flags used by the CXX compiler during DEBUG builds.
-CMAKE_CXX_FLAGS_DEBUG:STRING=-g
+CMAKE_CXX_FLAGS_DEBUG:STRING=-O0 -g -Xclang -gcodeview
 
 //Flags used by the CXX compiler during MINSIZEREL builds.
 CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
@@ -51,27 +52,28 @@ CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
 CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
-CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -DNDEBUG -g -Xclang -gcodeview
 
 //Libraries linked by default with all C++ applications.
-CMAKE_CXX_STANDARD_LIBRARIES:STRING=-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+CMAKE_CXX_STANDARD_LIBRARIES:STRING=-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 -loldnames
 
-//C compiler
-CMAKE_C_COMPILER:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc.exe
+//No help, variable specified on the command line.
+CMAKE_C_COMPILER:UNINITIALIZED=C:/Program Files/LLVM/bin/clang.exe
 
-//A wrapper around 'ar' adding the appropriate '--plugin' option
-// for the GCC compiler
-CMAKE_C_COMPILER_AR:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc-ar.exe
+//LLVM archiver
+CMAKE_C_COMPILER_AR:FILEPATH=C:/Program Files/LLVM/bin/llvm-ar.exe
 
-//A wrapper around 'ranlib' adding the appropriate '--plugin' option
-// for the GCC compiler
-CMAKE_C_COMPILER_RANLIB:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc-ranlib.exe
+//`clang-scan-deps` dependency scanner
+CMAKE_C_COMPILER_CLANG_SCAN_DEPS:FILEPATH=C:/Program Files/LLVM/bin/clang-scan-deps.exe
+
+//Generate index for LLVM archive
+CMAKE_C_COMPILER_RANLIB:FILEPATH=C:/Program Files/LLVM/bin/llvm-ranlib.exe
 
 //Flags used by the C compiler during all build types.
 CMAKE_C_FLAGS:STRING=
 
 //Flags used by the C compiler during DEBUG builds.
-CMAKE_C_FLAGS_DEBUG:STRING=-g
+CMAKE_C_FLAGS_DEBUG:STRING=-O0 -g -Xclang -gcodeview
 
 //Flags used by the C compiler during MINSIZEREL builds.
 CMAKE_C_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
@@ -80,13 +82,13 @@ CMAKE_C_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
 CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the C compiler during RELWITHDEBINFO builds.
-CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -DNDEBUG -g -Xclang -gcodeview
 
 //Libraries linked by default with all C applications.
-CMAKE_C_STANDARD_LIBRARIES:STRING=-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+CMAKE_C_STANDARD_LIBRARIES:STRING=-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 -loldnames
 
 //Path to a program.
-CMAKE_DLLTOOL:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/dlltool.exe
+CMAKE_DLLTOOL:FILEPATH=C:/Program Files/LLVM/bin/llvm-dlltool.exe
 
 //Flags used by the linker during all build types.
 CMAKE_EXE_LINKER_FLAGS:STRING=
@@ -108,9 +110,6 @@ CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
 //Value Computed by CMake.
 CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/CMakeFiles/pkgRedirects
-
-//Convert GNU import libraries to MS format (requires Visual Studio)
-CMAKE_GNUtoMS:BOOL=OFF
 
 //User executables (bin)
 CMAKE_INSTALL_BINDIR:PATH=bin
@@ -164,7 +163,7 @@ CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
 CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 
 //Path to a program.
-CMAKE_LINKER:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/ld.exe
+CMAKE_LINKER:FILEPATH=C:/Program Files/LLVM/bin/lld-link.exe
 
 //make program
 CMAKE_MAKE_PROGRAM:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/ninja/win/x64/ninja.exe
@@ -190,13 +189,13 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Path to a program.
-CMAKE_NM:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/nm.exe
+CMAKE_NM:FILEPATH=C:/Program Files/LLVM/bin/llvm-nm.exe
 
 //Path to a program.
-CMAKE_OBJCOPY:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/objcopy.exe
+CMAKE_OBJCOPY:FILEPATH=C:/Program Files/LLVM/bin/llvm-objcopy.exe
 
 //Path to a program.
-CMAKE_OBJDUMP:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/objdump.exe
+CMAKE_OBJDUMP:FILEPATH=C:/Program Files/LLVM/bin/llvm-objdump.exe
 
 //Value Computed by CMake
 CMAKE_PROJECT_DESCRIPTION:STATIC=
@@ -223,10 +222,10 @@ CMAKE_PROJECT_VERSION_PATCH:STATIC=2
 CMAKE_PROJECT_VERSION_TWEAK:STATIC=
 
 //Path to a program.
-CMAKE_RANLIB:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/ranlib.exe
+CMAKE_RANLIB:FILEPATH=C:/Program Files/LLVM/bin/llvm-ranlib.exe
 
 //RC compiler
-CMAKE_RC_COMPILER:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/windres.exe
+CMAKE_RC_COMPILER:FILEPATH=C:/Program Files/LLVM/bin/llvm-rc.exe
 
 //Flags for Windows Resource Compiler during all build types.
 CMAKE_RC_FLAGS:STRING=
@@ -244,7 +243,7 @@ CMAKE_RC_FLAGS_RELEASE:STRING=
 CMAKE_RC_FLAGS_RELWITHDEBINFO:STRING=
 
 //Path to a program.
-CMAKE_READELF:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/readelf.exe
+CMAKE_READELF:FILEPATH=CMAKE_READELF-NOTFOUND
 
 //Flags used by the linker during the creation of shared libraries
 // during all build types.
@@ -294,7 +293,7 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Path to a program.
-CMAKE_STRIP:FILEPATH=C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/strip.exe
+CMAKE_STRIP:FILEPATH=C:/Program Files/LLVM/bin/llvm-strip.exe
 
 //Path to a program.
 CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
@@ -527,7 +526,7 @@ SDL_HIDAPI_LIBUSB_SHARED:BOOL=ON
 
 //Root folder where to install SDL3Config.cmake related files (SDL3
 // subfolder for MSVC projects)
-SDL_INSTALL_CMAKEDIR_ROOT:STRING=lib/cmake
+SDL_INSTALL_CMAKEDIR_ROOT:STRING=cmake
 
 //Support the JACK audio API
 SDL_JACK:BOOL=OFF
@@ -833,6 +832,8 @@ CMAKE_CTEST_COMMAND:INTERNAL=C:/Program Files/JetBrains/CLion 2024.2.1/bin/cmake
 CMAKE_CXX_COMPILER-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_COMPILER_AR
 CMAKE_CXX_COMPILER_AR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS
+CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_COMPILER_RANLIB
 CMAKE_CXX_COMPILER_RANLIB-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_FLAGS
@@ -851,6 +852,8 @@ CMAKE_CXX_STANDARD_LIBRARIES-ADVANCED:INTERNAL=1
 CMAKE_C_COMPILER-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_AR
 CMAKE_C_COMPILER_AR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER_CLANG_SCAN_DEPS
+CMAKE_C_COMPILER_CLANG_SCAN_DEPS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_RANLIB
 CMAKE_C_COMPILER_RANLIB-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_FLAGS
@@ -892,7 +895,11 @@ CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
 //Test CMAKE_HAVE_LIBC_PTHREAD
-CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=1
+CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=
+//Have library pthreads
+CMAKE_HAVE_PTHREADS_CREATE:INTERNAL=
+//Have library pthread
+CMAKE_HAVE_PTHREAD_CREATE:INTERNAL=
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB
@@ -1005,8 +1012,8 @@ COMPILER_SUPPORTS_AVX:INTERNAL=1
 COMPILER_SUPPORTS_AVX2:INTERNAL=1
 //Test COMPILER_SUPPORTS_AVX512F
 COMPILER_SUPPORTS_AVX512F:INTERNAL=1
-//Test COMPILER_SUPPORTS_FDIAGNOSTICS_COLOR_ALWAYS
-COMPILER_SUPPORTS_FDIAGNOSTICS_COLOR_ALWAYS:INTERNAL=1
+//Test COMPILER_SUPPORTS_FCOLOR_DIAGNOSTICS
+COMPILER_SUPPORTS_FCOLOR_DIAGNOSTICS:INTERNAL=1
 //Test COMPILER_SUPPORTS_GCC_ATOMICS
 COMPILER_SUPPORTS_GCC_ATOMICS:INTERNAL=1
 //Test COMPILER_SUPPORTS_MMX
@@ -1031,8 +1038,6 @@ GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 HAVE_ALLOCA_H:INTERNAL=
 //Have include audioclient.h
 HAVE_AUDIOCLIENT_H:INTERNAL=1
-//Test HAVE_CLANG_COMMENT_BLOCK_COMMANDS
-HAVE_CLANG_COMMENT_BLOCK_COMMANDS:INTERNAL=
 //Have include d3d11_1.h
 HAVE_D3D11_H:INTERNAL=1
 //Have include d3d9.h
@@ -1050,7 +1055,7 @@ HAVE_DXGI_H:INTERNAL=1
 //Test HAVE_GAMEINPUT_H
 HAVE_GAMEINPUT_H:INTERNAL=
 //Test HAVE_GCC_COMMENT_BLOCK_COMMANDS
-HAVE_GCC_COMMENT_BLOCK_COMMANDS:INTERNAL=
+HAVE_GCC_COMMENT_BLOCK_COMMANDS:INTERNAL=1
 //Test HAVE_GCC_FVISIBILITY
 HAVE_GCC_FVISIBILITY:INTERNAL=
 //Test HAVE_GCC_NO_STRICT_ALIASING
@@ -1058,9 +1063,9 @@ HAVE_GCC_NO_STRICT_ALIASING:INTERNAL=1
 //Test HAVE_GCC_WALL
 HAVE_GCC_WALL:INTERNAL=1
 //Test HAVE_GCC_WDOCUMENTATION
-HAVE_GCC_WDOCUMENTATION:INTERNAL=
+HAVE_GCC_WDOCUMENTATION:INTERNAL=1
 //Test HAVE_GCC_WDOCUMENTATION_UNKNOWN_COMMAND
-HAVE_GCC_WDOCUMENTATION_UNKNOWN_COMMAND:INTERNAL=
+HAVE_GCC_WDOCUMENTATION_UNKNOWN_COMMAND:INTERNAL=1
 //Test HAVE_GCC_WFLOAT_CONVERSION
 HAVE_GCC_WFLOAT_CONVERSION:INTERNAL=1
 //Test HAVE_GCC_WIMPLICIT_FALLTHROUGH
@@ -1071,10 +1076,8 @@ HAVE_GCC_WSHADOW:INTERNAL=1
 HAVE_GCC_WUNDEF:INTERNAL=1
 //Test HAVE_GCC_WUNUSED_LOCAL_TYPEDEFS
 HAVE_GCC_WUNUSED_LOCAL_TYPEDEFS:INTERNAL=1
-//Test HAVE_GDWARF_4
-HAVE_GDWARF_4:INTERNAL=1
 //Have library m
-HAVE_LIBM:INTERNAL=1
+HAVE_LIBM:INTERNAL=
 //Test HAVE_MFAPI_H
 HAVE_MFAPI_H:INTERNAL=1
 //Have include mmdeviceapi.h
@@ -1150,13 +1153,13 @@ LIBC_HAS_FMOD:INTERNAL=1
 //Have symbol fmodf
 LIBC_HAS_FMODF:INTERNAL=1
 //Have symbol fopen64
-LIBC_HAS_FOPEN64:INTERNAL=1
+LIBC_HAS_FOPEN64:INTERNAL=
 //Have symbol free
 LIBC_HAS_FREE:INTERNAL=1
 //Have symbol fseeko
-LIBC_HAS_FSEEKO:INTERNAL=1
+LIBC_HAS_FSEEKO:INTERNAL=
 //Have symbol fseeko64
-LIBC_HAS_FSEEKO64:INTERNAL=1
+LIBC_HAS_FSEEKO64:INTERNAL=
 //Have symbol getenv
 LIBC_HAS_GETENV:INTERNAL=1
 //Have include iconv.h
@@ -1166,11 +1169,11 @@ LIBC_HAS_INDEX:INTERNAL=
 //Have include inttypes.h
 LIBC_HAS_INTTYPES_H:INTERNAL=1
 //Test LIBC_HAS_ISINF
-LIBC_HAS_ISINF:INTERNAL=
+LIBC_HAS_ISINF:INTERNAL=1
 //Test LIBC_HAS_ISINFF
 LIBC_HAS_ISINFF:INTERNAL=
 //Test LIBC_HAS_ISNAN
-LIBC_HAS_ISNAN:INTERNAL=
+LIBC_HAS_ISNAN:INTERNAL=1
 //Test LIBC_HAS_ISNANF
 LIBC_HAS_ISNANF:INTERNAL=
 //Have symbol itoa
@@ -1260,7 +1263,7 @@ LIBC_HAS_STRCHR:INTERNAL=1
 //Have symbol strcmp
 LIBC_HAS_STRCMP:INTERNAL=1
 //Have include strings.h
-LIBC_HAS_STRINGS_H:INTERNAL=1
+LIBC_HAS_STRINGS_H:INTERNAL=
 //Have include string.h
 LIBC_HAS_STRING_H:INTERNAL=1
 //Have symbol strlcat
@@ -1284,7 +1287,7 @@ LIBC_HAS_STRSTR:INTERNAL=1
 //Have symbol strtod
 LIBC_HAS_STRTOD:INTERNAL=1
 //Have symbol strtok_r
-LIBC_HAS_STRTOK_R:INTERNAL=1
+LIBC_HAS_STRTOK_R:INTERNAL=
 //Have symbol strtol
 LIBC_HAS_STRTOL:INTERNAL=1
 //Have symbol strtoll
@@ -1367,6 +1370,8 @@ SDL_CHECK_REQUIRED_INCLUDES-ADVANCED:INTERNAL=1
 SDL_CHECK_REQUIRED_LINK_OPTIONS-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
 SDL_CPU_CHECK_ALL:INTERNAL=TRUE
+//Result of TRY_COMPILE
+THREADS_HAVE_PTHREAD_ARG:INTERNAL=FALSE
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLC_EXECUTABLE
@@ -1375,8 +1380,6 @@ Vulkan_GLSLC_EXECUTABLE-ADVANCED:INTERNAL=1
 Vulkan_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_LIBRARY
 Vulkan_LIBRARY-ADVANCED:INTERNAL=1
-//linker supports push/pop state
-_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=C:/Program Files (x86)/Project
 

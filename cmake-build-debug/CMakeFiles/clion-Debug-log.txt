@@ -1,4 +1,4 @@
-"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2024.2.1/bin/ninja/win/x64/ninja.exe" -G Ninja -S C:\Users\luukk\Documents\github\Y2024-25-PR-BB\Y2024-25-PR-BB -B C:\Users\luukk\Documents\github\Y2024-25-PR-BB\Y2024-25-PR-BB\cmake-build-debug
+"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2024.2.1/bin/ninja/win/x64/ninja.exe" "-DCMAKE_C_COMPILER=C:/Program Files/LLVM/bin/clang.exe" "-DCMAKE_CXX_COMPILER=C:/Program Files/LLVM/bin/clang++.exe" -G Ninja -S C:\Users\luukk\Documents\github\Y2024-25-PR-BB\Y2024-25-PR-BB -B C:\Users\luukk\Documents\github\Y2024-25-PR-BB\Y2024-25-PR-BB\cmake-build-debug
 -- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
 -- Could NOT find LibUSB (missing: LibUSB_LIBRARY LibUSB_INCLUDE_PATH) (found version "LibUSB_VERSION-NOTFOUND")
 -- 
@@ -6,7 +6,7 @@
 -- 
 -- Platform: Windows-10.0.22631
 -- 64-bit:   TRUE
--- Compiler: C:/Program Files/JetBrains/CLion 2024.2.1/bin/mingw/bin/gcc.exe
+-- Compiler: C:/Program Files/LLVM/bin/clang.exe
 -- Revision: SDL-prerelease-3.0.0-6105-g3166f9128
 -- Vendor:   
 -- 
@@ -127,6 +127,6 @@
 -- C:/VulkanSDK/1.3.280.0/Lib/vulkan-1.lib
 -- Could NOT find simdjson (missing: simdjson_DIR)
 -- fastgltf: Found simdjson (Version 3.9.4)
--- Configuring done (1.3s)
+-- Configuring done (0.5s)
 -- Generating done (0.1s)
 -- Build files have been written to: C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug

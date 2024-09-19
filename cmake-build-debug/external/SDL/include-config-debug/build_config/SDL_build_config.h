@@ -64,7 +64,7 @@
 #define HAVE_STDINT_H 1
 #define HAVE_STDIO_H 1
 #define HAVE_STDLIB_H 1
-#define HAVE_STRINGS_H 1
+/* #undef HAVE_STRINGS_H */
 #define HAVE_STRING_H 1
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_WCHAR_H 1
@@ -110,7 +110,7 @@
 #define HAVE_STRRCHR 1
 #define HAVE_STRSTR 1
 /* #undef HAVE_STRNSTR */
-#define HAVE_STRTOK_R 1
+/* #undef HAVE_STRTOK_R */
 #define HAVE_ITOA 1
 #define HAVE__LTOA 1
 /* #undef HAVE__UITOA */
@@ -152,10 +152,10 @@
 #define HAVE_FLOORF 1
 #define HAVE_FMOD 1
 #define HAVE_FMODF 1
-/* #undef HAVE_ISINF */
+#define HAVE_ISINF 1
 /* #undef HAVE_ISINFF */
 #define HAVE_ISINF_FLOAT_MACRO 1
-/* #undef HAVE_ISNAN */
+#define HAVE_ISNAN 1
 /* #undef HAVE_ISNANF */
 #define HAVE_ISNAN_FLOAT_MACRO 1
 #define HAVE_LOG 1
@@ -180,9 +180,9 @@
 #define HAVE_TANF 1
 #define HAVE_TRUNC 1
 #define HAVE_TRUNCF 1
-#define HAVE_FOPEN64 1
-#define HAVE_FSEEKO 1
-#define HAVE_FSEEKO64 1
+/* #undef HAVE_FOPEN64 */
+/* #undef HAVE_FSEEKO */
+/* #undef HAVE_FSEEKO64 */
 /* #undef HAVE_MEMFD_CREATE */
 /* #undef HAVE_POSIX_FALLOCATE */
 /* #undef HAVE_SIGACTION */

@@ -115,6 +115,7 @@ set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/shaders/shader_loader.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/single_time_commands.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/swap_chain.cpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/ui_animation.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_brain.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_helper.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/source/vulkan_validation.cpp"
