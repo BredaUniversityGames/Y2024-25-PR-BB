@@ -346,15 +346,16 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 2> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 3> poolSizes = {
+        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize{ vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES }
     };
 
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
     poolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
-    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * std::size(poolSizes);
-    poolCreateInfo.poolSizeCount = std::size(poolSizes);
+    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * poolSizes.size();
+    poolCreateInfo.poolSizeCount = poolSizes.size();
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
@@ -369,6 +370,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
+    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
     vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[2];
     storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
@@ -376,17 +378,17 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     storageImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorage);
 
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
-    layoutCreateInfo.bindingCount = std::size(bindings);
+    layoutCreateInfo.bindingCount = bindings.size();
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    std::array<vk::DescriptorBindingFlags, 2> bindingFlags = {
+    std::array<vk::DescriptorBindingFlagsEXT, 2> bindingFlags = {
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::eUpdateAfterBind
     };
 
     vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT extInfo{};
-    extInfo.bindingCount = std::size(bindings);
+    extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
     layoutCreateInfo.pNext = &extInfo;

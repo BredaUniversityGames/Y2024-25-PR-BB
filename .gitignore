@@ -402,3 +402,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea/
+/steam_build/

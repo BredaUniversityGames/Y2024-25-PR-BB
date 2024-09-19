@@ -24,7 +24,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
     false;
 #endif
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 512;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
 enum class BindlessBinding
 {
     eColor = 10,
