@@ -1,13 +1,10 @@
 #pragma once
 
 #include "swap_chain.hpp"
-#include <glm/glm.hpp>
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
-#include "include.hpp"
 #include "camera.hpp"
-#include "hdr_target.hpp"
 
 class Application;
 class GeometryPipeline;
@@ -45,7 +42,7 @@ private:
     std::unique_ptr<ModelLoader> _modelLoader;
 
     SceneDescription _scene;
-    TextureHandle _environmentMap;
+    ResourceHandle<Image> _environmentMap;
 
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
@@ -54,9 +51,9 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    HDRTarget _hdrTarget;
-
     CameraStructure _cameraStructure;
+
+    ResourceHandle<Image> _hdrTarget;
 
     std::shared_ptr<Application> _application;
 

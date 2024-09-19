@@ -1,17 +1,8 @@
 #include "engine.hpp"
 
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define VMA_IMPLEMENTATION
-#define VMA_LEAK_LOG_FORMAT(format, ...) do { \
-        spdlog::info(fmt::sprintf(format, __VA_ARGS__)); \
-    } while(false)
-#include "vk_mem_alloc.h"
-
-
-#include "include.hpp"
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
@@ -121,6 +112,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
+    ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
@@ -134,65 +126,76 @@ void Engine::Run()
         return;
     }
 
-    int x, y;
-    _application->GetInputManager().GetMousePosition(x, y);
-
-    glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-    _lastMousePos = { x, y };
- 
-    constexpr float MOUSE_SENSITIVITY = 0.003f;
-    constexpr float CAM_SPEED = 0.003f;
-
-    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
-    constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-    constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
-
-    glm::vec3 eulerDelta{};
-    _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-    _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-  
-    glm::vec3 movement_dir{};
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-        movement_dir -= FORWARD;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-        movement_dir += FORWARD;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-        movement_dir += RIGHT;
-
-    if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-        movement_dir -= RIGHT;
-
-    if (glm::length(movement_dir) != 0.0f)
     {
-        movement_dir = glm::normalize(movement_dir);
-    }
+        ZoneNamedN(zone, "Update Camera", true);
+        int x, y;
+        _application->GetInputManager().GetMousePosition(x, y);
 
-    _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+        glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
+        _lastMousePos = { x, y };
+ 
+        constexpr float MOUSE_SENSITIVITY = 0.003f;
+        constexpr float CAM_SPEED = 0.003f;
+
+        constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
+        constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+        //constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+
+        _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+        _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+  
+        glm::vec3 movement_dir{};
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+            movement_dir -= FORWARD;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+            movement_dir += FORWARD;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+            movement_dir += RIGHT;
+
+        if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+            movement_dir -= RIGHT;
+
+        if (glm::length(movement_dir) != 0.0f)
+        {
+            movement_dir = glm::normalize(movement_dir);
+        }
+
+        _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+    }
 
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
     CameraUBO cameraUBO = CalculateCamera(_scene.camera);
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
-
-    util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
-                    "Failed waiting on in flight fence!");
-
-    uint32_t imageIndex;
-    vk::Result result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
-                                                    _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
-
-    if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
+    
     {
-        _swapChain->Resize(_application->DisplaySize());
-        _gBuffers->Resize(_application->DisplaySize());
-        _lightingPipeline->UpdateGBufferViews();
+        ZoneNamedN(zone, "Wait On Fence", true);
+        util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
+                    "Failed waiting on in flight fence!");
+    }
 
-        return;
-    } else
-        util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
+    uint32_t imageIndex{};
+    vk::Result result{};
+
+    {
+        ZoneNamedN(zone, "Acquire Next Image", true);
+
+        result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
+                                                        _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
+
+        if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
+        {
+            _swapChain->Resize(_application->DisplaySize());
+            _gBuffers->Resize(_application->DisplaySize());
+            _lightingPipeline->UpdateGBufferViews();
+
+            return;
+        } else
+            util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
+    }
 
     util::VK_ASSERT(_brain.device.resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
@@ -201,8 +204,11 @@ void Engine::Run()
     ImGui::NewFrame();
 
     _performanceTracker.Render();
-
-    ImGui::Render();
+    
+    {
+        ZoneNamedN(zone, "ImGui Render", true);
+        ImGui::Render();
+    }
 
     _commandBuffers[_currentFrame].reset();
 
@@ -220,8 +226,11 @@ void Engine::Run()
     vk::Semaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
-
-    util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+    
+    {
+        ZoneNamedN(zone, "Submit Commands", true);
+        util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+    }
 
     vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = 1;
@@ -231,10 +240,11 @@ void Engine::Run()
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapchains;
     presentInfo.pImageIndices = &imageIndex;
-
-    result = _brain.presentQueue.presentKHR(&presentInfo);
-
-    _brain.device.waitIdle();
+    
+    {
+        ZoneNamedN(zone, "Present Image", true);
+        result = _brain.presentQueue.presentKHR(&presentInfo);
+    }
 
     if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
     {
@@ -254,14 +264,16 @@ void Engine::Run()
 
 Engine::~Engine()
 {
+    _brain.device.waitIdle();
+
     ImGui_ImplVulkan_Shutdown();
     _application->ShutdownImGui();
 
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
-    _brain.device.destroy(_environmentMap.imageView);
-    vmaDestroyImage(_brain.vmaAllocator, _environmentMap.image, _environmentMap.imageAllocation);
+    _brain.ImageResourceManager().Destroy(_environmentMap);
+    _brain.ImageResourceManager().Destroy(_hdrTarget);
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -282,17 +294,13 @@ Engine::~Engine()
         }
         for(auto& texture : model->textures)
         {
-            _brain.device.destroy(texture->imageView);
-            vmaDestroyImage(_brain.vmaAllocator, texture->image, texture->imageAllocation);
+            _brain.ImageResourceManager().Destroy(texture);
         }
         for(auto& material : model->materials)
         {
             vmaDestroyBuffer(_brain.vmaAllocator, material->materialUniformBuffer, material->materialUniformAllocation);
         }
     }
-
-    _brain.device.destroy(_hdrTarget.imageViews);
-    vmaDestroyImage(_brain.vmaAllocator, _hdrTarget.images, _hdrTarget.allocations);
 
     _brain.device.destroy(_cameraStructure.descriptorSetLayout);
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -319,11 +327,14 @@ void Engine::CreateCommandBuffers()
 
 void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_t swapChainImageIndex)
 {
+    ZoneScoped;
+    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
+
     vk::CommandBufferBeginInfo commandBufferBeginInfo{};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
                                 _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
                                 DEFERRED_ATTACHMENT_COUNT);
@@ -338,7 +349,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
-    util::TransitionImageLayout(commandBuffer, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
@@ -458,43 +469,30 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 
 void Engine::InitializeHDRTarget()
 {
-    _hdrTarget.format = vk::Format::eR32G32B32A32Sfloat;
-    _hdrTarget.size = _swapChain->GetImageSize();
+    auto size = _swapChain->GetImageSize();
 
-    util::CreateImage(_brain.vmaAllocator, _hdrTarget.size.x, _hdrTarget.size.y, _hdrTarget.format,
-                      vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _hdrTarget.images, _hdrTarget.allocations, "HDR Target", false, VMA_MEMORY_USAGE_GPU_ONLY);
-    util::NameObject(_hdrTarget.images, "[IMAGE] HDR Target", _brain.device, _brain.dldi);
+    ImageCreation hdrCreation{};
+    hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget.imageViews = util::CreateImageView(_brain.device, _hdrTarget.images, _hdrTarget.format, vk::ImageAspectFlagBits::eColor);
-    util::NameObject(_hdrTarget.imageViews, "HDR Target View", _brain.device, _brain.dldi);
-
-    vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(cb, _hdrTarget.images, _hdrTarget.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::EndSingleTimeCommands(_brain,cb);
+    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
 }
 
 void Engine::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* data = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
+    float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
 
-    if(data == nullptr)
+    if(stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");
 
-    Texture texture{};
-    texture.width = width;
-    texture.height = height;
-    texture.numChannels = 4;
-    texture.isHDR = true;
-    texture.data.resize(width * height * texture.numChannels * sizeof(float));
-    std::memcpy(texture.data.data(), data, texture.data.size());
+    std::vector<std::byte> data(width * height * 4 * sizeof(float));
+    std::memcpy(data.data(), stbiData, data.size());
 
-    stbi_image_free(data);
+    stbi_image_free(stbiData);
 
-    SingleTimeCommands commandBuffer{ _brain };
-    commandBuffer.CreateTextureImage(texture, _environmentMap, false);
-    commandBuffer.Submit();
+    ImageCreation envMapCreation{};
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
+    envMapCreation.isHDR = true;
 
-    util::NameObject(_environmentMap.image, "Environment HDRI", _brain.device, _brain.dldi);
+    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
 }

@@ -1,13 +1,7 @@
 #pragma once
 
 #include <array>
-#include <vulkan/vulkan.hpp>
-#include <glm/glm.hpp>
-#include "vk_mem_alloc.h"
 #include "camera.hpp"
-#include <memory>
-#include <optional>
-#include <glm/gtc/quaternion.hpp>
 
 struct Vertex
 {
@@ -24,6 +18,10 @@ struct Vertex
     glm::vec4 tangent;
     glm::vec3 color;
     glm::vec2 texCoord;
+
+    Vertex() {}
+    Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec3 color, glm::vec2 texCoord) :
+        position(position), normal(normal), tangent(tangent), color(color), texCoord(texCoord) {}
 
     static vk::VertexInputBindingDescription GetBindingDescription();
     static std::array<vk::VertexInputAttributeDescription, 5> GetAttributeDescriptions();
@@ -144,7 +142,7 @@ struct MaterialHandle
     VmaAllocation materialUniformAllocation;
 
 
-    std::array<std::shared_ptr<TextureHandle>, TEXTURE_COUNT> textures;
+    std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
 
     static std::array<vk::DescriptorSetLayoutBinding, 7> GetLayoutBindings()
     {
@@ -205,7 +203,7 @@ struct ModelHandle
 {
     std::vector<std::shared_ptr<MeshHandle>> meshes;
     std::vector<std::shared_ptr<MaterialHandle>> materials;
-    std::vector<std::shared_ptr<TextureHandle>> textures;
+    std::vector<ResourceHandle<Image>> textures;
 
     Hierarchy hierarchy;
 };
@@ -214,6 +212,9 @@ struct GameObject
 {
     glm::mat4 transform;
     std::shared_ptr<ModelHandle> model;
+
+    GameObject(){}
+    GameObject(const glm::mat4& transform, std::shared_ptr<ModelHandle> model) : transform(transform), model(model) {}
 };
 
 struct SceneDescription
