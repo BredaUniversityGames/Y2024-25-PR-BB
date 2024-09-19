@@ -1,14 +1,7 @@
 #pragma once
 
-#include "include.hpp"
-#include <vulkan/vulkan.hpp>
 #include <magic_enum.hpp>
-#include <string>
 #include <glm/glm.hpp>
-#include <sstream>
-#include "spdlog/spdlog.h"
-#include "vk_mem_alloc.h"
-#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 

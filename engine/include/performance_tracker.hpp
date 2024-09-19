@@ -1,11 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <chrono>
-#include <vector>
-#include <array>
-#include <string>
-
 class PerformanceTracker
 {
 public:

@@ -1,18 +1,8 @@
 #include "engine.hpp"
 
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define VMA_IMPLEMENTATION
-#define VMA_LEAK_LOG_FORMAT(format, ...) do { \
-        spdlog::info(fmt::sprintf(format, __VA_ARGS__)); \
-    } while(false)
-#include "vk_mem_alloc.h"
-
-#include "tracy/Tracy.hpp"
-
-#include "include.hpp"
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
@@ -149,9 +139,8 @@ void Engine::Run()
 
         constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-        constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+        //constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        glm::vec3 eulerDelta{};
         _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
         _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
   

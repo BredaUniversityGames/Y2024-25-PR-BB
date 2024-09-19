@@ -1,5 +1,4 @@
 #pragma once
-#include "include.hpp"
 #include "swap_chain.hpp"
 
 class TonemappingPipeline
