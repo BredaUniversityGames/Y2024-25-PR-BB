@@ -123,38 +123,18 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &materialHandle.descriptorSet),
                     "Failed allocating material descriptor set!");
 
-    std::array<vk::DescriptorImageInfo, 6> imageInfos;
-    imageInfos[0].sampler = sampler;
-    for(size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
-    {
-        const MaterialHandle& material = brain.ImageResourceManager().IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
-
-        imageInfos[i].imageView = brain.ImageResourceManager().Access(material.textures[i - 1])->views[0];
-        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    }
-
     vk::DescriptorBufferInfo uniformInfo{};
     uniformInfo.offset = 0;
     uniformInfo.buffer = materialHandle.materialUniformBuffer;
     uniformInfo.range = sizeof(MaterialHandle::MaterialInfo);
 
-    std::array<vk::WriteDescriptorSet, imageInfos.size() + 1> writes;
-    for(size_t i = 0; i < imageInfos.size(); ++i)
-    {
-        writes[i].dstSet = materialHandle.descriptorSet;
-        writes[i].dstBinding = i;
-        writes[i].dstArrayElement = 0;
-        // Hacky way of keeping this process in one loop.
-        writes[i].descriptorType = i == 0 ? vk::DescriptorType::eSampler : vk::DescriptorType::eSampledImage;
-        writes[i].descriptorCount = 1;
-        writes[i].pImageInfo = &imageInfos[i];
-    }
-    writes[imageInfos.size()].dstSet = materialHandle.descriptorSet;
-    writes[imageInfos.size()].dstBinding = imageInfos.size();
-    writes[imageInfos.size()].dstArrayElement = 0;
-    writes[imageInfos.size()].descriptorType = vk::DescriptorType::eUniformBuffer;
-    writes[imageInfos.size()].descriptorCount = 1;
-    writes[imageInfos.size()].pBufferInfo = &uniformInfo;
+    std::array<vk::WriteDescriptorSet, 1> writes;
+    writes[0].dstSet = materialHandle.descriptorSet;
+    writes[0].dstBinding = 0;
+    writes[0].dstArrayElement = 0;
+    writes[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+    writes[0].descriptorCount = 1;
+    writes[0].pBufferInfo = &uniformInfo;
 
     brain.device.updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
 

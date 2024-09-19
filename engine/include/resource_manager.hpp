@@ -12,11 +12,12 @@ struct ResourceHandle
 {
     ResourceHandle() : index(0xFFFFFF), version(0) {}
     static ResourceHandle<T> Invalid() { return ResourceHandle<T>{}; }
+
+    uint32_t index : 24 {0};
 private:
     friend class VulkanBrain;
     friend ResourceManager<T>;
-    uint32_t index : 24;
-    uint32_t version : 8;
+    uint32_t version : 8 {0};
 };
 
 template <typename T>

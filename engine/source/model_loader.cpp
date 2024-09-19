@@ -383,6 +383,12 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
         info.useOcclusionMap = material.occlusionIndex.has_value();
         info.useEmissiveMap = material.emissiveIndex.has_value();
 
+        info.albedoMapIndex = textures[0].index;
+        info.mrMapIndex = textures[1].index;
+        info.normalMapIndex = textures[2].index;
+        info.occlusionMapIndex = textures[3].index;
+        info.emissiveMapIndex = textures[4].index;
+
         info.albedoFactor = material.albedoFactor;
         info.metallicFactor = material.metallicFactor;
         info.roughnessFactor = material.roughnessFactor;

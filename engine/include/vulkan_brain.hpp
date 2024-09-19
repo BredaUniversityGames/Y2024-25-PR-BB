@@ -50,7 +50,7 @@ public:
 
     ImageResourceManager& ImageResourceManager() const { return _imageResourceManager; }
 
-    void UpdateBindlessSet();
+    void UpdateBindlessSet() const;
 
 private:
     vk::DebugUtilsMessengerEXT _debugMessenger;

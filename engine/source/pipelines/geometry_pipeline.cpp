@@ -91,6 +91,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &material.descriptorSet, 0, nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &_brain.bindlessSet, 0, nullptr);
 
         vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
         vk::DeviceSize offsets[] = { 0 };
@@ -120,6 +121,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &material.descriptorSet, 0, nullptr);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &_brain.bindlessSet, 0, nullptr);
 
                 vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
                 vk::DeviceSize offsets[] = { 0 };
@@ -139,7 +141,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 void GeometryPipeline::CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
-    std::array<vk::DescriptorSetLayout, 3> layouts = {_descriptorSetLayout, _camera.descriptorSetLayout, materialDescriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 4> layouts = { _descriptorSetLayout, _camera.descriptorSetLayout, materialDescriptorSetLayout, _brain.bindlessLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;

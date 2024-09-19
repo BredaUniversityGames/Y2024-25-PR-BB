@@ -206,6 +206,8 @@ void Engine::Run()
 
     _commandBuffers[_currentFrame].reset();
 
+    _brain.UpdateBindlessSet();
+
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex);
 
     vk::SubmitInfo submitInfo{};
@@ -390,7 +392,7 @@ void Engine::InitializeCameraUBODescriptors()
     // Create buffers.
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::CreateBuffer(_brain, bufferSize,
+            util::CreateBuffer(_brain, bufferSize,
                            vk::BufferUsageFlagBits::eUniformBuffer,
                            _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
                            VMA_MEMORY_USAGE_CPU_ONLY,

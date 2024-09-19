@@ -67,21 +67,28 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-void VulkanBrain::UpdateBindlessSet()
+void VulkanBrain::UpdateBindlessSet() const
 {
     vk::DescriptorImageInfo imageInfos[MAX_BINDLESS_RESOURCES];
     vk::WriteDescriptorSet writes[MAX_BINDLESS_RESOURCES];
 
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image& image = i < _imageResourceManager.Resources().size() ? _imageResourceManager.Resources()[i].resource.value() : *_imageResourceManager.Access(_fallbackImage);
+        const Image* image = i < _imageResourceManager.Resources().size()
+                ? &_imageResourceManager.Resources()[i].resource.value()
+                : _imageResourceManager.Access(_fallbackImage);
+
+        uint32_t dstBinding = BINDLESS_TEXTURES_BINDING;
+
+        if(util::GetImageAspectFlags(image->format) != vk::ImageAspectFlagBits::eColor)
+            dstBinding = BINDLESS_TEXTURES_BINDING + 1;
 
         imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfos[i].imageView = image.views[0]; // TODO: Review later how to determine what view should be bound.
+        imageInfos[i].imageView = image->view;
         imageInfos[i].sampler = *_sampler;
 
         writes[i].dstSet = bindlessSet;
-        writes[i].dstBinding = BINDLESS_TEXTURES_BINDING;
+        writes[i].dstBinding = dstBinding;
         writes[i].dstArrayElement = i;
         writes[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
         writes[i].descriptorCount = 1;
@@ -344,16 +351,22 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes;
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    vk::DescriptorSetLayoutBinding bindings[2];
+    vk::DescriptorSetLayoutBinding bindings[3];
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
     combinedImageSampler.binding = BINDLESS_TEXTURES_BINDING;
+    combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
-    vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[1];
+    vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
+    depthImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
+    depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    depthImageBinding.binding = BINDLESS_TEXTURES_BINDING + 1;
+
+    vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[2];
     storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
     storageImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    storageImageBinding.binding = BINDLESS_TEXTURES_BINDING + 1;
+    storageImageBinding.binding = BINDLESS_TEXTURES_BINDING + 2;
 
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
     layoutCreateInfo.bindingCount = std::size(bindings);

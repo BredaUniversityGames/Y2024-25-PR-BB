@@ -4,7 +4,7 @@
 #include "vk_mem_alloc.h"
 #include "mesh.hpp"
 
-struct VulkanBrain;
+class VulkanBrain;
 struct TextureHandle;
 
 class IBLPipeline

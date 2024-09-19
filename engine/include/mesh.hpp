@@ -134,7 +134,12 @@ struct MaterialHandle
         int32_t useMRMap{false};
         int32_t useNormalMap{false};
         int32_t useOcclusionMap{false};
-        float _padding1;
+
+        int32_t albedoMapIndex;
+        int32_t mrMapIndex;
+        int32_t normalMapIndex;
+        int32_t occlusionMapIndex;
+        int32_t emissiveMapIndex;
     };
 
     const static uint32_t TEXTURE_COUNT = 5;
@@ -143,29 +148,16 @@ struct MaterialHandle
     vk::Buffer materialUniformBuffer;
     VmaAllocation materialUniformAllocation;
 
-
     std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
 
-    static std::array<vk::DescriptorSetLayoutBinding, 7> GetLayoutBindings()
+    static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
     {
-        std::array<vk::DescriptorSetLayoutBinding, 7> bindings{};
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
+
         bindings[0].binding = 0;
-        bindings[0].descriptorType = vk::DescriptorType::eSampler;
+        bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
         bindings[0].descriptorCount = 1;
         bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
-        for(size_t i = 1; i < TEXTURE_COUNT + 1; ++i)
-        {
-            bindings[i].binding = i;
-            bindings[i].descriptorType = vk::DescriptorType::eSampledImage;
-            bindings[i].descriptorCount = 1;
-            bindings[i].stageFlags = vk::ShaderStageFlagBits::eFragment;
-        }
-
-        const uint32_t infoUniformIndex = TEXTURE_COUNT + 1;
-        bindings[infoUniformIndex].binding = infoUniformIndex;
-        bindings[infoUniformIndex].descriptorType = vk::DescriptorType::eUniformBuffer;
-        bindings[infoUniformIndex].descriptorCount = 1;
-        bindings[infoUniformIndex].stageFlags = vk::ShaderStageFlagBits::eFragment;
 
         return bindings;
     }
