@@ -1,6 +1,8 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#include "bindless.glsl"
+
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normalIn;
 layout(location = 2) in vec2 texCoord;
@@ -34,8 +36,6 @@ layout(set = 2, binding = 0) uniform MaterialInfoUBO
     int emissiveMapIndex;
 } materialInfoUBO;
 
-layout(set = 3, binding = 10) uniform sampler2D global_textures[];
-
 void main()
 {
     vec4 albedoSample = pow(materialInfoUBO.albedoFactor, vec4(2.2));
@@ -47,25 +47,25 @@ void main()
 
     if(materialInfoUBO.useAlbedoMap)
     {
-        albedoSample *= pow(texture(global_textures[nonuniformEXT(materialInfoUBO.albedoMapIndex)], texCoord), vec4(2.2));
+        albedoSample *= pow(texture(bindless_color_textures[nonuniformEXT(materialInfoUBO.albedoMapIndex)], texCoord), vec4(2.2));
     }
     if(materialInfoUBO.useMRMap)
     {
-        mrSample *= texture(global_textures[nonuniformEXT(materialInfoUBO.mrMapIndex)], texCoord);
+        mrSample *= texture(bindless_color_textures[nonuniformEXT(materialInfoUBO.mrMapIndex)], texCoord);
     }
     if(materialInfoUBO.useNormalMap)
     {
-        vec4 normalSample = texture(global_textures[nonuniformEXT(materialInfoUBO.normalMapIndex)], texCoord) * materialInfoUBO.normalScale;
+        vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(materialInfoUBO.normalMapIndex)], texCoord) * materialInfoUBO.normalScale;
         normal = normalSample.xyz * 2.0 - 1.0;
         normal = normalize(TBN * normal);
     }
     if(materialInfoUBO.useOcclusionMap)
     {
-        occlusionSample *= texture(global_textures[nonuniformEXT(materialInfoUBO.occlusionMapIndex)], texCoord);
+        occlusionSample *= texture(bindless_color_textures[nonuniformEXT(materialInfoUBO.occlusionMapIndex)], texCoord);
     }
     if(materialInfoUBO.useEmissiveMap)
     {
-        emissiveSample *= pow(texture(global_textures[nonuniformEXT(materialInfoUBO.emissiveMapIndex)], texCoord), vec4(2.2));
+        emissiveSample *= pow(texture(bindless_color_textures[nonuniformEXT(materialInfoUBO.emissiveMapIndex)], texCoord), vec4(2.2));
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
