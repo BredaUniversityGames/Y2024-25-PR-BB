@@ -20,6 +20,13 @@ struct QueueFamilyIndices
     static QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 };
 
+constexpr bool ENABLE_VALIDATION_LAYERS =
+#if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
+    true;
+#else
+    false;
+#endif
+
 constexpr uint32_t MAX_BINDLESS_RESOURCES = 512;
 constexpr uint32_t BINDLESS_TEXTURES_BINDING = 10;
 
@@ -63,12 +70,7 @@ private:
         "VK_LAYER_KHRONOS_validation"
     };
 
-    const bool _enableValidationLayers =
-#if defined(NDEBUG)
-        false;
-#else
-        true;
-#endif
+
     const std::vector<const char*> _deviceExtensions =
     {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
