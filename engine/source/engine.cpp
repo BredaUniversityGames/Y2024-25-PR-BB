@@ -1,6 +1,5 @@
 #include "engine.hpp"
 
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -15,7 +14,6 @@
 #include "vk_mem_alloc.h"
 
 #pragma clang diagnostic pop
-#include "tracy/Tracy.hpp"
 
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
