@@ -47,7 +47,7 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this
 
 VulkanBrain::~VulkanBrain()
 {
-    if(_enableValidationLayers)
+    if(ENABLE_VALIDATION_LAYERS)
         instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, dldi);
 
     _imageResourceManager.Destroy(_fallbackImage);
@@ -94,7 +94,7 @@ void VulkanBrain::UpdateBindlessSet()
 void VulkanBrain::CreateInstance(const InitInfo& initInfo)
 {
     CheckValidationLayerSupport();
-    if(_enableValidationLayers && !CheckValidationLayerSupport())
+    if(ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
         throw std::runtime_error("Validation layers requested, but not supported!");
 
     vk::ApplicationInfo appInfo{};
@@ -113,7 +113,7 @@ void VulkanBrain::CreateInstance(const InitInfo& initInfo)
     };
 
     vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-    if(_enableValidationLayers)
+    if(ENABLE_VALIDATION_LAYERS)
     {
         createInfo.enabledLayerCount = _validationLayers.size();
         createInfo.ppEnabledLayerNames = _validationLayers.data();
@@ -224,10 +224,10 @@ bool VulkanBrain::CheckValidationLayerSupport()
 std::vector<const char*> VulkanBrain::GetRequiredExtensions(const InitInfo& initInfo)
 {
     std::vector<const char *> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
-    if(_enableValidationLayers)
+    if(ENABLE_VALIDATION_LAYERS)
         extensions.emplace_back(vk::EXTDebugUtilsExtensionName);
 
-#if LINUX
+#ifdef LINUX
     extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #endif
 
@@ -236,7 +236,7 @@ std::vector<const char*> VulkanBrain::GetRequiredExtensions(const InitInfo& init
 
 void VulkanBrain::SetupDebugMessenger()
 {
-    if(!_enableValidationLayers)
+    if(!ENABLE_VALIDATION_LAYERS)
         return;
 
     vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
@@ -275,13 +275,15 @@ void VulkanBrain::CreateDevice()
 
     vk::DeviceCreateInfo createInfo{};
     createInfo.pNext = &deviceFeatures;
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = nullptr; // Shouldn't be set because we already pass a pnext for DeviceFeatures2.
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
-    if(_enableValidationLayers)
+    spdlog::info("Validation layers enabled: {}", ENABLE_VALIDATION_LAYERS ? "TRUE" : "FALSE");
+
+    if(ENABLE_VALIDATION_LAYERS)
     {
         createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
         createInfo.ppEnabledLayerNames = _validationLayers.data();

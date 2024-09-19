@@ -4,6 +4,8 @@
 #include "imgui/backends/imgui_impl_sdl3.h"
 #include "include.hpp"
 
+#include "tracy/Tracy.hpp"
+
 SDLApp::SDLApp(const CreateParameters& parameters) : Application(parameters)
 {
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -92,6 +94,7 @@ void SDLApp::Run(std::function<bool()> updateLoop)
 
         if(updateLoop())
             running = false;
+        FrameMark;
     }
 }
 
@@ -102,6 +105,7 @@ void SDLApp::InitImGui()
 
 void SDLApp::NewImGuiFrame()
 {
+    ZoneScoped;
     ImGui_ImplSDL3_NewFrame();
 }
 
