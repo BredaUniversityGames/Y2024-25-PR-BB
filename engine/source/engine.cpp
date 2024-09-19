@@ -151,9 +151,8 @@ void Engine::Run()
 
         constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-        constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
-
-        glm::vec3 eulerDelta{};
+        //constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+        
         _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
         _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
   

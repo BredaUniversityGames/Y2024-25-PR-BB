@@ -27,6 +27,8 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 
+target_compile_options(Engine PRIVATE "-Wall")
+
 option(ENABLE_PCH "Compile with precompiled header" ON)
 
 if (ENABLE_PCH)
