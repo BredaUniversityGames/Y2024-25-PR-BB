@@ -8,7 +8,7 @@ layout(set = 0, binding = 4) uniform texture2D gBufferPosition;   // RGB: Positi
 layout(set = 0, binding = 5) uniform samplerCube irradianceMap;
 layout(set = 0, binding = 6) uniform samplerCube prefilterMap;
 layout(set = 0, binding = 7) uniform sampler2D brdfLUT;
-layout(set = 0, binding = 8) uniform sampler2D shadowMap;
+layout(set = 0, binding = 8) uniform sampler2DShadow shadowMap;
 
 layout(set = 1, binding = 0) uniform CameraUBO
 {
@@ -102,12 +102,34 @@ void main()
     vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec4 ShadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
+    //vec3 projCoords = ShadowCoord.xyz / ShadowCoord.w;
     vec4 TestCoord = cameraUbo.lightVP * vec4(position, 1.0);
     float visibility = 1.0;
-    float textureResult = texture( shadowMap, ShadowCoord.xy ).r;
-    if ( textureResult  <  TestCoord.z - 0.005){
-    visibility = 0.1;
-}
+
+    float cosTheta = clamp(dot(N, lightDir),0.0,1.0);
+   float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
+
+    bias = clamp(bias, 0,0.005);
+
+    /* vec3 yes = vec3(ShadowCoord.xy,TestCoord.z - bias);
+    float textureResult = texture( shadowMap, yes,bias).r;
+     if ( textureResult  <=  TestCoord.z - bias){
+    visibility = clamp(textureResult, 0.05, 1.0);
+    } 
+ */
+
+    const float offset = 1.0 / 4096.0; // Assuming a 4096x4096 shadow map
+
+    float shadow = 0.0;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset, -offset), TestCoord.z - bias)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset,  offset), TestCoord.z - bias)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset, -offset), TestCoord.z - bias)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset,  offset), TestCoord.z - bias)).r;
+    shadow *= 0.25; // Average the samples
+
+    visibility = clamp(shadow, 0.2, 1.0);
+
+
     outColor = vec4((Lo + ambient + emissive) * visibility, 1.0);
     //outColor = vec4((visibility.r),0.0,0.0,1.0);
 

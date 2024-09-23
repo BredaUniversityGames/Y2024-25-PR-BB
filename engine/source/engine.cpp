@@ -491,7 +491,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 
     //for debug info
 
-    /*
+
     static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     ImGui::Begin("Light Debug");
@@ -504,7 +504,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
     ImGui::Image(textureID, ImVec2(512   , 512));
     ImGui::End();
-    */
+
     const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
     glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);
     depthProjectionMatrix[1][1] *= -1;

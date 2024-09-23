@@ -11,9 +11,39 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     _brdfLUT(brdfLUT)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    //shaodw sampler
+    vk::PhysicalDeviceProperties properties{};
+    _brain.physicalDevice.getProperties(&properties);
+
+    vk::SamplerCreateInfo shadowSamplerInfo{};
+    shadowSamplerInfo.magFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.minFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeV =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeW =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.anisotropyEnable = 1;
+    shadowSamplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+    shadowSamplerInfo.unnormalizedCoordinates = 0;
+    shadowSamplerInfo.compareEnable = 0;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eAlways;
+    shadowSamplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    shadowSamplerInfo.mipLodBias = 0.0f;
+    shadowSamplerInfo.minLod = 0.0f;
+    shadowSamplerInfo.maxLod = static_cast<float>(1);
+    shadowSamplerInfo.compareEnable = vk::True;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eLessOrEqual;
+    _shadowSampler = brain.device.createSamplerUnique(shadowSamplerInfo);
+
+    //
+
     CreateDescriptorSetLayout();
     CreateDescriptorSets();
     CreatePipeline();
+
+
+
+
 }
 
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
@@ -247,6 +277,7 @@ void LightingPipeline::UpdateGBufferViews()
     vk::DescriptorImageInfo samplerInfo{};
     samplerInfo.sampler = *_sampler;
 
+
     std::array<vk::DescriptorImageInfo, DEFERRED_ATTACHMENT_COUNT> imageInfos{};
     for(size_t i = 0; i < imageInfos.size(); ++i)
     {
@@ -288,7 +319,7 @@ void LightingPipeline::UpdateGBufferViews()
     vk::DescriptorImageInfo _shadowMapInfo;
     _shadowMapInfo.imageView = _gBuffers.ShadowImageView();
     _shadowMapInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    _shadowMapInfo.sampler = *_sampler;
+    _shadowMapInfo.sampler = *_shadowSampler;
 
     descriptorWrites[5].dstSet = _descriptorSet;
     descriptorWrites[5].dstBinding = 5;

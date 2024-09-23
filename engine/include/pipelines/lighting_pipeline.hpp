@@ -37,4 +37,6 @@ private:
     vk::Pipeline _pipeline;
 
     vk::UniqueSampler _sampler;
+    vk::UniqueSampler _shadowSampler;
+
 };

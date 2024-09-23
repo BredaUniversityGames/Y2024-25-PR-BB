@@ -74,9 +74,9 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
-    util::CreateImage(_brain.vmaAllocator,1024,1024,_shadowFormat,vk::ImageTiling::eOptimal,
+    util::CreateImage(_brain.vmaAllocator,4096 ,4096,_shadowFormat,vk::ImageTiling::eOptimal,
                       vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _shadowImage, _shadowImageAllocation, "Shadow image", false, VMA_MEMORY_USAGE_GPU_ONLY);
+                      _shadowImage, _shadowImageAllocation, "Shadow image", vk::True, VMA_MEMORY_USAGE_GPU_ONLY);
 
     _shadowImageView = util::CreateImageView(_brain.device, _shadowImage, _shadowFormat, vk::ImageAspectFlagBits::eDepth);
     vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);

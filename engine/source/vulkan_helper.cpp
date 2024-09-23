@@ -240,6 +240,8 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
     createInfo.mipLodBias = 0.0f;
     createInfo.minLod = 0.0f;
     createInfo.maxLod = static_cast<float>(mipLevels);
+    //createInfo.compareEnable = VK_TRUE; // Enable depth comparison
+    //createInfo.compareOp = vk::CompareOp::eLessOrEqual;
 
     return brain.device.createSamplerUnique(createInfo);
 }
