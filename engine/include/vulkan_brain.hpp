@@ -62,14 +62,11 @@ private:
 
     ResourceHandle<Image> _fallbackImage;
 
-    const std::vector<const char*> _validationLayers =
-    {
+    const std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
 
-
-    const std::vector<const char*> _deviceExtensions =
-    {
+    const std::vector<const char*> _deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if defined(LINUX)
         VK_KHR_MULTIVIEW_EXTENSION_NAME,
@@ -86,7 +83,7 @@ private:
 
     void CreateInstance(const InitInfo& initInfo);
     void PickPhysicalDevice();
-    uint32_t RateDeviceSuitability(const vk::PhysicalDevice &device);
+    uint32_t RateDeviceSuitability(const vk::PhysicalDevice& device);
     bool ExtensionsSupported(const vk::PhysicalDevice& device);
     bool CheckValidationLayerSupport();
     std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);

@@ -3,12 +3,12 @@
 #include "pch.hpp"
 #include "vulkan_helper.hpp"
 
-ImageResourceManager::ImageResourceManager(const VulkanBrain &brain) : _brain(brain)
+ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)
+    : _brain(brain)
 {
-
 }
 
-ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation)
+ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation)
 {
     Image imageResource;
 
@@ -23,7 +23,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     imageResource.name = creation.name;
     imageResource.isHDR = creation.isHDR;
 
-    vk::ImageCreateInfo imageCreateInfo{};
+    vk::ImageCreateInfo imageCreateInfo {};
     imageCreateInfo.imageType = ImageTypeConversion(creation.type);
     imageCreateInfo.extent.width = creation.width;
     imageCreateInfo.extent.height = creation.height;
@@ -38,20 +38,20 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
 
     imageCreateInfo.usage = creation.flags;
 
-    if(creation.initialData)
+    if (creation.initialData)
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
 
-    if(creation.type == ImageType::eCubeMap)
+    if (creation.type == ImageType::eCubeMap)
         imageCreateInfo.flags |= vk::ImageCreateFlagBits::eCubeCompatible;
 
-    VmaAllocationCreateInfo allocCreateInfo{};
+    VmaAllocationCreateInfo allocCreateInfo {};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
     vmaCreateImage(_brain.vmaAllocator, (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&imageResource.image), &imageResource.allocation, nullptr);
     std::string allocName = creation.name + " texture allocation";
     vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, allocName.c_str());
 
-    vk::ImageViewCreateInfo viewCreateInfo{};
+    vk::ImageViewCreateInfo viewCreateInfo {};
     viewCreateInfo.image = imageResource.image;
     viewCreateInfo.viewType = vk::ImageViewType::e2D;
     viewCreateInfo.format = creation.format;
@@ -70,9 +70,9 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
     }
     imageResource.view = *imageResource.views.begin();
 
-    if(creation.type == ImageType::eCubeMap)
+    if (creation.type == ImageType::eCubeMap)
     {
-        vk::ImageViewCreateInfo cubeViewCreateInfo{};
+        vk::ImageViewCreateInfo cubeViewCreateInfo {};
         cubeViewCreateInfo.image = imageResource.image;
         cubeViewCreateInfo.viewType = ImageViewTypeConversion(creation.type);
         cubeViewCreateInfo.format = creation.format;
@@ -85,7 +85,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
         util::VK_ASSERT(_brain.device.createImageView(&cubeViewCreateInfo, nullptr, &imageResource.view), "Failed creating image view!");
     }
 
-    if(creation.initialData)
+    if (creation.initialData)
     {
         vk::DeviceSize imageSize = imageResource.width * imageResource.height * imageResource.depth * 4;
         if (imageResource.isHDR)
@@ -112,7 +112,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
 
             for (uint32_t i = 1; i < creation.mips; ++i)
             {
-                vk::ImageBlit blit{};
+                vk::ImageBlit blit {};
                 blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
                 blit.srcSubresource.layerCount = 1;
                 blit.srcSubresource.mipLevel = i - 1;
@@ -148,13 +148,13 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
 
 void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
 {
-    if(IsValid(handle))
+    if (IsValid(handle))
     {
         const Image* image = Access(handle);
         vmaDestroyImage(_brain.vmaAllocator, image->image, image->allocation);
-        for(auto& view : image->views)
+        for (auto& view : image->views)
             _brain.device.destroy(view);
-        if(image->type == ImageType::eCubeMap)
+        if (image->type == ImageType::eCubeMap)
             _brain.device.destroy(image->view);
 
         ResourceManager::Destroy(handle);
@@ -163,28 +163,28 @@ void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
 
 vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)
 {
-   switch(type)
-   {
-       case ImageType::e2D:
-       case ImageType::e2DArray:
-       case ImageType::eCubeMap:
-           return vk::ImageType::e2D;
-       default:
-           throw std::runtime_error("Unsupported ImageType!");
-   }
+    switch (type)
+    {
+    case ImageType::e2D:
+    case ImageType::e2DArray:
+    case ImageType::eCubeMap:
+        return vk::ImageType::e2D;
+    default:
+        throw std::runtime_error("Unsupported ImageType!");
+    }
 }
 
 vk::ImageViewType ImageResourceManager::ImageViewTypeConversion(ImageType type)
 {
-    switch(type)
+    switch (type)
     {
-        case ImageType::e2D:
-            return vk::ImageViewType::e2D;
-        case ImageType::e2DArray:
-            return vk::ImageViewType::e2DArray;
-        case ImageType::eCubeMap:
-            return vk::ImageViewType::eCube;
-        default:
-            throw std::runtime_error("Unsupported ImageType!");
+    case ImageType::e2D:
+        return vk::ImageViewType::e2D;
+    case ImageType::e2DArray:
+        return vk::ImageViewType::e2DArray;
+    case ImageType::eCubeMap:
+        return vk::ImageViewType::eCube;
+    default:
+        throw std::runtime_error("Unsupported ImageType!");
     }
 }

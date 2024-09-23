@@ -1,12 +1,12 @@
 #include "gbuffers.hpp"
 
-GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size) :
-        _brain(brain),
-        _size(size)
+GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
+    : _brain(brain)
+    , _size(size)
 {
     auto supportedDepthFormat = util::FindSupportedFormat(_brain.physicalDevice, { vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
-                                                          vk::ImageTiling::eOptimal,
-                                                          vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+        vk::ImageTiling::eOptimal,
+        vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
     assert(supportedDepthFormat.has_value() && "No supported depth format!");
 
@@ -17,7 +17,6 @@ GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size) :
     CreateViewportAndScissor();
 }
 
-
 GBuffers::~GBuffers()
 {
     CleanUp();
@@ -25,7 +24,7 @@ GBuffers::~GBuffers()
 
 void GBuffers::Resize(glm::uvec2 size)
 {
-    if(size == _size)
+    if (size == _size)
         return;
 
     CleanUp();
@@ -39,7 +38,7 @@ void GBuffers::Resize(glm::uvec2 size)
 
 void GBuffers::CreateGBuffers()
 {
-    ImageCreation gBufferCreation{};
+    ImageCreation gBufferCreation {};
     gBufferCreation.SetFormat(GBufferFormat()).SetSize(_size.x, _size.y).SetName("GBuffer array").SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
     gBufferCreation.layers = DEFERRED_ATTACHMENT_COUNT;
     _gBuffersImage = _brain.ImageResourceManager().Create(gBufferCreation);
@@ -53,7 +52,7 @@ void GBuffers::CreateGBuffers()
 
 void GBuffers::CreateDepthResources()
 {
-    ImageCreation depthCreation{};
+    ImageCreation depthCreation {};
     depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
     _depthImage = _brain.ImageResourceManager().Create(depthCreation);
 
@@ -72,9 +71,9 @@ void GBuffers::CleanUp()
 
 void GBuffers::CreateViewportAndScissor()
 {
-    _viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(_size.x), static_cast<float>(_size.y), 0.0f,
-                              1.0f };
-    vk::Extent2D extent{ _size.x, _size.y };
+    _viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(_size.x), static_cast<float>(_size.y), 0.0f,
+        1.0f };
+    vk::Extent2D extent { _size.x, _size.y };
 
-    _scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
+    _scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
 }

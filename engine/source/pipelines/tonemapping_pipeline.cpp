@@ -3,10 +3,10 @@
 #include "shaders/shader_loader.hpp"
 #include "imgui_impl_vulkan.h"
 
-TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, const SwapChain& _swapChain) :
-    _brain(brain),
-    _swapChain(_swapChain),
-    _hdrTarget(hdrTarget)
+TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, const SwapChain& _swapChain)
+    : _brain(brain)
+    , _swapChain(_swapChain)
+    , _hdrTarget(hdrTarget)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     CreateDescriptorSetLayout();
@@ -22,26 +22,25 @@ TonemappingPipeline::~TonemappingPipeline()
     _brain.device.destroy(_descriptorSetLayout);
 }
 
-
 void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
 {
-    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
+    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
     finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    vk::RenderingInfoKHR renderingInfo{};
+    vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = _swapChain.GetExtent();
-    renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+    renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    util::BeginLabel(commandBuffer, "Tonemapping pass", glm::vec3{ 239.0f, 71.0f, 111.0f } / 255.0f, _brain.dldi);
+    util::BeginLabel(commandBuffer, "Tonemapping pass", glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
@@ -59,14 +58,14 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
 void TonemappingPipeline::CreatePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = 1;
     pipelineLayoutCreateInfo.pSetLayouts = &_descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
     pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-                    "Failed creating geometry pipeline layout!");
+        "Failed creating geometry pipeline layout!");
 
     auto vertByteCode = shader::ReadFile("shaders/tonemapping-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/tonemapping-f.spv");
@@ -74,38 +73,38 @@ void TonemappingPipeline::CreatePipeline()
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo{};
+    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageCreateInfo.module = vertModule;
     vertShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo{};
+    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
     fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
     std::array<vk::DynamicState, 2> dynamicStates = {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eScissor,
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
     rasterizationStateCreateInfo.depthClampEnable = vk::False;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
@@ -117,7 +116,7 @@ void TonemappingPipeline::CreatePipeline()
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
     multisampleStateCreateInfo.sampleShadingEnable = vk::False;
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -125,22 +124,20 @@ void TonemappingPipeline::CreatePipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{};
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
     colorBlendAttachmentState.blendEnable = vk::False;
-    colorBlendAttachmentState.colorWriteMask =
-            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
-            vk::ColorComponentFlagBits::eA;
+    colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -156,7 +153,7 @@ void TonemappingPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     vk::Format format = _swapChain.GetFormat();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
@@ -174,43 +171,44 @@ void TonemappingPipeline::CreatePipeline()
 
 void TonemappingPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
+    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
+    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
     samplerLayoutBinding.binding = 0;
     samplerLayoutBinding.descriptorCount = 1;
     samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     samplerLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutCreateInfo createInfo{};
+    vk::DescriptorSetLayoutCreateInfo createInfo {};
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-                    "Failed creating tonemapping descriptor set layout!");
+        "Failed creating tonemapping descriptor set layout!");
 }
 
 void TonemappingPipeline::CreateDescriptorSets()
 {
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts{};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l) { l = _descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo{};
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _descriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _brain.descriptorPool;
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _descriptorSets.data()),
-                    "Failed allocating descriptor sets!");
+        "Failed allocating descriptor sets!");
 
-    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vk::DescriptorImageInfo imageInfo{};
+        vk::DescriptorImageInfo imageInfo {};
         imageInfo.sampler = *_sampler;
         imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
 
-        std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+        std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
         descriptorWrites[0].dstSet = _descriptorSets[i];
         descriptorWrites[0].dstBinding = 0;
         descriptorWrites[0].dstArrayElement = 0;

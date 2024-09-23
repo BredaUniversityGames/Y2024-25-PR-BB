@@ -1,20 +1,20 @@
 #include "single_time_commands.hpp"
 #include "vulkan_helper.hpp"
 
-SingleTimeCommands::SingleTimeCommands(const VulkanBrain& brain) :
-    _brain(brain)
+SingleTimeCommands::SingleTimeCommands(const VulkanBrain& brain)
+    : _brain(brain)
 {
-    vk::CommandBufferAllocateInfo allocateInfo{};
+    vk::CommandBufferAllocateInfo allocateInfo {};
     allocateInfo.level = vk::CommandBufferLevel::ePrimary;
     allocateInfo.commandPool = brain.commandPool;
     allocateInfo.commandBufferCount = 1;
 
     util::VK_ASSERT(brain.device.allocateCommandBuffers(&allocateInfo, &_commandBuffer), "Failed allocating one time command buffer!");
 
-    vk::FenceCreateInfo fenceInfo{};
+    vk::FenceCreateInfo fenceInfo {};
     util::VK_ASSERT(_brain.device.createFence(&fenceInfo, nullptr, &_fence), "Failed creating single time command fence!");
 
-    vk::CommandBufferBeginInfo beginInfo{};
+    vk::CommandBufferBeginInfo beginInfo {};
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
     util::VK_ASSERT(_commandBuffer.begin(&beginInfo), "Failed beginning one time command buffer!");
@@ -27,12 +27,12 @@ SingleTimeCommands::~SingleTimeCommands()
 
 void SingleTimeCommands::Submit()
 {
-    if(_submitted)
+    if (_submitted)
         return;
 
     _commandBuffer.end();
 
-    vk::SubmitInfo submitInfo{};
+    vk::SubmitInfo submitInfo {};
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &_commandBuffer;
 
@@ -43,7 +43,7 @@ void SingleTimeCommands::Submit()
     _brain.device.destroy(_fence);
 
     assert(_stagingAllocations.size() == _stagingBuffers.size());
-    for(size_t i = 0; i < _stagingBuffers.size(); ++i)
+    for (size_t i = 0; i < _stagingBuffers.size(); ++i)
     {
         vmaDestroyBuffer(_brain.vmaAllocator, _stagingBuffers[i], _stagingAllocations[i]);
     }
@@ -51,7 +51,7 @@ void SingleTimeCommands::Submit()
 }
 
 void SingleTimeCommands::CreateLocalBuffer(const std::byte* vec, uint32_t count, vk::Buffer& buffer,
-                                           VmaAllocation& allocation, vk::BufferUsageFlags usage, std::string_view name)
+    VmaAllocation& allocation, vk::BufferUsageFlags usage, std::string_view name)
 {
     vk::DeviceSize bufferSize = count;
 

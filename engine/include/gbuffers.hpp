@@ -14,7 +14,7 @@ public:
     void Resize(glm::uvec2 size);
 
     vk::Image GBuffersImageArray() const { return _brain.ImageResourceManager().Access(_gBuffersImage)->image; }
-    const std::vector<vk::ImageView>& GBufferViews() const  { return _brain.ImageResourceManager().Access(_gBuffersImage)->views; }
+    const std::vector<vk::ImageView>& GBufferViews() const { return _brain.ImageResourceManager().Access(_gBuffersImage)->views; }
     vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.ImageResourceManager().Access(_gBuffersImage)->views[viewIndex]; }
     vk::Format DepthFormat() const { return _depthFormat; }
     glm::uvec2 Size() const { return _size; }
@@ -38,8 +38,8 @@ private:
     vk::Rect2D _scissor;
 
     static constexpr std::array<std::string_view, DEFERRED_ATTACHMENT_COUNT> _names = {
-            "[VIEW] GBuffer RGB: Albedo A: Metallic", "[VIEW] GBuffer RGB: Normal A: Roughness",
-            "[VIEW] GBuffer RGB: Emissive A: AO",     "[VIEW] GBuffer RGB: Position A: Unused"
+        "[VIEW] GBuffer RGB: Albedo A: Metallic", "[VIEW] GBuffer RGB: Normal A: Roughness",
+        "[VIEW] GBuffer RGB: Emissive A: AO", "[VIEW] GBuffer RGB: Position A: Unused"
     };
 
     void CreateGBuffers();
