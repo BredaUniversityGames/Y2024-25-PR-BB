@@ -51,7 +51,8 @@ void main()
     if (normal == vec3(0.0, 0.0, 0.0))
     discard;
 
-    vec3 lightDir = normalize(vec3(-0.5, 0.3, -0.3));
+    //vec3 lightDir = normalize(vec3(-0.5, 0.3, -0.3));
+    vec3 lightDir = cameraUbo.lightData.xyz;
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);

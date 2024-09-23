@@ -474,23 +474,24 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
 
-
-    //static glm::vec3 lightPos = glm::vec3(2.4f, 2.0f, 0.0f);
     static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    static glm::vec3 lightDir = glm::vec3(0.5f, 0.5f, 0.5f);
-    static float sceneDistance = 10.0f;
-    static float orthoSize = 1.0f;
-    static float farPlane = 4.0f;
-    static float nearPlane = 0.1f;
-    glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
+    static glm::vec3 lightDir = glm::vec3(0.2f, -0.3f, -0.7f);
+    static float sceneDistance = 1.0f;
+    static float orthoSize = 8.0f;
+    static float farPlane = 8.0f;
+    static float nearPlane = -16.0f;
 
-    static glm::mat4 biasMatrix(
-0.5, 0.0, 0.0, 0.0,
-0.0, 0.5, 0.0, 0.0,
-0.0, 0.0, 0.5, 0.0,
-0.5, 0.5, 0.5, 1.0
-);
+    const glm::mat4 biasMatrix(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
+    );
 
+
+    //for debug info
+
+    /*
     static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     ImGui::Begin("Light Debug");
@@ -502,15 +503,14 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ImGui::DragFloat("Far Plane", &farPlane, 0.1f);
     ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
     ImGui::Image(textureID, ImVec2(512   , 512));
-
     ImGui::End();
+    */
+    const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
     glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);
     depthProjectionMatrix[1][1] *= -1;
-    //glm::mat4 depthViewMatrix = glm::lookAt(lightPos, targetPos, glm::vec3(0,1,0));
-    ubo.lightVP = depthProjectionMatrix * lightView  ;
-
-    //ubo.lightVP = biasMatrix * ubo.lightVP;
+    ubo.lightVP = depthProjectionMatrix * lightView;
     ubo.depthBiasMVP = biasMatrix * ubo.lightVP;
+    ubo.lightData = glm::vec4(targetPos - normalize(lightDir) * sceneDistance,0.0); //save light direction here
     return ubo;
 }
 
