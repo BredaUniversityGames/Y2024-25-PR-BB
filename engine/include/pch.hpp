@@ -36,6 +36,18 @@
 #include <implot.h>
 #include "tracy/Tracy.hpp"
 
+inline void* operator new(std::size_t count)
+{
+    auto ptr = malloc (count);
+    TracyAlloc (ptr, count);
+    return ptr ;
+}
+inline void operator delete(void* ptr) noexcept
+{
+    TracyFree (ptr);
+    free (ptr);
+}
+
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT{ 3 };
 constexpr uint32_t DEFERRED_ATTACHMENT_COUNT{ 4 };
 
