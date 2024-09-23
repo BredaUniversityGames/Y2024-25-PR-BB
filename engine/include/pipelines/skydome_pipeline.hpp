@@ -16,6 +16,11 @@ public:
 
 
 private:
+    struct PushConstants
+    {
+        uint32_t hdriIndex;
+    } _pc;
+
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
     ResourceHandle<Image> _hdrTarget;
@@ -26,10 +31,6 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
-    vk::DescriptorSet _descriptorSet;
-    vk::DescriptorSetLayout _descriptorSetLayout;
 
     void CreatePipeline();
-    void CreateDescriptorSetLayout();
-    void CreateDescriptorSet();
 };

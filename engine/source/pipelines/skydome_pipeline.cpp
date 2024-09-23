@@ -1,6 +1,5 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
-#include "single_time_commands.hpp"
 #include "vulkan_helper.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> environmentMap) :
@@ -12,9 +11,9 @@ SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&&
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
-    CreateDescriptorSetLayout();
-    CreateDescriptorSet();
     CreatePipeline();
+
+    _pc.hdriIndex = environmentMap.index;
 }
 
 SkydomePipeline::~SkydomePipeline()
@@ -22,7 +21,6 @@ SkydomePipeline::~SkydomePipeline()
     vmaDestroyBuffer(_brain.vmaAllocator, _sphere.vertexBuffer, _sphere.vertexBufferAllocation);
     vmaDestroyBuffer(_brain.vmaAllocator, _sphere.indexBuffer, _sphere.indexBufferAllocation);
 
-    _brain.device.destroy(_descriptorSetLayout);
     _brain.device.destroy(_pipelineLayout);
     _brain.device.destroy(_pipeline);
 }
@@ -50,7 +48,9 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
+    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pc), &_pc);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
 
     vk::DeviceSize offsets[] = { 0 };
@@ -67,11 +67,17 @@ void SkydomePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 
-    std::array<vk::DescriptorSetLayout, 2> descriptorSets = { _descriptorSetLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 2> descriptorSets = { _brain.bindlessLayout, _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+
+    vk::PushConstantRange pcRange{};
+    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    pcRange.size = sizeof(_pc);
+    pcRange.offset = 0;
+
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
                     "Failed creating geometry pipeline layout!");
@@ -185,49 +191,4 @@ void SkydomePipeline::CreatePipeline()
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
-}
-
-void SkydomePipeline::CreateDescriptorSetLayout()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
-
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo{};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-                    "Failed creating skydome descriptor set layout!");
-}
-
-void SkydomePipeline::CreateDescriptorSet()
-{
-    vk::DescriptorSetAllocateInfo allocateInfo{};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = 1;
-    allocateInfo.pSetLayouts = &_descriptorSetLayout;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_descriptorSet),
-                    "Failed allocating descriptor sets!");
-
-    vk::DescriptorImageInfo imageInfo{};
-    imageInfo.sampler = *_sampler;
-    imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->views[0];
-
-    vk::WriteDescriptorSet descriptorWrite{};
-    descriptorWrite.dstSet = _descriptorSet;
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pImageInfo = &imageInfo;
-
-    _brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
 }
