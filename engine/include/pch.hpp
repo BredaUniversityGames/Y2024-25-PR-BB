@@ -23,6 +23,7 @@
 #include <stb_image.h>
 
 #pragma clang diagnostic push
+
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
@@ -38,18 +39,18 @@
 
 inline void* operator new(std::size_t count)
 {
-    auto ptr = malloc (count);
-    TracyAlloc (ptr, count);
-    return ptr ;
+    auto ptr = malloc(count);
+    TracyAlloc(ptr, count);
+    return ptr;
 }
 inline void operator delete(void* ptr) noexcept
 {
-    TracyFree (ptr);
-    free (ptr);
+    TracyFree(ptr);
+    free(ptr);
 }
 
-constexpr uint32_t MAX_FRAMES_IN_FLIGHT{ 3 };
-constexpr uint32_t DEFERRED_ATTACHMENT_COUNT{ 4 };
+constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };
+constexpr uint32_t DEFERRED_ATTACHMENT_COUNT { 4 };
 
 #ifdef _WIN32
 #define WINDOWS
