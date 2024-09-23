@@ -7,7 +7,7 @@
 #include "mesh.hpp"
 #include "include.hpp"
 #include "camera.hpp"
-#include "../user_interface.h"
+#include "UserInterfaceSystem.h"
 
 
 class Application;
@@ -81,7 +81,7 @@ private:
     void InitializeHDRTarget();
     void LoadEnvironmentMap();
 
-    user_interface _interface {}  ;
+    UserInterfaceSystem _interface {}  ;
     std::unique_ptr<UIPipeLine> m_uiPipeLine;
     void RecordUICommandbuffers();
 };

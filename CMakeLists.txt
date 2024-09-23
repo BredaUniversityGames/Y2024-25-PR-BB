@@ -15,12 +15,14 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers}
-        engine/user_interface.cpp
-        engine/user_interface.h
+        engine/UserInterfaceSystem.cpp
+        engine/include/UserInterfaceSystem.h
         engine/source/ui_animation.cpp
         engine/source/ui_animation.h
         engine/include/pipelines/generic_pipeline.cpp
         engine/include/pipelines/generic_pipeline.h
+        engine/fonts.cpp
+        engine/include/fonts.h
 )
 
 option(ENABLE_TESTS "Compile with Unit Tests" OFF)

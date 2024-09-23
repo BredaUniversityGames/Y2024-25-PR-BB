@@ -59,7 +59,7 @@ set_target_properties(SDL3::SDL3_test PROPERTIES
 set_property(TARGET SDL3::SDL3_test APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
 set_target_properties(SDL3::SDL3_test PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "C"
-  IMPORTED_LOCATION_DEBUG "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/external/SDL/SDL3_test.lib"
+  IMPORTED_LOCATION_DEBUG "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/external/SDL/libSDL3_test.a"
   )
 
 # Make sure the targets which have been exported in some other

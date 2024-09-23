@@ -15,11 +15,11 @@ ImageCreation& ImageCreation::LoadFromFile(std::string_view file_path)
 
     if (initialData == nullptr)
     {
-        std::runtime_error("Failed to load image!");
+        throw std::runtime_error("Failed to load image!");
     }
-    if (width > std::numeric_limits<uint16_t>::max() || height > std::numeric_limits<uint16_t>::max())
+    if (width > UINT_FAST16_MAX || height > UINT_FAST16_MAX)
     {
-        std::runtime_error("Image size is too large!");
+        throw std::runtime_error("Image size is too large!");
     }
 
     SetSize(width, height);

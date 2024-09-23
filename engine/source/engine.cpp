@@ -1,5 +1,8 @@
-#include "engine.hpp"
 
+
+
+#include <typeindex>
+#include "engine.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -10,10 +13,11 @@
     } while(false)
 #include "vk_mem_alloc.h"
 
-
 #include "include.hpp"
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
+
+
 #include "imgui_impl_vulkan.h"
 #include "stopwatch.hpp"
 #include "model_loader.hpp"
@@ -27,7 +31,7 @@
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "single_time_commands.hpp"
-
+//#include "fonts.h"
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application) :
     _brain(initInfo)
 {
@@ -74,7 +78,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     auto buttonHoveredTexture = ImageCreation().LoadFromFile("assets/textures/buttonHovered.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
     auto buttonHoveredImage = _brain.ImageResourceManager().Create(buttonHoveredTexture);
 
-    
+   // utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf",40,_brain);
     m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
    
 
@@ -82,22 +86,24 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     
     m_uiPipeLine->CreatePipeLine();
+    _interface.InitializeDefaultSubSystems();
+    
+    auto button1Entity = _interface.ui_Registry.create();
+    auto& buttoncomp = _interface.ui_Registry.emplace<Button>(button1Entity);
+    auto& transcomp = _interface.ui_Registry.emplace<UITransform>(button1Entity);
 
-    Button button{};
-    button.Translation = {300.f,300.f};
-    button.Scale = {910.f/2.0,290.f/2.0};
-    button.OnBeginHoverCallBack = [&](auto&... args) {spdlog::info("Button hovered!");};
-    button.OnMouseDownCallBack = [&](auto&... args) {spdlog::info("Button down!");};
+    
+    buttoncomp.OnBeginHoverCallBack = [&]() {spdlog::info("Button hovered!");};
+    buttoncomp.OnMouseDownCallBack = [&]() {spdlog::info("Button down!");};
 
-    button.NormalImage = buttonNormalImage;
-    button.HoveredImage = buttonHoveredImage;
-    button.PressedImage = buttonNormalImage;
-    _interface.m_elements.emplace_back(button);
+    buttoncomp.NormalImage = buttonNormalImage;
+    buttoncomp.HoveredImage = buttonHoveredImage;
+    buttoncomp.PressedImage = buttonNormalImage;
 
-    button.Translation = {300.f,500.f};
-    button.OnMouseDownCallBack = [&](auto&... args) {_shouldQuit = true;};
+    transcomp.Translation = {300.f,500.f};
+    transcomp.Scale = {910,260};
 
-    _interface.m_elements.emplace_back(button);
+
     
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -376,7 +382,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
     auto ortho = glm::ortho(0.0f,static_cast<float>(_gBuffers->Size().x),0.0f,static_cast<float>( _gBuffers->Size().y));
-    _interface.SubmitCommands(commandBuffer,_currentFrame,_hdrTarget,*m_uiPipeLine,ortho);
+    _interface.Render(commandBuffer,_currentFrame,_hdrTarget,*m_uiPipeLine,ortho);
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
