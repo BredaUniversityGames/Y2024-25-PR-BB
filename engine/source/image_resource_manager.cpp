@@ -144,6 +144,34 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation &creation
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
     }
 
+    if(!creation.name.empty())
+    {
+        std::stringstream ss{};
+        ss << "[IMAGE] ";
+        ss << creation.name;
+        std::string imageStr = ss.str();
+        util::NameObject(imageResource.image, imageStr, _brain.device, _brain.dldi);
+        ss.str("");
+
+        for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
+        {
+            ss << "[VIEW " << i << "] ";
+            ss << creation.name;
+            std::string viewStr = ss.str();
+            util::NameObject(imageResource.views[i], viewStr, _brain.device, _brain.dldi);
+            ss.str("");
+        }
+
+        ss << "[ALLOCATION] ";
+        ss << creation.name;
+        std::string str = ss.str();
+        vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, str.c_str());
+    }
+    else
+    {
+        SPDLOG_WARN("Creating an unnamed image!");
+    }
+
     return ResourceManager::Create(imageResource);
 }
 

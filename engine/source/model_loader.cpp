@@ -44,6 +44,8 @@ ModelHandle ModelLoader::Load(std::string_view path)
         throw std::runtime_error("Path not found!");
 
     std::string_view directory = path.substr(0, path.find_last_of('/'));
+    size_t offset = path.find_last_of('/') + 1;
+    std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
     auto loadedGltf = _parser.loadGltf(fileStream, directory, fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
     if(!loadedGltf)
@@ -63,7 +65,7 @@ ModelHandle ModelLoader::Load(std::string_view path)
         meshes.emplace_back(ProcessMesh(mesh, gltf));
 
     for(auto& image : gltf.images)
-        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()]));
+        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()], name));
 
     for(auto& material : gltf.materials)
         materials.emplace_back(ProcessMaterial(material, gltf));
@@ -173,7 +175,7 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
     return primitive;
 }
 
-ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data)
+ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data, std::string_view name)
 {
     ImageCreation imageCreation{};
 
@@ -191,7 +193,7 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                 data = std::vector<std::byte>(width * height * 4);
                 std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                 stbi_image_free(stbiData);
             },
@@ -202,7 +204,7 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                 data = std::vector<std::byte>(width * height * 4);
                 std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                 stbi_image_free(stbiData);
             },
@@ -222,7 +224,7 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                             data = std::vector<std::byte>(width * height * 4);
                             std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                            imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                            imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                             stbi_image_free(stbiData);
                         }
@@ -361,9 +363,9 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
     ModelHandle modelHandle{};
 
     // Load textures
-    for(const auto& texture : textures)
+    for(const auto& imageCreation : textures)
     {
-        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(texture));
+        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
