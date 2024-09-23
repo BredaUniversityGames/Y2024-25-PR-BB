@@ -7,16 +7,19 @@ InputManager::InputManager()
 
 InputManager::~InputManager()
 {
-
 }
 
 void InputManager::Update()
 {
     // Reset key and mouse button states
-    for (auto& key : keyPressed) key.second = false;
-    for (auto& key : keyReleased) key.second = false;
-    for (auto& button : mouseButtonPressed) button.second = false;
-    for (auto& button : mouseButtonReleased) button.second = false;
+    for (auto& key : keyPressed)
+        key.second = false;
+    for (auto& key : keyReleased)
+        key.second = false;
+    for (auto& button : mouseButtonPressed)
+        button.second = false;
+    for (auto& button : mouseButtonReleased)
+        button.second = false;
 }
 
 void InputManager::UpdateEvent(SDL_Event event)
@@ -24,7 +27,8 @@ void InputManager::UpdateEvent(SDL_Event event)
     switch (event.type)
     {
     case SDL_EVENT_KEY_DOWN:
-        if (event.key.repeat == 0) { // Only process on first keydown, not when holding
+        if (event.key.repeat == 0)
+        { // Only process on first keydown, not when holding
             Key key = static_cast<Key>(event.key.scancode);
             keyPressed[key] = true;
             keyHeld[key] = true;
@@ -99,6 +103,6 @@ void InputManager::GetMousePosition(int& x, int& y) const
 {
     float fx, fy;
     SDL_GetMouseState(&fx, &fy);
-    x = mouseX;//fx;
-    y = mouseY;//fy;
+    x = mouseX; // fx;
+    y = mouseY; // fy;
 }

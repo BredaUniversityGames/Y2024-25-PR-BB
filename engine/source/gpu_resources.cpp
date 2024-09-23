@@ -38,7 +38,7 @@ ImageCreation& ImageCreation::SetName(std::string_view name)
     return *this;
 }
 
-ImageCreation &ImageCreation::SetType(ImageType type)
+ImageCreation& ImageCreation::SetType(ImageType type)
 {
     this->type = type;
     return *this;
