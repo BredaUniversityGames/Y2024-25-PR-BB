@@ -24,9 +24,13 @@ struct UITransform
 struct Text_Element 
 {
 	
-	bool m_textWrap = true;
-	int m_fontSize = 10;
+	
 	std::string m_text = "placeholder";
+
+
+	
+	int m_fontSize = 30;
+	int m_CharacterDistance = 2;
 	
 };
 
@@ -59,7 +63,7 @@ public:
 
 	//todo: create better render abstraction so this needs less parameters.
 	virtual void Render(const entt::registry&, vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-	                    const ResourceHandle<Image>& render_target, const UIPipeLine& pipe_line, const glm::mat4&) = 0;
+	                    const ResourceHandle<Image>& render_target,  UIPipeLine& pipe_line, const glm::mat4&) = 0;
 };
 
 class UIButtonSubSystem : public UISubSystem
@@ -67,7 +71,7 @@ class UIButtonSubSystem : public UISubSystem
 public:
 	void Update(entt::registry&, const InputManager& input) override;
 	void Render(const entt::registry&, vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-	            const ResourceHandle<Image>& render_target, const UIPipeLine& pipe_line, const glm::mat4&) override;
+	            const ResourceHandle<Image>& render_target,  UIPipeLine& pipe_line, const glm::mat4&) override;
 };
 
 class UIDisplayTextSubSystem : public UISubSystem
@@ -76,7 +80,7 @@ public:
 	UIDisplayTextSubSystem();
 	void Update(entt::registry&, const InputManager& input) override {};
 	void Render(const entt::registry&, vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-				const ResourceHandle<Image>& render_target, const UIPipeLine& pipe_line, const glm::mat4&) override;
+				const ResourceHandle<Image>& render_target,  UIPipeLine& pipe_line, const glm::mat4&) override;
 
 
 	
@@ -88,7 +92,7 @@ class UserInterfaceSystem {
 public:
 	void InitializeDefaultSubSystems();
 	void Update(const InputManager& input);
-	void Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const   ResourceHandle<Image>& _hdrTarget, const UIPipeLine&,const glm::mat4&);
+	void Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const   ResourceHandle<Image>& _hdrTarget,  UIPipeLine&,const glm::mat4&);
 	//todo: add children
 
 
@@ -116,7 +120,7 @@ public:
 	UIPipeLine(const VulkanBrain& brain, const SwapChain& sc) : m_brain(brain),m_swapChain(sc) {};
 
 	void CreateDescriptorSetLayout();
-	void UpdateTexture(ResourceHandle<Image> image) const;
+	void UpdateTexture(ResourceHandle<Image> image,vk::DescriptorSet& set) const;
 	void RecordCommands();
 	NON_COPYABLE(UIPipeLine);;
 	NON_MOVABLE(UIPipeLine)
@@ -124,11 +128,9 @@ public:
 
 	VkPipeline m_uiPipeLine;
 	vk::PipelineLayout  m_pipelineLayout;
-	vk::DescriptorSet m_descriptorSet;
-	vk::DescriptorSetLayout m_descriptorSetLayout;
+	vk::DescriptorSet m_descriptorSet {};
+	static vk::DescriptorSetLayout m_descriptorSetLayout;
 	const VulkanBrain& m_brain;
 	const SwapChain& m_swapChain;
 	vk::UniqueSampler m_sampler;
 };
-
-

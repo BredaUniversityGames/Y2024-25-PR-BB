@@ -31,7 +31,7 @@
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "single_time_commands.hpp"
-//#include "fonts.h"
+#include "fonts.h"
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application) :
     _brain(initInfo)
 {
@@ -78,7 +78,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     auto buttonHoveredTexture = ImageCreation().LoadFromFile("assets/textures/buttonHovered.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
     auto buttonHoveredImage = _brain.ImageResourceManager().Create(buttonHoveredTexture);
 
-   // utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf",40,_brain);
     m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
    
 
@@ -100,11 +99,17 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     buttoncomp.HoveredImage = buttonHoveredImage;
     buttoncomp.PressedImage = buttonNormalImage;
 
-    transcomp.Translation = {300.f,500.f};
+    transcomp.Translation = {500.f,0.f};
     transcomp.Scale = {910,260};
 
 
-    
+    utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf",40,_brain);
+    auto textentity1  = _interface.ui_Registry.create();
+    auto&  transcomp2 = _interface.ui_Registry.emplace<UITransform>(textentity1);
+    auto& textcomp = _interface.ui_Registry.emplace<Text_Element>(textentity1);
+    textcomp.m_text = "this is a text block";
+    transcomp2.Translation = {0.f,0.f};
+    transcomp2.Scale = {400,260};
     CreateCommandBuffers();
     CreateSyncObjects();
 
@@ -112,6 +117,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
   //  _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/room.gltf")));
 
+    
     glm::vec3 scale{0.05f};
     glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
     glm::vec3 translate{-0.275f, 0.06f, -0.025f};
@@ -158,6 +164,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(false);
 
+    
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -408,6 +415,8 @@ void Engine::CreateSyncObjects()
         util::VK_ASSERT(_brain.device.createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
     }
 }
+ std::unique_ptr<UIPipeLine>  Engine:: m_uiPipeLine = {};
+
 
 void Engine::CreateDescriptorSetLayout()
 {

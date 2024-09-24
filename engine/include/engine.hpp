@@ -32,7 +32,7 @@ public:
     void Run();
     bool ShouldQuit() const { return _shouldQuit; };
     void Quit() { _shouldQuit = true; };
-
+    static  std::unique_ptr<UIPipeLine> m_uiPipeLine;
 private:
     const VulkanBrain _brain;
     vk::DescriptorSetLayout _materialDescriptorSetLayout;
@@ -82,6 +82,6 @@ private:
     void LoadEnvironmentMap();
 
     UserInterfaceSystem _interface {}  ;
-    std::unique_ptr<UIPipeLine> m_uiPipeLine;
+ 
     void RecordUICommandbuffers();
 };

@@ -5,10 +5,15 @@
 #include "include/fonts.h"
 
 #include <ft2build.h>
+
+#include "engine.hpp"
+
 #include FT_FREETYPE_H  
 #include "vulkan_brain.hpp"
 #include "gpu_resources.hpp"
-
+#include "UserInterfaceSystem.h"
+#include "vulkan_helper.hpp"
+std::map<char,Character> Font::Characters = {};
 void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain)
 {
 	FT_Library library;
@@ -22,9 +27,9 @@ void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
 	int row = 0;
 	int col = padding;
 
-	auto texturewidth = (127-32)*fontsize;
-	uint8_t texture[texturewidth*fontsize];
-	for (unsigned char c = 0; c < 128; c++)
+
+	
+	for (unsigned char c = 32; c < 128; c++)
 	{
 		// load character glyph 
 		if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER))
@@ -32,22 +37,42 @@ void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
 			continue;
 		}
 
+		if(fontFace->glyph->bitmap.buffer == nullptr | fontFace->glyph->bitmap.width == 0 || fontFace->glyph->bitmap.rows == 0)
+		{
+			continue;
+		}
+
+		
 
 		ImageCreation image;
 		image.width = 	fontFace->glyph->bitmap.width;
 		image.height = 	fontFace->glyph->bitmap.rows;
 		image.SetData(reinterpret_cast<std::byte*>(fontFace->glyph->bitmap.buffer));
 		image.SetFormat(vk::Format::eR8Uint);
-
+		image.SetFlags(vk::ImageUsageFlagBits::eSampled);
+	auto handle  = 	brain.ImageResourceManager().Create(image);
 		// now store character for later use
-		Character character = {
-			brain.ImageResourceManager().Create(image),
+
+
+		vk::DescriptorSetAllocateInfo allocateInfo{};
+		allocateInfo.descriptorPool = brain.descriptorPool;
+		allocateInfo.descriptorSetCount = 1;
+		allocateInfo.pSetLayouts = &UIPipeLine::m_descriptorSetLayout;
+		
+		
+		Character character = {{},
+		handle,
 			glm::ivec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),
 			glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
 			uint8_t(fontFace->glyph->advance.x)
 		};
-		Characters.insert(std::pair<char, Character>(c, character));
+ 		util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &character.DescriptorSet),
+						"Failed allocating descriptor sets!");
+		Engine::m_uiPipeLine->UpdateTexture(handle,character.DescriptorSet);
+		Font::Characters.insert(std::pair<char, Character>(c, character));
 	}
+	
 	FT_Done_Face(fontFace);
 	FT_Done_FreeType(library);
 }
+

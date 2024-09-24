@@ -19,7 +19,7 @@ void UserInterfaceSystem::Update(const InputManager& input)
 }
 
 void UserInterfaceSystem::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-	const ResourceHandle<Image>& _hdrTarget, const UIPipeLine& pipeline, const glm::mat4& cameraMatrix)
+	const ResourceHandle<Image>& _hdrTarget,  UIPipeLine& pipeline, const glm::mat4& cameraMatrix)
 {
 
 			
@@ -99,13 +99,12 @@ void UIButtonSubSystem::Update(entt::registry& reg,const InputManager& input)
 }
 
 void UIButtonSubSystem::Render(const entt::registry& reg, vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-                           const ResourceHandle<Image>& render_target, const UIPipeLine& pipe_line,
+                           const ResourceHandle<Image>& render_target,  UIPipeLine& pipe_line,
                            const glm::mat4& projection)
-{
+{/*
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipe_line.m_uiPipeLine);
 
-	
-	
+
 	for (const auto& [entity, transform,button] : reg.view<UITransform,Button>().each())
 	{
 		
@@ -113,30 +112,31 @@ void UIButtonSubSystem::Render(const entt::registry& reg, vk::CommandBuffer comm
 		matrix = glm::translate(matrix, glm::vec3(transform.Translation.x, transform.Translation.y, 0));
 		matrix = glm::scale(matrix, glm::vec3(transform.Scale.x, transform.Scale.y, 1));
 
-
 		matrix = projection * matrix;
 		switch (button.m_state)
 		{
 		case Button::ButtonState::normal:
-			pipe_line.UpdateTexture(button.NormalImage);
+			pipe_line.UpdateTexture(button.NormalImage,pipe_line.m_descriptorSet);
 			break;
 
 		case Button::ButtonState::hovered:
-			pipe_line.UpdateTexture(button.HoveredImage);
+			pipe_line.UpdateTexture(button.HoveredImage,pipe_line.m_descriptorSet);
 			break;
 
 		case Button::ButtonState::pressed:
-			pipe_line.UpdateTexture(button.PressedImage);
+			pipe_line.UpdateTexture(button.PressedImage,pipe_line.m_descriptorSet);
 			break;
 		}
 
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipe_line.m_pipelineLayout, 0, 1,
-		                                 &pipe_line.m_descriptorSet, 0, nullptr);
-
+		
+	
 		vkCmdPushConstants(commandBuffer, pipe_line.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
 		                   &matrix);
+		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipe_line.m_pipelineLayout, 0, 1,
+										 &pipe_line.m_descriptorSet, 0, nullptr);
+//
 		commandBuffer.draw(6, 1, 0, 0);
-	}
+	}*/
 }
 
 UIDisplayTextSubSystem::UIDisplayTextSubSystem()
@@ -145,7 +145,7 @@ UIDisplayTextSubSystem::UIDisplayTextSubSystem()
 }
 
 void UIDisplayTextSubSystem::Render(const entt::registry& reg, vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-	const ResourceHandle<Image>& render_target, const UIPipeLine& pipe_line, const glm::mat4& projection)
+	const ResourceHandle<Image>& render_target,  UIPipeLine& pipe_line, const glm::mat4& projection)
 {
 	
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipe_line.m_uiPipeLine);
@@ -160,24 +160,37 @@ void UIDisplayTextSubSystem::Render(const entt::registry& reg, vk::CommandBuffer
 
 
 		
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipe_line.m_pipelineLayout, 0, 1,
-										 &pipe_line.m_descriptorSet, 0, nullptr);
-
 
 		for(const auto i : text.m_text)
 		{
-			Character ch = Characters[i];
-			pipe_line.UpdateTexture(ch.image);
-			matrix = glm::translate(matrix, glm::vec3(ch.Advance,0, 0));
+
+			if(i == ' ')
+			{
+				matrix = glm::translate(matrix, glm::vec3( text.m_fontSize + text.m_CharacterDistance,0, 0));
+				continue;
+			}
+			if(Font::Characters.find(i) == Font::Characters.end())
+			{
+				continue;	
+			}
+			
+			Character ch = Font::Characters[i];
+			
+			
 
 			
-		auto finalmatrix = projection *  (glm::scale(matrix, glm::vec3(ch.Size, 1)));
+			auto finalmatrix = projection *  (glm::scale(matrix, glm::vec3(ch.Size.x,ch.Size.y, 1)));
 			vkCmdPushConstants(commandBuffer, pipe_line.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
-				   &matrix);
-			vkCmdPushConstants(commandBuffer, pipe_line.m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4) ,sizeof(int),
-						   &matrix);
-
+				   &finalmatrix);
+			
+			commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipe_line.m_pipelineLayout, 0, 1,
+							 &ch.DescriptorSet, 0, nullptr);
+			
 			commandBuffer.draw(6, 1, 0, 0);
+			
+			matrix = glm::translate(matrix, glm::vec3(ch.Size.x + text.m_CharacterDistance,0, 0));
+
+		
 		}
 	
 	}
@@ -185,14 +198,18 @@ void UIDisplayTextSubSystem::Render(const entt::registry& reg, vk::CommandBuffer
 
 void UserInterfaceSystem::InitializeDefaultSubSystems()
 {
+	AddSubSystem<UIDisplayTextSubSystem>();
 	AddSubSystem<UIButtonSubSystem>();
 }
+
+vk::DescriptorSetLayout UIPipeLine::m_descriptorSetLayout = {};
+
 
 void UIPipeLine::CreatePipeLine()
 {
 
-	auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert.vert.spv");
-	auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag.frag.spv");
+	auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert-v.spv");
+	auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag-f.spv");
 	m_sampler = util::CreateSampler(m_brain, vk::Filter::eNearest, vk::Filter::eNearest, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
 	vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);
@@ -308,15 +325,12 @@ void UIPipeLine::CreatePipeLine()
 	bufferRange[0].size = sizeof(glm::mat4);
 	bufferRange[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
 	
-	bufferRange[1].offset = sizeof(glm::mat4);
-	bufferRange[1].size = sizeof(unsigned int);
-	bufferRange[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
-	
+
 	
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.setLayoutCount = 1; // Optional
-	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout; // Optional
-	pipelineLayoutInfo.pushConstantRangeCount = 2; // Optional
+	pipelineLayoutInfo.pSetLayouts = &UIPipeLine::m_descriptorSetLayout; // Optional
+	pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = bufferRange.data(); // Optional
 
 	if (m_brain.device.createPipelineLayout(&pipelineLayoutInfo, nullptr, &m_pipelineLayout) != vk::Result::eSuccess) {
@@ -393,7 +407,7 @@ void UIPipeLine::CreateDescriptorSetLayout()
 	
 }
 
-void UIPipeLine::UpdateTexture(ResourceHandle<Image> image) const
+void UIPipeLine::UpdateTexture(ResourceHandle<Image> image,vk::DescriptorSet& set) const
 {
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo.sampler = *m_sampler;
@@ -401,7 +415,7 @@ void UIPipeLine::UpdateTexture(ResourceHandle<Image> image) const
 	imageInfo.imageView = m_brain.ImageResourceManager().Access(image)->views[0];
 
 	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite.dstSet = m_descriptorSet;
+	descriptorWrite.dstSet = set;
 	descriptorWrite.dstBinding = 0;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
