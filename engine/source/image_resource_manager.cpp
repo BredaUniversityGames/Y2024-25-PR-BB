@@ -22,6 +22,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     imageResource.mips = std::min(creation.mips, static_cast<uint8_t>(floor(log2(std::max(imageResource.width, imageResource.height))) + 1));
     imageResource.name = creation.name;
     imageResource.isHDR = creation.isHDR;
+    imageResource.sampler = creation.sampler;
 
     vk::ImageCreateInfo imageCreateInfo {};
     imageCreateInfo.imageType = ImageTypeConversion(creation.type);
@@ -141,6 +142,34 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         util::EndSingleTimeCommands(_brain, commandBuffer);
 
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
+    }
+
+    if (!creation.name.empty())
+    {
+        std::stringstream ss {};
+        ss << "[IMAGE] ";
+        ss << creation.name;
+        std::string imageStr = ss.str();
+        util::NameObject(imageResource.image, imageStr, _brain.device, _brain.dldi);
+        ss.str("");
+
+        for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
+        {
+            ss << "[VIEW " << i << "] ";
+            ss << creation.name;
+            std::string viewStr = ss.str();
+            util::NameObject(imageResource.views[i], viewStr, _brain.device, _brain.dldi);
+            ss.str("");
+        }
+
+        ss << "[ALLOCATION] ";
+        ss << creation.name;
+        std::string str = ss.str();
+        vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, str.c_str());
+    }
+    else
+    {
+        SPDLOG_WARN("Creating an unnamed image!");
     }
 
     return ResourceManager::Create(imageResource);

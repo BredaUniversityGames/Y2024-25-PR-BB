@@ -1,18 +1,24 @@
 #version 460
+#extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) uniform sampler gBufferSampler;
-layout(set = 0, binding = 1) uniform texture2D gBufferAlbedoM;    // RGB: Albedo,   A: Metallic
-layout(set = 0, binding = 2) uniform texture2D gBufferNormalR;    // RGB: Normal,   A: Roughness
-layout(set = 0, binding = 3) uniform texture2D gBufferEmissiveAO; // RGB: Emissive, A: AO
-layout(set = 0, binding = 4) uniform texture2D gBufferPosition;   // RGB: Position, A: Unused
-layout(set = 0, binding = 5) uniform samplerCube irradianceMap;
-layout(set = 0, binding = 6) uniform samplerCube prefilterMap;
-layout(set = 0, binding = 7) uniform sampler2D brdfLUT;
-layout(set = 0, binding = 8) uniform sampler2DShadow shadowMap;
+#include "bindless.glsl"
+
+layout(push_constant) uniform PushConstants
+{
+    uint albedoMIndex;    // RGB: Albedo,   A: Metallic
+    uint normalRIndex;    // RGB: Normal,   A: Roughness
+    uint emissiveAOIndex; // RGB: Emissive, A: AO
+    uint positionIndex;   // RGB: Position, A: Unused
+
+    uint irradianceIndex;
+    uint prefilterIndex;
+    uint brdfLUTIndex;
+    uint shadowMapIndex;
+} pushConstants;
 
 layout(set = 1, binding = 0) uniform CameraUBO
 {
- mat4 VP;
+    mat4 VP;
     mat4 view;
     mat4 proj;
     mat4 lightVP;
@@ -36,10 +42,10 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 
 void main()
 {
-    vec4 albedoM = texture(sampler2D(gBufferAlbedoM, gBufferSampler), texCoords);
-    vec4 normalR = texture(sampler2D(gBufferNormalR, gBufferSampler), texCoords);
-    vec4 emissiveAO = texture(sampler2D(gBufferEmissiveAO, gBufferSampler), texCoords);
-    vec3 position = texture(sampler2D(gBufferPosition, gBufferSampler), texCoords).xyz;
+    vec4 albedoM = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalR = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAO = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec3 position = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords).xyz;
 
     vec3 albedo = albedoM.rgb;
     float metallic = albedoM.a;
@@ -51,7 +57,6 @@ void main()
     if (normal == vec3(0.0, 0.0, 0.0))
     discard;
 
-    //vec3 lightDir = normalize(vec3(-0.5, 0.3, -0.3));
     vec3 lightDir = cameraUbo.lightData.xyz;
     vec3 Lo = vec3(0.0);
 
@@ -91,12 +96,12 @@ void main()
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
 
-    vec3 irradiance = texture(irradianceMap, -N).rgb;
+    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(pushConstants.irradianceIndex)], -N).rgb;
     vec3 diffuse = irradiance * albedo;
 
     const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(pushConstants.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(pushConstants.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;

@@ -113,6 +113,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(true);
 
+    _brain.UpdateBindlessSet();
+
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -138,7 +140,7 @@ void Engine::Run()
 
     glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
     _lastMousePos = { x, y };
- 
+
     constexpr float MOUSE_SENSITIVITY = 0.003f;
     constexpr float CAM_SPEED = 0.003f;
 
@@ -161,7 +163,6 @@ void Engine::Run()
         int x, y;
         _application->GetInputManager().GetMousePosition(x, y);
 
-    
         glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
         _lastMousePos = { x, y };
 
@@ -223,7 +224,6 @@ void Engine::Run()
         {
             _swapChain->Resize(_application->DisplaySize());
             _gBuffers->Resize(_application->DisplaySize());
-            _lightingPipeline->UpdateGBufferViews();
 
             return;
         }
@@ -285,7 +285,6 @@ void Engine::Run()
     {
         _swapChain->Resize(_application->DisplaySize());
         _gBuffers->Resize(_application->DisplaySize());
-        _lightingPipeline->UpdateGBufferViews();
     }
     else
     {
@@ -370,20 +369,14 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-        _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-        DEFERRED_ATTACHMENT_COUNT);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
     _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-                                _gBuffers->GBufferFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                                DEFERRED_ATTACHMENT_COUNT);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1,0,1,vk::ImageAspectFlagBits::eDepth);
-
-
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
@@ -517,7 +510,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     0.0, 0.0, 0.5, 0.0,
     0.5, 0.5, 0.5, 1.0
     );
-    
+
     //for debug info
     /*
     static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);

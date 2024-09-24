@@ -26,7 +26,8 @@ ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout mater
     std::fill(textures.begin() + 1, textures.end(), textures[0]);
 
     MaterialHandle::MaterialInfo info;
-    _defaultMaterial = std::make_shared<MaterialHandle>(util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout));
+    _defaultMaterial = std::make_shared<MaterialHandle>(
+        util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout));
 }
 
 ModelLoader::~ModelLoader()
@@ -44,7 +45,10 @@ ModelHandle ModelLoader::Load(std::string_view path)
         throw std::runtime_error("Path not found!");
 
     std::string_view directory = path.substr(0, path.find_last_of('/'));
-    auto loadedGltf = _parser.loadGltf(fileStream, directory, fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
+    size_t offset = path.find_last_of('/') + 1;
+    std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
+    auto loadedGltf = _parser.loadGltf(fileStream, directory,
+        fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
     if (!loadedGltf)
         throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
@@ -63,7 +67,7 @@ ModelHandle ModelLoader::Load(std::string_view path)
         meshes.emplace_back(ProcessMesh(mesh, gltf));
 
     for (auto& image : gltf.images)
-        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()]));
+        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()], name));
 
     for (auto& material : gltf.materials)
         materials.emplace_back(ProcessMaterial(material, gltf));
@@ -128,8 +132,6 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
             offset = offsetof(Vertex, texCoord);
             texCoordFound = true;
         }
-        else if (attribute.name == "COLOR_0")
-            offset = offsetof(Vertex, color);
         else
             continue;
 
@@ -182,7 +184,8 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
     return primitive;
 }
 
-ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data)
+ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
+    std::string_view name)
 {
     ImageCreation imageCreation {};
 
@@ -202,19 +205,20 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                        stbi_image_free(stbiData);
                    },
                    [&](const fastgltf::sources::Array& vector)
                    {
                        int32_t width, height, nrChannels;
-                       stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()), static_cast<int32_t>(vector.bytes.size()), &width, &height, &nrChannels, 4);
+                       stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()),
+                           static_cast<int32_t>(vector.bytes.size()), &width, &height, &nrChannels, 4);
 
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                        stbi_image_free(stbiData);
                    },
@@ -229,13 +233,14 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                                       [&](const fastgltf::sources::Array& vector)
                                       {
                                           int32_t width, height, nrChannels;
-                                          stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
+                                          stbi_uc* stbiData = stbi_load_from_memory(
+                                              reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
                                               static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels, 4);
 
                                           data = std::vector<std::byte>(width * height * 4);
                                           std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                                          imageCreation.SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                                          imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                                           stbi_image_free(stbiData);
                                       } },
@@ -254,7 +259,8 @@ Material ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
         material.albedoIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltf);
     if (gltfMaterial.pbrData.metallicRoughnessTexture.has_value())
-        material.metallicRoughnessIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex, gltf);
+        material.metallicRoughnessIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex,
+            gltf);
     if (gltfMaterial.normalTexture.has_value())
         material.normalIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
     if (gltfMaterial.occlusionTexture.has_value())
@@ -352,10 +358,15 @@ void ModelLoader::CalculateTangents(MeshPrimitive& primitive)
     }
 
     for (size_t i = 0; i < primitive.vertices.size(); ++i)
-        primitive.vertices[i].tangent = glm::normalize(primitive.vertices[i].tangent);
+    {
+        glm::vec3 tangent = primitive.vertices[i].tangent;
+        tangent = glm::normalize(tangent);
+        primitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, primitive.vertices[i].tangent.w };
+    }
 }
 
-glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2, glm::vec3 normal)
+glm::vec4
+ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2, glm::vec3 normal)
 {
     glm::vec3 e1 = p1 - p0;
     glm::vec3 e2 = p2 - p0;
@@ -368,37 +379,50 @@ glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2
     float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
 
     glm::vec3 tangent;
-    tangent = f * (deltaV2 * e1 - deltaV1 * e2);
-
+    tangent.x = f * (deltaV2 * e1.x - deltaV1 * e2.x);
+    tangent.y = f * (deltaV2 * e1.y - deltaV1 * e2.y);
+    tangent.z = f * (deltaV2 * e1.z - deltaV1 * e2.z);
     tangent = glm::normalize(tangent);
 
-    glm::vec3 bitangent = glm::normalize(glm::cross(normal, tangent));
+    glm::vec3 bitangent;
+    bitangent.x = f * (-deltaU2 * e1.x + deltaU1 * e2.x);
+    bitangent.y = f * (-deltaU2 * e1.y + deltaU1 * e2.y);
+    bitangent.z = f * (-deltaU2 * e1.z + deltaU1 * e2.z);
+    bitangent = glm::normalize(bitangent);
+
     float w = (glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f;
 
-    return glm::vec4(tangent.x, tangent.y, tangent.z, w);
+    return glm::vec4 { tangent.x, tangent.y, tangent.z, w };
 }
 
-ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures, const std::vector<Material>& materials, const fastgltf::Asset& gltf)
+ModelHandle
+ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures, const std::vector<Material>& materials,
+    const fastgltf::Asset& gltf)
 {
     SingleTimeCommands commandBuffer { _brain };
 
     ModelHandle modelHandle {};
 
     // Load textures
-    for (const auto& texture : textures)
+    for (const auto& imageCreation : textures)
     {
-        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(texture));
+        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
     for (const auto& material : materials)
     {
         std::array<ResourceHandle<Image>, 5> textures;
-        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()] : ResourceHandle<Image>::Invalid();
-        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()] : ResourceHandle<Image>::Invalid();
-        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()] : ResourceHandle<Image>::Invalid();
-        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()] : ResourceHandle<Image>::Invalid();
-        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()] : ResourceHandle<Image>::Invalid();
+        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()]
+                                                       : ResourceHandle<Image>::Invalid();
+        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()]
+                                                                  : ResourceHandle<Image>::Invalid();
+        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()]
+                                                       : ResourceHandle<Image>::Invalid();
+        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()]
+                                                          : ResourceHandle<Image>::Invalid();
+        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()]
+                                                         : ResourceHandle<Image>::Invalid();
 
         MaterialHandle::MaterialInfo info;
         info.useAlbedoMap = material.albedoIndex.has_value();
@@ -407,6 +431,12 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
         info.useOcclusionMap = material.occlusionIndex.has_value();
         info.useEmissiveMap = material.emissiveIndex.has_value();
 
+        info.albedoMapIndex = textures[0].index;
+        info.mrMapIndex = textures[1].index;
+        info.normalMapIndex = textures[2].index;
+        info.occlusionMapIndex = textures[3].index;
+        info.emissiveMapIndex = textures[4].index;
+
         info.albedoFactor = material.albedoFactor;
         info.metallicFactor = material.metallicFactor;
         info.roughnessFactor = material.roughnessFactor;
@@ -414,7 +444,8 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
         info.occlusionStrength = material.occlusionStrength;
         info.emissiveFactor = material.emissiveFactor;
 
-        modelHandle.materials.emplace_back(std::make_shared<MaterialHandle>(util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout, _defaultMaterial)));
+        modelHandle.materials.emplace_back(std::make_shared<MaterialHandle>(
+            util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout, _defaultMaterial)));
     }
 
     // Load meshes
@@ -436,7 +467,8 @@ ModelHandle ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::v
     return modelHandle;
 }
 
-MeshPrimitiveHandle ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, std::shared_ptr<MaterialHandle> material)
+MeshPrimitiveHandle
+ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, std::shared_ptr<MaterialHandle> material)
 {
     MeshPrimitiveHandle primitiveHandle {};
     primitiveHandle.material = material == nullptr ? _defaultMaterial : material;
@@ -444,8 +476,10 @@ MeshPrimitiveHandle ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, S
     primitiveHandle.indexType = primitive.indexType;
     primitiveHandle.indexCount = primitive.indicesBytes.size() / (primitiveHandle.indexType == vk::IndexType::eUint16 ? 2 : 4);
 
-    commandBuffer.CreateLocalBuffer(primitive.vertices, primitiveHandle.vertexBuffer, primitiveHandle.vertexBufferAllocation, vk::BufferUsageFlagBits::eVertexBuffer, "Vertex buffer");
-    commandBuffer.CreateLocalBuffer(primitive.indicesBytes, primitiveHandle.indexBuffer, primitiveHandle.indexBufferAllocation, vk::BufferUsageFlagBits::eIndexBuffer, "Index buffer");
+    commandBuffer.CreateLocalBuffer(primitive.vertices, primitiveHandle.vertexBuffer, primitiveHandle.vertexBufferAllocation,
+        vk::BufferUsageFlagBits::eVertexBuffer, "Vertex buffer");
+    commandBuffer.CreateLocalBuffer(primitive.indicesBytes, primitiveHandle.indexBuffer, primitiveHandle.indexBufferAllocation,
+        vk::BufferUsageFlagBits::eIndexBuffer, "Index buffer");
 
     return primitiveHandle;
 }
