@@ -110,6 +110,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(true);
 
+    _brain.UpdateBindlessSet();
+
     spdlog::info("Successfully initialized engine!");
 }
 
