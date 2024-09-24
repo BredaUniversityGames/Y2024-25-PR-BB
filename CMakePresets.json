@@ -9,14 +9,12 @@
     {
       "name": "default",
       "hidden": true,
-      "generator": "ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "toolchainFile": "${sourceDir}/scripts/compile.cmake"
     },
     {
       "name": "WSL",
       "hidden": true,
-      "generator": "ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "toolchainFile": "${sourceDir}/scripts/compile.cmake",
       "vendor": {
