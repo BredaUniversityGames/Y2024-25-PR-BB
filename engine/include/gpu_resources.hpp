@@ -22,6 +22,7 @@ struct ImageCreation
 
     vk::Format format { vk::Format::eUndefined };
     ImageType type { ImageType::e2D };
+    vk::Sampler sampler { nullptr };
 
     std::string name;
 
@@ -32,6 +33,7 @@ struct ImageCreation
     ImageCreation& SetFormat(vk::Format format);
     ImageCreation& SetName(std::string_view name);
     ImageCreation& SetType(ImageType type);
+    ImageCreation& SetSampler(vk::Sampler sampler);
 };
 
 struct Image
@@ -40,6 +42,7 @@ struct Image
     std::vector<vk::ImageView> views {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     VmaAllocation allocation {};
+    vk::Sampler sampler { nullptr };
 
     uint16_t width { 1 };
     uint16_t height { 1 };

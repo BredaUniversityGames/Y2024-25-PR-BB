@@ -17,11 +17,12 @@ struct ResourceHandle
     }
     static ResourceHandle<T> Invalid() { return ResourceHandle<T> {}; }
 
+    uint32_t index : 24 { 0 };
+
 private:
     friend class VulkanBrain;
     friend ResourceManager<T>;
-    uint32_t index : 24;
-    uint32_t version : 8;
+    uint32_t version : 8 { 0 };
 };
 
 template <typename T>
@@ -65,7 +66,7 @@ public:
         if (!IsValid(handle))
             return nullptr;
 
-        return _resources[index].resource.has_value() ? &_resources[index].resource.value() : nullptr;
+        return &_resources[index].resource.value();
     }
 
     virtual void Destroy(ResourceHandle<T> handle)
@@ -81,7 +82,7 @@ public:
     virtual bool IsValid(ResourceHandle<T> handle) const
     {
         uint32_t index = handle.index;
-        return index < _resources.size() && _resources[index].version == handle.version;
+        return index < _resources.size() && _resources[index].version == handle.version && _resources[index].resource.has_value();
     }
 
     const std::vector<ResourceSlot<T>>& Resources() const { return _resources; }
