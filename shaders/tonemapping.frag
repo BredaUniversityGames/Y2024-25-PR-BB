@@ -1,6 +1,7 @@
 #version 460
 
 layout(binding = 0) uniform sampler2D hdrTarget;
+layout(binding = 1) uniform sampler2D bloomTarget;
 
 layout(location = 0) in vec2 texCoords;
 
@@ -20,6 +21,9 @@ const float exposure = 0.4;
 void main()
 {
     vec3 hdrColor = texture(hdrTarget, texCoords).rgb;
+
+    vec3 bloomColor = texture(bloomTarget, texCoords).rgb;
+    hdrColor += bloomColor;
 
     // Reinhardt
     //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
