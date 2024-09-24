@@ -55,7 +55,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, *_swapChain);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers,_cameraStructure,*_geometryPipeline);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -122,7 +122,7 @@ void Engine::Run()
 {
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    static bool cursorHidden = false;
+    std::cout<<_application->GetMouseHidden()<<std::endl;
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
@@ -149,8 +149,7 @@ void Engine::Run()
     constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
     glm::vec3 eulerDelta{};
-    _application->SetMouseHidden(cursorHidden);
-    if(cursorHidden)
+    if(_application->GetMouseHidden() == true)
     {
         _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
         _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
@@ -195,7 +194,7 @@ void Engine::Run()
         }
 
         if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
-            cursorHidden = !cursorHidden;
+            _application->SetMouseHidden(!_application->GetMouseHidden());
 
         _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
     }
