@@ -27,6 +27,7 @@ private:
         uint32_t irradianceIndex;
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
+        uint32_t shadowMapIndex;
     } _pushConstants;
 
     void CreatePipeline();

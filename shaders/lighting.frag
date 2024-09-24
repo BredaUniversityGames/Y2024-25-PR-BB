@@ -114,19 +114,18 @@ void main()
 
     bias = clamp(bias, 0,0.005);
 
-    const float offset = 1.0 / (textureSize(shadowMap,0).x*1.6); // Assuming a 4096x4096 shadow map
+    const float offset = 1.0 / (4096*1.6); // Assuming a 4096x4096 shadow map
 
     float visibility = 1.0;
     float shadow = 0.0;
     float depthFactor = TestCoord.z - bias;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
     visibility = clamp(shadow, 0.2, 1.0);
-
 
     outColor = vec4((Lo + ambient + emissive) * visibility, 1.0);
     //outColor = vec4((visibility.r),0.0,0.0,1.0);

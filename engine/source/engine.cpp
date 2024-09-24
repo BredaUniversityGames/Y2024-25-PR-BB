@@ -371,17 +371,20 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
+
+    const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
+
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
     _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1,0,1,vk::ImageAspectFlagBits::eDepth);
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1,0,1,vk::ImageAspectFlagBits::eDepth);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
-    util::TransitionImageLayout(commandBuffer, _gBuffers->ShadowImage(), _gBuffers->ShadowFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,1,0,1,vk::ImageAspectFlagBits::eDepth);
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

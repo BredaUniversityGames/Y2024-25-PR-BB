@@ -89,6 +89,9 @@ void VulkanBrain::UpdateBindlessSet() const
         if (image->type == ImageType::eCubeMap)
             dstBinding = BindlessBinding::eCubemap;
 
+        if (image->type == ImageType::eShadowMap)
+            dstBinding = BindlessBinding::eShadowmap;
+
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
         _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
@@ -346,7 +349,8 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 3> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
@@ -359,7 +363,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings;
+    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
@@ -378,12 +382,19 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
     cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
+    vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
+    shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
+    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo {};
     layoutCreateInfo.bindingCount = bindings.size();
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
     std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound

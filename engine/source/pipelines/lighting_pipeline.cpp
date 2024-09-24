@@ -20,31 +20,12 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     _pushConstants.irradianceIndex = _irradianceMap.index;
     _pushConstants.prefilterIndex = _prefilterMap.index;
     _pushConstants.brdfLUTIndex = _brdfLUT.index;
+    _pushConstants.shadowMapIndex = _gBuffers.Shadow().index;
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     //shaodw sampler
     vk::PhysicalDeviceProperties properties{};
     _brain.physicalDevice.getProperties(&properties);
-
-    vk::SamplerCreateInfo shadowSamplerInfo{};
-    shadowSamplerInfo.magFilter = vk::Filter::eLinear;
-    shadowSamplerInfo.minFilter = vk::Filter::eLinear;
-    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeV =vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeW =vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.anisotropyEnable = 1;
-    shadowSamplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-    shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-    shadowSamplerInfo.unnormalizedCoordinates = 0;
-    shadowSamplerInfo.compareEnable = 0;
-    shadowSamplerInfo.compareOp = vk::CompareOp::eAlways;
-    shadowSamplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-    shadowSamplerInfo.mipLodBias = 0.0f;
-    shadowSamplerInfo.minLod = 0.0f;
-    shadowSamplerInfo.maxLod = static_cast<float>(1);
-    shadowSamplerInfo.compareEnable = vk::True;
-    shadowSamplerInfo.compareOp = vk::CompareOp::eLessOrEqual;
-    _shadowSampler = brain.device.createSamplerUnique(shadowSamplerInfo);
 
     CreatePipeline();
 }

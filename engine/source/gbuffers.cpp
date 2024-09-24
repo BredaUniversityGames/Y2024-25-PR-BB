@@ -91,8 +91,34 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
+    vk::SamplerCreateInfo shadowSamplerInfo{};
+    shadowSamplerInfo.magFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.minFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeV =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeW =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.anisotropyEnable = 1;
+    shadowSamplerInfo.maxAnisotropy = 16;
+    shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+    shadowSamplerInfo.unnormalizedCoordinates = 0;
+    shadowSamplerInfo.compareEnable = 0;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eAlways;
+    shadowSamplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    shadowSamplerInfo.mipLodBias = 0.0f;
+    shadowSamplerInfo.minLod = 0.0f;
+    shadowSamplerInfo.maxLod = static_cast<float>(1);
+    shadowSamplerInfo.compareEnable = vk::True;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eLessOrEqual;
+    _shadowSampler = _brain.device.createSampler(shadowSamplerInfo);
+
     ImageCreation shadowCreation {};
-    shadowCreation.SetFormat(_shadowFormat).SetSize(4096 ,4096).SetName("Shadow image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    shadowCreation
+        .SetFormat(_shadowFormat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(4096 ,4096)
+        .SetName("Shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
+        .SetSampler(_shadowSampler);
     _shadowImage = _brain.ImageResourceManager().Create(shadowCreation);
 
     const Image* image = _brain.ImageResourceManager().Access(_shadowImage);
@@ -110,6 +136,7 @@ void GBuffers::CleanUp()
     _brain.ImageResourceManager().Destroy(_position);
     _brain.ImageResourceManager().Destroy(_depthImage);
     _brain.ImageResourceManager().Destroy(_shadowImage);
+    _brain.device.destroy(_shadowSampler);
 }
 
 void GBuffers::CreateViewportAndScissor()

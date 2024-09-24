@@ -44,9 +44,10 @@ public:
         return _depthFormat;
     }
 
-    vk::Image ShadowImage() const { return _brain.ImageResourceManager().Access(_shadowImage)->image; }
-    vk::ImageView ShadowImageView() const { return _brain.ImageResourceManager().Access(_shadowImage)->view; }
-    vk::Format ShadowFormat() const { return _shadowFormat; }
+    ResourceHandle<Image> Shadow() const
+    {
+        return _shadowImage;
+    }
 
     glm::uvec2 Size() const
     {
@@ -83,6 +84,7 @@ private:
 
     vk::Format _depthFormat;
     ResourceHandle<Image> _shadowImage;
+    vk::Sampler _shadowSampler;
 
     vk::Format _shadowFormat;
 
