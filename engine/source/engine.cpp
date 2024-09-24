@@ -122,7 +122,6 @@ void Engine::Run()
 {
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    std::cout<<_application->GetMouseHidden()<<std::endl;
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
@@ -135,28 +134,9 @@ void Engine::Run()
         return;
     }
 
-    int x, y;
-    _application->GetInputManager().GetMousePosition(x, y);
-
-    glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-    _lastMousePos = { x, y };
-
-    constexpr float MOUSE_SENSITIVITY = 0.003f;
-    constexpr float CAM_SPEED = 0.003f;
-
-    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
-    constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-    constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
-
-    glm::vec3 eulerDelta{};
+    if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+        _application->SetMouseHidden(!_application->GetMouseHidden());
     if(_application->GetMouseHidden() == true)
-    {
-        _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-        _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-    }
-
-
-
     {
         ZoneNamedN(zone, "Update Camera", true);
         int x, y;
@@ -193,16 +173,11 @@ void Engine::Run()
             movement_dir = glm::normalize(movement_dir);
         }
 
-        if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
-            _application->SetMouseHidden(!_application->GetMouseHidden());
-
         _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
     }
 
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
-
-
 
     {
         ZoneNamedN(zone, "Wait On Fence", true);
