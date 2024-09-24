@@ -24,7 +24,7 @@ jobs:
     steps:
 
       - name: Install Ninja
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
+        uses: ashutoshvarma/setup-ninja@master
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
