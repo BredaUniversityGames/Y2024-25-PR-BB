@@ -35,7 +35,7 @@ jobs:
       - name: Install Vulkan SDK
         uses: jakoch/install-vulkan-sdk-action@v1.0.0
         with:
-            vulkan-query-version: 'latest'
+            vulkan_version: 'latest'
 
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
