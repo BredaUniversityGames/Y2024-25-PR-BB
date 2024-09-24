@@ -49,10 +49,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
     _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _materialDescriptorSetLayout, _cameraStructure);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _environmentMap);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _hdrBlurredBloomTarget, *_swapChain);
-    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _hdrBloomTarget, _hdrBlurredBloomTarget);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _hdrBloomTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -279,8 +279,8 @@ Engine::~Engine()
     _brain.ImageResourceManager().Destroy(_environmentMap);
     _brain.ImageResourceManager().Destroy(_hdrTarget);
 
-    _brain.ImageResourceManager().Destroy(_hdrBloomTarget);
-    _brain.ImageResourceManager().Destroy(_hdrBlurredBloomTarget);
+    _brain.ImageResourceManager().Destroy(_brightnessTarget);
+    _brain.ImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -336,8 +336,8 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
 {
     ZoneScoped;
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
-    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_hdrBloomTarget);
-    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_hdrBlurredBloomTarget);
+    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_brightnessTarget);
+    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_bloomTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -497,8 +497,8 @@ void Engine::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrBloomTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
-    _hdrBlurredBloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Engine::LoadEnvironmentMap()

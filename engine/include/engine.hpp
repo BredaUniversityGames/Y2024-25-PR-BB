@@ -56,8 +56,8 @@ private:
     CameraStructure _cameraStructure;
 
     ResourceHandle<Image> _hdrTarget;
-    ResourceHandle<Image> _hdrBloomTarget;
-    ResourceHandle<Image> _hdrBlurredBloomTarget;
+    ResourceHandle<Image> _brightnessTarget;
+    ResourceHandle<Image> _bloomTarget;
 
     std::shared_ptr<Application> _application;
 

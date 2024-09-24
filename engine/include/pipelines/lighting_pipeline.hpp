@@ -34,7 +34,7 @@ private:
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const ResourceHandle<Image> _hdrTarget;
-    const ResourceHandle<Image> _hdrBloomTarget;
+    const ResourceHandle<Image> _brightnessTarget;
     const CameraStructure& _camera;
     const ResourceHandle<Image> _irradianceMap;
     const ResourceHandle<Image> _prefilterMap;
