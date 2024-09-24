@@ -102,29 +102,22 @@ void main()
     vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec4 ShadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
-    //vec3 projCoords = ShadowCoord.xyz / ShadowCoord.w;
     vec4 TestCoord = cameraUbo.lightVP * vec4(position, 1.0);
-    float visibility = 1.0;
 
     float cosTheta = clamp(dot(N, lightDir),0.0,1.0);
-   float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
+    float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
 
     bias = clamp(bias, 0,0.005);
 
-    /* vec3 yes = vec3(ShadowCoord.xy,TestCoord.z - bias);
-    float textureResult = texture( shadowMap, yes,bias).r;
-     if ( textureResult  <=  TestCoord.z - bias){
-    visibility = clamp(textureResult, 0.05, 1.0);
-    } 
- */
+    const float offset = 1.0 / (textureSize(shadowMap,0).x*1.6); // Assuming a 4096x4096 shadow map
 
-    const float offset = 1.0 / 4096.0; // Assuming a 4096x4096 shadow map
-
+    float visibility = 1.0;
     float shadow = 0.0;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset, -offset), TestCoord.z - bias)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset,  offset), TestCoord.z - bias)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset, -offset), TestCoord.z - bias)).r;
-    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset,  offset), TestCoord.z - bias)).r;
+    float depthFactor = TestCoord.z - bias;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
+    shadow += texture(shadowMap, vec3(ShadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
     visibility = clamp(shadow, 0.2, 1.0);
