@@ -14,7 +14,6 @@ public:
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);
 
-
 private:
     struct PushConstants
     {

@@ -45,8 +45,8 @@ private:
     vk::Rect2D _scissor;
 
     static constexpr std::array<std::string_view, 4> _names = {
-            "[VIEW] GBuffer RGB: Albedo A: Metallic", "[VIEW] GBuffer RGB: Normal A: Roughness",
-            "[VIEW] GBuffer RGB: Emissive A: AO",     "[VIEW] GBuffer RGB: Position A: Unused"
+        "[VIEW] GBuffer RGB: Albedo A: Metallic", "[VIEW] GBuffer RGB: Normal A: Roughness",
+        "[VIEW] GBuffer RGB: Emissive A: AO", "[VIEW] GBuffer RGB: Position A: Unused"
     };
 
     void CreateGBuffers();

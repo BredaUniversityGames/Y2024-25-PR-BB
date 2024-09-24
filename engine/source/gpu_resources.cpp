@@ -38,13 +38,13 @@ ImageCreation& ImageCreation::SetName(std::string_view name)
     return *this;
 }
 
-ImageCreation &ImageCreation::SetType(ImageType type)
+ImageCreation& ImageCreation::SetType(ImageType type)
 {
     this->type = type;
     return *this;
 }
 
-ImageCreation &ImageCreation::SetSampler(vk::Sampler sampler)
+ImageCreation& ImageCreation::SetSampler(vk::Sampler sampler)
 {
     this->sampler = sampler;
     return *this;
