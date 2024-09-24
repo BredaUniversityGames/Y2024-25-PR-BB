@@ -33,9 +33,10 @@ jobs:
           version: "18.1.8"
 
       - name: Install Vulkan SDK
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        uses: humbletim/install-vulkan-sdk@v1.1.1
         with:
-            vulkan-query-version: latest
+            version: latest
+            cache: true
 
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
