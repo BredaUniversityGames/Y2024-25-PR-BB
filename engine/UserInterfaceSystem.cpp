@@ -210,7 +210,7 @@ void UIPipeLine::CreatePipeLine()
 
 	auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert-v.spv");
 	auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag-f.spv");
-	m_sampler = util::CreateSampler(m_brain, vk::Filter::eNearest, vk::Filter::eNearest, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
+	m_sampler = util::CreateSampler(m_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eLinear, 0);
 
 	vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);
 	vk::ShaderModule fragModule = shader::CreateShaderModule(fragShaderCode, m_brain.device);

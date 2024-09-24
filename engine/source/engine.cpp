@@ -7,7 +7,7 @@
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 
-
+#include"engine.hpp"
 #include "imgui_impl_vulkan.h"
 #include "stopwatch.hpp"
 #include "model_loader.hpp"
@@ -20,6 +20,7 @@
 #include "pipelines/ibl_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
+#include "fonts.h"
 #include "single_time_commands.hpp"
 
 
@@ -167,7 +168,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
-    ZoneNamed(zone, "");
+   // ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
@@ -194,11 +195,12 @@ void Engine::Run()
     constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
     constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
+    
     glm::vec3 eulerDelta{};
     _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
     _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
   
-    glm::vec3 movement_dir{};
+    glm::vec3 movement_dir {};
     if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
         movement_dir -= FORWARD;
 
@@ -213,10 +215,10 @@ void Engine::Run()
 
     if (glm::length(movement_dir) != 0.0f)
     {
-        ZoneNamedN(zone, "Update Camera", true);
+        //   ZoneNamedN(zone, "Update Camera", true);
         int x, y;
         _application->GetInputManager().GetMousePosition(x, y);
-
+    }
 
     _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
@@ -228,7 +230,7 @@ void Engine::Run()
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &m_cameraMatrices, sizeof(CameraUBO));
 
     {
-        ZoneNamedN(zone, "Wait On Fence", true);
+      //  ZoneNamedN(zone, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
@@ -237,7 +239,7 @@ void Engine::Run()
     vk::Result result {};
 
     {
-        ZoneNamedN(zone, "Acquire Next Image", true);
+       // ZoneNamedN(zone, "Acquire Next Image", true);
 
         result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
             _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
@@ -259,10 +261,10 @@ void Engine::Run()
     _application->NewImGuiFrame();
     ImGui::NewFrame();
 
-    _performanceTracker.Render();
+//    _performanceTracker.Render();
 
     {
-        ZoneNamedN(zone, "ImGui Render", true);
+       // ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
     }
 
@@ -284,7 +286,7 @@ void Engine::Run()
     submitInfo.pSignalSemaphores = signalSemaphores;
 
     {
-        ZoneNamedN(zone, "Submit Commands", true);
+    //    ZoneNamedN(zone, "Submit Commands", true);
         util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
     }
 
@@ -298,7 +300,7 @@ void Engine::Run()
     presentInfo.pImageIndices = &imageIndex;
 
     {
-        ZoneNamedN(zone, "Present Image", true);
+     //   ZoneNamedN(zone, "Present Image", true);
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
 
@@ -314,7 +316,7 @@ void Engine::Run()
 
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
-    _performanceTracker.Update();
+//    _performanceTracker.Update();
 }
 
 Engine::~Engine()
@@ -383,7 +385,7 @@ void Engine::CreateCommandBuffers()
 void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
 {
 
-    ZoneScoped;
+    //ZoneScoped;
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};

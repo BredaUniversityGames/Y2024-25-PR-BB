@@ -62,7 +62,8 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
     vk::ImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.image = imageResource.image;
-    viewCreateInfo.viewType = static_cast<vk::ImageViewType>(creation.type);
+
+    viewCreateInfo.viewType = vk::ImageViewType::e2D;
 
     viewCreateInfo.format = creation.format;
     viewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(imageResource.format);

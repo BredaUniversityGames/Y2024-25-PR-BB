@@ -1,5 +1,5 @@
 #include "performance_tracker.hpp"
-
+/*
 PerformanceTracker::PerformanceTracker()
 {
     _totalTime = 0;
@@ -101,3 +101,4 @@ void PerformanceTracker::Render()
 
     ImGui::End();
 }
+*/

@@ -9,5 +9,6 @@ layout(set =0, binding = 0) uniform usampler2D displayTexture;
 
 void main()
 {
+    
     outColor = vec4(  texture(displayTexture,uv).r);
 }   

@@ -92,7 +92,7 @@ void SDLApp::Run(std::function<bool()> updateLoop)
 
         if (updateLoop())
             running = false;
-        FrameMark;
+       // FrameMark;
     }
 }
 
@@ -103,7 +103,7 @@ void SDLApp::InitImGui()
 
 void SDLApp::NewImGuiFrame()
 {
-    ZoneScoped;
+    ///ZoneScoped;
     ImGui_ImplSDL3_NewFrame();
 }
 
