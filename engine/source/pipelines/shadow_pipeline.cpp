@@ -7,11 +7,9 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     _brain(brain),
     _gBuffers(gBuffers),
     _camera(camera),
-   // _geometryPipeline(geometryPipeline),
     _frameData(geometryPipeline.GetFrameData())
 {
     CreateDescriptorSetLayout();
-    //CreateUniformBuffers();
     CreateDescriptorSets();
     CreatePipeline();
 }
@@ -19,22 +17,12 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
 ShadowPipeline::~ShadowPipeline() {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
-
-    //remove this if we get getters
-
-    /*for (size_t i = 0; i < _frameData.size(); ++i) {
-        vmaUnmapMemory(_brain.vmaAllocator, _frameData[i].uniformBufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _frameData[i].uniformBuffer, _frameData[i].uniformBufferAllocation);
-    }*/
-
     _brain.device.destroy(_descriptorSetLayout);
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
     const SceneDescription& scene)
 {
-    //_frameData = _geometryPipeline.GetFrameData();
-      // Set up rendering to the shadow map (depth attachment only)
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo{};
     depthAttachmentInfo.imageView = _gBuffers.ShadowImageView();
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
@@ -56,19 +44,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     // Set viewport and scissor for shadow map size
     vk::Viewport viewport{ 0.0f, 0.0f, 4096.0f, 4096.0f, 0.0f, 1.0f };
     vk::Rect2D scissor{ vk::Offset2D{ 0, 0 }, vk::Extent2D{ 4096, 4096 } };
-    //commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
-    //commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
     commandBuffer.setViewport(0, 1, &viewport);
     commandBuffer.setScissor(0, 1, &scissor);
-
-    // Collect transforms
-    std::vector<glm::mat4> transforms;
-    for (auto& gameObject : scene.gameObjects) {
-        for (auto& node : gameObject.model->hierarchy.allNodes) {
-            transforms.emplace_back(gameObject.transform * node.transform);
-        }
-    }
-    //UpdateUniformData(currentFrame, transforms);
 
     uint32_t counter = 0;
     for (auto& gameObject : scene.gameObjects) {
@@ -136,8 +113,6 @@ void ShadowPipeline::CreateDescriptorSets()
                     "Failed allocating descriptor sets!");
     for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
-        //_frameData[i].descriptorSet = descriptorSets[i];
-
         vk::DescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = _frameData[i].uniformBuffer;
         bufferInfo.offset = 0;
@@ -153,31 +128,6 @@ void ShadowPipeline::CreateDescriptorSets()
         _brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
 
     }
-}
-
-void ShadowPipeline::CreateUniformBuffers()
-{
-    vk::DeviceSize bufferSize = sizeof(UBO) * 128;//max meshes
-
-    /*for (size_t i = 0; i < _frameData.size(); ++i) {
-        util::CreateBuffer(_brain, bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
-                           _frameData[i].uniformBuffer, true, _frameData[i].uniformBufferAllocation,
-                           VMA_MEMORY_USAGE_CPU_ONLY, "Shadow Uniform Buffer");
-
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].uniformBufferAllocation,
-                                     &_frameData[i].uniformBufferMapped),
-                        "Failed to map shadow uniform buffer memory!");
-    }*/
-}
-
-void ShadowPipeline::UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4>& transforms)
-{
-    std::array<UBO, 128> ubos{};
-    for (size_t i = 0; i < std::min(transforms.size(), ubos.size()); ++i) {
-        ubos[i].model = transforms[i];
-    }
-
-    memcpy(_frameData[currentFrame].uniformBufferMapped, ubos.data(), ubos.size() * sizeof(UBO));
 }
 
 void ShadowPipeline::CreatePipeline()

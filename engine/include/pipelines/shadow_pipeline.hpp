@@ -20,20 +20,15 @@ private:
     void CreatePipeline();
     void CreateDescriptorSetLayout();
     void CreateDescriptorSets();
-
-    void CreateUniformBuffers();
-     void UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4>& transforms);
-
-
+    
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const CameraStructure& _camera;
-    //GeometryPipeline& _geometryPipeline;
 
-    vk::DescriptorSetLayout _descriptorSetLayout; //remove / getter
+    vk::DescriptorSetLayout _descriptorSetLayout;
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
-    const std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _frameData; // getter
+    const std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _frameData; // Reference to the geometry pipeline's frame data
 
 };
