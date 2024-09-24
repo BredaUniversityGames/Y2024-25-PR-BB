@@ -31,12 +31,13 @@ jobs:
         with:
           version: "18.1.8"
 
-      - name: Setup PATH
+      - name: Refresh PATH
         run: echo "$PATH" >> $GITHUB_PATH
 
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
-
+        with:
+            submodules: 'true'
 
       - name: Build Project
         uses: threeal/cmake-action@v2.0.0
