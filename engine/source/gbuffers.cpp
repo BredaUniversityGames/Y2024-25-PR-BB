@@ -67,13 +67,14 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
-    util::CreateImage(_brain.vmaAllocator,4096 ,4096,_shadowFormat,vk::ImageTiling::eOptimal,
-                      vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-                      _shadowImage, _shadowImageAllocation, "Shadow image", vk::True, VMA_MEMORY_USAGE_GPU_ONLY);
+    ImageCreation shadowCreation {};
+    shadowCreation.SetFormat(_shadowFormat).SetSize(4096 ,4096).SetName("Shadow image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _shadowImage = _brain.ImageResourceManager().Create(shadowCreation);
 
-    _shadowImageView = util::CreateImageView(_brain.device, _shadowImage, _shadowFormat, vk::ImageAspectFlagBits::eDepth);
+    const Image* image = _brain.ImageResourceManager().Access(_shadowImage);
+
     vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(commandBuffer, _shadowImage, _shadowFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, image->image, _shadowFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
@@ -81,8 +82,7 @@ void GBuffers::CleanUp()
 {
     _brain.ImageResourceManager().Destroy(_gBuffersImage);
     _brain.ImageResourceManager().Destroy(_depthImage);
-    _brain.device.destroy(_shadowImageView);
-    vmaDestroyImage(_brain.vmaAllocator, _shadowImage, _shadowImageAllocation);
+    _brain.ImageResourceManager().Destroy(_shadowImage);
 }
 
 void GBuffers::CreateViewportAndScissor()

@@ -18,8 +18,8 @@ public:
     vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.ImageResourceManager().Access(_gBuffersImage)->views[viewIndex]; }
     vk::Format DepthFormat() const { return _depthFormat; }
     glm::uvec2 Size() const { return _size; }
-    vk::Image ShadowImage() const { return _shadowImage; }
-    vk::ImageView ShadowImageView() const { return _shadowImageView; }
+    vk::Image ShadowImage() const { return _brain.ImageResourceManager().Access(_shadowImage)->image; }
+    vk::ImageView ShadowImageView() const { return _brain.ImageResourceManager().Access(_shadowImage)->view; }
     vk::Format ShadowFormat() const { return _shadowFormat; }
     vk::Image DepthImage() const { return _brain.ImageResourceManager().Access(_depthImage)->image; }
     vk::ImageView DepthImageView() const { return _brain.ImageResourceManager().Access(_depthImage)->views[0]; }
@@ -37,11 +37,8 @@ private:
     ResourceHandle<Image> _depthImage;
 
     vk::Format _depthFormat;
+    ResourceHandle<Image> _shadowImage;
 
-    //shadow mapping
-    vk::Image _shadowImage;
-    VmaAllocation _shadowImageAllocation;
-    vk::ImageView _shadowImageView;
     vk::Format _shadowFormat;
 
     vk::Viewport _viewport;

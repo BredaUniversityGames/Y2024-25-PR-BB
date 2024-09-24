@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "include.hpp"
+
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
@@ -20,7 +20,7 @@ private:
     void CreatePipeline();
     void CreateDescriptorSetLayout();
     void CreateDescriptorSets();
-    
+
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const CameraStructure& _camera;

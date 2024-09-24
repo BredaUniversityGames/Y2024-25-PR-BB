@@ -155,7 +155,7 @@ void Engine::Run()
     }
 
 
-    if (glm::length(movement_dir) != 0.0f)
+
     {
         ZoneNamedN(zone, "Update Camera", true);
         int x, y;
@@ -192,6 +192,9 @@ void Engine::Run()
         {
             movement_dir = glm::normalize(movement_dir);
         }
+
+        if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+            cursorHidden = !cursorHidden;
 
         _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
     }
