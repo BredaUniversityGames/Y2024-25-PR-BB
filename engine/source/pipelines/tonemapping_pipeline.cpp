@@ -3,11 +3,11 @@
 #include "shaders/shader_loader.hpp"
 #include "imgui_impl_vulkan.h"
 
-TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain) :
-    _brain(brain),
-    _swapChain(_swapChain),
-    _hdrTarget(hdrTarget),
-    _bloomTarget(bloomTarget)
+TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain)
+    : _brain(brain)
+    , _swapChain(_swapChain)
+    , _hdrTarget(hdrTarget)
+    , _bloomTarget(bloomTarget)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     CreateDescriptorSetLayout();
@@ -172,16 +172,16 @@ void TonemappingPipeline::CreatePipeline()
 
 void TonemappingPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 2> bindings{};
+    std::array<vk::DescriptorSetLayoutBinding, 2> bindings {};
 
-    vk::DescriptorSetLayoutBinding& hdrSamplerLayoutBinding{bindings[0]};
+    vk::DescriptorSetLayoutBinding& hdrSamplerLayoutBinding { bindings[0] };
     hdrSamplerLayoutBinding.binding = 0;
     hdrSamplerLayoutBinding.descriptorCount = 1;
     hdrSamplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     hdrSamplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     hdrSamplerLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutBinding& bloomSamplerLayoutBinding{bindings[1]};
+    vk::DescriptorSetLayoutBinding& bloomSamplerLayoutBinding { bindings[1] };
     bloomSamplerLayoutBinding.binding = 1;
     bloomSamplerLayoutBinding.descriptorCount = 1;
     bloomSamplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
@@ -211,17 +211,17 @@ void TonemappingPipeline::CreateDescriptorSets()
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vk::DescriptorImageInfo hdrImageInfo{};
+        vk::DescriptorImageInfo hdrImageInfo {};
         hdrImageInfo.sampler = *_sampler;
         hdrImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         hdrImageInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
 
-        vk::DescriptorImageInfo bloomImageInfo{};
+        vk::DescriptorImageInfo bloomImageInfo {};
         bloomImageInfo.sampler = *_sampler;
         bloomImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         bloomImageInfo.imageView = _brain.ImageResourceManager().Access(_bloomTarget)->views[0];
 
-        std::array<vk::WriteDescriptorSet, 2> descriptorWrites{};
+        std::array<vk::WriteDescriptorSet, 2> descriptorWrites {};
 
         descriptorWrites[0].dstSet = _descriptorSets[i];
         descriptorWrites[0].dstBinding = 0;

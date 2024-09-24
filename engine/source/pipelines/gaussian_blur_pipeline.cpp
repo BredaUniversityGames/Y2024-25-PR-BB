@@ -2,9 +2,9 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 
-GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target) :
-    _brain(brain),
-    _source(source)
+GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target)
+    : _brain(brain)
+    , _source(source)
 {
     // The result target will be the vertical target, as the vertical pass is the last one
     _targets[1] = target;
@@ -27,15 +27,15 @@ GaussianBlurPipeline::~GaussianBlurPipeline()
 
 void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t blurPasses)
 {
-    util::BeginLabel(commandBuffer, "Gaussian blur pass", glm::vec3{ 255.0f, 255.0f, 153.0f } / 255.0f, _brain.dldi);
+    util::BeginLabel(commandBuffer, "Gaussian blur pass", glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f, _brain.dldi);
 
     // The horizontal target is created by this pass, so we need to transition it from undefined layout
-    auto verticalTarget  = _brain.ImageResourceManager().Access(_targets[0]);
+    auto verticalTarget = _brain.ImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     auto descriptorSet = &_sourceDescriptorSets[currentFrame];
 
-    for(int i = 0; i < blurPasses * 2; ++i)
+    for (int i = 0; i < blurPasses * 2; ++i)
     {
         uint32_t isVerticalPass = i % 2;
         auto target = _brain.ImageResourceManager().Access(_targets[isVerticalPass]);
@@ -57,16 +57,16 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
             }
         }
 
-        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
+        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
         finalColorAttachmentInfo.imageView = target->views[0];
         finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
         finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
         finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-        finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+        finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
-        vk::RenderingInfoKHR renderingInfo{};
-        renderingInfo.renderArea.extent = vk::Extent2D{ target->width, target->height };
-        renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+        vk::RenderingInfoKHR renderingInfo {};
+        renderingInfo.renderArea.extent = vk::Extent2D { target->width, target->height };
+        renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
         renderingInfo.layerCount = 1;
@@ -89,11 +89,11 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
 
 void GaussianBlurPipeline::CreatePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = 1;
     pipelineLayoutCreateInfo.pSetLayouts = &_descriptorSetLayout;
 
-    vk::PushConstantRange pushConstantRange{};
+    vk::PushConstantRange pushConstantRange {};
     pushConstantRange.size = sizeof(uint32_t);
     pushConstantRange.offset = 0;
     pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -101,7 +101,7 @@ void GaussianBlurPipeline::CreatePipeline()
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-                    "Failed creating geometry pipeline layout!");
+        "Failed creating geometry pipeline layout!");
 
     auto vertByteCode = shader::ReadFile("shaders/tonemapping-v.spv"); // TODO: Rename shader to appropriate name
     auto fragByteCode = shader::ReadFile("shaders/gaussian_blur-f.spv");
@@ -109,38 +109,38 @@ void GaussianBlurPipeline::CreatePipeline()
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo{};
+    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageCreateInfo.module = vertModule;
     vertShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo{};
+    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
     fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
     std::array<vk::DynamicState, 2> dynamicStates = {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eScissor,
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
     rasterizationStateCreateInfo.depthClampEnable = vk::False;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
@@ -152,7 +152,7 @@ void GaussianBlurPipeline::CreatePipeline()
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
     multisampleStateCreateInfo.sampleShadingEnable = vk::False;
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -160,22 +160,20 @@ void GaussianBlurPipeline::CreatePipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{};
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
     colorBlendAttachmentState.blendEnable = vk::False;
-    colorBlendAttachmentState.colorWriteMask =
-            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
-            vk::ColorComponentFlagBits::eA;
+    colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -191,7 +189,7 @@ void GaussianBlurPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     vk::Format format = _brain.ImageResourceManager().Access(_source)->format;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
@@ -209,43 +207,44 @@ void GaussianBlurPipeline::CreatePipeline()
 
 void GaussianBlurPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
+    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
+    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
     samplerLayoutBinding.binding = 0;
     samplerLayoutBinding.descriptorCount = 1;
     samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     samplerLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutCreateInfo createInfo{};
+    vk::DescriptorSetLayoutCreateInfo createInfo {};
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-                    "Failed creating gaussian blur descriptor set layout!");
+        "Failed creating gaussian blur descriptor set layout!");
 }
 
 void GaussianBlurPipeline::CreateDescriptorSets()
 {
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts{};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l) { l = _descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo{};
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _descriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _brain.descriptorPool;
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _sourceDescriptorSets.data()),
-                    "Failed allocating descriptor sets!");
+        "Failed allocating descriptor sets!");
 
-    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vk::DescriptorImageInfo imageInfo{};
+        vk::DescriptorImageInfo imageInfo {};
         imageInfo.sampler = *_sampler;
         imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageInfo.imageView = _brain.ImageResourceManager().Access(_source)->views[0];
 
-        std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+        std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
         descriptorWrites[0].dstSet = _sourceDescriptorSets[i];
         descriptorWrites[0].dstBinding = 0;
         descriptorWrites[0].dstArrayElement = 0;
@@ -259,16 +258,16 @@ void GaussianBlurPipeline::CreateDescriptorSets()
     for (int i = 0; i < _targets.size(); ++i)
     {
         util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _targetDescriptorSets[i].data()),
-                    "Failed allocating descriptor sets!");
+            "Failed allocating descriptor sets!");
 
         for (size_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
         {
-            vk::DescriptorImageInfo imageInfo{};
+            vk::DescriptorImageInfo imageInfo {};
             imageInfo.sampler = *_sampler;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             imageInfo.imageView = _brain.ImageResourceManager().Access(_targets[i])->views[0];
 
-            std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+            std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
             descriptorWrites[0].dstSet = _targetDescriptorSets[i][frame];
             descriptorWrites[0].dstBinding = 0;
             descriptorWrites[0].dstArrayElement = 0;
@@ -286,7 +285,7 @@ void GaussianBlurPipeline::CreateVerticalTarget()
     auto horizontalTargetAccess = _brain.ImageResourceManager().Access(_targets[1]);
     std::string verticalTargetName = std::string(horizontalTargetAccess->name + " | vertical");
 
-    ImageCreation verticalTargetCreation{};
+    ImageCreation verticalTargetCreation {};
     verticalTargetCreation.SetName(verticalTargetName).SetSize(horizontalTargetAccess->width, horizontalTargetAccess->height).SetFormat(horizontalTargetAccess->format).SetFlags(horizontalTargetAccess->flags);
 
     _targets[0] = _brain.ImageResourceManager().Create(verticalTargetCreation);

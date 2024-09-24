@@ -1,15 +1,15 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> hdrBloomTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT) :
-    _brain(brain),
-    _gBuffers(gBuffers),
-    _hdrTarget(hdrTarget),
-    _hdrBloomTarget(hdrBloomTarget),
-    _camera(camera),
-    _irradianceMap(irradianceMap),
-    _prefilterMap(prefilterMap),
-    _brdfLUT(brdfLUT)
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> hdrBloomTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT)
+    : _brain(brain)
+    , _gBuffers(gBuffers)
+    , _hdrTarget(hdrTarget)
+    , _hdrBloomTarget(hdrBloomTarget)
+    , _camera(camera)
+    , _irradianceMap(irradianceMap)
+    , _prefilterMap(prefilterMap)
+    , _brdfLUT(brdfLUT)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
@@ -27,25 +27,25 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
 
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
 {
-    std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos{};
+    std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
     colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_hdrBloomTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
-    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    vk::RenderingInfoKHR renderingInfo{};
-    renderingInfo.renderArea.extent = vk::Extent2D{ _gBuffers.Size().x, _gBuffers.Size().y };
-    renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+    vk::RenderingInfoKHR renderingInfo {};
+    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
+    renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
     renderingInfo.layerCount = 1;
@@ -150,11 +150,9 @@ void LightingPipeline::CreatePipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments{};
+    std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;
-    blendAttachments[0].colorWriteMask =
-            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
-            vk::ColorComponentFlagBits::eA;
+    blendAttachments[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
     memcpy(&blendAttachments[1], &blendAttachments[0], sizeof(vk::PipelineColorBlendAttachmentState));
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
@@ -183,7 +181,7 @@ void LightingPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineIndex = -1;
 
     std::array<vk::Format, 2> colorAttachmentFormats = { _brain.ImageResourceManager().Access(_hdrTarget)->format, _brain.ImageResourceManager().Access(_hdrBloomTarget)->format };
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
