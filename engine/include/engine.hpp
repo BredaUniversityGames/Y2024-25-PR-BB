@@ -63,7 +63,7 @@ private:
 
     glm::ivec2 _lastMousePos;
 
-    uint32_t _currentFrame{ 0 };
+    uint32_t _currentFrame { 0 };
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;

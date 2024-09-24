@@ -2,15 +2,15 @@
 
 void util::VK_ASSERT(vk::Result result, std::string_view message)
 {
-    if(result == vk::Result::eSuccess)
+    if (result == vk::Result::eSuccess)
         return;
 
-    static std::string completeMessage{};
+    static std::string completeMessage {};
     completeMessage = "[] ";
     auto resultStr = magic_enum::enum_name(result);
 
-    completeMessage.insert(0, resultStr);
-    completeMessage.insert(completeMessage.size() - 1, message);
+    completeMessage.insert(1, resultStr);
+    completeMessage.insert(completeMessage.size(), message);
 
     throw std::runtime_error(completeMessage.c_str());
 }
@@ -22,21 +22,20 @@ void util::VK_ASSERT(VkResult result, std::string_view message)
 
 bool util::HasStencilComponent(vk::Format format)
 {
-    return format == vk::Format::eD32SfloatS8Uint ||
-           format == vk::Format::eD24UnormS8Uint;
+    return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
 }
 
 std::optional<vk::Format> util::FindSupportedFormat(const vk::PhysicalDevice physicalDevice, const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
-                                              vk::FormatFeatureFlags features)
+    vk::FormatFeatureFlags features)
 {
-    for(vk::Format format : candidates)
+    for (vk::Format format : candidates)
     {
         vk::FormatProperties props;
         physicalDevice.getFormatProperties(format, &props);
 
-        if(tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features)
+        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features)
             return format;
-        else if(tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features)
+        else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features)
             return format;
     }
 
@@ -45,16 +44,16 @@ std::optional<vk::Format> util::FindSupportedFormat(const vk::PhysicalDevice phy
 
 void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
 {
-    vk::BufferCreateInfo bufferInfo{};
+    vk::BufferCreateInfo bufferInfo {};
     bufferInfo.size = size;
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = vk::SharingMode::eExclusive;
     bufferInfo.queueFamilyIndexCount = 1;
     bufferInfo.pQueueFamilyIndices = &brain.queueFamilyIndices.graphicsFamily.value();
 
-    VmaAllocationCreateInfo allocationInfo{};
+    VmaAllocationCreateInfo allocationInfo {};
     allocationInfo.usage = memoryUsage;
-    if(mappable)
+    if (mappable)
         allocationInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
     util::VK_ASSERT(vmaCreateBuffer(brain.vmaAllocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
@@ -63,7 +62,7 @@ void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::Buffe
 
 vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanBrain& brain)
 {
-    vk::CommandBufferAllocateInfo allocateInfo{};
+    vk::CommandBufferAllocateInfo allocateInfo {};
     allocateInfo.level = vk::CommandBufferLevel::ePrimary;
     allocateInfo.commandPool = brain.commandPool;
     allocateInfo.commandBufferCount = 1;
@@ -71,7 +70,7 @@ vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanBrain& brain)
     vk::CommandBuffer commandBuffer;
     util::VK_ASSERT(brain.device.allocateCommandBuffers(&allocateInfo, &commandBuffer), "Failed allocating one time command buffer!");
 
-    vk::CommandBufferBeginInfo beginInfo{};
+    vk::CommandBufferBeginInfo beginInfo {};
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
     util::VK_ASSERT(commandBuffer.begin(&beginInfo), "Failed beginning one time command buffer!");
@@ -83,7 +82,7 @@ void util::EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer com
 {
     commandBuffer.end();
 
-    vk::SubmitInfo submitInfo{};
+    vk::SubmitInfo submitInfo {};
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
@@ -95,7 +94,7 @@ void util::EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer com
 
 void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
 {
-    vk::BufferCopy copyRegion{};
+    vk::BufferCopy copyRegion {};
     copyRegion.srcOffset = 0;
     copyRegion.dstOffset = 0;
     copyRegion.size = size;
@@ -114,47 +113,26 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     std::memcpy(uniformPtr, &info, sizeof(info));
     vmaUnmapMemory(brain.vmaAllocator, materialHandle.materialUniformAllocation);
 
-
-    vk::DescriptorSetAllocateInfo allocateInfo{};
+    vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = brain.descriptorPool;
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &materialLayout;
 
     util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &materialHandle.descriptorSet),
-                    "Failed allocating material descriptor set!");
+        "Failed allocating material descriptor set!");
 
-    std::array<vk::DescriptorImageInfo, 6> imageInfos;
-    imageInfos[0].sampler = sampler;
-    for(size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
-    {
-        const MaterialHandle& material = brain.ImageResourceManager().IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
-
-        imageInfos[i].imageView = brain.ImageResourceManager().Access(material.textures[i - 1])->views[0];
-        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    }
-
-    vk::DescriptorBufferInfo uniformInfo{};
+    vk::DescriptorBufferInfo uniformInfo {};
     uniformInfo.offset = 0;
     uniformInfo.buffer = materialHandle.materialUniformBuffer;
     uniformInfo.range = sizeof(MaterialHandle::MaterialInfo);
 
-    std::array<vk::WriteDescriptorSet, imageInfos.size() + 1> writes;
-    for(size_t i = 0; i < imageInfos.size(); ++i)
-    {
-        writes[i].dstSet = materialHandle.descriptorSet;
-        writes[i].dstBinding = i;
-        writes[i].dstArrayElement = 0;
-        // Hacky way of keeping this process in one loop.
-        writes[i].descriptorType = i == 0 ? vk::DescriptorType::eSampler : vk::DescriptorType::eSampledImage;
-        writes[i].descriptorCount = 1;
-        writes[i].pImageInfo = &imageInfos[i];
-    }
-    writes[imageInfos.size()].dstSet = materialHandle.descriptorSet;
-    writes[imageInfos.size()].dstBinding = imageInfos.size();
-    writes[imageInfos.size()].dstArrayElement = 0;
-    writes[imageInfos.size()].descriptorType = vk::DescriptorType::eUniformBuffer;
-    writes[imageInfos.size()].descriptorCount = 1;
-    writes[imageInfos.size()].pBufferInfo = &uniformInfo;
+    std::array<vk::WriteDescriptorSet, 1> writes;
+    writes[0].dstSet = materialHandle.descriptorSet;
+    writes[0].dstBinding = 0;
+    writes[0].dstArrayElement = 0;
+    writes[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+    writes[0].descriptorCount = 1;
+    writes[0].pBufferInfo = &uniformInfo;
 
     brain.device.updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
 
@@ -163,10 +141,10 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
 
 vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
 {
-    vk::PhysicalDeviceProperties properties{};
+    vk::PhysicalDeviceProperties properties {};
     brain.physicalDevice.getProperties(&properties);
 
-    vk::SamplerCreateInfo createInfo{};
+    vk::SamplerCreateInfo createInfo {};
     createInfo.magFilter = mag;
     createInfo.minFilter = min;
     createInfo.addressModeU = addressingMode;
@@ -188,7 +166,7 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
 
 void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount)
 {
-    vk::ImageMemoryBarrier barrier{};
+    vk::ImageMemoryBarrier barrier {};
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
     barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
@@ -203,22 +181,22 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
     vk::PipelineStageFlags sourceStage;
     vk::PipelineStageFlags destinationStage;
 
-    if(newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+    if (newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
     {
         barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-        if(util::HasStencilComponent(format))
+        if (util::HasStencilComponent(format))
             barrier.subresourceRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
     }
 
-    if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+    if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
     {
-        barrier.srcAccessMask = vk::AccessFlags{ 0 };
+        barrier.srcAccessMask = vk::AccessFlags { 0 };
         barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
         destinationStage = vk::PipelineStageFlagBits::eTransfer;
     }
-    else if(oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eTransferSrcOptimal)
+    else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eTransferSrcOptimal)
     {
         barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
         barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
@@ -258,14 +236,14 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
     else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
     {
         barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-        barrier.dstAccessMask = vk::AccessFlags{ 0 };
+        barrier.dstAccessMask = vk::AccessFlags { 0 };
 
         sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
     }
     else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
     {
-        barrier.srcAccessMask = vk::AccessFlags{ 0 };
+        barrier.srcAccessMask = vk::AccessFlags { 0 };
         barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
@@ -283,15 +261,15 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
         throw std::runtime_error("Unsupported layout transition!");
 
     commandBuffer.pipelineBarrier(sourceStage, destinationStage,
-                                  vk::DependencyFlags{ 0 },
-                                  0, nullptr,
-                                  0, nullptr,
-                                  1, &barrier);
+        vk::DependencyFlags { 0 },
+        0, nullptr,
+        0, nullptr,
+        1, &barrier);
 }
 
 void util::CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height)
 {
-    vk::BufferImageCopy region{};
+    vk::BufferImageCopy region {};
     region.bufferImageHeight = 0;
     region.bufferRowLength = 0;
     region.bufferImageHeight = 0;
@@ -299,17 +277,17 @@ void util::CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer,
     region.imageSubresource.mipLevel = 0;
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
-    region.imageOffset = vk::Offset3D{ 0, 0, 0 };
-    region.imageExtent = vk::Extent3D{ width, height, 1 };
+    region.imageOffset = vk::Offset3D { 0, 0, 0 };
+    region.imageExtent = vk::Extent3D { width, height, 1 };
 
     commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &region);
 }
 
 void util::BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi)
 {
-    if(!ENABLE_VALIDATION_LAYERS)
+    if (!ENABLE_VALIDATION_LAYERS)
         return;
-    vk::DebugUtilsLabelEXT labelExt{};
+    vk::DebugUtilsLabelEXT labelExt {};
     memcpy(labelExt.color.data(), &color.r, sizeof(glm::vec3));
     labelExt.color[3] = 1.0f;
     labelExt.pLabelName = label.data();
@@ -319,16 +297,16 @@ void util::BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, 
 
 void util::EndLabel(vk::Queue queue, const vk::DispatchLoaderDynamic dldi)
 {
-    if(!ENABLE_VALIDATION_LAYERS)
+    if (!ENABLE_VALIDATION_LAYERS)
         return;
     queue.endDebugUtilsLabelEXT(dldi);
 }
 
 void util::BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi)
 {
-    if(!ENABLE_VALIDATION_LAYERS)
+    if (!ENABLE_VALIDATION_LAYERS)
         return;
-    vk::DebugUtilsLabelEXT labelExt{};
+    vk::DebugUtilsLabelEXT labelExt {};
     memcpy(labelExt.color.data(), &color.r, sizeof(glm::vec3));
     labelExt.color[3] = 1.0f;
     labelExt.pLabelName = label.data();
@@ -338,34 +316,38 @@ void util::BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, g
 
 void util::EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDynamic dldi)
 {
-    if(!ENABLE_VALIDATION_LAYERS)
+    if (!ENABLE_VALIDATION_LAYERS)
         return;
     commandBuffer.endDebugUtilsLabelEXT(dldi);
 }
 
-vk::ImageAspectFlags util::GetImageAspectFlags(vk::Format format) {
-    switch (format) {
-        // Depth formats
-        case vk::Format::eD16Unorm:
-        case vk::Format::eX8D24UnormPack32:
-        case vk::Format::eD32Sfloat:
-            return vk::ImageAspectFlagBits::eDepth;
+vk::ImageAspectFlags util::GetImageAspectFlags(vk::Format format)
+{
+    switch (format)
+    {
+    // Depth formats
+    case vk::Format::eD16Unorm:
+    case vk::Format::eX8D24UnormPack32:
+    case vk::Format::eD32Sfloat:
+        return vk::ImageAspectFlagBits::eDepth;
 
-        // Depth-stencil formats
-        case vk::Format::eD16UnormS8Uint:
-        case vk::Format::eD24UnormS8Uint:
-        case vk::Format::eD32SfloatS8Uint:
-            return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+    // Depth-stencil formats
+    case vk::Format::eD16UnormS8Uint:
+    case vk::Format::eD24UnormS8Uint:
+    case vk::Format::eD32SfloatS8Uint:
+        return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 
-        // Color formats
-        default:
-            // Most other formats are color formats
-            if (format >= vk::Format::eR4G4UnormPack8 && format <= vk::Format::eBc7UnormBlock) {
-                return vk::ImageAspectFlagBits::eColor;
-            } else {
-                // Handle error or unsupported format case
-                throw std::runtime_error("Unsupported format for aspect determination.");
-            }
+    // Color formats
+    default:
+        // Most other formats are color formats
+        if (format >= vk::Format::eR4G4UnormPack8 && format <= vk::Format::eBc7UnormBlock)
+        {
+            return vk::ImageAspectFlagBits::eColor;
+        }
+        else
+        {
+            // Handle error or unsupported format case
+            throw std::runtime_error("Unsupported format for aspect determination.");
+        }
     }
 }
-
