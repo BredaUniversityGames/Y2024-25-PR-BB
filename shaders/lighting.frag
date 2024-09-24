@@ -106,8 +106,8 @@ void main()
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
-    vec4 ShadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
-    vec4 TestCoord = cameraUbo.lightVP * vec4(position, 1.0);
+    vec4 shadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
+    vec4 testCoord = cameraUbo.lightVP * vec4(position, 1.0);
 
     float cosTheta = clamp(dot(N, lightDir),0.0,1.0);
     float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
@@ -118,11 +118,11 @@ void main()
 
     float visibility = 1.0;
     float shadow = 0.0;
-    float depthFactor = TestCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
+    float depthFactor = testCoord.z - bias;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
     outColor = vec4((Lo* shadow)+ ambient + emissive, 1.0);
