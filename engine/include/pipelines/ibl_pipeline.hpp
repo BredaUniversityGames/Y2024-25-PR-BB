@@ -1,22 +1,20 @@
 #pragma once
-#include "class_decorations.hpp"
 #include "vulkan/vulkan.hpp"
-#include "vk_mem_alloc.h"
 #include "mesh.hpp"
 
-struct VulkanBrain;
+class VulkanBrain;
 struct TextureHandle;
 
 class IBLPipeline
 {
 public:
-    IBLPipeline(const VulkanBrain& brain, const TextureHandle& environmentMap);
+    IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap);
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
-    const Cubemap& IrradianceMap() const { return _irradianceMap; }
-    const Cubemap& PrefilterMap() const { return _prefilterMap; }
-    const TextureHandle& BRDFLUTMap() const { return _brdfLUT; }
+    ResourceHandle<Image> IrradianceMap() const { return _irradianceMap; }
+    ResourceHandle<Image> PrefilterMap() const { return _prefilterMap; }
+    ResourceHandle<Image> BRDFLUTMap() const { return _brdfLUT; }
 
     NON_MOVABLE(IBLPipeline);
     NON_COPYABLE(IBLPipeline);
@@ -29,7 +27,7 @@ private:
     };
 
     const VulkanBrain& _brain;
-    const TextureHandle& _environmentMap;
+    const ResourceHandle<Image> _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;
     vk::Pipeline _irradiancePipeline;
@@ -40,11 +38,12 @@ private:
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::DescriptorSet _descriptorSet;
 
-    Cubemap _irradianceMap;
-    Cubemap _prefilterMap;
-    TextureHandle _brdfLUT;
+    ResourceHandle<Image> _irradianceMap;
+    ResourceHandle<Image> _prefilterMap;
+    ResourceHandle<Image> _brdfLUT;
 
-    std::array<vk::ImageView, 6> _irradianceMapViews;
+    vk::UniqueSampler _sampler;
+
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;
 
     void CreateIrradiancePipeline();

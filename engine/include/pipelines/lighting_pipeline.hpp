@@ -1,15 +1,13 @@
 #pragma once
 
-#include "include.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "swap_chain.hpp"
-#include "hdr_target.hpp"
 
 class LightingPipeline
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const HDRTarget& hdrTarget, const CameraStructure& camera, const Cubemap& irradianceMap, const Cubemap& prefilterMap, const TextureHandle& brdfLUT);
+    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT);
     ~LightingPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
@@ -25,11 +23,11 @@ private:
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
-    const HDRTarget& _hdrTarget;
+    const ResourceHandle<Image> _hdrTarget;
     const CameraStructure& _camera;
-    const Cubemap& _irradianceMap;
-    const Cubemap& _prefilterMap;
-    const TextureHandle& _brdfLUT;
+    const ResourceHandle<Image> _irradianceMap;
+    const ResourceHandle<Image> _prefilterMap;
+    const ResourceHandle<Image> _brdfLUT;
 
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::DescriptorSet _descriptorSet;

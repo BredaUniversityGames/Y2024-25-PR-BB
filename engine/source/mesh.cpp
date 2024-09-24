@@ -12,7 +12,7 @@ vk::VertexInputBindingDescription Vertex::GetBindingDescription()
 
 std::array<vk::VertexInputAttributeDescription, 5> Vertex::GetAttributeDescriptions()
 {
-    std::array<vk::VertexInputAttributeDescription, 5> attributeDescriptions{};
+    std::array<vk::VertexInputAttributeDescription, 5> attributeDescriptions {};
     attributeDescriptions[ePOSITION].binding = 0;
     attributeDescriptions[ePOSITION].location = 0;
     attributeDescriptions[ePOSITION].format = vk::Format::eR32G32B32Sfloat;
@@ -38,8 +38,5 @@ std::array<vk::VertexInputAttributeDescription, 5> Vertex::GetAttributeDescripti
     attributeDescriptions[eTEX_COORD].format = vk::Format::eR32G32Sfloat;
     attributeDescriptions[eTEX_COORD].offset = offsetof(Vertex, texCoord);
 
-
     return attributeDescriptions;
 }
-
-
