@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct QueueFamilyIndices;
 
 class SwapChain
