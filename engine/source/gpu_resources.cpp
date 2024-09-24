@@ -64,4 +64,17 @@ ImageCreation& ImageCreation::SetName(std::string_view name)
 {
     this->name = name;
     return *this;
+
+}
+
+ImageCreation& ImageCreation::SetType(ImageType type)
+{
+    this->type = type;
+    return *this;
+}
+
+ImageCreation& ImageCreation::SetSampler(vk::Sampler sampler)
+{
+    this->sampler = sampler;
+    return *this;
 }

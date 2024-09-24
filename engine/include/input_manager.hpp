@@ -3,9 +3,11 @@
 #include <SDL3/SDL.h>
 #include <unordered_map>
 
-class InputManager {
+class InputManager
+{
 public:
-    enum class Key {
+    enum class Key
+    {
         W = SDL_SCANCODE_W,
         A = SDL_SCANCODE_A,
         S = SDL_SCANCODE_S,
@@ -15,7 +17,8 @@ public:
         // Add other keys as needed
     };
 
-    enum class MouseButton {
+    enum class MouseButton
+    {
         Left = SDL_BUTTON_LEFT,
         Right = SDL_BUTTON_RIGHT,
         Middle = SDL_BUTTON_MIDDLE,

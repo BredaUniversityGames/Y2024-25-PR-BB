@@ -1,14 +1,11 @@
 #pragma once
 
 #include "swap_chain.hpp"
-#include <glm/glm.hpp>
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
-#include "include.hpp"
 #include "camera.hpp"
 #include "UserInterfaceSystem.h"
-
 
 class Application;
 class GeometryPipeline;
@@ -47,6 +44,7 @@ private:
 
     SceneDescription _scene;
     ResourceHandle<Image> _environmentMap;
+
     CameraUBO m_cameraMatrices;
     
     std::unique_ptr<SwapChain> _swapChain;
@@ -64,7 +62,7 @@ private:
 
     glm::ivec2 _lastMousePos;
 
-    uint32_t _currentFrame{ 0 };
+    uint32_t _currentFrame { 0 };
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;

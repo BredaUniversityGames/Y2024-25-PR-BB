@@ -1,21 +1,15 @@
 #pragma once
-#include <cstdint>
-#include <string_view>
-#include <functional>
-#include <memory>
-#include <glm/glm.hpp>
-#include "class_decorations.hpp"
 #include "engine_init_info.hpp"
 #include "input_manager.hpp"
 
 class Application
 {
 public:
-   struct CreateParameters
-   {
-       std::string_view windowTitle;
-       bool isFullscreen;
-   };
+    struct CreateParameters
+    {
+        std::string_view windowTitle;
+        bool isFullscreen;
+    };
 
     Application(const CreateParameters& parameters);
     virtual InitInfo GetInitInfo() = 0;

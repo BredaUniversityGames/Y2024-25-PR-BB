@@ -1,7 +1,4 @@
 #pragma once
-#include "class_decorations.hpp"
-#include "vulkan/vulkan.hpp"
-#include "vk_mem_alloc.h"
 
 class VulkanBrain;
 struct Texture;
@@ -31,7 +28,7 @@ private:
     const VulkanBrain& _brain;
     vk::CommandBuffer _commandBuffer;
     vk::Fence _fence;
-    bool _submitted{ false };
+    bool _submitted { false };
 
     std::vector<vk::Buffer> _stagingBuffers;
     std::vector<VmaAllocation> _stagingAllocations;

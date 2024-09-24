@@ -1,10 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-#include <glm/glm.hpp>
-#include "class_decorations.hpp"
-#include "vulkan_brain.hpp"
-
 struct QueueFamilyIndices;
 
 class SwapChain

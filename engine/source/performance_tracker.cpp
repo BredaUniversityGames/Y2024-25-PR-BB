@@ -1,9 +1,4 @@
 #include "performance_tracker.hpp"
-#include "imgui.h"
-#include "implot.h"
-#include <algorithm>
-#include <iostream>
-#include <string>
 
 PerformanceTracker::PerformanceTracker()
 {
@@ -16,6 +11,7 @@ PerformanceTracker::PerformanceTracker()
 
 void PerformanceTracker::Update()
 {
+    ZoneScoped;
     auto currentTime = std::chrono::steady_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - _lastFrameTime).count();
     _lastFrameTime = currentTime;
@@ -24,29 +20,29 @@ void PerformanceTracker::Update()
     float frameDuration = deltaTime * 1000.0f;
     _totalTime += deltaTime;
 
-    if(_frameCounter < 4)
+    if (_frameCounter < 4)
     {
         ++_frameCounter;
         return;
     }
 
-    if(fps >= _highestFps)
+    if (fps >= _highestFps)
     {
         _highestFps = fps;
         _highestFpsRecordIndex = _frameCounter;
     }
-    if(frameDuration >= _highestFrameDuration)
+    if (frameDuration >= _highestFrameDuration)
     {
         _highestFrameDuration = frameDuration;
         _highestFrameDurationRecordIndex = _frameCounter;
     }
-    if(_frameCounter - _highestFpsRecordIndex > MAX_SAMPLES)
+    if (_frameCounter - _highestFpsRecordIndex > MAX_SAMPLES)
     {
         auto it = std::max_element(_fpsValues.begin(), _fpsValues.end());
         _highestFps = *it;
         _highestFpsRecordIndex = _frameCounter - std::distance(_fpsValues.begin(), it);
     }
-    if(_frameCounter - _highestFrameDurationRecordIndex > MAX_SAMPLES)
+    if (_frameCounter - _highestFrameDurationRecordIndex > MAX_SAMPLES)
     {
         auto it = std::max_element(_frameDurations.begin(), _frameDurations.end());
         _highestFrameDuration = *it;
@@ -58,7 +54,7 @@ void PerformanceTracker::Update()
 
     _timePoints.emplace_back(_totalTime);
 
-    if(_fpsValues.size() > MAX_SAMPLES)
+    if (_fpsValues.size() > MAX_SAMPLES)
     {
         _fpsValues.erase(_fpsValues.begin());
         _frameDurations.erase(_frameDurations.begin());
@@ -70,12 +66,14 @@ void PerformanceTracker::Update()
 
 void PerformanceTracker::Render()
 {
-    if(_timePoints.empty())
+    ZoneScoped;
+
+    if (_timePoints.empty())
         return;
 
     ImGui::Begin("Performance metrics");
 
-    if(ImPlot::BeginPlot("FPS"))
+    if (ImPlot::BeginPlot("FPS"))
     {
         ImPlot::SetupAxes("Time (s)", "Value", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
         ImPlot::SetupAxisLimits(ImAxis_X1, _timePoints.front(), _timePoints.back(), ImGuiCond_Always);
@@ -87,7 +85,7 @@ void PerformanceTracker::Render()
 
         ImPlot::EndPlot();
     }
-    if(ImPlot::BeginPlot("Frame Duration"))
+    if (ImPlot::BeginPlot("Frame Duration"))
     {
         ImPlot::SetupAxes("Time (s)", "Value (ms)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
         ImPlot::SetupAxisLimits(ImAxis_X1, _timePoints.front(), _timePoints.back(), ImGuiCond_Always);
@@ -97,8 +95,6 @@ void PerformanceTracker::Render()
         ImPlot::PlotShaded("Frame Duration (ms)", _timePoints.data(), _frameDurations.data(), _frameDurations.size());
 
         ImPlot::PlotLine("Frame Duration (ms)", _timePoints.data(), _frameDurations.data(), _frameDurations.size());
-
-
 
         ImPlot::EndPlot();
     }

@@ -10,7 +10,9 @@ TEST(ResourceManagerTests, Creating)
     std::string resource = "my_resource";
 
     // Act
-    auto handle = rm.Create(resource);
+
+    rm.Create(resource);
+
 
     // Assert
     EXPECT_GT(rm.Resources().size(), 0);

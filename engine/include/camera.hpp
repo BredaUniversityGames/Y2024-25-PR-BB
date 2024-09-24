@@ -1,26 +1,24 @@
 #pragma once
 
-#include "include.hpp"
-
 struct Camera
 {
-    glm::vec3 position{};
-    glm::vec3 euler_rotation{};
-    float fov{};
+    glm::vec3 position {};
+    glm::vec3 euler_rotation {};
+    float fov {};
 
-    float nearPlane{};
-    float farPlane{};
+    float nearPlane {};
+    float farPlane {};
 };
 
 struct CameraUBO
 {
     alignas(16)
-    glm::mat4 VP;
+        glm::mat4 VP;
     glm::mat4 view;
     glm::mat4 proj;
 
     alignas(16)
-    glm::vec3 cameraPosition;
+        glm::vec3 cameraPosition;
 };
 
 struct CameraStructure
