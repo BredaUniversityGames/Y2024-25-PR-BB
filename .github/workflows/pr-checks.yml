@@ -33,9 +33,9 @@ jobs:
           version: "18.1.8"
 
       - name: Install Vulkan SDK
-        uses: jakoch/install-vulkan-sdk-action@v1.0.0
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:
-            version: latest
+            vulkan-query-version: latest
 
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
