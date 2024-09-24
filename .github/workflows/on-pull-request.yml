@@ -26,13 +26,16 @@ jobs:
       - name: Install Ninja
         uses: ashutoshvarma/setup-ninja@master
 
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "18.1.8"
+    #   - name: Install LLVM and Clang
+    #     uses: KyleMayes/install-llvm-action@v2
+    #     with:
+    #       version: "18.1.8"
 
-      - name: Refresh PATH
-        run: echo "$PATH" >> $GITHUB_PATH
+    #   - name: Refresh PATH
+    #     run: echo "$PATH" >> $GITHUB_PATH
+
+      - name: Check Dependencies
+        run: clang --version && ninja --version
 
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
