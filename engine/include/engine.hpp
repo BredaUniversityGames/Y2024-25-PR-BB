@@ -5,6 +5,7 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 #include "camera.hpp"
+#include "pipelines/shadow_pipeline.hpp"
 
 class Application;
 class GeometryPipeline;
@@ -37,6 +38,7 @@ private:
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
+    std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ModelLoader> _modelLoader;
