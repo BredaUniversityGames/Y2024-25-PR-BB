@@ -5,26 +5,29 @@
 
 struct Vertex
 {
-    enum Enumeration {
+    enum Enumeration
+    {
         ePOSITION,
         eNORMAL,
         eTANGENT,
-        eCOLOR,
         eTEX_COORD
     };
 
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec4 tangent;
-    glm::vec3 color;
-    glm::vec2 texCoord;
+    glm::vec3 position{};
+    glm::vec3 normal{};
+    glm::vec4 tangent{};
+    glm::vec2 texCoord{};
 
-    Vertex() {}
-    Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec3 color, glm::vec2 texCoord) :
-        position(position), normal(normal), tangent(tangent), color(color), texCoord(texCoord) {}
+    Vertex()
+    {}
+
+    Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord) :
+            position(position), normal(normal), tangent(tangent), texCoord(texCoord)
+    {}
 
     static vk::VertexInputBindingDescription GetBindingDescription();
-    static std::array<vk::VertexInputAttributeDescription, 5> GetAttributeDescriptions();
+
+    static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
 struct MeshPrimitive
@@ -49,6 +52,7 @@ struct Texture
     std::vector<std::byte> data;
     bool isHDR = false;
     vk::Format format = vk::Format::eR8G8B8A8Unorm;
+
     vk::Format GetFormat() const
     {
         if(isHDR)
@@ -118,20 +122,20 @@ struct MaterialHandle
 {
     struct alignas(16) MaterialInfo
     {
-        glm::vec4 albedoFactor{0.0f};
+        glm::vec4 albedoFactor{ 0.0f };
 
-        float metallicFactor{0.0f};
-        float roughnessFactor{0.0f};
-        float normalScale{0.0f};
-        float occlusionStrength{0.0f};
+        float metallicFactor{ 0.0f };
+        float roughnessFactor{ 0.0f };
+        float normalScale{ 0.0f };
+        float occlusionStrength{ 0.0f };
 
-        glm::vec3 emissiveFactor{0.0f};
-        int32_t useEmissiveMap{false};
+        glm::vec3 emissiveFactor{ 0.0f };
+        int32_t useEmissiveMap{ false };
 
-        int32_t useAlbedoMap{false};
-        int32_t useMRMap{false};
-        int32_t useNormalMap{false};
-        int32_t useOcclusionMap{false};
+        int32_t useAlbedoMap{ false };
+        int32_t useMRMap{ false };
+        int32_t useNormalMap{ false };
+        int32_t useOcclusionMap{ false };
 
         int32_t albedoMapIndex;
         int32_t mrMapIndex;
@@ -205,8 +209,11 @@ struct GameObject
     glm::mat4 transform;
     std::shared_ptr<ModelHandle> model;
 
-    GameObject(){}
-    GameObject(const glm::mat4& transform, std::shared_ptr<ModelHandle> model) : transform(transform), model(model) {}
+    GameObject()
+    {}
+
+    GameObject(const glm::mat4 &transform, std::shared_ptr<ModelHandle> model) : transform(transform), model(model)
+    {}
 };
 
 struct SceneDescription

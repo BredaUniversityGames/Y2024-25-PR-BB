@@ -1,4 +1,5 @@
 #pragma once
+
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
@@ -19,9 +20,9 @@ struct QueueFamilyIndices
 
 constexpr bool ENABLE_VALIDATION_LAYERS =
 #if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
-    true;
+        true;
 #else
-    false;
+false;
 #endif
 
 constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
@@ -29,14 +30,14 @@ enum class BindlessBinding
 {
     eColor = 10,
     eDepth,
-    eStorage,
     eCubemap,
 };
 
 class VulkanBrain
 {
 public:
-    explicit VulkanBrain(const InitInfo& initInfo);
+    explicit VulkanBrain(const InitInfo &initInfo);
+
     ~VulkanBrain();
     NON_COPYABLE(VulkanBrain);
     NON_MOVABLE(VulkanBrain);
@@ -58,7 +59,8 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const { return _imageResourceManager; }
+    ImageResourceManager &ImageResourceManager() const
+    { return _imageResourceManager; }
 
     void UpdateBindlessSet() const;
 
@@ -72,37 +74,47 @@ private:
     mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessWrites;
 
 
-    const std::vector<const char*> _validationLayers =
-    {
-        "VK_LAYER_KHRONOS_validation"
-    };
+    const std::vector<const char *> _validationLayers =
+            {
+                    "VK_LAYER_KHRONOS_validation"
+            };
 
 
-    const std::vector<const char*> _deviceExtensions =
-    {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    const std::vector<const char *> _deviceExtensions =
+            {
+                    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if defined(LINUX)
-        VK_KHR_MULTIVIEW_EXTENSION_NAME,
-        VK_KHR_MAINTENANCE2_EXTENSION_NAME,
+                    VK_KHR_MULTIVIEW_EXTENSION_NAME,
+                    VK_KHR_MAINTENANCE2_EXTENSION_NAME,
 #endif
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-        VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
-        VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-    };
+                    VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+                    VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+                    VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+                    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+                    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+            };
 
     mutable class ImageResourceManager _imageResourceManager;
 
-    void CreateInstance(const InitInfo& initInfo);
+    void CreateInstance(const InitInfo &initInfo);
+
     void PickPhysicalDevice();
+
     uint32_t RateDeviceSuitability(const vk::PhysicalDevice &device);
-    bool ExtensionsSupported(const vk::PhysicalDevice& device);
+
+    bool ExtensionsSupported(const vk::PhysicalDevice &device);
+
     bool CheckValidationLayerSupport();
-    std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);
+
+    std::vector<const char *> GetRequiredExtensions(const InitInfo &initInfo);
+
     void SetupDebugMessenger();
+
     void CreateDevice();
+
     void CreateCommandPool();
+
     void CreateDescriptorPool();
+
     void CreateBindlessDescriptorSet();
 };

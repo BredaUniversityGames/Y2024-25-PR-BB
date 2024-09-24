@@ -4,7 +4,7 @@
 #include "vulkan_validation.hpp"
 #include <map>
 
-VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this)
+VulkanBrain::VulkanBrain(const InitInfo &initInfo) : _imageResourceManager(*this)
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic{ instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
@@ -39,7 +39,8 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo) : _imageResourceManager(*this
 
     std::vector<std::byte> data(2 * 2 * 4 * sizeof(std::byte));
     ImageCreation creation{};
-    creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
+    creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName(
+            "Fallback texture");
 
     _fallbackImage = _imageResourceManager.Create(creation);
 }
@@ -68,11 +69,11 @@ VulkanBrain::~VulkanBrain()
 
 void VulkanBrain::UpdateBindlessSet() const
 {
-    for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
+    for(uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image* image = i < _imageResourceManager.Resources().size()
-                ? &_imageResourceManager.Resources()[i].resource.value()
-                : _imageResourceManager.Access(_fallbackImage);
+        const Image *image = i < _imageResourceManager.Resources().size()
+                             ? &_imageResourceManager.Resources()[i].resource.value()
+                             : _imageResourceManager.Access(_fallbackImage);
 
         // If it can't be sampled, use the fallback.
         if(!(image->flags & vk::ImageUsageFlagBits::eSampled))
@@ -84,9 +85,6 @@ void VulkanBrain::UpdateBindlessSet() const
 
         if(util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eDepth)
             dstBinding = BindlessBinding::eDepth;
-
-        if(image->flags & vk::ImageUsageFlagBits::eStorage)
-            dstBinding = BindlessBinding::eStorage;
 
         if(image->type == ImageType::eCubeMap)
             dstBinding = BindlessBinding::eCubemap;
@@ -106,7 +104,7 @@ void VulkanBrain::UpdateBindlessSet() const
     device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessWrites.data(), 0, nullptr);
 }
 
-void VulkanBrain::CreateInstance(const InitInfo& initInfo)
+void VulkanBrain::CreateInstance(const InitInfo &initInfo)
 {
     CheckValidationLayerSupport();
     if(ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
@@ -164,7 +162,7 @@ void VulkanBrain::PickPhysicalDevice()
     physicalDevice = candidates.rbegin()->second;
 }
 
-uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
+uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice &deviceToRate)
 {
     vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
     vk::PhysicalDeviceFeatures2 deviceFeatures;
@@ -236,7 +234,7 @@ bool VulkanBrain::CheckValidationLayerSupport()
     return result;
 }
 
-std::vector<const char*> VulkanBrain::GetRequiredExtensions(const InitInfo& initInfo)
+std::vector<const char *> VulkanBrain::GetRequiredExtensions(const InitInfo &initInfo)
 {
     std::vector<const char *> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
     if(ENABLE_VALIDATION_LAYERS)
@@ -258,7 +256,7 @@ void VulkanBrain::SetupDebugMessenger()
     util::PopulateDebugMessengerCreateInfo(createInfo);
     createInfo.pUserData = nullptr;
 
-    util::VK_ASSERT(instance.createDebugUtilsMessengerEXT( &createInfo, nullptr, &_debugMessenger, dldi),
+    util::VK_ASSERT(instance.createDebugUtilsMessengerEXT(&createInfo, nullptr, &_debugMessenger, dldi),
                     "Failed to create debug messenger!");
 }
 
@@ -271,8 +269,8 @@ void VulkanBrain::CreateDevice()
     deviceFeatures.pNext = &indexingFeatures;
     physicalDevice.getFeatures2(&deviceFeatures);
 
-    std::vector <vk::DeviceQueueCreateInfo> queueCreateInfos{};
-    std::set <uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos{};
+    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
     float queuePriority{ 1.0f };
 
     for(uint32_t familyQueueIndex: uniqueQueueFamilies)
@@ -290,7 +288,7 @@ void VulkanBrain::CreateDevice()
 
     vk::DeviceCreateInfo createInfo{};
     createInfo.pNext = &deviceFeatures;
-        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = nullptr; // Shouldn't be set because we already pass a pnext for DeviceFeatures2.
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
@@ -302,8 +300,7 @@ void VulkanBrain::CreateDevice()
     {
         createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
         createInfo.ppEnabledLayerNames = _validationLayers.data();
-    }
-    else
+    } else
     {
         createInfo.enabledLayerCount = 0;
     }
@@ -349,11 +346,10 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
-        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize{ vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+    std::array<vk::DescriptorPoolSize, 3> poolSizes = {
+            vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+            vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+            vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
     };
 
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
@@ -363,26 +359,20 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
-    vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings;
+    vk::DescriptorSetLayoutBinding &combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
     combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eColor);
     combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
-    vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
+    vk::DescriptorSetLayoutBinding &depthImageBinding = bindings[1];
     depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
     depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
-    vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[2];
-    storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
-    storageImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    storageImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorage);
-    storageImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
-
-    vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[3];
+    vk::DescriptorSetLayoutBinding &cubemapBinding = bindings[2];
     cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
@@ -393,9 +383,10 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    std::array<vk::DescriptorBindingFlagsEXT, 2> bindingFlags = {
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::eUpdateAfterBind
+    std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
+            vk::DescriptorBindingFlagBits::ePartiallyBound,
+            vk::DescriptorBindingFlagBits::ePartiallyBound,
+            vk::DescriptorBindingFlagBits::ePartiallyBound
     };
 
     vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT extInfo{};
@@ -404,7 +395,8 @@ void VulkanBrain::CreateBindlessDescriptorSet()
 
     layoutCreateInfo.pNext = &extInfo;
 
-    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout), "Failed creating bindless descriptor set layout.");
+    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout),
+                    "Failed creating bindless descriptor set layout.");
 
     vk::DescriptorSetAllocateInfo allocInfo{};
     allocInfo.descriptorPool = bindlessPool;
@@ -421,7 +413,7 @@ QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice devi
     uint32_t queueFamilyCount{ 0 };
     device.getQueueFamilyProperties(&queueFamilyCount, nullptr);
 
-    std::vector <vk::QueueFamilyProperties> queueFamilies(queueFamilyCount);
+    std::vector<vk::QueueFamilyProperties> queueFamilies(queueFamilyCount);
     device.getQueueFamilyProperties(&queueFamilyCount, queueFamilies.data());
 
     for(size_t i = 0; i < queueFamilies.size(); ++i)
