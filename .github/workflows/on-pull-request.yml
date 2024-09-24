@@ -15,6 +15,10 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
 
+    env:
+        PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }} 
+        PRESET_SUFFIX: ${{ matrix.configuration == 'Debug' && 'Debug' || matrix.configuration == 'Release' && 'Release' || 'RelWithDebInfo' }} 
+
     steps:
 
     #   - name: Install LLVM and Clang
@@ -29,8 +33,5 @@ jobs:
       - name: Build Project
         uses: threeal/cmake-action@v2.0.0
         with:
-          build_dir: build/${{ matrix.platform }}/${{ matrix.configuration }}
-          generator: Ninja
-          c-compiler: clang
-          cxx-compiler: clang++
+          args: --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
           
