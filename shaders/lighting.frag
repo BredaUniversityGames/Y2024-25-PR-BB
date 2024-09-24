@@ -125,9 +125,7 @@ void main()
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(ShadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
-    visibility = clamp(shadow, 0.2, 1.0);
-
-    outColor = vec4((Lo + ambient + emissive) * visibility, 1.0);
+    outColor = vec4((Lo* shadow)+ ambient + emissive, 1.0);
     //outColor = vec4((visibility.r),0.0,0.0,1.0);
 
 }
