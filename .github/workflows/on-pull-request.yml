@@ -9,6 +9,8 @@ jobs:
     name: Build Project
 
     strategy:
+      fail-fast:
+        true
       matrix:
         platform: [windows-latest] #, ubuntu-latest]
         configuration: [Debug] #, RelWithDebInfo, Release]
@@ -21,10 +23,10 @@ jobs:
 
     steps:
 
-    #   - name: Install LLVM and Clang
-    #     uses: KyleMayes/install-llvm-action@v2
-    #     with:
-    #       version: "18.1.8"
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18.1.8"
 
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
