@@ -263,13 +263,21 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
         sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
     }
-    else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+    else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
     {
         barrier.srcAccessMask = vk::AccessFlags{ 0 };
         barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
         destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    }
+    else if (oldLayout == vk::ImageLayout::eShaderReadOnlyOptimal && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+    {
+        barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+        barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+
+        sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
+        destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
     }
     else
         throw std::runtime_error("Unsupported layout transition!");

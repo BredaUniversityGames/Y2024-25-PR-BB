@@ -14,6 +14,7 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
+#include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
@@ -37,6 +38,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     InitializeCameraUBODescriptors();
     InitializeHDRTarget();
     LoadEnvironmentMap();
+    InitializeBloomTargets();
 
     _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
 
@@ -48,8 +50,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _materialDescriptorSetLayout, _cameraStructure);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _environmentMap);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, *_swapChain);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _hdrBloomTarget, _hdrBlurredBloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _hdrBloomTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
 
     SingleTimeCommands commandBufferIBL{ _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -275,6 +278,9 @@ Engine::~Engine()
     _brain.ImageResourceManager().Destroy(_environmentMap);
     _brain.ImageResourceManager().Destroy(_hdrTarget);
 
+    _brain.ImageResourceManager().Destroy(_hdrBloomTarget);
+    _brain.ImageResourceManager().Destroy(_hdrBlurredBloomTarget);
+
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         _brain.device.destroy(_inFlightFences[i]);
@@ -329,6 +335,8 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
 {
     ZoneScoped;
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
+    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_hdrBloomTarget);
+    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_hdrBlurredBloomTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo{};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -345,11 +353,18 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
     util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
                                 _gBuffers->GBufferFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
                                 DEFERRED_ATTACHMENT_COUNT);
+    util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
+    util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+
+    _bloomBlurPipeline->RecordCommands(commandBuffer, _currentFrame, 5);
+
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
@@ -475,6 +490,20 @@ void Engine::InitializeHDRTarget()
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
+}
+
+void Engine::InitializeBloomTargets()
+{
+    auto size = _swapChain->GetImageSize();
+
+    ImageCreation hdrBloomCreation{};
+    hdrBloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+
+    ImageCreation hdrBlurredBloomCreation{};
+    hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+
+    _hdrBloomTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
+    _hdrBlurredBloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Engine::LoadEnvironmentMap()

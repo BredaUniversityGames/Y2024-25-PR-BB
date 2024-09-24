@@ -21,6 +21,7 @@ layout(set = 1, binding = 0) uniform CameraUBO
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outBrightness;
 
 const float PI = 3.14159265359;
 
@@ -97,6 +98,17 @@ void main()
     vec3 ambient = (kD * diffuse + specular) * ao;
 
     outColor = vec4(Lo + ambient + emissive, 1.0);
+
+    // We store brightness for bloom later on
+    float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+    {
+        outBrightness = vec4(outColor.rgb, 1.0);
+    }
+    else
+    {
+        outBrightness = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }
 
 

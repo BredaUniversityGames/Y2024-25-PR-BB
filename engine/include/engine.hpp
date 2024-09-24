@@ -11,6 +11,7 @@ class GeometryPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class GaussianBlurPipeline;
 class IBLPipeline;
 class SwapChain;
 class GBuffers;
@@ -38,6 +39,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ModelLoader> _modelLoader;
 
@@ -54,6 +56,8 @@ private:
     CameraStructure _cameraStructure;
 
     ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<Image> _hdrBloomTarget;
+    ResourceHandle<Image> _hdrBlurredBloomTarget;
 
     std::shared_ptr<Application> _application;
 
@@ -74,5 +78,6 @@ private:
     void UpdateCameraDescriptorSet(uint32_t currentFrame);
     CameraUBO CalculateCamera(const Camera& camera);
     void InitializeHDRTarget();
+    void InitializeBloomTargets();
     void LoadEnvironmentMap();
 };
