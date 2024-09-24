@@ -29,7 +29,7 @@ jobs:
           version: "18.1.8"
 
       - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
+        uses: ashutoshvarma/setup-ninja@master
 
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
