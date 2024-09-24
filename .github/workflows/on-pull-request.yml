@@ -1,4 +1,4 @@
-name: Build
+name: PR-Checks
 
 on:
   pull_request
@@ -25,12 +25,15 @@ jobs:
 
       - name: Install Ninja
         # uses: ashutoshvarma/setup-ninja@master
-        run: choco install ninja -y
+        run: ${{ matrix.platform == 'windows-latest' && 'choco install ninja -y' || 'sudo apt-get install ninja-build' }}
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "18.1.8"
+
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1.0.0
 
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
