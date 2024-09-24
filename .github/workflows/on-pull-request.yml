@@ -31,6 +31,9 @@ jobs:
       - name: Install Ninja
         uses: ashutoshvarma/setup-ninja@master
 
+      - name: Test Ninja
+        run: ninja --v
+
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
 
