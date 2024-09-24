@@ -6,9 +6,7 @@
 class SkydomePipeline
 {
 public:
-    SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> environmentMap);
-
+    SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> environmentMap);
     ~SkydomePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
@@ -16,12 +14,8 @@ public:
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);
 
-private:
-    struct PushConstants
-    {
-        uint32_t hdriIndex;
-    } _pushConstants;
 
+private:
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
     ResourceHandle<Image> _hdrTarget;
@@ -32,6 +26,10 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
+    vk::DescriptorSet _descriptorSet;
+    vk::DescriptorSetLayout _descriptorSetLayout;
 
     void CreatePipeline();
+    void CreateDescriptorSetLayout();
+    void CreateDescriptorSet();
 };

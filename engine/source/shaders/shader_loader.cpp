@@ -7,10 +7,10 @@
 std::vector<std::byte> shader::ReadFile(std::string_view filename)
 {
     // Open file at the end and interpret data as binary.
-    std::ifstream file { filename.data(), std::ios::ate | std::ios::binary };
+    std::ifstream file{ filename.data(), std::ios::ate | std::ios::binary };
 
     // Failed to open file.
-    if (!file.is_open())
+    if(!file.is_open())
         throw std::runtime_error("Failed opening shader file!");
 
     // Deduce file size based on read position (remember we opened the file at the end with the ate flag).
@@ -32,11 +32,11 @@ std::vector<std::byte> shader::ReadFile(std::string_view filename)
 
 vk::ShaderModule shader::CreateShaderModule(const std::vector<std::byte>& byteCode, const vk::Device& device)
 {
-    vk::ShaderModuleCreateInfo createInfo {};
+    vk::ShaderModuleCreateInfo createInfo{};
     createInfo.codeSize = byteCode.size();
     createInfo.pCode = reinterpret_cast<const uint32_t*>(byteCode.data());
 
-    vk::ShaderModule shaderModule {};
+    vk::ShaderModule shaderModule{};
     util::VK_ASSERT(device.createShaderModule(&createInfo, nullptr, &shaderModule), "Failed creating shader module!");
 
     return shaderModule;

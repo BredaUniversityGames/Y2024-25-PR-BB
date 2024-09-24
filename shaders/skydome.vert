@@ -1,6 +1,6 @@
 #version 460
 
-layout (set = 1, binding = 0) uniform CameraUBO
+layout(set = 1, binding = 0) uniform CameraUBO
 {
     mat4 VP;
     mat4 view;
@@ -9,12 +9,13 @@ layout (set = 1, binding = 0) uniform CameraUBO
     vec3 cameraPosition;
 } cameraUbo;
 
-layout (location = 0) in vec3 inPosition;
-layout (location = 1) in vec3 inNormal;
-layout (location = 2) in vec4 inTangent;
-layout (location = 3) in vec2 inTexCoord;
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec4 inTangent;
+layout(location = 3) in vec3 inColor;
+layout(location = 4) in vec2 inTexCoord;
 
-layout (location = 0) out vec2 texCoord;
+layout(location = 0) out vec2 texCoord;
 
 void main()
 {

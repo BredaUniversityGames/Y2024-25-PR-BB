@@ -5,11 +5,11 @@
 class Application
 {
 public:
-    struct CreateParameters
-    {
-        std::string_view windowTitle;
-        bool isFullscreen;
-    };
+   struct CreateParameters
+   {
+       std::string_view windowTitle;
+       bool isFullscreen;
+   };
 
     Application(const CreateParameters& parameters);
     virtual InitInfo GetInitInfo() = 0;

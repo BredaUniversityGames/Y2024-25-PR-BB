@@ -1,5 +1,4 @@
 #pragma once
-
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
@@ -25,19 +24,13 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
     false;
 #endif
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
-enum class BindlessBinding
-{
-    eColor = 0,
-    eDepth,
-    eCubemap,
-};
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 512;
+constexpr uint32_t BINDLESS_TEXTURES_BINDING = 10;
 
 class VulkanBrain
 {
 public:
     explicit VulkanBrain(const InitInfo& initInfo);
-
     ~VulkanBrain();
     NON_COPYABLE(VulkanBrain);
     NON_MOVABLE(VulkanBrain);
@@ -59,12 +52,9 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const
-    {
-        return _imageResourceManager;
-    }
+    ImageResourceManager& ImageResourceManager() const { return _imageResourceManager; }
 
-    void UpdateBindlessSet() const;
+    void UpdateBindlessSet();
 
 private:
     vk::DebugUtilsMessengerEXT _debugMessenger;
@@ -72,14 +62,14 @@ private:
 
     ResourceHandle<Image> _fallbackImage;
 
-    mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
-    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessWrites;
-
-    const std::vector<const char*> _validationLayers = {
+    const std::vector<const char*> _validationLayers =
+    {
         "VK_LAYER_KHRONOS_validation"
     };
 
-    const std::vector<const char*> _deviceExtensions = {
+
+    const std::vector<const char*> _deviceExtensions =
+    {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if defined(LINUX)
         VK_KHR_MULTIVIEW_EXTENSION_NAME,
@@ -89,30 +79,20 @@ private:
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+        "VK_EXT_descriptor_indexing"
     };
 
     mutable class ImageResourceManager _imageResourceManager;
 
     void CreateInstance(const InitInfo& initInfo);
-
     void PickPhysicalDevice();
-
-    uint32_t RateDeviceSuitability(const vk::PhysicalDevice& device);
-
+    uint32_t RateDeviceSuitability(const vk::PhysicalDevice &device);
     bool ExtensionsSupported(const vk::PhysicalDevice& device);
-
     bool CheckValidationLayerSupport();
-
     std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);
-
     void SetupDebugMessenger();
-
     void CreateDevice();
-
     void CreateCommandPool();
-
     void CreateDescriptorPool();
-
     void CreateBindlessDescriptorSet();
 };

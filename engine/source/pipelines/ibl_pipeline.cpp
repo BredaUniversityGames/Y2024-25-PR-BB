@@ -4,11 +4,11 @@
 #include "single_time_commands.hpp"
 #include "stopwatch.hpp"
 
-IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap)
-    : _brain(brain)
-    , _environmentMap(environmentMap)
+IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap) :
+    _brain(brain),
+    _environmentMap(environmentMap)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0).release();
+    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0);
 
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
@@ -22,15 +22,13 @@ IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environ
 
 IBLPipeline::~IBLPipeline()
 {
-    for (const auto& mips : _prefilterMapViews)
-        for (const auto& view : mips)
+    for(const auto& mips : _prefilterMapViews)
+        for(const auto& view : mips)
             _brain.device.destroy(view);
 
     _brain.ImageResourceManager().Destroy(_irradianceMap);
     _brain.ImageResourceManager().Destroy(_brdfLUT);
     _brain.ImageResourceManager().Destroy(_prefilterMap);
-
-    _brain.device.destroy(_sampler);
 
     _brain.device.destroy(_prefilterPipeline);
     _brain.device.destroy(_prefilterPipelineLayout);
@@ -46,21 +44,21 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     const Image& irradianceMap = *_brain.ImageResourceManager().Access(_irradianceMap);
     const Image& prefilterMap = *_brain.ImageResourceManager().Access(_prefilterMap);
 
-    util::BeginLabel(commandBuffer, "Irradiance pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
+    util::BeginLabel(commandBuffer, "Irradiance pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
 
     util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, 1);
 
-    for (size_t i = 0; i < 6; ++i)
+    for(size_t i = 0; i < 6; ++i)
     {
-        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
+        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
         finalColorAttachmentInfo.imageView = irradianceMap.views[i];
         finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
         finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
         finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
-        vk::RenderingInfoKHR renderingInfo {};
-        renderingInfo.renderArea.extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
-        renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
+        vk::RenderingInfoKHR renderingInfo{};
+        renderingInfo.renderArea.extent = vk::Extent2D{ static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
+        renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
         renderingInfo.layerCount = 1;
@@ -73,12 +71,12 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _irradiancePipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _irradiancePipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
 
-        vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(irradianceMap.width), static_cast<float>(irradianceMap.height), 0.0f,
-            1.0f };
+        vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(irradianceMap.width), static_cast<float>(irradianceMap.height), 0.0f,
+                                              1.0f };
         commandBuffer.setViewport(0, 1, &viewport);
 
-        vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
-        vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
+        vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height)};
+        vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
         commandBuffer.setScissor(0, 1, &scissor);
 
         commandBuffer.draw(3, 1, 0, 0);
@@ -89,14 +87,14 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, 1);
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    util::BeginLabel(commandBuffer, "Prefilter pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
+    util::BeginLabel(commandBuffer, "Prefilter pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     util::TransitionImageLayout(commandBuffer, prefilterMap.image, prefilterMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, prefilterMap.mips);
 
-    for (size_t i = 0; i < prefilterMap.mips; ++i)
+    for(size_t i = 0; i < prefilterMap.mips; ++i)
     {
-        for (size_t j = 0; j < 6; ++j)
+        for(size_t j = 0; j < 6; ++j)
         {
-            vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
+            vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
             finalColorAttachmentInfo.imageView = _prefilterMapViews[i][j];
             finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
             finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
@@ -104,9 +102,9 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
 
-            vk::RenderingInfoKHR renderingInfo {};
-            renderingInfo.renderArea.extent = vk::Extent2D { size, size };
-            renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
+            vk::RenderingInfoKHR renderingInfo{};
+            renderingInfo.renderArea.extent = vk::Extent2D{ size, size };
+            renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
             renderingInfo.colorAttachmentCount = 1;
             renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
             renderingInfo.layerCount = 1;
@@ -115,18 +113,18 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
-            PrefilterPushConstant pc { static_cast<uint32_t>(j), static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1) };
+            PrefilterPushConstant pc{ static_cast<uint32_t>(j), static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1)};
 
             commandBuffer.pushConstants(_prefilterPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PrefilterPushConstant), &pc);
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _prefilterPipeline);
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _prefilterPipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
 
-            vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
-                1.0f };
+            vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
+                                                  1.0f };
             commandBuffer.setViewport(0, 1, &viewport);
 
-            vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(size), static_cast<uint32_t>(size) };
-            vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
+            vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(size), static_cast<uint32_t>(size)};
+            vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
             commandBuffer.setScissor(0, 1, &scissor);
 
             commandBuffer.draw(3, 1, 0, 0);
@@ -140,18 +138,18 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, _brain.dldi);
 
     const Image* brdfLUT = _brain.ImageResourceManager().Access(_brdfLUT);
-    util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
+    util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3{ 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
+    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo{};
     finalColorAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_brdfLUT)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
-    vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { brdfLUT->width, brdfLUT->height };
-    renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
+    vk::RenderingInfoKHR renderingInfo{};
+    renderingInfo.renderArea.extent = vk::Extent2D{ brdfLUT->width, brdfLUT->height };
+    renderingInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
     renderingInfo.layerCount = 1;
@@ -162,12 +160,12 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
-    vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(brdfLUT->width), static_cast<float>(brdfLUT->height), 0.0f,
-        1.0f };
+    vk::Viewport viewport = vk::Viewport{ 0.0f, 0.0f, static_cast<float>(brdfLUT->width), static_cast<float>(brdfLUT->height), 0.0f,
+                                          1.0f };
     commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(brdfLUT->width), static_cast<uint32_t>(brdfLUT->height) };
-    vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
+    vk::Extent2D extent = vk::Extent2D{static_cast<uint32_t>(brdfLUT->width), static_cast<uint32_t>(brdfLUT->height)};
+    vk::Rect2D scissor = vk::Rect2D{ vk::Offset2D{ 0, 0 }, extent };
     commandBuffer.setScissor(0, 1, &scissor);
 
     commandBuffer.draw(3, 1, 0, 0);
@@ -181,12 +179,12 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
 void IBLPipeline::CreateIrradiancePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
-    vk::PushConstantRange pushConstantRange {};
+    vk::PushConstantRange pushConstantRange{};
     pushConstantRange.size = sizeof(uint32_t) * 6;
     pushConstantRange.offset = 0;
     pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -194,7 +192,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_irradiancePipelineLayout),
-        "Failed to create IBL pipeline layout!");
+                    "Failed to create IBL pipeline layout!");
 
     auto vertByteCode = shader::ReadFile("shaders/irradiance-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/irradiance-f.spv");
@@ -202,38 +200,38 @@ void IBLPipeline::CreateIrradiancePipeline()
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo{};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageCreateInfo.module = vertModule;
     vertShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo{};
     fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
     std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
     rasterizationStateCreateInfo.depthClampEnable = vk::False;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
@@ -245,7 +243,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
     multisampleStateCreateInfo.sampleShadingEnable = vk::False;
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -253,19 +251,21 @@ void IBLPipeline::CreateIrradiancePipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates{};
+    for(auto& blendAttachmentState : colorBlendAttachmentStates)
     {
         blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        blendAttachmentState.colorWriteMask =
+                vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
+                vk::ColorComponentFlagBits::eA;
     }
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
     colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
     colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
     depthStencilStateCreateInfo.depthTestEnable = true;
     depthStencilStateCreateInfo.depthWriteEnable = true;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
@@ -274,7 +274,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -290,7 +290,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_irradianceMap)->format;
 
@@ -307,12 +307,12 @@ void IBLPipeline::CreateIrradiancePipeline()
 
 void IBLPipeline::CreatePrefilterPipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
-    vk::PushConstantRange pushConstantRange {};
+    vk::PushConstantRange pushConstantRange{};
     pushConstantRange.size = sizeof(PrefilterPushConstant) * 6 * _brain.ImageResourceManager().Access(_prefilterMap)->mips;
     assert(pushConstantRange.size < 256);
     pushConstantRange.offset = 0;
@@ -321,7 +321,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_prefilterPipelineLayout),
-        "Failed to create IBL pipeline layout!");
+                    "Failed to create IBL pipeline layout!");
 
     auto vertByteCode = shader::ReadFile("shaders/prefilter-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/prefilter-f.spv");
@@ -329,38 +329,38 @@ void IBLPipeline::CreatePrefilterPipeline()
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo{};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageCreateInfo.module = vertModule;
     vertShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo{};
     fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
     std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
     rasterizationStateCreateInfo.depthClampEnable = vk::False;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
@@ -372,7 +372,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
     multisampleStateCreateInfo.sampleShadingEnable = vk::False;
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -380,19 +380,21 @@ void IBLPipeline::CreatePrefilterPipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates{};
+    for(auto& blendAttachmentState : colorBlendAttachmentStates)
     {
         blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        blendAttachmentState.colorWriteMask =
+                vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
+                vk::ColorComponentFlagBits::eA;
     }
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
     colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
     colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
     depthStencilStateCreateInfo.depthTestEnable = true;
     depthStencilStateCreateInfo.depthWriteEnable = true;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
@@ -401,7 +403,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -417,7 +419,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_prefilterMap)->format;
 
@@ -434,7 +436,7 @@ void IBLPipeline::CreatePrefilterPipeline()
 
 void IBLPipeline::CreateBRDFLUTPipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
@@ -442,7 +444,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_brdfLUTPipelineLayout),
-        "Failed to create IBL pipeline layout!");
+                    "Failed to create IBL pipeline layout!");
 
     auto vertByteCode = shader::ReadFile("shaders/brdf_integration-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/brdf_integration-f.spv");
@@ -450,38 +452,38 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo{};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageCreateInfo.module = vertModule;
     vertShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
+    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo{};
     fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
+    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
     std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
     rasterizationStateCreateInfo.depthClampEnable = vk::False;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
@@ -493,7 +495,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
     multisampleStateCreateInfo.sampleShadingEnable = vk::False;
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -501,19 +503,21 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates{};
+    for(auto& blendAttachmentState : colorBlendAttachmentStates)
     {
         blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        blendAttachmentState.colorWriteMask =
+                vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
+                vk::ColorComponentFlagBits::eA;
     }
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
     colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
     colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
     depthStencilStateCreateInfo.depthTestEnable = true;
     depthStencilStateCreateInfo.depthWriteEnable = true;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
@@ -522,7 +526,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -538,7 +542,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.ImageResourceManager().Access(_brdfLUT)->format;
 
@@ -555,39 +559,39 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
 void IBLPipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+    std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
+    vk::DescriptorSetLayoutBinding& samplerLayoutBinding{bindings[0]};
     samplerLayoutBinding.binding = 0;
     samplerLayoutBinding.descriptorCount = 1;
     samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
     samplerLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
+    vk::DescriptorSetLayoutCreateInfo createInfo{};
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating IBL descriptor set layout!");
+                    "Failed creating IBL descriptor set layout!");
 }
 
 void IBLPipeline::CreateDescriptorSet()
 {
-    vk::DescriptorSetAllocateInfo allocateInfo {};
+    vk::DescriptorSetAllocateInfo allocateInfo{};
     allocateInfo.descriptorPool = _brain.descriptorPool;
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &_descriptorSetLayout;
 
     util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_descriptorSet),
-        "Failed allocating descriptor sets!");
+                    "Failed allocating descriptor sets!");
 
-    vk::DescriptorImageInfo imageInfo {};
-    imageInfo.sampler = _sampler;
+    vk::DescriptorImageInfo imageInfo{};
+    imageInfo.sampler = _sampler.get();
     imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     imageInfo.imageView = _brain.ImageResourceManager().Access(_environmentMap)->view;
 
-    vk::WriteDescriptorSet descriptorWrite {};
+    vk::WriteDescriptorSet descriptorWrite{};
     descriptorWrite.dstSet = _descriptorSet;
     descriptorWrite.dstBinding = 0;
     descriptorWrite.dstArrayElement = 0;
@@ -600,7 +604,7 @@ void IBLPipeline::CreateDescriptorSet()
 
 void IBLPipeline::CreateIrradianceCubemap()
 {
-    ImageCreation creation {};
+    ImageCreation creation{};
     creation
         .SetName("Irradiance cubemap")
         .SetType(ImageType::eCubeMap)
@@ -613,24 +617,23 @@ void IBLPipeline::CreateIrradianceCubemap()
 
 void IBLPipeline::CreatePrefilterCubemap()
 {
-    ImageCreation creation {};
+    ImageCreation creation{};
     creation
         .SetName("Prefilter cubemap")
         .SetType(ImageType::eCubeMap)
         .SetSize(128, 128)
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
-        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled)
-        .SetSampler(_sampler)
-        .SetMips(fmin(floor(log2(creation.width)), 3.0));
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    creation.mips = fmin(floor(log2(creation.width)), 3.0);
 
     _prefilterMap = _brain.ImageResourceManager().Create(creation);
 
     _prefilterMapViews.resize(creation.mips);
-    for (size_t i = 0; i < _prefilterMapViews.size(); ++i)
+    for(size_t i = 0; i < _prefilterMapViews.size(); ++i)
     {
-        for (size_t j = 0; j < 6; ++j)
+        for(size_t j = 0; j < 6; ++j)
         {
-            vk::ImageViewCreateInfo imageViewCreateInfo {};
+            vk::ImageViewCreateInfo imageViewCreateInfo{};
             imageViewCreateInfo.image = _brain.ImageResourceManager().Access(_prefilterMap)->image;
             imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
             imageViewCreateInfo.format = creation.format;
@@ -647,7 +650,7 @@ void IBLPipeline::CreatePrefilterCubemap()
 
 void IBLPipeline::CreateBRDFLUT()
 {
-    ImageCreation creation {};
+    ImageCreation creation{};
     creation
         .SetName("BRDF LUT")
         .SetSize(512, 512)

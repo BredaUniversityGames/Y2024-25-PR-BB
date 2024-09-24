@@ -12,14 +12,14 @@ std::unique_ptr<Engine> g_engine;
 int main(int argc, char* argv[])
 {
 #if defined(TESTS_ENABLED)
-    if (argc > 1 && std::strcmp(argv[1], "-T") == 0)
+    if (argc > 1 && std::strcmp(argv[1], "-T") == 0) 
     {
         testing::InitGoogleTest(&argc, argv);
         return RUN_ALL_TESTS();
     }
 #endif
 
-    Application::CreateParameters parameters { "Vulkan", true };
+    Application::CreateParameters parameters{ "Vulkan", true };
 
     g_app = std::make_shared<SDLApp>(parameters);
 
@@ -27,8 +27,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        g_app->Run([]()
-            { g_engine->Run(); return g_engine->ShouldQuit(); });
+        g_app->Run([]() { g_engine->Run(); return g_engine->ShouldQuit(); });
     }
     catch (const std::exception& e)
     {
@@ -40,3 +39,4 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
 }
+
