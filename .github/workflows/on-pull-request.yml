@@ -31,9 +31,6 @@ jobs:
         with:
           version: "18.1.8"
 
-      - name: Refresh PATH
-        run: echo "$PATH" >> $GITHUB_PATH
-
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
 
@@ -42,8 +39,6 @@ jobs:
         with:
             submodules: 'true'
 
-      - name: Build Project
-        uses: threeal/cmake-action@v2.0.0
-        with:
-          args: --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
+      - name: Configure Project
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
           
