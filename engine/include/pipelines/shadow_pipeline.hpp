@@ -3,13 +3,11 @@
 #include "include.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
-
-
-
+#include "geometry_pipeline.hpp"
 class ShadowPipeline
 {
 public:
-    ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera);
+    ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline);
     ~ShadowPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
@@ -18,13 +16,6 @@ public:
     NON_COPYABLE(ShadowPipeline);
 
 private:
-    struct FrameData
-    {
-        vk::Buffer uniformBuffer;
-        VmaAllocation uniformBufferAllocation;
-        void* uniformBufferMapped;
-        vk::DescriptorSet descriptorSet;
-    }; //remove
 
     void CreatePipeline();
     void CreateDescriptorSetLayout();
@@ -37,11 +28,12 @@ private:
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const CameraStructure& _camera;
+    //GeometryPipeline& _geometryPipeline;
 
     vk::DescriptorSetLayout _descriptorSetLayout; //remove / getter
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData; // getter
+    const std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _frameData; // getter
 
 };

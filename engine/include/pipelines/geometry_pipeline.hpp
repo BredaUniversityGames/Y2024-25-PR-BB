@@ -14,15 +14,7 @@ constexpr uint32_t MAX_MESHES = 128;
 class GeometryPipeline
 {
 public:
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout, const CameraStructure& camera);
-    ~GeometryPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
-
-    NON_MOVABLE(GeometryPipeline);
-    NON_COPYABLE(GeometryPipeline);
-
-private:
     struct FrameData
     {
         vk::Buffer uniformBuffer;
@@ -30,6 +22,19 @@ private:
         void* uniformBufferMapped;
         vk::DescriptorSet descriptorSet;
     };
+
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout, const CameraStructure& camera);
+    ~GeometryPipeline();
+
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
+
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
+
+    NON_MOVABLE(GeometryPipeline);
+    NON_COPYABLE(GeometryPipeline);
+
+private:
+
 
     void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
     void CreateDescriptorSetLayout();
