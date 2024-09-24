@@ -24,7 +24,8 @@ jobs:
     steps:
 
       - name: Install Ninja
-        uses: ashutoshvarma/setup-ninja@master
+        # uses: ashutoshvarma/setup-ninja@master
+        run: choco install ninja -y
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
