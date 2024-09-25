@@ -29,9 +29,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
     spdlog::info("Starting engine...");
 
@@ -70,10 +71,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale{10.0f};
-    glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
-    glm::vec3 translate{-0.275f, 0.06f, -0.025f};
-    glm::mat4 transform = glm::translate(glm::mat4{1.0f}, translate) * rotation * glm::scale(glm::mat4{1.0f}, scale);
+    glm::vec3 scale { 10.0f };
+    glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
+    glm::vec3 translate { -0.275f, 0.06f, -0.025f };
+    glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
 
     //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
     _scene.gameObjects.emplace_back(transform, _scene.models[1]);
@@ -137,9 +138,9 @@ void Engine::Run()
         return;
     }
 
-    if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+    if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
         _application->SetMouseHidden(!_application->GetMouseHidden());
-    if(_application->GetMouseHidden() == true)
+    if (_application->GetMouseHidden() == true)
     {
         ZoneNamedN(zone, "Update Camera", true);
         int x, y;
@@ -353,7 +354,6 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-
     const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
@@ -495,13 +495,12 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     static float nearPlane = -16.0f;
 
     const glm::mat4 biasMatrix(
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.5, 0.5, 0.5, 1.0
-    );
+        0.5, 0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.5, 0.5, 0.5, 1.0);
 
-    //for debug info
+    // for debug info
     /*
     static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -518,11 +517,11 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     */
 
     const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
     depthProjectionMatrix[1][1] *= -1;
     ubo.lightVP = depthProjectionMatrix * lightView;
     ubo.depthBiasMVP = biasMatrix * ubo.lightVP;
-    ubo.lightData = glm::vec4(targetPos - normalize(lightDir) * sceneDistance,0.0); //save light direction here
+    ubo.lightData = glm::vec4(targetPos - normalize(lightDir) * sceneDistance, 0.0); // save light direction here
     return ubo;
 }
 

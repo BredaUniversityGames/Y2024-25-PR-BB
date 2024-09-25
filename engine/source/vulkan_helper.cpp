@@ -160,13 +160,13 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
     createInfo.mipLodBias = 0.0f;
     createInfo.minLod = 0.0f;
     createInfo.maxLod = static_cast<float>(mipLevels);
-    //createInfo.compareEnable = VK_TRUE; // Enable depth comparison
-    //createInfo.compareOp = vk::CompareOp::eLessOrEqual;
+    // createInfo.compareEnable = VK_TRUE; // Enable depth comparison
+    // createInfo.compareOp = vk::CompareOp::eLessOrEqual;
 
     return brain.device.createSamplerUnique(createInfo);
 }
 
-void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount,vk::ImageAspectFlagBits imageAspect)
+void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount, vk::ImageAspectFlagBits imageAspect)
 {
     vk::ImageMemoryBarrier barrier {};
     barrier.oldLayout = oldLayout;
@@ -258,9 +258,9 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
 
         sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
         destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-	}
-    else if (oldLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) 
-	{
+    }
+    else if (oldLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+    {
         barrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
         barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
