@@ -24,7 +24,6 @@ vec3 aces(vec3 x) {
 }
 
 const float exposure = 0.4;
-const float bloomStrength = 0.8;
 
 void main()
 {
