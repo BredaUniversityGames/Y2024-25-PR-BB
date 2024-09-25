@@ -45,7 +45,7 @@ jobs:
         # Configure, Build and Test
 
       - name: Configure Project
-        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} #-DWARNINGS_AS_ERRORS=ON
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
