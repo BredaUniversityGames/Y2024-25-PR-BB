@@ -3,11 +3,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 
-#include"engine.hpp"
+#include "engine.hpp"
 #include "imgui_impl_vulkan.h"
 #include "stopwatch.hpp"
 #include "model_loader.hpp"
@@ -22,11 +21,13 @@
 #include "application.hpp"
 #include "fonts.h"
 #include "single_time_commands.hpp"
-
-
+#include "ui/ui_text_rendering.hpp"
+UITextElement text;
+UserInterfaceContext ui_context;
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
     : _brain(initInfo)
 {
+
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
 
@@ -37,7 +38,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _application = std::move(application);
 
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { initInfo.width, initInfo.height });
-
 
     CreateDescriptorSetLayout();
     InitializeCameraUBODescriptors();
@@ -58,65 +58,40 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
 
-
     SingleTimeCommands commandBufferIBL { _brain };
 
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
-    
-  
     auto buttonNormalTexture = ImageCreation().LoadFromFile("assets/textures/button.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
     auto buttonNormalImage = _brain.ImageResourceManager().Create(buttonNormalTexture);
 
     auto buttonHoveredTexture = ImageCreation().LoadFromFile("assets/textures/buttonHovered.png").SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
     auto buttonHoveredImage = _brain.ImageResourceManager().Create(buttonHoveredTexture);
 
-    m_uiPipeLine = std::make_unique<UIPipeLine>(_brain,*_swapChain);
-   
+    m_uiPipeLine = std::make_unique<UIPipeLine>(_brain, *_swapChain);
 
-   m_uiPipeLine->CreateDescriptorSetLayout();
+    m_uiPipeLine->CreateDescriptorSetLayout();
 
-    
     m_uiPipeLine->CreatePipeLine();
-    _interface.InitializeDefaultSubSystems();
-    
-    auto button1Entity = _interface.ui_Registry.create();
-    auto& buttoncomp = _interface.ui_Registry.emplace<Button>(button1Entity);
-    auto& transcomp = _interface.ui_Registry.emplace<UITransform>(button1Entity);
+    ui_context.InitializeDefaultRenderSystems(*m_uiPipeLine);
+    text = UITextElement();
+    text.m_Text = "Hello  World!";
+    text.Size = { 50, 50 };
 
-    
-    buttoncomp.OnBeginHoverCallBack = [&]() {spdlog::info("Button hovered!");};
-    buttoncomp.OnMouseDownCallBack = [&]() {spdlog::info("Button down!");};
+    utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf", 40, _brain);
 
-    buttoncomp.NormalImage = buttonNormalImage;
-    buttoncomp.HoveredImage = buttonHoveredImage;
-    buttoncomp.PressedImage = buttonNormalImage;
-
-    transcomp.Translation = {500.f,0.f};
-    transcomp.Scale = {910,260};
-
-
-    utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf",40,_brain);
-    auto textentity1  = _interface.ui_Registry.create();
-    auto&  transcomp2 = _interface.ui_Registry.emplace<UITransform>(textentity1);
-    auto& textcomp = _interface.ui_Registry.emplace<Text_Element>(textentity1);
-    textcomp.m_text = "this is a text block";
-    transcomp2.Translation = {0.f,0.f};
-    transcomp2.Scale = {400,260};
     CreateCommandBuffers();
     CreateSyncObjects();
 
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-  //  _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+    //  _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/room.gltf")));
-
 
     glm::vec3 scale { 0.05f };
     glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
     glm::vec3 translate { -0.275f, 0.06f, -0.025f };
     glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
-
 
     _scene.gameObjects.emplace_back(transform, _scene.models[0]);
     _scene.gameObjects.emplace_back(glm::mat4 { 1.0f }, _scene.models[1]);
@@ -138,7 +113,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     initInfoVulkan.Instance = _brain.instance;
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
     initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.             graphicsFamily.value();
+    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
     initInfoVulkan.DescriptorPool = _brain.descriptorPool;
     initInfoVulkan.MinImageCount = 2;
     initInfoVulkan.ImageCount = _swapChain->GetImageCount();
@@ -159,16 +134,14 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(false);
 
-
     _brain.UpdateBindlessSet();
-
 
     spdlog::info("Successfully initialized engine!");
 }
 
 void Engine::Run()
 {
-   // ZoneNamed(zone, "");
+    // ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
@@ -183,23 +156,22 @@ void Engine::Run()
     }
     int x, y;
     _application->GetInputManager().GetMousePosition(x, y);
-    
-    _interface.Update(_application->GetInputManager());
+
+    // _interface.Update(_application->GetInputManager());
     glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
     _lastMousePos = { x, y };
- 
+
     constexpr float MOUSE_SENSITIVITY = 0.003f;
     constexpr float CAM_SPEED = 0.003f;
 
-    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f};
+    constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
     constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
     constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-    
-    glm::vec3 eulerDelta{};
+    glm::vec3 eulerDelta {};
     _scene.camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
     _scene.camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-  
+
     glm::vec3 movement_dir {};
     if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
         movement_dir -= FORWARD;
@@ -222,7 +194,6 @@ void Engine::Run()
 
     _scene.camera.position += glm::quat(_scene.camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
-
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
@@ -230,7 +201,7 @@ void Engine::Run()
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &m_cameraMatrices, sizeof(CameraUBO));
 
     {
-      //  ZoneNamedN(zone, "Wait On Fence", true);
+        //  ZoneNamedN(zone, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
@@ -239,7 +210,7 @@ void Engine::Run()
     vk::Result result {};
 
     {
-       // ZoneNamedN(zone, "Acquire Next Image", true);
+        // ZoneNamedN(zone, "Acquire Next Image", true);
 
         result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
             _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
@@ -261,10 +232,10 @@ void Engine::Run()
     _application->NewImGuiFrame();
     ImGui::NewFrame();
 
-//    _performanceTracker.Render();
+    //    _performanceTracker.Render();
 
     {
-       // ZoneNamedN(zone, "ImGui Render", true);
+        // ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
     }
 
@@ -286,7 +257,7 @@ void Engine::Run()
     submitInfo.pSignalSemaphores = signalSemaphores;
 
     {
-    //    ZoneNamedN(zone, "Submit Commands", true);
+        //    ZoneNamedN(zone, "Submit Commands", true);
         util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
     }
 
@@ -300,7 +271,7 @@ void Engine::Run()
     presentInfo.pImageIndices = &imageIndex;
 
     {
-     //   ZoneNamedN(zone, "Present Image", true);
+        //   ZoneNamedN(zone, "Present Image", true);
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
 
@@ -316,7 +287,7 @@ void Engine::Run()
 
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
-//    _performanceTracker.Update();
+    //    _performanceTracker.Update();
 }
 
 Engine::~Engine()
@@ -385,7 +356,7 @@ void Engine::CreateCommandBuffers()
 void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
 {
 
-    //ZoneScoped;
+    // ZoneScoped;
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
@@ -397,23 +368,18 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
-
-
-    auto ortho = glm::ortho(0.0f,static_cast<float>(_gBuffers->Size().x),0.0f,static_cast<float>( _gBuffers->Size().y));
-    _interface.Render(commandBuffer,_currentFrame,_hdrTarget,*m_uiPipeLine,ortho);
-
+    auto ortho = glm::ortho(0.0f, static_cast<float>(_gBuffers->Size().x), 0.0f, static_cast<float>(_gBuffers->Size().y));
+    RenderUI(&text, commandBuffer, _brain, ui_context, _hdrTarget, ortho);
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
-
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
@@ -434,8 +400,7 @@ void Engine::CreateSyncObjects()
         util::VK_ASSERT(_brain.device.createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
     }
 }
- std::unique_ptr<UIPipeLine>  Engine:: m_uiPipeLine = {};
-
+std::unique_ptr<UIPipeLine> Engine::m_uiPipeLine = {};
 
 void Engine::CreateDescriptorSetLayout()
 {
@@ -534,7 +499,6 @@ void Engine::InitializeHDRTarget()
 {
     auto size = _swapChain->GetImageSize();
 
-
     ImageCreation hdrCreation {};
 
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
@@ -547,7 +511,6 @@ void Engine::LoadEnvironmentMap()
     int32_t width, height, numChannels;
     float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
 
-
     if (stbiData == nullptr)
 
         throw std::runtime_error("Failed loading HDRI!");
@@ -557,17 +520,14 @@ void Engine::LoadEnvironmentMap()
 
     stbi_image_free(stbiData);
 
-
     ImageCreation envMapCreation {};
 
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
     _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
-
 }
 
-void Engine::RecordUICommandbuffers(){
-
-
+void Engine::RecordUICommandbuffers()
+{
 }

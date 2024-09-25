@@ -5,7 +5,7 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 #include "camera.hpp"
-#include "UserInterfaceSystem.h"
+#include "ui/UserInterfaceSystem.h"
 
 class Application;
 class GeometryPipeline;
@@ -79,7 +79,7 @@ private:
     void InitializeHDRTarget();
     void LoadEnvironmentMap();
 
-    UserInterfaceSystem _interface {}  ;
+    UserInterfaceContext _interface {}  ;
  
     void RecordUICommandbuffers();
 };
