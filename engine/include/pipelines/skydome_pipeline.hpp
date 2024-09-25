@@ -7,7 +7,7 @@ class SkydomePipeline
 {
 public:
     SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> environmentMap);
+        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap);
 
     ~SkydomePipeline();
 
@@ -25,6 +25,7 @@ private:
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
     ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
 
     MeshPrimitiveHandle _sphere;
