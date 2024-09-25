@@ -17,14 +17,14 @@ vec3 aces(vec3 x) {
 }
 
 const float exposure = 0.4;
+const float bloomStrength = 0.8;
 
 void main()
 {
     vec3 hdrColor = texture(hdrTarget, texCoords).rgb;
 
-    float bloomStrenght = 0.8;
     vec3 bloomColor = texture(bloomTarget, texCoords).rgb;
-    hdrColor += bloomColor * bloomStrenght;
+    hdrColor += bloomColor * bloomStrength;
 
     // Reinhardt
     //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));

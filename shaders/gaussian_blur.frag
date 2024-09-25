@@ -11,9 +11,10 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
+const float weight[5] = { 0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216 };
+
 void main()
 {
-    float weight[5] = { 0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216 };
     vec2 texOffset = 1.0 / textureSize(source, 0);
     vec3 result = texture(source, texCoords).rgb * weight[0];
 
