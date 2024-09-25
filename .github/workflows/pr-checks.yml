@@ -27,10 +27,11 @@ jobs:
         run: sudo apt install ninja-build tree
 
       - name: Install Vulkan SDK
-        uses: humbletim/install-vulkan-sdk@v1.1.1
-        with:
-            version: latest
-            cache: true
+        # uses: humbletim/install-vulkan-sdk@v1.1.1
+        # with:
+        #     version: latest
+        #     cache: true
+        run: sudo apt-get install libvulkan-dev -y
 
       - name: Check Vulkan Install
         run: ls && tree $VULKAN_SDK
