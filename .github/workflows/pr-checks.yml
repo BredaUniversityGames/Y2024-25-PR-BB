@@ -24,9 +24,7 @@ jobs:
     steps:
 
       - name: Setup Ninja
-        uses: ashutoshvarma/setup-ninja@master
-        with:
-          version: 1.10.0
+        uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install Dependencies
         run: sudo apt-get install libvulkan-dev libsdl2-dev -y
