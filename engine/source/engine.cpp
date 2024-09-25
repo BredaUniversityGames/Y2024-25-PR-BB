@@ -3,11 +3,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "model_loader.hpp"
 #include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "stopwatch.hpp"
-#include "model_loader.hpp"
 #include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
