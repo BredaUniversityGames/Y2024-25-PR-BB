@@ -167,6 +167,17 @@ struct MaterialHandle
     }
 };
 
+struct BatchBuffer
+{
+    uint32_t vertexBufferSize;
+    uint32_t indexBufferSize;
+    vk::IndexType indexType;
+    vk::Buffer vertexBuffer;
+    vk::Buffer indexBuffer;
+    VmaAllocation vertexBufferAllocation;
+    VmaAllocation indexBufferAllocation;
+};
+
 struct MeshPrimitiveHandle
 {
     vk::PrimitiveTopology topology;
