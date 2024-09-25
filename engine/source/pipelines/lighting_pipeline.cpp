@@ -23,8 +23,8 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     _pushConstants.shadowMapIndex = _gBuffers.Shadow().index;
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    //shaodw sampler
-    vk::PhysicalDeviceProperties properties{};
+    // shaodw sampler
+    vk::PhysicalDeviceProperties properties {};
     _brain.physicalDevice.getProperties(&properties);
 
     CreatePipeline();

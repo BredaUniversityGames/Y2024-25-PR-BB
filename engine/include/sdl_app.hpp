@@ -27,7 +27,7 @@ public:
     void ShutdownImGui() override;
 
     void SetMouseHidden(bool state) override;
-    bool GetMouseHidden() override { return _mouseHidden;}
+    bool GetMouseHidden() override { return _mouseHidden; }
 
     const InputManager& GetInputManager() const override;
 

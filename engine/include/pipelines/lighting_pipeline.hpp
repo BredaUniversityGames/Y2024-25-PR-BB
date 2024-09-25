@@ -45,5 +45,4 @@ private:
 
     vk::UniqueSampler _sampler;
     vk::UniqueSampler _shadowSampler;
-
 };

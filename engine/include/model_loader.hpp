@@ -19,7 +19,7 @@ public:
     ModelHandle Load(std::string_view path);
 
     MeshPrimitiveHandle LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer,
-                                      std::shared_ptr<MaterialHandle> material = nullptr);
+        std::shared_ptr<MaterialHandle> material = nullptr);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
@@ -36,7 +36,7 @@ private:
 
     ImageCreation
     ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
-                 std::string_view name);
+        std::string_view name);
 
     Material ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf);
 
@@ -49,11 +49,11 @@ private:
     void CalculateTangents(MeshPrimitive& primitive);
 
     glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
-                               glm::vec3 normal);
+        glm::vec3 normal);
 
     ModelHandle LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
-                          const std::vector<Material>& materials, const fastgltf::Asset& gltf);
+        const std::vector<Material>& materials, const fastgltf::Asset& gltf);
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
-                          glm::mat4 matrix);
+        glm::mat4 matrix);
 };
