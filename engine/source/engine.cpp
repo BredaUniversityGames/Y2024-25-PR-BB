@@ -69,8 +69,25 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     CreateCommandBuffers();
     CreateSyncObjects();
 
-    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-    _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+    fileWatcher.OnFileChanged = [&](std::string filePath)
+    {
+        if(_scene.models.contains("level"))
+        {
+            auto newmodel = _modelLoader->Load(filePath);
+            _scene.models.at("level")->hierarchy = newmodel.hierarchy;
+            _scene.models.at("level")->materials = newmodel.materials;
+            _scene.models.at("level")->meshes = newmodel.meshes;
+            _scene.models.at("level")->textures = newmodel.textures;
+        }
+        else
+        {
+            _scene.models.emplace("level",std::make_shared<ModelHandle>(_modelLoader->Load(filePath)));
+        }
+       
+    };
+
+    _scene.models.emplace("helmet",std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
+    _scene.models.emplace("game",std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
     //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
 
@@ -80,7 +97,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-        _scene.gameObjects.emplace_back(transform, _scene.models[1]);
+        _scene.gameObjects.emplace_back(transform, _scene.models.at("game"));
     }
 
     _application->InitImGui();
@@ -121,6 +138,8 @@ void Engine::Run()
         return;
     }
 
+    fileWatcher.PollForUpdates();
+    
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
         _application->SetMouseHidden(!_application->GetMouseHidden());
 
@@ -272,7 +291,7 @@ Engine::~Engine()
 
     for (auto& model : _scene.models)
     {
-        for (auto& mesh : model->meshes)
+        for (auto& mesh : model.second->meshes)
         {
             for (auto& primitive : mesh->primitives)
             {
@@ -280,11 +299,11 @@ Engine::~Engine()
                 vmaDestroyBuffer(_brain.vmaAllocator, primitive.indexBuffer, primitive.indexBufferAllocation);
             }
         }
-        for (auto& texture : model->textures)
+        for (auto& texture : model.second->textures)
         {
             _brain.ImageResourceManager().Destroy(texture);
         }
-        for (auto& material : model->materials)
+        for (auto& material : model.second->materials)
         {
             vmaDestroyBuffer(_brain.vmaAllocator, material->materialUniformBuffer, material->materialUniformAllocation);
         }

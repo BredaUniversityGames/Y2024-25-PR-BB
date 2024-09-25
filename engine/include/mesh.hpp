@@ -242,7 +242,7 @@ struct DirectionalLight
 struct SceneDescription
 {
     Camera camera;
-    std::vector<std::shared_ptr<ModelHandle>> models;
+    std::unordered_map<std::string,std::shared_ptr<ModelHandle>> models;
     std::vector<GameObject> gameObjects;
     DirectionalLight directionalLight;
 };

@@ -111,7 +111,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, glm::vec3 { count * 7.0f, 0.0f, 0.0f });
         transform = glm::scale(transform, glm::vec3 { 10.0f });
-        scene.gameObjects.emplace_back(transform, scene.models[1]);
+        scene.gameObjects.emplace_back(transform, scene.models.at("level"));
     }
 
     ImGui::End();

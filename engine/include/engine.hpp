@@ -7,7 +7,7 @@
 #include "camera.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "bloom_settings.hpp"
-
+#include "file_watcher.h"
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
@@ -32,7 +32,7 @@ public:
     void Run();
     bool ShouldQuit() const { return _shouldQuit; };
     void Quit() { _shouldQuit = true; };
-
+    FileWatcher fileWatcher = FileWatcher("assets/maps/testmap.gltf");
 private:
     const VulkanBrain _brain;
     vk::DescriptorSetLayout _materialDescriptorSetLayout;
