@@ -32,6 +32,7 @@ layout (set = 2, binding = 0) uniform BloomSettingsUBO
 {
     float strength;
     float gradientStrength;
+    float maxBrightness;
     vec3 colorWeights;
 } bloomSettings;
 
@@ -136,8 +137,10 @@ void main()
     outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
 
     // We store brightness for bloom later on
-    float brightness = dot(outColor.rgb, bloomSettings.colorWeights);
-    outBrightness = vec4(outColor.rgb * brightness * bloomSettings.gradientStrength, 1.0);
+    float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
+    vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);
+    brightnessColor = min(brightnessColor, bloomSettings.maxBrightness);
+    outBrightness = vec4(brightnessColor, 1.0);
 }
 
 

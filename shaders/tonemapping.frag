@@ -4,6 +4,7 @@ layout (set = 1, binding = 0) uniform BloomSettingsUBO
 {
     float strength;
     float gradientStrength;
+    float maxBrightness;
     vec3 colorWeights;
 } bloomSettings;
 

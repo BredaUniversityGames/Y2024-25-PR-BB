@@ -11,7 +11,10 @@ public:
         /// How strong the brightness difference should be between dark and bright spots. The higher this is the stronger specular reflections will be.
         float gradientStrength = 0.2f;
 
-        /// How much brightness is extracted from each color channel
+        /// The maximum amount of brightness tha is accepted.
+        float maxBrightness = 10.0f;
+
+        /// How much brightness is extracted from each color channel.
         glm::vec3 colorWeights = glm::vec3(0.2126f, 0.7152f, 0.0722f);
     };
 
