@@ -68,7 +68,7 @@ void Engine::Run()
     {
         // update input
         ZoneNamed(zone, "");
-        _application->ProcessEvents();
+        _application->ProcessWindowEvents();
         auto currentFrameTime = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
         _lastFrameTime = currentFrameTime;

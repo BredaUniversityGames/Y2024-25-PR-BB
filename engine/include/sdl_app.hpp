@@ -13,12 +13,11 @@ public:
     InitInfo GetInitInfo() override;
     glm::uvec2 DisplaySize() override;
     bool IsMinimized() override;
-    void Run(std::function<bool()> updateLoop) override;
     void InitImGui() override;
     void NewImGuiFrame() override;
     void ShutdownImGui() override;
     void SetMouseHidden(bool state) override;
-    void ProcessEvents() override;
+    void ProcessWindowEvents() override;
 
     const InputManager& GetInputManager() const override;
 

@@ -86,6 +86,8 @@ Renderer::~Renderer()
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
+    _modelLoader.reset();
+
     _brain.ImageResourceManager().Destroy(_environmentMap);
     _brain.ImageResourceManager().Destroy(_hdrTarget);
 

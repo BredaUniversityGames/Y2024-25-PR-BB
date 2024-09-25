@@ -36,11 +36,13 @@ public:
 private:
     friend Engine;
 
-    std::shared_ptr<Application> _application;
     const VulkanBrain _brain;
+
+    std::unique_ptr<ModelLoader> _modelLoader;
+    std::shared_ptr<Application> _application;
+
     vk::DescriptorSetLayout _materialDescriptorSetLayout;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
-    std::unique_ptr<ModelLoader> _modelLoader;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
     std::unique_ptr<LightingPipeline> _lightingPipeline;
@@ -63,7 +65,6 @@ private:
     ResourceHandle<Image> _hdrTarget;
 
     uint32_t _currentFrame { 0 };
-    std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     void CreateDescriptorSetLayout();
     void CreateCommandBuffers();
