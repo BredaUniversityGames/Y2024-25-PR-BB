@@ -3,11 +3,12 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "swap_chain.hpp"
+class BloomSettings;
 
 class LightingPipeline
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT);
+    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings);
     ~LightingPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
@@ -47,4 +48,5 @@ private:
     vk::UniqueSampler _sampler;
     vk::UniqueSampler _shadowSampler;
 
+    const BloomSettings& _bloomSettings;
 };

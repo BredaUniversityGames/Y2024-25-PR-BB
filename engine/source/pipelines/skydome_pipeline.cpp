@@ -1,15 +1,17 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
+#include "bloom_settings.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera,
-    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap)
+    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _environmentMap(environmentMap)
     , _sphere(sphere)
+    , _bloomSettings(bloomSettings)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, 0);
@@ -66,6 +68,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0,
         nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     vk::DeviceSize offsets[] = { 0 };
     commandBuffer.bindVertexBuffers(0, 1, &_sphere.vertexBuffer, offsets);
@@ -81,7 +84,7 @@ void SkydomePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
 
-    std::array<vk::DescriptorSetLayout, 2> descriptorSets = { _brain.bindlessLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, _camera.descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
 

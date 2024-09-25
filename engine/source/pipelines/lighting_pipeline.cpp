@@ -1,7 +1,8 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "bloom_settings.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT)
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
@@ -10,6 +11,7 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     , _irradianceMap(irradianceMap)
     , _prefilterMap(prefilterMap)
     , _brdfLUT(brdfLUT)
+    , _bloomSettings(bloomSettings)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
@@ -67,6 +69,7 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -83,7 +86,7 @@ LightingPipeline::~LightingPipeline()
 
 void LightingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _brain.bindlessLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _brain.bindlessLayout, _camera.descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();

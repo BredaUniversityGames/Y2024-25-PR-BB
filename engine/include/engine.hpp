@@ -6,6 +6,7 @@
 #include "mesh.hpp"
 #include "camera.hpp"
 #include "pipelines/shadow_pipeline.hpp"
+#include "bloom_settings.hpp"
 
 class Application;
 class GeometryPipeline;
@@ -69,6 +70,8 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;
+
+    BloomSettings _bloomSettings;
 
     bool _shouldQuit = false;
 

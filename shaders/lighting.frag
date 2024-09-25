@@ -28,6 +28,12 @@ layout(set = 1, binding = 0) uniform CameraUBO
     float _padding;
 } cameraUbo;
 
+layout (set = 2, binding = 0) uniform BloomSettingsUBO
+{
+    float strength;
+    float gradientStrength;
+} bloomSettings;
+
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
@@ -129,9 +135,8 @@ void main()
     outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
 
     // We store brightness for bloom later on
-    const float gradientStrength = 0.25;
     float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    outBrightness = vec4(outColor.rgb * (brightness * gradientStrength), 1.0);
+    outBrightness = vec4(outColor.rgb * (brightness * bloomSettings.gradientStrength), 1.0);
 }
 
 
