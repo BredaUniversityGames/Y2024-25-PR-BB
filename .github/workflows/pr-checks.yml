@@ -13,7 +13,7 @@ jobs:
         true
       matrix:
         platform: [ubuntu-latest] #, ubuntu-latest]
-        configuration: [Debug] #, RelWithDebInfo, Release]
+        configuration: [Debug, RelWithDebInfo, Release]
 
     runs-on: ${{ matrix.platform }}
 
