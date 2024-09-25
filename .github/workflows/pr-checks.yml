@@ -13,18 +13,20 @@ jobs:
         true
       matrix:
         platform: [ubuntu-latest] #, ubuntu-latest]
-        configuration: [Debug, RelWithDebInfo, Release]
+        configuration: [Debug, Release]
 
     runs-on: ${{ matrix.platform }}
 
     env:
         PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }} 
-        PRESET_SUFFIX: ${{ matrix.configuration == 'Debug' && 'Debug' || matrix.configuration == 'Release' && 'Release' || 'RelWithDebInfo' }} 
+        PRESET_SUFFIX: ${{ matrix.configuration }} 
 
     steps:
 
-      - name: Install Ninja
-        run: sudo apt install ninja-build tree
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.10.0
 
       - name: Install Dependencies
         run: sudo apt-get install libvulkan-dev libsdl2-dev -y
