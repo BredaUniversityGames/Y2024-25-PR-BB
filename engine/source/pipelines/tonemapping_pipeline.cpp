@@ -68,7 +68,7 @@ void TonemappingPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/tonemapping-v.spv");
+    auto vertByteCode = shader::ReadFile("shaders/fullscreen-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/tonemapping-f.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
