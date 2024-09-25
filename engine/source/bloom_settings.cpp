@@ -2,8 +2,7 @@
 #include "vulkan_helper.hpp"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
-    :
-    _brain(brain)
+    : _brain(brain)
 {
     CreateDescriptorSetLayout();
     CreateUniformBuffers();
