@@ -33,7 +33,7 @@ jobs:
             cache: true
 
       - name: Check Vulkan Install
-        run: tree $VULKAN_SDK
+        run: ls && tree $VULKAN_SDK
         
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version

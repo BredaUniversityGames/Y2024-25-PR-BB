@@ -35,7 +35,7 @@ add_subdirectory(magic_enum)
 add_subdirectory(spdlog)
 
 # Vulkan
-find_package(Vulkan)
+find_package(Vulkan PATHS $ENV{VULKAN_SDK})
 
 if (NOT Vulkan_FOUND)
     message(FATAL_ERROR "Could not find Vulkan library!")
