@@ -223,7 +223,7 @@ struct GameObject
 
 struct DirectionalLight
 {
-    glm::vec3 targetPos = glm::vec3(0.0f, 1.0f, -0.25f);
+    glm::vec3 targetPos = glm::vec3(0.0f, 1.5f, -0.25f);
     glm::vec3 lightDir = glm::vec3(0.2f, -0.15f, 0.15f);
     float sceneDistance = 1.0f;
     float orthoSize = 17.0f;
