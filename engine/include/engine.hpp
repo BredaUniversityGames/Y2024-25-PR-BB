@@ -17,6 +17,7 @@ class SwapChain;
 class GBuffers;
 class VulkanBrain;
 class ModelLoader;
+class Editor;
 
 class Engine
 {
@@ -42,6 +43,8 @@ private:
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ModelLoader> _modelLoader;
+
+    std::unique_ptr<Editor> _editor;
 
     SceneDescription _scene;
     ResourceHandle<Image> _environmentMap;

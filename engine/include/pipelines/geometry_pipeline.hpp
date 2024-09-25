@@ -8,7 +8,7 @@ struct UBO
     alignas(16) glm::mat4 model;
 };
 
-constexpr uint32_t MAX_MESHES = 128;
+constexpr uint32_t MAX_MESHES = 2048;
 
 class GeometryPipeline
 {
@@ -22,7 +22,9 @@ public:
         vk::DescriptorSet descriptorSet;
     };
 
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout, const CameraStructure& camera);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout,
+        const CameraStructure& camera);
+
     ~GeometryPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
@@ -37,10 +39,15 @@ private:
 
 
     void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
+
     void CreateDescriptorSetLayout();
+
     void CreateDescriptorSets();
+
     void CreateUniformBuffers();
+
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
+
     void UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera);
 
     const VulkanBrain& _brain;

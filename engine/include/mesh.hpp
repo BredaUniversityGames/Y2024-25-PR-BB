@@ -13,20 +13,17 @@ struct Vertex
         eTEX_COORD
     };
 
-    glm::vec3 position {};
-    glm::vec3 normal {};
-    glm::vec4 tangent {};
-    glm::vec2 texCoord {};
+    glm::vec3 position{};
+    glm::vec3 normal{};
+    glm::vec4 tangent{};
+    glm::vec2 texCoord{};
 
     Vertex()
     {
     }
 
     Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord)
-        : position(position)
-        , normal(normal)
-        , tangent(tangent)
-        , texCoord(texCoord)
+            : position(position), normal(normal), tangent(tangent), texCoord(texCoord)
     {
     }
 
@@ -60,7 +57,7 @@ struct Texture
 
     vk::Format GetFormat() const
     {
-        if (isHDR)
+        if(isHDR)
             return vk::Format::eR32G32B32A32Sfloat;
 
         return format;
@@ -127,20 +124,20 @@ struct MaterialHandle
 {
     struct alignas(16) MaterialInfo
     {
-        glm::vec4 albedoFactor { 0.0f };
+        glm::vec4 albedoFactor{ 0.0f };
 
-        float metallicFactor { 0.0f };
-        float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
-        float occlusionStrength { 0.0f };
+        float metallicFactor{ 0.0f };
+        float roughnessFactor{ 0.0f };
+        float normalScale{ 0.0f };
+        float occlusionStrength{ 0.0f };
 
-        glm::vec3 emissiveFactor { 0.0f };
-        int32_t useEmissiveMap { false };
+        glm::vec3 emissiveFactor{ 0.0f };
+        int32_t useEmissiveMap{ false };
 
-        int32_t useAlbedoMap { false };
-        int32_t useMRMap { false };
-        int32_t useNormalMap { false };
-        int32_t useOcclusionMap { false };
+        int32_t useAlbedoMap{ false };
+        int32_t useMRMap{ false };
+        int32_t useNormalMap{ false };
+        int32_t useOcclusionMap{ false };
 
         int32_t albedoMapIndex;
         int32_t mrMapIndex;
@@ -159,7 +156,7 @@ struct MaterialHandle
 
     static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
     {
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
 
         bindings[0].binding = 0;
         bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -218,9 +215,8 @@ struct GameObject
     {
     }
 
-    GameObject(const glm::mat4& transform, std::shared_ptr<ModelHandle> model)
-        : transform(transform)
-        , model(model)
+    GameObject(const glm::mat4 &transform, std::shared_ptr<ModelHandle> model)
+            : transform(transform), model(model)
     {
     }
 };
@@ -229,6 +225,5 @@ struct SceneDescription
 {
     Camera camera;
     std::vector<std::shared_ptr<ModelHandle>> models;
-    std::vector<MeshPrimitiveHandle> otherMeshes;
     std::vector<GameObject> gameObjects;
 };
