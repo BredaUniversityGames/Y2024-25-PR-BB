@@ -106,15 +106,9 @@ void main()
     outColor = vec4(Lo + ambient + emissive, 1.0);
 
     // We store brightness for bloom later on
+    float gradientStrength = 0.25;
     float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    if(brightness > 1.0)
-    {
-        outBrightness = vec4(outColor.rgb, 1.0);
-    }
-    else
-    {
-        outBrightness = vec4(0.0, 0.0, 0.0, 1.0);
-    }
+    outBrightness = vec4(outColor.rgb * (brightness * gradientStrength), 1.0);
 }
 
 

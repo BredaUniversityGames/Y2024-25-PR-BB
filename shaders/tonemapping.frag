@@ -22,8 +22,9 @@ void main()
 {
     vec3 hdrColor = texture(hdrTarget, texCoords).rgb;
 
+    float bloomStrenght = 0.8;
     vec3 bloomColor = texture(bloomTarget, texCoords).rgb;
-    hdrColor += bloomColor;
+    hdrColor += bloomColor * bloomStrenght;
 
     // Reinhardt
     //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
