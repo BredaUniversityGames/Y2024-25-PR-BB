@@ -26,14 +26,6 @@ target_include_directories(ImGui
         PUBLIC implot
 )
 
-# SDL
-
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(SDL)
-target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
-# Disabling warnings from SDL3 compilation
-
 # Magic Enum
 
 add_subdirectory(magic_enum)
@@ -47,15 +39,10 @@ add_subdirectory(spdlog)
 find_package(Vulkan)
 
 if (NOT Vulkan_FOUND)
-    find_library(Vulkan_LIBRARY NAMES vulkan-1 vulkan HINTS "$ENV{VULKAN_SDK}" REQUIRED)
-endif ()
-
-if (NOT Vulkan_FOUND)
     message(FATAL_ERROR "Could not find Vulkan library!")
 else ()
     message(STATUS ${Vulkan_LIBRARY})
 endif ()
-
 
 # Vulkan Memory allocator
 
@@ -70,6 +57,14 @@ add_subdirectory(fastgltf)
 set(TRACY_ENABLE "" ON)
 set(TRACY_ON_DEMAND "" ON)
 add_subdirectory(tracy)
+
+# SDL
+
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+add_subdirectory(SDL)
+target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
+# Disabling warnings from SDL3 compilation
 
 # Main External Library
 
