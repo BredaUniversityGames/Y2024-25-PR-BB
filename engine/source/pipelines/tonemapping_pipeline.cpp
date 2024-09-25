@@ -62,7 +62,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
 void TonemappingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
