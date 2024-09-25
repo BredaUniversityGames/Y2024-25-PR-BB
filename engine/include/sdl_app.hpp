@@ -23,7 +23,6 @@ public:
 
 private:
     SDL_Window* _window;
-    SDL_Renderer* _renderer;
 
     InitInfo _initInfo;
     class InputManager _inputManager;
