@@ -57,6 +57,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
 
+    _basicSampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
@@ -68,7 +70,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
     glm::vec3 scale{10.0f};
-    glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
+    glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 0.0f, 0.0f))};
     glm::vec3 translate{-0.275f, 0.06f, -0.025f};
     glm::mat4 transform = glm::translate(glm::mat4{1.0f}, translate) * rotation * glm::scale(glm::mat4{1.0f}, scale);
 
@@ -133,6 +135,8 @@ void Engine::Run()
         std::this_thread::sleep_for(16ms);
         return;
     }
+
+
 
     if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
         _application->SetMouseHidden(!_application->GetMouseHidden());
@@ -320,6 +324,7 @@ Engine::~Engine()
     _swapChain.reset();
 
     _brain.device.destroy(_materialDescriptorSetLayout);
+    //_brain.device.destroy(_basicSampler.get());
 }
 
 void Engine::CreateCommandBuffers()
@@ -358,7 +363,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
-    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
@@ -475,7 +480,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ubo.cameraPosition = camera.position;
 
     static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    static glm::vec3 lightDir = glm::vec3(0.2f, -0.3f, -0.7f);
+    static glm::vec3 lightDir = glm::vec3(0.2f, -0.2f, 0.1f);
     static float sceneDistance = 1.0f;
     static float orthoSize = 8.0f;
     static float farPlane = 8.0f;
@@ -489,20 +494,19 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     );
 
     //for debug info
-    /*
-    static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.ImageResourceManager().Access( _gBuffers->Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::Text("%f %f %f", camera.position.x, camera.position.y, camera.position.z);
-    ImGui::DragFloat3("Light dir", &lightDir.x, 0.1f);
-    ImGui::DragFloat("scene distance", &sceneDistance, 0.1f);
-    ImGui::DragFloat3("Target Position", &targetPos.x, 0.1f);
+    ImGui::DragFloat3("Light dir", &lightDir.x, 0.05f);
+    ImGui::DragFloat("scene distance", &sceneDistance, 0.05f);
+    ImGui::DragFloat3("Target Position", &targetPos.x, 0.05f);
     ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f);
     ImGui::DragFloat("Far Plane", &farPlane, 0.1f);
     ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
     ImGui::Image(textureID, ImVec2(512   , 512));
     ImGui::End();
-    */
+
 
     const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
     glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);

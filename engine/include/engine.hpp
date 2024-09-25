@@ -65,6 +65,7 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;
+    vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
 
     bool _shouldQuit = false;
 
