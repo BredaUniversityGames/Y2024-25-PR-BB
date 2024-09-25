@@ -3,6 +3,7 @@
 #include "imgui_impl_vulkan.h"
 #include "application.hpp"
 #include "performance_tracker.hpp"
+#include "bloom_settings.hpp"
 #include "mesh.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -34,13 +35,14 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     ImGui_ImplVulkan_CreateFontsTexture();
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
 {
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
     ImGui::NewFrame();
 
     performanceTracker.Render();
+    bloomSettings.Render();
 
     ImGui::Begin("Scene");
 

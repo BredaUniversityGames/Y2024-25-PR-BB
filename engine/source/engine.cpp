@@ -197,8 +197,8 @@ void Engine::Run()
     CameraUBO cameraUBO = CalculateCamera(_scene.camera);
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
 
-    _editor->Draw(_performanceTracker, _scene);
-	_bloomSettings.Update(_currentFrame);
+    _editor->Draw(_performanceTracker, _bloomSettings, _scene);
+    _bloomSettings.Update(_currentFrame);
 
     _commandBuffers[_currentFrame].reset();
 

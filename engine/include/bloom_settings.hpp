@@ -29,6 +29,7 @@ public:
 
     BloomSettings(const VulkanBrain& brain);
     ~BloomSettings();
+    void Render();
     void Update(uint32_t currentFrame);
     const vk::DescriptorSet& GetDescriptorSetData(uint32_t currentFrame) const { return _frameData.descriptorSets[currentFrame]; }
     const vk::DescriptorSetLayout& GetDescriptorSetLayout() const { return _frameData.descriptorSetLayout; }

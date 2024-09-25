@@ -19,7 +19,7 @@ BloomSettings::~BloomSettings()
     }
 }
 
-void BloomSettings::Update(uint32_t currentFrame)
+void BloomSettings::Render()
 {
     ImGui::Begin("Bloom Settings");
 
@@ -29,7 +29,10 @@ void BloomSettings::Update(uint32_t currentFrame)
     ImGui::InputFloat3("Color weights", &_data.colorWeights[0], "%.00005f");
 
     ImGui::End();
+}
 
+void BloomSettings::Update(uint32_t currentFrame)
+{
     memcpy(_frameData.mappedPtrs[currentFrame], &_data, sizeof(SettingsData));
 }
 
