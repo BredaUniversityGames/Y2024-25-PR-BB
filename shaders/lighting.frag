@@ -28,9 +28,18 @@ layout(set = 1, binding = 0) uniform CameraUBO
     float _padding;
 } cameraUbo;
 
+layout (set = 2, binding = 0) uniform BloomSettingsUBO
+{
+    float strength;
+    float gradientStrength;
+    float maxBrightnessExtraction;
+    vec3 colorWeights;
+} bloomSettings;
+
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outBrightness;
 
 const float PI = 3.14159265359;
 
@@ -126,9 +135,13 @@ void main()
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
-    outColor = vec4((Lo* shadow)+ ambient + emissive, 1.0);
-    //outColor = vec4((visibility.r),0.0,0.0,1.0);
+    outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
 
+    // We store brightness for bloom later on
+    float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
+    vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);
+    brightnessColor = min(brightnessColor, bloomSettings.maxBrightnessExtraction);
+    outBrightness = vec4(brightnessColor, 1.0);
 }
 
 
