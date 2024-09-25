@@ -93,60 +93,61 @@ void Engine::Run()
             return;
         }
 
-    if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
-        _application->SetMouseHidden(!_application->GetMouseHidden());
+        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+            _application->SetMouseHidden(!_application->GetMouseHidden());
 
-    if(_application->GetMouseHidden())
-    {
-        ZoneNamedN(zone, "Update Camera", true);
-        int x, y;
-        _application->GetInputManager().GetMousePosition(x, y);
+        if (_application->GetMouseHidden())
+        {
+            ZoneNamedN(zone, "Update Camera", true);
+            int x, y;
+            _application->GetInputManager().GetMousePosition(x, y);
 
-                glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-                _lastMousePos = { x, y };
+            glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
+            _lastMousePos = { x, y };
 
-                constexpr float MOUSE_SENSITIVITY = 0.003f;
-                constexpr float CAM_SPEED = 0.003f;
+            constexpr float MOUSE_SENSITIVITY = 0.003f;
+            constexpr float CAM_SPEED = 0.003f;
 
-                constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-                constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-                // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
+            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+            // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-                _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-                _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+            _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+            _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
 
-                glm::vec3 movement_dir {};
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-                    movement_dir -= FORWARD;
+            glm::vec3 movement_dir {};
+            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+                movement_dir -= FORWARD;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-                    movement_dir += FORWARD;
+            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+                movement_dir += FORWARD;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-                    movement_dir += RIGHT;
+            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+                movement_dir += RIGHT;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-                    movement_dir -= RIGHT;
+            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+                movement_dir -= RIGHT;
 
-                if (glm::length(movement_dir) != 0.0f)
-                {
-                    movement_dir = glm::normalize(movement_dir);
-                }
-
-                _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+            if (glm::length(movement_dir) != 0.0f)
+            {
+                movement_dir = glm::normalize(movement_dir);
             }
 
-            if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
-                Quit();
-
-            _renderer->UpdateCamera(_scene->camera);
-
-            _renderer->Render();
-
-            _performanceTracker.Update();
-
-            FrameMark;
+            _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
+
+        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
+            Quit();
+
+        _renderer->UpdateCamera(_scene->camera);
+
+        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+
+        _renderer->Render();
+
+        _performanceTracker.Update();
+
+        FrameMark;
     }
 }
 
