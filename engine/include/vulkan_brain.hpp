@@ -1,4 +1,5 @@
 #pragma once
+
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
@@ -24,13 +25,20 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
     false;
 #endif
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 512;
-constexpr uint32_t BINDLESS_TEXTURES_BINDING = 10;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
+enum class BindlessBinding
+{
+    eColor = 0,
+    eDepth,
+    eCubemap,
+    eShadowmap
+};
 
 class VulkanBrain
 {
 public:
     explicit VulkanBrain(const InitInfo& initInfo);
+
     ~VulkanBrain();
     NON_COPYABLE(VulkanBrain);
     NON_MOVABLE(VulkanBrain);
@@ -52,15 +60,21 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const { return _imageResourceManager; }
+    ImageResourceManager& ImageResourceManager() const
+    {
+        return _imageResourceManager;
+    }
 
-    void UpdateBindlessSet();
+    void UpdateBindlessSet() const;
 
 private:
     vk::DebugUtilsMessengerEXT _debugMessenger;
     vk::UniqueSampler _sampler;
 
     ResourceHandle<Image> _fallbackImage;
+
+    mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
+    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessWrites;
 
     const std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
@@ -76,20 +90,30 @@ private:
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        "VK_EXT_descriptor_indexing"
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
     };
 
     mutable class ImageResourceManager _imageResourceManager;
 
     void CreateInstance(const InitInfo& initInfo);
+
     void PickPhysicalDevice();
+
     uint32_t RateDeviceSuitability(const vk::PhysicalDevice& device);
+
     bool ExtensionsSupported(const vk::PhysicalDevice& device);
+
     bool CheckValidationLayerSupport();
+
     std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);
+
     void SetupDebugMessenger();
+
     void CreateDevice();
+
     void CreateCommandPool();
+
     void CreateDescriptorPool();
+
     void CreateBindlessDescriptorSet();
 };

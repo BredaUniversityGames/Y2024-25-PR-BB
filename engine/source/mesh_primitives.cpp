@@ -43,7 +43,7 @@ MeshPrimitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
             glm::vec2 texCoords { u, v };
             glm::vec3 position { point * radius };
 
-            primitive.vertices.emplace_back(position, point, glm::vec4 {}, glm::vec3 {}, texCoords);
+            primitive.vertices.emplace_back(position, point, glm::vec4 {}, texCoords);
         }
     }
 

@@ -1,14 +1,11 @@
 #include "engine.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
+
 #include <stb_image.h>
 
-#include "model_loader.hpp"
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
-#include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
-#include "util.hpp"
+#include "model_loader.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -18,6 +15,7 @@
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "single_time_commands.hpp"
+#include "editor.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
     : _brain(initInfo)
@@ -27,6 +25,12 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     ImGui::CreateContext();
     ImPlot::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+
     spdlog::info("Starting engine...");
 
     _application = std::move(application);
@@ -49,7 +53,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _environmentMap);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, *_swapChain);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(), _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -61,38 +67,20 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale { 0.05f };
-    glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
-    glm::vec3 translate { -0.275f, 0.06f, -0.025f };
-    glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
+    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
 
-    _scene.gameObjects.emplace_back(transform, _scene.models[0]);
-    _scene.gameObjects.emplace_back(glm::mat4 { 1.0f }, _scene.models[1]);
+    glm::vec3 scale { 10.0f };
+    for (size_t i = 0; i < 10; ++i)
+    {
+        glm::vec3 translate { i / 3, 0.0f, i % 3 };
+        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-    vk::Format format = _swapChain->GetFormat();
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers->DepthFormat();
+        _scene.gameObjects.emplace_back(transform, _scene.models[1]);
+    }
 
     _application->InitImGui();
 
-    ImGui_ImplVulkan_InitInfo initInfoVulkan {};
-    initInfoVulkan.UseDynamicRendering = true;
-    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
-    initInfoVulkan.Device = _brain.device;
-    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = _brain.instance;
-    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
-    initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = _swapChain->GetImageCount();
-    ImGui_ImplVulkan_Init(&initInfoVulkan);
-
-    ImGui_ImplVulkan_CreateFontsTexture();
+    _editor = std::make_unique<Editor>(_brain, *_application, _swapChain->GetFormat(), _gBuffers->DepthFormat(), _swapChain->GetImageCount());
 
     _scene.camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene.camera.fov = glm::radians(45.0f);
@@ -106,6 +94,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _lastMousePos = mousePos;
 
     _application->SetMouseHidden(true);
+
+    _brain.UpdateBindlessSet();
 
     spdlog::info("Successfully initialized engine!");
 }
@@ -126,6 +116,10 @@ void Engine::Run()
         return;
     }
 
+    if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+        _application->SetMouseHidden(!_application->GetMouseHidden());
+
+    if (_application->GetMouseHidden())
     {
         ZoneNamedN(zone, "Update Camera", true);
         int x, y;
@@ -168,9 +162,6 @@ void Engine::Run()
     if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
         Quit();
 
-    CameraUBO cameraUBO = CalculateCamera(_scene.camera);
-    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
-
     {
         ZoneNamedN(zone, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
@@ -190,7 +181,6 @@ void Engine::Run()
         {
             _swapChain->Resize(_application->DisplaySize());
             _gBuffers->Resize(_application->DisplaySize());
-            _lightingPipeline->UpdateGBufferViews();
 
             return;
         }
@@ -200,16 +190,10 @@ void Engine::Run()
 
     util::VK_ASSERT(_brain.device.resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
-    ImGui_ImplVulkan_NewFrame();
-    _application->NewImGuiFrame();
-    ImGui::NewFrame();
+    CameraUBO cameraUBO = CalculateCamera(_scene.camera);
+    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
 
-    _performanceTracker.Render();
-
-    {
-        ZoneNamedN(zone, "ImGui Render", true);
-        ImGui::Render();
-    }
+    _editor->Draw(_performanceTracker, _scene);
 
     _commandBuffers[_currentFrame].reset();
 
@@ -230,7 +214,8 @@ void Engine::Run()
 
     {
         ZoneNamedN(zone, "Submit Commands", true);
-        util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+        util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]),
+            "Failed submitting to graphics queue!");
     }
 
     vk::PresentInfoKHR presentInfo {};
@@ -251,7 +236,6 @@ void Engine::Run()
     {
         _swapChain->Resize(_application->DisplaySize());
         _gBuffers->Resize(_application->DisplaySize());
-        _lightingPipeline->UpdateGBufferViews();
     }
     else
     {
@@ -266,12 +250,6 @@ void Engine::Run()
 Engine::~Engine()
 {
     _brain.device.waitIdle();
-
-    ImGui_ImplVulkan_Shutdown();
-    _application->ShutdownImGui();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
 
     _brain.ImageResourceManager().Destroy(_environmentMap);
     _brain.ImageResourceManager().Destroy(_hdrTarget);
@@ -334,26 +312,36 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-        _gBuffers->GBufferFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-        DEFERRED_ATTACHMENT_COUNT);
+    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
+        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
+    const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
+
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, _scene);
 
-    util::TransitionImageLayout(commandBuffer, _gBuffers->GBuffersImageArray(),
-        _gBuffers->GBufferFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-        DEFERRED_ATTACHMENT_COUNT);
+    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
-    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
+
+    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
+        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     commandBuffer.end();
 }
@@ -408,7 +396,8 @@ void Engine::InitializeCameraUBODescriptors()
             VMA_MEMORY_USAGE_CPU_ONLY,
             "Uniform buffer");
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
+        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]),
+            "Failed mapping memory for UBO!");
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
@@ -457,12 +446,48 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
 
     ubo.view = glm::inverse(cameraTranslation * cameraRotation);
 
-    ubo.proj = glm::perspective(camera.fov, _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y), camera.nearPlane, camera.farPlane);
+    ubo.proj = glm::perspective(camera.fov, _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y), camera.nearPlane,
+        camera.farPlane);
     ubo.proj[1][1] *= -1;
 
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
 
+    static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
+    static glm::vec3 lightDir = glm::vec3(0.2f, -0.3f, -0.7f);
+    static float sceneDistance = 1.0f;
+    static float orthoSize = 8.0f;
+    static float farPlane = 8.0f;
+    static float nearPlane = -16.0f;
+
+    const glm::mat4 biasMatrix(
+        0.5, 0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.5, 0.5, 0.5, 1.0);
+
+    // for debug info
+    /*
+    static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    ImGui::Begin("Light Debug");
+    ImGui::Text("%f %f %f", camera.position.x, camera.position.y, camera.position.z);
+    ImGui::DragFloat3("Light dir", &lightDir.x, 0.1f);
+    ImGui::DragFloat("scene distance", &sceneDistance, 0.1f);
+    ImGui::DragFloat3("Target Position", &targetPos.x, 0.1f);
+    ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f);
+    ImGui::DragFloat("Far Plane", &farPlane, 0.1f);
+    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
+    ImGui::Image(textureID, ImVec2(512   , 512));
+    ImGui::End();
+    */
+
+    const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+    depthProjectionMatrix[1][1] *= -1;
+    ubo.lightVP = depthProjectionMatrix * lightView;
+    ubo.depthBiasMVP = biasMatrix * ubo.lightVP;
+    ubo.lightData = glm::vec4(targetPos - normalize(lightDir) * sceneDistance, 0.0); // save light direction here
     return ubo;
 }
 

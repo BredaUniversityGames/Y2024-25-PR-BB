@@ -29,7 +29,7 @@ private:
 
     Mesh ProcessMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& gltf);
     MeshPrimitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
-    ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data);
+    ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data, std::string_view name);
     Material ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf);
 
     vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology);
