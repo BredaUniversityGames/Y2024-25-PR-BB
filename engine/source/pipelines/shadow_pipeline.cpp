@@ -7,17 +7,15 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     _brain(brain),
     _gBuffers(gBuffers),
     _camera(camera),
-    _frameData(geometryPipeline.GetFrameData())
+    _frameData(geometryPipeline.GetFrameData()),
+    _descriptorSetLayout(geometryPipeline.DescriptorSetLayout())
 {
-    CreateDescriptorSetLayout();
-    CreateDescriptorSets();
     CreatePipeline();
 }
 
 ShadowPipeline::~ShadowPipeline() {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
-    _brain.device.destroy(_descriptorSetLayout);
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
@@ -78,58 +76,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void ShadowPipeline::CreateDescriptorSetLayout()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
-
-    vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding{bindings[0]};
-    descriptorSetLayoutBinding.binding = 0;
-    descriptorSetLayoutBinding.descriptorCount = 1;
-    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
-    descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo{};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-                    "Failed creating shadow descriptor set layout!");
-}
-
-void ShadowPipeline::CreateDescriptorSets()
-{
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts{};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-    { l = _descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo{};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-                    "Failed allocating descriptor sets!");
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
-    {
-        vk::DescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = _frameData[i].uniformBuffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UBO);
-
-        vk::WriteDescriptorSet descriptorWrite{};
-        descriptorWrite.dstSet = _frameData[i].descriptorSet;
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-
-        _brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
-
-    }
-}
-
 void ShadowPipeline::CreatePipeline()
 {
 // Pipeline layout with two descriptor sets: object data and light camera data
@@ -160,7 +106,7 @@ void ShadowPipeline::CreatePipeline()
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
     vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
     vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributes.size();
+    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 1;
     vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
