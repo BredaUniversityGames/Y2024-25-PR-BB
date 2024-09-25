@@ -7,8 +7,8 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     _brain(brain),
     _gBuffers(gBuffers),
     _camera(camera),
-    _frameData(geometryPipeline.GetFrameData()),
-    _descriptorSetLayout(geometryPipeline.DescriptorSetLayout())
+    _descriptorSetLayout(geometryPipeline.DescriptorSetLayout()),
+    _frameData(geometryPipeline.GetFrameData())
 {
     CreatePipeline();
 }

@@ -31,7 +31,7 @@ target_compile_options(Engine PRIVATE -Wall)
 option(WARNINGS_AS_ERRORS OFF)
 
 if (WARNINGS_AS_ERRORS)
-    target_compile_options(Engine PRIVATE -Werror -ferror-limit=0)
+    target_compile_options(Engine PRIVATE -Werror)
 endif ()
 
 option(ENABLE_PCH "Compile with precompiled header" ON)
