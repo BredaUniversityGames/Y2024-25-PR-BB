@@ -9,14 +9,16 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
-Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages) : _brain(brain), _application(application)
+Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages)
+    : _brain(brain)
+    , _application(application)
 {
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &swapchainFormat;
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = depthFormat;
 
-    ImGui_ImplVulkan_InitInfo initInfoVulkan{};
+    ImGui_ImplVulkan_InitInfo initInfoVulkan {};
     initInfoVulkan.UseDynamicRendering = true;
     initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
     initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
@@ -45,7 +47,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, SceneDescription& scen
     ImGui::Begin("Scene");
 
     int32_t indexToRemove = -1;
-    for(size_t i = 0; i < scene.gameObjects.size(); ++i)
+    for (size_t i = 0; i < scene.gameObjects.size(); ++i)
     {
         glm::vec3 scale;
         glm::vec3 translation;
@@ -55,20 +57,20 @@ void Editor::Draw(PerformanceTracker& performanceTracker, SceneDescription& scen
         glm::decompose(scene.gameObjects[i].transform, scale, rotationQ, translation, skew, perspective);
         glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQ));
 
-        if(ImGui::BeginChild(i + 0xf00f, ImVec2{400, 110}))
+        if (ImGui::BeginChild(i + 0xf00f, ImVec2 { 400, 110 }))
         {
             ImGui::Text("Gameobject %i", static_cast<uint32_t>(i));
             ImGui::DragFloat3("Position", &translation.x);
             ImGui::DragFloat3("Scale", &scale.x);
             ImGui::DragFloat3("Rotation", &rotation.x);
 
-            glm::mat4 mTranslation = glm::translate(glm::mat4{1.0f}, translation);
-            glm::mat4 mScale = glm::scale(glm::mat4{1.0f}, scale);
-            glm::mat4 mRotation = glm::mat4{glm::quat{glm::radians(rotation)}};
+            glm::mat4 mTranslation = glm::translate(glm::mat4 { 1.0f }, translation);
+            glm::mat4 mScale = glm::scale(glm::mat4 { 1.0f }, scale);
+            glm::mat4 mRotation = glm::mat4 { glm::quat { glm::radians(rotation) } };
 
             scene.gameObjects[i].transform = mTranslation * mRotation * mScale;
 
-            if(ImGui::Button("X"))
+            if (ImGui::Button("X"))
             {
                 indexToRemove = i;
             }
@@ -76,16 +78,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, SceneDescription& scen
         ImGui::EndChildFrame();
     }
 
-    if(indexToRemove != -1)
+    if (indexToRemove != -1)
     {
         scene.gameObjects.erase(scene.gameObjects.begin() + indexToRemove);
     }
 
     uint32_t count = scene.gameObjects.size();
-    if(ImGui::Button("Add model"))
+    if (ImGui::Button("Add model"))
     {
-        glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ count * 7.0f, 0.0f, 0.0f });
-        transform = glm::scale(transform, glm::vec3{ 10.0f });
+        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, glm::vec3 { count * 7.0f, 0.0f, 0.0f });
+        transform = glm::scale(transform, glm::vec3 { 10.0f });
         scene.gameObjects.emplace_back(transform, scene.models[1]);
     }
 

@@ -54,40 +54,9 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     CreateCommandBuffers();
     CreateSyncObjects();
-
-    vk::Format format = _swapChain->GetFormat();
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers->DepthFormat();
-
-    ImGui_ImplVulkan_InitInfo initInfoVulkan {};
-    initInfoVulkan.UseDynamicRendering = true;
-    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
-    initInfoVulkan.Device = _brain.device;
-    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = _brain.instance;
-    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
-    initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = _swapChain->GetImageCount();
-    ImGui_ImplVulkan_Init(&initInfoVulkan);
-
-    ImGui_ImplVulkan_CreateFontsTexture();
 }
 Renderer::~Renderer()
 {
-    _brain.device.waitIdle();
-
-    ImGui_ImplVulkan_Shutdown();
-    _application->ShutdownImGui();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
-
     _modelLoader.reset();
 
     _brain.ImageResourceManager().Destroy(_environmentMap);
