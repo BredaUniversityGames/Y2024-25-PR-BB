@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
-        run: ''
+        run: 'choco install ninja'
 
         # DEBUG: Check versions
 
