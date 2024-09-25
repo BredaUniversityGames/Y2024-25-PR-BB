@@ -44,6 +44,11 @@ public:
         return _depthFormat;
     }
 
+    ResourceHandle<Image> Shadow() const
+    {
+        return _shadowImage;
+    }
+
     glm::uvec2 Size() const
     {
         return _size;
@@ -78,6 +83,10 @@ private:
     ResourceHandle<Image> _depthImage;
 
     vk::Format _depthFormat;
+    ResourceHandle<Image> _shadowImage;
+    vk::Sampler _shadowSampler;
+
+    vk::Format _shadowFormat;
 
     vk::Viewport _viewport;
     vk::Rect2D _scissor;
@@ -90,6 +99,8 @@ private:
     void CreateGBuffers();
 
     void CreateDepthResources();
+
+    void CreateShadowMapResources();
 
     void CreateViewportAndScissor();
 
