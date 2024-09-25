@@ -68,12 +68,17 @@ Engine::Engine(const InitInfo &initInfo, std::shared_ptr<Application> applicatio
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene.models.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale{ 10.0f };
-    glm::vec3 translate{ -0.275f, 0.06f, -0.025f };
-    glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, translate) * glm::scale(glm::mat4{ 1.0f }, scale);
 
     //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
-    _scene.gameObjects.emplace_back(transform, _scene.models[1]);
+
+    glm::vec3 scale{ 10.0f };
+    for(size_t i = 0; i < 10; ++i)
+    {
+        glm::vec3 translate{ i / 3, 0.0f, i % 3 };
+        glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, translate * 7.0f) * glm::scale(glm::mat4{ 1.0f }, scale);
+
+        _scene.gameObjects.emplace_back(transform, _scene.models[1]);
+    }
 
 
     _application->InitImGui();
