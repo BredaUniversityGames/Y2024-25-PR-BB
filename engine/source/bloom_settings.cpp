@@ -22,7 +22,7 @@ void BloomSettings::Render()
 {
     ImGui::Begin("Bloom Settings");
 
-    ImGui::InputFloat("Strength", &_data.strength, 0.05f, 0.1f);
+    ImGui::InputFloat("Strength", &_data.strength, 0.5f, 2.0f);
     ImGui::InputFloat("Gradient strength", &_data.gradientStrength, 0.05f, 0.1f, "%.00005f");
     ImGui::InputFloat("Max brightness extraction", &_data.maxBrightnessExtraction, 1.0f, 5.0f);
     ImGui::InputFloat3("Color weights", &_data.colorWeights[0], "%.00005f");
