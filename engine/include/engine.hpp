@@ -17,6 +17,7 @@ class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Renderer;
+class Editor;
 
 class Engine
 {
@@ -35,6 +36,8 @@ private:
     // std::unique_ptr<World> _world;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
+
+    std::unique_ptr<Editor> _editor;
 
     std::unique_ptr<Renderer> _renderer;
 

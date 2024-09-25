@@ -1,14 +1,12 @@
 #include "engine.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
+
 #include <stb_image.h>
 
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
 #include "model_loader.hpp"
-#include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -19,6 +17,8 @@
 #include "application.hpp"
 #include "renderer.h"
 #include "single_time_commands.hpp"
+#include "editor.hpp"
+
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -28,10 +28,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+    ImGuiIO &io = ImGui::GetIO();
+    (void) io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     spdlog::info("Starting engine...");
 
@@ -43,15 +43,22 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale { 10.0f };
-    glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
-    glm::vec3 translate { -0.275f, 0.06f, -0.025f };
-    glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
 
-    //_scene->gameObjects.emplace_back(transform, _scene->models[0]);
-    _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
+
+    glm::vec3 scale{ 10.0f };
+    for(size_t i = 0; i < 10; ++i)
+    {
+        glm::vec3 translate{ i / 3, 0.0f, i % 3 };
+        glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, translate * 7.0f) * glm::scale(glm::mat4{ 1.0f }, scale);
+
+        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+    }
+
 
     _renderer->UpdateBindless();
+
+    //_editor = std::make_unique<Editor>(_brain, *_application, _swapChain->GetFormat(), _gBuffers->DepthFormat(), _swapChain->GetImageCount());
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -82,7 +89,7 @@ void Engine::Run()
         float deltaTimeMS = deltaTime.count();
 
         // Slow down application when minimized.
-        if (_application->IsMinimized())
+        if(_application->IsMinimized())
         {
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(16ms);
@@ -101,7 +108,7 @@ void Engine::Run()
             _application->GetInputManager().GetMousePosition(x, y);
             if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
                 _application->SetMouseHidden(!_application->GetMouseHidden());
-            if (_application->GetMouseHidden() == true)
+            if (_application->GetMouseHidden())
             {
                 ZoneNamedN(zone, "Update Camera", true);
                 int x, y;
@@ -120,20 +127,20 @@ void Engine::Run()
                 _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
                 _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
 
-                glm::vec3 movement_dir {};
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+                glm::vec3 movement_dir{};
+                if(_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
                     movement_dir -= FORWARD;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+                if(_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
                     movement_dir += FORWARD;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+                if(_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
                     movement_dir += RIGHT;
 
-                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+                if(_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
                     movement_dir -= RIGHT;
 
-                if (glm::length(movement_dir) != 0.0f)
+                if(glm::length(movement_dir) != 0.0f)
                 {
                     movement_dir = glm::normalize(movement_dir);
                 }
@@ -141,7 +148,7 @@ void Engine::Run()
                 _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
             }
 
-            if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
+            if(_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
                 Quit();
 
             _renderer->UpdateCamera(_scene->camera);
