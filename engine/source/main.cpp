@@ -27,8 +27,9 @@ int main(int argc, char* argv[])
 
     try
     {
-        g_app->Run([]()
-            { g_engine->Run(); return g_engine->ShouldQuit(); });
+        g_engine->Run();
+        // g_app->Run([]()
+        //     { g_engine->Run(); return g_engine->ShouldQuit(); });
     }
     catch (const std::exception& e)
     {

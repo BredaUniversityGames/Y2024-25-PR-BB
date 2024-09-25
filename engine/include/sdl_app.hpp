@@ -18,6 +18,7 @@ public:
     void NewImGuiFrame() override;
     void ShutdownImGui() override;
     void SetMouseHidden(bool state) override;
+    void ProcessEvents() override;
 
     const InputManager& GetInputManager() const override;
 

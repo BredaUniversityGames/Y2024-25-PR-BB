@@ -24,6 +24,7 @@ public:
     virtual void InitImGui() = 0;
     virtual void NewImGuiFrame() = 0;
     virtual void ShutdownImGui() = 0;
+    virtual void ProcessEvents() = 0;
     virtual const InputManager& GetInputManager() const = 0;
     virtual void SetMouseHidden(bool state) = 0;
 

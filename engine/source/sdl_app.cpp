@@ -92,7 +92,6 @@ void SDLApp::Run(std::function<bool()> updateLoop)
 
         if (updateLoop())
             running = false;
-        FrameMark;
     }
 }
 
@@ -128,4 +127,20 @@ void SDLApp::SetMouseHidden(bool state)
         SDL_HideCursor();
     else
         SDL_ShowCursor();
+}
+
+void SDLApp::ProcessEvents()
+{
+    _inputManager.Update();
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        _inputManager.UpdateEvent(event);
+        if (event.type == SDL_EventType::SDL_EVENT_QUIT)
+        {
+            _quit = true;
+            break;
+        }
+    }
 }
