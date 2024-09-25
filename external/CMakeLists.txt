@@ -35,7 +35,6 @@ add_subdirectory(magic_enum)
 add_subdirectory(spdlog)
 
 # Vulkan
-
 find_package(Vulkan)
 
 if (NOT Vulkan_FOUND)

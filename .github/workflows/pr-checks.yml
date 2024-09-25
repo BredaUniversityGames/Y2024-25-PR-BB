@@ -23,8 +23,8 @@ jobs:
 
     steps:
 
-    #   - name: Install Ninja
-    #     run: sudo apt install ninja-build
+      - name: Install Ninja
+        run: sudo apt install ninja-build
 
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.1.1
@@ -32,19 +32,17 @@ jobs:
             version: latest
             cache: true
 
-    #   - name: Check Dependencies
-    #     run: clang --version && ninja --version && cmake --version
+      - name: Check Dependencies
+        run: clang --version && ninja --version && cmake --version
 
-    #   - name: Checkout Project
-    #     uses: actions/checkout@v4.1.7
-    #     with:
-    #         submodules: 'true'
+      - name: Checkout Project
+        uses: actions/checkout@v4.1.7
+        with:
+            submodules: 'true'
 
-      - name: Check Current Dir
-        run: ls $VULKAN_SDK
+      - name: Configure Project
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON --debug-find
 
-      
-
-    #   - name: Build and Configure Project
-    #     run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON && cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+      - name: Build Project
+        run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
           
