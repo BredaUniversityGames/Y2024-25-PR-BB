@@ -4,12 +4,8 @@
 
 #include <stb_image.h>
 
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
-#include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
 #include "model_loader.hpp"
-#include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -19,6 +15,8 @@
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "single_time_commands.hpp"
+#include "editor.hpp"
+
 
 Engine::Engine(const InitInfo &initInfo, std::shared_ptr<Application> application)
         : _brain(initInfo)
@@ -77,30 +75,10 @@ Engine::Engine(const InitInfo &initInfo, std::shared_ptr<Application> applicatio
     //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
     _scene.gameObjects.emplace_back(transform, _scene.models[1]);
 
-    vk::Format format = _swapChain->GetFormat();
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr{};
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers->DepthFormat();
 
     _application->InitImGui();
 
-    ImGui_ImplVulkan_InitInfo initInfoVulkan{};
-    initInfoVulkan.UseDynamicRendering = true;
-    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
-    initInfoVulkan.Device = _brain.device;
-    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = _brain.instance;
-    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
-    initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = _swapChain->GetImageCount();
-    ImGui_ImplVulkan_Init(&initInfoVulkan);
-
-    ImGui_ImplVulkan_CreateFontsTexture();
+    _editor = std::make_unique<Editor>(_brain, *_application, _swapChain->GetFormat(), _gBuffers->DepthFormat(), _swapChain->GetImageCount());
 
     _scene.camera.position = glm::vec3{ 0.0f, 0.2f, 0.0f };
     _scene.camera.fov = glm::radians(45.0f);
@@ -209,33 +187,11 @@ void Engine::Run()
 
     util::VK_ASSERT(_brain.device.resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
-    ImGui_ImplVulkan_NewFrame();
-    _application->NewImGuiFrame();
-    ImGui::NewFrame();
     CameraUBO cameraUBO = CalculateCamera(_scene.camera);
     std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
-    _performanceTracker.Render();
 
-    ImGui::Begin("Model handler");
+    _editor->Draw(_performanceTracker, _scene);
 
-    uint32_t count = _scene.gameObjects.size();
-    if(ImGui::Button("Add model"))
-    {
-        glm::mat4 transform = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ count * 7.0f, 0.0f, 0.0f });
-        transform = glm::scale(transform, glm::vec3{ 10.0f });
-        _scene.gameObjects.emplace_back(transform, _scene.models[1]);
-    }
-    if(ImGui::Button("Remove model"))
-    {
-        _scene.gameObjects.pop_back();
-    }
-
-    ImGui::End();
-
-    {
-        ZoneNamedN(zone, "ImGui Render", true);
-        ImGui::Render();
-    }
 
     _commandBuffers[_currentFrame].reset();
 
@@ -293,11 +249,6 @@ Engine::~Engine()
 {
     _brain.device.waitIdle();
 
-    ImGui_ImplVulkan_Shutdown();
-    _application->ShutdownImGui();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
 
     _brain.ImageResourceManager().Destroy(_environmentMap);
     _brain.ImageResourceManager().Destroy(_hdrTarget);
