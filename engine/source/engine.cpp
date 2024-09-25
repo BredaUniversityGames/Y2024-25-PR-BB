@@ -55,7 +55,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, *_application, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount());
+    _editor = std::make_unique<Editor>(_renderer->_brain, *_application, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -93,19 +93,14 @@ void Engine::Run()
             return;
         }
 
-        _editor->Draw(_performanceTracker, *_scene);
+    if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+        _application->SetMouseHidden(!_application->GetMouseHidden());
 
-        {
-            ZoneNamedN(zone, "Update Camera", true);
-            int x, y;
-            _application->GetInputManager().GetMousePosition(x, y);
-            if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
-                _application->SetMouseHidden(!_application->GetMouseHidden());
-            if (_application->GetMouseHidden())
-            {
-                ZoneNamedN(zone, "Update Camera", true);
-                int x, y;
-                _application->GetInputManager().GetMousePosition(x, y);
+    if(_application->GetMouseHidden())
+    {
+        ZoneNamedN(zone, "Update Camera", true);
+        int x, y;
+        _application->GetInputManager().GetMousePosition(x, y);
 
                 glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
                 _lastMousePos = { x, y };
