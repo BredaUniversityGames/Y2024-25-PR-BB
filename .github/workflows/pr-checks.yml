@@ -24,6 +24,13 @@ jobs:
 
     steps:
 
+        # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4.1.7
+        with:
+            submodules: 'true'
+
         # Install all dependencies
 
       - name: Install Dependencies (Linux)
@@ -34,13 +41,6 @@ jobs:
 
       - name: Check Tools
         run: clang --version && ninja --version && cmake --version
-
-        # Check out project
-
-      - name: Checkout Project
-        uses: actions/checkout@v4.1.7
-        with:
-            submodules: 'true'
 
         # Configure, Build and Test
 

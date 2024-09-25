@@ -19,7 +19,7 @@ public:
 
 private:
     const VulkanBrain& _brain;
+    Application& _application;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
     GBuffers& _gBuffers;
-    Application& _application;
 };
