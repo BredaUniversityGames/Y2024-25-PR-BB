@@ -342,6 +342,7 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
+    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
