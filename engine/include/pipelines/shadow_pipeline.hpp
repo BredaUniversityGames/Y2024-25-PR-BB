@@ -18,14 +18,12 @@ public:
 private:
 
     void CreatePipeline();
-    void CreateDescriptorSetLayout();
-    void CreateDescriptorSets();
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const CameraStructure& _camera;
 
-    vk::DescriptorSetLayout _descriptorSetLayout;
+    vk::DescriptorSetLayout& _descriptorSetLayout;
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
