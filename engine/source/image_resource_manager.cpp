@@ -196,6 +196,7 @@ vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)
     {
     case ImageType::e2D:
     case ImageType::e2DArray:
+    case ImageType::eShadowMap:
     case ImageType::eCubeMap:
         return vk::ImageType::e2D;
     default:
@@ -207,6 +208,7 @@ vk::ImageViewType ImageResourceManager::ImageViewTypeConversion(ImageType type)
 {
     switch (type)
     {
+    case ImageType::eShadowMap:
     case ImageType::e2D:
         return vk::ImageViewType::e2D;
     case ImageType::e2DArray:

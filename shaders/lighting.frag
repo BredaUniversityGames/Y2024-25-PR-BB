@@ -13,6 +13,7 @@ layout(push_constant) uniform PushConstants
     uint irradianceIndex;
     uint prefilterIndex;
     uint brdfLUTIndex;
+    uint shadowMapIndex;
 } pushConstants;
 
 layout(set = 1, binding = 0) uniform CameraUBO
@@ -20,8 +21,11 @@ layout(set = 1, binding = 0) uniform CameraUBO
     mat4 VP;
     mat4 view;
     mat4 proj;
-
+    mat4 lightVP;
+    mat4 depthBiasMVP;
+    vec4 lightData;
     vec3 cameraPosition;
+    float _padding;
 } cameraUbo;
 
 layout(location = 0) in vec2 texCoords;
@@ -54,7 +58,7 @@ void main()
     if (normal == vec3(0.0, 0.0, 0.0))
     discard;
 
-    vec3 lightDir = normalize(vec3(-0.5, 0.3, -0.3));
+    vec3 lightDir = cameraUbo.lightData.xyz;
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);
@@ -103,7 +107,26 @@ void main()
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
-    outColor = vec4(Lo + ambient + emissive, 1.0);
+    vec4 shadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
+    vec4 testCoord = cameraUbo.lightVP * vec4(position, 1.0);
+
+    float cosTheta = clamp(dot(N, lightDir),0.0,1.0);
+    float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
+
+    bias = clamp(bias, 0,0.005);
+
+    const float offset = 1.0 / (4096*1.6); // Assuming a 4096x4096 shadow map
+
+    float visibility = 1.0;
+    float shadow = 0.0;
+    float depthFactor = testCoord.z - bias;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset,  offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2( offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2( offset,  offset), depthFactor)).r;
+    shadow *= 0.25; // Average the samples
+
+    outColor = vec4((Lo* shadow)+ ambient + emissive, 1.0);
 
     // We store brightness for bloom later on
     float gradientStrength = 0.25;
