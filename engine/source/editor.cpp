@@ -14,6 +14,7 @@
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
     : _brain(brain)
+    , _gBuffers(gBuffers)
     , _application(application)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
