@@ -12,6 +12,7 @@ layout (set = 2, binding = 0) uniform BloomSettingsUBO
 {
     float strength;
     float gradientStrength;
+    vec3 colorWeights;
 } bloomSettings;
 
 layout(location = 0) in vec2 texCoord;
@@ -24,6 +25,6 @@ void main()
     outColor = texture(bindless_color_textures[nonuniformEXT(pc.index)], texCoord);
 
     // We store brightness for bloom later on
-    float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = dot(outColor.rgb, bloomSettings.colorWeights);
     outBrightness = vec4(outColor.rgb * (brightness * bloomSettings.gradientStrength), 1.0);
 }

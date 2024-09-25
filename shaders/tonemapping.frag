@@ -4,6 +4,7 @@ layout (set = 1, binding = 0) uniform BloomSettingsUBO
 {
     float strength;
     float gradientStrength;
+    vec3 colorWeights;
 } bloomSettings;
 
 layout(binding = 0) uniform sampler2D hdrTarget;
