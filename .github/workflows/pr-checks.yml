@@ -6,7 +6,7 @@ on:
 jobs:
 
   build-project:
-    name: Build Project
+    name: Build and Test Project
 
     strategy:
       fail-fast:
@@ -42,4 +42,7 @@ jobs:
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      - name: Test Project
+        run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/Engine -T
           
