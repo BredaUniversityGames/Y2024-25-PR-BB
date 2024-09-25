@@ -136,8 +136,6 @@ void Engine::Run()
         return;
     }
 
-
-
     if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
         _application->SetMouseHidden(!_application->GetMouseHidden());
     if(_application->GetMouseHidden() == true)
@@ -324,7 +322,6 @@ Engine::~Engine()
     _swapChain.reset();
 
     _brain.device.destroy(_materialDescriptorSetLayout);
-    //_brain.device.destroy(_basicSampler.get());
 }
 
 void Engine::CreateCommandBuffers()
@@ -480,7 +477,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ubo.cameraPosition = camera.position;
 
     static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    static glm::vec3 lightDir = glm::vec3(0.2f, -0.2f, 0.1f);
+    static glm::vec3 lightDir = glm::vec3(0.2f, -0.2f, 0.15f);
     static float sceneDistance = 1.0f;
     static float orthoSize = 8.0f;
     static float farPlane = 8.0f;
@@ -494,7 +491,6 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     );
 
     //for debug info
-
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.ImageResourceManager().Access( _gBuffers->Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::Text("%f %f %f", camera.position.x, camera.position.y, camera.position.z);
@@ -506,7 +502,7 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
     ImGui::Image(textureID, ImVec2(512   , 512));
     ImGui::End();
-
+    //
 
     const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
     glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize,orthoSize,-orthoSize,orthoSize,nearPlane,farPlane);

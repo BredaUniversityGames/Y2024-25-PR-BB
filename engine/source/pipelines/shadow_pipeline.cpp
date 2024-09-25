@@ -107,7 +107,7 @@ void ShadowPipeline::CreatePipeline()
     attributes[Vertex::ePOSITION].location = 0;
     attributes[Vertex::ePOSITION].format = vk::Format::eR32G32B32Sfloat;
     attributes[Vertex::ePOSITION].offset = offsetof(Vertex, position);
-    
+
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
     vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
     vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
