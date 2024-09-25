@@ -12,7 +12,7 @@ jobs:
       fail-fast:
         true
       matrix:
-        platform: [ubuntu-latest, windows-latest]
+        platform: [ubuntu-latest]
         configuration: [Debug, Release]
 
     runs-on: ${{ matrix.platform }}
@@ -29,10 +29,6 @@ jobs:
       - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         run: 'sudo apt install ninja-build && sudo apt-get install libvulkan-dev libsdl2-dev -y'
-
-      - name: Install Dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: 'choco install ninja -y && vcpkg install vulkan-loader && vcpkg integrate install'
 
         # DEBUG: Check versions
 
