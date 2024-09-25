@@ -1,5 +1,11 @@
 #version 460
 
+layout (set = 1, binding = 0) uniform BloomSettingsUBO
+{
+    float strength;
+    float gradientStrength;
+} bloomSettings;
+
 layout(binding = 0) uniform sampler2D hdrTarget;
 layout(binding = 1) uniform sampler2D bloomTarget;
 
@@ -24,7 +30,7 @@ void main()
     vec3 hdrColor = texture(hdrTarget, texCoords).rgb;
 
     vec3 bloomColor = texture(bloomTarget, texCoords).rgb;
-    hdrColor += bloomColor * bloomStrength;
+    hdrColor += bloomColor * bloomSettings.strength;
 
     // Reinhardt
     //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));

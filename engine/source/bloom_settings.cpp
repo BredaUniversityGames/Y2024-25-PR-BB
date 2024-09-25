@@ -24,7 +24,7 @@ void BloomSettings::Update(uint32_t currentFrame)
     ImGui::Begin("Bloom Settings");
 
     ImGui::InputFloat("Strength", &_data.strength, 0.05f, 0.1f);
-    ImGui::InputFloat("Gradient strength", &_data.gradientStrength, 0.05f, 0.1f);
+    ImGui::InputFloat("Gradient strength", &_data.gradientStrength, 0.05f, 0.1f, "%.00005f");
 
     ImGui::End();
 

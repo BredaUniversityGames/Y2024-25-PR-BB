@@ -8,7 +8,7 @@ public:
         /// Overall strength of the final output.
         float strength = 0.8f;
 
-        /// How strong the brightness difference should be between dark and bright spots. The higher this is the stronger specular reflections wil be.
+        /// How strong the brightness difference should be between dark and bright spots. The higher this is the stronger specular reflections will be.
         float gradientStrength = 0.2f;
     };
 
