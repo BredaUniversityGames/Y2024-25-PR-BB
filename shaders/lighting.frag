@@ -119,10 +119,11 @@ void main()
     vec4 testCoord = cameraUbo.lightVP * vec4(position, 1.0);
 
     float cosTheta = clamp(dot(N, lightDir),0.0,1.0);
-    float bias = max(0.005 * (1.0 - cosTheta), 0.0001);
+    float baseBias = cameraUbo.lightData.w;
+    float bias = max(baseBias * (1.0 - cosTheta),  baseBias);
 
-    bias = clamp(bias, 0,0.005);
-
+    bias = clamp(bias, 0,baseBias);
+    //bias = baseBias;
     const float offset = 1.0 / (4096*1.6); // Assuming a 4096x4096 shadow map
 
     float visibility = 1.0;

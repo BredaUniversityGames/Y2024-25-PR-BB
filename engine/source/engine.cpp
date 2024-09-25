@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+#include <imgui_impl_vulkan.h>
 #include <stb_image.h>
 
 #include "vulkan_helper.hpp"
@@ -84,7 +85,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->InitImGui();
 
-    _editor = std::make_unique<Editor>(_brain, *_application, _swapChain->GetFormat(), _gBuffers->DepthFormat(), _swapChain->GetImageCount());
+    _editor = std::make_unique<Editor>(_brain, *_application, _swapChain->GetFormat(), _gBuffers->DepthFormat(), _swapChain->GetImageCount(),*_gBuffers);
 
     _scene.camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene.camera.fov = glm::radians(45.0f);
@@ -464,41 +465,14 @@ CameraUBO Engine::CalculateCamera(const Camera& camera)
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
 
-    static glm::vec3 targetPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    static glm::vec3 lightDir = glm::vec3(0.2f, -0.3f, -0.7f);
-    static float sceneDistance = 1.0f;
-    static float orthoSize = 8.0f;
-    static float farPlane = 8.0f;
-    static float nearPlane = -16.0f;
+    const DirectionalLight& light = _scene.directionalLight;
 
-    const glm::mat4 biasMatrix(
-        0.5, 0.0, 0.0, 0.0,
-        0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0);
-
-    // for debug info
-    /*
-    static vk::UniqueSampler sampler =util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(sampler.get(), _gBuffers->ShadowImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-    ImGui::Begin("Light Debug");
-    ImGui::Text("%f %f %f", camera.position.x, camera.position.y, camera.position.z);
-    ImGui::DragFloat3("Light dir", &lightDir.x, 0.1f);
-    ImGui::DragFloat("scene distance", &sceneDistance, 0.1f);
-    ImGui::DragFloat3("Target Position", &targetPos.x, 0.1f);
-    ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f);
-    ImGui::DragFloat("Far Plane", &farPlane, 0.1f);
-    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f);
-    ImGui::Image(textureID, ImVec2(512   , 512));
-    ImGui::End();
-    */
-
-    const glm::mat4 lightView = glm::lookAt(targetPos - normalize(lightDir) * sceneDistance, targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+    const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.orthoSize, light.orthoSize, -light.orthoSize, light.orthoSize, light.nearPlane, light.farPlane);
     depthProjectionMatrix[1][1] *= -1;
     ubo.lightVP = depthProjectionMatrix * lightView;
-    ubo.depthBiasMVP = biasMatrix * ubo.lightVP;
-    ubo.lightData = glm::vec4(targetPos - normalize(lightDir) * sceneDistance, 0.0); // save light direction here
+    ubo.depthBiasMVP = light.biasMatrix * ubo.lightVP;
+    ubo.lightData = glm::vec4(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.shadowBias); //save light direction here
     return ubo;
 }
 

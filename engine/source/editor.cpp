@@ -8,9 +8,11 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
+
+#include "gbuffers.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
-Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages)
+Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
     : _brain(brain)
     , _application(application)
 {
@@ -35,6 +37,9 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
+
+    _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
@@ -45,6 +50,21 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     performanceTracker.Render();
     bloomSettings.Render();
+
+    DirectionalLight& light = scene.directionalLight;
+    //for debug info
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.ImageResourceManager().Access( _gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    ImGui::Begin("Light Debug");
+    ImGui::DragFloat3("Light dir", &light.lightDir.x, 0.05f);
+    ImGui::DragFloat("scene distance", &light.sceneDistance, 0.05f);
+    ImGui::DragFloat3("Target Position", &light.targetPos.x, 0.05f);
+    ImGui::DragFloat("Ortho Size", &light.orthoSize, 0.1f);
+    ImGui::DragFloat("Far Plane", &light.farPlane, 0.1f);
+    ImGui::DragFloat("Near Plane", &light.nearPlane, 0.1f);
+    ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
+    ImGui::Image(textureID, ImVec2(512   , 512));
+    ImGui::End();
+    //
 
     ImGui::Begin("Scene");
 

@@ -221,9 +221,28 @@ struct GameObject
     }
 };
 
+struct DirectionalLight
+{
+    glm::vec3 targetPos = glm::vec3(0.0f, 1.5f, -0.25f);
+    glm::vec3 lightDir = glm::vec3(0.2f, -0.15f, 0.15f);
+    float sceneDistance = 1.0f;
+    float orthoSize = 17.0f;
+    float farPlane = 32.0f;
+    float nearPlane = -16.0f;
+    float shadowBias = 0.002f;
+
+    const glm::mat4 biasMatrix = glm::mat4(
+            0.5, 0.0, 0.0, 0.0,
+            0.0, 0.5, 0.0, 0.0,
+            0.0, 0.0, 0.5, 0.0,
+            0.5, 0.5, 0.5, 1.0
+    );
+};
+
 struct SceneDescription
 {
     Camera camera;
     std::vector<std::shared_ptr<ModelHandle>> models;
     std::vector<GameObject> gameObjects;
+    DirectionalLight directionalLight;
 };
