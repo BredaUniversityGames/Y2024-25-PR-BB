@@ -28,9 +28,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
     spdlog::info("Starting engine...");
 
@@ -42,13 +43,15 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale{10.0f};
-    glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
-    glm::vec3 translate{-0.275f, 0.06f, -0.025f};
-    glm::mat4 transform = glm::translate(glm::mat4{1.0f}, translate) * rotation * glm::scale(glm::mat4{1.0f}, scale);
+    glm::vec3 scale { 10.0f };
+    glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
+    glm::vec3 translate { -0.275f, 0.06f, -0.025f };
+    glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
 
     //_scene->gameObjects.emplace_back(transform, _scene->models[0]);
     _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+
+    _renderer->UpdateBindless();
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -68,7 +71,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
-
     while (!ShouldQuit())
     {
         // update input
@@ -97,58 +99,59 @@ void Engine::Run()
             ZoneNamedN(zone, "Update Camera", true);
             int x, y;
             _application->GetInputManager().GetMousePosition(x, y);
-            if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+            if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
                 _application->SetMouseHidden(!_application->GetMouseHidden());
-            if(_application->GetMouseHidden() == true)
+            if (_application->GetMouseHidden() == true)
             {
                 ZoneNamedN(zone, "Update Camera", true);
                 int x, y;
                 _application->GetInputManager().GetMousePosition(x, y);
 
-            glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-            _lastMousePos = { x, y };
+                glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
+                _lastMousePos = { x, y };
 
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float CAM_SPEED = 0.003f;
+                constexpr float MOUSE_SENSITIVITY = 0.003f;
+                constexpr float CAM_SPEED = 0.003f;
 
-            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-            // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+                constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
+                constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+                // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-            _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-            _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+                _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+                _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
 
-            glm::vec3 movement_dir {};
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-                movement_dir -= FORWARD;
+                glm::vec3 movement_dir {};
+                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
+                    movement_dir -= FORWARD;
 
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-                movement_dir += FORWARD;
+                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
+                    movement_dir += FORWARD;
 
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-                movement_dir += RIGHT;
+                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
+                    movement_dir += RIGHT;
 
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-                movement_dir -= RIGHT;
+                if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
+                    movement_dir -= RIGHT;
 
-            if (glm::length(movement_dir) != 0.0f)
-            {
-                movement_dir = glm::normalize(movement_dir);
+                if (glm::length(movement_dir) != 0.0f)
+                {
+                    movement_dir = glm::normalize(movement_dir);
+                }
+
+                _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
             }
 
-            _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+            if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
+                Quit();
+
+            _renderer->UpdateCamera(_scene->camera);
+
+            _renderer->Render();
+
+            _performanceTracker.Update();
+
+            FrameMark;
         }
-
-        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
-            Quit();
-
-        _renderer->UpdateCamera(_scene->camera);
-
-        _renderer->Render();
-
-        _performanceTracker.Update();
-
-        FrameMark;
     }
 }
 

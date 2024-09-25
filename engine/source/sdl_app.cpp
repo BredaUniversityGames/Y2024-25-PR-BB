@@ -116,6 +116,7 @@ void SDLApp::ProcessWindowEvents()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
+        ImGui_ImplSDL3_ProcessEvent(&event);
         _inputManager.UpdateEvent(event);
         if (event.type == SDL_EventType::SDL_EVENT_QUIT)
         {

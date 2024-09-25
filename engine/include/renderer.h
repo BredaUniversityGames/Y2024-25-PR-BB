@@ -17,6 +17,7 @@ class GeometryPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class ShadowPipeline;
 class IBLPipeline;
 class SwapChain;
 class GBuffers;
@@ -48,6 +49,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
     std::shared_ptr<SceneDescription> _scene;
@@ -76,5 +78,6 @@ private:
     void InitializeHDRTarget();
     void LoadEnvironmentMap();
     void UpdateCamera(const Camera& camera);
+    void UpdateBindless();
     void Render();
 };
