@@ -24,7 +24,7 @@ jobs:
     steps:
 
       - name: Install Ninja
-        run: sudo apt install ninja-build
+        run: sudo apt install ninja-build tree
 
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.1.1
@@ -32,8 +32,12 @@ jobs:
             version: latest
             cache: true
 
+      - name: Check Vulkan Install
+        run: tree $VULKAN_SDK
+        
       - name: Check Dependencies
         run: clang --version && ninja --version && cmake --version
+
 
       - name: Checkout Project
         uses: actions/checkout@v4.1.7
