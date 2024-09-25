@@ -27,7 +27,7 @@ jobs:
     #     run: sudo apt update && sudo apt install ninja-build build-essential libncurses5 libc++-dev -y
 
       - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
+        run: sudo apt install ninja-build
 
     #   - name: Install LLVM and Clang
     #     uses: egor-tensin/setup-clang@v1
@@ -57,6 +57,8 @@ jobs:
 
       - name: Check Current Dir
         run: ls
+
+      
 
       - name: Build and Configure Project
         run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON && cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
