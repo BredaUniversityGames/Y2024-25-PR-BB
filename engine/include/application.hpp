@@ -26,12 +26,13 @@ public:
     virtual void ProcessWindowEvents() = 0;
     virtual const InputManager& GetInputManager() const = 0;
     virtual void SetMouseHidden(bool state) = 0;
+    virtual bool GetMouseHidden() = 0;
 
 protected:
     uint32_t _width, _height;
     std::string_view _windowTitle;
     bool _isFullscreen;
-
+    bool _cursorHidden = false;
     bool _quit = false;
     bool _paused = false;
     float _timer = 0.0f;

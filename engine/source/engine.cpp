@@ -4,7 +4,7 @@
 #include <stb_image.h>
 
 #include "vulkan_validation.hpp"
-// #include "vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "stopwatch.hpp"
 #include "model_loader.hpp"
@@ -27,6 +27,11 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     ImGui::CreateContext();
     ImPlot::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
     spdlog::info("Starting engine...");
 
     _application = std::move(application);
@@ -37,13 +42,13 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
     _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
 
-    glm::vec3 scale { 0.05f };
-    glm::mat4 rotation { glm::quat(glm::vec3(0.0f, 90.0f, 0.0f)) };
-    glm::vec3 translate { -0.275f, 0.06f, -0.025f };
-    glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate) * rotation * glm::scale(glm::mat4 { 1.0f }, scale);
+    glm::vec3 scale{10.0f};
+    glm::mat4 rotation{glm::quat(glm::vec3(0.0f, 90.0f, 0.0f))};
+    glm::vec3 translate{-0.275f, 0.06f, -0.025f};
+    glm::mat4 transform = glm::translate(glm::mat4{1.0f}, translate) * rotation * glm::scale(glm::mat4{1.0f}, scale);
 
-    _scene->gameObjects.emplace_back(transform, _scene->models[0]);
-    _scene->gameObjects.emplace_back(glm::mat4 { 1.0f }, _scene->models[1]);
+    //_scene->gameObjects.emplace_back(transform, _scene->models[0]);
+    _scene->gameObjects.emplace_back(transform, _scene->models[1]);
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -92,6 +97,13 @@ void Engine::Run()
             ZoneNamedN(zone, "Update Camera", true);
             int x, y;
             _application->GetInputManager().GetMousePosition(x, y);
+            if(_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
+                _application->SetMouseHidden(!_application->GetMouseHidden());
+            if(_application->GetMouseHidden() == true)
+            {
+                ZoneNamedN(zone, "Update Camera", true);
+                int x, y;
+                _application->GetInputManager().GetMousePosition(x, y);
 
             glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
             _lastMousePos = { x, y };

@@ -67,28 +67,44 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-void VulkanBrain::UpdateBindlessSet()
+void VulkanBrain::UpdateBindlessSet() const
 {
-    vk::DescriptorImageInfo imageInfos[MAX_BINDLESS_RESOURCES];
-    vk::WriteDescriptorSet writes[MAX_BINDLESS_RESOURCES];
-
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image& image = i < _imageResourceManager.Resources().size() ? _imageResourceManager.Resources()[i].resource.value() : *_imageResourceManager.Access(_fallbackImage);
+        const Image* image = i < _imageResourceManager.Resources().size()
+            ? &_imageResourceManager.Resources()[i].resource.value()
+            : _imageResourceManager.Access(_fallbackImage);
 
-        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfos[i].imageView = image.views[0]; // TODO: Review later how to determine what view should be bound.
-        imageInfos[i].sampler = *_sampler;
+        // If it can't be sampled, use the fallback.
+        if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
+            image = _imageResourceManager.Access(_fallbackImage);
 
-        writes[i].dstSet = bindlessSet;
-        writes[i].dstBinding = BINDLESS_TEXTURES_BINDING;
-        writes[i].dstArrayElement = i;
-        writes[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        writes[i].descriptorCount = 1;
-        writes[i].pImageInfo = &imageInfos[i];
+        BindlessBinding dstBinding;
+        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eColor)
+            dstBinding = BindlessBinding::eColor;
+
+        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eDepth)
+            dstBinding = BindlessBinding::eDepth;
+
+        if (image->type == ImageType::eCubeMap)
+            dstBinding = BindlessBinding::eCubemap;
+
+        if (image->type == ImageType::eShadowMap)
+            dstBinding = BindlessBinding::eShadowmap;
+
+        _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        _bindlessImageInfos[i].imageView = image->view;
+        _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
+
+        _bindlessWrites[i].dstSet = bindlessSet;
+        _bindlessWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
+        _bindlessWrites[i].dstArrayElement = i;
+        _bindlessWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        _bindlessWrites[i].descriptorCount = 1;
+        _bindlessWrites[i].pImageInfo = &_bindlessImageInfos[i];
     }
 
-    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, writes, 0, nullptr);
+    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessWrites.data(), 0, nullptr);
 }
 
 void VulkanBrain::CreateInstance(const InitInfo& initInfo)
@@ -333,45 +349,65 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    vk::DescriptorPoolSize poolSizes[] = {
-        { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        { vk::DescriptorType::eStorageImage, MAX_BINDLESS_RESOURCES }
+    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
     };
 
     vk::DescriptorPoolCreateInfo poolCreateInfo {};
     poolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
-    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * std::size(poolSizes);
-    poolCreateInfo.poolSizeCount = std::size(poolSizes);
-    poolCreateInfo.pPoolSizes = poolSizes;
+    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * poolSizes.size();
+    poolCreateInfo.poolSizeCount = poolSizes.size();
+    poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    vk::DescriptorSetLayoutBinding bindings[2];
+    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
-    combinedImageSampler.binding = BINDLESS_TEXTURES_BINDING;
+    combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eColor);
+    combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
-    vk::DescriptorSetLayoutBinding& storageImageBinding = bindings[1];
-    storageImageBinding.descriptorType = vk::DescriptorType::eStorageImage;
-    storageImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    storageImageBinding.binding = BINDLESS_TEXTURES_BINDING + 1;
+    vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
+    depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
+    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
+    vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[2];
+    cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
+    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
+    vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
+    shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
+    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo {};
-    layoutCreateInfo.bindingCount = std::size(bindings);
-    layoutCreateInfo.pBindings = bindings;
+    layoutCreateInfo.bindingCount = bindings.size();
+    layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    vk::DescriptorBindingFlags bindingFlags[2] = {
+    std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
         vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::eUpdateAfterBind
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
+        vk::DescriptorBindingFlagBits::ePartiallyBound
     };
 
     vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT extInfo {};
-    extInfo.bindingCount = std::size(bindings);
-    extInfo.pBindingFlags = bindingFlags;
+    extInfo.bindingCount = bindings.size();
+    extInfo.pBindingFlags = bindingFlags.data();
+
     layoutCreateInfo.pNext = &extInfo;
 
-    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout), "Failed creating bindless descriptor set layout.");
+    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout),
+        "Failed creating bindless descriptor set layout.");
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = bindlessPool;

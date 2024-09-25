@@ -11,9 +11,11 @@ GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
     assert(supportedDepthFormat.has_value() && "No supported depth format!");
 
     _depthFormat = supportedDepthFormat.value();
+    _shadowFormat = supportedDepthFormat.value();
 
     CreateGBuffers();
     CreateDepthResources();
+    CreateShadowMapResources();
     CreateViewportAndScissor();
 }
 
@@ -39,14 +41,37 @@ void GBuffers::Resize(glm::uvec2 size)
 void GBuffers::CreateGBuffers()
 {
     ImageCreation gBufferCreation {};
-    gBufferCreation.SetFormat(GBufferFormat()).SetSize(_size.x, _size.y).SetName("GBuffer array").SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-    gBufferCreation.layers = DEFERRED_ATTACHMENT_COUNT;
-    _gBuffersImage = _brain.ImageResourceManager().Create(gBufferCreation);
+    gBufferCreation
+        .SetFormat(GBufferFormat())
+        .SetSize(_size.x, _size.y)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    const Image* image = _brain.ImageResourceManager().Access(_gBuffersImage);
+    gBufferCreation.SetName("AlbedoM");
+    _albedoM = _brain.ImageResourceManager().Create(gBufferCreation);
+
+    gBufferCreation.SetName("NormalR");
+    _normalR = _brain.ImageResourceManager().Create(gBufferCreation);
+
+    gBufferCreation.SetName("EmissiveAO");
+    _emissiveAO = _brain.ImageResourceManager().Create(gBufferCreation);
+
+    gBufferCreation.SetName("Position");
+    _position = _brain.ImageResourceManager().Create(gBufferCreation);
+
+    const Image* albedoMImage = _brain.ImageResourceManager().Access(_albedoM);
+    const Image* normalRImage = _brain.ImageResourceManager().Access(_normalR);
+    const Image* emissiveAOImage = _brain.ImageResourceManager().Access(_emissiveAO);
+    const Image* positionImage = _brain.ImageResourceManager().Access(_position);
 
     vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(cb, image->image, image->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, image->layers);
+    util::TransitionImageLayout(cb, albedoMImage->image, albedoMImage->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(cb, normalRImage->image, normalRImage->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(cb, emissiveAOImage->image, emissiveAOImage->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(cb, positionImage->image, positionImage->format, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal);
     util::EndSingleTimeCommands(_brain, cb);
 }
 
@@ -59,14 +84,59 @@ void GBuffers::CreateDepthResources()
     const Image* image = _brain.ImageResourceManager().Access(_depthImage);
 
     vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(commandBuffer, image->image, _depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, image->image, _depthFormat, vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    util::EndSingleTimeCommands(_brain, commandBuffer);
+}
+
+void GBuffers::CreateShadowMapResources()
+{
+    vk::SamplerCreateInfo shadowSamplerInfo{};
+    shadowSamplerInfo.magFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.minFilter = vk::Filter::eLinear;
+    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeV =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeW =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.anisotropyEnable = 1;
+    shadowSamplerInfo.maxAnisotropy = 16;
+    shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+    shadowSamplerInfo.unnormalizedCoordinates = 0;
+    shadowSamplerInfo.compareEnable = 0;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eAlways;
+    shadowSamplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    shadowSamplerInfo.mipLodBias = 0.0f;
+    shadowSamplerInfo.minLod = 0.0f;
+    shadowSamplerInfo.maxLod = static_cast<float>(1);
+    shadowSamplerInfo.compareEnable = vk::True;
+    shadowSamplerInfo.compareOp = vk::CompareOp::eLessOrEqual;
+    _shadowSampler = _brain.device.createSampler(shadowSamplerInfo);
+
+    ImageCreation shadowCreation {};
+    shadowCreation
+        .SetFormat(_shadowFormat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(4096 ,4096)
+        .SetName("Shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
+        .SetSampler(_shadowSampler);
+    _shadowImage = _brain.ImageResourceManager().Create(shadowCreation);
+
+    const Image* image = _brain.ImageResourceManager().Access(_shadowImage);
+
+    vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
+    util::TransitionImageLayout(commandBuffer, image->image, _shadowFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
 void GBuffers::CleanUp()
 {
-    _brain.ImageResourceManager().Destroy(_gBuffersImage);
+    _brain.ImageResourceManager().Destroy(_albedoM);
+    _brain.ImageResourceManager().Destroy(_normalR);
+    _brain.ImageResourceManager().Destroy(_emissiveAO);
+    _brain.ImageResourceManager().Destroy(_position);
     _brain.ImageResourceManager().Destroy(_depthImage);
+    _brain.ImageResourceManager().Destroy(_shadowImage);
+    _brain.device.destroy(_shadowSampler);
 }
 
 void GBuffers::CreateViewportAndScissor()
@@ -76,4 +146,17 @@ void GBuffers::CreateViewportAndScissor()
     vk::Extent2D extent { _size.x, _size.y };
 
     _scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
+}
+
+void GBuffers::TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+{
+    const Image* albedoMImage = _brain.ImageResourceManager().Access(_albedoM);
+    const Image* normalRImage = _brain.ImageResourceManager().Access(_normalR);
+    const Image* emissiveAOImage = _brain.ImageResourceManager().Access(_emissiveAO);
+    const Image* positionImage = _brain.ImageResourceManager().Access(_position);
+
+    util::TransitionImageLayout(commandBuffer, albedoMImage->image, albedoMImage->format, oldLayout, newLayout);
+    util::TransitionImageLayout(commandBuffer, normalRImage->image, normalRImage->format, oldLayout, newLayout);
+    util::TransitionImageLayout(commandBuffer, emissiveAOImage->image, emissiveAOImage->format, oldLayout, newLayout);
+    util::TransitionImageLayout(commandBuffer, positionImage->image, positionImage->format, oldLayout, newLayout);
 }

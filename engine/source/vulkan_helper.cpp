@@ -9,8 +9,8 @@ void util::VK_ASSERT(vk::Result result, std::string_view message)
     completeMessage = "[] ";
     auto resultStr = magic_enum::enum_name(result);
 
-    completeMessage.insert(0, resultStr);
-    completeMessage.insert(completeMessage.size() - 1, message);
+    completeMessage.insert(1, resultStr);
+    completeMessage.insert(completeMessage.size(), message);
 
     throw std::runtime_error(completeMessage.c_str());
 }
@@ -121,38 +121,18 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &materialHandle.descriptorSet),
         "Failed allocating material descriptor set!");
 
-    std::array<vk::DescriptorImageInfo, 6> imageInfos;
-    imageInfos[0].sampler = sampler;
-    for (size_t i = 1; i < MaterialHandle::TEXTURE_COUNT + 1; ++i)
-    {
-        const MaterialHandle& material = brain.ImageResourceManager().IsValid(textures[i - 1]) ? materialHandle : *defaultMaterial;
-
-        imageInfos[i].imageView = brain.ImageResourceManager().Access(material.textures[i - 1])->views[0];
-        imageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    }
-
     vk::DescriptorBufferInfo uniformInfo {};
     uniformInfo.offset = 0;
     uniformInfo.buffer = materialHandle.materialUniformBuffer;
     uniformInfo.range = sizeof(MaterialHandle::MaterialInfo);
 
-    std::array<vk::WriteDescriptorSet, imageInfos.size() + 1> writes;
-    for (size_t i = 0; i < imageInfos.size(); ++i)
-    {
-        writes[i].dstSet = materialHandle.descriptorSet;
-        writes[i].dstBinding = i;
-        writes[i].dstArrayElement = 0;
-        // Hacky way of keeping this process in one loop.
-        writes[i].descriptorType = i == 0 ? vk::DescriptorType::eSampler : vk::DescriptorType::eSampledImage;
-        writes[i].descriptorCount = 1;
-        writes[i].pImageInfo = &imageInfos[i];
-    }
-    writes[imageInfos.size()].dstSet = materialHandle.descriptorSet;
-    writes[imageInfos.size()].dstBinding = imageInfos.size();
-    writes[imageInfos.size()].dstArrayElement = 0;
-    writes[imageInfos.size()].descriptorType = vk::DescriptorType::eUniformBuffer;
-    writes[imageInfos.size()].descriptorCount = 1;
-    writes[imageInfos.size()].pBufferInfo = &uniformInfo;
+    std::array<vk::WriteDescriptorSet, 1> writes;
+    writes[0].dstSet = materialHandle.descriptorSet;
+    writes[0].dstBinding = 0;
+    writes[0].dstArrayElement = 0;
+    writes[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+    writes[0].descriptorCount = 1;
+    writes[0].pBufferInfo = &uniformInfo;
 
     brain.device.updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
 
@@ -180,11 +160,13 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
     createInfo.mipLodBias = 0.0f;
     createInfo.minLod = 0.0f;
     createInfo.maxLod = static_cast<float>(mipLevels);
+    //createInfo.compareEnable = VK_TRUE; // Enable depth comparison
+    //createInfo.compareOp = vk::CompareOp::eLessOrEqual;
 
     return brain.device.createSamplerUnique(createInfo);
 }
 
-void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount)
+void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount,vk::ImageAspectFlagBits imageAspect)
 {
     vk::ImageMemoryBarrier barrier {};
     barrier.oldLayout = oldLayout;
@@ -192,7 +174,7 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
     barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
     barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
     barrier.image = image;
-    barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    barrier.subresourceRange.aspectMask = imageAspect;
     barrier.subresourceRange.baseMipLevel = mipLevel;
     barrier.subresourceRange.levelCount = mipCount;
     barrier.subresourceRange.baseArrayLayer = 0;
@@ -268,6 +250,13 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
         destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    }
+    else if (oldLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+        barrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+        sourceStage = vk::PipelineStageFlagBits::eLateFragmentTests;
+        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
     }
     else
         throw std::runtime_error("Unsupported layout transition!");
