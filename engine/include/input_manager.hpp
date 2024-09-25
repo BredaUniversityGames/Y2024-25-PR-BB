@@ -1,8 +1,6 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#undef None
-
 #include <unordered_map>
 
 class InputManager
