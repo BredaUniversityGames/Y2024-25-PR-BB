@@ -101,17 +101,12 @@ void ShadowPipeline::CreatePipeline()
 
     // Vertex input (same as GeometryPipeline)
     auto bindingDesc = Vertex::GetBindingDescription();
-
-    std::array<vk::VertexInputAttributeDescription, 1> attributes {};
-    attributes[Vertex::ePOSITION].binding = 0;
-    attributes[Vertex::ePOSITION].location = 0;
-    attributes[Vertex::ePOSITION].format = vk::Format::eR32G32B32Sfloat;
-    attributes[Vertex::ePOSITION].offset = offsetof(Vertex, position);
+    auto attributes = Vertex::GetAttributeDescriptions();
 
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
     vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
     vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributes.size();
+    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 1;
     vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
