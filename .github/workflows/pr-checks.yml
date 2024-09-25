@@ -18,6 +18,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
+        
         PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }} 
         PRESET_SUFFIX: ${{ matrix.configuration }} 
 
@@ -31,15 +32,7 @@ jobs:
 
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
-        run: 'choco install ninja -y'
-
-      - name: Setup Vulkan-SDK (Windows)
-        if: runner.os == 'Windows'
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
-        with:
-            vulkan-query-version: latest
-            vulkan-components: Vulkan-Headers, Vulkan-Loader
-            vulkan-use-cache: true
+        run: 'choco install ninja -y && choco install vulkan-sdk -y'
 
         # DEBUG: Check versions
 
