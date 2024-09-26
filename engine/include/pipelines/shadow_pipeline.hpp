@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
@@ -16,7 +15,6 @@ public:
     NON_COPYABLE(ShadowPipeline);
 
 private:
-
     void CreatePipeline();
 
     const VulkanBrain& _brain;
@@ -28,5 +26,4 @@ private:
     vk::Pipeline _pipeline;
 
     const std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _frameData; // Reference to the geometry pipeline's frame data
-
 };
