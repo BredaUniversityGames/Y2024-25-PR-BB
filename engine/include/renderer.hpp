@@ -1,11 +1,4 @@
-//
-// Created by leohe on 24/09/2024.
-//
-
-#ifndef RENDERER_H
-#define RENDERER_H
-
-#endif // RENDERER_H
+#pragma once
 
 #include "swap_chain.hpp"
 #include "engine_init_info.hpp"

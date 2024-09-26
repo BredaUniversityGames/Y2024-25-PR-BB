@@ -1,21 +1,10 @@
 #pragma once
 
-#include "swap_chain.hpp"
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
-#include "camera.hpp"
 
 class Application;
-class GeometryPipeline;
-class LightingPipeline;
-class SkydomePipeline;
-class TonemappingPipeline;
-class IBLPipeline;
-class SwapChain;
-class GBuffers;
-class VulkanBrain;
-class ModelLoader;
 class Renderer;
 class Editor;
 

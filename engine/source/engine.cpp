@@ -15,7 +15,7 @@
 #include "pipelines/ibl_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
-#include "renderer.h"
+#include "renderer.hpp"
 #include "single_time_commands.hpp"
 #include "editor.hpp"
 
