@@ -3,6 +3,8 @@
 #include <filesystem>
 
 #if defined(TESTS_ENABLED)
+#undef None
+#undef Bool
 #include <gtest/gtest.h>
 #endif
 

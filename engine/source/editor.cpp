@@ -14,8 +14,8 @@
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
     : _brain(brain)
-    , _gBuffers(gBuffers)
     , _application(application)
+    , _gBuffers(gBuffers)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;

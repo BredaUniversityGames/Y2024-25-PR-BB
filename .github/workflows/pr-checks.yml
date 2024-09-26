@@ -1,0 +1,55 @@
+name: PR-Checks
+
+on:
+  pull_request
+
+jobs:
+
+  build-project:
+    name: Build and Test Project
+
+    strategy:
+      fail-fast:
+        true
+      matrix:
+        platform: [ubuntu-latest]
+        configuration: [Debug, Release]
+
+    runs-on: ${{ matrix.platform }}
+
+    env:
+
+        PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }} 
+        PRESET_SUFFIX: ${{ matrix.configuration }} 
+
+    steps:
+
+        # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4.1.7
+        with:
+            submodules: 'true'
+
+        # Install all dependencies
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: 'sudo apt install ninja-build && sudo apt-get install libvulkan-dev libsdl2-dev -y'
+
+        # DEBUG: Check versions
+
+      - name: Check Tools
+        run: clang --version && ninja --version && cmake --version
+
+        # Configure, Build and Test
+
+      - name: Configure Project
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
+
+      - name: Build Project
+        run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      - name: Test Project
+        run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/Engine -T
+          
