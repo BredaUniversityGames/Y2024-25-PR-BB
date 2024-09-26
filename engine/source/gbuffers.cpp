@@ -91,12 +91,12 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
-    vk::SamplerCreateInfo shadowSamplerInfo{};
+    vk::SamplerCreateInfo shadowSamplerInfo {};
     shadowSamplerInfo.magFilter = vk::Filter::eLinear;
     shadowSamplerInfo.minFilter = vk::Filter::eLinear;
     shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeV =vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeW =vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
     shadowSamplerInfo.anisotropyEnable = 1;
     shadowSamplerInfo.maxAnisotropy = 16;
     shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
@@ -115,7 +115,7 @@ void GBuffers::CreateShadowMapResources()
     shadowCreation
         .SetFormat(_shadowFormat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(4096 ,4096)
+        .SetSize(4096, 4096)
         .SetName("Shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
         .SetSampler(_shadowSampler);

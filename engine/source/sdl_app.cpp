@@ -75,28 +75,6 @@ bool SDLApp::IsMinimized()
     return flags & SDL_WINDOW_MINIMIZED;
 }
 
-void SDLApp::Run(std::function<bool()> updateLoop)
-{
-    bool running = true;
-    while (running)
-    {
-        _inputManager.Update();
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            _inputManager.UpdateEvent(event);
-            if (event.type == SDL_EventType::SDL_EVENT_QUIT)
-                running = false;
-        }
-
-        if (updateLoop())
-            running = false;
-        FrameMark;
-    }
-}
-
 void SDLApp::InitImGui()
 {
     ImGui_ImplSDL3_InitForVulkan(_window);
@@ -129,4 +107,21 @@ void SDLApp::SetMouseHidden(bool state)
         SDL_HideCursor();
     else
         SDL_ShowCursor();
+}
+
+void SDLApp::ProcessWindowEvents()
+{
+    _inputManager.Update();
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        ImGui_ImplSDL3_ProcessEvent(&event);
+        _inputManager.UpdateEvent(event);
+        if (event.type == SDL_EventType::SDL_EVENT_QUIT)
+        {
+            _quit = true;
+            break;
+        }
+    }
 }

@@ -27,7 +27,7 @@ public:
     ~GeometryPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
-    vk::DescriptorSetLayout& DescriptorSetLayout()  { return _descriptorSetLayout; }
+    vk::DescriptorSetLayout& DescriptorSetLayout() { return _descriptorSetLayout; }
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
 
