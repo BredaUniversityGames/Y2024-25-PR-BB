@@ -1,13 +1,16 @@
 #pragma once
 
+#include "bloom_settings.hpp"
 #include "swap_chain.hpp"
 #include "mesh.hpp"
+
+class BloomSettings;
 
 class SkydomePipeline
 {
 public:
     SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> environmentMap);
+        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
 
     ~SkydomePipeline();
 
@@ -25,10 +28,12 @@ private:
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
     ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
 
     MeshPrimitiveHandle _sphere;
     vk::UniqueSampler _sampler;
+    const BloomSettings& _bloomSettings;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

@@ -13,7 +13,6 @@ constexpr uint32_t MAX_MESHES = 2048;
 class GeometryPipeline
 {
 public:
-
     struct FrameData
     {
         vk::Buffer uniformBuffer;
@@ -36,8 +35,6 @@ public:
     NON_COPYABLE(GeometryPipeline);
 
 private:
-
-
     void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
 
     void CreateDescriptorSetLayout();
