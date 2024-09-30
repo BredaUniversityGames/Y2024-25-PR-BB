@@ -53,6 +53,8 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
+    _brain.drawStats.indexCount += 3;
+    _brain.drawStats.drawCalls++;
 
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 

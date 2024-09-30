@@ -115,6 +115,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::End();
 
+    ImGui::Begin("Renderer Stats");
+
+    ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
+    ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    
+    ImGui::End();
+
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
