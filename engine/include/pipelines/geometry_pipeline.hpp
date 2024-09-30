@@ -13,7 +13,6 @@ constexpr uint32_t MAX_MESHES = 2048;
 class GeometryPipeline
 {
 public:
-
     struct FrameData
     {
         vk::Buffer uniformBuffer;
@@ -28,6 +27,7 @@ public:
     ~GeometryPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
+    vk::DescriptorSetLayout& DescriptorSetLayout() { return _descriptorSetLayout; }
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
 
@@ -35,8 +35,6 @@ public:
     NON_COPYABLE(GeometryPipeline);
 
 private:
-
-
     void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
 
     void CreateDescriptorSetLayout();

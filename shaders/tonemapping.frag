@@ -1,10 +1,25 @@
 #version 460
+#extension GL_EXT_nonuniform_qualifier: enable
 
-layout(binding = 0) uniform sampler2D hdrTarget;
+#include "bindless.glsl"
 
-layout(location = 0) in vec2 texCoords;
+layout (push_constant) uniform PushConstants
+{
+    uint hdrTargetIndex;
+    uint bloomTargetIndex;
+} pc;
 
-layout(location = 0) out vec4 outColor;
+layout (set = 1, binding = 0) uniform BloomSettingsUBO
+{
+    float strength;
+    float gradientStrength;
+    float maxBrightnessExtraction;
+    vec3 colorWeights;
+} bloomSettings;
+
+layout (location = 0) in vec2 texCoords;
+
+layout (location = 0) out vec4 outColor;
 
 vec3 aces(vec3 x) {
     const float a = 2.51;
@@ -19,7 +34,10 @@ const float exposure = 0.4;
 
 void main()
 {
-    vec3 hdrColor = texture(hdrTarget, texCoords).rgb;
+    vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], texCoords).rgb;
+
+    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT(pc.bloomTargetIndex)], texCoords).rgb;
+    hdrColor += bloomColor * bloomSettings.strength;
 
     // Reinhardt
     //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));

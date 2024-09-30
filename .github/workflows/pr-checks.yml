@@ -1,0 +1,57 @@
+name: PR-Checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-project:
+    name: Build and Test Project
+
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [ ubuntu-latest, windows-latest ]
+        configuration: [ Debug, Release ]
+
+    runs-on: ${{ matrix.platform }}
+
+    env:
+      PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
+      PRESET_SUFFIX: ${{ matrix.configuration }}
+
+    steps:
+      # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          lfs: 'true'
+
+      # Install all dependencies
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+
+      - name: Setup Vulkan SDK
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        with:
+          vulkan-query-version: latest
+          vulkan-components: Vulkan-Headers, Vulkan-Loader
+          vulkan-use-cache: true
+
+      # Configure, Build and Test
+
+      - name: Configure Project
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
+
+      - name: Build Project
+        run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      - name: Test Project
+        run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/Engine -T
+          
