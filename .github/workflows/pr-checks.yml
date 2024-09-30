@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        platform: [ ubuntu-latest ]
+        platform: [ ubuntu-latest, windows-latest ]
         configuration: [ Debug, Release ]
 
     runs-on: ${{ matrix.platform }}
@@ -44,12 +44,7 @@ jobs:
           vulkan-components: Vulkan-Headers, Vulkan-Loader
           vulkan-use-cache: true
 
-        # DEBUG: Check versions
-
-      - name: Check Tools
-        run: clang --version && ninja --version && cmake --version
-
-        # Configure, Build and Test
+      # Configure, Build and Test
 
       - name: Configure Project
         run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} -DWARNINGS_AS_ERRORS=ON
