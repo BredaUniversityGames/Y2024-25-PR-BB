@@ -30,7 +30,7 @@ GeometryPipeline::~GeometryPipeline()
     _brain.device.destroy(_descriptorSetLayout);
 }
 
-void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene)
+void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
@@ -97,9 +97,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                if (primitive.topology != vk::PrimitiveTopology::eTriangleList)
-                    throw std::runtime_error("No support for topology other than triangle list!");
-
                 assert(primitive.material && "There should always be a material available.");
                 const MaterialHandle& material = *primitive.material;
 
@@ -113,12 +110,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0,
                     nullptr);
 
-                vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.vertexBuffer };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(primitive.indexBuffer, 0, primitive.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
 
-                commandBuffer.drawIndexed(primitive.indexCount, 1, 0, 0, 0);
+                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }
         }
     }

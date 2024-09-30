@@ -39,28 +39,12 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
 
-    uint32_t totalVertexSize {};
-    uint32_t totalIndexSize {};
     std::vector<std::string> modelPaths = {
-        "assets/models/DamagedHelmet.glb", "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+        "assets/models/DamagedHelmet.glb",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
-    for (const auto& path : modelPaths)
-    {
-        uint32_t vertexSize;
-        uint32_t indexSize;
 
-        _renderer->_modelLoader->ReadGeometrySize(path, vertexSize, indexSize);
-        totalVertexSize += vertexSize;
-        totalIndexSize += indexSize;
-    }
-
-    spdlog::info("damaged helmet\nvertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
-
-    _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-    _scene->models.emplace_back(
-        std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
-
-    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
+    _scene->models = _renderer->FrontLoadModels(modelPaths);
 
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)

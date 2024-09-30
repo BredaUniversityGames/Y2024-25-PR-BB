@@ -23,14 +23,11 @@ SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&&
 
 SkydomePipeline::~SkydomePipeline()
 {
-    vmaDestroyBuffer(_brain.vmaAllocator, _sphere.vertexBuffer, _sphere.vertexBufferAllocation);
-    vmaDestroyBuffer(_brain.vmaAllocator, _sphere.indexBuffer, _sphere.indexBufferAllocation);
-
     _brain.device.destroy(_pipelineLayout);
     _brain.device.destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
@@ -71,10 +68,10 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, &_sphere.vertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(_sphere.indexBuffer, 0, _sphere.indexType);
+    commandBuffer.bindVertexBuffers(0, 1, &batchBuffer.vertexBuffer, offsets);
+    commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
 
-    commandBuffer.drawIndexed(_sphere.indexCount, 1, 0, 0, 0);
+    commandBuffer.drawIndexed(_sphere.count, 1, _sphere.indexOffset, _sphere.vertexOffset, 0);
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);

@@ -37,10 +37,7 @@ struct Vertex
 
 struct MeshPrimitive
 {
-    vk::PrimitiveTopology topology;
-
-    vk::IndexType indexType;
-    std::vector<std::byte> indicesBytes;
+    std::vector<uint32_t> indices;
     std::vector<Vertex> vertices;
 
     std::optional<uint32_t> materialIndex;
@@ -175,22 +172,21 @@ struct BatchBuffer
     uint32_t vertexBufferSize;
     uint32_t indexBufferSize;
     vk::IndexType indexType;
+    vk::PrimitiveTopology topology;
     vk::Buffer vertexBuffer;
     vk::Buffer indexBuffer;
     VmaAllocation vertexBufferAllocation;
     VmaAllocation indexBufferAllocation;
+
+    uint32_t vertexOffset { 0 };
+    uint32_t indexOffset { 0 };
 };
 
 struct MeshPrimitiveHandle
 {
-    vk::PrimitiveTopology topology;
-    vk::IndexType indexType;
-    uint32_t indexCount;
-
-    vk::Buffer vertexBuffer;
-    vk::Buffer indexBuffer;
-    VmaAllocation vertexBufferAllocation;
-    VmaAllocation indexBufferAllocation;
+    uint32_t count;
+    uint32_t vertexOffset;
+    uint32_t indexOffset;
 
     std::shared_ptr<MaterialHandle> material;
 };

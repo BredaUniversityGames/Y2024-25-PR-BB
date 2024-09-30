@@ -20,7 +20,7 @@ ShadowPipeline::~ShadowPipeline()
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const SceneDescription& scene)
+    const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Shadow())->view;
@@ -55,9 +55,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                if (primitive.topology != vk::PrimitiveTopology::eTriangleList)
-                    throw std::runtime_error("Unsupported topology!");
-
                 uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
@@ -65,12 +62,12 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
                     &_camera.descriptorSets[currentFrame], 0, nullptr);
 
-                vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.vertexBuffer };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(primitive.indexBuffer, 0, primitive.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
 
-                commandBuffer.drawIndexed(primitive.indexCount, 1, 0, 0, 0);
+                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }
         }
     }

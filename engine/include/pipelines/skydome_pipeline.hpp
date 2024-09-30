@@ -14,7 +14,7 @@ public:
 
     ~SkydomePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer);
 
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);

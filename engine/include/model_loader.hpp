@@ -18,9 +18,9 @@ public:
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    ModelHandle Load(std::string_view path);
+    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer);
 
-    MeshPrimitiveHandle LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer,
+    MeshPrimitiveHandle LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         std::shared_ptr<MaterialHandle> material = nullptr);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
@@ -54,7 +54,7 @@ private:
         glm::vec3 normal);
 
     ModelHandle LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
-        const std::vector<Material>& materials, const fastgltf::Asset& gltf);
+        const std::vector<Material>& materials, BatchBuffer& batchBuffer, const fastgltf::Asset& gltf);
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
         glm::mat4 matrix);

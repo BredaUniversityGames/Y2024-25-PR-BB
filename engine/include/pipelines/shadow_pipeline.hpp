@@ -9,7 +9,7 @@ public:
     ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline);
     ~ShadowPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
 
     NON_MOVABLE(ShadowPipeline);
     NON_COPYABLE(ShadowPipeline);

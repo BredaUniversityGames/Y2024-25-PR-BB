@@ -38,7 +38,7 @@ ModelLoader::~ModelLoader()
     _brain.ImageResourceManager().Destroy(_defaultMaterial->textures[0]);
 }
 
-ModelHandle ModelLoader::Load(std::string_view path)
+ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -75,7 +75,7 @@ ModelHandle ModelLoader::Load(std::string_view path)
 
     spdlog::info("Loaded model: {}", path);
 
-    return LoadModel(meshes, textures, materials, gltf);
+    return LoadModel(meshes, textures, materials, batchBuffer, gltf);
 }
 
 Mesh ModelLoader::ProcessMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& gltf)
@@ -92,7 +92,7 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
 {
     MeshPrimitive primitive {};
 
-    primitive.topology = MapGltfTopology(gltfPrimitive.type);
+    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
 
@@ -158,15 +158,13 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
         auto& buffer = gltf.buffers[bufferView.bufferIndex];
         auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-        uint32_t indexTypeSize = sizeof(uint32_t);
-        primitive.indexType = vk::IndexType::eUint32;
-        primitive.indicesBytes = std::vector<std::byte>(accessor.count * indexTypeSize);
+        primitive.indices = std::vector<uint32_t>(accessor.count);
 
         const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
 
         if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            std::memcpy(primitive.indicesBytes.data(), attributeBufferStart, primitive.indicesBytes.size());
+            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size());
         }
         else
         {
@@ -174,7 +172,7 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
             for (size_t i = 0; i < accessor.count; ++i)
             {
                 const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
-                std::byte* indexPtr = primitive.indicesBytes.data() + i * indexTypeSize;
+                uint32_t* indexPtr = primitive.indices.data() + i;
                 std::memcpy(indexPtr, element, gltfIndexTypeSize);
             }
         }
@@ -331,17 +329,17 @@ uint32_t ModelLoader::MapTextureIndexToImageIndex(uint32_t textureIndex, const f
 
 void ModelLoader::CalculateTangents(MeshPrimitive& primitive)
 {
-    uint32_t indexElementSize = (primitive.indexType == vk::IndexType::eUint16 ? 2 : 4);
-    uint32_t triangleCount = primitive.indicesBytes.size() > 0 ? primitive.indicesBytes.size() / indexElementSize / 3 : primitive.vertices.size() / 3;
+    uint32_t triangleCount = primitive.indices.size() > 0 ? primitive.indices.size() / 3 : primitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
     {
         std::array<Vertex*, 3> triangle = {};
-        if (primitive.indicesBytes.size() > 0)
+        if (primitive.indices.size() > 0)
         {
             std::array<uint32_t, 3> indices = {};
-            std::memcpy(&indices[0], &primitive.indicesBytes[(i * 3 + 0) * indexElementSize], indexElementSize);
-            std::memcpy(&indices[1], &primitive.indicesBytes[(i * 3 + 1) * indexElementSize], indexElementSize);
-            std::memcpy(&indices[2], &primitive.indicesBytes[(i * 3 + 2) * indexElementSize], indexElementSize);
+
+            indices[0] = primitive.indices[(i * 3 + 0)];
+            indices[1] = primitive.indices[(i * 3 + 1)];
+            indices[2] = primitive.indices[(i * 3 + 2)];
 
             triangle = {
                 &primitive.vertices[indices[0]],
@@ -408,7 +406,7 @@ ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec
 
 ModelHandle
 ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
-    const std::vector<Material>& materials,
+    const std::vector<Material>& materials, BatchBuffer& batchBuffer,
     const fastgltf::Asset& gltf)
 {
     SingleTimeCommands commandBuffer { _brain };
@@ -468,7 +466,7 @@ ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageC
         MeshHandle meshHandle {};
 
         for (const auto& primitive : mesh.primitives)
-            meshHandle.primitives.emplace_back(LoadPrimitive(primitive, commandBuffer,
+            meshHandle.primitives.emplace_back(LoadPrimitive(primitive, commandBuffer, batchBuffer,
                 primitive.materialIndex.has_value()
                     ? modelHandle.materials[primitive.materialIndex.value()]
                     : nullptr));
@@ -485,21 +483,23 @@ ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageC
 }
 
 MeshPrimitiveHandle
-ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer,
+ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
     std::shared_ptr<MaterialHandle> material)
 {
+    assert((batchBuffer.vertexOffset + primitive.vertices.size()) * sizeof(Vertex) < batchBuffer.vertexBufferSize);
+    assert((batchBuffer.indexOffset + primitive.indices.size()) * sizeof(uint32_t) < batchBuffer.indexBufferSize);
+
     MeshPrimitiveHandle primitiveHandle {};
     primitiveHandle.material = material == nullptr ? _defaultMaterial : material;
-    primitiveHandle.topology = primitive.topology;
-    primitiveHandle.indexType = primitive.indexType;
-    primitiveHandle.indexCount = primitive.indicesBytes.size() / (primitiveHandle.indexType == vk::IndexType::eUint16 ? 2 : 4);
+    primitiveHandle.count = primitive.indices.size();
+    primitiveHandle.vertexOffset = batchBuffer.vertexOffset;
+    primitiveHandle.indexOffset = batchBuffer.indexOffset;
 
-    commandBuffer.CreateLocalBuffer(primitive.vertices, primitiveHandle.vertexBuffer,
-        primitiveHandle.vertexBufferAllocation,
-        vk::BufferUsageFlagBits::eVertexBuffer, "Vertex buffer");
-    commandBuffer.CreateLocalBuffer(primitive.indicesBytes, primitiveHandle.indexBuffer,
-        primitiveHandle.indexBufferAllocation,
-        vk::BufferUsageFlagBits::eIndexBuffer, "Index buffer");
+    commandBuffer.CopyIntoLocalBuffer(primitive.vertices, batchBuffer.vertexOffset, batchBuffer.vertexBuffer);
+    commandBuffer.CopyIntoLocalBuffer(primitive.indices, batchBuffer.indexOffset, batchBuffer.indexBuffer);
+
+    batchBuffer.vertexOffset += primitive.vertices.size();
+    batchBuffer.indexOffset += primitive.indices.size();
 
     return primitiveHandle;
 }
