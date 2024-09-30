@@ -20,18 +20,19 @@ public:
     NON_MOVABLE(Application);
 
     virtual ~Application();
-    virtual void Run(std::function<bool()> updateLoop) = 0;
     virtual void InitImGui() = 0;
     virtual void NewImGuiFrame() = 0;
     virtual void ShutdownImGui() = 0;
+    virtual void ProcessWindowEvents() = 0;
     virtual const InputManager& GetInputManager() const = 0;
     virtual void SetMouseHidden(bool state) = 0;
+    virtual bool GetMouseHidden() = 0;
 
 protected:
     uint32_t _width, _height;
     std::string_view _windowTitle;
     bool _isFullscreen;
-
+    bool _cursorHidden = false;
     bool _quit = false;
     bool _paused = false;
     float _timer = 0.0f;

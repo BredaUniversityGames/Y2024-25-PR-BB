@@ -2,24 +2,25 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "imgui_impl_vulkan.h"
+#include "bloom_settings.hpp"
 
-TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, const SwapChain& _swapChain)
+TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)
+    , _bloomTarget(bloomTarget)
+    , _bloomSettings(bloomSettings)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    CreateDescriptorSetLayout();
-    CreateDescriptorSets();
     CreatePipeline();
+
+    _pushConstants.hdrTargetIndex = hdrTarget.index;
+    _pushConstants.bloomTargetIndex = bloomTarget.index;
 }
 
 TonemappingPipeline::~TonemappingPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
-
-    _brain.device.destroy(_descriptorSetLayout);
 }
 
 void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
@@ -45,7 +46,10 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -58,16 +62,24 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
 void TonemappingPipeline::CreatePipeline()
 {
+    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _brain.bindlessLayout, _bloomSettings.GetDescriptorSetLayout() };
+
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &_descriptorSetLayout;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
+    pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
+
+    vk::PushConstantRange pcRange {};
+    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    pcRange.size = sizeof(_pushConstants);
+    pcRange.offset = 0;
+
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/tonemapping-v.spv");
+    auto vertByteCode = shader::ReadFile("shaders/fullscreen-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/tonemapping-f.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
@@ -167,55 +179,4 @@ void TonemappingPipeline::CreatePipeline()
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
-}
-
-void TonemappingPipeline::CreateDescriptorSetLayout()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating tonemapping descriptor set layout!");
-}
-
-void TonemappingPipeline::CreateDescriptorSets()
-{
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _descriptorSets.data()),
-        "Failed allocating descriptor sets!");
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        vk::DescriptorImageInfo imageInfo {};
-        imageInfo.sampler = *_sampler;
-        imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
-
-        std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
-        descriptorWrites[0].dstSet = _descriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pImageInfo = &imageInfo;
-
-        _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
-    }
 }

@@ -4,10 +4,8 @@
 #include "vulkan_validation.hpp"
 #include <map>
 
-
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     : _imageResourceManager(*this)
-
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic { instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
@@ -36,16 +34,12 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
 
     _sampler = util::CreateSampler(*this, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
-
 
     CreateBindlessDescriptorSet();
 
     std::vector<std::byte> data(2 * 2 * 4 * sizeof(std::byte));
-
     ImageCreation creation {};
-
     creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
 
     _fallbackImage = _imageResourceManager.Create(creation);
@@ -73,7 +67,6 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-
 void VulkanBrain::UpdateBindlessSet() const
 {
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
@@ -95,6 +88,9 @@ void VulkanBrain::UpdateBindlessSet() const
 
         if (image->type == ImageType::eCubeMap)
             dstBinding = BindlessBinding::eCubemap;
+
+        if (image->type == ImageType::eShadowMap)
+            dstBinding = BindlessBinding::eShadowmap;
 
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
@@ -184,7 +180,6 @@ uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRa
     uint32_t score { 0 };
 
     // Failed if geometry shader is not supported.
-
     if (!deviceFeatures.features.geometryShader)
         return 0;
 
@@ -198,10 +193,6 @@ uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRa
 
     // Check for bindless rendering support.
     if (!indexingFeatures.descriptorBindingPartiallyBound || !indexingFeatures.runtimeDescriptorArray)
-        return 0;
-
-    // Check for bindless rendering support.
-    if(!indexingFeatures.descriptorBindingPartiallyBound || !indexingFeatures.runtimeDescriptorArray)
         return 0;
 
     // Check support for swap chain.
@@ -276,7 +267,6 @@ void VulkanBrain::CreateDevice()
 {
     queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(physicalDevice, surface);
 
-
     vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
     vk::PhysicalDeviceFeatures2 deviceFeatures;
     deviceFeatures.pNext = &indexingFeatures;
@@ -298,9 +288,7 @@ void VulkanBrain::CreateDevice()
     deviceFeatures.pNext = &dynamicRenderingFeaturesKhr;
     dynamicRenderingFeaturesKhr.pNext = &indexingFeatures;
 
-
     vk::DeviceCreateInfo createInfo {};
-
     createInfo.pNext = &deviceFeatures;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -361,8 +349,8 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-
-    std::array<vk::DescriptorPoolSize, 3> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
@@ -375,7 +363,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings;
+    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
@@ -394,12 +382,19 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
     cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
+    vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
+    shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
+    shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
+    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo {};
     layoutCreateInfo.bindingCount = bindings.size();
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
     std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound
@@ -415,7 +410,6 @@ void VulkanBrain::CreateBindlessDescriptorSet()
         "Failed creating bindless descriptor set layout.");
 
     vk::DescriptorSetAllocateInfo allocInfo {};
-
     allocInfo.descriptorPool = bindlessPool;
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &bindlessLayout;

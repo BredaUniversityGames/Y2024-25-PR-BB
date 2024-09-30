@@ -25,18 +25,16 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "engine/source/*.cpp")
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 
 # EXECUTABLE TARGET
-add_executable(Engine ${sources} ${headers}
-        engine/UserInterfaceSystem.cpp
-        engine/include/UserInterfaceSystem.h
-        engine/source/ui_animation.cpp
-        engine/source/ui_animation.h
-        engine/include/pipelines/generic_pipeline.cpp
-        engine/include/pipelines/generic_pipeline.h
-        engine/fonts.cpp
-        engine/include/fonts.h
-)
 
-target_compile_options(Engine PRIVATE "-Wall")
+add_executable(Engine ${sources} ${headers})
+target_compile_options(Engine PRIVATE -Wall)
+
+
+option(WARNINGS_AS_ERRORS OFF)
+
+if (WARNINGS_AS_ERRORS)
+    target_compile_options(Engine PRIVATE -Werror)
+endif ()
 
 option(ENABLE_PCH "Compile with precompiled header" ON)
 

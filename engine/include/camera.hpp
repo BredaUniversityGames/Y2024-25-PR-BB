@@ -17,6 +17,9 @@ struct CameraUBO
     glm::mat4 view;
     glm::mat4 proj;
 
+    glm::mat4 lightVP;
+    glm::mat4 depthBiasMVP;
+    glm::vec4 lightData; // we can store light direction here
     alignas(16)
         glm::vec3 cameraPosition;
 };

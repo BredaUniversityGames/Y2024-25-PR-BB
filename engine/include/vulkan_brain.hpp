@@ -33,6 +33,7 @@ enum class BindlessBinding
     eColor = 0,
     eDepth,
     eCubemap,
+    eShadowmap
 };
 
 

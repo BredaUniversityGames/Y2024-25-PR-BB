@@ -7,7 +7,8 @@ enum class ImageType
 {
     e2D,
     e2DArray,
-    eCubeMap
+    eCubeMap,
+    eShadowMap
 };
 
 struct ImageCreation

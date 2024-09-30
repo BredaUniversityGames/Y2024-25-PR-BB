@@ -17,21 +17,14 @@ set(implot_files ${implot_sources} ${implot_headers})
 add_library(ImGui ${imgui_files} ${implot_files})
 
 target_include_directories(ImGui
-        INTERFACE freetype/include
+
+        PRIVATE freetype/include
         PRIVATE Vulkan-Headers/include
         PRIVATE SDL/include
         PUBLIC imgui
         PUBLIC imgui/backends
         PUBLIC implot
 )
-
-# SDL
-
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(SDL)
-target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
-# Disabling warnings from SDL3 compilation
 
 # Magic Enum
 
@@ -42,15 +35,18 @@ add_subdirectory(magic_enum)
 add_subdirectory(spdlog)
 
 # Vulkan
+find_package(Vulkan)
 
-find_package(Vulkan REQUIRED)
+if (NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Could not find Vulkan library!")
+else ()
+    message(STATUS ${Vulkan_LIBRARY})
+endif ()
+
+# Vulkan Memory allocator
+
 add_subdirectory(VulkanMemoryAllocator)
 
-if(NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Could not find Vulkan library!")
-else()
-    message(STATUS ${Vulkan_LIBRARY})
-endif()
 
 # FastGLTF
 
@@ -62,27 +58,35 @@ add_subdirectory(freetype)
 # Tracy Profiler
 
 
+# SDL
+
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+add_subdirectory(SDL)
+target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
+# Disabling warnings from SDL3 compilation
+
 # Main External Library
 
 add_library(External INTERFACE)
 
-if(WIN32)
+
+if (WIN32)
     target_compile_options(External INTERFACE -DVK_USE_PLATFORM_WIN32_KHR)
-elseif(LINUX)
+elseif (LINUX)
     target_compile_options(External INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
-endif()
+endif ()
 
 target_link_libraries(External
-
-   INTERFACE freetype
-    INTERFACE ImGui
-    INTERFACE SDL3::SDL3-static
-    INTERFACE magic_enum::magic_enum
-    INTERFACE spdlog::spdlog
-    INTERFACE VulkanMemoryAllocator
-    INTERFACE fastgltf::fastgltf
-    INTERFACE ${Vulkan_LIBRARY}
-
+        INTERFACE freetype
+        INTERFACE ImGui
+        INTERFACE SDL3::SDL3-static
+        INTERFACE magic_enum::magic_enum
+        INTERFACE spdlog::spdlog
+        INTERFACE VulkanMemoryAllocator
+        INTERFACE fastgltf::fastgltf
+        INTERFACE TracyClient
+        INTERFACE ${Vulkan_LIBRARY}
 )
 
 target_include_directories(External
