@@ -65,6 +65,12 @@ public:
         return _imageResourceManager;
     }
 
+    struct DrawStats
+    {
+        uint32_t indexCount;
+        uint32_t drawCalls;
+    } mutable drawStats;
+
     void UpdateBindlessSet() const;
 
 private:

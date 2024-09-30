@@ -71,6 +71,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
                 commandBuffer.bindIndexBuffer(primitive.indexBuffer, 0, primitive.indexType);
 
                 commandBuffer.drawIndexed(primitive.indexCount, 1, 0, 0, 0);
+                _brain.drawStats.indexCount += primitive.indexCount;
+                _brain.drawStats.drawCalls++;
             }
         }
     }

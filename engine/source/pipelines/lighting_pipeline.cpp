@@ -73,6 +73,8 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
+    _brain.drawStats.indexCount += 3;
+    _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
