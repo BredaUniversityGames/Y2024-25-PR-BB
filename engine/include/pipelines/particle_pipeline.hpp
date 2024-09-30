@@ -5,15 +5,25 @@
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const VulkanBrain& brain, const SwapChain& swapChain, const CameraStructure& camera);
+    ParticlePipeline(const VulkanBrain& brain, const CameraStructure& camera);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
 
 private:
+    struct Particle
+    {
+        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+        float mass = 0.0f;
+        glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
+        float maxLife = 5.0f;
+        float life = 5.0f;
+        glm::vec3 padding = { 0.0f, 0.0f, 0.0f };
+    };
+
     struct UniformBuffer
     {
         vk::Buffer buffer;
@@ -21,8 +31,14 @@ private:
         void* bufferMapped;
     };
 
+    struct PushConstants
+    {
+        float deltaTime;
+    } _pushConstants;
+
+    const uint32_t MAX_PARTICLES = 1024; // temporary value
+
     const VulkanBrain& _brain;
-    const SwapChain& _swapChain;
     const CameraStructure& _camera;
 
     // Particle buffers
@@ -30,12 +46,17 @@ private:
     UniformBuffer _aliveList[2];
     UniformBuffer _deadList;
     UniformBuffer _counterBuffer;
-    // TODO: add more buffers (e.g. indirect buffers, constant, etc.)
 
+    std::vector<std::string> _particlePaths;
+    std::vector<vk::Pipeline> _pipelines;
+
+    vk::DescriptorSetLayout _descriptorSetLayout;
+    vk::DescriptorSet _descriptorSet;
     vk::PipelineLayout _pipelineLayout;
-    vk::Pipeline _pipeline;
 
     void CreatePipeline();
+    void CreateDescriptorSetLayout();
+    void CreateDescriptorSets();
     void CreateBuffers();
     void UpdateBuffers(); // might not be needed, but is here for now
 };

@@ -12,6 +12,7 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "single_time_commands.hpp"
@@ -57,6 +58,7 @@ Engine::Engine(const InitInfo &initInfo, std::shared_ptr<Application> applicatio
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
                                                            _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap());
+    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, _cameraStructure);
 
     SingleTimeCommands commandBufferIBL{ _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -336,6 +338,8 @@ void Engine::RecordCommandBuffer(const vk::CommandBuffer &commandBuffer, uint32_
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+
+    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, 1.0f); // TODO: get deltaTime
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
                                 vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);

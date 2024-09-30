@@ -1,14 +1,14 @@
 struct Particle
 {
-    float3 position;
+    vec3 position;
     float mass;
-    float3 force;
-    float rotationalVelocity;
-    float3 velocity;
+    vec3 velocity;
     float maxLife;
-    float2 sizeBeginEnd;
     float life;
-    uint color;
+    //vec3 force;
+    //float rotationalVelocity;
+    //vec2 sizeBeginEnd;
+    //uint color;
 };
 
 struct ParticleCounters
@@ -21,9 +21,31 @@ struct ParticleCounters
     //uint cellAllocator;
 };
 
-const uint MAX_PARTICLES = 1024; // temporary value
 const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT = 0;
 const uint PARTICLECOUNTER_OFFSET_DEADCOUNT = PARTICLECOUNTER_OFFSET_ALIVECOUNT + 4;
 const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION = PARTICLECOUNTER_OFFSET_DEADCOUNT + 4;
 
-layout(set = 2, binding = 0) buffer
+layout(set = 1, binding = 0) buffer ParticleSSBO
+{
+    Particle particles[ ];
+};
+
+layout(set = 1, binding = 1) buffer AliveNEWSSBO
+{
+    uint anIndex[ ];
+};
+
+layout(set = 1, binding = 2) buffer AliveCURRENTSSBO
+{
+    uint acIndex[ ];
+};
+
+layout(set = 1, binding = 3) buffer DeadSSBO
+{
+    uint dIndex[ ];
+};
+
+layout(set = 1, binding = 4) buffer CounterSSBO
+{
+    uint count[3];
+};

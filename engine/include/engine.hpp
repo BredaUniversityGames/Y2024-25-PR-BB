@@ -13,6 +13,7 @@ class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
 class IBLPipeline;
+class ParticlePipeline;
 class SwapChain;
 class GBuffers;
 class VulkanBrain;
@@ -42,6 +43,7 @@ private:
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
+    std::unique_ptr<ParticlePipeline> _particlePipeline;
     std::unique_ptr<ModelLoader> _modelLoader;
 
     std::unique_ptr<Editor> _editor;
