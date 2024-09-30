@@ -10,21 +10,15 @@
 #include "../input_manager.hpp"
 #include "../../../external/entt-master/src/entt/entt.hpp"
 #include "../pipelines/generic_pipeline.h"
+#include <expected>
 
-class UserInterfaceContext;
+class UserInterfaceRenderContext;
 class GenericPipeline;
 struct CameraUBO;
 struct Camera;
 class SwapChain;
 
 class UIPipeLine;
-
-struct ButtonDrawInfo
-{
-    glm::vec2 position;
-    glm::vec2 size;
-    ResourceHandle<Image> image;
-};
 
 class UIRenderSystemBase
 {
@@ -83,16 +77,16 @@ struct UIElement
      *
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
-    [[nodiscard]] glm::vec2 GetRelativeLocation() const { return RelativeLocation; }
+    [[nodiscard]] const glm::vec2& GetRelativeLocation() const { return RelativeLocation; }
 
     /**
      * submits drawinfo to the appropriate rendering system inside the current UserInterfaceContext.
      */
-    virtual void SubmitDrawInfo(UserInterfaceContext&)
+    virtual void SubmitDrawInfo(UserInterfaceRenderContext&) const
     {
     }
 
-    virtual void Update()
+    virtual void Update(const InputManager&)
     {
     }
 
@@ -100,7 +94,7 @@ struct UIElement
     bool m_Visible = true;
 
     virtual void UpdateChildAbsoluteLocations() = 0;
-    glm::vec2 Size {};
+    glm::vec2 Scale {};
 
 protected:
     glm::vec2 AbsoluteLocation {};
@@ -111,7 +105,7 @@ protected:
 
 void UpdateUI(const InputManager& input, UIElement* element);
 
-void RenderUI(UIElement* element, const vk::CommandBuffer&, const VulkanBrain&, UserInterfaceContext&, ResourceHandle<Image>& renderTarget, const glm::mat4& projectionMatrix);
+void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk::CommandBuffer&, const VulkanBrain&, ResourceHandle<Image>& renderTarget, const glm::mat4& projectionMatrix);
 
 /**
  * holds free floating elements. elements can be anchored to one of the 4 corners of the canvas. anchors help preserve
@@ -127,7 +121,7 @@ struct Canvas : public UIElement
  *  logic on the passed registry. By default, this object is contained in the Engine class and persists throughout
  *  the program.
  */
-class UserInterfaceContext
+class UserInterfaceRenderContext
 {
 public:
     /**
@@ -144,23 +138,29 @@ public:
     /**
      *
      * @tparam T render system type, must be derived from UIRenderSystemBase.
-     * @return reference to the newly created system.
+     * @return If operation was successful.
      */
     template <typename T>
-    T& AddRenderingSystem(const UIPipeLine& pipe_line)
+    bool AddRenderingSystem(const UIPipeLine& pipe_line)
     {
         static_assert(std::is_base_of<UIRenderSystemBase, T>::value,
             "Subsystem must be derived from UIRenderSystemBase");
 
-        auto result = m_UIRenderSystems.emplace(std::type_index(typeid(T)), std::make_unique<T>(pipe_line));
+        if (!m_UIRenderSystems.contains(typeid(T))) [[likely]]
+        {
+            auto result = m_UIRenderSystems.emplace(typeid(T), std::make_unique<T>(pipe_line));
+            return true;
+        }
 
-        return *(static_cast<T*>(result.first->second.get()));
+        // todo: only log when logging is enabled.
+        spdlog::warn("UIRenderSystem {} already exists, cannot add again", typeid(T).name());
+        return false;
     }
 
     template <typename T>
     T& GetRenderingSystem()
     {
-        return *(static_cast<T*>(m_UIRenderSystems.at(std::type_index(typeid(T))).get()));
+        return (static_cast<T*>(m_UIRenderSystems.at(std::type_index(typeid(T))).get()));
     }
 
     std::unordered_map<std::type_index, std::unique_ptr<UIRenderSystemBase>> m_UIRenderSystems;
