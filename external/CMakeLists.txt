@@ -57,7 +57,9 @@ add_subdirectory(freetype)
 
 # Tracy Profiler
 
-
+set(TRACY_ENABLE "" ON)
+set(TRACY_ON_DEMAND "" ON)
+add_subdirectory(tracy)
 # SDL
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
