@@ -4,6 +4,7 @@
 class VulkanBrain;
 class Application;
 class PerformanceTracker;
+class BloomSettings;
 struct SceneDescription;
 class GBuffers;
 class Editor
@@ -15,11 +16,11 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, SceneDescription& scene);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
 
 private:
     const VulkanBrain& _brain;
+    Application& _application;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
     GBuffers& _gBuffers;
-    Application& _application;
 };
