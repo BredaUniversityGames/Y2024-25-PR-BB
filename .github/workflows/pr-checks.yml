@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-project:
+    name: Build and Test Project
 
     strategy:
       fail-fast: true
