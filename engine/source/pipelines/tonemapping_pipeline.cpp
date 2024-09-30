@@ -11,18 +11,16 @@ TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandl
     , _bloomTarget(bloomTarget)
     , _bloomSettings(bloomSettings)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    CreateDescriptorSetLayout();
-    CreateDescriptorSets();
     CreatePipeline();
+
+    _pushConstants.hdrTargetIndex = hdrTarget.index;
+    _pushConstants.bloomTargetIndex = bloomTarget.index;
 }
 
 TonemappingPipeline::~TonemappingPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
-
-    _brain.device.destroy(_descriptorSetLayout);
 }
 
 void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
@@ -48,7 +46,9 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     // Fullscreen triangle.
@@ -62,13 +62,19 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
 void TonemappingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 2> descriptorLayouts = { _brain.bindlessLayout, _bloomSettings.GetDescriptorSetLayout() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+
+    vk::PushConstantRange pcRange {};
+    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    pcRange.size = sizeof(_pushConstants);
+    pcRange.offset = 0;
+
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
@@ -173,75 +179,4 @@ void TonemappingPipeline::CreatePipeline()
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
-}
-
-void TonemappingPipeline::CreateDescriptorSetLayout()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 2> bindings {};
-
-    vk::DescriptorSetLayoutBinding& hdrSamplerLayoutBinding { bindings[0] };
-    hdrSamplerLayoutBinding.binding = 0;
-    hdrSamplerLayoutBinding.descriptorCount = 1;
-    hdrSamplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    hdrSamplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    hdrSamplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutBinding& bloomSamplerLayoutBinding { bindings[1] };
-    bloomSamplerLayoutBinding.binding = 1;
-    bloomSamplerLayoutBinding.descriptorCount = 1;
-    bloomSamplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    bloomSamplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    bloomSamplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating tonemapping descriptor set layout!");
-}
-
-void TonemappingPipeline::CreateDescriptorSets()
-{
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _descriptorSets.data()),
-        "Failed allocating descriptor sets!");
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        vk::DescriptorImageInfo hdrImageInfo {};
-        hdrImageInfo.sampler = *_sampler;
-        hdrImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        hdrImageInfo.imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
-
-        vk::DescriptorImageInfo bloomImageInfo {};
-        bloomImageInfo.sampler = *_sampler;
-        bloomImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        bloomImageInfo.imageView = _brain.ImageResourceManager().Access(_bloomTarget)->views[0];
-
-        std::array<vk::WriteDescriptorSet, 2> descriptorWrites {};
-
-        descriptorWrites[0].dstSet = _descriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pImageInfo = &hdrImageInfo;
-
-        descriptorWrites[1].dstSet = _descriptorSets[i];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &bloomImageInfo;
-
-        _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
-    }
 }
