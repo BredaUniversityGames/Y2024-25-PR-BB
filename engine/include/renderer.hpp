@@ -14,6 +14,7 @@ class TonemappingPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
+class ParticlePipeline;
 class SwapChain;
 class GBuffers;
 class VulkanBrain;
@@ -47,6 +48,7 @@ private:
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
+    std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
     ResourceHandle<Image> _environmentMap;

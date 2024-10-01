@@ -8,8 +8,8 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructu
     , _camera(camera)
 {
     CreateDescriptorSetLayout();
-    CreateDescriptorSets();
     CreateBuffers();
+    CreateDescriptorSets();
     CreatePipeline();
 }
 
@@ -43,8 +43,16 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, 1,
-                                    &_descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
+                                    &_particleBuffer.descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
+                                    &_aliveList[0].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
+                                    &_aliveList[1].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
+                                    &_deadList.descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
+                                    &_counterBuffer.descriptorSet, 0, nullptr);
 
     commandBuffer.dispatch(256, 1, 1);
 
@@ -121,8 +129,89 @@ void ParticlePipeline::CreateDescriptorSets()
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &_descriptorSetLayout;
 
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_descriptorSet),
+    std::array<vk::DescriptorSet, 5> descriptorSets;
+
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
                     "Failed allocating particle descriptor sets!");
+
+    // TODO: clean this up; perhaps put all buffers in an array, but that might be unreadable
+    _particleBuffer.descriptorSet = descriptorSets[0];
+    _aliveList[0].descriptorSet = descriptorSets[1];
+    _aliveList[1].descriptorSet = descriptorSets[2];
+    _deadList.descriptorSet = descriptorSets[3];
+    _counterBuffer.descriptorSet = descriptorSets[4];
+    UpdateParticleDescriptorSets();
+}
+
+void ParticlePipeline::UpdateParticleDescriptorSets()
+{
+    std::array<vk::WriteDescriptorSet, 5> descriptorWrites {};
+
+    // Particle SSBO
+    vk::DescriptorBufferInfo particleBufferInfo {};
+    particleBufferInfo.buffer = _particleBuffer.buffer;
+    particleBufferInfo.offset = 0;
+    particleBufferInfo.range = sizeof(Particle) * MAX_PARTICLES;
+    vk::WriteDescriptorSet& particleBufferWrite { descriptorWrites[0] };
+    particleBufferWrite.dstSet = _particleBuffer.descriptorSet;
+    particleBufferWrite.dstBinding = 0;
+    particleBufferWrite.dstArrayElement = 0;
+    particleBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    particleBufferWrite.descriptorCount = 1;
+    particleBufferWrite.pBufferInfo = &particleBufferInfo;
+
+    // Alive list SSBOs
+    vk::DescriptorBufferInfo aliveBufferInfo {};
+    aliveBufferInfo.buffer = _particleBuffer.buffer;
+    aliveBufferInfo.offset = 0;
+    aliveBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLES;
+    vk::WriteDescriptorSet& aliveBufferWrite { descriptorWrites[1] };
+    aliveBufferWrite.dstSet = _aliveList[0].descriptorSet;
+    aliveBufferWrite.dstBinding = 1;
+    aliveBufferWrite.dstArrayElement = 0;
+    aliveBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    aliveBufferWrite.descriptorCount = 1;
+    aliveBufferWrite.pBufferInfo = &aliveBufferInfo;
+
+    vk::DescriptorBufferInfo aliveNEWBufferInfo {};
+    aliveNEWBufferInfo.buffer = _particleBuffer.buffer;
+    aliveNEWBufferInfo.offset = 0;
+    aliveNEWBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLES;
+    vk::WriteDescriptorSet& aliveNEWBufferWrite { descriptorWrites[2] };
+    aliveNEWBufferWrite.dstSet = _aliveList[1].descriptorSet;
+    aliveNEWBufferWrite.dstBinding = 2;
+    aliveNEWBufferWrite.dstArrayElement = 0;
+    aliveNEWBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    aliveNEWBufferWrite.descriptorCount = 1;
+    aliveNEWBufferWrite.pBufferInfo = &aliveNEWBufferInfo;
+
+    // Dead list SSBO
+    vk::DescriptorBufferInfo deadBufferInfo {};
+    deadBufferInfo.buffer = _particleBuffer.buffer;
+    deadBufferInfo.offset = 0;
+    deadBufferInfo.range = sizeof(Particle) * MAX_PARTICLES;
+    vk::WriteDescriptorSet& deadBufferWrite { descriptorWrites[3] };
+    deadBufferWrite.dstSet = _particleBuffer.descriptorSet;
+    deadBufferWrite.dstBinding = 3;
+    deadBufferWrite.dstArrayElement = 0;
+    deadBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    deadBufferWrite.descriptorCount = 1;
+    deadBufferWrite.pBufferInfo = &deadBufferInfo;
+
+    // Particle SSBO
+    vk::DescriptorBufferInfo counterBufferInfo {};
+    counterBufferInfo.buffer = _particleBuffer.buffer;
+    counterBufferInfo.offset = 0;
+    counterBufferInfo.range = sizeof(Particle) * MAX_PARTICLES;
+    vk::WriteDescriptorSet& counterBufferWrite { descriptorWrites[4] };
+    counterBufferWrite.dstSet = _particleBuffer.descriptorSet;
+    counterBufferWrite.dstBinding = 4;
+    counterBufferWrite.dstArrayElement = 0;
+    counterBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    counterBufferWrite.descriptorCount = 1;
+    counterBufferWrite.pBufferInfo = &counterBufferInfo;
+
+    _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
 

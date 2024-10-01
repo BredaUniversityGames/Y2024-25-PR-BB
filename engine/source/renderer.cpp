@@ -16,6 +16,7 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "engine.hpp"
@@ -52,6 +53,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, _cameraStructure);
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
@@ -148,6 +150,9 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+
+    // TODO: pass in delta time
+    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, 1.0f);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);

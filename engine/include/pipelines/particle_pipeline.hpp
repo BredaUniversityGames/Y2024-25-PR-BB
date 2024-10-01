@@ -29,6 +29,7 @@ private:
         vk::Buffer buffer;
         VmaAllocation bufferAllocation;
         void* bufferMapped;
+        vk::DescriptorSet descriptorSet;
     };
 
     struct PushConstants
@@ -51,7 +52,6 @@ private:
     std::vector<vk::Pipeline> _pipelines;
 
     vk::DescriptorSetLayout _descriptorSetLayout;
-    vk::DescriptorSet _descriptorSet;
     vk::PipelineLayout _pipelineLayout;
 
     void CreatePipeline();
@@ -59,4 +59,5 @@ private:
     void CreateDescriptorSets();
     void CreateBuffers();
     void UpdateBuffers(); // might not be needed, but is here for now
+    void UpdateParticleDescriptorSets();
 };
