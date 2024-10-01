@@ -5,10 +5,6 @@ struct Particle
     vec3 velocity;
     float maxLife;
     float life;
-    //vec3 force;
-    //float rotationalVelocity;
-    //vec2 sizeBeginEnd;
-    //uint color;
 };
 
 struct ParticleCounters
@@ -16,9 +12,6 @@ struct ParticleCounters
     uint aliveCount;
     uint deadCount;
     uint realEmitCount;
-    //uint aliveCount_afterSimulation;
-    //uint culledCount;
-    //uint cellAllocator;
 };
 
 const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT = 0;

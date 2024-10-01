@@ -14,6 +14,15 @@ public:
     NON_MOVABLE(ParticlePipeline);
 
 private:
+    enum class SSBOUsage
+    {
+        PARTICLE = 0,
+        ALIVE_NEW,
+        ALIVE_CURRENT,
+        DEAD,
+        COUNTER
+    };
+
     struct Particle
     {
         glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -24,7 +33,7 @@ private:
         glm::vec3 padding = { 0.0f, 0.0f, 0.0f };
     };
 
-    struct UniformBuffer
+    struct StorageBuffer
     {
         vk::Buffer buffer;
         VmaAllocation bufferAllocation;
@@ -38,15 +47,12 @@ private:
     } _pushConstants;
 
     const uint32_t MAX_PARTICLES = 1024; // temporary value
+    const uint32_t MAX_PARTICLE_COUNTERS = 3;
 
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
 
-    // Particle buffers
-    UniformBuffer _particleBuffer;
-    UniformBuffer _aliveList[2];
-    UniformBuffer _deadList;
-    UniformBuffer _counterBuffer;
+    std::array<StorageBuffer, 5> _storageBuffers;
 
     std::vector<std::string> _particlePaths;
     std::vector<vk::Pipeline> _pipelines;
