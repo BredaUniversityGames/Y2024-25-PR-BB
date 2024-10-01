@@ -75,6 +75,8 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindIndexBuffer(_sphere.indexBuffer, 0, _sphere.indexType);
 
     commandBuffer.drawIndexed(_sphere.indexCount, 1, 0, 0, 0);
+    _brain.drawStats.indexCount += _sphere.indexCount;
+    _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
