@@ -31,6 +31,8 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructu
     }
     // Descriptor stuff
     _brain.device.destroy(_descriptorSetLayout);
+
+    // this is a test
 }
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, float deltaTime)
