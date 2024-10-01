@@ -1,6 +1,7 @@
 #pragma once
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
+#include "resource_manager.hpp"
 
 enum class ImageType
 {
@@ -58,4 +59,82 @@ struct Image
     vk::ImageType vkType { vk::ImageType::e2D };
 
     std::string name;
+};
+
+struct MaterialCreation
+{
+    ResourceHandle<Image> albedoMap;
+    glm::vec4 albedoFactor{ 0.0f };
+    uint32_t albedoUVChannel;
+
+    ResourceHandle<Image> metallicRoughnessMap;
+    float metallicFactor{ 0.0f };
+    float roughnessFactor{ 0.0f };
+    std::optional<uint32_t> metallicRoughnessUVChannel;
+
+    ResourceHandle<Image> normalMap;
+    float normalScale{ 0.0f };
+    uint32_t normalUVChannel;
+
+    ResourceHandle<Image> occlusionMap;
+    float occlusionStrength{ 0.0f };
+    uint32_t occlusionUVChannel;
+
+    ResourceHandle<Image> emissiveMap;
+    glm::vec3 emissiveFactor{ 0.0f };
+    uint32_t emissiveUVChannel;
+
+    std::string name;
+};
+
+struct Material
+{
+    struct alignas(16) GPUInfo
+    {
+        glm::vec4 albedoFactor { 0.0f };
+
+        float metallicFactor { 0.0f };
+        float roughnessFactor { 0.0f };
+        float normalScale { 0.0f };
+        float occlusionStrength { 0.0f };
+
+        glm::vec3 emissiveFactor { 0.0f };
+        int32_t useEmissiveMap { false };
+
+        int32_t useAlbedoMap { false };
+        int32_t useMRMap { false };
+        int32_t useNormalMap { false };
+        int32_t useOcclusionMap { false };
+
+        int32_t albedoMapIndex;
+        int32_t mrMapIndex;
+        int32_t normalMapIndex;
+        int32_t occlusionMapIndex;
+        int32_t emissiveMapIndex;
+    };
+
+    vk::DescriptorSet descriptorSet;
+    vk::Buffer uniformBuffer;
+    VmaAllocation uniformAllocation;
+
+    // Maps used to know they are used?
+    ResourceHandle<Image> albedoMap;
+    ResourceHandle<Image> mrMap;
+    ResourceHandle<Image> normalMap;
+    ResourceHandle<Image> occlusionMap;
+    ResourceHandle<Image> emissiveMap;
+
+    std::string name;
+
+    static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
+    {
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+
+        bindings[0].binding = 0;
+        bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+        bindings[0].descriptorCount = 1;
+        bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+        return bindings;
+    }
 };

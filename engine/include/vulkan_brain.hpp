@@ -4,6 +4,7 @@
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
 #include "image_resource_manager.hpp"
+#include "material_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -65,6 +66,11 @@ public:
         return _imageResourceManager;
     }
 
+    material_resource_manager& MaterialResourceManager() const
+    {
+        return _materialResourceManager;
+    }
+
     void UpdateBindlessSet() const;
 
 private:
@@ -94,6 +100,7 @@ private:
     };
 
     mutable class ImageResourceManager _imageResourceManager;
+    mutable class material_resource_manager _materialResourceManager;
 
     void CreateInstance(const InitInfo& initInfo);
 

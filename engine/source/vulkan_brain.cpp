@@ -6,6 +6,7 @@
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     : _imageResourceManager(*this)
+    , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic { instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
