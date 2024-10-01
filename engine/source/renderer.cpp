@@ -142,6 +142,9 @@ void Renderer::CreateCommandBuffers()
 void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
 {
     ZoneScoped;
+
+    _brain.drawStats = {};
+
     const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
     const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_brightnessTarget);
     const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_bloomTarget);

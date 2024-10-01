@@ -68,6 +68,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
                 commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
                 commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _brain.drawStats.indexCount += primitive.count;
+                _brain.drawStats.drawCalls++;
             }
         }
     }
