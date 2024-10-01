@@ -7,6 +7,7 @@
 #include <fastgltf/core.hpp>
 
 class SingleTimeCommands;
+class BatchBuffer;
 
 class ModelLoader
 {

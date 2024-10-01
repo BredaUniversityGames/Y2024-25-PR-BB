@@ -19,6 +19,7 @@ class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
+class BatchBuffer;
 
 class Renderer
 {
@@ -62,7 +63,7 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    BatchBuffer _batchBuffer;
+    std::unique_ptr<BatchBuffer> _batchBuffer;
 
     CameraStructure _cameraStructure;
 

@@ -5,6 +5,7 @@
 #include "stb_image.h"
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
+#include "batch_buffer.hpp"
 
 ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout)
     : _brain(brain)
@@ -164,7 +165,7 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
 
         if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size());
+            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size() * sizeof(uint32_t));
         }
         else
         {
@@ -486,20 +487,11 @@ MeshPrimitiveHandle
 ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
     std::shared_ptr<MaterialHandle> material)
 {
-    assert((batchBuffer.vertexOffset + primitive.vertices.size()) * sizeof(Vertex) < batchBuffer.vertexBufferSize);
-    assert((batchBuffer.indexOffset + primitive.indices.size()) * sizeof(uint32_t) < batchBuffer.indexBufferSize);
-
     MeshPrimitiveHandle primitiveHandle {};
     primitiveHandle.material = material == nullptr ? _defaultMaterial : material;
     primitiveHandle.count = primitive.indices.size();
-    primitiveHandle.vertexOffset = batchBuffer.vertexOffset;
-    primitiveHandle.indexOffset = batchBuffer.indexOffset;
-
-    commandBuffer.CopyIntoLocalBuffer(primitive.vertices, batchBuffer.vertexOffset, batchBuffer.vertexBuffer);
-    commandBuffer.CopyIntoLocalBuffer(primitive.indices, batchBuffer.indexOffset, batchBuffer.indexBuffer);
-
-    batchBuffer.vertexOffset += primitive.vertices.size();
-    batchBuffer.indexOffset += primitive.indices.size();
+    primitiveHandle.vertexOffset = batchBuffer.AppendVertices(primitive.vertices, commandBuffer);
+    primitiveHandle.indexOffset = batchBuffer.AppendIndices(primitive.indices, commandBuffer);
 
     return primitiveHandle;
 }

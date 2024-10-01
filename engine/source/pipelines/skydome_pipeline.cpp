@@ -2,6 +2,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 #include "bloom_settings.hpp"
+#include "batch_buffer.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
@@ -68,8 +69,9 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, &batchBuffer.vertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
+    vk::Buffer vertexBuffer[] = { batchBuffer.VertexBuffer() };
+    commandBuffer.bindVertexBuffers(0, 1, vertexBuffer, offsets);
+    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
     commandBuffer.drawIndexed(_sphere.count, 1, _sphere.indexOffset, _sphere.vertexOffset, 0);
 

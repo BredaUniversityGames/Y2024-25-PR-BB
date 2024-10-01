@@ -1,7 +1,7 @@
 ﻿#include "pipelines/shadow_pipeline.hpp"
 
-// #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "batch_buffer.hpp"
 
 ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline)
     : _brain(brain)
@@ -62,10 +62,10 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
                     &_camera.descriptorSets[currentFrame], 0, nullptr);
 
-                vk::Buffer vertexBuffers[] = { batchBuffer.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
                 commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }

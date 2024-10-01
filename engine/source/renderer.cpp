@@ -2,12 +2,9 @@
 
 #include <utility>
 
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
 #include "model_loader.hpp"
-#include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -20,6 +17,7 @@
 #include "application.hpp"
 #include "engine.hpp"
 #include "single_time_commands.hpp"
+#include "batch_buffer.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -39,32 +37,10 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
 
-    _batchBuffer.topology = vk::PrimitiveTopology::eTriangleList;
-    _batchBuffer.indexType = vk::IndexType::eUint32;
-    _batchBuffer.vertexBufferSize = 256 * 1024 * 1024;
-    _batchBuffer.indexBufferSize = 256 * 1024 * 1024;
-    util::CreateBuffer(
-        _brain,
-        _batchBuffer.vertexBufferSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-        _batchBuffer.vertexBuffer,
-        false,
-        _batchBuffer.vertexBufferAllocation,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        "Unified vertex buffer");
-
-    util::CreateBuffer(
-        _brain,
-        _batchBuffer.indexBufferSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-        _batchBuffer.indexBuffer,
-        false,
-        _batchBuffer.indexBufferAllocation,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        "Unified index buffer");
+    _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _brain };
-    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, _batchBuffer);
+    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
@@ -105,7 +81,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
 
     for (const auto& path : models)
     {
-        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, _batchBuffer)));
+        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer)));
     }
 
     return loadedModels;
@@ -127,9 +103,6 @@ Renderer::~Renderer()
         _brain.device.destroy(_renderFinishedSemaphores[i]);
         _brain.device.destroy(_imageAvailableSemaphores[i]);
     }
-
-    vmaDestroyBuffer(_brain.vmaAllocator, _batchBuffer.vertexBuffer, _batchBuffer.vertexBufferAllocation);
-    vmaDestroyBuffer(_brain.vmaAllocator, _batchBuffer.indexBuffer, _batchBuffer.indexBufferAllocation);
 
     for (auto& model : _scene->models)
     {
@@ -185,14 +158,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, _batchBuffer);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, _batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
-    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, _batchBuffer);
+    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);

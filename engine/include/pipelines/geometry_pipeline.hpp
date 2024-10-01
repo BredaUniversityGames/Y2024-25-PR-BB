@@ -3,6 +3,8 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 
+class BatchBuffer;
+
 struct UBO
 {
     alignas(16) glm::mat4 model;

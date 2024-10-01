@@ -5,6 +5,7 @@
 #include "mesh.hpp"
 
 class BloomSettings;
+class BatchBuffer;
 
 class SkydomePipeline
 {

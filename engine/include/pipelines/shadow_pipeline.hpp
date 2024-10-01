@@ -3,6 +3,9 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
+
+class BatchBuffer;
+
 class ShadowPipeline
 {
 public:

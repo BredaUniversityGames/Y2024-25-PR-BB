@@ -1,5 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "batch_buffer.hpp"
 
 VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
 {
@@ -110,10 +111,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0,
                     nullptr);
 
-                vk::Buffer vertexBuffers[] = { batchBuffer.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(batchBuffer.indexBuffer, 0, batchBuffer.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
                 commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }
