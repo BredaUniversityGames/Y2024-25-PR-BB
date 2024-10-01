@@ -1,6 +1,13 @@
 #pragma once
 
+#pragma clang diagnostic push
+
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include "entt.hpp"
+
+#pragma clang diagnostic pop
+
 #include "mesh.hpp"
 
 struct SceneDescription;
