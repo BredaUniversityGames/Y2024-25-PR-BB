@@ -333,7 +333,8 @@ void GeometryPipeline::UpdateUniformData(uint32_t currentFrame, const SceneDescr
         {
             for (const auto& primitive : node.mesh->primitives)
             {
-                assert(uboCount < MAX_MESHES && "Reached the limit of how many meshes can be rendered");
+                assert(uboCount < MAX_MESHES && "Reached the limit of instance data available for the meshes");
+                assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
 
                 ubos[uboCount].model = gameObject.transform * node.transform;
                 ubos[uboCount].materialIndex = primitive.material.index;
