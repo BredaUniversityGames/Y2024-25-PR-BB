@@ -110,10 +110,6 @@ struct Material
         uint32_t emissiveMapIndex;
     } gpuInfo;
 
-    vk::DescriptorSet descriptorSet;
-    vk::Buffer uniformBuffer;
-    VmaAllocation uniformAllocation;
-
     ResourceHandle<Image> albedoMap;
     ResourceHandle<Image> mrMap;
     ResourceHandle<Image> normalMap;
