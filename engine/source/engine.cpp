@@ -95,17 +95,17 @@ void Engine::Run()
             return;
         }
 
+        int32_t mouseX, mouseY;
+        _application->GetInputManager().GetMousePosition(mouseX, mouseY);
+
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
             _application->SetMouseHidden(!_application->GetMouseHidden());
 
         if (_application->GetMouseHidden())
         {
             ZoneNamedN(zone, "Update Camera", true);
-            int x, y;
-            _application->GetInputManager().GetMousePosition(x, y);
 
-            glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-            _lastMousePos = { x, y };
+            glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float CAM_SPEED = 0.003f;
@@ -137,6 +137,7 @@ void Engine::Run()
 
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
+        _lastMousePos = { mouseX, mouseY };
 
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();

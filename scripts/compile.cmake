@@ -1,7 +1,7 @@
 # toolchain.cmake
 
-# set(CMAKE_C_COMPILER "clang")
-# set(CMAKE_CXX_COMPILER "clang++")
+set(CMAKE_C_COMPILER "clang")
+set(CMAKE_CXX_COMPILER "clang++")
 
 set(CMAKE_CXX_FLAGS "-fexceptions -frtti")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
