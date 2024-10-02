@@ -7,8 +7,7 @@ VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout,
-    const CameraStructure& camera)
+GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
@@ -16,7 +15,7 @@ GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBu
     CreateDescriptorSetLayout();
     CreateInstanceBuffers();
     CreateDescriptorSets();
-    CreatePipeline(materialDescriptorSetLayout);
+    CreatePipeline();
 }
 
 GeometryPipeline::~GeometryPipeline()
@@ -79,15 +78,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    std::vector<glm::mat4> transforms;
-    for (auto& gameObject : scene.gameObjects)
-    {
-        for (auto& node : gameObject.model->hierarchy.allNodes)
-        {
-            transforms.emplace_back(gameObject.transform * node.transform);
-        }
-    }
-    UpdateInstanceData(currentFrame, transforms, scene.camera);
+    UpdateInstanceData(currentFrame, scene);
 
     std::vector<vk::DrawIndexedIndirectCommand> drawCommands;
 
@@ -100,8 +91,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                assert(primitive.material && "There should always be a material available.");
-
                 _brain.drawStats.indexCount += primitive.count;
 
                 drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
@@ -111,12 +100,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     batchBuffer.WriteDraws(drawCommands, currentFrame);
 
-    const MaterialHandle& material = *scene.gameObjects[0].model->meshes[0]->primitives[0].material;
+    ResourceHandle<Material> material = scene.gameObjects[0].model->meshes[0]->primitives[0].material;
+    assert(_brain.GetMaterialResourceManager().IsValid(material) && "Invalid material used");
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0, nullptr);
 
     vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
     vk::DeviceSize offsets[] = { 0 };
@@ -130,11 +119,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void GeometryPipeline::CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout)
+void GeometryPipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 4> layouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout,
-        materialDescriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
@@ -270,7 +258,7 @@ void GeometryPipeline::CreateDescriptorSetLayout()
     descriptorSetLayoutBinding.binding = 0;
     descriptorSetLayoutBinding.descriptorCount = 1;
     descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
     descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
     vk::DescriptorSetLayoutCreateInfo createInfo {};
@@ -339,12 +327,26 @@ void GeometryPipeline::CreateInstanceBuffers()
     }
 }
 
-void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera)
+void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene)
 {
-    static std::array<InstanceData, MAX_MESHES> instances;
-    for (size_t i = 0; i < std::min(transforms.size(), instances.size()); ++i)
+    std::array<InstanceData, MAX_MESHES> instances;
+    uint32_t count = 0;
+
+    for (auto& gameObject : scene.gameObjects)
     {
-        instances[i].model = transforms[i];
+        for (auto& node : gameObject.model->hierarchy.allNodes)
+        {
+            for (const auto& primitive : node.mesh->primitives)
+            {
+                assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
+                assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
+
+                instances[count].model = gameObject.transform * node.transform;
+                instances[count].materialIndex = primitive.material.index;
+
+                count++;
+            }
+        }
     }
 
     memcpy(_frameData[currentFrame].storageBufferMapped, instances.data(), instances.size() * sizeof(InstanceData));

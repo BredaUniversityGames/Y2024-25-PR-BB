@@ -1,6 +1,7 @@
 #pragma once
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
+#include "resource_manager.hpp"
 
 enum class ImageType
 {
@@ -58,4 +59,60 @@ struct Image
     vk::ImageType vkType { vk::ImageType::e2D };
 
     std::string name;
+};
+
+struct MaterialCreation
+{
+    ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Invalid();
+    glm::vec4 albedoFactor{ 0.0f };
+    uint32_t albedoUVChannel;
+
+    ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Invalid();
+    float metallicFactor{ 0.0f };
+    float roughnessFactor{ 0.0f };
+    std::optional<uint32_t> metallicRoughnessUVChannel;
+
+    ResourceHandle<Image> normalMap = ResourceHandle<Image>::Invalid();
+    float normalScale{ 0.0f };
+    uint32_t normalUVChannel;
+
+    ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Invalid();
+    float occlusionStrength{ 0.0f };
+    uint32_t occlusionUVChannel;
+
+    ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Invalid();
+    glm::vec3 emissiveFactor{ 0.0f };
+    uint32_t emissiveUVChannel;
+};
+
+struct Material
+{
+    struct alignas(16) GPUInfo
+    {
+        glm::vec4 albedoFactor { 0.0f };
+
+        float metallicFactor { 0.0f };
+        float roughnessFactor { 0.0f };
+        float normalScale { 0.0f };
+        float occlusionStrength { 0.0f };
+        glm::vec3 emissiveFactor { 0.0f };
+
+        int32_t useEmissiveMap { false };
+        int32_t useAlbedoMap { false };
+        int32_t useMRMap { false };
+        int32_t useNormalMap { false };
+        int32_t useOcclusionMap { false };
+
+        uint32_t albedoMapIndex;
+        uint32_t mrMapIndex;
+        uint32_t normalMapIndex;
+        uint32_t occlusionMapIndex;
+        uint32_t emissiveMapIndex;
+    } gpuInfo;
+
+    ResourceHandle<Image> albedoMap;
+    ResourceHandle<Image> mrMap;
+    ResourceHandle<Image> normalMap;
+    ResourceHandle<Image> occlusionMap;
+    ResourceHandle<Image> emissiveMap;
 };

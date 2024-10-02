@@ -4,6 +4,7 @@
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
 #include "image_resource_manager.hpp"
+#include "material_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -31,7 +32,8 @@ enum class BindlessBinding
     eColor = 0,
     eDepth,
     eCubemap,
-    eShadowmap
+    eShadowmap,
+    eMaterial
 };
 
 class VulkanBrain
@@ -65,6 +67,11 @@ public:
         return _imageResourceManager;
     }
 
+    MaterialResourceManager& GetMaterialResourceManager() const
+    {
+        return _materialResourceManager;
+    }
+	
     struct DrawStats
     {
         uint32_t indexCount;
@@ -80,7 +87,12 @@ private:
     ResourceHandle<Image> _fallbackImage;
 
     mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
-    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessWrites;
+    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;
+
+    vk::Buffer _bindlessMaterialBuffer;
+    VmaAllocation _bindlessMaterialBufferAllocation;
+    mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
+    mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 
     const std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
@@ -101,6 +113,10 @@ private:
     };
 
     mutable class ImageResourceManager _imageResourceManager;
+    mutable class MaterialResourceManager _materialResourceManager;
+
+    void UpdateBindlessImages() const;
+    void UpdateBindlessMaterials() const;
 
     void CreateInstance(const InitInfo& initInfo);
 
@@ -123,4 +139,6 @@ private:
     void CreateDescriptorPool();
 
     void CreateBindlessDescriptorSet();
+
+    void CreateBindlessMaterialBuffer();
 };

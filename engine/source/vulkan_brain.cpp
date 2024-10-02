@@ -6,6 +6,7 @@
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     : _imageResourceManager(*this)
+    , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);
     dldi = vk::DispatchLoaderDynamic { instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
@@ -36,6 +37,7 @@ VulkanBrain::VulkanBrain(const InitInfo& initInfo)
     _sampler = util::CreateSampler(*this, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
+    CreateBindlessMaterialBuffer();
     CreateBindlessDescriptorSet();
 
     std::vector<std::byte> data(2 * 2 * 4 * sizeof(std::byte));
@@ -57,6 +59,7 @@ VulkanBrain::~VulkanBrain()
 
     device.destroy(bindlessLayout);
     device.destroy(bindlessPool);
+    vmaDestroyBuffer(vmaAllocator, _bindlessMaterialBuffer, _bindlessMaterialBufferAllocation);
 
     _sampler.reset();
 
@@ -68,6 +71,12 @@ VulkanBrain::~VulkanBrain()
 }
 
 void VulkanBrain::UpdateBindlessSet() const
+{
+    UpdateBindlessImages();
+    UpdateBindlessMaterials();
+}
+
+void VulkanBrain::UpdateBindlessImages() const
 {
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
@@ -96,15 +105,46 @@ void VulkanBrain::UpdateBindlessSet() const
         _bindlessImageInfos[i].imageView = image->view;
         _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
 
-        _bindlessWrites[i].dstSet = bindlessSet;
-        _bindlessWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
-        _bindlessWrites[i].dstArrayElement = i;
-        _bindlessWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        _bindlessWrites[i].descriptorCount = 1;
-        _bindlessWrites[i].pImageInfo = &_bindlessImageInfos[i];
+        _bindlessImageWrites[i].dstSet = bindlessSet;
+        _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
+        _bindlessImageWrites[i].dstArrayElement = i;
+        _bindlessImageWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        _bindlessImageWrites[i].descriptorCount = 1;
+        _bindlessImageWrites[i].pImageInfo = &_bindlessImageInfos[i];
     }
 
-    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessWrites.data(), 0, nullptr);
+    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
+}
+
+void VulkanBrain::UpdateBindlessMaterials() const
+{
+    assert(_materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
+
+    std::array<Material::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
+
+    for (uint32_t i = 0; i < _materialResourceManager.Resources().size(); ++i)
+    {
+        const Material* material = &_materialResourceManager.Resources()[i].resource.value();
+        materialGPUData[i] = material->gpuInfo;
+    }
+
+    void* mappedPtr;
+    util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &mappedPtr), "Failed mapping memory for UBO!");
+    std::memcpy(mappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
+    vmaUnmapMemory(vmaAllocator, _bindlessMaterialBufferAllocation);
+
+    _bindlessMaterialInfo.buffer = _bindlessMaterialBuffer;
+    _bindlessMaterialInfo.offset = 0;
+    _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager.Resources().size();
+
+    _bindlessMaterialWrite.dstSet = bindlessSet;
+    _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eMaterial);
+    _bindlessMaterialWrite.dstArrayElement = 0;
+    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    _bindlessMaterialWrite.descriptorCount = 1;
+    _bindlessMaterialWrite.pBufferInfo = &_bindlessMaterialInfo;
+
+    device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
 }
 
 void VulkanBrain::CreateInstance(const InitInfo& initInfo)
@@ -349,11 +389,12 @@ void VulkanBrain::CreateDescriptorPool()
 
 void VulkanBrain::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 4> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 5> poolSizes = {
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
+        vk::DescriptorPoolSize { vk::DescriptorType::eStorageBuffer, 1 },
     };
 
     vk::DescriptorPoolCreateInfo poolCreateInfo {};
@@ -363,7 +404,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 4> bindings;
+    std::array<vk::DescriptorSetLayoutBinding, 5> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
@@ -388,12 +429,19 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
     shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
+    vk::DescriptorSetLayoutBinding& materialBinding = bindings[4];
+    materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    materialBinding.descriptorCount = 1;
+    materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eMaterial);
+    materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo {};
     layoutCreateInfo.bindingCount = bindings.size();
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
     std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
+        vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
@@ -415,6 +463,15 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     allocInfo.pSetLayouts = &bindlessLayout;
 
     util::VK_ASSERT(device.allocateDescriptorSets(&allocInfo, &bindlessSet), "Failed creating bindless descriptor set!");
+}
+
+void VulkanBrain::CreateBindlessMaterialBuffer()
+{
+    util::CreateBuffer(*this, MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo),
+            vk::BufferUsageFlagBits::eStorageBuffer,
+            _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
+            VMA_MEMORY_USAGE_CPU_ONLY,
+            "Bindless material uniform buffer");
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)
