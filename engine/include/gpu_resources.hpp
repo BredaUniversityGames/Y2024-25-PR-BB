@@ -2,7 +2,6 @@
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
 
-
 enum class ImageType
 {
     e2D,
@@ -28,7 +27,6 @@ struct ImageCreation
     vk::Sampler sampler { nullptr };
 
     std::string name;
-
 
     ImageCreation& SetData(std::byte* data);
     ImageCreation& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
@@ -65,4 +63,3 @@ struct Image
 
     std::string name;
 };
-

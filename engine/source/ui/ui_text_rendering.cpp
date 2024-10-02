@@ -3,8 +3,8 @@
 //
 
 #include "ui/ui_text_rendering.hpp"
-#include "fonts.h"
-void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix)
+#include "ui/fonts.hpp"
+void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain&)
 {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine.m_uiPipeLine);
 
@@ -45,9 +45,9 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
     }
 };
 
-void UITextElement::SubmitDrawInfo(UserInterfaceContext& user_interface_context)
+void UITextElement::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_context) const
 {
-    user_interface_context.GetRenderingSystem<UITextRenderSystem>().renderQueue.push({ AbsoluteLocation, 10, 2, m_Text });
+    user_interface_context.GetRenderingSystem<UITextRenderSystem>()->renderQueue.push({ AbsoluteLocation, 10, 2, m_Text });
     for (auto& i : chilren)
     {
         i->SubmitDrawInfo(user_interface_context);

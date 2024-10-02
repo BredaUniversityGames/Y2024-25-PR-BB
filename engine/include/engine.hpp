@@ -4,6 +4,9 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 
+class UIPipeLine;
+class MainMenuCanvas;
+class UserInterfaceRenderContext;
 class Application;
 class Renderer;
 class Editor;
@@ -28,8 +31,9 @@ private:
 
     std::unique_ptr<Editor> _editor;
 
+    std::unique_ptr<UserInterfaceRenderContext> m_UIContext;
+    std::shared_ptr<MainMenuCanvas> m_MainMenuCanvas;
     std::unique_ptr<Renderer> _renderer;
-
     std::shared_ptr<SceneDescription> _scene;
 
     std::shared_ptr<Application> _application;

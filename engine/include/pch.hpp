@@ -37,7 +37,7 @@
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>
-//#include "tracy/Tracy.hpp"
+#include "tracy/Tracy.hpp"
 
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };

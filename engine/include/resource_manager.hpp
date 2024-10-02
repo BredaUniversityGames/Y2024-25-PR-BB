@@ -18,13 +18,12 @@ struct ResourceHandle
     }
     static ResourceHandle<T> Invalid() { return ResourceHandle<T> {}; }
 
-    uint32_t index : 24 { 0 };
+    uint32_t index { 0 };
 
 private:
     friend class VulkanBrain;
     friend ResourceManager<T>;
-    uint32_t version : 8 { 0 };
-
+    uint32_t version { 0 };
 };
 
 template <typename T>
@@ -55,7 +54,6 @@ public:
 
         ResourceSlot<T>& resc = _resources[index];
         resc.resource = resource;
-
 
         ResourceHandle<T> handle {};
 

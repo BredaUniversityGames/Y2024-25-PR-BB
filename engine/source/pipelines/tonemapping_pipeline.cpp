@@ -29,8 +29,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = _swapChain.GetExtent();

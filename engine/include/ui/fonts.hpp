@@ -1,13 +1,9 @@
-//
-// Created by luuk on 23-9-2024.
-//
-
 #pragma once
-#include <map>
-#include <string_view>
-#include <vector>
+
 
 #include <pch.hpp>
+#include <map>
+
 struct Character;
 struct Image;
 
@@ -30,6 +26,8 @@ public:
 	//todo: convert this into font resource.
 	static std::map<char, Character> Characters;
 };
+
+
 struct Character {
 	vk::DescriptorSet DescriptorSet;
 	ResourceHandle<Image> image;

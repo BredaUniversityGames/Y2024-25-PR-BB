@@ -18,6 +18,8 @@
 #include "renderer.hpp"
 #include "single_time_commands.hpp"
 #include "editor.hpp"
+#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_mainMenu.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -62,6 +64,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene->camera.nearPlane = 0.01f;
     _scene->camera.farPlane = 100.0f;
 
+    m_MainMenuCanvas = std::make_shared<MainMenuCanvas>();
+    m_MainMenuCanvas->InitElements(_renderer->_brain);
+    _renderer->m_UIElementToRender = m_MainMenuCanvas;
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
@@ -135,7 +140,10 @@ void Engine::Run()
 
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
-
+        else
+        {
+            UpdateUI(_application->GetInputManager(), m_MainMenuCanvas.get());
+        }
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
 

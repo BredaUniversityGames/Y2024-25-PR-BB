@@ -45,7 +45,6 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
     imageCreateInfo.usage = creation.flags;
 
-
     if (creation.initialData)
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
 
@@ -60,7 +59,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     std::string allocName = creation.name + " texture allocation";
     vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, allocName.c_str());
 
-    vk::ImageViewCreateInfo viewCreateInfo{};
+    vk::ImageViewCreateInfo viewCreateInfo {};
     viewCreateInfo.image = imageResource.image;
 
     viewCreateInfo.viewType = vk::ImageViewType::e2D;
@@ -71,7 +70,6 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     viewCreateInfo.subresourceRange.levelCount = creation.mips;
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
     viewCreateInfo.subresourceRange.layerCount = 1;
-
 
     for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
 
@@ -159,7 +157,6 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
     }
 
-
     if (!creation.name.empty())
     {
         std::stringstream ss {};
@@ -206,7 +203,6 @@ void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
         ResourceManager::Destroy(handle);
     }
 }
-
 
 vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)
 {

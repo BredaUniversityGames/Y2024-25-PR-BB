@@ -6,6 +6,9 @@
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 
+class UIPipeLine;
+class UserInterfaceRenderContext;
+struct UIElement;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
@@ -60,6 +63,10 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
+    std::shared_ptr<UIElement> m_UIElementToRender;
+    std::unique_ptr<UserInterfaceRenderContext> m_UIRenderContext;
+
+    std::unique_ptr<UIPipeLine> _uiPipeLine;
     CameraStructure _cameraStructure;
 
     BloomSettings _bloomSettings;

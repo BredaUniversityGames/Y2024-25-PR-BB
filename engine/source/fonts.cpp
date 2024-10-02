@@ -2,7 +2,7 @@
 // Created by luuk on 23-9-2024.
 //
 
-#include "include/fonts.h"
+#include "ui/fonts.hpp"
 
 #include <ft2build.h>
 
@@ -11,7 +11,7 @@
 #include FT_FREETYPE_H
 #include "vulkan_brain.hpp"
 #include "gpu_resources.hpp"
-#include "include/ui/UserInterfaceSystem.h"
+#include "ui/UserInterfaceSystem.hpp"
 #include "vulkan_helper.hpp"
 std::map<char, Character> Font::Characters = {};
 
@@ -64,7 +64,7 @@ void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
             uint8_t(fontFace->glyph->advance.x) };
         util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &character.DescriptorSet),
             "Failed allocating descriptor sets!");
-        Engine::m_uiPipeLine->UpdateTexture(handle, character.DescriptorSet);
+      // Engine::m_uiPipeLine->UpdateTexture(handle, character.DescriptorSet);
         Font::Characters.insert(std::pair<char, Character>(c, character));
     }
 

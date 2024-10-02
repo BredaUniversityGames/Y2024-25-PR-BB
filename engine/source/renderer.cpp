@@ -20,6 +20,7 @@
 #include "application.hpp"
 #include "engine.hpp"
 #include "single_time_commands.hpp"
+#include "ui/UserInterfaceSystem.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -36,6 +37,11 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     InitializeHDRTarget();
     InitializeBloomTargets();
     LoadEnvironmentMap();
+    _uiPipeLine = std::make_unique<UIPipeLine>(_brain, *_swapChain);
+    _uiPipeLine->CreatePipeLine();
+
+    m_UIRenderContext = std::make_unique<UserInterfaceRenderContext>();
+    m_UIRenderContext->InitializeDefaultRenderSystems(*_uiPipeLine);
 
     _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
 
@@ -157,11 +163,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    glm::mat4 projection = glm::ortho(0, int(1920), 0, int(1200));
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+    RenderUI(m_UIElementToRender.get(), *m_UIRenderContext, commandBuffer, _brain, *_swapChain, swapChainImageIndex, projection);
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+
     commandBuffer.end();
 }
 
@@ -299,7 +308,10 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBloomCreation {};
     hdrBloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
+    static auto sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eNearest, 0);
+    hdrBloomCreation.sampler = sampler.get();
     ImageCreation hdrBlurredBloomCreation {};
+    hdrBlurredBloomCreation.sampler = sampler.get();
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _brightnessTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);

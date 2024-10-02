@@ -28,7 +28,7 @@ public:
     {
     }
 
-    virtual void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix) = 0;
+    virtual void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain&) = 0;
 
     virtual ~UIRenderSystemBase() = default;
 
@@ -59,10 +59,11 @@ struct UIElement
 {
     enum class AnchorPoint
     {
+        MIDDLE,
         TOP_LEFT,
         TOP_RIGHT,
         BOTTOM_LEFT,
-        BOTTOM_RIGHT
+        BOTTOM_RIGHT,
     };
 
     void SetLocation(const glm::vec2& location) { RelativeLocation = location; }
@@ -86,8 +87,10 @@ struct UIElement
     {
     }
 
-    virtual void Update(const InputManager&)
+    virtual void Update(const InputManager& input)
     {
+        for (auto& i : chilren)
+            i->Update(input);
     }
 
     AnchorPoint m_AnchorPoint = AnchorPoint::TOP_LEFT;
@@ -95,6 +98,8 @@ struct UIElement
 
     virtual void UpdateChildAbsoluteLocations() = 0;
     glm::vec2 Scale {};
+
+    virtual ~UIElement() = default;
 
 protected:
     glm::vec2 AbsoluteLocation {};
@@ -105,7 +110,7 @@ protected:
 
 void UpdateUI(const InputManager& input, UIElement* element);
 
-void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk::CommandBuffer&, const VulkanBrain&, ResourceHandle<Image>& renderTarget, const glm::mat4& projectionMatrix);
+void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex, const glm::mat4& projectionMatrix);
 
 /**
  * holds free floating elements. elements can be anchored to one of the 4 corners of the canvas. anchors help preserve
@@ -113,7 +118,9 @@ void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk:
  */
 struct Canvas : public UIElement
 {
+public:
     void UpdateChildAbsoluteLocations() override;
+    void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
 };
 
 /**
@@ -137,8 +144,8 @@ public:
 
     /**
      *
-     * @tparam T render system type, must be derived from UIRenderSystemBase.
-     * @return If operation was successful.
+     * @tparam T Render system type, must be derived from UIRenderSystemBase.
+     * @return If the operation was successful.
      */
     template <typename T>
     bool AddRenderingSystem(const UIPipeLine& pipe_line)
@@ -158,7 +165,7 @@ public:
     }
 
     template <typename T>
-    T& GetRenderingSystem()
+    T* GetRenderingSystem()
     {
         return (static_cast<T*>(m_UIRenderSystems.at(std::type_index(typeid(T))).get()));
     }

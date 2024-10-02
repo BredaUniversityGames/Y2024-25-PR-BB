@@ -4,7 +4,7 @@
 
 #pragma once
 #include "pch.hpp"
-#include "UserInterfaceSystem.h"
+#include "UserInterfaceSystem.hpp"
 
 struct TextDrawInfo
 {
@@ -17,7 +17,7 @@ struct TextDrawInfo
 struct UITextElement : public UIElement
 {
     void UpdateChildAbsoluteLocations() override { }
-    void SubmitDrawInfo(UserInterfaceContext&) override;
+    void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
     std::string m_Text;
 };
 
@@ -28,7 +28,7 @@ public:
         : UIRenderSystem<TextDrawInfo>(pl)
     {
     }
-    void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix) override;
+    void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain&) override;
 
     ~UITextRenderSystem() = default;
 };
