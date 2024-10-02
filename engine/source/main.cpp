@@ -24,7 +24,6 @@ int main(int argc, char* argv[])
     Application::CreateParameters parameters { "Vulkan", true };
 
     g_app = std::make_shared<SDLApp>(parameters);
-
     g_engine = std::make_unique<Engine>(g_app->GetInitInfo(), g_app);
 
     try
