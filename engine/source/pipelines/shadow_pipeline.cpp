@@ -1,7 +1,7 @@
 ﻿#include "pipelines/shadow_pipeline.hpp"
 
-// #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "batch_buffer.hpp"
 
 ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline)
     : _brain(brain)
@@ -20,10 +20,10 @@ ShadowPipeline::~ShadowPipeline()
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const SceneDescription& scene)
+    const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Shadow())->view;
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
@@ -55,9 +55,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                if (primitive.topology != vk::PrimitiveTopology::eTriangleList)
-                    throw std::runtime_error("Unsupported topology!");
-
                 uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
@@ -65,13 +62,13 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
                     &_camera.descriptorSets[currentFrame], 0, nullptr);
 
-                vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(primitive.indexBuffer, 0, primitive.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
-                commandBuffer.drawIndexed(primitive.indexCount, 1, 0, 0, 0);
-                _brain.drawStats.indexCount += primitive.indexCount;
+                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _brain.drawStats.indexCount += primitive.count;
                 _brain.drawStats.drawCalls++;
             }
         }
@@ -160,7 +157,7 @@ void ShadowPipeline::CreatePipeline()
 
     // Use dynamic rendering
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.ImageResourceManager().Access(_gBuffers.Shadow())->format;
+    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
 

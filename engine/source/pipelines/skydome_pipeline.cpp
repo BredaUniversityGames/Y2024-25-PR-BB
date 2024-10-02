@@ -2,6 +2,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 #include "bloom_settings.hpp"
+#include "batch_buffer.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
@@ -23,34 +24,31 @@ SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&&
 
 SkydomePipeline::~SkydomePipeline()
 {
-    vmaDestroyBuffer(_brain.vmaAllocator, _sphere.vertexBuffer, _sphere.vertexBufferAllocation);
-    vmaDestroyBuffer(_brain.vmaAllocator, _sphere.indexBuffer, _sphere.indexBufferAllocation);
-
     _brain.device.destroy(_pipelineLayout);
     _brain.device.destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
     colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { _brain.ImageResourceManager().Access(_hdrTarget)->width,
-        _brain.ImageResourceManager().Access(_hdrTarget)->height };
+    renderingInfo.renderArea.extent = vk::Extent2D { _brain.GetImageResourceManager().Access(_hdrTarget)->width,
+        _brain.GetImageResourceManager().Access(_hdrTarget)->height };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
@@ -71,11 +69,12 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
     vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, &_sphere.vertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(_sphere.indexBuffer, 0, _sphere.indexType);
+    vk::Buffer vertexBuffer[] = { batchBuffer.VertexBuffer() };
+    commandBuffer.bindVertexBuffers(0, 1, vertexBuffer, offsets);
+    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
-    commandBuffer.drawIndexed(_sphere.indexCount, 1, 0, 0, 0);
-    _brain.drawStats.indexCount += _sphere.indexCount;
+    commandBuffer.drawIndexed(_sphere.count, 1, _sphere.indexOffset, _sphere.vertexOffset, 0);
+    _brain.drawStats.indexCount += _sphere.count;
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
@@ -196,7 +195,10 @@ void SkydomePipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    std::array<vk::Format, 2> colorAttachmentFormats = { _brain.ImageResourceManager().Access(_hdrTarget)->format, _brain.ImageResourceManager().Access(_brightnessTarget)->format };
+    std::array<vk::Format, 2> colorAttachmentFormats = {
+        _brain.GetImageResourceManager().Access(_hdrTarget)->format,
+        _brain.GetImageResourceManager().Access(_brightnessTarget)->format
+    };
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();

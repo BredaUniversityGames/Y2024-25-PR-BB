@@ -1,15 +1,11 @@
 #include "mesh_primitives.hpp"
 #include <concepts>
 
-template <typename T>
-concept indexType = std::same_as<T, uint16_t> || std::same_as<T, uint32_t>;
-
-template <indexType T>
-void AddTriangle(std::vector<std::byte>& indicesBytes, std::array<T, 3> triangle)
+void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangle)
 {
-    size_t sizeBefore = indicesBytes.size();
-    indicesBytes.resize(indicesBytes.size() + sizeof(triangle));
-    std::memcpy(indicesBytes.data() + sizeBefore, triangle.data(), sizeof(triangle));
+    indices.emplace_back(triangle[0]);
+    indices.emplace_back(triangle[1]);
+    indices.emplace_back(triangle[2]);
 }
 
 MeshPrimitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
@@ -21,8 +17,6 @@ MeshPrimitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
     primitive.vertices.reserve(totalVertices);
 
     // TODO: Consider this based on the total amount of indices instead.
-    primitive.indexType = vk::IndexType::eUint32;
-    primitive.topology = vk::PrimitiveTopology::eTriangleList;
     primitive.materialIndex = std::nullopt;
 
     for (uint32_t i = 0; i <= stacks; ++i)
@@ -55,8 +49,8 @@ MeshPrimitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
             uint32_t first = i * (slices + 1) + j;
             uint32_t second = first + slices + 1;
 
-            AddTriangle(primitive.indicesBytes, Triangle { first, second, first + 1 });
-            AddTriangle(primitive.indicesBytes, Triangle { second, second + 1, first + 1 });
+            AddTriangle(primitive.indices, Triangle { first, second, first + 1 });
+            AddTriangle(primitive.indices, Triangle { second, second + 1, first + 1 });
         }
     }
 
