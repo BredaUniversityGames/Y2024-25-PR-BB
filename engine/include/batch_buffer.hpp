@@ -18,6 +18,9 @@ public:
     vk::IndexType IndexType() const { return _indexType; }
     vk::PrimitiveTopology Topology() const { return _topology; }
 
+    uint32_t VertexBufferSize() const { return _vertexBufferSize; }
+    uint32_t IndexBufferSize() const { return _indexBufferSize; }
+
     uint32_t AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer);
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
