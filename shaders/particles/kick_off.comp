@@ -1,16 +1,17 @@
 #version 460
 #include "particle_vars.glsl"
 
-layout(push_constant) uniform DeltaTime
-{
-    float deltaTime;
-} dT;
-
-layout ( local_size_x = 256, local_size_y = 1, local_size_z = 1 ) in;
+layout ( local_size_x = 1, local_size_y = 1, local_size_z = 1 ) in;
 
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
 
-    float test = dT.deltaTime * 2.0f;
+    uint aliveCount = particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION];
+    uint deadCount = particleCounters[PARTICLECOUNTER_OFFSET_DEADCOUNT];
+
+    particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT] = aliveCount;
+    particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION] = 0;
+    particleCounters[PARTICLECOUNTER_OFFSET_DEADCOUNT] = max(0, deadCount);
+    particleCounters[PARTICLECOUNTER_OFFSET_CULLEDCOUNT] = 0;
 }

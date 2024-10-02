@@ -63,7 +63,7 @@ private:
     // temporary values for testing/progress
     const uint32_t MAX_EMITTERS = 64;
     const uint32_t MAX_PARTICLES = 1024;
-    const uint32_t MAX_PARTICLE_COUNTERS = 3;
+    const uint32_t MAX_PARTICLE_COUNTERS = 4;
 
     const VulkanBrain& _brain;
     const CameraStructure& _camera;

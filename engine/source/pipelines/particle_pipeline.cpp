@@ -37,9 +37,9 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 {
     UpdateBuffers();
 
+    // kick-off shader pass
     util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[0]);
-    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
 
     // for now try binding all
     for(auto& ssbo : _storageBuffers)
@@ -47,10 +47,15 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
             &ssbo.descriptorSet, 0, nullptr);
     }
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, 1,
-        &_emitterBuffer.descriptorSet, 0, nullptr);
-    commandBuffer.dispatch(256, 1, 1);
+    commandBuffer.dispatch(1, 1, 1);
     util::EndLabel(commandBuffer, _brain.dldi);
+
+    // emit shader pass
+    // commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, 1,
+    //     &_emitterBuffer.descriptorSet, 0, nullptr);
+
+    // simulate shader pass
+    //commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
 }
 
 void ParticlePipeline::SpawnEmitter(glm::vec3 position, uint32_t count, EmitterType type)
@@ -81,7 +86,7 @@ void ParticlePipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
                     "Failed creating particle pipeline layout!");
 
-    _particlePaths = { "kick_off" }; // TODO: add more shader names here later
+    _particlePaths = { "kick_off", "emit", "simulate" }; // TODO: add more shader names here later
     for (auto& shaderName : _particlePaths)
     {
         auto byteCode = shader::ReadFile("shaders/particles/" + shaderName + "-c.spv");

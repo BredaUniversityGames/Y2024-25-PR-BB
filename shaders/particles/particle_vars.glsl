@@ -1,9 +1,3 @@
-struct Emitter
-{
-    vec3 position;
-    uint count;
-};
-
 struct Particle
 {
     vec3 position;
@@ -17,12 +11,14 @@ struct ParticleCounters
 {
     uint aliveCount;
     uint deadCount;
-    uint realEmitCount;
+    uint aliveCount_afterSimulation;
+    uint culledCount;
 };
 
 const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT = 0;
-const uint PARTICLECOUNTER_OFFSET_DEADCOUNT = PARTICLECOUNTER_OFFSET_ALIVECOUNT + 4;
-const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION = PARTICLECOUNTER_OFFSET_DEADCOUNT + 4;
+const uint PARTICLECOUNTER_OFFSET_DEADCOUNT = 1;
+const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION = 2;
+const uint PARTICLECOUNTER_OFFSET_CULLEDCOUNT = 3;
 
 layout(set = 1, binding = 0) buffer ParticleSSBO
 {
@@ -31,25 +27,20 @@ layout(set = 1, binding = 0) buffer ParticleSSBO
 
 layout(set = 1, binding = 1) buffer AliveNEWSSBO
 {
-    uint anIndex[ ];
+    uint aliveNEWIndex[ ];
 };
 
 layout(set = 1, binding = 2) buffer AliveCURRENTSSBO
 {
-    uint acIndex[ ];
+    uint aliveCURRENTIndex[ ];
 };
 
 layout(set = 1, binding = 3) buffer DeadSSBO
 {
-    uint dIndex[ ];
+    uint deadIndex[ ];
 };
 
 layout(set = 1, binding = 4) buffer CounterSSBO
 {
-    uint count[3];
-};
-
-layout(set = 2, binding = 0) uniform EmitterUBO
-{
-    Emitter emitters[ ];
+    uint particleCounters[4];
 };
