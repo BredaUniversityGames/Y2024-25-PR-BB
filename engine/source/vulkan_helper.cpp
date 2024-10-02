@@ -92,11 +92,11 @@ void util::EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer com
     brain.device.free(brain.commandPool, commandBuffer);
 }
 
-void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
+void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset)
 {
     vk::BufferCopy copyRegion {};
     copyRegion.srcOffset = 0;
-    copyRegion.dstOffset = 0;
+    copyRegion.dstOffset = offset;
     copyRegion.size = size;
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }

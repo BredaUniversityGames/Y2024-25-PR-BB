@@ -3,6 +3,8 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 
+class BatchBuffer;
+
 struct alignas(64) UBO
 {
     glm::mat4 model;
@@ -29,7 +31,7 @@ public:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
     vk::DescriptorSetLayout& DescriptorSetLayout() { return _descriptorSetLayout; }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);

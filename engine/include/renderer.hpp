@@ -19,6 +19,7 @@ class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
+class BatchBuffer;
 
 class Renderer
 {
@@ -28,6 +29,8 @@ public:
 
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
+
+    std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
     friend Engine;
@@ -58,6 +61,8 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _imageAvailableSemaphores;
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
+
+    std::unique_ptr<BatchBuffer> _batchBuffer;
 
     CameraStructure _cameraStructure;
 
