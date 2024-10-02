@@ -224,11 +224,12 @@ void Renderer::InitializeCameraUBODescriptors()
     // Create buffers.
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
+        std::string name = std::format("[{}] Camera UBO", i);
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eUniformBuffer,
             _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
             VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
+            name);
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
     }
