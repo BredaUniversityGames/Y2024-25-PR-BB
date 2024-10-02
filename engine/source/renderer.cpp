@@ -2,12 +2,9 @@
 
 #include <utility>
 
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
 #include "model_loader.hpp"
-#include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -20,6 +17,7 @@
 #include "application.hpp"
 #include "engine.hpp"
 #include "single_time_commands.hpp"
+#include "batch_buffer.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -39,8 +37,10 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
 
+    _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
+
     SingleTimeCommands commandBufferPrimitive { _brain };
-    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive);
+    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
@@ -60,15 +60,42 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     CreateCommandBuffers();
     CreateSyncObjects();
 }
+
+std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
+{
+    uint32_t totalVertexSize {};
+    uint32_t totalIndexSize {};
+    for (const auto& path : models)
+    {
+        uint32_t vertexSize;
+        uint32_t indexSize;
+
+        _modelLoader->ReadGeometrySize(path, vertexSize, indexSize);
+        totalVertexSize += vertexSize;
+        totalIndexSize += indexSize;
+    }
+
+    spdlog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
+
+    std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
+
+    for (const auto& path : models)
+    {
+        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer)));
+    }
+
+    return loadedModels;
+}
+
 Renderer::~Renderer()
 {
     _modelLoader.reset();
 
-    _brain.ImageResourceManager().Destroy(_environmentMap);
-    _brain.ImageResourceManager().Destroy(_hdrTarget);
+    _brain.GetImageResourceManager().Destroy(_environmentMap);
+    _brain.GetImageResourceManager().Destroy(_hdrTarget);
 
-    _brain.ImageResourceManager().Destroy(_brightnessTarget);
-    _brain.ImageResourceManager().Destroy(_bloomTarget);
+    _brain.GetImageResourceManager().Destroy(_brightnessTarget);
+    _brain.GetImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -79,17 +106,9 @@ Renderer::~Renderer()
 
     for (auto& model : _scene->models)
     {
-        for (auto& mesh : model->meshes)
-        {
-            for (auto& primitive : mesh->primitives)
-            {
-                vmaDestroyBuffer(_brain.vmaAllocator, primitive.vertexBuffer, primitive.vertexBufferAllocation);
-                vmaDestroyBuffer(_brain.vmaAllocator, primitive.indexBuffer, primitive.indexBufferAllocation);
-            }
-        }
         for (auto& texture : model->textures)
         {
-            _brain.ImageResourceManager().Destroy(texture);
+            _brain.GetImageResourceManager().Destroy(texture);
         }
         for (auto& material : model->materials)
         {
@@ -126,10 +145,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _brain.drawStats = {};
 
-    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
-    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_brightnessTarget);
-    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_bloomTarget);
-    const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
+    const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);
+    const Image* hdrBloomImage = _brain.GetImageResourceManager().Access(_brightnessTarget);
+    const Image* hdrBlurredBloomImage = _brain.GetImageResourceManager().Access(_bloomTarget);
+    const Image* shadowMap = _brain.GetImageResourceManager().Access(_gBuffers->Shadow());
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -142,14 +161,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
-    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
+    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
@@ -292,7 +311,7 @@ void Renderer::InitializeHDRTarget()
     ImageCreation hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _brain.GetImageResourceManager().Create(hdrCreation);
 }
 
 void Renderer::InitializeBloomTargets()
@@ -305,8 +324,8 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _brightnessTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _brain.GetImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _brain.GetImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Renderer::LoadEnvironmentMap()
@@ -326,7 +345,7 @@ void Renderer::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
+    _environmentMap = _brain.GetImageResourceManager().Create(envMapCreation);
 }
 void Renderer::UpdateCamera(const Camera& camera)
 {

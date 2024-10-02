@@ -41,10 +41,12 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
 
-    _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-    _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+    std::vector<std::string> modelPaths = {
+        //"assets/models/DamagedHelmet.glb",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+    };
 
-    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
+    _scene->models = _renderer->FrontLoadModels(modelPaths);
 
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
@@ -52,7 +54,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+        _scene->gameObjects.emplace_back(transform, _scene->models[0]);
     }
 
     _renderer->UpdateBindless();
@@ -101,17 +103,17 @@ void Engine::Run()
             return;
         }
 
+        int32_t mouseX, mouseY;
+        _application->GetInputManager().GetMousePosition(mouseX, mouseY);
+
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
             _application->SetMouseHidden(!_application->GetMouseHidden());
 
         if (_application->GetMouseHidden())
         {
             ZoneNamedN(zone, "Update Camera", true);
-            int x, y;
-            _application->GetInputManager().GetMousePosition(x, y);
 
-            glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-            _lastMousePos = { x, y };
+            glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float CAM_SPEED = 0.003f;
@@ -143,6 +145,7 @@ void Engine::Run()
 
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
+        _lastMousePos = { mouseX, mouseY };
 
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
