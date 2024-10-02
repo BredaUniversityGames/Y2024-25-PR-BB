@@ -23,7 +23,6 @@ public:
 
 private:
     friend Renderer;
-    // std::unique_ptr<World> _world;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
