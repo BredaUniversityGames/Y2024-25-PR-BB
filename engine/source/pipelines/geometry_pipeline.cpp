@@ -14,7 +14,7 @@ GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBu
     , _camera(camera)
 {
     CreateDescriptorSetLayout();
-    CreateUniformBuffers();
+    CreateInstanceBuffers();
     CreateDescriptorSets();
     CreatePipeline(materialDescriptorSetLayout);
 }
@@ -25,8 +25,8 @@ GeometryPipeline::~GeometryPipeline()
     _brain.device.destroy(_pipelineLayout);
     for (size_t i = 0; i < _frameData.size(); ++i)
     {
-        vmaUnmapMemory(_brain.vmaAllocator, _frameData[i].uniformBufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _frameData[i].uniformBuffer, _frameData[i].uniformBufferAllocation);
+        vmaUnmapMemory(_brain.vmaAllocator, _frameData[i].storageBufferAllocation);
+        vmaDestroyBuffer(_brain.vmaAllocator, _frameData[i].storageBuffer, _frameData[i].storageBufferAllocation);
     }
     _brain.device.destroy(_descriptorSetLayout);
 }
@@ -87,7 +87,9 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             transforms.emplace_back(gameObject.transform * node.transform);
         }
     }
-    UpdateUniformData(currentFrame, transforms, scene.camera);
+    UpdateInstanceData(currentFrame, transforms, scene.camera);
+
+    std::vector<vk::DrawIndexedIndirectCommand> drawCommands;
 
     uint32_t counter = 0;
     for (auto& gameObject : scene.gameObjects)
@@ -99,29 +101,29 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             for (const auto& primitive : node.mesh->primitives)
             {
                 assert(primitive.material && "There should always be a material available.");
-                const MaterialHandle& material = *primitive.material;
 
-                uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
-
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
-                    &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1,
-                    &_camera.descriptorSets[currentFrame], 0, nullptr);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0,
-                    nullptr);
-
-                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
-                vk::DeviceSize offsets[] = { 0 };
-                commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
-
-                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
                 _brain.drawStats.indexCount += primitive.count;
-                _brain.drawStats.drawCalls++;
+
+                drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }
         }
     }
+
+    batchBuffer.WriteDraws(drawCommands, currentFrame);
+
+    const MaterialHandle& material = *scene.gameObjects[0].model->meshes[0]->primitives[0].material;
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0, nullptr);
+
+    vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
+    vk::DeviceSize offsets[] = { 0 };
+    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
+    commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
+    _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 
@@ -267,7 +269,7 @@ void GeometryPipeline::CreateDescriptorSetLayout()
     vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
     descriptorSetLayoutBinding.binding = 0;
     descriptorSetLayoutBinding.descriptorCount = 1;
-    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
     descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
     descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
@@ -303,9 +305,9 @@ void GeometryPipeline::CreateDescriptorSets()
 void GeometryPipeline::UpdateGeometryDescriptorSet(uint32_t frameIndex)
 {
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _frameData[frameIndex].uniformBuffer;
+    bufferInfo.buffer = _frameData[frameIndex].storageBuffer;
     bufferInfo.offset = 0;
-    bufferInfo.range = sizeof(UBO);
+    bufferInfo.range = vk::WholeSize;
 
     std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
 
@@ -313,37 +315,37 @@ void GeometryPipeline::UpdateGeometryDescriptorSet(uint32_t frameIndex)
     bufferWrite.dstSet = _frameData[frameIndex].descriptorSet;
     bufferWrite.dstBinding = 0;
     bufferWrite.dstArrayElement = 0;
-    bufferWrite.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
     bufferWrite.descriptorCount = 1;
     bufferWrite.pBufferInfo = &bufferInfo;
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
-void GeometryPipeline::CreateUniformBuffers()
+void GeometryPipeline::CreateInstanceBuffers()
 {
-    vk::DeviceSize bufferSize = sizeof(UBO) * MAX_MESHES;
+    vk::DeviceSize bufferSize = sizeof(InstanceData) * MAX_MESHES;
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {
         util::CreateBuffer(_brain, bufferSize,
-            vk::BufferUsageFlagBits::eUniformBuffer,
-            _frameData[i].uniformBuffer, true, _frameData[i].uniformBufferAllocation,
+            vk::BufferUsageFlagBits::eStorageBuffer,
+            _frameData[i].storageBuffer, true, _frameData[i].storageBufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
             "Uniform buffer");
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].uniformBufferAllocation, &_frameData[i].uniformBufferMapped),
+        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].storageBufferAllocation, &_frameData[i].storageBufferMapped),
             "Failed mapping memory for UBO!");
     }
 }
 
-void GeometryPipeline::UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera)
+void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera)
 {
-    std::array<UBO, MAX_MESHES> ubos;
-    for (size_t i = 0; i < std::min(transforms.size(), ubos.size()); ++i)
+    static std::array<InstanceData, MAX_MESHES> instances;
+    for (size_t i = 0; i < std::min(transforms.size(), instances.size()); ++i)
     {
-        ubos[i].model = transforms[i];
+        instances[i].model = transforms[i];
     }
 
-    memcpy(_frameData[currentFrame].uniformBufferMapped, ubos.data(), ubos.size() * sizeof(UBO));
+    memcpy(_frameData[currentFrame].storageBufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
 }

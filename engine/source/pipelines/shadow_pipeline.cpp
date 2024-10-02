@@ -55,7 +55,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
+                uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(InstanceData));
 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
                     &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);

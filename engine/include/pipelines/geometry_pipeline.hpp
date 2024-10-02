@@ -5,21 +5,19 @@
 
 class BatchBuffer;
 
-struct UBO
+struct InstanceData
 {
     alignas(16) glm::mat4 model;
 };
-
-constexpr uint32_t MAX_MESHES = 2048;
 
 class GeometryPipeline
 {
 public:
     struct FrameData
     {
-        vk::Buffer uniformBuffer;
-        VmaAllocation uniformBufferAllocation;
-        void* uniformBufferMapped;
+        vk::Buffer storageBuffer;
+        VmaAllocation storageBufferAllocation;
+        void* storageBufferMapped;
         vk::DescriptorSet descriptorSet;
     };
 
@@ -43,11 +41,11 @@ private:
 
     void CreateDescriptorSets();
 
-    void CreateUniformBuffers();
+    void CreateInstanceBuffers();
 
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
 
-    void UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera);
+    void UpdateInstanceData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

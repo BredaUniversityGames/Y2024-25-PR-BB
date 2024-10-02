@@ -58,6 +58,7 @@ void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::Buffe
 
     util::VK_ASSERT(vmaCreateBuffer(brain.vmaAllocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
     vmaSetAllocationName(brain.vmaAllocator, allocation, name.data());
+    util::NameObject(buffer, name, brain.device, brain.dldi);
 }
 
 vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanBrain& brain)

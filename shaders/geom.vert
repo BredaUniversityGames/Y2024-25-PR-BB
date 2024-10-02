@@ -1,9 +1,9 @@
 #version 460
 
-layout (set = 1, binding = 0) uniform UBO
+layout (std430, set = 1, binding = 0) buffer InstanceData
 {
-    mat4 model;
-} ubo;
+    mat4 models[];
+} instances;
 
 layout (set = 2, binding = 0) uniform CameraUBO
 {
@@ -29,10 +29,11 @@ layout (location = 3) out mat3 TBN;
 
 void main()
 {
-    position = (ubo.model * vec4(inPosition, 1.0)).xyz;
-    normal = normalize((ubo.model * vec4(inNormal, 0.0)).xyz);
-    vec3 tangent = normalize((ubo.model * vec4(inTangent.xyz, 0.0)).xyz);
-    vec3 bitangent = normalize((ubo.model * vec4(inTangent.w * cross(inNormal, inTangent.xyz), 0.0)).xyz);
+    mat4 modelTransform = instances.models[gl_DrawID];
+    position = (modelTransform * vec4(inPosition, 1.0)).xyz;
+    normal = normalize((modelTransform * vec4(inNormal, 0.0)).xyz);
+    vec3 tangent = normalize((modelTransform * vec4(inTangent.xyz, 0.0)).xyz);
+    vec3 bitangent = normalize((modelTransform * vec4(inTangent.w * cross(inNormal, inTangent.xyz), 0.0)).xyz);
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 

@@ -28,12 +28,33 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
         _indexBufferAllocation,
         VMA_MEMORY_USAGE_GPU_ONLY,
         "Unified index buffer");
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        util::CreateBuffer(
+            _brain,
+            sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES,
+            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
+            _indirectDrawBuffers[i],
+            true,
+            _indirectDrawBufferAllocations[i],
+            VMA_MEMORY_USAGE_AUTO,
+            "Indirect draw buffer");
+
+        vmaMapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i], &_indirectDrawBufferPtr[i]);
+    }
 }
 
 BatchBuffer::~BatchBuffer()
 {
     vmaDestroyBuffer(_brain.vmaAllocator, _vertexBuffer, _vertexBufferAllocation);
     vmaDestroyBuffer(_brain.vmaAllocator, _indexBuffer, _indexBufferAllocation);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        vmaUnmapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i]);
+        vmaDestroyBuffer(_brain.vmaAllocator, _indirectDrawBuffers[i], _indirectDrawBufferAllocations[i]);
+    }
 }
 
 uint32_t BatchBuffer::AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer)
@@ -58,4 +79,11 @@ uint32_t BatchBuffer::AppendIndices(const std::vector<uint32_t>& indices, Single
     _indexOffset += indices.size();
 
     return originalOffset;
+}
+
+void BatchBuffer::WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& commands, uint32_t frameIndex) const
+{
+    assert(commands.size() < MAX_MESHES && "Too many draw commands");
+
+    std::memcpy(_indirectDrawBufferPtr[frameIndex], commands.data(), commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 }
