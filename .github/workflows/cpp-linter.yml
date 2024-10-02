@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    paths: ['**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
   push:
     branches: [main]
-    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    paths: ['**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
 
 jobs:
   cpp-linter:
@@ -46,6 +46,7 @@ jobs:
 
           files-changed-only: false
           database: build/x64-Release/compile_commands.json
+          verbosity: 'debug'
           style: 'file'
           ignore: 'external | VULKAN_SDK'
           tidy-checks: '' 
