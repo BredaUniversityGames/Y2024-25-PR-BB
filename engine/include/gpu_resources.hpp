@@ -115,16 +115,4 @@ struct Material
     ResourceHandle<Image> normalMap;
     ResourceHandle<Image> occlusionMap;
     ResourceHandle<Image> emissiveMap;
-
-    static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
-    {
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-        bindings[0].binding = 0;
-        bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-        bindings[0].descriptorCount = 1;
-        bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-        return bindings;
-    }
 };
