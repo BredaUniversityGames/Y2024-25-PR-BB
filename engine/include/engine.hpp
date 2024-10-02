@@ -4,6 +4,7 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 
+class ECS;
 class Application;
 class Renderer;
 class Editor;
@@ -29,6 +30,8 @@ private:
     std::unique_ptr<Editor> _editor;
 
     std::unique_ptr<Renderer> _renderer;
+
+    std::unique_ptr<ECS> _ecs;
 
     std::shared_ptr<SceneDescription> _scene;
 

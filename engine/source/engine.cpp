@@ -2,22 +2,21 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+#include "ECS.hpp"
+
 #include <stb_image.h>
 
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
-#include "mesh_primitives.hpp"
-#include "pipelines/geometry_pipeline.hpp"
-#include "pipelines/lighting_pipeline.hpp"
-#include "pipelines/skydome_pipeline.hpp"
-#include "pipelines/tonemapping_pipeline.hpp"
-#include "pipelines/ibl_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "renderer.hpp"
-#include "single_time_commands.hpp"
 #include "editor.hpp"
+
+// TODO remove this
+#include "systems/test_system.hpp"
+#include "components/test_component.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -36,6 +35,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application = std::move(application);
     _renderer = std::make_unique<Renderer>(initInfo, _application);
+
+    _ecs = std::make_unique<ECS>();
+
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
 
@@ -75,6 +77,12 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
+
+    _ecs->AddSystem<TestSystem>();
+
+    entt::entity entity = _ecs->_registry.create();
+    _ecs->_registry.emplace<TestComponent>(entity);
+
     while (!ShouldQuit())
     {
         // update input
@@ -139,6 +147,10 @@ void Engine::Run()
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
 
+        _ecs->UpdateSystems(deltaTimeMS);
+        _ecs->RemovedDestroyed();
+        _ecs->RenderSystems();
+
         _renderer->UpdateCamera(_scene->camera);
 
         _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
@@ -157,4 +169,5 @@ Engine::~Engine()
 
     _editor.reset();
     _renderer.reset();
+    _ecs.reset();
 }
