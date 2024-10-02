@@ -1,9 +1,16 @@
 #version 460
 
+struct Instance
+{
+    mat4 model;
+    uint materialIndex;
+};
+
 layout (std430, set = 0, binding = 0) buffer InstanceData
 {
-    mat4 models[];
+    Instance data[];
 } instances;
+
 
 layout (set = 1, binding = 0) uniform CameraUBO
 {
@@ -22,6 +29,6 @@ layout (location = 0) in vec3 inPosition;
 layout (location = 0) out vec3 position;
 
 void main() {
-    position = (instances.models[0] * vec4(inPosition, 1.0)).xyz;
+    position = (instances.data[gl_DrawID].model * vec4(inPosition, 1.0)).xyz;
     gl_Position = (cameraUbo.lightVP) * vec4(position, 1.0);
 }

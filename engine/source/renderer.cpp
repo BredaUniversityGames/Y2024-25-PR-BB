@@ -141,6 +141,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
+    _geometryPipeline->UpdateInstanceData(_currentFrame, *_scene);
+
     _brain.drawStats = {};
 
     const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);
@@ -159,8 +161,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);

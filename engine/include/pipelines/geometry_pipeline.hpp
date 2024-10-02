@@ -31,6 +31,8 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
 
+    void UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene);
+
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
@@ -44,8 +46,6 @@ private:
     void CreateInstanceBuffers();
 
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
-
-    void UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

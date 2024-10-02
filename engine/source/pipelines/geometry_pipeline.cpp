@@ -78,8 +78,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    UpdateInstanceData(currentFrame, scene);
-
+    // TODO: this can be cached to cause less allocations.
     std::vector<vk::DrawIndexedIndirectCommand> drawCommands;
 
     uint32_t counter = 0;
@@ -99,9 +98,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     }
 
     batchBuffer.WriteDraws(drawCommands, currentFrame);
-
-    ResourceHandle<Material> material = scene.gameObjects[0].model->meshes[0]->primitives[0].material;
-    assert(_brain.GetMaterialResourceManager().IsValid(material) && "Invalid material used");
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);

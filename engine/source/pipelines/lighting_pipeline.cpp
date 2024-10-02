@@ -63,6 +63,9 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::BeginLabel(commandBuffer, "Lighting pass", glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
+    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
+    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
+
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);

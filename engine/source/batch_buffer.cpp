@@ -85,5 +85,6 @@ void BatchBuffer::WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& 
 {
     assert(commands.size() < MAX_MESHES && "Too many draw commands");
 
+    _drawCount = commands.size();
     std::memcpy(_indirectDrawBufferPtr[frameIndex], commands.data(), commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 }

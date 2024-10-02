@@ -46,33 +46,15 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.setViewport(0, 1, &viewport);
     commandBuffer.setScissor(0, 1, &scissor);
 
-    uint32_t counter = 0;
-    for (auto& gameObject : scene.gameObjects)
-    {
-        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i, ++counter)
-        {
-            const auto& node = gameObject.model->hierarchy.allNodes[i];
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
 
-            for (const auto& primitive : node.mesh->primitives)
-            {
-                uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(InstanceData));
-
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
-                    &_frameData[currentFrame].descriptorSet, 1, &dynamicOffset);
-                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
-                    &_camera.descriptorSets[currentFrame], 0, nullptr);
-
-                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
-                vk::DeviceSize offsets[] = { 0 };
-                commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
-
-                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
-                _brain.drawStats.indexCount += primitive.count;
-                _brain.drawStats.drawCalls++;
-            }
-        }
-    }
+    vk::DeviceSize offsets[] = { 0 };
+    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
+    commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, batchBuffer.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand));
+    _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 
