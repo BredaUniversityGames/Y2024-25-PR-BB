@@ -114,7 +114,6 @@ struct Material
     vk::Buffer uniformBuffer;
     VmaAllocation uniformAllocation;
 
-    // Maps used to know they are used?
     ResourceHandle<Image> albedoMap;
     ResourceHandle<Image> mrMap;
     ResourceHandle<Image> normalMap;
