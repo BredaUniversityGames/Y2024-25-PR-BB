@@ -18,7 +18,7 @@ ModelLoader::ModelLoader(const VulkanBrain& brain)
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    ResourceHandle<Image> defaultImage = _brain.ImageResourceManager().Create(defaultImageCreation);
+    ResourceHandle<Image> defaultImage = _brain.GetImageResourceManager().Create(defaultImageCreation);
 
     MaterialCreation defaultMaterialCreationInfo{};
     defaultMaterialCreationInfo.albedoMap = defaultImage;
@@ -403,16 +403,14 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        ResourceHandle<Image> img = _brain.ImageResourceManager().Create(imageCreation);
-        modelHandle.textures.emplace_back(img);
+        modelHandle.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
     for (auto& material : gltf.materials)
     {
         MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
-        ResourceHandle<Material> mat = _brain.MaterialResourceManager().Create(materialCreation);
-        modelHandle.materials.emplace_back(mat);
+        modelHandle.materials.emplace_back(_brain.MaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes

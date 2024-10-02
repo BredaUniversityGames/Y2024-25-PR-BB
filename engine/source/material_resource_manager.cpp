@@ -17,11 +17,11 @@ ResourceHandle<Material> material_resource_manager::Create(const MaterialCreatio
     materialResource.emissiveMap = creation.emissiveMap;
 
     Material::GPUInfo& gpuInfo = materialResource.gpuInfo;
-    gpuInfo.useAlbedoMap = _brain.ImageResourceManager().IsValid(materialResource.albedoMap);
-    gpuInfo.useMRMap = _brain.ImageResourceManager().IsValid(materialResource.mrMap);
-    gpuInfo.useNormalMap = _brain.ImageResourceManager().IsValid(materialResource.normalMap);
-    gpuInfo.useOcclusionMap = _brain.ImageResourceManager().IsValid(materialResource.occlusionMap);
-    gpuInfo.useEmissiveMap = _brain.ImageResourceManager().IsValid(materialResource.emissiveMap);
+    gpuInfo.useAlbedoMap = _brain.GetImageResourceManager().IsValid(materialResource.albedoMap);
+    gpuInfo.useMRMap = _brain.GetImageResourceManager().IsValid(materialResource.mrMap);
+    gpuInfo.useNormalMap = _brain.GetImageResourceManager().IsValid(materialResource.normalMap);
+    gpuInfo.useOcclusionMap = _brain.GetImageResourceManager().IsValid(materialResource.occlusionMap);
+    gpuInfo.useEmissiveMap = _brain.GetImageResourceManager().IsValid(materialResource.emissiveMap);
 
     gpuInfo.albedoMapIndex = materialResource.albedoMap.index;
     gpuInfo.mrMapIndex = materialResource.mrMap.index;

@@ -89,9 +89,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                if (primitive.topology != vk::PrimitiveTopology::eTriangleList)
-                    throw std::runtime_error("No support for topology other than triangle list!");
-
                 uint32_t dynamicOffset = static_cast<uint32_t>(counter * sizeof(UBO));
 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
