@@ -22,14 +22,14 @@ ModelLoader::ModelLoader(const VulkanBrain& brain)
 
     MaterialCreation defaultMaterialCreationInfo{};
     defaultMaterialCreationInfo.albedoMap = defaultImage;
-    _defaultMaterial = _brain.MaterialResourceManager().Create(defaultMaterialCreationInfo);
+    _defaultMaterial = _brain.GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
 ModelLoader::~ModelLoader()
 {
-    const Material* defaultMaterial = _brain.MaterialResourceManager().Access(_defaultMaterial);
+    const Material* defaultMaterial = _brain.GetMaterialResourceManager().Access(_defaultMaterial);
     _brain.GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
-    _brain.MaterialResourceManager().Destroy(_defaultMaterial);
+    _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
 ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
@@ -410,7 +410,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
     for (auto& material : gltf.materials)
     {
         MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
-        modelHandle.materials.emplace_back(_brain.MaterialResourceManager().Create(materialCreation));
+        modelHandle.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
@@ -442,7 +442,7 @@ ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& c
     ResourceHandle<Material> material)
 {
     MeshPrimitiveHandle primitiveHandle {};
-    primitiveHandle.material = _brain.MaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
+    primitiveHandle.material = _brain.GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitiveHandle.count = primitive.indices.size();
     primitiveHandle.vertexOffset = batchBuffer.AppendVertices(primitive.vertices, commandBuffer);
     primitiveHandle.indexOffset = batchBuffer.AppendIndices(primitive.indices, commandBuffer);

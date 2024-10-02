@@ -2,11 +2,11 @@
 #include "util.hpp"
 #include "vulkan_helper.hpp"
 
-material_resource_manager::material_resource_manager(const VulkanBrain& brain) :
+MaterialResourceManager::MaterialResourceManager(const VulkanBrain& brain) :
     _brain(brain)
 {}
 
-ResourceHandle<Material> material_resource_manager::Create(const MaterialCreation& creation)
+ResourceHandle<Material> MaterialResourceManager::Create(const MaterialCreation& creation)
 {
     Material materialResource{};
 

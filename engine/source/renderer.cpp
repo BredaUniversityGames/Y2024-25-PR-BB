@@ -112,7 +112,7 @@ Renderer::~Renderer()
         }
         for (auto& material : model->materials)
         {
-            _brain.MaterialResourceManager().Destroy(material);
+            _brain.GetMaterialResourceManager().Destroy(material);
         }
     }
 

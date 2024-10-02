@@ -5,10 +5,10 @@
 
 class VulkanBrain;
 
-class material_resource_manager : public ResourceManager<Material>
+class MaterialResourceManager : public ResourceManager<Material>
 {
 public:
-    explicit material_resource_manager(const VulkanBrain& brain);
+    explicit MaterialResourceManager(const VulkanBrain& brain);
     ResourceHandle<Material> Create(const MaterialCreation& creation);
     ResourceHandle<Material> Create(const Material& material) override { return ResourceManager<Material>::Create(material); }
 

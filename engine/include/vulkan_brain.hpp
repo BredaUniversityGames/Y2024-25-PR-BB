@@ -67,7 +67,7 @@ public:
         return _imageResourceManager;
     }
 
-    material_resource_manager& MaterialResourceManager() const
+    MaterialResourceManager& GetMaterialResourceManager() const
     {
         return _materialResourceManager;
     }
@@ -112,7 +112,7 @@ private:
     };
 
     mutable class ImageResourceManager _imageResourceManager;
-    mutable class material_resource_manager _materialResourceManager;
+    mutable class MaterialResourceManager _materialResourceManager;
 
     void UpdateBindlessImages() const;
     void UpdateBindlessMaterials() const;
