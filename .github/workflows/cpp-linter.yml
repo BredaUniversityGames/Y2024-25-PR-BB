@@ -36,6 +36,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+            
+          files-changed-only: false
           database: build/WSL-Release/compile_commands.json
           style: 'file'
           ignore: 'external'
