@@ -1,0 +1,184 @@
+---
+Checks: '
+-*,
+
+modernize-*,
+-modernize-use-trailing-return-type,
+-modernize-use-auto,
+
+readability-*,
+-readability-identifier-length,
+-readability-uppercase-literal-suffix,
+-readability-simplify-boolean-expr,
+-readability-use-anyofallof,
+-readability-else-after-return,
+
+performance-*,
+
+misc-*,
+-misc-include-cleaner,
+
+bugprone-*
+'
+
+CheckOptions:
+
+  # Naming convention for classes
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.ClassPrefix
+    value: ''
+  - key: readability-identifier-naming.ClassSuffix
+    value: ''
+
+  # Naming convention for structs
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructPrefix
+    value: ''
+  - key: readability-identifier-naming.StructSuffix
+    value: ''
+
+  # Naming convention for functions
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.FunctionPrefix
+    value: ''
+  - key: readability-identifier-naming.FunctionSuffix
+    value: ''
+
+  # Naming convention for methods
+  - key: readability-identifier-naming.MethodCase
+    value: lower_case
+  - key: readability-identifier-naming.MethodPrefix
+    value: ''
+  - key: readability-identifier-naming.MethodSuffix
+    value: ''
+
+  # Naming convention for variables
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.VariablePrefix
+    value: ''
+  - key: readability-identifier-naming.VariableSuffix
+    value: ''
+
+  # Naming convention for global variables
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariablePrefix
+    value: ''
+  - key: readability-identifier-naming.GlobalVariableSuffix
+    value: ''
+
+  # Naming convention for constants
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.ConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.ConstantSuffix
+    value: ''
+
+  # Naming convention for member variables
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberPrefix
+    value: '_'
+  - key: readability-identifier-naming.MemberSuffix
+    value: ''
+
+  # Naming convention for member variables
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.MemberSuffix
+    value: ''
+
+  # Naming convention for private member variables
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: '_'
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: ''
+
+  # Naming convention for parameters
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.ParameterSuffix
+    value: ''
+
+  # Naming convention for template parameters
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TemplateParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.TemplateParameterSuffix
+    value: ''
+
+  # Naming convention for local variables
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariablePrefix
+    value: ''
+  - key: readability-identifier-naming.LocalVariableSuffix
+    value: ''
+
+  # Naming convention for namespaces
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.NamespacePrefix
+    value: ''
+  - key: readability-identifier-naming.NamespaceSuffix
+    value: ''
+
+  # Naming convention for macros
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.MacroDefinitionPrefix
+    value: ''
+  - key: readability-identifier-naming.MacroDefinitionSuffix
+    value: ''
+
+  # Naming convention for enum constants
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.EnumConstantSuffix
+    value: ''
+
+  # Naming convention for enums
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumPrefix
+    value: ''
+  - key: readability-identifier-naming.EnumSuffix
+    value: ''
+
+  # Naming convention for typedefs
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefPrefix
+    value: ''
+  - key: readability-identifier-naming.TypedefSuffix
+    value: ''
+
+  # Naming convention for using alias
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasPrefix
+    value: ''
+  - key: readability-identifier-naming.TypeAliasSuffix
+    value: ''
+
+  # Naming convention for abstract classes
+  - key: readability-identifier-naming.AbstractClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.AbstractClassPrefix
+    value: 'I'
+  - key: readability-identifier-naming.AbstractClassSuffix
+    value: ''
