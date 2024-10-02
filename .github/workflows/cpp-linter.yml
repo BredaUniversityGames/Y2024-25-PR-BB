@@ -35,7 +35,7 @@ jobs:
           vulkan-use-cache: true
 
       - name: Setup database
-        run: cmake --preset WSL-Release
+        run: cmake --preset x64-Release
 
       - name: CPP-Linter
         uses: cpp-linter/cpp-linter-action@v2
@@ -45,8 +45,8 @@ jobs:
         with:
 
           files-changed-only: false
-          database: build/WSL-Release/compile_commands.json
+          database: build/x64-Release/compile_commands.json
           style: 'file'
-          ignore: 'external'
+          ignore: 'external | VULKAN_SDK'
           tidy-checks: '' 
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
