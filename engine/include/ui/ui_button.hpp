@@ -18,6 +18,11 @@ struct ButtonDrawInfo
 class UIButton : public UIElement
 {
 public:
+    UIButton()
+        : UIElement(1)
+    {
+    }
+
     enum class ButtonState
     {
         NORMAL,
@@ -30,7 +35,7 @@ public:
 
     void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
 
-    void UpdateChildAbsoluteLocations() override {};
+    void UpdateChildAbsoluteLocations() override;
     ResourceHandle<Image> m_NormalImage = {};
     ResourceHandle<Image> m_HoveredImage = {};
     ResourceHandle<Image> m_PressedImage = {};
@@ -42,11 +47,12 @@ public:
 class UIButtonRenderSystem : public UIRenderSystem<ButtonDrawInfo>
 {
 public:
-    UIButtonRenderSystem(const UIPipeLine& pl)
+    explicit UIButtonRenderSystem(const UIPipeLine& pl)
         : UIRenderSystem<ButtonDrawInfo>(pl)
     {
     }
+
     void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain&) override;
 
-    ~UIButtonRenderSystem() = default;
+    ~UIButtonRenderSystem() override = default;
 };

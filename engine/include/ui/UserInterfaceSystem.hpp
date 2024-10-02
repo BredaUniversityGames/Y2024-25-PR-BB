@@ -57,6 +57,12 @@ public:
 
 struct UIElement
 {
+
+    explicit UIElement(uint16_t max_children)
+        : m_MaxChildren(max_children)
+    {
+    }
+
     enum class AnchorPoint
     {
         MIDDLE,
@@ -72,7 +78,12 @@ struct UIElement
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
      */
-    void UpdateAbsoluteLocation(const glm::vec2& location) { AbsoluteLocation = location; }
+    void UpdateAbsoluteLocation(const glm::vec2& location, bool updateChildren = true)
+    {
+        AbsoluteLocation = location;
+        if (updateChildren)
+            UpdateChildAbsoluteLocations();
+    }
 
     /**
      *
@@ -93,10 +104,26 @@ struct UIElement
             i->Update(input);
     }
 
-    AnchorPoint m_AnchorPoint = AnchorPoint::TOP_LEFT;
+    void AddChild(std::unique_ptr<UIElement> child)
+    {
+        if (chilren.size() < m_MaxChildren && child != nullptr)
+            chilren.push_back(std::move(child));
+        else
+            spdlog::warn("UIElement::AddChild:Can't add, Too many children");
+    }
+
+    [[nodiscard]] const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
+    {
+        return chilren;
+    }
+
+    AnchorPoint m_AnchorPoint
+        = AnchorPoint::TOP_LEFT;
+
     bool m_Visible = true;
 
     virtual void UpdateChildAbsoluteLocations() = 0;
+
     glm::vec2 Scale {};
 
     virtual ~UIElement() = default;
@@ -105,6 +132,8 @@ protected:
     glm::vec2 AbsoluteLocation {};
     glm::vec2 RelativeLocation {};
 
+private:
+    uint16_t m_MaxChildren = 0;
     std::vector<std::unique_ptr<UIElement>> chilren;
 };
 

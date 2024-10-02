@@ -50,7 +50,7 @@ void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk:
 void Canvas::UpdateChildAbsoluteLocations()
 {
     {
-        for (auto& i : chilren)
+        for (const auto& i : GetChildren())
         {
             auto relativeLocation = i->GetRelativeLocation();
             switch (i->m_AnchorPoint)
@@ -75,7 +75,7 @@ void Canvas::UpdateChildAbsoluteLocations()
 }
 void Canvas::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_render_context) const
 {
-    for (auto& i : chilren)
+    for (const auto& i : GetChildren())
     {
         i->SubmitDrawInfo(user_interface_render_context);
     }
@@ -83,7 +83,7 @@ void Canvas::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_render_co
 
 void UserInterfaceRenderContext::InitializeDefaultRenderSystems(const UIPipeLine& pipeline)
 {
-    //   AddRenderingSystem<UITextRenderSystem>(pipeline);
+    AddRenderingSystem<UITextRenderSystem>(pipeline);
     AddRenderingSystem<UIButtonRenderSystem>(pipeline);
 }
 

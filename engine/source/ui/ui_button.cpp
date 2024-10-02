@@ -70,6 +70,12 @@ void UIButton::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_context
         .Scale = this->Scale,
         .Image = image });
 }
+void UIButton::UpdateChildAbsoluteLocations()
+{
+    auto& child = GetChildren()[0];
+
+    child->UpdateAbsoluteLocation(AbsoluteLocation);
+}
 
 void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)
 {
