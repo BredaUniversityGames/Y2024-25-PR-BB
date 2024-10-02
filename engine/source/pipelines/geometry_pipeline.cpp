@@ -43,13 +43,13 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         info.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
     }
 
-    colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_gBuffers.AlbedoM())->view;
-    colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_gBuffers.NormalR())->view;
-    colorAttachmentInfos[2].imageView = _brain.ImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
-    colorAttachmentInfos[3].imageView = _brain.ImageResourceManager().Access(_gBuffers.Position())->view;
+    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_gBuffers.AlbedoM())->view;
+    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_gBuffers.NormalR())->view;
+    colorAttachmentInfos[2].imageView = _brain.GetImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
+    colorAttachmentInfos[3].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Position())->view;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Depth())->view;
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;

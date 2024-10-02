@@ -23,7 +23,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Shadow())->view;
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
@@ -157,7 +157,7 @@ void ShadowPipeline::CreatePipeline()
 
     // Use dynamic rendering
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.ImageResourceManager().Access(_gBuffers.Shadow())->format;
+    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
 

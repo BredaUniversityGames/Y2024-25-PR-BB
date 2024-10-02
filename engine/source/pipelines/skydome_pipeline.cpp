@@ -33,22 +33,22 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
     colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { _brain.ImageResourceManager().Access(_hdrTarget)->width,
-        _brain.ImageResourceManager().Access(_hdrTarget)->height };
+    renderingInfo.renderArea.extent = vk::Extent2D { _brain.GetImageResourceManager().Access(_hdrTarget)->width,
+        _brain.GetImageResourceManager().Access(_hdrTarget)->height };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
@@ -195,7 +195,10 @@ void SkydomePipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    std::array<vk::Format, 2> colorAttachmentFormats = { _brain.ImageResourceManager().Access(_hdrTarget)->format, _brain.ImageResourceManager().Access(_brightnessTarget)->format };
+    std::array<vk::Format, 2> colorAttachmentFormats = {
+        _brain.GetImageResourceManager().Access(_hdrTarget)->format,
+        _brain.GetImageResourceManager().Access(_brightnessTarget)->format
+    };
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();

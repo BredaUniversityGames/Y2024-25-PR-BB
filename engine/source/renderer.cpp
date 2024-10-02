@@ -91,11 +91,11 @@ Renderer::~Renderer()
 {
     _modelLoader.reset();
 
-    _brain.ImageResourceManager().Destroy(_environmentMap);
-    _brain.ImageResourceManager().Destroy(_hdrTarget);
+    _brain.GetImageResourceManager().Destroy(_environmentMap);
+    _brain.GetImageResourceManager().Destroy(_hdrTarget);
 
-    _brain.ImageResourceManager().Destroy(_brightnessTarget);
-    _brain.ImageResourceManager().Destroy(_bloomTarget);
+    _brain.GetImageResourceManager().Destroy(_brightnessTarget);
+    _brain.GetImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -108,7 +108,7 @@ Renderer::~Renderer()
     {
         for (auto& texture : model->textures)
         {
-            _brain.ImageResourceManager().Destroy(texture);
+            _brain.GetImageResourceManager().Destroy(texture);
         }
         for (auto& material : model->materials)
         {
@@ -145,10 +145,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _brain.drawStats = {};
 
-    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
-    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_brightnessTarget);
-    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_bloomTarget);
-    const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
+    const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);
+    const Image* hdrBloomImage = _brain.GetImageResourceManager().Access(_brightnessTarget);
+    const Image* hdrBlurredBloomImage = _brain.GetImageResourceManager().Access(_bloomTarget);
+    const Image* shadowMap = _brain.GetImageResourceManager().Access(_gBuffers->Shadow());
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -311,7 +311,7 @@ void Renderer::InitializeHDRTarget()
     ImageCreation hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _brain.GetImageResourceManager().Create(hdrCreation);
 }
 
 void Renderer::InitializeBloomTargets()
@@ -324,8 +324,8 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _brightnessTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _brain.GetImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _brain.GetImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Renderer::LoadEnvironmentMap()
@@ -345,7 +345,7 @@ void Renderer::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
+    _environmentMap = _brain.GetImageResourceManager().Create(envMapCreation);
 }
 void Renderer::UpdateCamera(const Camera& camera)
 {

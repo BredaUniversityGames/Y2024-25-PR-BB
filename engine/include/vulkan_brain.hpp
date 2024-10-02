@@ -60,7 +60,7 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const
+    ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
     }
