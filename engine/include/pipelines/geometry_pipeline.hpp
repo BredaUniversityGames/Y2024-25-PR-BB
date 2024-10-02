@@ -3,9 +3,10 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 
-struct UBO
+struct alignas(64) UBO
 {
-    alignas(16) glm::mat4 model;
+    glm::mat4 model;
+    uint32_t materialIndex;
 };
 
 constexpr uint32_t MAX_MESHES = 2048;
@@ -21,8 +22,7 @@ public:
         vk::DescriptorSet descriptorSet;
     };
 
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout,
-        const CameraStructure& camera);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera);
 
     ~GeometryPipeline();
 
@@ -35,7 +35,7 @@ public:
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
+    void CreatePipeline();
 
     void CreateDescriptorSetLayout();
 
@@ -45,7 +45,7 @@ private:
 
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
 
-    void UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera);
+    void UpdateUniformData(uint32_t currentFrame, const SceneDescription& scene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

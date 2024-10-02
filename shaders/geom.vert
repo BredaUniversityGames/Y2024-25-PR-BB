@@ -3,6 +3,7 @@
 layout (set = 1, binding = 0) uniform UBO
 {
     mat4 model;
+    uint materialIndex;
 } ubo;
 
 layout (set = 2, binding = 0) uniform CameraUBO

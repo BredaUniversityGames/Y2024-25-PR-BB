@@ -37,7 +37,6 @@ private:
     std::unique_ptr<ModelLoader> _modelLoader;
     std::shared_ptr<Application> _application;
 
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;

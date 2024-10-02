@@ -6,9 +6,8 @@
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 
-ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout)
+ModelLoader::ModelLoader(const VulkanBrain& brain)
     : _brain(brain)
-    , _materialDescriptorSetLayout(materialDescriptorSetLayout)
 {
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
@@ -21,7 +20,7 @@ ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout mater
     ResourceHandle<Image> defaultImage = _brain.ImageResourceManager().Create(defaultImageCreation);
 
     MaterialCreation defaultMaterialCreationInfo{};
-    defaultMaterialCreationInfo.albedoIndex = defaultImage.index;
+    defaultMaterialCreationInfo.albedoMap = defaultImage;
     _defaultMaterial = _brain.MaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
@@ -397,14 +396,16 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, const std::string_view name)
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(imageCreation));
+        ResourceHandle<Image> img = _brain.ImageResourceManager().Create(imageCreation);
+        modelHandle.textures.emplace_back(img);
     }
 
     // Load materials
     for (auto& material : gltf.materials)
     {
         MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
-        modelHandle.materials.emplace_back(_brain.MaterialResourceManager().Create(materialCreation));
+        ResourceHandle<Material> mat = _brain.MaterialResourceManager().Create(materialCreation);
+        modelHandle.materials.emplace_back(mat);
     }
 
     // Load meshes
@@ -415,7 +416,9 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, const std::string_view name)
         for (const auto& primitive : mesh.primitives)
         {
             MeshPrimitive processedPrimitive = ProcessPrimitive(primitive, gltf);
-            meshHandle.primitives.emplace_back(LoadPrimitive(processedPrimitive, commandBuffer, primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : nullptr));
+            MeshPrimitiveHandle primitivea = LoadPrimitive(processedPrimitive, commandBuffer,
+                primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
+            meshHandle.primitives.emplace_back(primitivea);
         }
 
         modelHandle.meshes.emplace_back(std::make_shared<MeshHandle>(meshHandle));
@@ -433,7 +436,7 @@ MeshPrimitiveHandle
 ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, ResourceHandle<Material> material)
 {
     MeshPrimitiveHandle primitiveHandle {};
-    primitiveHandle.material = _brain.MaterialResourceManager().IsValid(material) ? _defaultMaterial : material;
+    primitiveHandle.material = _brain.MaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitiveHandle.topology = primitive.topology;
     primitiveHandle.indexType = primitive.indexType;
     primitiveHandle.indexCount = primitive.indicesBytes.size() / (primitiveHandle.indexType == vk::IndexType::eUint16 ? 2 : 4);

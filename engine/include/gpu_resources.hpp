@@ -63,28 +63,26 @@ struct Image
 
 struct MaterialCreation
 {
-    ResourceHandle<Image> albedoMap;
+    ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Invalid();
     glm::vec4 albedoFactor{ 0.0f };
     uint32_t albedoUVChannel;
 
-    ResourceHandle<Image> metallicRoughnessMap;
+    ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Invalid();
     float metallicFactor{ 0.0f };
     float roughnessFactor{ 0.0f };
     std::optional<uint32_t> metallicRoughnessUVChannel;
 
-    ResourceHandle<Image> normalMap;
+    ResourceHandle<Image> normalMap = ResourceHandle<Image>::Invalid();
     float normalScale{ 0.0f };
     uint32_t normalUVChannel;
 
-    ResourceHandle<Image> occlusionMap;
+    ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Invalid();
     float occlusionStrength{ 0.0f };
     uint32_t occlusionUVChannel;
 
-    ResourceHandle<Image> emissiveMap;
+    ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Invalid();
     glm::vec3 emissiveFactor{ 0.0f };
     uint32_t emissiveUVChannel;
-
-    std::string name;
 };
 
 struct Material
@@ -97,21 +95,20 @@ struct Material
         float roughnessFactor { 0.0f };
         float normalScale { 0.0f };
         float occlusionStrength { 0.0f };
-
         glm::vec3 emissiveFactor { 0.0f };
-        int32_t useEmissiveMap { false };
 
+        int32_t useEmissiveMap { false };
         int32_t useAlbedoMap { false };
         int32_t useMRMap { false };
         int32_t useNormalMap { false };
         int32_t useOcclusionMap { false };
 
-        int32_t albedoMapIndex;
-        int32_t mrMapIndex;
-        int32_t normalMapIndex;
-        int32_t occlusionMapIndex;
-        int32_t emissiveMapIndex;
-    };
+        uint32_t albedoMapIndex;
+        uint32_t mrMapIndex;
+        uint32_t normalMapIndex;
+        uint32_t occlusionMapIndex;
+        uint32_t emissiveMapIndex;
+    } gpuInfo;
 
     vk::DescriptorSet descriptorSet;
     vk::Buffer uniformBuffer;
@@ -123,8 +120,6 @@ struct Material
     ResourceHandle<Image> normalMap;
     ResourceHandle<Image> occlusionMap;
     ResourceHandle<Image> emissiveMap;
-
-    std::string name;
 
     static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
     {

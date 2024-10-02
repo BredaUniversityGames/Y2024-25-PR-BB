@@ -11,7 +11,7 @@ class SingleTimeCommands;
 class ModelLoader
 {
 public:
-    ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout);
+    ModelLoader(const VulkanBrain& brain);
     ~ModelLoader();
 
     NON_COPYABLE(ModelLoader);
@@ -25,7 +25,6 @@ private:
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;
     ResourceHandle<Material> _defaultMaterial;
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
 
     MeshPrimitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
     ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data, std::string_view name);
