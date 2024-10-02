@@ -81,19 +81,25 @@ void Canvas::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_render_co
     }
 }
 
-void UserInterfaceRenderContext::InitializeDefaultRenderSystems(const UIPipeLine& pipeline)
+void UserInterfaceRenderContext::InitializeDefaultRenderSystems()
 {
-    AddRenderingSystem<UITextRenderSystem>(pipeline);
-    AddRenderingSystem<UIButtonRenderSystem>(pipeline);
+    std::shared_ptr<UIPipeLine> textPipeline = std::make_shared<UIPipeLine>(m_VulkanBrain);
+    textPipeline->CreatePipeLine("shaders/ui_rendering-v.spv", "shaders/text_rendering-f.spv");
+
+    std::shared_ptr<UIPipeLine> buttonPipeline = std::make_shared<UIPipeLine>(m_VulkanBrain);
+    buttonPipeline->CreatePipeLine("shaders/ui_rendering-v.spv", "shaders/button_rendering-f.spv");
+
+    AddRenderingSystem<UIButtonRenderSystem>(buttonPipeline);
+    AddRenderingSystem<UITextRenderSystem>(textPipeline);
 }
 
 vk::DescriptorSetLayout UIPipeLine::m_descriptorSetLayout = {};
 
-void UIPipeLine::CreatePipeLine()
+void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fragshader)
 {
     CreateDescriptorSetLayout();
-    auto vertShaderCode = shader::ReadFile("shaders/ui_uber_vert-v.spv");
-    auto fragShaderCode = shader::ReadFile("shaders/ui_uber_frag-f.spv");
+    auto vertShaderCode = shader::ReadFile(vertshader);
+    auto fragShaderCode = shader::ReadFile(fragshader);
     m_sampler = util::CreateSampler(m_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eLinear, 0);
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);

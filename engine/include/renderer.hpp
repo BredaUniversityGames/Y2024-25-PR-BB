@@ -66,7 +66,6 @@ private:
     std::shared_ptr<UIElement> m_UIElementToRender;
     std::unique_ptr<UserInterfaceRenderContext> m_UIRenderContext;
 
-    std::unique_ptr<UIPipeLine> _uiPipeLine;
     CameraStructure _cameraStructure;
 
     BloomSettings _bloomSettings;

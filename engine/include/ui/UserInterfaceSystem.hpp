@@ -23,7 +23,7 @@ class UIPipeLine;
 class UIRenderSystemBase
 {
 public:
-    UIRenderSystemBase(const UIPipeLine& pipe_line)
+    UIRenderSystemBase(std::shared_ptr<UIPipeLine>& pipe_line)
         : m_PipeLine(pipe_line)
     {
     }
@@ -33,15 +33,15 @@ public:
     virtual ~UIRenderSystemBase() = default;
 
 protected:
-    const UIPipeLine& m_PipeLine;
+    std::shared_ptr<UIPipeLine> m_PipeLine;
 };
 
 template <typename T>
 class UIRenderSystem : public UIRenderSystemBase
 {
 public:
-    UIRenderSystem(const UIPipeLine& pipe_line)
-        : UIRenderSystemBase(pipe_line)
+    UIRenderSystem(std::shared_ptr<UIPipeLine>& pl)
+        : UIRenderSystemBase(pl)
     {
     }
     std::queue<T> renderQueue;
@@ -134,7 +134,7 @@ protected:
 
 private:
     uint16_t m_MaxChildren = 0;
-    std::vector<std::unique_ptr<UIElement>> chilren;
+    std::vector<std::unique_ptr<UIElement>> chilren {};
 };
 
 void UpdateUI(const InputManager& input, UIElement* element);
@@ -148,6 +148,10 @@ void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk:
 struct Canvas : public UIElement
 {
 public:
+    Canvas()
+        : UIElement(std::numeric_limits<uint16_t>::max())
+    {
+    }
     void UpdateChildAbsoluteLocations() override;
     void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
 };
@@ -160,6 +164,11 @@ public:
 class UserInterfaceRenderContext
 {
 public:
+    explicit UserInterfaceRenderContext(const VulkanBrain& b)
+        : m_VulkanBrain(b)
+    {
+    }
+
     /**
      * Initialises and adds the default UI subsystems. these include:
      *
@@ -169,7 +178,7 @@ public:
      * Note that calling this function is optional and if you do not want or need these systems
       this function call can be omitted.
      */
-    void InitializeDefaultRenderSystems(const UIPipeLine& pipeline);
+    void InitializeDefaultRenderSystems();
 
     /**
      *
@@ -177,7 +186,7 @@ public:
      * @return If the operation was successful.
      */
     template <typename T>
-    bool AddRenderingSystem(const UIPipeLine& pipe_line)
+    bool AddRenderingSystem(std::shared_ptr<UIPipeLine>& pipe_line)
     {
         static_assert(std::is_base_of<UIRenderSystemBase, T>::value,
             "Subsystem must be derived from UIRenderSystemBase");
@@ -202,16 +211,16 @@ public:
     std::unordered_map<std::type_index, std::unique_ptr<UIRenderSystemBase>> m_UIRenderSystems;
 
 protected:
+    const VulkanBrain& m_VulkanBrain;
 };
 
 // todo: refactor
 class UIPipeLine
 {
 public:
-    void CreatePipeLine();
-    UIPipeLine(const VulkanBrain& brain, const SwapChain& sc)
-        : m_brain(brain)
-        , m_swapChain(sc) {};
+    void CreatePipeLine(std::string_view vertshader, std::string_view fragshader);
+    UIPipeLine(const VulkanBrain& brain)
+        : m_brain(brain) {};
 
     void CreateDescriptorSetLayout();
     void UpdateTexture(ResourceHandle<Image> image, vk::DescriptorSet& set) const;
@@ -225,6 +234,5 @@ public:
     vk::DescriptorSet m_descriptorSet {};
     static vk::DescriptorSetLayout m_descriptorSetLayout;
     const VulkanBrain& m_brain;
-    const SwapChain& m_swapChain;
     vk::UniqueSampler m_sampler;
 };

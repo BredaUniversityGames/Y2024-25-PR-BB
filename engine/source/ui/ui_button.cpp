@@ -69,17 +69,21 @@ void UIButton::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_context
         .position = AbsoluteLocation,
         .Scale = this->Scale,
         .Image = image });
+
+    for (auto& i : GetChildren())
+    {
+        i->SubmitDrawInfo(user_interface_context);
+    }
 }
 void UIButton::UpdateChildAbsoluteLocations()
 {
-    auto& child = GetChildren()[0];
-
-    child->UpdateAbsoluteLocation(AbsoluteLocation);
+    for (auto& i : GetChildren())
+        i->UpdateAbsoluteLocation(AbsoluteLocation);
 }
 
 void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)
 {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine.m_uiPipeLine);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_uiPipeLine);
 
     auto size = renderQueue.size();
     for (int i = 0; i < size; i++)
@@ -88,12 +92,11 @@ void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const 
         glm::mat4 matrix = glm::mat4(1);
         matrix = glm::scale(glm::translate(matrix, glm::vec3(info.position, 0)), glm::vec3(info.Scale, 0));
         const glm::mat4 s = glm::ortho(0.0f, 2560.0f, 0.0f, 1600.0f) * matrix;
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine.m_pipelineLayout, 0, 1, &brain.bindlessSet, 0, nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1, &brain.bindlessSet, 0, nullptr);
 
-        static int f = 54;
-        vkCmdPushConstants(commandBuffer, m_PipeLine.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
+        vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
             &s);
-        vkCmdPushConstants(commandBuffer, m_PipeLine.m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
+        vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
             &info.Image.index);
         commandBuffer.draw(6, 1, 0, 0);
 

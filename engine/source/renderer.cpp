@@ -37,11 +37,9 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     InitializeHDRTarget();
     InitializeBloomTargets();
     LoadEnvironmentMap();
-    _uiPipeLine = std::make_unique<UIPipeLine>(_brain, *_swapChain);
-    _uiPipeLine->CreatePipeLine();
 
-    m_UIRenderContext = std::make_unique<UserInterfaceRenderContext>();
-    m_UIRenderContext->InitializeDefaultRenderSystems(*_uiPipeLine);
+    m_UIRenderContext = std::make_unique<UserInterfaceRenderContext>(_brain);
+    m_UIRenderContext->InitializeDefaultRenderSystems();
 
     _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
 

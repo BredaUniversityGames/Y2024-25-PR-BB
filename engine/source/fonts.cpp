@@ -49,25 +49,18 @@ void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
         image.SetData(reinterpret_cast<std::byte*>(fontFace->glyph->bitmap.buffer));
         image.SetFormat(vk::Format::eR8Unorm);
         image.SetFlags(vk::ImageUsageFlagBits::eSampled);
+        image.isHDR = false;
         auto handle = brain.ImageResourceManager().Create(image);
-        // now store character for later use
-
-        vk::DescriptorSetAllocateInfo allocateInfo {};
-        allocateInfo.descriptorPool = brain.descriptorPool;
-        allocateInfo.descriptorSetCount = 1;
-        allocateInfo.pSetLayouts = &UIPipeLine::m_descriptorSetLayout;
 
         Character character = { {},
             handle,
             glm::ivec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),
             glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
             uint8_t(fontFace->glyph->advance.x) };
-        util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &character.DescriptorSet),
-            "Failed allocating descriptor sets!");
-      // Engine::m_uiPipeLine->UpdateTexture(handle, character.DescriptorSet);
+
         Font::Characters.insert(std::pair<char, Character>(c, character));
     }
-
+    brain.UpdateBindlessSet();
     FT_Done_Face(fontFace);
     FT_Done_FreeType(library);
 }

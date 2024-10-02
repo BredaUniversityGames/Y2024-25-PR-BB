@@ -4,6 +4,7 @@
 #include "ui/ui_mainMenu.hpp"
 #include "pch.hpp"
 #include "vulkan_helper.hpp"
+#include "ui/ui_text_rendering.hpp"
 void MainMenuCanvas::InitElements(const VulkanBrain& brain)
 {
 
@@ -31,7 +32,11 @@ void MainMenuCanvas::InitElements(const VulkanBrain& brain)
     playbutton->SetLocation({ 100, 100 });
     playbutton->m_OnBeginHoverCallBack = []() {};
     playbutton->m_OnMouseDownCallBack = []() {};
-    chilren.push_back(std::move(playbutton));
+
+    std::unique_ptr<UITextElement> text = std::make_unique<UITextElement>();
+    text->m_Text = "play";
+    playbutton->AddChild(std::move(text));
+    AddChild(std::move(playbutton));
 
     UpdateChildAbsoluteLocations();
 }

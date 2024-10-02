@@ -19,6 +19,7 @@
 #include "single_time_commands.hpp"
 #include "editor.hpp"
 #include "ui/UserInterfaceSystem.hpp"
+#include "ui/fonts.hpp"
 #include "ui/ui_mainMenu.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
@@ -54,6 +55,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
         _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
+    utils::LoadFont("assets/fonts/JosyWine-G33rg.ttf", 30, _renderer->_brain);
 
     _renderer->UpdateBindless();
 

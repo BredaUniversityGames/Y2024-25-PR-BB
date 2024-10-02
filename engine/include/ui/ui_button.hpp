@@ -47,7 +47,7 @@ public:
 class UIButtonRenderSystem : public UIRenderSystem<ButtonDrawInfo>
 {
 public:
-    explicit UIButtonRenderSystem(const UIPipeLine& pl)
+    explicit UIButtonRenderSystem(std::shared_ptr<UIPipeLine>& pl)
         : UIRenderSystem<ButtonDrawInfo>(pl)
     {
     }

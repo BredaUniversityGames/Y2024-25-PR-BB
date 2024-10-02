@@ -19,7 +19,6 @@ struct QueueFamilyIndices
     static QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 };
 
-
 constexpr bool ENABLE_VALIDATION_LAYERS =
 #if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
     true;
@@ -27,7 +26,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
     false;
 #endif
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 256;
 enum class BindlessBinding
 {
     eColor = 0,
@@ -35,7 +34,6 @@ enum class BindlessBinding
     eCubemap,
     eShadowmap
 };
-
 
 class VulkanBrain
 {
@@ -63,7 +61,6 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-
     ImageResourceManager& ImageResourceManager() const
     {
         return _imageResourceManager;
@@ -71,11 +68,9 @@ public:
 
     void UpdateBindlessSet() const;
 
-
 private:
     vk::DebugUtilsMessengerEXT _debugMessenger;
     vk::UniqueSampler _sampler;
-
 
     ResourceHandle<Image> _fallbackImage;
 
