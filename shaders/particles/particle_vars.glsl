@@ -1,3 +1,9 @@
+struct Emitter
+{
+    vec3 position;
+    uint count;
+};
+
 struct Particle
 {
     vec3 position;
@@ -41,4 +47,9 @@ layout(set = 1, binding = 3) buffer DeadSSBO
 layout(set = 1, binding = 4) buffer CounterSSBO
 {
     uint count[3];
+};
+
+layout(set = 2, binding = 0) uniform EmitterUBO
+{
+    Emitter emitters[ ];
 };

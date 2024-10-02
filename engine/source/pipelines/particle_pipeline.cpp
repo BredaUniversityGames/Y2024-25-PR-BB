@@ -26,8 +26,11 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructu
     {
         vmaDestroyBuffer(_brain.vmaAllocator, ssbo.buffer, ssbo.bufferAllocation);
     }
+    vmaUnmapMemory(_brain.vmaAllocator, _emitterBuffer.bufferAllocation);
+    vmaDestroyBuffer(_brain.vmaAllocator, _emitterBuffer.buffer, _emitterBuffer.bufferAllocation);
     // Descriptor stuff
-    _brain.device.destroy(_descriptorSetLayout);
+    _brain.device.destroy(_storageLayout);
+    _brain.device.destroy(_uniformLayout);
 }
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, float deltaTime)
@@ -35,9 +38,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     UpdateBuffers();
 
     util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
-
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[0]);
-
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
 
     // for now try binding all
@@ -46,16 +47,26 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
             &ssbo.descriptorSet, 0, nullptr);
     }
-
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, 1,
+        &_emitterBuffer.descriptorSet, 0, nullptr);
     commandBuffer.dispatch(256, 1, 1);
-
     util::EndLabel(commandBuffer, _brain.dldi);
 }
+
+void ParticlePipeline::SpawnEmitter(glm::vec3 position, uint32_t count, EmitterType type)
+{
+    Emitter emitter{};
+    emitter.position = position;
+    emitter.count = count;
+    //emitter.type = type;
+    _emitters.emplace_back(emitter);
+}
+
 
 void ParticlePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
-    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 4> layouts = { _brain.bindlessLayout, _storageLayout, _uniformLayout, _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -96,47 +107,86 @@ void ParticlePipeline::CreatePipeline()
 
 void ParticlePipeline::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 5> bindings{};
-    for(size_t i = 0; i < 5; i++)
-    {
-        vk::DescriptorSetLayoutBinding &descriptorSetLayoutBinding{ bindings[i] };
-        descriptorSetLayoutBinding.binding = i;
-        descriptorSetLayoutBinding.descriptorCount = 1;
-        descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-        descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
-        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+    {   // SSBO
+        std::array<vk::DescriptorSetLayoutBinding, 5> bindings{};
+        for(size_t i = 0; i < 5; i++)
+        {
+            vk::DescriptorSetLayoutBinding &descriptorSetLayoutBinding{ bindings[i] };
+            descriptorSetLayoutBinding.binding = i;
+            descriptorSetLayoutBinding.descriptorCount = 1;
+            descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+            descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+            descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+        }
+
+        vk::DescriptorSetLayoutCreateInfo createInfo{};
+        createInfo.bindingCount = bindings.size();
+        createInfo.pBindings = bindings.data();
+
+        util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_storageLayout),
+            "Failed creating particle descriptor set layout!");
     }
 
-    vk::DescriptorSetLayoutCreateInfo createInfo{};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
+    {   // UBO
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating particle descriptor set layout!");
+        vk::DescriptorSetLayoutBinding &descriptorSetLayoutBinding{ bindings[0] };
+        descriptorSetLayoutBinding.binding = 0;
+        descriptorSetLayoutBinding.descriptorCount = 1;
+        descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
+        descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+        vk::DescriptorSetLayoutCreateInfo createInfo{};
+        createInfo.bindingCount = bindings.size();
+        createInfo.pBindings = bindings.data();
+
+        util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_uniformLayout),
+            "Failed creating particle descriptor set layout!");
+    }
 }
 
 void ParticlePipeline::CreateDescriptorSets()
 {
-    vk::DescriptorSetAllocateInfo allocateInfo{};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = 1;
-    allocateInfo.pSetLayouts = &_descriptorSetLayout;
-
-    std::array<vk::DescriptorSet, 1> descriptorSets;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-                    "Failed allocating particle descriptor sets!");
-
-    for(size_t i = 0; i < 5; i++)
+    // SSBO
     {
-        _storageBuffers[i].descriptorSet = descriptorSets[0];
+        vk::DescriptorSetAllocateInfo allocateInfo{};
+        allocateInfo.descriptorPool = _brain.descriptorPool;
+        allocateInfo.descriptorSetCount = 1;
+        allocateInfo.pSetLayouts = &_storageLayout;
+
+        std::array<vk::DescriptorSet, 1> descriptorSets;
+
+        util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+            "Failed allocating SSBO descriptor sets!");
+
+        for(size_t i = 0; i < 5; i++)
+        {
+            _storageBuffers[i].descriptorSet = descriptorSets[0];
+        }
     }
+
+    // Uniform
+    {
+        vk::DescriptorSetAllocateInfo allocateInfo{};
+        allocateInfo.descriptorPool = _brain.descriptorPool;
+        allocateInfo.descriptorSetCount = 1;
+        allocateInfo.pSetLayouts = &_uniformLayout;
+
+        std::array<vk::DescriptorSet, 1> descriptorSets;
+
+        util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+            "Failed allocating UBO descriptor sets!");
+
+        _emitterBuffer.descriptorSet = descriptorSets[0];
+    }
+
     UpdateParticleDescriptorSets();
 }
 
 void ParticlePipeline::UpdateParticleDescriptorSets()
 {
-    std::array<vk::WriteDescriptorSet, 5> descriptorWrites {};
+    std::array<vk::WriteDescriptorSet, 6> descriptorWrites {};
 
     // Particle SSBO (binding = 0)
     vk::DescriptorBufferInfo particleBufferInfo {};
@@ -202,6 +252,19 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
     counterBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
     counterBufferWrite.descriptorCount = 1;
     counterBufferWrite.pBufferInfo = &counterBufferInfo;
+
+    // Emitter UBO (binding = 0)
+    vk::DescriptorBufferInfo emitterBufferInfo {};
+    emitterBufferInfo.buffer = _emitterBuffer.buffer;
+    emitterBufferInfo.offset = 0;
+    emitterBufferInfo.range = sizeof(Emitter) * MAX_EMITTERS;
+    vk::WriteDescriptorSet& emitterBufferWrite { descriptorWrites[5] };
+    emitterBufferWrite.dstSet = _emitterBuffer.descriptorSet;
+    emitterBufferWrite.dstBinding = 0;
+    emitterBufferWrite.dstArrayElement = 0;
+    emitterBufferWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+    emitterBufferWrite.descriptorCount = 1;
+    emitterBufferWrite.pBufferInfo = &emitterBufferInfo;
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
@@ -306,10 +369,26 @@ void ParticlePipeline::CreateBuffers()
         // Clean up
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
     }
+
+    {   // Emitter UBO
+        vk::DeviceSize bufferSize = sizeof(Emitter) * MAX_EMITTERS;
+
+        util::CreateBuffer(_brain, bufferSize,
+            vk::BufferUsageFlagBits::eUniformBuffer,
+            _emitterBuffer.buffer, true, _emitterBuffer.bufferAllocation,
+            VMA_MEMORY_USAGE_CPU_ONLY,
+            "Uniform buffer");
+
+        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _emitterBuffer.bufferAllocation, &_emitterBuffer.bufferMapped),
+            "Failed mapping memory for UBO!");
+    }
 }
 
 void ParticlePipeline::UpdateBuffers()
 {
-    // TODO: check if this is the way to do this lol and maybe we can do async at some point :emoji_7:
+    // TODO: check if this is the way to go about swapping the alive list buffers
     std::swap(_storageBuffers[static_cast<int>(SSBOUsage::ALIVE_NEW)], _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_CURRENT)]);
+
+    memcpy(_emitterBuffer.bufferMapped, _emitters.data(), _emitters.size() * sizeof(Emitter));
+    _emitters.clear();
 }
