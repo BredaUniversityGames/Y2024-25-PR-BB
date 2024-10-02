@@ -59,6 +59,8 @@ VulkanBrain::~VulkanBrain()
 
     device.destroy(bindlessLayout);
     device.destroy(bindlessPool);
+
+    vmaUnmapMemory(vmaAllocator, _bindlessMaterialBufferAllocation);
     vmaDestroyBuffer(vmaAllocator, _bindlessMaterialBuffer, _bindlessMaterialBufferAllocation);
 
     _sampler.reset();
@@ -128,10 +130,7 @@ void VulkanBrain::UpdateBindlessMaterials() const
         materialGPUData[i] = material->gpuInfo;
     }
 
-    void* mappedPtr;
-    util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &mappedPtr), "Failed mapping memory for UBO!");
-    std::memcpy(mappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
-    vmaUnmapMemory(vmaAllocator, _bindlessMaterialBufferAllocation);
+    std::memcpy(_bindlessMaterialBufferMappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
 
     _bindlessMaterialInfo.buffer = _bindlessMaterialBuffer;
     _bindlessMaterialInfo.offset = 0;
@@ -472,6 +471,8 @@ void VulkanBrain::CreateBindlessMaterialBuffer()
             _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
             "Bindless material uniform buffer");
+
+    util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &_bindlessMaterialBufferMappedPtr), "Failed mapping memory for UBO!");
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)
