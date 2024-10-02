@@ -3,10 +3,7 @@
 #include "systems/system.hpp"
 
 ECS::ECS() = default;
-ECS::~ECS()
-{
-    _registry.clear<>();
-}
+ECS::~ECS() = default;
 
 void ECS::UpdateSystems(const float dt)
 {
