@@ -229,7 +229,7 @@ void Renderer::InitializeCameraUBODescriptors()
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eUniformBuffer,
             _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
-            VMA_MEMORY_USAGE_CPU_ONLY,
+            VMA_MEMORY_USAGE_AUTO,
             name);
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
@@ -287,6 +287,12 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
 
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
+
+    ubo.skydomeMVP = ubo.view;
+    ubo.skydomeMVP[3][0] = 0.0f;
+    ubo.skydomeMVP[3][1] = 0.0f;
+    ubo.skydomeMVP[3][2] = 0.0f;
+    ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
 
     const DirectionalLight& light = _scene->directionalLight;
 
@@ -355,13 +361,15 @@ void Renderer::Render()
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
 
-    _bloomSettings.Update(_currentFrame);
-
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
+
+    _bloomSettings.Update(_currentFrame);
+
+    UpdateCamera(_scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};
