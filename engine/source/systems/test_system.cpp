@@ -5,13 +5,16 @@
 
 void TestSystem::Update(ECS& ecs, float dt)
 {
+    ++_x;
     const auto view = ecs._registry.view<TestComponent>();
 
     for (const auto entity : view)
     {
         TestComponent& component = view.get<TestComponent>(entity);
 
-        if (++component._y >= 100)
+        component._y += _x;
+
+        if (component._y >= 100)
         {
             ecs.DestroyEntity(entity);
         }
