@@ -57,6 +57,10 @@ set(TRACY_ENABLE "" ON)
 set(TRACY_ON_DEMAND "" ON)
 add_subdirectory(tracy)
 
+# EnTT
+
+add_subdirectory(entt)
+
 # SDL
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
@@ -91,4 +95,5 @@ target_include_directories(External
         INTERFACE Vulkan-Headers/include
         INTERFACE glm
         INTERFACE stb
+        INTERFACE entt/src/entt
 )
