@@ -7,14 +7,45 @@ struct Emitter
     uint count;
 };
 
+const uint MAX_EMITTERS = 64;
+
 layout(set = 2, binding = 0) uniform EmitterUBO
 {
-    Emitter emitters[ ];
+    Emitter emitters[MAX_EMITTERS];
+};
+
+layout(push_constant) uniform BufferOffset
+{
+    uint bufferOffset;
 };
 
 layout ( local_size_x = 64, local_size_y = 1, local_size_z = 1 ) in;
 
 void main()
 {
+    Emitter emitter = emitters[bufferOffset];
     uint index = gl_GlobalInvocationID.x;
+    if(index >= emitter.count)
+        return;
+
+    // test particle variables
+    Particle particle;
+    particle.position = vec3(1.0, 2.0, 3.0);
+    particle.mass = 5.0;
+    particle.velocity = vec3(0.0, 0.0, 0.0);
+    particle.maxLife = 5.0;
+    particle.life = particle.maxLife;
+
+    // new particle index retrieved from dead list
+    int deadCount = atomicAdd(particleCounters.deadCount, -1);
+    if(deadCount < 1)
+        return;
+
+    uint newParticleIndex = deadBuffer[deadCount - 1];
+
+    particles[newParticleIndex] = particle;
+
+    // add index to alive list
+    uint aliveCount = atomicAdd(particleCounters.aliveCount_afterSimulation, 1);
+    aliveBuffer_CURRENT[aliveCount] = newParticleIndex;
 }

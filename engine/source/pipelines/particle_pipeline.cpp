@@ -37,25 +37,72 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 {
     UpdateBuffers();
 
-    // kick-off shader pass
-    util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[0]);
+    // Set up memory barrier to be used in between every shader stage
+    vk::MemoryBarrier memoryBarrier{};
+    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryWrite;
+    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryWrite | vk::AccessFlagBits::eMemoryRead;
 
-    // for now try binding all
+    // for now bind all buffers at the start since they all use the same ones (particle_vars.glsl)
     for(auto& ssbo : _storageBuffers)
     {
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, 1,
             &ssbo.descriptorSet, 0, nullptr);
     }
+
+
+    // -- kick-off shader pass --
+    util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[0]);
+
     commandBuffer.dispatch(1, 1, 1);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
+        1, &memoryBarrier, 0, nullptr, 0, nullptr);
+
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    // emit shader pass
-    // commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, 1,
-    //     &_emitterBuffer.descriptorSet, 0, nullptr);
 
-    // simulate shader pass
+    // -- emit shader pass --
+    util::BeginLabel(commandBuffer, "Emit particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[1]);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, 1,
+        &_emitterBuffer.descriptorSet, 0, nullptr);
+    // spawn as many threads as there's particles to emit
+    uint32_t bufferOffset = 0;
+    for(bufferOffset = 0; bufferOffset < _emitters.size(); bufferOffset++)
+    {
+        commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(uint32_t), &bufferOffset);
+        // +63 so we always dispatch at least once.
+        commandBuffer.dispatch(_emitters[bufferOffset].count + 63, 1, 1);
+    }
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
+    1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    _emitters.clear();
+
+    util::EndLabel(commandBuffer, _brain.dldi);
+
+
+    // -- simulate shader pass --
     //commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
+    // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
+    // 1, &memoryBarrier, 0, nullptr, 0, nullptr);
+
+
+    // -- finish shader pass --
+    util::BeginLabel(commandBuffer, "Finish particle pass", glm::vec3{ 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[3]);
+
+    commandBuffer.dispatch(1, 1, 1);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
+    1, &memoryBarrier, 0, nullptr, 0, nullptr);
+
+    util::EndLabel(commandBuffer, _brain.dldi);
+
+
+    // -- indirect draw call rendering --
 }
 
 void ParticlePipeline::SpawnEmitter(glm::vec3 position, uint32_t count, EmitterType type)
@@ -86,7 +133,7 @@ void ParticlePipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
                     "Failed creating particle pipeline layout!");
 
-    _particlePaths = { "kick_off", "emit", "simulate" }; // TODO: add more shader names here later
+    _particlePaths = { "kick_off", "emit", "simulate", "finish" };
     for (auto& shaderName : _particlePaths)
     {
         auto byteCode = shader::ReadFile("shaders/particles/" + shaderName + "-c.spv");
@@ -103,7 +150,7 @@ void ParticlePipeline::CreatePipeline()
         computePipelineCreateInfo.stage = shaderStageCreateInfo;
 
         auto result = _brain.device.createComputePipeline(nullptr, computePipelineCreateInfo, nullptr);
-        util::VK_ASSERT(result.result, "Failed creating the geometry pipeline layout!");
+        util::VK_ASSERT(result.result, "Failed creating the " + shaderName + " pipeline layout!");
         _pipelines.push_back(result.value);
 
         _brain.device.destroy(shaderModule);
@@ -249,7 +296,7 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
     vk::DescriptorBufferInfo counterBufferInfo {};
     counterBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].buffer;
     counterBufferInfo.offset = 0;
-    counterBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLE_COUNTERS;
+    counterBufferInfo.range = sizeof(ParticleCounters);
     vk::WriteDescriptorSet& counterBufferWrite { descriptorWrites[4] };
     counterBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].descriptorSet;
     counterBufferWrite.dstBinding = 4;
@@ -350,8 +397,9 @@ void ParticlePipeline::CreateBuffers()
     }
 
     {   // Counter SSBO
-        std::vector<uint32_t> counters(MAX_PARTICLE_COUNTERS);
-        vk::DeviceSize counterBufferSize = sizeof(uint32_t) * MAX_PARTICLE_COUNTERS;
+        ParticleCounters particleCounters{};
+        particleCounters.deadCount = MAX_PARTICLES;
+        vk::DeviceSize counterBufferSize = sizeof(ParticleCounters);
 
         // Create and map staging buffer
         util::CreateBuffer(_brain, counterBufferSize,
@@ -360,7 +408,7 @@ void ParticlePipeline::CreateBuffers()
             VMA_MEMORY_USAGE_AUTO,
             "Counter Staging buffer");
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, stagingBufferAllocation, &data), "Failed mapping memory for staging buffer!");
-        memcpy(data, counters.data(), (size_t)counterBufferSize);
+        memcpy(data, &particleCounters, (size_t)counterBufferSize);
         vmaUnmapMemory(_brain.vmaAllocator, stagingBufferAllocation);
 
         // Create and copy to SSBO
@@ -395,5 +443,4 @@ void ParticlePipeline::UpdateBuffers()
     std::swap(_storageBuffers[static_cast<int>(SSBOUsage::ALIVE_NEW)], _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_CURRENT)]);
 
     memcpy(_emitterBuffer.bufferMapped, _emitters.data(), _emitters.size() * sizeof(Emitter));
-    _emitters.clear();
 }

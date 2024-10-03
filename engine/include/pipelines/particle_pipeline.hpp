@@ -59,11 +59,17 @@ private:
         float life = 5.0f;
         glm::vec3 padding = { 0.0f, 0.0f, 0.0f };
     };
+    struct ParticleCounters
+    {
+        uint32_t aliveCount;
+        int32_t deadCount;
+        uint32_t aliveCount_afterSimulation;
+        uint32_t culledCount;
+    };
 
     // temporary values for testing/progress
     const uint32_t MAX_EMITTERS = 64;
-    const uint32_t MAX_PARTICLES = 1024;
-    const uint32_t MAX_PARTICLE_COUNTERS = 4;
+    const int32_t MAX_PARTICLES = 1024;
 
     const VulkanBrain& _brain;
     const CameraStructure& _camera;

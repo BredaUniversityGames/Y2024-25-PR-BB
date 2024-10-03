@@ -5,13 +5,11 @@ layout ( local_size_x = 1, local_size_y = 1, local_size_z = 1 ) in;
 
 void main()
 {
-    uint index = gl_GlobalInvocationID.x;
+    uint aliveCount = particleCounters.aliveCount_afterSimulation;
+    int deadCount = particleCounters.deadCount;
 
-    uint aliveCount = particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION];
-    uint deadCount = particleCounters[PARTICLECOUNTER_OFFSET_DEADCOUNT];
-
-    particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT] = aliveCount;
-    particleCounters[PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION] = 0;
-    particleCounters[PARTICLECOUNTER_OFFSET_DEADCOUNT] = max(0, deadCount);
-    particleCounters[PARTICLECOUNTER_OFFSET_CULLEDCOUNT] = 0;
+    particleCounters.aliveCount = aliveCount;
+    particleCounters.aliveCount_afterSimulation = 0;
+    particleCounters.deadCount = max(0, deadCount);
+    particleCounters.culledCount = 0;
 }
