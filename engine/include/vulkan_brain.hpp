@@ -91,6 +91,7 @@ private:
 
     vk::Buffer _bindlessMaterialBuffer;
     VmaAllocation _bindlessMaterialBufferAllocation;
+    void* _bindlessMaterialBufferMappedPtr;
     mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
     mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 

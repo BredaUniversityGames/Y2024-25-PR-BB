@@ -95,9 +95,10 @@ struct Material
         float roughnessFactor { 0.0f };
         float normalScale { 0.0f };
         float occlusionStrength { 0.0f };
-        glm::vec3 emissiveFactor { 0.0f };
 
+        glm::vec3 emissiveFactor { 0.0f };
         int32_t useEmissiveMap { false };
+
         int32_t useAlbedoMap { false };
         int32_t useMRMap { false };
         int32_t useNormalMap { false };
@@ -107,6 +108,7 @@ struct Material
         uint32_t mrMapIndex;
         uint32_t normalMapIndex;
         uint32_t occlusionMapIndex;
+
         uint32_t emissiveMapIndex;
     } gpuInfo;
 
