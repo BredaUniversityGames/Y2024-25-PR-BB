@@ -2,19 +2,22 @@ name: Code Linter
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main]
-    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    branches: [ main ]
+    paths: [ '**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake' ]
   push:
-    branches: [main]
-    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    branches: [ main ]
+    paths: [ '**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake' ]
 
 jobs:
   cpp-linter:
     runs-on: ubuntu-latest
 
-    permissions: 
+    permissions:
       contents: read
       pull-requests: write
+
+    env:
+      EXTRA_ARGS: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
     steps:
       - name: Checkout Project
@@ -35,7 +38,10 @@ jobs:
           vulkan-use-cache: true
 
       - name: Setup database
-        run: cmake --preset x64-Release
+        run: cmake --preset WSL-Release ${{ env.EXTRA_ARGS }}
+
+      - name: DEBUG check pch
+        run: sudo apt install tree && tree -L 3 build
 
       - name: CPP-Linter
         uses: cpp-linter/cpp-linter-action@v2
@@ -46,9 +52,9 @@ jobs:
 
           version: 18
           files-changed-only: false # TODO: switch this back on once most of codebase is checks
-          database: build/x64-Release/compile_commands.json
+          database: build/WSL-Release/compile_commands.json
           verbosity: 'debug'
           style: 'file'
           ignore: 'external | build | VULKAN_SDK' # Also ignore Vulkan SDK folder
-          tidy-checks: '' 
+          tidy-checks: ''
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
