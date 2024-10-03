@@ -14,10 +14,6 @@
 #include "renderer.hpp"
 #include "editor.hpp"
 
-// TODO remove this
-#include "systems/test_system.hpp"
-#include "components/test_component.hpp"
-
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
     auto path = std::filesystem::current_path();
@@ -79,12 +75,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
-
-    _ecs->AddSystem<TestSystem>();
-
-    entt::entity entity = _ecs->_registry.create();
-    _ecs->_registry.emplace<TestComponent>(entity);
-
     while (!ShouldQuit())
     {
         // update input
