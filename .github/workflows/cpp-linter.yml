@@ -41,7 +41,7 @@ jobs:
         run: cmake --preset WSL-Release ${{ env.EXTRA_ARGS }}
 
       - name: DEBUG check pch
-        run: sudo apt install tree && tree -L 3 build
+        run: sudo apt install tree && tree build
 
       - name: CPP-Linter
         uses: cpp-linter/cpp-linter-action@v2
