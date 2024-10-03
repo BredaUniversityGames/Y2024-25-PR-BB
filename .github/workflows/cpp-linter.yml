@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ['**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
   push:
     branches: [main]
-    paths: ['**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake']
 
 jobs:
   cpp-linter:
@@ -44,10 +44,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
 
-          files-changed-only: false
+          version: 18
+          files-changed-only: false # TODO: switch this back on once most of codebase is checks
           database: build/x64-Release/compile_commands.json
           verbosity: 'debug'
           style: 'file'
-          ignore: 'external | VULKAN_SDK'
+          ignore: 'external | build | VULKAN_SDK' # Also ignore Vulkan SDK folder
           tidy-checks: '' 
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
