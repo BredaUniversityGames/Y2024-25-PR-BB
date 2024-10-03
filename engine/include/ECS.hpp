@@ -42,4 +42,6 @@ void ECS::AddSystem(Args&&... args)
     T* system = new T(std::forward<Args>(args)...);
 
     _systems.emplace_back(std::unique_ptr<System>(system));
+
+    spdlog::info("{}, created", typeid(*system).name());
 }

@@ -11,11 +11,9 @@ void TestSystem::Update(ECS& ecs, float dt)
     {
         TestComponent& component = view.get<TestComponent>(entity);
 
-        spdlog::info("_y = {}", component._y);
         if (++component._y >= 100)
         {
             ecs.DestroyEntity(entity);
-            spdlog::info("Destroyed entity");
         }
     }
 }
