@@ -1,7 +1,10 @@
 #pragma once
 
 #include "entity/registry.hpp"
+#include <class_decorations.hpp>
+#include <spdlog/spdlog.h>
 #include "systems/system.hpp"
+
 class System;
 
 class ECS
