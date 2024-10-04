@@ -5,6 +5,7 @@
 #include <class_decorations.hpp>
 #include "mesh.hpp"
 
+class ECS;
 class Application;
 class Renderer;
 class Editor;
@@ -23,13 +24,14 @@ public:
 
 private:
     friend Renderer;
-    // std::unique_ptr<World> _world;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
     std::unique_ptr<Editor> _editor;
 
     std::unique_ptr<Renderer> _renderer;
+
+    std::unique_ptr<ECS> _ecs;
 
     std::shared_ptr<SceneDescription> _scene;
 
