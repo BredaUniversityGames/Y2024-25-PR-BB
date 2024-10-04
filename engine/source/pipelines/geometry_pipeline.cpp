@@ -141,8 +141,8 @@ void GeometryPipeline::CreatePipeline(vk::DescriptorSetLayout materialDescriptor
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/geom-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/geom-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/geom.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/geom.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);

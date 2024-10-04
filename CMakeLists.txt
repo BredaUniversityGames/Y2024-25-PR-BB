@@ -18,6 +18,10 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     add_compile_definitions(MINSIZEREL_BUILD)
 endif ()
 
+### SHADERS ###
+
+add_subdirectory(shaders)
+
 ### MAIN EXECUTABLE ###
 
 # SOURCE FILES
@@ -27,6 +31,9 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 target_compile_options(Engine PRIVATE -Wall)
+
+# Ensure shaders are compiled before the application
+add_dependencies(Engine Shaders)
 
 option(WARNINGS_AS_ERRORS OFF)
 

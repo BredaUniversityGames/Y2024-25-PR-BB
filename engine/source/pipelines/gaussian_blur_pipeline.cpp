@@ -105,8 +105,8 @@ void GaussianBlurPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/fullscreen-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/gaussian_blur-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/gaussian_blur.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
