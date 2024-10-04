@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
+#include <class_decorations.hpp>
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
 #include "image_resource_manager.hpp"

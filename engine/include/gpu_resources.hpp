@@ -1,5 +1,5 @@
 #pragma once
-#include "vk_mem_alloc.h"
+#include "vma.hpp"
 #include "vulkan/vulkan.hpp"
 
 enum class ImageType

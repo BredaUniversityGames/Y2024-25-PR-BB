@@ -1,5 +1,6 @@
 ﻿#include "pipelines/shadow_pipeline.hpp"
 
+#include <vulkan_brain.hpp>
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan_helper.hpp"
+#include <class_decorations.hpp>
 
 class GBuffers
 {

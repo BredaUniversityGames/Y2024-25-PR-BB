@@ -1,5 +1,7 @@
 #pragma once
 #include "engine_init_info.hpp"
+#include <glm/glm.hpp>
+#include <class_decorations.hpp>
 #include "input_manager.hpp"
 
 class Application

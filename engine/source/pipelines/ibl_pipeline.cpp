@@ -1,6 +1,7 @@
 #include "pipelines/ibl_pipeline.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
+#include <vulkan_brain.hpp>
 #include "single_time_commands.hpp"
 #include "stopwatch.hpp"
 

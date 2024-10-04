@@ -1,6 +1,7 @@
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
+#include <vulkan_brain.hpp>
 
 BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, uint32_t indexBufferSize)
     : _brain(brain)

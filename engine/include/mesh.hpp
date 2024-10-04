@@ -1,7 +1,10 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include "camera.hpp"
+#include <resource_manager.hpp>
+#include <gpu_resources.hpp>
 
 struct Vertex
 {

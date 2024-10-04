@@ -1,4 +1,8 @@
 #pragma once
+#include <glm/glm.hpp>
+#include <vulkan/vulkan.hpp>
+#include <constants.hpp>
+#include <vma.hpp>
 
 struct Camera
 {

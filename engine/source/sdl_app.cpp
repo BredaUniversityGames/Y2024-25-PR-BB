@@ -1,7 +1,9 @@
 #include "sdl_app.hpp"
 #include "SDL3/SDL.h"
+#include <spdlog/spdlog.h>
 #include "SDL3/SDL_vulkan.h"
 #include "imgui/backends/imgui_impl_sdl3.h"
+#include <tracy/Tracy.hpp>
 
 SDLApp::SDLApp(const CreateParameters& parameters)
     : Application(parameters)

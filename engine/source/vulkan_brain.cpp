@@ -2,6 +2,7 @@
 #include "vulkan_helper.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_validation.hpp"
+#include <set>
 #include <map>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)

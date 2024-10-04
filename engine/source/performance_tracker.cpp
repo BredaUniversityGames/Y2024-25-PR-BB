@@ -1,4 +1,8 @@
 #include "performance_tracker.hpp"
+#include <tracy/Tracy.hpp>
+#include <imgui/imgui.h>
+#include <implot/implot.h>
+#include <chrono>
 
 PerformanceTracker::PerformanceTracker()
 {

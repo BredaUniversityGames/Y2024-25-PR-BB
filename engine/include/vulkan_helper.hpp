@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/spdlog.h>
 #include <magic_enum.hpp>
 #include <glm/glm.hpp>
 #include "mesh.hpp"

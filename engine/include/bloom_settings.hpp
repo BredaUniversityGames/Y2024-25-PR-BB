@@ -1,4 +1,10 @@
 #pragma once
+#include <glm/glm.hpp>
+#include <array>
+#include <vma.hpp>
+#include <vulkan/vulkan.hpp>
+#include <constants.hpp>
+#include <vulkan_brain.hpp>
 
 class BloomSettings
 {

@@ -2,6 +2,7 @@
 
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
+#include <class_decorations.hpp>
 #include "mesh.hpp"
 
 class Application;

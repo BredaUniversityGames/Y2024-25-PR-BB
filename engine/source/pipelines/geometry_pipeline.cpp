@@ -1,5 +1,8 @@
+
+#define NOMINMAX
 #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include <vulkan_brain.hpp>
 #include "batch_buffer.hpp"
 
 VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)

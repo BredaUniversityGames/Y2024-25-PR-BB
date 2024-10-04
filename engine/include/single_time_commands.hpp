@@ -1,4 +1,9 @@
 #pragma once
+#include <cstddef>
+#include <class_decorations.hpp>
+#include <vulkan/vulkan.hpp>
+#include <cstdint>
+#include <vma.hpp>
 
 class VulkanBrain;
 struct Texture;

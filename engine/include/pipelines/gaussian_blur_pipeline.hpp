@@ -1,4 +1,6 @@
 #pragma once
+#include <vulkan_brain.hpp>
+#include <constants.hpp>
 
 class GaussianBlurPipeline
 {

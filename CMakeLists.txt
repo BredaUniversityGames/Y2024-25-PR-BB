@@ -31,12 +31,14 @@ target_compile_options(Engine PRIVATE -Wall)
 option(WARNINGS_AS_ERRORS OFF)
 
 if (WARNINGS_AS_ERRORS)
+    message("-- Warnings are enabled as errors")
     target_compile_options(Engine PRIVATE -Werror)
 endif ()
 
 option(ENABLE_PCH "Compile with precompiled header" ON)
 
 if (ENABLE_PCH)
+    message("-- Precompiled headers are enabled")
     target_precompile_headers(Engine PRIVATE [["pch.hpp"]])
 endif ()
 

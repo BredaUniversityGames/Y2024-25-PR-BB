@@ -1,3 +1,6 @@
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/bundled/printf.h>
+
 #pragma clang diagnostic push
 
 #pragma clang diagnostic ignored "-Wnullability-completeness"

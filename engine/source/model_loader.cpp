@@ -6,6 +6,7 @@
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include <vulkan_brain.hpp>
 
 ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout)
     : _brain(brain)

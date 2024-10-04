@@ -22,16 +22,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
 
-#pragma clang diagnostic push
-
-#pragma clang diagnostic ignored "-Wnullability-completeness"
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wunused-private-field"
-
-#include "vk_mem_alloc.h"
-
-#pragma clang diagnostic pop
-
 #include "class_decorations.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"

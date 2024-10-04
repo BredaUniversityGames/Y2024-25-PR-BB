@@ -1,4 +1,7 @@
 #pragma once
+#include <vulkan/vulkan.hpp>
+#include <vulkan_brain.hpp>
+#include <glm/glm.hpp>
 
 struct QueueFamilyIndices;
 

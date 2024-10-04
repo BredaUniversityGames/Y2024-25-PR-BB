@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stb_image.h>
-
+#include <tracy/Tracy.hpp>
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
@@ -18,6 +18,9 @@
 #include "renderer.hpp"
 #include "single_time_commands.hpp"
 #include "editor.hpp"
+#include <implot/implot.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {

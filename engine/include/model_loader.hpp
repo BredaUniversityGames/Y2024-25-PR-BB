@@ -1,7 +1,8 @@
 #pragma once
-
+#define NOMINMAX
 #include "mesh.hpp"
 #include <string>
+#include <class_decorations.hpp>
 
 #undef None
 #include <fastgltf/core.hpp>

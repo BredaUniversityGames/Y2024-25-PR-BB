@@ -1,5 +1,6 @@
 #include "editor.hpp"
 
+#include <implot/implot.h>
 #include "imgui_impl_vulkan.h"
 #include "application.hpp"
 #include "performance_tracker.hpp"
@@ -8,7 +9,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
-
+#include <tracy/Tracy.hpp>
 #include "gbuffers.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 

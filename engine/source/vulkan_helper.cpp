@@ -1,4 +1,5 @@
 #include "vulkan_helper.hpp"
+#include <vulkan_brain.hpp>
 
 void util::VK_ASSERT(vk::Result result, std::string_view message)
 {

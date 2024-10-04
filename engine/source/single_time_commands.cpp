@@ -1,4 +1,5 @@
 #include "single_time_commands.hpp"
+#include <vulkan_brain.hpp>
 #include "vulkan_helper.hpp"
 
 SingleTimeCommands::SingleTimeCommands(const VulkanBrain& brain)

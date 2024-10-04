@@ -1,4 +1,5 @@
 #include "pipelines/lighting_pipeline.hpp"
+#include <vulkan_brain.hpp>
 #include "shaders/shader_loader.hpp"
 #include "bloom_settings.hpp"
 
