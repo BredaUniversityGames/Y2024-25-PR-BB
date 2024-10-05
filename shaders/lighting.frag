@@ -5,10 +5,10 @@
 
 layout (push_constant) uniform PushConstants
 {
-    uint albedoMIndex;    // RGB: Albedo,   A: Metallic
-    uint normalRIndex;    // RGB: Normal,   A: Roughness
-    uint emissiveAOIndex; // RGB: Emissive, A: AO
-    uint positionIndex;   // RGB: Position, A: Unused
+    uint albedoMIndex;
+    uint normalRIndex;
+    uint emissiveAOIndex;
+    uint positionIndex;
 
     uint irradianceIndex;
     uint prefilterIndex;
@@ -51,19 +51,21 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 
 void main()
 {
-    vec4 albedoM = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalR = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAO = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec3 position = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords).xyz;
+    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
 
-    vec3 albedo = albedoM.rgb;
-    float metallic = albedoM.a;
-    vec3 normal = normalR.xyz;
-    float roughness = normalR.a;
-    vec3 emissive = emissiveAO.rgb;
-    float ao = emissiveAO.a;
+    vec3 albedo = albedoMSample.rgb;
+    float metallic = albedoMSample.a;
+    vec3 normal = normalRSample.rgb;
+    vec3 position = positionSample.rgb;
 
-    if (normal == vec3(0.0, 0.0, 0.0))
+    float roughness = normalRSample.a;
+    vec3 emissive = emissiveAOSample.rgb;
+    float ao = emissiveAOSample.a;
+
+    if (normal == vec3(0.0))
     discard;
 
     vec3 lightDir = cameraUbo.lightData.xyz;
