@@ -63,7 +63,7 @@ add_subdirectory(tracy)
 
 # EnTT
 
-add_subdirectory(EnTT)
+add_subdirectory(entt)
 
 # SDL
 

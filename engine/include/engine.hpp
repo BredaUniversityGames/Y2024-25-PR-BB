@@ -33,7 +33,6 @@ private:
     std::unique_ptr<Renderer> _renderer;
 
     std::unique_ptr<ECS> _ecs;
-    std::unique_ptr<UserInterfaceRenderer> m_UIContext;
     std::shared_ptr<MainMenuCanvas> m_MainMenuCanvas;
     std::shared_ptr<SceneDescription> _scene;
 
