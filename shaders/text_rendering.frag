@@ -8,7 +8,7 @@ layout(location = 0) in vec2 uv;
 
 layout(location = 0) out vec4 outColor;
 
-layout(push_constant) uniform fragConsts
+layout(push_constant) uniform FragConsts
 {
     mat4 dummy;
     uint textureindex;
@@ -16,6 +16,5 @@ layout(push_constant) uniform fragConsts
 
 void main()
 {
-
     outColor = vec4(vec3(10),texture(bindless_color_textures[nonuniformEXT(fragConstants.textureindex)], uv).r);
 }
