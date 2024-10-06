@@ -33,7 +33,7 @@ public:
 
     void Update(const InputManager&) override;
 
-    void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
+    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
 
     void UpdateChildAbsoluteLocations() override;
     ResourceHandle<Image> m_NormalImage = {};

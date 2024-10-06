@@ -1,39 +1,24 @@
 #pragma once
 
-
 #include <pch.hpp>
 #include <map>
 
-struct Character;
 struct Image;
 
-
-
-
-namespace utils
+namespace Fonts
 {
-void LoadFont(std::string_view filepath, int fontsize,const VulkanBrain& brain);
 
-	
+struct Character
+{
+    ResourceHandle<Image> image;
+    glm::ivec2 Size;
+    glm::ivec2 Bearing;
+    uint16_t Advance;
+};
 
-
+// todo: this needs to be changed to return a created font resource
+void LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain);
+// todo: convert this into font resource and make a single texture atlas
+static std::map<char, Character> Characters {};
 
 }
-
-class Font
-{
-public:
-	//todo: convert this into font resource.
-	static std::map<char, Character> Characters;
-};
-
-
-struct Character {
-	vk::DescriptorSet DescriptorSet;
-	ResourceHandle<Image> image;
-	glm::ivec2   Size;       // Size of glyph
-	glm::ivec2   Bearing;    // Offset from baseline to left/top of glyph
-	unsigned int Advance;    // Offset to advance to next glyph
-};
-
-

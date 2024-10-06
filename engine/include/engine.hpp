@@ -4,9 +4,9 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 
-class UIPipeLine;
 class MainMenuCanvas;
-class UserInterfaceRenderContext;
+class UserInterfaceRenderer;
+class ECS;
 class Application;
 class Renderer;
 class Editor;
@@ -25,15 +25,16 @@ public:
 
 private:
     friend Renderer;
-    // std::unique_ptr<World> _world;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
     std::unique_ptr<Editor> _editor;
 
-    std::unique_ptr<UserInterfaceRenderContext> m_UIContext;
-    std::shared_ptr<MainMenuCanvas> m_MainMenuCanvas;
     std::unique_ptr<Renderer> _renderer;
+
+    std::unique_ptr<ECS> _ecs;
+    std::unique_ptr<UserInterfaceRenderer> m_UIContext;
+    std::shared_ptr<MainMenuCanvas> m_MainMenuCanvas;
     std::shared_ptr<SceneDescription> _scene;
 
     std::shared_ptr<Application> _application;

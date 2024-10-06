@@ -1,8 +1,5 @@
 #pragma once
 
-#include <pch.hpp>
-
-#include "vulkan_brain.hpp"
 #include "vulkan_helper.hpp"
 
 class GBuffers
@@ -16,14 +13,6 @@ public:
     NON_COPYABLE(GBuffers);
 
     void Resize(glm::uvec2 size);
-
-
-    vk::Image GBuffersImageArray() const { return _brain.ImageResourceManager().Access(_gBuffersImage)->image; }
-    const std::vector<vk::ImageView>& GBufferViews() const  { return _brain.ImageResourceManager().Access(_gBuffersImage)->views; }
-    vk::ImageView GBufferView(uint32_t viewIndex) const { return _brain.ImageResourceManager().Access(_gBuffersImage)->views[viewIndex]; }
-    vk::Image DepthImage() const { return _brain.ImageResourceManager().Access(_depthImage)->image; }
-    vk::ImageView DepthImageView() const { return _brain.ImageResourceManager().Access(_depthImage)->views[0]; }
-
 
     ResourceHandle<Image> AlbedoM() const
     {
@@ -85,9 +74,6 @@ public:
 private:
     const VulkanBrain& _brain;
     glm::uvec2 _size;
-
-
-    ResourceHandle<Image> _gBuffersImage;
 
     ResourceHandle<Image> _albedoM;
     ResourceHandle<Image> _normalR;

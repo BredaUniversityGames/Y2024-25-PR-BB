@@ -1,5 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "batch_buffer.hpp"
 
 VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
 {
@@ -30,7 +31,7 @@ GeometryPipeline::~GeometryPipeline()
     _brain.device.destroy(_descriptorSetLayout);
 }
 
-void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene)
+void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
@@ -42,13 +43,13 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         info.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
     }
 
-    colorAttachmentInfos[0].imageView = _brain.ImageResourceManager().Access(_gBuffers.AlbedoM())->view;
-    colorAttachmentInfos[1].imageView = _brain.ImageResourceManager().Access(_gBuffers.NormalR())->view;
-    colorAttachmentInfos[2].imageView = _brain.ImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
-    colorAttachmentInfos[3].imageView = _brain.ImageResourceManager().Access(_gBuffers.Position())->view;
+    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_gBuffers.AlbedoM())->view;
+    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_gBuffers.NormalR())->view;
+    colorAttachmentInfos[2].imageView = _brain.GetImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
+    colorAttachmentInfos[3].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Position())->view;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.ImageResourceManager().Access(_gBuffers.Depth())->view;
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
@@ -97,9 +98,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                if (primitive.topology != vk::PrimitiveTopology::eTriangleList)
-                    throw std::runtime_error("No support for topology other than triangle list!");
-
                 assert(primitive.material && "There should always be a material available.");
                 const MaterialHandle& material = *primitive.material;
 
@@ -113,12 +111,14 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
                 commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &material.descriptorSet, 0,
                     nullptr);
 
-                vk::Buffer vertexBuffers[] = { primitive.vertexBuffer };
+                vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
                 vk::DeviceSize offsets[] = { 0 };
                 commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-                commandBuffer.bindIndexBuffer(primitive.indexBuffer, 0, primitive.indexType);
+                commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
-                commandBuffer.drawIndexed(primitive.indexCount, 1, 0, 0, 0);
+                commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _brain.drawStats.indexCount += primitive.count;
+                _brain.drawStats.drawCalls++;
             }
         }
     }

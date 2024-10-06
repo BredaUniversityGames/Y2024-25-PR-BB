@@ -12,7 +12,6 @@ public:
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
-
     ResourceHandle<Image> IrradianceMap() const { return _irradianceMap; }
     ResourceHandle<Image> PrefilterMap() const { return _prefilterMap; }
     ResourceHandle<Image> BRDFLUTMap() const { return _brdfLUT; }
@@ -39,13 +38,11 @@ private:
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::DescriptorSet _descriptorSet;
 
-
     ResourceHandle<Image> _irradianceMap;
     ResourceHandle<Image> _prefilterMap;
     ResourceHandle<Image> _brdfLUT;
 
     vk::Sampler _sampler;
-
 
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;
 

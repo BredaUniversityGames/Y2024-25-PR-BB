@@ -5,18 +5,17 @@
 #include "mesh.hpp"
 
 class BloomSettings;
+class BatchBuffer;
 
 class SkydomePipeline
 {
 public:
-
     SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
         ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
 
-
     ~SkydomePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer);
 
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);

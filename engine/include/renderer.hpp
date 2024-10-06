@@ -6,9 +6,8 @@
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 
-class UIPipeLine;
-class UserInterfaceRenderContext;
 struct UIElement;
+class UserInterfaceRenderer;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
@@ -22,6 +21,7 @@ class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
+class BatchBuffer;
 
 class Renderer
 {
@@ -31,6 +31,8 @@ public:
 
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
+
+    std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
     friend Engine;
@@ -51,6 +53,11 @@ private:
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
+    // temp
+    std::shared_ptr<UIElement> m_UIElementToRender;
+
+    std::unique_ptr<UserInterfaceRenderer> m_UIRenderContext;
+
     std::shared_ptr<SceneDescription> _scene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
@@ -63,8 +70,7 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::shared_ptr<UIElement> m_UIElementToRender;
-    std::unique_ptr<UserInterfaceRenderContext> m_UIRenderContext;
+    std::unique_ptr<BatchBuffer> _batchBuffer;
 
     CameraStructure _cameraStructure;
 

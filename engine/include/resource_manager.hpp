@@ -10,7 +10,6 @@ class ResourceManager;
 template <typename T>
 struct ResourceHandle
 {
-
     ResourceHandle()
         : index(0xFFFFFF)
         , version(0)
@@ -18,12 +17,12 @@ struct ResourceHandle
     }
     static ResourceHandle<T> Invalid() { return ResourceHandle<T> {}; }
 
-    uint32_t index { 0 };
+    uint32_t index : 24 { 0 };
 
 private:
     friend class VulkanBrain;
     friend ResourceManager<T>;
-    uint32_t version { 0 };
+    uint32_t version : 8 { 0 };
 };
 
 template <typename T>
@@ -39,7 +38,6 @@ class ResourceManager
 public:
     virtual ResourceHandle<T> Create(const T& resource)
     {
-
         uint32_t index {};
         if (!_freeList.empty())
         {
@@ -56,7 +54,6 @@ public:
         resc.resource = resource;
 
         ResourceHandle<T> handle {};
-
         handle.index = index;
         handle.version = ++_resources[index].version;
 
@@ -66,7 +63,6 @@ public:
     virtual const T* Access(ResourceHandle<T> handle) const
     {
         uint32_t index = handle.index;
-
         if (!IsValid(handle))
             return nullptr;
 
@@ -76,7 +72,6 @@ public:
     virtual void Destroy(ResourceHandle<T> handle)
     {
         uint32_t index = handle.index;
-
         if (IsValid(handle))
         {
             _freeList.emplace_back(index);
@@ -87,7 +82,6 @@ public:
     virtual bool IsValid(ResourceHandle<T> handle) const
     {
         uint32_t index = handle.index;
-
         return index < _resources.size() && _resources[index].version == handle.version && _resources[index].resource.has_value();
     }
 

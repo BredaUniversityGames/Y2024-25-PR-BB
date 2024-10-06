@@ -1,3 +1,4 @@
+
 # ImGUI and ImPlot
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -17,7 +18,6 @@ set(implot_files ${implot_sources} ${implot_headers})
 add_library(ImGui ${imgui_files} ${implot_files})
 
 target_include_directories(ImGui
-
         PRIVATE freetype/include
         PRIVATE Vulkan-Headers/include
         PRIVATE SDL/include
@@ -47,19 +47,24 @@ endif ()
 
 add_subdirectory(VulkanMemoryAllocator)
 
-
 # FastGLTF
 
 add_subdirectory(fastgltf)
 
-add_subdirectory(freetype)
+# freetype
 
+add_subdirectory(freetype)
 
 # Tracy Profiler
 
 set(TRACY_ENABLE "" ON)
 set(TRACY_ON_DEMAND "" ON)
 add_subdirectory(tracy)
+
+# EnTT
+
+add_subdirectory(EnTT)
+
 # SDL
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
@@ -71,7 +76,6 @@ target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
 # Main External Library
 
 add_library(External INTERFACE)
-
 
 if (WIN32)
     target_compile_options(External INTERFACE -DVK_USE_PLATFORM_WIN32_KHR)
@@ -92,8 +96,10 @@ target_link_libraries(External
 )
 
 target_include_directories(External
+        INTERFACE freetype/include
         INTERFACE external/SDL/include
         INTERFACE Vulkan-Headers/include
         INTERFACE glm
         INTERFACE stb
+        INTERFACE entt/src/entt
 )

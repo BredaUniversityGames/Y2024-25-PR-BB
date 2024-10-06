@@ -8,11 +8,9 @@
 #include <queue>
 
 #include "../input_manager.hpp"
-#include "../../../external/entt-master/src/entt/entt.hpp"
-#include "../pipelines/generic_pipeline.h"
 #include <expected>
 
-class UserInterfaceRenderContext;
+class UserInterfaceRenderer;
 class GenericPipeline;
 struct CameraUBO;
 struct Camera;
@@ -94,7 +92,7 @@ struct UIElement
     /**
      * submits drawinfo to the appropriate rendering system inside the current UserInterfaceContext.
      */
-    virtual void SubmitDrawInfo(UserInterfaceRenderContext&) const
+    virtual void SubmitDrawInfo(UserInterfaceRenderer&) const
     {
     }
 
@@ -139,7 +137,7 @@ private:
 
 void UpdateUI(const InputManager& input, UIElement* element);
 
-void RenderUI(UIElement* element, UserInterfaceRenderContext& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex, const glm::mat4& projectionMatrix);
+void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex, const glm::mat4& projectionMatrix);
 
 /**
  * holds free floating elements. elements can be anchored to one of the 4 corners of the canvas. anchors help preserve
@@ -153,18 +151,13 @@ public:
     {
     }
     void UpdateChildAbsoluteLocations() override;
-    void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
+    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
 };
 
-/**
- *  main class responsable for the updating and rendering of the UI. Does not hold any data on its own and just applies
- *  logic on the passed registry. By default, this object is contained in the Engine class and persists throughout
- *  the program.
- */
-class UserInterfaceRenderContext
+class UserInterfaceRenderer
 {
 public:
-    explicit UserInterfaceRenderContext(const VulkanBrain& b)
+    explicit UserInterfaceRenderer(const VulkanBrain& b)
         : m_VulkanBrain(b)
     {
     }
@@ -212,27 +205,4 @@ public:
 
 protected:
     const VulkanBrain& m_VulkanBrain;
-};
-
-// todo: refactor
-class UIPipeLine
-{
-public:
-    void CreatePipeLine(std::string_view vertshader, std::string_view fragshader);
-    UIPipeLine(const VulkanBrain& brain)
-        : m_brain(brain) {};
-
-    void CreateDescriptorSetLayout();
-    void UpdateTexture(ResourceHandle<Image> image, vk::DescriptorSet& set) const;
-    void RecordCommands();
-    NON_COPYABLE(UIPipeLine);
-    NON_MOVABLE(UIPipeLine);
-    ~UIPipeLine();
-
-    VkPipeline m_uiPipeLine;
-    vk::PipelineLayout m_pipelineLayout;
-    vk::DescriptorSet m_descriptorSet {};
-    static vk::DescriptorSetLayout m_descriptorSetLayout;
-    const VulkanBrain& m_brain;
-    vk::UniqueSampler m_sampler;
 };

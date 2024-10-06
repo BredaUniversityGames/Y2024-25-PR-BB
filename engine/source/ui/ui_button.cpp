@@ -4,6 +4,7 @@
 
 #include "ui/ui_button.hpp"
 #include "input_manager.hpp"
+#include "pipelines/ui_pipelines.hpp"
 
 void UIButton::Update(const InputManager& input)
 {
@@ -46,7 +47,7 @@ void UIButton::Update(const InputManager& input)
         m_State = ButtonState::NORMAL;
 }
 
-void UIButton::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_context) const
+void UIButton::SubmitDrawInfo(UserInterfaceRenderer& user_interface_context) const
 {
 
     ResourceHandle<Image> image;
@@ -83,7 +84,7 @@ void UIButton::UpdateChildAbsoluteLocations()
 
 void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)
 {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_uiPipeLine);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipeline);
 
     auto size = renderQueue.size();
     for (int i = 0; i < size; i++)
@@ -94,10 +95,13 @@ void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const 
         const glm::mat4 s = glm::ortho(0.0f, 2560.0f, 0.0f, 1600.0f) * matrix;
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1, &brain.bindlessSet, 0, nullptr);
 
+        // nescesery beccause index is a bit-field.
+        auto imageIndex = info.Image.index;
+
         vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
             &s);
         vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
-            &info.Image.index);
+            &imageIndex);
         commandBuffer.draw(6, 1, 0, 0);
 
         renderQueue.pop();

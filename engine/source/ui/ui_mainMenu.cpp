@@ -17,10 +17,10 @@ void MainMenuCanvas::InitElements(const VulkanBrain& brain)
     buttonNormalImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
     buttonNormalImage.LoadFromFile("assets/textures/buttonBackGround.png");
     buttonNormalImage.isHDR = false;
-    auto normalImage = brain.ImageResourceManager().Create(buttonNormalImage);
+    auto normalImage = brain.GetImageResourceManager().Create(buttonNormalImage);
 
     buttonNormalImage.LoadFromFile("assets/textures/buttonBackGroundHovered.png");
-    auto hoveredImage = brain.ImageResourceManager().Create(buttonNormalImage);
+    auto hoveredImage = brain.GetImageResourceManager().Create(buttonNormalImage);
 
     brain.UpdateBindlessSet();
     std::unique_ptr<UIButton> playbutton = std::make_unique<UIButton>();

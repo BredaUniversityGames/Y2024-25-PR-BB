@@ -3,10 +3,12 @@
 //
 
 #include "ui/ui_text_rendering.hpp"
+#include "pipelines/ui_pipelines.hpp"
 #include "ui/fonts.hpp"
+
 void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)
 {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_uiPipeLine);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipeline);
 
     auto size = renderQueue.size();
     for (int i = 0; i < size; i++)
@@ -24,18 +26,20 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
                 matrix = glm::translate(matrix, glm::vec3(render_info.m_FontSize + render_info.m_FontSpacing, 0, 0));
                 continue;
             }
-            if (Font::Characters.find(c) == Font::Characters.end())
+            if (Fonts::Characters.find(c) == Fonts::Characters.end())
             {
                 continue;
             }
-            Character ch = Font::Characters[c];
+            Fonts::Character ch = Fonts::Characters[c];
 
             auto finalmatrix = s * (glm::scale(matrix, glm::vec3(ch.Size.x, ch.Size.y, 1)));
+
+            auto imageIndex = ch.image.index;
 
             vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
                 &finalmatrix);
             vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
-                &ch.image.index);
+                &imageIndex);
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1,
                 &brain.bindlessSet, 0, nullptr);
 
@@ -48,7 +52,7 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
     }
 };
 
-void UITextElement::SubmitDrawInfo(UserInterfaceRenderContext& user_interface_context) const
+void UITextElement::SubmitDrawInfo(UserInterfaceRenderer& user_interface_context) const
 {
     user_interface_context.GetRenderingSystem<UITextRenderSystem>()->renderQueue.push({ AbsoluteLocation, 10, 2, m_Text });
     for (auto& i : GetChildren())

@@ -37,10 +37,7 @@ struct Vertex
 
 struct MeshPrimitive
 {
-    vk::PrimitiveTopology topology;
-
-    vk::IndexType indexType;
-    std::vector<std::byte> indicesBytes;
+    std::vector<uint32_t> indices;
     std::vector<Vertex> vertices;
 
     std::optional<uint32_t> materialIndex;
@@ -157,7 +154,6 @@ struct MaterialHandle
 
     std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
 
-
     static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
     {
         std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
@@ -173,14 +169,9 @@ struct MaterialHandle
 
 struct MeshPrimitiveHandle
 {
-    vk::PrimitiveTopology topology;
-    vk::IndexType indexType;
-    uint32_t indexCount;
-
-    vk::Buffer vertexBuffer;
-    vk::Buffer indexBuffer;
-    VmaAllocation vertexBufferAllocation;
-    VmaAllocation indexBufferAllocation;
+    uint32_t count;
+    uint32_t vertexOffset;
+    uint32_t indexOffset;
 
     std::shared_ptr<MaterialHandle> material;
 };

@@ -13,9 +13,8 @@
 #include "gpu_resources.hpp"
 #include "ui/UserInterfaceSystem.hpp"
 #include "vulkan_helper.hpp"
-std::map<char, Character> Font::Characters = {};
 
-void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain)
+void Fonts::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -50,15 +49,16 @@ void utils::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
         image.SetFormat(vk::Format::eR8Unorm);
         image.SetFlags(vk::ImageUsageFlagBits::eSampled);
         image.isHDR = false;
-        auto handle = brain.ImageResourceManager().Create(image);
+        auto handle = brain.GetImageResourceManager().Create(image);
 
-        Character character = { {},
+        Character character = {
             handle,
             glm::ivec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),
             glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
-            uint8_t(fontFace->glyph->advance.x) };
+            uint16_t(fontFace->glyph->advance.x)
+        };
 
-        Font::Characters.insert(std::pair<char, Character>(c, character));
+        Characters.insert(std::pair<char, Character>(c, character));
     }
     brain.UpdateBindlessSet();
     FT_Done_Face(fontFace);

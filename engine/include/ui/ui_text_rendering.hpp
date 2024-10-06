@@ -21,7 +21,7 @@ struct UITextElement : public UIElement
     {
     }
     void UpdateChildAbsoluteLocations() override { }
-    void SubmitDrawInfo(UserInterfaceRenderContext&) const override;
+    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
     std::string m_Text;
 };
 

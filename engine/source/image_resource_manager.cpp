@@ -1,7 +1,5 @@
 #include "image_resource_manager.hpp"
 #include "vulkan_brain.hpp"
-
-#include "pch.hpp"
 #include "vulkan_helper.hpp"
 
 ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)
@@ -10,7 +8,6 @@ ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)
 }
 
 ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation)
-
 {
     Image imageResource;
 
@@ -24,19 +21,15 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     imageResource.mips = std::min(creation.mips, static_cast<uint8_t>(floor(log2(std::max(imageResource.width, imageResource.height))) + 1));
     imageResource.name = creation.name;
     imageResource.isHDR = creation.isHDR;
-
     imageResource.sampler = creation.sampler;
 
     vk::ImageCreateInfo imageCreateInfo {};
     imageCreateInfo.imageType = ImageTypeConversion(creation.type);
-
     imageCreateInfo.extent.width = creation.width;
     imageCreateInfo.extent.height = creation.height;
     imageCreateInfo.extent.depth = creation.depth;
     imageCreateInfo.mipLevels = creation.mips;
-
     imageCreateInfo.arrayLayers = creation.type == ImageType::eCubeMap ? 6 : creation.layers;
-
     imageCreateInfo.format = creation.format;
     imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
     imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
@@ -52,7 +45,6 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         imageCreateInfo.flags |= vk::ImageCreateFlagBits::eCubeCompatible;
 
     VmaAllocationCreateInfo allocCreateInfo {};
-
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
     vmaCreateImage(_brain.vmaAllocator, (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&imageResource.image), &imageResource.allocation, nullptr);
@@ -61,9 +53,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
     vk::ImageViewCreateInfo viewCreateInfo {};
     viewCreateInfo.image = imageResource.image;
-
     viewCreateInfo.viewType = vk::ImageViewType::e2D;
-
     viewCreateInfo.format = creation.format;
     viewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(imageResource.format);
     viewCreateInfo.subresourceRange.baseMipLevel = 0;
@@ -72,14 +62,12 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     viewCreateInfo.subresourceRange.layerCount = 1;
 
     for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
-
     {
         viewCreateInfo.subresourceRange.baseArrayLayer = i;
         vk::ImageView imageView;
         util::VK_ASSERT(_brain.device.createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
         imageResource.views.emplace_back(imageView);
     }
-
     imageResource.view = *imageResource.views.begin();
 
     if (creation.type == ImageType::eCubeMap)
@@ -124,9 +112,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
             for (uint32_t i = 1; i < creation.mips; ++i)
             {
-
                 vk::ImageBlit blit {};
-
                 blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
                 blit.srcSubresource.layerCount = 1;
                 blit.srcSubresource.mipLevel = i - 1;
@@ -190,7 +176,6 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
 void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
 {
-
     if (IsValid(handle))
     {
         const Image* image = Access(handle);

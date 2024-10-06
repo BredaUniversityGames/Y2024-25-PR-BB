@@ -29,7 +29,8 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = _swapChain.GetExtent();
@@ -52,6 +53,8 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
+    _brain.drawStats.indexCount += 3;
+    _brain.drawStats.drawCalls++;
 
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 

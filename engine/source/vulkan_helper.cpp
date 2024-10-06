@@ -92,11 +92,11 @@ void util::EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer com
     brain.device.free(brain.commandPool, commandBuffer);
 }
 
-void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
+void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset)
 {
     vk::BufferCopy copyRegion {};
     copyRegion.srcOffset = 0;
-    copyRegion.dstOffset = 0;
+    copyRegion.dstOffset = offset;
     copyRegion.size = size;
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
@@ -121,13 +121,10 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     util::VK_ASSERT(brain.device.allocateDescriptorSets(&allocateInfo, &materialHandle.descriptorSet),
         "Failed allocating material descriptor set!");
 
-
     vk::DescriptorBufferInfo uniformInfo {};
-
     uniformInfo.offset = 0;
     uniformInfo.buffer = materialHandle.materialUniformBuffer;
     uniformInfo.range = sizeof(MaterialHandle::MaterialInfo);
-
 
     std::array<vk::WriteDescriptorSet, 1> writes;
     writes[0].dstSet = materialHandle.descriptorSet;
@@ -136,7 +133,6 @@ MaterialHandle util::CreateMaterial(const VulkanBrain& brain, const std::array<R
     writes[0].descriptorType = vk::DescriptorType::eUniformBuffer;
     writes[0].descriptorCount = 1;
     writes[0].pBufferInfo = &uniformInfo;
-
 
     brain.device.updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
 
@@ -342,7 +338,6 @@ void util::EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDyn
         return;
     commandBuffer.endDebugUtilsLabelEXT(dldi);
 }
-
 
 vk::ImageAspectFlags util::GetImageAspectFlags(vk::Format format)
 {

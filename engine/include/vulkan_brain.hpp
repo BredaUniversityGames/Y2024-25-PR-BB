@@ -2,7 +2,6 @@
 
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
-#include <optional>
 #include "gpu_resources.hpp"
 #include "image_resource_manager.hpp"
 
@@ -26,7 +25,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
     false;
 #endif
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 256;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
 enum class BindlessBinding
 {
     eColor = 0,
@@ -61,10 +60,16 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const
+    ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
     }
+
+    struct DrawStats
+    {
+        uint32_t indexCount;
+        uint32_t drawCalls;
+    } mutable drawStats;
 
     void UpdateBindlessSet() const;
 
@@ -91,9 +96,7 @@ private:
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-
     };
 
     mutable class ImageResourceManager _imageResourceManager;
