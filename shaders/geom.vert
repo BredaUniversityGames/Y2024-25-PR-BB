@@ -37,8 +37,8 @@ layout (location = 3) out flat int drawID;
 
 void main()
 {
-    mat4 modelTransform = instances.data[gl_DrawID].model;
-    drawID = gl_DrawID;
+    mat4 modelTransform = instances.data[gl_InstanceID].model;
+    drawID = gl_InstanceID;
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
     normal = normalize((modelTransform * vec4(inNormal, 0.0)).xyz);

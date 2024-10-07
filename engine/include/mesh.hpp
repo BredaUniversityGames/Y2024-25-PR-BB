@@ -72,6 +72,7 @@ struct Cubemap
 
 struct MeshPrimitiveHandle
 {
+    uint32_t id;
     uint32_t count;
     uint32_t vertexOffset;
     uint32_t indexOffset;

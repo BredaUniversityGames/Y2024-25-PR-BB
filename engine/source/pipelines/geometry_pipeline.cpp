@@ -1,6 +1,8 @@
 #include "pipelines/geometry_pipeline.hpp"
+#include "mesh.hpp"
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
+#include <map>
 
 VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
 {
@@ -79,22 +81,48 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     _drawCommands.clear();
-    uint32_t counter = 0;
-    for (auto& gameObject : scene.gameObjects)
+    _instanceData.clear();
+
+    std::multimap<const MeshPrimitiveHandle*, InstanceData> drawings {};
+
+    for (const auto& gameObject : scene.gameObjects)
     {
-        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i, ++counter)
+        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i)
         {
             const auto& node = gameObject.model->hierarchy.allNodes[i];
 
             for (const auto& primitive : node.mesh->primitives)
             {
-                _brain.drawStats.indexCount += primitive.count;
+                InstanceData id {
+                    .model = gameObject.transform * node.transform,
+                    .materialIndex = primitive.material.index,
+                };
 
-                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                drawings.insert(std::pair<const MeshPrimitiveHandle*, InstanceData> { &primitive, id });
             }
         }
     }
 
+    const MeshPrimitiveHandle* lastPtr = nullptr;
+    uint32_t counter = 0;
+    for (const auto& [primitive, instanceData] : drawings)
+    {
+        if (lastPtr == nullptr)
+            lastPtr = primitive;
+
+        ++counter;
+        _instanceData.emplace_back(instanceData);
+
+        if (lastPtr != primitive)
+        {
+            _brain.drawStats.indexCount += primitive->count * counter;
+            _drawCommands.emplace_back(primitive->count, counter, primitive->indexOffset, primitive->vertexOffset, _instanceData.size() - counter);
+
+            counter = 0;
+        }
+    }
+
+    UpdateInstanceData(currentFrame);
     batchBuffer.WriteDraws(_drawCommands, currentFrame);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
@@ -321,27 +349,8 @@ void GeometryPipeline::CreateInstanceBuffers()
     }
 }
 
-void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene)
+void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame)
 {
-    std::array<InstanceData, MAX_MESHES> instances;
-    uint32_t count = 0;
-
-    for (auto& gameObject : scene.gameObjects)
-    {
-        for (auto& node : gameObject.model->hierarchy.allNodes)
-        {
-            for (const auto& primitive : node.mesh->primitives)
-            {
-                assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
-                assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
-
-                instances[count].model = gameObject.transform * node.transform;
-                instances[count].materialIndex = primitive.material.index;
-
-                count++;
-            }
-        }
-    }
-
-    memcpy(_frameData[currentFrame].storageBufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
+    assert(_instanceData.size() < MAX_MESHES);
+    memcpy(_frameData[currentFrame].storageBufferMapped, _instanceData.data(), _instanceData.size() * sizeof(InstanceData));
 }

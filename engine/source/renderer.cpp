@@ -141,8 +141,6 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
-    _geometryPipeline->UpdateInstanceData(_currentFrame, *_scene);
-
     _brain.drawStats = {};
 
     const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);

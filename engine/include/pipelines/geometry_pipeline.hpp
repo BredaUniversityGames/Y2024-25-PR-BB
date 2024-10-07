@@ -31,7 +31,7 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
 
-    void UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene);
+    void UpdateInstanceData(uint32_t currentFrame);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
@@ -57,4 +57,5 @@ private:
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
+    std::vector<InstanceData> _instanceData;
 };

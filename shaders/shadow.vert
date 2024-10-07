@@ -30,6 +30,6 @@ layout (location = 0) in vec3 inPosition;
 layout (location = 0) out vec3 position;
 
 void main() {
-    position = (instances.data[gl_DrawID].model * vec4(inPosition, 1.0)).xyz;
+    position = (instances.data[gl_InstanceID].model * vec4(inPosition, 1.0)).xyz;
     gl_Position = (cameraUbo.lightVP) * vec4(position, 1.0);
 }
