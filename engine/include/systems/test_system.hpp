@@ -8,7 +8,4 @@ public:
     TestSystem() = default;
 
     void Update(ECS& ecs, float dt) override;
-
-private:
-    int _x { 0 };
 };
