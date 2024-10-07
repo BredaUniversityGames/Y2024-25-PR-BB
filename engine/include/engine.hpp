@@ -3,6 +3,7 @@
 #include "engine_init_info.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
+#include "particles/particle_interface.hpp"
 
 class ECS;
 class Application;
@@ -30,7 +31,9 @@ private:
 
     std::unique_ptr<Renderer> _renderer;
 
-    std::unique_ptr<ECS> _ecs;
+    std::unique_ptr<ParticleInterface> _particleInterface;
+
+    std::shared_ptr<ECS> _ecs;
 
     std::shared_ptr<SceneDescription> _scene;
 

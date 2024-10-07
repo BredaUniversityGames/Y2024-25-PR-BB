@@ -5,6 +5,11 @@ struct Emitter
 {
     vec3 position;
     uint count;
+    vec3 velocity;
+    float mass;
+    vec3 rotationVelocity;
+    uint maxLife;
+    // TODO: image/color
 };
 
 const uint MAX_EMITTERS = 64;

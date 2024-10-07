@@ -14,6 +14,9 @@
 #include "renderer.hpp"
 #include "editor.hpp"
 
+#include "particles/particle_util.hpp"
+#include "particles/particle_interface.hpp"
+
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
     auto path = std::filesystem::current_path();
@@ -29,10 +32,10 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     spdlog::info("Starting engine...");
 
-    _application = std::move(application);
-    _renderer = std::make_unique<Renderer>(initInfo, _application);
+    _ecs = std::make_shared<ECS>();
 
-    _ecs = std::make_unique<ECS>();
+    _application = std::move(application);
+    _renderer = std::make_unique<Renderer>(initInfo, _application, _ecs);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -69,6 +72,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _lastMousePos = mousePos;
 
     _application->SetMouseHidden(true);
+
+    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     spdlog::info("Successfully initialized engine!");
 }
@@ -139,6 +144,12 @@ void Engine::Run()
 
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
+
+        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::P))
+        {
+            _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+            spdlog::info("Spawned emitter!");
+        }
 
         _ecs->UpdateSystems(deltaTimeMS);
         _ecs->RemovedDestroyed();

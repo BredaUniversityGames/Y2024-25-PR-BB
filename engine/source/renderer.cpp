@@ -13,16 +13,18 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
-#include "pipelines/particle_pipeline.hpp"
+#include "particles/particle_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "ECS.hpp"
 
-Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
+Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application, const std::shared_ptr<ECS>& ecs)
     : _brain(initInfo)
     , _application(application)
+    , _ecs(ecs)
     , _bloomSettings(_brain)
 {
 
@@ -174,7 +176,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
     // TODO: pass in delta time
-    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, 1.0f);
+    _particlePipeline->RecordCommands(commandBuffer, *_ecs);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);

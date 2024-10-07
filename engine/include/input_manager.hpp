@@ -17,6 +17,7 @@ public:
         F1 = SDL_SCANCODE_F1,
         F2 = SDL_SCANCODE_F2,
         H = SDL_SCANCODE_H,
+        P = SDL_SCANCODE_P,
         // Add other keys as needed
     };
 

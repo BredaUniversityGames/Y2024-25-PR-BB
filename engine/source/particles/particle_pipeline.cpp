@@ -1,5 +1,9 @@
-#include "pipelines/particle_pipeline.hpp"
+#include "particles/particle_pipeline.hpp"
 
+#include "camera.hpp"
+#include "particles/particle_util.hpp"
+#include "particles/emitter_component.hpp"
+#include "ECS.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 
@@ -33,9 +37,10 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructu
     _brain.device.destroy(_uniformLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
 {
     UpdateBuffers();
+    UpdateEmitters(ecs);
 
     // Set up memory barrier to be used in between every shader stage
     vk::MemoryBarrier memoryBarrier{};
@@ -85,7 +90,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
 
     // -- simulate shader pass --
-    //commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(_pushConstants), &_pushConstants);
+    // commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &deltaTime);
     // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
     // 1, &memoryBarrier, 0, nullptr, 0, nullptr);
 
@@ -101,17 +106,29 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
+    // TODO: execution barrier between compute and graphics render
 
     // -- indirect draw call rendering --
 }
 
-void ParticlePipeline::SpawnEmitter(glm::vec3 position, uint32_t count, EmitterType type)
+void ParticlePipeline::UpdateEmitters(ECS& ecs)
 {
-    Emitter emitter{};
-    emitter.position = position;
-    emitter.count = count;
-    //emitter.type = type;
-    _emitters.emplace_back(emitter);
+    auto view = ecs._registry.view<EmitterComponent>();
+    for(auto entity : view)
+    {
+        auto& component = view.get<EmitterComponent>(entity);
+        if(component.isEmitting)
+        {
+            // TODO: do something with particle type later
+            _emitters.emplace_back(component.emitter);
+
+            // TODO: check if this can be moved to the particle interface itself as we should only be fetching stuff here, not babysitting
+            if(--component.lifetime == 0)
+            {
+                component.isEmitting = false;
+            }
+        }
+    }
 }
 
 
@@ -124,7 +141,7 @@ void ParticlePipeline::CreatePipeline()
 
     vk::PushConstantRange pcRange = {};
     pcRange.stageFlags = vk::ShaderStageFlagBits::eCompute;
-    pcRange.size = sizeof(_pushConstants);
+    pcRange.size = sizeof(_pushConstantSize);
     pcRange.offset = 0;
 
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
@@ -136,7 +153,7 @@ void ParticlePipeline::CreatePipeline()
     _particlePaths = { "kick_off", "emit", "simulate", "finish" };
     for (auto& shaderName : _particlePaths)
     {
-        auto byteCode = shader::ReadFile("shaders/particles/" + shaderName + "-c.spv");
+        auto byteCode = shader::ReadFile("shaders/bin/" + shaderName + ".comp.spv");
 
         vk::ShaderModule shaderModule = shader::CreateShaderModule(byteCode, _brain.device);
 
@@ -242,11 +259,11 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     // Particle SSBO (binding = 0)
     vk::DescriptorBufferInfo particleBufferInfo {};
-    particleBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::PARTICLE)].buffer;
+    particleBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer;
     particleBufferInfo.offset = 0;
     particleBufferInfo.range = sizeof(Particle) * MAX_PARTICLES;
     vk::WriteDescriptorSet& particleBufferWrite { descriptorWrites[0] };
-    particleBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::PARTICLE)].descriptorSet;
+    particleBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].descriptorSet;
     particleBufferWrite.dstBinding = 0;
     particleBufferWrite.dstArrayElement = 0;
     particleBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -255,11 +272,11 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     // Alive NEW list SSBO (binding = 1)
     vk::DescriptorBufferInfo aliveNEWBufferInfo {};
-    aliveNEWBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_NEW)].buffer;
+    aliveNEWBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::eAliveNew)].buffer;
     aliveNEWBufferInfo.offset = 0;
     aliveNEWBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLES;
     vk::WriteDescriptorSet& aliveNEWBufferWrite { descriptorWrites[1] };
-    aliveNEWBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_NEW)].descriptorSet;
+    aliveNEWBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::eAliveNew)].descriptorSet;
     aliveNEWBufferWrite.dstBinding = 1;
     aliveNEWBufferWrite.dstArrayElement = 0;
     aliveNEWBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -268,11 +285,11 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     // Alive CURRENT list SSBO (binding = 2)
     vk::DescriptorBufferInfo aliveCURRENTBufferInfo {};
-    aliveCURRENTBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_CURRENT)].buffer;
+    aliveCURRENTBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::eAliveCurrent)].buffer;
     aliveCURRENTBufferInfo.offset = 0;
     aliveCURRENTBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLES;
     vk::WriteDescriptorSet& aliveCURRENTBufferWrite { descriptorWrites[2] };
-    aliveCURRENTBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_CURRENT)].descriptorSet;
+    aliveCURRENTBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::eAliveCurrent)].descriptorSet;
     aliveCURRENTBufferWrite.dstBinding = 2;
     aliveCURRENTBufferWrite.dstArrayElement = 0;
     aliveCURRENTBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -281,11 +298,11 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     // Dead list SSBO (binding = 3)
     vk::DescriptorBufferInfo deadBufferInfo {};
-    deadBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::DEAD)].buffer;
+    deadBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::eDead)].buffer;
     deadBufferInfo.offset = 0;
     deadBufferInfo.range = sizeof(uint32_t) * MAX_PARTICLES;
     vk::WriteDescriptorSet& deadBufferWrite { descriptorWrites[3] };
-    deadBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::DEAD)].descriptorSet;
+    deadBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::eDead)].descriptorSet;
     deadBufferWrite.dstBinding = 3;
     deadBufferWrite.dstArrayElement = 0;
     deadBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -294,11 +311,11 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     // Counter SSBO (binding = 4)
     vk::DescriptorBufferInfo counterBufferInfo {};
-    counterBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].buffer;
+    counterBufferInfo.buffer = _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].buffer;
     counterBufferInfo.offset = 0;
     counterBufferInfo.range = sizeof(ParticleCounters);
     vk::WriteDescriptorSet& counterBufferWrite { descriptorWrites[4] };
-    counterBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].descriptorSet;
+    counterBufferWrite.dstSet = _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].descriptorSet;
     counterBufferWrite.dstBinding = 4;
     counterBufferWrite.dstArrayElement = 0;
     counterBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -320,7 +337,6 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
-
 
 void ParticlePipeline::CreateBuffers()
 {
@@ -358,10 +374,10 @@ void ParticlePipeline::CreateBuffers()
         // Create and copy to SSBO
         util::CreateBuffer(_brain, particleBufferSize,
             vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-            _storageBuffers[static_cast<int>(SSBOUsage::PARTICLE)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::PARTICLE)].bufferAllocation,
+            _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].bufferAllocation,
             VMA_MEMORY_USAGE_GPU_ONLY,
             "Particle SSBO");
-        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::PARTICLE)].buffer, particleBufferSize);
+        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer, particleBufferSize);
 
         // Clean up
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
@@ -371,7 +387,7 @@ void ParticlePipeline::CreateBuffers()
         std::vector<uint32_t> indices(MAX_PARTICLES);
         vk::DeviceSize indexBufferSize = sizeof(uint32_t) * MAX_PARTICLES;
 
-        for (size_t i = static_cast<size_t>(SSBOUsage::ALIVE_NEW); i <= static_cast<size_t>(SSBOUsage::DEAD); i++)
+        for (size_t i = static_cast<size_t>(SSBOUsage::eAliveNew); i <= static_cast<size_t>(SSBOUsage::eDead); i++)
         {
             // Create and map staging buffer
             util::CreateBuffer(_brain, indexBufferSize,
@@ -414,10 +430,10 @@ void ParticlePipeline::CreateBuffers()
         // Create and copy to SSBO
         util::CreateBuffer(_brain, counterBufferSize,
             vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-            _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].bufferAllocation,
+            _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].bufferAllocation,
             VMA_MEMORY_USAGE_GPU_ONLY,
             "Counters SSBO");
-        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::COUNTER)].buffer, counterBufferSize);
+        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].buffer, counterBufferSize);
 
         // Clean up
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
@@ -440,7 +456,7 @@ void ParticlePipeline::CreateBuffers()
 void ParticlePipeline::UpdateBuffers()
 {
     // TODO: check if this is the way to go about swapping the alive list buffers
-    std::swap(_storageBuffers[static_cast<int>(SSBOUsage::ALIVE_NEW)], _storageBuffers[static_cast<int>(SSBOUsage::ALIVE_CURRENT)]);
+    std::swap(_storageBuffers[static_cast<int>(SSBOUsage::eAliveNew)], _storageBuffers[static_cast<int>(SSBOUsage::eAliveCurrent)]);
 
     memcpy(_emitterBuffer.bufferMapped, _emitters.data(), _emitters.size() * sizeof(Emitter));
 }

@@ -21,11 +21,12 @@ class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class ECS;
 
 class Renderer
 {
 public:
-    Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application);
+    Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -40,6 +41,7 @@ private:
 
     std::unique_ptr<ModelLoader> _modelLoader;
     std::shared_ptr<Application> _application;
+    std::shared_ptr<ECS> _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
