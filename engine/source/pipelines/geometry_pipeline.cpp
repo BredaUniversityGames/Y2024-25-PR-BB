@@ -78,7 +78,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    _transforms.clear();
+    _drawCommands.clear();
     uint32_t counter = 0;
     for (auto& gameObject : scene.gameObjects)
     {
@@ -90,12 +90,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             {
                 _brain.drawStats.indexCount += primitive.count;
 
-                drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
             }
         }
     }
 
-    batchBuffer.WriteDraws(drawCommands, currentFrame);
+    batchBuffer.WriteDraws(_drawCommands, currentFrame);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
@@ -105,7 +105,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     vk::DeviceSize offsets[] = { 0 };
     commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
-    commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
+    commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, _drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);

@@ -56,5 +56,5 @@ private:
     vk::Pipeline _pipeline;
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
-    std::vector<glm::mat4> _transforms;
+    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 };
