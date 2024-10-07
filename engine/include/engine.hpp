@@ -8,7 +8,7 @@ class ECS;
 class Application;
 class Renderer;
 class Editor;
-
+class PhysicsModule;
 class Engine
 {
 public:
@@ -41,6 +41,9 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;
+
+    // modules
+    std::unique_ptr<PhysicsModule> _physicsModule;
 
     bool _shouldQuit = false;
 };

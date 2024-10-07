@@ -13,7 +13,7 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
-#include <Jolt/Jolt.h>
+#include "modules/physics_module.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -71,6 +71,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application->SetMouseHidden(true);
 
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
     spdlog::info("Successfully initialized engine!");
 }
 
@@ -78,6 +81,7 @@ void Engine::Run()
 {
     while (!ShouldQuit())
     {
+
         // update input
         ZoneNamed(zone, "");
         _application->ProcessWindowEvents();
@@ -85,6 +89,9 @@ void Engine::Run()
         std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
         _lastFrameTime = currentFrameTime;
         float deltaTimeMS = deltaTime.count();
+
+        // update physics
+        _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
 
         // Slow down application when minimized.
         if (_application->IsMinimized())
