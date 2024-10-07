@@ -185,7 +185,7 @@ public:
 
         if (!m_UIRenderSystems.contains(typeid(T))) [[likely]]
         {
-            auto result = m_UIRenderSystems.emplace(typeid(T), std::make_unique<T>(pipe_line));
+            m_UIRenderSystems.emplace(typeid(T), std::make_unique<T>(pipe_line));
             return true;
         }
 
