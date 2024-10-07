@@ -51,7 +51,10 @@ jobs:
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
-
+      
+      - name: Configure Project
+        run: pwd
+        
       - name: Test Project
         run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/Engine -T
           
