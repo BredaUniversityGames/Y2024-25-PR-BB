@@ -125,7 +125,9 @@ void ShadowPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 1;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -138,10 +140,10 @@ void ShadowPipeline::CreatePipeline()
     pipelineCreateInfo.layout = _pipelineLayout;
 
     // Use dynamic rendering
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
+    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
     util::VK_ASSERT(result.result, "Failed to create shadow pipeline!");

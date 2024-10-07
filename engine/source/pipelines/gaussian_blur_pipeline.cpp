@@ -175,7 +175,9 @@ void GaussianBlurPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -191,12 +193,11 @@ void GaussianBlurPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     vk::Format format = _brain.GetImageResourceManager().Access(_source)->format;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

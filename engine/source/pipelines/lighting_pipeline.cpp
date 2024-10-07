@@ -178,7 +178,9 @@ void LightingPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -198,11 +200,10 @@ void LightingPipeline::CreatePipeline()
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

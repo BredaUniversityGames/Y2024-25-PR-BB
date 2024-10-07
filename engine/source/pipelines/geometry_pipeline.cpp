@@ -210,7 +210,9 @@ void GeometryPipeline::CreatePipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -226,14 +228,13 @@ void GeometryPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
     std::fill(formats.begin(), formats.end(), GBuffers::GBufferFormat());
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = DEFERRED_ATTACHMENT_COUNT;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = formats.data();
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
