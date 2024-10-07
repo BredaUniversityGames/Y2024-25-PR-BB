@@ -2,7 +2,6 @@
 
 #include "entity/registry.hpp"
 #include "systems/system.hpp"
-
 class System;
 
 class ECS
@@ -10,7 +9,6 @@ class ECS
 public:
     ECS();
     ~ECS();
-
 
     NON_COPYABLE(ECS);
     NON_MOVABLE(ECS);

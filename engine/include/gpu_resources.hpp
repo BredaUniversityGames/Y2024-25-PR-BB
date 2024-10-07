@@ -12,7 +12,6 @@ enum class ImageType
 
 struct ImageCreation
 {
-
     std::byte* initialData { nullptr };
     uint16_t width { 1 };
     uint16_t height { 1 };
@@ -42,7 +41,6 @@ struct ImageCreation
 
 struct Image
 {
-
     vk::Image image {};
     std::vector<vk::ImageView> views {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
