@@ -78,9 +78,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    // TODO: this can be cached to cause less allocations.
-    std::vector<vk::DrawIndexedIndirectCommand> drawCommands;
-
+    _transforms.clear();
     uint32_t counter = 0;
     for (auto& gameObject : scene.gameObjects)
     {
