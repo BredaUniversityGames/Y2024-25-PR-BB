@@ -6,6 +6,34 @@
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+namespace detail
+{
+
+glm::vec3 ToVec3(const fastgltf::math::nvec3& gltf_vec)
+{
+    return { gltf_vec.x(), gltf_vec.y(), gltf_vec.z() };
+}
+
+glm::vec4 ToVec4(const fastgltf::math::nvec4& gltf_vec)
+{
+    return { gltf_vec.x(), gltf_vec.y(), gltf_vec.z(), gltf_vec.w() };
+}
+
+glm::mat4 ToMat4(const fastgltf::math::fmat4x4& gltf_mat)
+{
+    return glm::make_mat4(gltf_mat.data());
+}
+
+fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
+{
+    fastgltf::math::fmat4x4 out {};
+    std::copy(&glm_mat[0][0], &glm_mat[3][3], out.data());
+    return out;
+}
+
+}
 
 ModelLoader::ModelLoader(const VulkanBrain& brain)
     : _brain(brain)
@@ -260,11 +288,11 @@ MaterialCreation ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMate
         material.emissiveMap = modelTextures[textureIndex];
     }
 
-    material.albedoFactor = *reinterpret_cast<const glm::vec4*>(&gltfMaterial.pbrData.baseColorFactor);
+    material.albedoFactor = detail::ToVec4(gltfMaterial.pbrData.baseColorFactor);
     material.metallicFactor = gltfMaterial.pbrData.metallicFactor;
     material.roughnessFactor = gltfMaterial.pbrData.roughnessFactor;
     material.normalScale = gltfMaterial.normalTexture.has_value() ? gltfMaterial.normalTexture.value().scale : 0.0f;
-    material.emissiveFactor = *reinterpret_cast<const glm::vec3*>(&gltfMaterial.emissiveFactor);
+    material.emissiveFactor = detail::ToVec3(gltfMaterial.emissiveFactor);
     material.occlusionStrength = gltfMaterial.occlusionTexture.has_value()
         ? gltfMaterial.occlusionTexture.value().strength
         : 1.0f;
@@ -458,8 +486,8 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& 
     if (gltfNode.meshIndex.has_value())
         node.mesh = modelHandle.meshes[gltfNode.meshIndex.value()];
 
-    auto transform = fastgltf::getTransformMatrix(gltfNode, *reinterpret_cast<fastgltf::math::fmat4x4*>(&matrix));
-    matrix = *reinterpret_cast<glm::mat4*>(&transform);
+    fastgltf::math::fmat4x4 transform = fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
+    matrix = detail::ToMat4(transform);
     node.transform = matrix;
 
     if (gltfNode.meshIndex.has_value())

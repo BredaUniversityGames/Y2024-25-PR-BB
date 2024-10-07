@@ -33,7 +33,8 @@ enum class BindlessBinding
     eDepth,
     eCubemap,
     eShadowmap,
-    eMaterial
+    eMaterial,
+    eNone,
 };
 
 class VulkanBrain

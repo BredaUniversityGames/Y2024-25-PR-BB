@@ -2,6 +2,7 @@
 
 #include <magic_enum.hpp>
 #include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 #include "mesh.hpp"
 
 namespace util
