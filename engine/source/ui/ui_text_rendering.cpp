@@ -16,7 +16,6 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
         const auto& render_info = renderQueue.front();
 
         auto matrix = glm::mat4(1.f);
-        const glm::mat4 s = glm::ortho(0.0f, 2560.0f, 0.0f, 1600.0f) * matrix;
         matrix = glm::translate(matrix, glm::vec3(render_info.position.x, render_info.position.y, 0));
 
         for (const auto c : render_info.text)
@@ -32,16 +31,14 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
             }
             Fonts::Character ch = Fonts::Characters[c];
 
-            auto finalmatrix = s * (glm::scale(matrix, glm::vec3(ch.Size.x, ch.Size.y, 1)));
+            GenericUIPushConstants constants {
+                .m_ProjectionMatrix = projection_matrix * (glm::scale(matrix, glm::vec3(ch.Size.x, ch.Size.y, 1))),
+                .m_TextureIndex = ch.image.index
+            };
 
-            auto imageIndex = ch.image.index;
-
-            vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
-                &finalmatrix);
-            vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
-                &imageIndex);
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1,
                 &brain.bindlessSet, 0, nullptr);
+            commandBuffer.pushConstants(m_PipeLine->m_pipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, sizeof(GenericUIPushConstants), &constants);
 
             commandBuffer.draw(6, 1, 0, 0);
 

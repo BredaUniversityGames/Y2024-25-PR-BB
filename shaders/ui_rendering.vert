@@ -21,13 +21,14 @@ vec2 uvs[6] = vec2[](
 );
 
 
-layout( push_constant ) uniform constants
+layout( push_constant ) uniform PushConstants
 {	
-	mat4 render_matrix;
-} PushConstants;
+	mat4 MVP;
+    	uint TextureIndex;
+} pushConstants;
 
 
 void main() {
-    gl_Position = PushConstants.render_matrix* vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    gl_Position = pushConstants.render_matrix* vec4(positions[gl_VertexIndex], 0.0, 1.0);
     uv = uvs[gl_VertexIndex];
 }

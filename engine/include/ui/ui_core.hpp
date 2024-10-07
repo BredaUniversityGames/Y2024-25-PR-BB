@@ -18,6 +18,12 @@ class SwapChain;
 
 class UIPipeLine;
 
+struct GenericUIPushConstants
+{
+    glm::mat4 m_ProjectionMatrix;
+    uint32_t m_TextureIndex;
+};
+
 class UIRenderSystemBase
 {
 public:

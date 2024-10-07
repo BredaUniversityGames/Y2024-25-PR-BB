@@ -5,6 +5,7 @@
 
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
+#include "ui/ui_core.hpp"
 
 void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fragshader)
 {
@@ -117,19 +118,15 @@ void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fr
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
 
-    std::array<vk::PushConstantRange, 2> bufferRange {};
+    std::array<vk::PushConstantRange, 1> bufferRange {};
     bufferRange[0].offset = 0;
-    bufferRange[0].size = sizeof(glm::mat4);
-    bufferRange[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
-
-    bufferRange[1].offset = sizeof(glm::mat4);
-    bufferRange[1].size = sizeof(uint32_t);
-    bufferRange[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
+    bufferRange[0].size = sizeof(GenericUIPushConstants);
+    bufferRange[0].stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.setLayoutCount = 1; // Optional
     pipelineLayoutInfo.pSetLayouts = &m_brain.bindlessLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 2; // Optional
+    pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
     pipelineLayoutInfo.pPushConstantRanges = bufferRange.data(); // Optional
 
     if (m_brain.device.createPipelineLayout(&pipelineLayoutInfo, nullptr, &m_pipelineLayout) != vk::Result::eSuccess)

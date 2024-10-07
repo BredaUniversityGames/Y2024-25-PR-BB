@@ -90,18 +90,19 @@ void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const 
     for (int i = 0; i < size; i++)
     {
         const auto& info = renderQueue.front();
-        glm::mat4 matrix = glm::mat4(1);
+
+        glm::mat4 matrix(1);
+
         matrix = glm::scale(glm::translate(matrix, glm::vec3(info.position, 0)), glm::vec3(info.Scale, 0));
-        glm::mat4 s = glm::ortho(0.0f, 2640.0f, 0.0f, 1600.0f) * matrix;
+        matrix = projection_matrix * matrix;
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1, &brain.bindlessSet, 0, nullptr);
 
-        // nescesery beccause index is a bit-field.
-        auto imageIndex = info.Image.index;
+        GenericUIPushConstants constants {
+            .m_ProjectionMatrix = matrix,
+            .m_TextureIndex = info.Image.index
+        };
 
-        vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
-            &s);
-        vkCmdPushConstants(commandBuffer, m_PipeLine->m_pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), sizeof(uint32_t),
-            &imageIndex);
+        commandBuffer.pushConstants(m_PipeLine->m_pipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, sizeof(GenericUIPushConstants), &constants);
         commandBuffer.draw(6, 1, 0, 0);
 
         renderQueue.pop();
