@@ -225,7 +225,7 @@ void Renderer::InitializeCameraUBODescriptors()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         std::string name = "[] Camera UBO";
-        name.insert(1, std::to_string(i));
+        // name.insert(1, std::to_string(i));
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eUniformBuffer,
             _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
