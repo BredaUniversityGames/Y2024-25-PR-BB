@@ -7,6 +7,7 @@ class PerformanceTracker;
 class BloomSettings;
 struct SceneDescription;
 class GBuffers;
+class ECS;
 class Editor
 {
 public:
@@ -16,7 +17,7 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs);
 
 private:
     const VulkanBrain& _brain;

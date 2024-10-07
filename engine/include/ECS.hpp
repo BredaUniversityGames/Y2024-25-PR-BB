@@ -16,6 +16,9 @@ public:
     template <typename T, typename... Args>
     void AddSystem(Args&&... args);
 
+    template <typename T>
+    T& GetSystem();
+
     void UpdateSystems(float dt);
 
     void RenderSystems() const;
@@ -42,4 +45,17 @@ void ECS::AddSystem(Args&&... args)
     _systems.emplace_back(std::unique_ptr<System>(system));
 
     spdlog::info("{}, created", typeid(*system).name());
+}
+
+template <typename T>
+T& ECS::GetSystem()
+{
+    for (auto& s : _systems)
+    {
+        T* found = dynamic_cast<T*>(s.get());
+        if (found)
+            return *found;
+    }
+    assert(false);
+    return *dynamic_cast<T*>(_systems[0].get()); // This line will always fail
 }

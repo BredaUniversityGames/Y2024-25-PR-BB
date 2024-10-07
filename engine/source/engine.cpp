@@ -13,6 +13,7 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
+#include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
@@ -73,6 +74,9 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>();
 
     spdlog::info("Successfully initialized engine!");
 }
@@ -154,7 +158,7 @@ void Engine::Run()
 
         _renderer->UpdateCamera(_scene->camera);
 
-        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
         _renderer->Render();
 

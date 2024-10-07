@@ -7,6 +7,8 @@
 #include "mesh.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "ECS.hpp"
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
@@ -42,7 +44,7 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
@@ -51,6 +53,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     performanceTracker.Render();
     bloomSettings.Render();
 
+    // Render systems inspect
+    for (const auto& system : ecs._systems)
+    {
+        system->Inspect();
+    }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
