@@ -5,26 +5,24 @@
 
 class BatchBuffer;
 
-struct UBO
+struct alignas(16) InstanceData
 {
-    alignas(16) glm::mat4 model;
+    glm::mat4 model;
+    uint32_t materialIndex;
 };
-
-constexpr uint32_t MAX_MESHES = 2048;
 
 class GeometryPipeline
 {
 public:
     struct FrameData
     {
-        vk::Buffer uniformBuffer;
-        VmaAllocation uniformBufferAllocation;
-        void* uniformBufferMapped;
+        vk::Buffer storageBuffer;
+        VmaAllocation storageBufferAllocation;
+        void* storageBufferMapped;
         vk::DescriptorSet descriptorSet;
     };
 
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, vk::DescriptorSetLayout materialDescriptorSetLayout,
-        const CameraStructure& camera);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera);
 
     ~GeometryPipeline();
 
@@ -33,21 +31,21 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
 
+    void UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene);
+
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline(vk::DescriptorSetLayout materialDescriptorSetLayout);
+    void CreatePipeline();
 
     void CreateDescriptorSetLayout();
 
     void CreateDescriptorSets();
 
-    void CreateUniformBuffers();
+    void CreateInstanceBuffers();
 
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
-
-    void UpdateUniformData(uint32_t currentFrame, const std::vector<glm::mat4> transforms, const Camera& camera);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
@@ -58,5 +56,5 @@ private:
     vk::Pipeline _pipeline;
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
-    std::vector<glm::mat4> _transforms;
+    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 };
