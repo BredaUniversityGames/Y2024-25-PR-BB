@@ -1,15 +1,15 @@
 #version 460
 
-layout(push_constant) uniform PushConstants
+layout (push_constant) uniform PushConstants
 {
     uint vertical;
 } passType;
 
-layout(binding = 0) uniform sampler2D source;
+layout (binding = 0) uniform sampler2D source;
 
-layout(location = 0) in vec2 texCoords;
+layout (location = 0) in vec2 texCoords;
 
-layout(location = 0) out vec4 outColor;
+layout (location = 0) out vec4 outColor;
 
 const float weight[5] = { 0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216 };
 

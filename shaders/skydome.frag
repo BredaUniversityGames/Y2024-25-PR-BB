@@ -1,9 +1,9 @@
 #version 460
-#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_nonuniform_qualifier: enable
 
 #include "bindless.glsl"
 
-layout(push_constant) uniform PushConstants
+layout (push_constant) uniform PushConstants
 {
     uint index;
 } pc;
@@ -16,10 +16,10 @@ layout (set = 2, binding = 0) uniform BloomSettingsUBO
     vec3 colorWeights;
 } bloomSettings;
 
-layout(location = 0) in vec2 texCoord;
+layout (location = 0) in vec2 texCoord;
 
-layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec4 outBrightness;
+layout (location = 0) out vec4 outColor;
+layout (location = 1) out vec4 outBrightness;
 
 void main()
 {

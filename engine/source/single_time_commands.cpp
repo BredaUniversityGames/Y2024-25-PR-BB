@@ -65,3 +65,16 @@ void SingleTimeCommands::CreateLocalBuffer(const std::byte* vec, uint32_t count,
 
     util::CopyBuffer(_commandBuffer, stagingBuffer, buffer, bufferSize);
 }
+
+void SingleTimeCommands::CopyIntoLocalBuffer(const std::byte* vec, uint32_t count, uint32_t offset, vk::Buffer buffer)
+{
+    vk::DeviceSize bufferSize = count;
+
+    vk::Buffer& stagingBuffer = _stagingBuffers.emplace_back();
+    VmaAllocation& stagingBufferAllocation = _stagingAllocations.emplace_back();
+    util::CreateBuffer(_brain, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Staging buffer");
+
+    vmaCopyMemoryToAllocation(_brain.vmaAllocator, vec, stagingBufferAllocation, 0, bufferSize);
+
+    util::CopyBuffer(_commandBuffer, stagingBuffer, buffer, bufferSize, offset);
+}

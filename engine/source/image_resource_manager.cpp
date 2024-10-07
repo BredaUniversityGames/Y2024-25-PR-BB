@@ -1,6 +1,5 @@
 #include "image_resource_manager.hpp"
 #include "vulkan_brain.hpp"
-#include "pch.hpp"
 #include "vulkan_helper.hpp"
 
 ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)

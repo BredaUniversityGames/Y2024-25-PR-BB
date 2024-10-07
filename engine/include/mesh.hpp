@@ -13,17 +13,20 @@ struct Vertex
         eTEX_COORD
     };
 
-    glm::vec3 position{};
-    glm::vec3 normal{};
-    glm::vec4 tangent{};
-    glm::vec2 texCoord{};
+    glm::vec3 position {};
+    glm::vec3 normal {};
+    glm::vec4 tangent {};
+    glm::vec2 texCoord {};
 
     Vertex()
     {
     }
 
     Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord)
-            : position(position), normal(normal), tangent(tangent), texCoord(texCoord)
+        : position(position)
+        , normal(normal)
+        , tangent(tangent)
+        , texCoord(texCoord)
     {
     }
 
@@ -34,10 +37,7 @@ struct Vertex
 
 struct MeshPrimitive
 {
-    vk::PrimitiveTopology topology;
-
-    vk::IndexType indexType;
-    std::vector<std::byte> indicesBytes;
+    std::vector<uint32_t> indices;
     std::vector<Vertex> vertices;
 
     std::optional<uint32_t> materialIndex;
@@ -57,7 +57,7 @@ struct Texture
 
     vk::Format GetFormat() const
     {
-        if(isHDR)
+        if (isHDR)
             return vk::Format::eR32G32B32A32Sfloat;
 
         return format;
@@ -124,20 +124,20 @@ struct MaterialHandle
 {
     struct alignas(16) MaterialInfo
     {
-        glm::vec4 albedoFactor{ 0.0f };
+        glm::vec4 albedoFactor { 0.0f };
 
-        float metallicFactor{ 0.0f };
-        float roughnessFactor{ 0.0f };
-        float normalScale{ 0.0f };
-        float occlusionStrength{ 0.0f };
+        float metallicFactor { 0.0f };
+        float roughnessFactor { 0.0f };
+        float normalScale { 0.0f };
+        float occlusionStrength { 0.0f };
 
-        glm::vec3 emissiveFactor{ 0.0f };
-        int32_t useEmissiveMap{ false };
+        glm::vec3 emissiveFactor { 0.0f };
+        int32_t useEmissiveMap { false };
 
-        int32_t useAlbedoMap{ false };
-        int32_t useMRMap{ false };
-        int32_t useNormalMap{ false };
-        int32_t useOcclusionMap{ false };
+        int32_t useAlbedoMap { false };
+        int32_t useMRMap { false };
+        int32_t useNormalMap { false };
+        int32_t useOcclusionMap { false };
 
         int32_t albedoMapIndex;
         int32_t mrMapIndex;
@@ -156,7 +156,7 @@ struct MaterialHandle
 
     static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
     {
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings{};
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
 
         bindings[0].binding = 0;
         bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -169,14 +169,9 @@ struct MaterialHandle
 
 struct MeshPrimitiveHandle
 {
-    vk::PrimitiveTopology topology;
-    vk::IndexType indexType;
-    uint32_t indexCount;
-
-    vk::Buffer vertexBuffer;
-    vk::Buffer indexBuffer;
-    VmaAllocation vertexBufferAllocation;
-    VmaAllocation indexBufferAllocation;
+    uint32_t count;
+    uint32_t vertexOffset;
+    uint32_t indexOffset;
 
     std::shared_ptr<MaterialHandle> material;
 };
@@ -215,8 +210,9 @@ struct GameObject
     {
     }
 
-    GameObject(const glm::mat4 &transform, std::shared_ptr<ModelHandle> model)
-            : transform(transform), model(model)
+    GameObject(const glm::mat4& transform, std::shared_ptr<ModelHandle> model)
+        : transform(transform)
+        , model(model)
     {
     }
 };
@@ -232,11 +228,10 @@ struct DirectionalLight
     float shadowBias = 0.002f;
 
     const glm::mat4 biasMatrix = glm::mat4(
-            0.5, 0.0, 0.0, 0.0,
-            0.0, 0.5, 0.0, 0.0,
-            0.0, 0.0, 0.5, 0.0,
-            0.5, 0.5, 0.5, 1.0
-    );
+        0.5, 0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.5, 0.5, 0.5, 1.0);
 };
 
 struct SceneDescription

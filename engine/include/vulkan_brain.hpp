@@ -60,10 +60,16 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
-    ImageResourceManager& ImageResourceManager() const
+    ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
     }
+
+    struct DrawStats
+    {
+        uint32_t indexCount;
+        uint32_t drawCalls;
+    } mutable drawStats;
 
     void UpdateBindlessSet() const;
 

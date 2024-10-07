@@ -3,6 +3,8 @@
 #include <filesystem>
 
 #if defined(TESTS_ENABLED)
+#undef None
+#undef Bool
 #include <gtest/gtest.h>
 #endif
 
@@ -27,8 +29,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        g_app->Run([]()
-            { g_engine->Run(); return g_engine->ShouldQuit(); });
+        g_engine->Run();
     }
     catch (const std::exception& e)
     {

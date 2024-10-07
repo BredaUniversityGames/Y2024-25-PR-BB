@@ -1,3 +1,6 @@
+
+#undef None
+#undef Bool
 #include <gtest/gtest.h>
 
 #include "resource_manager.hpp"
