@@ -1,6 +1,7 @@
 #pragma once
 #include "class_decorations.hpp"
 
+class ECS;
 class VulkanBrain;
 class Application;
 class PerformanceTracker;
@@ -16,7 +17,7 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs);
 
 private:
     const VulkanBrain& _brain;

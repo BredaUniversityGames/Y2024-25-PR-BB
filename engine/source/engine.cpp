@@ -13,6 +13,7 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
+#include "components/transform_component.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -33,6 +34,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _renderer = std::make_unique<Renderer>(initInfo, _application);
 
     _ecs = std::make_unique<ECS>();
+    TransformComponent::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -75,6 +77,21 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
+
+    entt::entity entity1 = _ecs->_registry.create();
+
+    auto& transform = _ecs->_registry.emplace<TransformComponent>(entity1);
+
+    entt::entity entity2 = _ecs->_registry.create();
+
+    auto& transform2 = _ecs->_registry.emplace<TransformComponent>(entity2);
+
+    entt::entity entity3 = _ecs->_registry.create();
+
+    auto& transform3 = _ecs->_registry.emplace<TransformComponent>(entity3);
+
+    transform3.SetParent(&transform2);
+
     while (!ShouldQuit())
     {
         // update input
@@ -144,7 +161,7 @@ void Engine::Run()
         _ecs->RemovedDestroyed();
         _ecs->RenderSystems();
 
-        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
         _renderer->Render();
 
@@ -160,5 +177,7 @@ Engine::~Engine()
 
     _editor.reset();
     _renderer.reset();
+
+    TransformComponent::UnsubscribeFromEvents(_ecs->_registry);
     _ecs.reset();
 }

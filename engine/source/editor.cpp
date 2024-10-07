@@ -7,9 +7,12 @@
 #include "mesh.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "ECS.hpp"
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
+#include "components/transform_component.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
@@ -42,11 +45,70 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
     ImGui::NewFrame();
+
+    // Hierarchy panel
+
+    const auto displayEntity = [&](const auto& self, entt::entity entity, const TransformComponent* transform) -> void
+    {
+        // TODO Get name from name componenent instead
+        std::string name = "Entity- " + std::to_string(static_cast<uint32_t>(entity));
+        static ImGuiTreeNodeFlags nodeflags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        if (transform->HasChildren())
+        {
+            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeflags, "%s", name.c_str());
+
+            if (nodeOpen)
+            {
+                for (auto child : transform->GetChildren())
+                {
+                    entt::entity childEntity = child.get().GetOwner();
+                    if (ecs._registry.valid(childEntity))
+                    {
+                        const TransformComponent* childTransform = ecs._registry.try_get<TransformComponent>(childEntity);
+                        self(self, childEntity, childTransform);
+                    }
+                }
+
+                ImGui::TreePop();
+            }
+        }
+        else
+        {
+            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeflags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+        }
+    };
+
+    if (ImGui::Begin("World Inspector"))
+    {
+        if (ImGui::Button("+ Add entity"))
+        {
+            entt::entity entity = ecs._registry.create();
+
+            ecs._registry.emplace<TransformComponent>(entity);
+        }
+
+        if (ImGui::BeginChild("Hierarchy Panel"))
+        {
+            for (const auto [entity] : ecs._registry.storage<entt::entity>().each())
+            {
+                TransformComponent* transform = ecs._registry.try_get<TransformComponent>(entity);
+
+                if (transform == nullptr
+                    || transform->IsOrphan())
+                {
+                    displayEntity(displayEntity, entity, transform);
+                }
+            }
+
+            ImGui::EndChild();
+        }
+        ImGui::End();
+    }
 
     performanceTracker.Render();
     bloomSettings.Render();
