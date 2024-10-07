@@ -20,6 +20,7 @@ class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class GPUScene;
 
 class Renderer
 {
@@ -64,6 +65,7 @@ private:
 
     std::unique_ptr<BatchBuffer> _batchBuffer;
 
+    std::unique_ptr<GPUScene> _gpuScene;
     CameraStructure _cameraStructure;
 
     BloomSettings _bloomSettings;

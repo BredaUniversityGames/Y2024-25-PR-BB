@@ -18,6 +18,7 @@
 #include "engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -59,6 +60,18 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     CreateCommandBuffers();
     CreateSyncObjects();
+
+    GPUSceneCreation gpuSceneCreation
+    {
+        _brain,
+        *_scene,
+        _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(),
+        _iblPipeline->BRDFLUTMap(),
+        _gBuffers->Shadow()
+    };
+
+    _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
 }
 
 std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
@@ -141,7 +154,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
-    _geometryPipeline->UpdateInstanceData(_currentFrame, *_scene);
+    _gpuScene->Update(_currentFrame);
 
     _brain.drawStats = {};
 
@@ -294,14 +307,6 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.skydomeMVP[3][2] = 0.0f;
     ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
 
-    const DirectionalLight& light = _scene->directionalLight;
-
-    const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.orthoSize, light.orthoSize, -light.orthoSize, light.orthoSize, light.nearPlane, light.farPlane);
-    depthProjectionMatrix[1][1] *= -1;
-    ubo.lightVP = depthProjectionMatrix * lightView;
-    ubo.depthBiasMVP = light.biasMatrix * ubo.lightVP;
-    ubo.lightData = glm::vec4(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.shadowBias); // save light direction here
     return ubo;
 }
 
