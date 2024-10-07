@@ -79,15 +79,15 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    std::vector<glm::mat4> transforms;
+    _transforms.clear();
     for (auto& gameObject : scene.gameObjects)
     {
         for (auto& node : gameObject.model->hierarchy.allNodes)
         {
-            transforms.emplace_back(gameObject.transform * node.transform);
+            _transforms.emplace_back(gameObject.transform * node.transform);
         }
     }
-    UpdateUniformData(currentFrame, transforms, scene.camera);
+    UpdateUniformData(currentFrame, _transforms, scene.camera);
 
     uint32_t counter = 0;
     for (auto& gameObject : scene.gameObjects)
