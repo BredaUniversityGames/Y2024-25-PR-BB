@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
-      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCOMPILE_SHADERS=OFF
       PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
       PRESET_SUFFIX: ${{ matrix.configuration }}
 
@@ -38,12 +38,13 @@ jobs:
       - name: Setup Ninja
         uses: ashutoshvarma/setup-ninja@master
 
-      - name: Install Vulkan SDK
-        uses: humbletim/install-vulkan-sdk@v1.1.1
+      - name: Setup Vulkan SDK
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:
-          version: latest
-          cache: true
-          
+          vulkan-query-version: latest
+          vulkan-components: Vulkan-Headers, Vulkan-Loader
+          vulkan-use-cache: true
+
       # Configure, Build and Test
 
       - name: Configure Project
