@@ -3,11 +3,12 @@
 
 struct RigidbodyComponent
 {
-    RigidbodyComponent(BodyInterface& body_interface)
+    RigidbodyComponent(JPH::BodyInterface& body_interface)
     {
-        BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0, 2.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-        bodyID = body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
+        JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+        bodyID = body_interface.CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+        body_interface.SetLinearVelocity(bodyID, JPH::Vec3(0.0f, -5.0f, 0.0f));
     }
 
-    BodyID bodyID;
+    JPH::BodyID bodyID;
 };

@@ -76,7 +76,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _physicsModule = std::make_unique<PhysicsModule>();
 
     // systems
-    _ecs->AddSystem<PhysicsSystem>();
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
     spdlog::info("Successfully initialized engine!");
 }

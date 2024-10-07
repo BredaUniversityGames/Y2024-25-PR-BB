@@ -171,6 +171,7 @@ public:
     PhysicsModule();
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
+    JPH::BodyInterface* body_interface = nullptr;
 
 private:
     // This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
@@ -194,12 +195,16 @@ private:
     // If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
     const int cCollisionSteps = 1;
 
-    JPH::PhysicsSystem physics_system;
-    MyBodyActivationListener body_activation_listener;
-    MyContactListener contact_listener;
-    JPH::BodyInterface* body_interface = nullptr; // jolt isn't that happy with smart pointers sadly
+    JPH::PhysicsSystem* physics_system = nullptr;
+    MyBodyActivationListener* body_activation_listener = nullptr;
+    MyContactListener* contact_listener = nullptr;
+    BPLayerInterfaceImpl* broad_phase_layer_interface = nullptr;
+    ObjectVsBroadPhaseLayerFilterImpl* object_vs_broadphase_layer_filter = nullptr;
+    ObjectLayerPairFilterImpl* object_vs_object_layer_filter = nullptr;
 
     // for updates
     JPH::TempAllocatorImpl* temp_allocator = nullptr;
     JPH::JobSystemThreadPool* job_system = nullptr;
+
+    // jolt isn't that happy with smart pointers sadly
 };
