@@ -4,7 +4,7 @@
 
 #pragma once
 #include "pch.hpp"
-#include "UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 
 struct TextDrawInfo
 {

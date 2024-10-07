@@ -69,7 +69,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _scene->camera.nearPlane = 0.01f;
     _scene->camera.farPlane = 100.0f;
 
-    Fonts::LoadFont("assets/fonts/JosyWine-G33rg.ttf", 30, _renderer->_brain);
+    // Fonts::LoadFont("assets/fonts/JosyWine-G33rg.ttf", 30, _renderer->_brain);
 
     m_MainMenuCanvas = std::make_shared<MainMenuCanvas>();
     m_MainMenuCanvas->InitElements(_renderer->_brain);

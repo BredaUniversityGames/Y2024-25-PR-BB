@@ -12,10 +12,10 @@ void UIButton::Update(const InputManager& input)
     input.GetMousePosition(mousePos.x, mousePos.y);
 
     // mouse inside boundary
-    if (mousePos.x > static_cast<int>(AbsoluteLocation.x)
-        && mousePos.x < static_cast<int>(AbsoluteLocation.x + Scale.x)
-        && mousePos.y > static_cast<int>(AbsoluteLocation.y)
-        && mousePos.y < static_cast<int>(AbsoluteLocation.y + Scale.y))
+    if (mousePos.x > static_cast<int>(m_AbsoluteLocation.x)
+        && mousePos.x < static_cast<int>(m_AbsoluteLocation.x + m_Scale.x)
+        && mousePos.y > static_cast<int>(m_AbsoluteLocation.y)
+        && mousePos.y < static_cast<int>(m_AbsoluteLocation.y + m_Scale.y))
     {
         switch (m_State)
         {
@@ -54,21 +54,21 @@ void UIButton::SubmitDrawInfo(UserInterfaceRenderer& user_interface_context) con
     switch (m_State)
     {
     case ButtonState::NORMAL:
-        image = m_NormalImage;
+        image = m_Style.m_NormalImage;
         break;
 
     case ButtonState::HOVERED:
-        image = m_HoveredImage;
+        image = m_Style.m_HoveredImage;
         break;
 
     case ButtonState::PRESSED:
-        image = m_PressedImage;
+        image = m_Style.m_PressedImage;
         break;
     }
 
     user_interface_context.GetRenderingSystem<UIButtonRenderSystem>()->renderQueue.push(ButtonDrawInfo {
-        .position = AbsoluteLocation,
-        .Scale = this->Scale,
+        .position = m_AbsoluteLocation,
+        .Scale = this->m_Scale,
         .Image = image });
 
     for (auto& i : GetChildren())
@@ -79,7 +79,7 @@ void UIButton::SubmitDrawInfo(UserInterfaceRenderer& user_interface_context) con
 void UIButton::UpdateChildAbsoluteLocations()
 {
     for (auto& i : GetChildren())
-        i->UpdateAbsoluteLocation(AbsoluteLocation);
+        i->UpdateAbsoluteLocation(m_AbsoluteLocation);
 }
 
 void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)
@@ -92,7 +92,7 @@ void UIButtonRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const 
         const auto& info = renderQueue.front();
         glm::mat4 matrix = glm::mat4(1);
         matrix = glm::scale(glm::translate(matrix, glm::vec3(info.position, 0)), glm::vec3(info.Scale, 0));
-        const glm::mat4 s = glm::ortho(0.0f, 2560.0f, 0.0f, 1600.0f) * matrix;
+        glm::mat4 s = glm::ortho(0.0f, 2640.0f, 0.0f, 1600.0f) * matrix;
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipeLine->m_pipelineLayout, 0, 1, &brain.bindlessSet, 0, nullptr);
 
         // nescesery beccause index is a bit-field.

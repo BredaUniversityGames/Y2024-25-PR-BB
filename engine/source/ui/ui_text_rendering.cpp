@@ -2,7 +2,7 @@
 // Created by luuk on 25-9-2024.
 //
 
-#include "ui/ui_text_rendering.hpp"
+#include "ui/ui_text.hpp"
 #include "pipelines/ui_pipelines.hpp"
 #include "ui/fonts.hpp"
 
@@ -54,7 +54,7 @@ void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const gl
 
 void UITextElement::SubmitDrawInfo(UserInterfaceRenderer& user_interface_context) const
 {
-    user_interface_context.GetRenderingSystem<UITextRenderSystem>()->renderQueue.push({ AbsoluteLocation, 10, 2, m_Text });
+    user_interface_context.GetRenderingSystem<UITextRenderSystem>()->renderQueue.push({ m_AbsoluteLocation, 10, 2, m_Text });
     for (auto& i : GetChildren())
     {
         i->SubmitDrawInfo(user_interface_context);

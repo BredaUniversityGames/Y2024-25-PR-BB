@@ -6,7 +6,7 @@
 
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
-#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 
 struct ButtonDrawInfo
 {
@@ -36,10 +36,13 @@ public:
     void SubmitDrawInfo(UserInterfaceRenderer&) const override;
 
     void UpdateChildAbsoluteLocations() override;
-    ResourceHandle<Image> m_NormalImage = {};
-    ResourceHandle<Image> m_HoveredImage = {};
-    ResourceHandle<Image> m_PressedImage = {};
 
+    struct ButtonStyle
+    {
+        ResourceHandle<Image> m_NormalImage = {};
+        ResourceHandle<Image> m_HoveredImage = {};
+        ResourceHandle<Image> m_PressedImage = {};
+    } m_Style {};
     std::function<void()> m_OnBeginHoverCallBack {};
     std::function<void()> m_OnMouseDownCallBack {};
 };

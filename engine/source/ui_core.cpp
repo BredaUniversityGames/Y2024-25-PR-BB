@@ -2,7 +2,7 @@
 // Created by luuk on 16-9-2024.
 //
 
-#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
@@ -10,14 +10,13 @@
 #include "shaders/shader_loader.hpp"
 #include "ui/fonts.hpp"
 #include "ui/ui_button.hpp"
-#include "ui/ui_text_rendering.hpp"
+#include "ui/ui_text.hpp"
 
 void UpdateUI(const InputManager& input, UIElement* element)
 {
     element->Update(input);
 }
-void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer& cb, const VulkanBrain& b, SwapChain& swapChain, int swapChainIndex,
-    const glm::mat4& projectionMatrix)
+void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer& cb, const VulkanBrain& b, SwapChain& swapChain, int swapChainIndex)
 {
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -39,9 +38,11 @@ void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::Comm
 
     element->SubmitDrawInfo(context);
 
+    glm::mat4 orthoMatrix = glm::ortho(0.f, static_cast<float>(swapChain.GetExtent().width), 0.f, static_cast<float>(swapChain.GetExtent().height));
+
     for (auto& i : context.m_UIRenderSystems)
     {
-        i.second->Render(cb, projectionMatrix, b);
+        i.second->Render(cb, orthoMatrix, b);
     }
 
     cb.endRenderingKHR(b.dldi);
@@ -57,16 +58,16 @@ void Canvas::UpdateChildAbsoluteLocations()
             switch (i->m_AnchorPoint)
             {
             case AnchorPoint::TOP_LEFT:
-                i->UpdateAbsoluteLocation(AbsoluteLocation + relativeLocation);
+                i->UpdateAbsoluteLocation(m_AbsoluteLocation + relativeLocation);
                 break;
             case AnchorPoint::TOP_RIGHT:
-                i->UpdateAbsoluteLocation({ AbsoluteLocation.x + Scale.x - relativeLocation.x, AbsoluteLocation.y + relativeLocation.y });
+                i->UpdateAbsoluteLocation({ m_AbsoluteLocation.x + m_Scale.x - relativeLocation.x, m_AbsoluteLocation.y + relativeLocation.y });
                 break;
             case AnchorPoint::BOTTOM_LEFT:
-                i->UpdateAbsoluteLocation({ AbsoluteLocation.x + relativeLocation.x, AbsoluteLocation.y + Scale.y - relativeLocation.y });
+                i->UpdateAbsoluteLocation({ m_AbsoluteLocation.x + relativeLocation.x, m_AbsoluteLocation.y + m_Scale.y - relativeLocation.y });
                 break;
             case AnchorPoint::BOTTOM_RIGHT:
-                i->UpdateAbsoluteLocation(AbsoluteLocation + Scale - relativeLocation);
+                i->UpdateAbsoluteLocation(m_AbsoluteLocation + m_Scale - relativeLocation);
                 break;
             }
 

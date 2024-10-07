@@ -18,7 +18,7 @@
 #include "engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
-#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -185,7 +185,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
-
+    RenderUI(m_UIElementToRender.get(), *m_UIRenderContext, commandBuffer, _brain, *_swapChain, swapChainImageIndex);
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
     commandBuffer.end();

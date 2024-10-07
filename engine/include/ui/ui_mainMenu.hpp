@@ -3,9 +3,8 @@
 //
 #pragma once
 
-#include "UserInterfaceSystem.hpp"
 #include "ui_button.hpp"
-#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 
 class MainMenuCanvas : public Canvas
 {

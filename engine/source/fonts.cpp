@@ -11,7 +11,7 @@
 #include FT_FREETYPE_H
 #include "vulkan_brain.hpp"
 #include "gpu_resources.hpp"
-#include "ui/UserInterfaceSystem.hpp"
+#include "ui/ui_core.hpp"
 #include "vulkan_helper.hpp"
 
 void Fonts::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain)
@@ -27,7 +27,6 @@ void Fonts::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
     int row = 0;
     int col = padding;
 
-    // uto sampler = util::CreateSampler(brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eLinear, 0);
 
     for (unsigned char c = 32; c < 128; c++)
     {

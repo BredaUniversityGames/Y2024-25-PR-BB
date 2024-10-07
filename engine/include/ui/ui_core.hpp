@@ -48,11 +48,10 @@ public:
 };
 
 /**
- * Base class from which all ui elements inherit from.Updating and rendering of the ui happens
+ * Base class from which all ui elements inherit from. Updating and rendering of the ui happens
  * mostly in a hierarchical manner. each element calls its children's update and draw functions.
- * class contains pure virtual functions and is thus abstract.
+ * class contains pure virtual functions.
  */
-
 struct UIElement
 {
 
@@ -70,7 +69,7 @@ struct UIElement
         BOTTOM_RIGHT,
     };
 
-    void SetLocation(const glm::vec2& location) { RelativeLocation = location; }
+    void SetLocation(const glm::vec2& location) { m_RelativeLocation = location; }
 
     /**
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
@@ -78,7 +77,7 @@ struct UIElement
      */
     void UpdateAbsoluteLocation(const glm::vec2& location, bool updateChildren = true)
     {
-        AbsoluteLocation = location;
+        m_AbsoluteLocation = location;
         if (updateChildren)
             UpdateChildAbsoluteLocations();
     }
@@ -87,7 +86,7 @@ struct UIElement
      *
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
-    [[nodiscard]] const glm::vec2& GetRelativeLocation() const { return RelativeLocation; }
+    [[nodiscard]] const glm::vec2& GetRelativeLocation() const { return m_RelativeLocation; }
 
     /**
      * submits drawinfo to the appropriate rendering system inside the current UserInterfaceContext.
@@ -98,21 +97,21 @@ struct UIElement
 
     virtual void Update(const InputManager& input)
     {
-        for (auto& i : chilren)
+        for (auto& i : m_Children)
             i->Update(input);
     }
 
     void AddChild(std::unique_ptr<UIElement> child)
     {
-        if (chilren.size() < m_MaxChildren && child != nullptr)
-            chilren.push_back(std::move(child));
+        if (m_Children.size() < m_MaxChildren && child != nullptr)
+            m_Children.push_back(std::move(child));
         else
             spdlog::warn("UIElement::AddChild:Can't add, Too many children");
     }
 
     [[nodiscard]] const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
     {
-        return chilren;
+        return m_Children;
     }
 
     AnchorPoint m_AnchorPoint
@@ -122,22 +121,22 @@ struct UIElement
 
     virtual void UpdateChildAbsoluteLocations() = 0;
 
-    glm::vec2 Scale {};
+    glm::vec2 m_Scale {};
 
     virtual ~UIElement() = default;
 
 protected:
-    glm::vec2 AbsoluteLocation {};
-    glm::vec2 RelativeLocation {};
+    glm::vec2 m_AbsoluteLocation {};
+    glm::vec2 m_RelativeLocation {};
 
 private:
     uint16_t m_MaxChildren = 0;
-    std::vector<std::unique_ptr<UIElement>> chilren {};
+    std::vector<std::unique_ptr<UIElement>> m_Children {};
 };
 
 void UpdateUI(const InputManager& input, UIElement* element);
 
-void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex, const glm::mat4& projectionMatrix);
+void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex);
 
 /**
  * holds free floating elements. elements can be anchored to one of the 4 corners of the canvas. anchors help preserve

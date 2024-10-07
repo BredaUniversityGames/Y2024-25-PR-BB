@@ -10,7 +10,6 @@ void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fr
 {
     auto vertShaderCode = shader::ReadFile(vertshader);
     auto fragShaderCode = shader::ReadFile(fragshader);
-    m_sampler = util::CreateSampler(m_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eLinear, 0);
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, m_brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragShaderCode, m_brain.device);
