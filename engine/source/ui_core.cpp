@@ -57,6 +57,9 @@ void Canvas::UpdateChildAbsoluteLocations()
             auto relativeLocation = i->GetRelativeLocation();
             switch (i->m_AnchorPoint)
             {
+            case AnchorPoint::MIDDLE:
+                assert(false && "not implemented");
+                break;
             case AnchorPoint::TOP_LEFT:
                 i->UpdateAbsoluteLocation(m_AbsoluteLocation + relativeLocation);
                 break;
