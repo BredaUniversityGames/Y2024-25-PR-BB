@@ -13,6 +13,8 @@
 #include <optional>
 #include <functional>
 #include <chrono>
+
+#define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

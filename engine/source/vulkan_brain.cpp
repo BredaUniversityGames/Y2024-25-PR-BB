@@ -163,10 +163,12 @@ void VulkanBrain::CreateInstance(const InitInfo& initInfo)
 
     auto extensions = GetRequiredExtensions(initInfo);
     structureChain.assign({
-        vk::InstanceCreateFlags {},
-        &appInfo,
-        0, nullptr, // Validation layers.
-        static_cast<uint32_t>(extensions.size()), extensions.data() // Extensions.
+        .flags = vk::InstanceCreateFlags {},
+        .pApplicationInfo = &appInfo,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr, // Validation layers.
+        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+        .ppEnabledExtensionNames = extensions.data() // Extensions.
     });
 
     auto& createInfo = structureChain.get<vk::InstanceCreateInfo>();
@@ -315,7 +317,7 @@ void VulkanBrain::CreateDevice()
     float queuePriority { 1.0f };
 
     for (uint32_t familyQueueIndex : uniqueQueueFamilies)
-        queueCreateInfos.emplace_back(vk::DeviceQueueCreateFlags {}, familyQueueIndex, 1, &queuePriority);
+        queueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo { .flags = vk::DeviceQueueCreateFlags {}, .queueFamilyIndex = familyQueueIndex, .queueCount = 1, .pQueuePriorities = &queuePriority });
 
     vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures> structureChain;
     auto& indexingFeatures = structureChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
