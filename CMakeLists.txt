@@ -28,9 +28,20 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 add_executable(Engine ${sources} ${headers})
 target_compile_options(Engine PRIVATE -Wall)
 
+### SHADERS ###
+
+option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
+
+if (COMPILE_SHADERS)
+    message(STATUS "### Shaders will be compiled on build")
+    add_subdirectory(shaders)
+    add_dependencies(Engine Shaders)
+endif ()
+
 option(WARNINGS_AS_ERRORS OFF)
 
 if (WARNINGS_AS_ERRORS)
+    message(STATUS "### Warnings are enabled as Errors")
     target_compile_options(Engine PRIVATE -Werror)
 endif ()
 
@@ -43,7 +54,7 @@ endif ()
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
 
 if (ENABLE_TESTS)
-    message("-- Tests are Enabled (GoogleTest)")
+    message(STATUS "### Tests are Enabled (GoogleTest)")
 
     add_subdirectory(external/googletest)
     enable_testing()

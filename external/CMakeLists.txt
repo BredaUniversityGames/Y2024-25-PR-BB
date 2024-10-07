@@ -67,7 +67,6 @@ set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL)
 target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
-# Disabling warnings from SDL3 compilation
 
 # Main External Library
 

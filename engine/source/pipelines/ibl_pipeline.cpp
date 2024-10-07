@@ -196,8 +196,8 @@ void IBLPipeline::CreateIrradiancePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_irradiancePipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/irradiance-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/irradiance-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/irradiance.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/irradiance.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -323,8 +323,8 @@ void IBLPipeline::CreatePrefilterPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_prefilterPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/prefilter-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/prefilter-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/prefilter.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/prefilter.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -444,8 +444,8 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_brdfLUTPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/brdf_integration-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/brdf_integration-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/brdf_integration.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);

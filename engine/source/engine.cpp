@@ -38,7 +38,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _renderer->_scene = _scene;
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/DamagedHelmet.glb",
+        "assets/models/DamagedHelmet.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
@@ -50,7 +50,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-        _scene->gameObjects.emplace_back(transform, _scene->models[0]);
+        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
 
     _renderer->UpdateBindless();
@@ -143,8 +143,6 @@ void Engine::Run()
         _ecs->UpdateSystems(deltaTimeMS);
         _ecs->RemovedDestroyed();
         _ecs->RenderSystems();
-
-        _renderer->UpdateCamera(_scene->camera);
 
         _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
 
