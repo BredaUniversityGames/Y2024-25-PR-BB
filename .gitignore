@@ -405,3 +405,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea/
+
+compile_commands.json

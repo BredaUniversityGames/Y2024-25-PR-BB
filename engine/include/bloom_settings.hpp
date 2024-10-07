@@ -12,7 +12,7 @@ public:
         float gradientStrength = 0.2f;
 
         /// The maximum amount of brightness that can be extracted per pixel.
-        float maxBrightnessExtraction = 50.0f;
+        float maxBrightnessExtraction = 5.0f;
 
         /// How much brightness is extracted from each color channel.
         glm::vec3 colorWeights = glm::vec3(0.2126f, 0.7152f, 0.0722f);

@@ -2,22 +2,16 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+#include "ECS.hpp"
+
 #include <stb_image.h>
 
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
-#include "mesh_primitives.hpp"
-#include "pipelines/geometry_pipeline.hpp"
-#include "pipelines/lighting_pipeline.hpp"
-#include "pipelines/skydome_pipeline.hpp"
-#include "pipelines/tonemapping_pipeline.hpp"
-#include "pipelines/ibl_pipeline.hpp"
-#include "pipelines/particle_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "renderer.hpp"
-#include "single_time_commands.hpp"
 #include "editor.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
@@ -37,13 +31,18 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _application = std::move(application);
     _renderer = std::make_unique<Renderer>(initInfo, _application);
+
+    _ecs = std::make_unique<ECS>();
+
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
 
-    _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/DamagedHelmet.glb")));
-    _scene->models.emplace_back(std::make_shared<ModelHandle>(_renderer->_modelLoader->Load("assets/models/ABeautifulGame/ABeautifulGame.gltf")));
+    std::vector<std::string> modelPaths = {
+        "assets/models/DamagedHelmet.glb",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+    };
 
-    //_scene.gameObjects.emplace_back(transform, _scene.models[0]);
+    _scene->models = _renderer->FrontLoadModels(modelPaths);
 
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
@@ -94,17 +93,17 @@ void Engine::Run()
             return;
         }
 
+        int32_t mouseX, mouseY;
+        _application->GetInputManager().GetMousePosition(mouseX, mouseY);
+
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
             _application->SetMouseHidden(!_application->GetMouseHidden());
 
         if (_application->GetMouseHidden())
         {
             ZoneNamedN(zone, "Update Camera", true);
-            int x, y;
-            _application->GetInputManager().GetMousePosition(x, y);
 
-            glm::ivec2 mouse_delta = glm::ivec2(x, y) - _lastMousePos;
-            _lastMousePos = { x, y };
+            glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float CAM_SPEED = 0.003f;
@@ -136,11 +135,14 @@ void Engine::Run()
 
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
+        _lastMousePos = { mouseX, mouseY };
 
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
 
-        _renderer->UpdateCamera(_scene->camera);
+        _ecs->UpdateSystems(deltaTimeMS);
+        _ecs->RemovedDestroyed();
+        _ecs->RenderSystems();
 
         _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
 
@@ -158,4 +160,5 @@ Engine::~Engine()
 
     _editor.reset();
     _renderer.reset();
+    _ecs.reset();
 }

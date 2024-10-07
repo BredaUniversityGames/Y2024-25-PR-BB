@@ -20,6 +20,7 @@ class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
+class BatchBuffer;
 
 class Renderer
 {
@@ -30,6 +31,8 @@ public:
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
+    std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
+
 private:
     friend Engine;
 
@@ -38,7 +41,6 @@ private:
     std::unique_ptr<ModelLoader> _modelLoader;
     std::shared_ptr<Application> _application;
 
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
@@ -61,6 +63,8 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _imageAvailableSemaphores;
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
+
+    std::unique_ptr<BatchBuffer> _batchBuffer;
 
     CameraStructure _cameraStructure;
 

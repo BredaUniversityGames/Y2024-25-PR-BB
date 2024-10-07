@@ -2,12 +2,9 @@
 
 #include <utility>
 
-#include "vulkan_validation.hpp"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
-#include "stopwatch.hpp"
 #include "model_loader.hpp"
-#include "util.hpp"
 #include "mesh_primitives.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
@@ -21,6 +18,7 @@
 #include "application.hpp"
 #include "engine.hpp"
 #include "single_time_commands.hpp"
+#include "batch_buffer.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -38,14 +36,16 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
+    _modelLoader = std::make_unique<ModelLoader>(_brain);
+
+    _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _brain };
-    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive);
+    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _materialDescriptorSetLayout, _cameraStructure);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
@@ -62,15 +62,42 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     CreateCommandBuffers();
     CreateSyncObjects();
 }
+
+std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
+{
+    uint32_t totalVertexSize {};
+    uint32_t totalIndexSize {};
+    for (const auto& path : models)
+    {
+        uint32_t vertexSize;
+        uint32_t indexSize;
+
+        _modelLoader->ReadGeometrySize(path, vertexSize, indexSize);
+        totalVertexSize += vertexSize;
+        totalIndexSize += indexSize;
+    }
+
+    spdlog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
+
+    std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
+
+    for (const auto& path : models)
+    {
+        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer)));
+    }
+
+    return loadedModels;
+}
+
 Renderer::~Renderer()
 {
     _modelLoader.reset();
 
-    _brain.ImageResourceManager().Destroy(_environmentMap);
-    _brain.ImageResourceManager().Destroy(_hdrTarget);
+    _brain.GetImageResourceManager().Destroy(_environmentMap);
+    _brain.GetImageResourceManager().Destroy(_hdrTarget);
 
-    _brain.ImageResourceManager().Destroy(_brightnessTarget);
-    _brain.ImageResourceManager().Destroy(_bloomTarget);
+    _brain.GetImageResourceManager().Destroy(_brightnessTarget);
+    _brain.GetImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -81,21 +108,13 @@ Renderer::~Renderer()
 
     for (auto& model : _scene->models)
     {
-        for (auto& mesh : model->meshes)
-        {
-            for (auto& primitive : mesh->primitives)
-            {
-                vmaDestroyBuffer(_brain.vmaAllocator, primitive.vertexBuffer, primitive.vertexBufferAllocation);
-                vmaDestroyBuffer(_brain.vmaAllocator, primitive.indexBuffer, primitive.indexBufferAllocation);
-            }
-        }
         for (auto& texture : model->textures)
         {
-            _brain.ImageResourceManager().Destroy(texture);
+            _brain.GetImageResourceManager().Destroy(texture);
         }
         for (auto& material : model->materials)
         {
-            vmaDestroyBuffer(_brain.vmaAllocator, material->materialUniformBuffer, material->materialUniformAllocation);
+            _brain.GetMaterialResourceManager().Destroy(material);
         }
     }
 
@@ -107,8 +126,6 @@ Renderer::~Renderer()
     }
 
     _swapChain.reset();
-
-    _brain.device.destroy(_materialDescriptorSetLayout);
 }
 
 void Renderer::CreateCommandBuffers()
@@ -126,12 +143,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
+    _geometryPipeline->UpdateInstanceData(_currentFrame, *_scene);
+
     _brain.drawStats = {};
 
-    const Image* hdrImage = _brain.ImageResourceManager().Access(_hdrTarget);
-    const Image* hdrBloomImage = _brain.ImageResourceManager().Access(_brightnessTarget);
-    const Image* hdrBlurredBloomImage = _brain.ImageResourceManager().Access(_bloomTarget);
-    const Image* shadowMap = _brain.ImageResourceManager().Access(_gBuffers->Shadow());
+    const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);
+    const Image* hdrBloomImage = _brain.GetImageResourceManager().Access(_brightnessTarget);
+    const Image* hdrBlurredBloomImage = _brain.GetImageResourceManager().Access(_bloomTarget);
+    const Image* shadowMap = _brain.GetImageResourceManager().Access(_gBuffers->Shadow());
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -144,14 +163,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
-    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame);
+    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
 
     // TODO: pass in delta time
@@ -190,13 +209,6 @@ void Renderer::CreateSyncObjects()
 
 void Renderer::CreateDescriptorSetLayout()
 {
-    auto materialLayoutBindings = MaterialHandle::GetLayoutBindings();
-    vk::DescriptorSetLayoutCreateInfo materialCreateInfo {};
-    materialCreateInfo.bindingCount = materialLayoutBindings.size();
-    materialCreateInfo.pBindings = materialLayoutBindings.data();
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&materialCreateInfo, nullptr, &_materialDescriptorSetLayout),
-        "Failed creating material descriptor set layout!");
-
     vk::DescriptorSetLayoutBinding cameraUBODescriptorSetBinding {};
     cameraUBODescriptorSetBinding.binding = 0;
     cameraUBODescriptorSetBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -217,11 +229,13 @@ void Renderer::InitializeCameraUBODescriptors()
     // Create buffers.
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
+        std::string name = "[] Camera UBO";
+        name.insert(1, std::to_string(i));
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eUniformBuffer,
             _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
+            VMA_MEMORY_USAGE_AUTO,
+            name);
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
     }
@@ -279,6 +293,12 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
 
+    ubo.skydomeMVP = ubo.view;
+    ubo.skydomeMVP[3][0] = 0.0f;
+    ubo.skydomeMVP[3][1] = 0.0f;
+    ubo.skydomeMVP[3][2] = 0.0f;
+    ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
+
     const DirectionalLight& light = _scene->directionalLight;
 
     const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
@@ -297,7 +317,7 @@ void Renderer::InitializeHDRTarget()
     ImageCreation hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _brain.ImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _brain.GetImageResourceManager().Create(hdrCreation);
 }
 
 void Renderer::InitializeBloomTargets()
@@ -310,8 +330,8 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _brightnessTarget = _brain.ImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _brain.ImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _brain.GetImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _brain.GetImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Renderer::LoadEnvironmentMap()
@@ -331,7 +351,7 @@ void Renderer::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _brain.ImageResourceManager().Create(envMapCreation);
+    _environmentMap = _brain.GetImageResourceManager().Create(envMapCreation);
 }
 void Renderer::UpdateCamera(const Camera& camera)
 {
@@ -346,13 +366,15 @@ void Renderer::Render()
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
 
-    _bloomSettings.Update(_currentFrame);
-
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
+
+    _bloomSettings.Update(_currentFrame);
+
+    UpdateCamera(_scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};

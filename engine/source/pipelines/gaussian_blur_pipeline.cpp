@@ -18,7 +18,7 @@ GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHan
 
 GaussianBlurPipeline::~GaussianBlurPipeline()
 {
-    _brain.ImageResourceManager().Destroy(_targets[0]);
+    _brain.GetImageResourceManager().Destroy(_targets[0]);
 
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
@@ -30,15 +30,15 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
     util::BeginLabel(commandBuffer, "Gaussian blur pass", glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f, _brain.dldi);
 
     // The horizontal target is created by this pass, so we need to transition it from undefined layout
-    auto verticalTarget = _brain.ImageResourceManager().Access(_targets[0]);
+    auto verticalTarget = _brain.GetImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     auto descriptorSet = &_sourceDescriptorSets[currentFrame];
 
-    for (int i = 0; i < blurPasses * 2; ++i)
+    for (uint32_t i = 0; i < blurPasses * 2; ++i)
     {
         uint32_t isVerticalPass = i % 2;
-        auto target = _brain.ImageResourceManager().Access(_targets[isVerticalPass]);
+        auto target = _brain.GetImageResourceManager().Access(_targets[isVerticalPass]);
 
         // We don't transition on first horizontal pass, since the first source are not either of the blur targets
         // We also don't need to update the descriptor set, since on the first horizontal pass we want to sample from the source
@@ -46,7 +46,7 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
         {
             uint32_t horizontalTargetIndex = isVerticalPass ? 0 : 1;
             descriptorSet = &_targetDescriptorSets[horizontalTargetIndex][currentFrame];
-            auto source = _brain.ImageResourceManager().Access(_targets[horizontalTargetIndex]);
+            auto source = _brain.GetImageResourceManager().Access(_targets[horizontalTargetIndex]);
 
             util::TransitionImageLayout(commandBuffer, source->image, source->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
@@ -105,8 +105,8 @@ void GaussianBlurPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/fullscreen-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/gaussian_blur-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/gaussian_blur.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -193,7 +193,7 @@ void GaussianBlurPipeline::CreatePipeline()
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    vk::Format format = _brain.ImageResourceManager().Access(_source)->format;
+    vk::Format format = _brain.GetImageResourceManager().Access(_source)->format;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
 
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
@@ -244,7 +244,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
         vk::DescriptorImageInfo imageInfo {};
         imageInfo.sampler = *_sampler;
         imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        imageInfo.imageView = _brain.ImageResourceManager().Access(_source)->views[0];
+        imageInfo.imageView = _brain.GetImageResourceManager().Access(_source)->views[0];
 
         std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
         descriptorWrites[0].dstSet = _sourceDescriptorSets[i];
@@ -257,7 +257,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
         _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
     }
 
-    for (int i = 0; i < _targets.size(); ++i)
+    for (size_t i = 0; i < _targets.size(); ++i)
     {
         util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _targetDescriptorSets[i].data()),
             "Failed allocating descriptor sets!");
@@ -267,7 +267,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
             vk::DescriptorImageInfo imageInfo {};
             imageInfo.sampler = *_sampler;
             imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            imageInfo.imageView = _brain.ImageResourceManager().Access(_targets[i])->views[0];
+            imageInfo.imageView = _brain.GetImageResourceManager().Access(_targets[i])->views[0];
 
             std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
             descriptorWrites[0].dstSet = _targetDescriptorSets[i][frame];
@@ -284,11 +284,11 @@ void GaussianBlurPipeline::CreateDescriptorSets()
 
 void GaussianBlurPipeline::CreateVerticalTarget()
 {
-    auto horizontalTargetAccess = _brain.ImageResourceManager().Access(_targets[1]);
+    auto horizontalTargetAccess = _brain.GetImageResourceManager().Access(_targets[1]);
     std::string verticalTargetName = std::string(horizontalTargetAccess->name + " | vertical");
 
     ImageCreation verticalTargetCreation {};
     verticalTargetCreation.SetName(verticalTargetName).SetSize(horizontalTargetAccess->width, horizontalTargetAccess->height).SetFormat(horizontalTargetAccess->format).SetFlags(horizontalTargetAccess->flags);
 
-    _targets[0] = _brain.ImageResourceManager().Create(verticalTargetCreation);
+    _targets[0] = _brain.GetImageResourceManager().Create(verticalTargetCreation);
 }

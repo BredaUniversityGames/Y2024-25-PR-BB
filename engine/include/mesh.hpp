@@ -37,10 +37,7 @@ struct Vertex
 
 struct MeshPrimitive
 {
-    vk::PrimitiveTopology topology;
-
-    vk::IndexType indexType;
-    std::vector<std::byte> indicesBytes;
+    std::vector<uint32_t> indices;
     std::vector<Vertex> vertices;
 
     std::optional<uint32_t> materialIndex;
@@ -49,22 +46,6 @@ struct MeshPrimitive
 struct Mesh
 {
     std::vector<MeshPrimitive> primitives;
-};
-
-struct Texture
-{
-    uint32_t width, height, numChannels;
-    std::vector<std::byte> data;
-    bool isHDR = false;
-    vk::Format format = vk::Format::eR8G8B8A8Unorm;
-
-    vk::Format GetFormat() const
-    {
-        if (isHDR)
-            return vk::Format::eR32G32B32A32Sfloat;
-
-        return format;
-    }
 };
 
 struct HDR
@@ -89,99 +70,13 @@ struct Cubemap
     vk::UniqueSampler sampler;
 };
 
-struct Material
-{
-    std::optional<uint32_t> albedoIndex;
-    glm::vec4 albedoFactor;
-    uint32_t albedoUVChannel;
-
-    std::optional<uint32_t> metallicRoughnessIndex;
-    float metallicFactor;
-    float roughnessFactor;
-    std::optional<uint32_t> metallicRoughnessUVChannel;
-
-    std::optional<uint32_t> normalIndex;
-    float normalScale;
-    uint32_t normalUVChannel;
-
-    std::optional<uint32_t> occlusionIndex;
-    float occlusionStrength;
-    uint32_t occlusionUVChannel;
-
-    std::optional<uint32_t> emissiveIndex;
-    glm::vec3 emissiveFactor;
-    uint32_t emissiveUVChannel;
-};
-
-struct TextureHandle
-{
-    std::string name;
-    vk::Image image;
-    VmaAllocation imageAllocation;
-    vk::ImageView imageView;
-    uint32_t width, height;
-    vk::Format format;
-};
-
-struct MaterialHandle
-{
-    struct alignas(16) MaterialInfo
-    {
-        glm::vec4 albedoFactor { 0.0f };
-
-        float metallicFactor { 0.0f };
-        float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
-        float occlusionStrength { 0.0f };
-
-        glm::vec3 emissiveFactor { 0.0f };
-        int32_t useEmissiveMap { false };
-
-        int32_t useAlbedoMap { false };
-        int32_t useMRMap { false };
-        int32_t useNormalMap { false };
-        int32_t useOcclusionMap { false };
-
-        int32_t albedoMapIndex;
-        int32_t mrMapIndex;
-        int32_t normalMapIndex;
-        int32_t occlusionMapIndex;
-        int32_t emissiveMapIndex;
-    };
-
-    const static uint32_t TEXTURE_COUNT = 5;
-
-    vk::DescriptorSet descriptorSet;
-    vk::Buffer materialUniformBuffer;
-    VmaAllocation materialUniformAllocation;
-
-    std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
-
-    static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
-    {
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-        bindings[0].binding = 0;
-        bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-        bindings[0].descriptorCount = 1;
-        bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-        return bindings;
-    }
-};
-
 struct MeshPrimitiveHandle
 {
-    vk::PrimitiveTopology topology;
-    vk::IndexType indexType;
-    uint32_t indexCount;
+    uint32_t count;
+    uint32_t vertexOffset;
+    uint32_t indexOffset;
 
-    vk::Buffer vertexBuffer;
-    vk::Buffer indexBuffer;
-    VmaAllocation vertexBufferAllocation;
-    VmaAllocation indexBufferAllocation;
-
-    std::shared_ptr<MaterialHandle> material;
+    ResourceHandle<Material> material;
 };
 
 struct MeshHandle
@@ -203,7 +98,7 @@ struct Hierarchy
 struct ModelHandle
 {
     std::vector<std::shared_ptr<MeshHandle>> meshes;
-    std::vector<std::shared_ptr<MaterialHandle>> materials;
+    std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
 
     Hierarchy hierarchy;

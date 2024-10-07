@@ -5,39 +5,34 @@
 #include "stb_image.h"
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
+#include "batch_buffer.hpp"
 
-ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout)
+ModelLoader::ModelLoader(const VulkanBrain& brain)
     : _brain(brain)
-    , _parser()
-    , _materialDescriptorSetLayout(materialDescriptorSetLayout)
 {
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
-    std::array<ResourceHandle<Image>, 5> textures {};
-
     auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    textures[0] = _brain.ImageResourceManager().Create(defaultImageCreation);
+    ResourceHandle<Image> defaultImage = _brain.GetImageResourceManager().Create(defaultImageCreation);
 
-    std::fill(textures.begin() + 1, textures.end(), textures[0]);
-
-    MaterialHandle::MaterialInfo info;
-    _defaultMaterial = std::make_shared<MaterialHandle>(
-        util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout));
+    MaterialCreation defaultMaterialCreationInfo {};
+    defaultMaterialCreationInfo.albedoMap = defaultImage;
+    _defaultMaterial = _brain.GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
 ModelLoader::~ModelLoader()
 {
-    vmaDestroyBuffer(_brain.vmaAllocator, _defaultMaterial->materialUniformBuffer, _defaultMaterial->materialUniformAllocation);
-
-    _brain.ImageResourceManager().Destroy(_defaultMaterial->textures[0]);
+    const Material* defaultMaterial = _brain.GetMaterialResourceManager().Access(_defaultMaterial);
+    _brain.GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
+    _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
-ModelHandle ModelLoader::Load(std::string_view path)
+ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -58,40 +53,16 @@ ModelHandle ModelLoader::Load(std::string_view path)
     if (gltf.scenes.size() > 1)
         spdlog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    std::vector<Mesh> meshes;
-    std::vector<ImageCreation> textures;
-    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
-    std::vector<Material> materials;
-
-    for (auto& mesh : gltf.meshes)
-        meshes.emplace_back(ProcessMesh(mesh, gltf));
-
-    for (auto& image : gltf.images)
-        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()], name));
-
-    for (auto& material : gltf.materials)
-        materials.emplace_back(ProcessMaterial(material, gltf));
-
     spdlog::info("Loaded model: {}", path);
 
-    return LoadModel(meshes, textures, materials, gltf);
-}
-
-Mesh ModelLoader::ProcessMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& gltf)
-{
-    Mesh mesh {};
-
-    for (auto& primitive : gltfMesh.primitives)
-        mesh.primitives.emplace_back(ProcessPrimitive(primitive, gltf));
-
-    return mesh;
+    return LoadModel(gltf, batchBuffer, name);
 }
 
 MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
     MeshPrimitive primitive {};
 
-    primitive.topology = MapGltfTopology(gltfPrimitive.type);
+    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
 
@@ -157,23 +128,22 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
         auto& buffer = gltf.buffers[bufferView.bufferIndex];
         auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-        uint32_t indexTypeSize = fastgltf::getElementByteSize(accessor.type, accessor.componentType);
-        primitive.indexType = MapIndexType(accessor.componentType);
-        primitive.indicesBytes = std::vector<std::byte>(accessor.count * indexTypeSize);
+        primitive.indices = std::vector<uint32_t>(accessor.count);
 
         const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
 
-        if (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0)
+        if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            std::memcpy(primitive.indicesBytes.data(), attributeBufferStart, primitive.indicesBytes.size());
+            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size() * sizeof(uint32_t));
         }
         else
         {
+            uint32_t gltfIndexTypeSize = fastgltf::getComponentByteSize(accessor.componentType);
             for (size_t i = 0; i < accessor.count; ++i)
             {
-                const std::byte* element = attributeBufferStart + bufferView.byteStride.value() + i * indexTypeSize;
-                std::byte* indexPtr = primitive.indicesBytes.data() + i * indexTypeSize;
-                std::memcpy(indexPtr, element, indexTypeSize);
+                const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
+                uint32_t* indexPtr = primitive.indices.data() + i;
+                std::memcpy(indexPtr, element, gltfIndexTypeSize);
             }
         }
     }
@@ -184,7 +154,8 @@ MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
     return primitive;
 }
 
-ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
+ImageCreation
+ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
     std::string_view name)
 {
     ImageCreation imageCreation {};
@@ -213,7 +184,8 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                    {
                        int32_t width, height, nrChannels;
                        stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()),
-                           static_cast<int32_t>(vector.bytes.size()), &width, &height, &nrChannels, 4);
+                           static_cast<int32_t>(vector.bytes.size()), &width, &height,
+                           &nrChannels, 4);
 
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
@@ -227,23 +199,25 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
                        auto& bufferView = gltf.bufferViews[view.bufferViewIndex];
                        auto& buffer = gltf.buffers[bufferView.bufferIndex];
 
-                       std::visit(fastgltf::visitor { // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning
-                                      // all buffers are already loaded into a vector.
-                                      [](auto& arg) {},
-                                      [&](const fastgltf::sources::Array& vector)
-                                      {
-                                          int32_t width, height, nrChannels;
-                                          stbi_uc* stbiData = stbi_load_from_memory(
-                                              reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
-                                              static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels, 4);
+                       std::visit(
+                           fastgltf::visitor { // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning
+                               // all buffers are already loaded into a vector.
+                               [](auto& arg) {},
+                               [&](const fastgltf::sources::Array& vector)
+                               {
+                                   int32_t width, height, nrChannels;
+                                   stbi_uc* stbiData = stbi_load_from_memory(
+                                       reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
+                                       static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels,
+                                       4);
 
-                                          data = std::vector<std::byte>(width * height * 4);
-                                          std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
+                                   data = std::vector<std::byte>(width * height * 4);
+                                   std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                                          imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                                   imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-                                          stbi_image_free(stbiData);
-                                      } },
+                                   stbi_image_free(stbiData);
+                               } },
                            buffer.data);
                    },
                },
@@ -252,28 +226,48 @@ ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const 
     return imageCreation;
 }
 
-Material ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf)
+MaterialCreation ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<ResourceHandle<Image>>& modelTextures, const fastgltf::Asset& gltf)
 {
-    Material material {};
+    MaterialCreation material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
-        material.albedoIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltf);
+        material.albedoMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.pbrData.metallicRoughnessTexture.has_value())
-        material.metallicRoughnessIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex,
-            gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex, gltf);
+        material.metallicRoughnessMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.normalTexture.has_value())
-        material.normalIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
+        material.normalMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.occlusionTexture.has_value())
-        material.occlusionIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltf);
+        material.occlusionMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.emissiveTexture.has_value())
-        material.emissiveIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltf);
+        material.emissiveMap = modelTextures[textureIndex];
+    }
 
     material.albedoFactor = *reinterpret_cast<const glm::vec4*>(&gltfMaterial.pbrData.baseColorFactor);
     material.metallicFactor = gltfMaterial.pbrData.metallicFactor;
     material.roughnessFactor = gltfMaterial.pbrData.roughnessFactor;
     material.normalScale = gltfMaterial.normalTexture.has_value() ? gltfMaterial.normalTexture.value().scale : 0.0f;
     material.emissiveFactor = *reinterpret_cast<const glm::vec3*>(&gltfMaterial.emissiveFactor);
-    material.occlusionStrength = gltfMaterial.occlusionTexture.has_value() ? gltfMaterial.occlusionTexture.value().strength : 1.0f;
+    material.occlusionStrength = gltfMaterial.occlusionTexture.has_value()
+        ? gltfMaterial.occlusionTexture.value().strength
+        : 1.0f;
 
     return material;
 }
@@ -321,17 +315,17 @@ uint32_t ModelLoader::MapTextureIndexToImageIndex(uint32_t textureIndex, const f
 
 void ModelLoader::CalculateTangents(MeshPrimitive& primitive)
 {
-    uint32_t indexElementSize = (primitive.indexType == vk::IndexType::eUint16 ? 2 : 4);
-    uint32_t triangleCount = primitive.indicesBytes.size() > 0 ? primitive.indicesBytes.size() / indexElementSize / 3 : primitive.vertices.size() / 3;
+    uint32_t triangleCount = primitive.indices.size() > 0 ? primitive.indices.size() / 3 : primitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
     {
         std::array<Vertex*, 3> triangle = {};
-        if (primitive.indicesBytes.size() > 0)
+        if (primitive.indices.size() > 0)
         {
             std::array<uint32_t, 3> indices = {};
-            std::memcpy(&indices[0], &primitive.indicesBytes[(i * 3 + 0) * indexElementSize], indexElementSize);
-            std::memcpy(&indices[1], &primitive.indicesBytes[(i * 3 + 1) * indexElementSize], indexElementSize);
-            std::memcpy(&indices[2], &primitive.indicesBytes[(i * 3 + 2) * indexElementSize], indexElementSize);
+
+            indices[0] = primitive.indices[(i * 3 + 0)];
+            indices[1] = primitive.indices[(i * 3 + 1)];
+            indices[2] = primitive.indices[(i * 3 + 2)];
 
             triangle = {
                 &primitive.vertices[indices[0]],
@@ -366,7 +360,8 @@ void ModelLoader::CalculateTangents(MeshPrimitive& primitive)
 }
 
 glm::vec4
-ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2, glm::vec3 normal)
+ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
+    glm::vec3 normal)
 {
     glm::vec3 e1 = p1 - p0;
     glm::vec3 e2 = p2 - p0;
@@ -396,65 +391,40 @@ ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec
 }
 
 ModelHandle
-ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures, const std::vector<Material>& materials,
-    const fastgltf::Asset& gltf)
+ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name)
 {
     SingleTimeCommands commandBuffer { _brain };
 
     ModelHandle modelHandle {};
 
     // Load textures
-    for (const auto& imageCreation : textures)
+    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
+
+    for (size_t i = 0; i < gltf.images.size(); ++i)
     {
-        modelHandle.textures.emplace_back(_brain.ImageResourceManager().Create(imageCreation));
+        ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
+        modelHandle.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
-    for (const auto& material : materials)
+    for (auto& material : gltf.materials)
     {
-        std::array<ResourceHandle<Image>, 5> textures;
-        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()]
-                                                       : ResourceHandle<Image>::Invalid();
-        textures[1] = material.metallicRoughnessIndex.has_value() ? modelHandle.textures[material.metallicRoughnessIndex.value()]
-                                                                  : ResourceHandle<Image>::Invalid();
-        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()]
-                                                       : ResourceHandle<Image>::Invalid();
-        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()]
-                                                          : ResourceHandle<Image>::Invalid();
-        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()]
-                                                         : ResourceHandle<Image>::Invalid();
-
-        MaterialHandle::MaterialInfo info;
-        info.useAlbedoMap = material.albedoIndex.has_value();
-        info.useMRMap = material.metallicRoughnessIndex.has_value();
-        info.useNormalMap = material.normalIndex.has_value();
-        info.useOcclusionMap = material.occlusionIndex.has_value();
-        info.useEmissiveMap = material.emissiveIndex.has_value();
-
-        info.albedoMapIndex = textures[0].index;
-        info.mrMapIndex = textures[1].index;
-        info.normalMapIndex = textures[2].index;
-        info.occlusionMapIndex = textures[3].index;
-        info.emissiveMapIndex = textures[4].index;
-
-        info.albedoFactor = material.albedoFactor;
-        info.metallicFactor = material.metallicFactor;
-        info.roughnessFactor = material.roughnessFactor;
-        info.normalScale = material.normalScale;
-        info.occlusionStrength = material.occlusionStrength;
-        info.emissiveFactor = material.emissiveFactor;
-
-        modelHandle.materials.emplace_back(std::make_shared<MaterialHandle>(
-            util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout, _defaultMaterial)));
+        MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
+        modelHandle.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
-    for (const auto& mesh : meshes)
+    for (auto& mesh : gltf.meshes)
     {
         MeshHandle meshHandle {};
 
         for (const auto& primitive : mesh.primitives)
-            meshHandle.primitives.emplace_back(LoadPrimitive(primitive, commandBuffer, primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : nullptr));
+        {
+            MeshPrimitive processedPrimitive = ProcessPrimitive(primitive, gltf);
+            MeshPrimitiveHandle primitivea = LoadPrimitive(processedPrimitive, commandBuffer, batchBuffer,
+                primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
+            meshHandle.primitives.emplace_back(primitivea);
+        }
 
         modelHandle.meshes.emplace_back(std::make_shared<MeshHandle>(meshHandle));
     }
@@ -468,23 +438,20 @@ ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageC
 }
 
 MeshPrimitiveHandle
-ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, std::shared_ptr<MaterialHandle> material)
+ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+    ResourceHandle<Material> material)
 {
     MeshPrimitiveHandle primitiveHandle {};
-    primitiveHandle.material = material == nullptr ? _defaultMaterial : material;
-    primitiveHandle.topology = primitive.topology;
-    primitiveHandle.indexType = primitive.indexType;
-    primitiveHandle.indexCount = primitive.indicesBytes.size() / (primitiveHandle.indexType == vk::IndexType::eUint16 ? 2 : 4);
-
-    commandBuffer.CreateLocalBuffer(primitive.vertices, primitiveHandle.vertexBuffer, primitiveHandle.vertexBufferAllocation,
-        vk::BufferUsageFlagBits::eVertexBuffer, "Vertex buffer");
-    commandBuffer.CreateLocalBuffer(primitive.indicesBytes, primitiveHandle.indexBuffer, primitiveHandle.indexBufferAllocation,
-        vk::BufferUsageFlagBits::eIndexBuffer, "Index buffer");
+    primitiveHandle.material = _brain.GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
+    primitiveHandle.count = primitive.indices.size();
+    primitiveHandle.vertexOffset = batchBuffer.AppendVertices(primitive.vertices, commandBuffer);
+    primitiveHandle.indexOffset = batchBuffer.AppendIndices(primitive.indices, commandBuffer);
 
     return primitiveHandle;
 }
 
-void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& modelHandle, const fastgltf::Asset& gltf, glm::mat4 matrix)
+void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& modelHandle, const fastgltf::Asset& gltf,
+    glm::mat4 matrix)
 {
     Hierarchy::Node node {};
 
@@ -501,5 +468,44 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& 
     for (size_t i = 0; i < gltfNode.children.size(); ++i)
     {
         RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix);
+    }
+}
+
+void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
+{
+    vertexBufferSize = 0;
+    indexBufferSize = 0;
+
+    fastgltf::GltfFileStream fileStream { path };
+
+    if (!fileStream.isOpen())
+        throw std::runtime_error("Path not found!");
+
+    std::string_view directory = path.substr(0, path.find_last_of('/'));
+    auto loadedGltf = _parser.loadGltf(fileStream, directory,
+        fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
+
+    if (!loadedGltf)
+        throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+
+    fastgltf::Asset& gltf = loadedGltf.get();
+
+    for (const auto& mesh : gltf.meshes)
+    {
+        for (const auto& primitive : mesh.primitives)
+        {
+            const auto& vertexAccessor = gltf.accessors[primitive.attributes[0].accessorIndex];
+            uint32_t vertexCount = vertexAccessor.count;
+
+            vertexBufferSize += vertexCount * sizeof(Vertex);
+
+            if (primitive.indicesAccessor.has_value())
+            {
+                const auto& indexAccessor = gltf.accessors[primitive.indicesAccessor.value()];
+                uint32_t indexCount = indexAccessor.count;
+
+                indexBufferSize += indexCount * sizeof(uint32_t);
+            }
+        }
     }
 }
