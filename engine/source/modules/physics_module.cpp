@@ -51,7 +51,6 @@ PhysicsModule::~PhysicsModule()
 {
     delete temp_allocator;
     delete job_system;
-    delete body_interface;
 }
 void PhysicsModule::UpdatePhysicsEngine(float deltaTime)
 {
