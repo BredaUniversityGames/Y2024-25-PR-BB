@@ -6,6 +6,15 @@ endif ()
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
+file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS 
+  SHADER_DIR/*.frag
+  SHADER_DIR/*.vert
+  SHADER_DIR/*.tesc
+  SHADER_DIR/*.tese
+  SHADER_DIR/*.geom
+  SHADER_DIR/*.comp
+)
+
 set(SHADERS
         ${SHADER_DIR}/brdf_integration.frag
         ${SHADER_DIR}/brdf_integration.vert
