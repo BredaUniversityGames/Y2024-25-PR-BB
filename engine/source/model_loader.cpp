@@ -7,36 +7,29 @@
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 
-ModelLoader::ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout)
+ModelLoader::ModelLoader(const VulkanBrain& brain)
     : _brain(brain)
-    , _parser()
-    , _materialDescriptorSetLayout(materialDescriptorSetLayout)
 {
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
-    std::array<ResourceHandle<Image>, 5> textures {};
-
     auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    textures[0] = _brain.GetImageResourceManager().Create(defaultImageCreation);
+    ResourceHandle<Image> defaultImage = _brain.GetImageResourceManager().Create(defaultImageCreation);
 
-    std::fill(textures.begin() + 1, textures.end(), textures[0]);
-
-    MaterialHandle::MaterialInfo info;
-    _defaultMaterial = std::make_shared<MaterialHandle>(
-        util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout));
+    MaterialCreation defaultMaterialCreationInfo{};
+    defaultMaterialCreationInfo.albedoMap = defaultImage;
+    _defaultMaterial = _brain.GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
 ModelLoader::~ModelLoader()
 {
-    vmaDestroyBuffer(_brain.vmaAllocator, _defaultMaterial->materialUniformBuffer,
-        _defaultMaterial->materialUniformAllocation);
-
-    _brain.GetImageResourceManager().Destroy(_defaultMaterial->textures[0]);
+    const Material* defaultMaterial = _brain.GetMaterialResourceManager().Access(_defaultMaterial);
+    _brain.GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
+    _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
 ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
@@ -60,33 +53,9 @@ ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
     if (gltf.scenes.size() > 1)
         spdlog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    std::vector<Mesh> meshes;
-    std::vector<ImageCreation> textures;
-    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
-    std::vector<Material> materials;
-
-    for (auto& mesh : gltf.meshes)
-        meshes.emplace_back(ProcessMesh(mesh, gltf));
-
-    for (auto& image : gltf.images)
-        textures.emplace_back(ProcessImage(image, gltf, textureData[textures.size()], name));
-
-    for (auto& material : gltf.materials)
-        materials.emplace_back(ProcessMaterial(material, gltf));
-
     spdlog::info("Loaded model: {}", path);
 
-    return LoadModel(meshes, textures, materials, batchBuffer, gltf);
-}
-
-Mesh ModelLoader::ProcessMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& gltf)
-{
-    Mesh mesh {};
-
-    for (auto& primitive : gltfMesh.primitives)
-        mesh.primitives.emplace_back(ProcessPrimitive(primitive, gltf));
-
-    return mesh;
+    return LoadModel(gltf, batchBuffer, name);
 }
 
 MeshPrimitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
@@ -257,23 +226,39 @@ ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asse
     return imageCreation;
 }
 
-Material ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf)
+MaterialCreation ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<ResourceHandle<Image>>& modelTextures, const fastgltf::Asset& gltf)
 {
-    Material material {};
+    MaterialCreation material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
-        material.albedoIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex,
-            gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltf);
+        material.albedoMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.pbrData.metallicRoughnessTexture.has_value())
-        material.metallicRoughnessIndex = MapTextureIndexToImageIndex(
-            gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex,
-            gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex, gltf);
+        material.metallicRoughnessMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.normalTexture.has_value())
-        material.normalIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
+        material.normalMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.occlusionTexture.has_value())
-        material.occlusionIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltf);
+        material.occlusionMap = modelTextures[textureIndex];
+    }
+
     if (gltfMaterial.emissiveTexture.has_value())
-        material.emissiveIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltf);
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltf);
+        material.emissiveMap = modelTextures[textureIndex];
+    }
 
     material.albedoFactor = *reinterpret_cast<const glm::vec4*>(&gltfMaterial.pbrData.baseColorFactor);
     material.metallicFactor = gltfMaterial.pbrData.metallicFactor;
@@ -406,71 +391,40 @@ ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec
 }
 
 ModelHandle
-ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
-    const std::vector<Material>& materials, BatchBuffer& batchBuffer,
-    const fastgltf::Asset& gltf)
+ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name)
 {
     SingleTimeCommands commandBuffer { _brain };
 
     ModelHandle modelHandle {};
 
     // Load textures
-    for (const auto& imageCreation : textures)
+    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
+
+    for (size_t i = 0; i < gltf.images.size(); ++i)
     {
+        ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
         modelHandle.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
-    for (const auto& material : materials)
+    for (auto& material : gltf.materials)
     {
-        std::array<ResourceHandle<Image>, 5> textures;
-        textures[0] = material.albedoIndex.has_value() ? modelHandle.textures[material.albedoIndex.value()]
-                                                       : ResourceHandle<Image>::Invalid();
-        textures[1] = material.metallicRoughnessIndex.has_value()
-            ? modelHandle.textures[material.metallicRoughnessIndex.value()]
-            : ResourceHandle<Image>::Invalid();
-        textures[2] = material.normalIndex.has_value() ? modelHandle.textures[material.normalIndex.value()]
-                                                       : ResourceHandle<Image>::Invalid();
-        textures[3] = material.occlusionIndex.has_value() ? modelHandle.textures[material.occlusionIndex.value()]
-                                                          : ResourceHandle<Image>::Invalid();
-        textures[4] = material.emissiveIndex.has_value() ? modelHandle.textures[material.emissiveIndex.value()]
-                                                         : ResourceHandle<Image>::Invalid();
-
-        MaterialHandle::MaterialInfo info;
-        info.useAlbedoMap = material.albedoIndex.has_value();
-        info.useMRMap = material.metallicRoughnessIndex.has_value();
-        info.useNormalMap = material.normalIndex.has_value();
-        info.useOcclusionMap = material.occlusionIndex.has_value();
-        info.useEmissiveMap = material.emissiveIndex.has_value();
-
-        info.albedoMapIndex = textures[0].index;
-        info.mrMapIndex = textures[1].index;
-        info.normalMapIndex = textures[2].index;
-        info.occlusionMapIndex = textures[3].index;
-        info.emissiveMapIndex = textures[4].index;
-
-        info.albedoFactor = material.albedoFactor;
-        info.metallicFactor = material.metallicFactor;
-        info.roughnessFactor = material.roughnessFactor;
-        info.normalScale = material.normalScale;
-        info.occlusionStrength = material.occlusionStrength;
-        info.emissiveFactor = material.emissiveFactor;
-
-        modelHandle.materials.emplace_back(std::make_shared<MaterialHandle>(
-            util::CreateMaterial(_brain, textures, info, *_sampler, _materialDescriptorSetLayout,
-                _defaultMaterial)));
+        MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
+        modelHandle.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
-    for (const auto& mesh : meshes)
+    for (auto& mesh : gltf.meshes)
     {
         MeshHandle meshHandle {};
 
         for (const auto& primitive : mesh.primitives)
-            meshHandle.primitives.emplace_back(LoadPrimitive(primitive, commandBuffer, batchBuffer,
-                primitive.materialIndex.has_value()
-                    ? modelHandle.materials[primitive.materialIndex.value()]
-                    : nullptr));
+        {
+            MeshPrimitive processedPrimitive = ProcessPrimitive(primitive, gltf);
+            MeshPrimitiveHandle primitivea = LoadPrimitive(processedPrimitive, commandBuffer, batchBuffer,
+                primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
+            meshHandle.primitives.emplace_back(primitivea);
+        }
 
         modelHandle.meshes.emplace_back(std::make_shared<MeshHandle>(meshHandle));
     }
@@ -485,10 +439,10 @@ ModelLoader::LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageC
 
 MeshPrimitiveHandle
 ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
-    std::shared_ptr<MaterialHandle> material)
+    ResourceHandle<Material> material)
 {
     MeshPrimitiveHandle primitiveHandle {};
-    primitiveHandle.material = material == nullptr ? _defaultMaterial : material;
+    primitiveHandle.material = _brain.GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitiveHandle.count = primitive.indices.size();
     primitiveHandle.vertexOffset = batchBuffer.AppendVertices(primitive.vertices, commandBuffer);
     primitiveHandle.indexOffset = batchBuffer.AppendIndices(primitive.indices, commandBuffer);
