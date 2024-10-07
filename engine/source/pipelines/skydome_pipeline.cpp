@@ -107,8 +107,8 @@ void SkydomePipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/skydome-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/skydome-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/skydome.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/skydome.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);

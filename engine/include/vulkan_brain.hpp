@@ -71,7 +71,7 @@ public:
     {
         return _materialResourceManager;
     }
-	
+
     struct DrawStats
     {
         uint32_t indexCount;

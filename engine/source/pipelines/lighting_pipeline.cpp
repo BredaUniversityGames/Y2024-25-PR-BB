@@ -107,8 +107,8 @@ void LightingPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/lighting-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/lighting-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/lighting.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);

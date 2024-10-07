@@ -20,7 +20,7 @@ ModelLoader::ModelLoader(const VulkanBrain& brain)
 
     ResourceHandle<Image> defaultImage = _brain.GetImageResourceManager().Create(defaultImageCreation);
 
-    MaterialCreation defaultMaterialCreationInfo{};
+    MaterialCreation defaultMaterialCreationInfo {};
     defaultMaterialCreationInfo.albedoMap = defaultImage;
     _defaultMaterial = _brain.GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
 }

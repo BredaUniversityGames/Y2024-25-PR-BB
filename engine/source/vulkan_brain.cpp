@@ -467,10 +467,10 @@ void VulkanBrain::CreateBindlessDescriptorSet()
 void VulkanBrain::CreateBindlessMaterialBuffer()
 {
     util::CreateBuffer(*this, MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo),
-            vk::BufferUsageFlagBits::eStorageBuffer,
-            _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            "Bindless material uniform buffer");
+        vk::BufferUsageFlagBits::eStorageBuffer,
+        _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        "Bindless material uniform buffer");
 
     util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &_bindlessMaterialBufferMappedPtr), "Failed mapping memory for UBO!");
 }

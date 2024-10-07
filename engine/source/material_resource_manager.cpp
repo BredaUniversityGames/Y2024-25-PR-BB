@@ -2,13 +2,14 @@
 #include "util.hpp"
 #include "vulkan_helper.hpp"
 
-MaterialResourceManager::MaterialResourceManager(const VulkanBrain& brain) :
-    _brain(brain)
-{}
+MaterialResourceManager::MaterialResourceManager(const VulkanBrain& brain)
+    : _brain(brain)
+{
+}
 
 ResourceHandle<Material> MaterialResourceManager::Create(const MaterialCreation& creation)
 {
-    Material materialResource{};
+    Material materialResource {};
 
     materialResource.albedoMap = creation.albedoMap;
     materialResource.mrMap = creation.metallicRoughnessMap;

@@ -64,24 +64,24 @@ struct Image
 struct MaterialCreation
 {
     ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Invalid();
-    glm::vec4 albedoFactor{ 0.0f };
+    glm::vec4 albedoFactor { 0.0f };
     uint32_t albedoUVChannel;
 
     ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Invalid();
-    float metallicFactor{ 0.0f };
-    float roughnessFactor{ 0.0f };
+    float metallicFactor { 0.0f };
+    float roughnessFactor { 0.0f };
     std::optional<uint32_t> metallicRoughnessUVChannel;
 
     ResourceHandle<Image> normalMap = ResourceHandle<Image>::Invalid();
-    float normalScale{ 0.0f };
+    float normalScale { 0.0f };
     uint32_t normalUVChannel;
 
     ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Invalid();
-    float occlusionStrength{ 0.0f };
+    float occlusionStrength { 0.0f };
     uint32_t occlusionUVChannel;
 
     ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Invalid();
-    glm::vec3 emissiveFactor{ 0.0f };
+    glm::vec3 emissiveFactor { 0.0f };
     uint32_t emissiveUVChannel;
 };
 

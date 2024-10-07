@@ -73,7 +73,7 @@ void ShadowPipeline::CreatePipeline()
         "Failed to create shadow pipeline layout!");
 
     // Load shaders (simple vertex shader for depth only)
-    auto vertByteCode = shader::ReadFile("shaders/shadow-v.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/shadow.vert.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
 
