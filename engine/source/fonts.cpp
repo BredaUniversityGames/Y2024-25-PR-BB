@@ -23,10 +23,6 @@ void Fonts::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
     FT_New_Face(library, filepath.data(), 0, &fontFace);
     FT_Set_Pixel_Sizes(fontFace, 0, fontsize);
 
-    int padding = 2;
-    int row = 0;
-    int col = padding;
-
 
     for (unsigned char c = 32; c < 128; c++)
     {
