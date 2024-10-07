@@ -3,3 +3,6 @@
     <method v="2">
       <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       <option name="BeforeTestRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
