@@ -69,6 +69,11 @@ add_subdirectory(SDL)
 target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
 # Disabling warnings from SDL3 compilation
 
+# SPIRV-Reflect
+
+set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "" FORCE)
+add_subdirectory(SPIRV-Reflect)
+
 # Main External Library
 
 add_library(External INTERFACE)
@@ -87,6 +92,7 @@ target_link_libraries(External
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
         INTERFACE TracyClient
+        INTERFACE spirv-reflect-static
         INTERFACE ${Vulkan_LIBRARY}
 )
 
