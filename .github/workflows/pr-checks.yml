@@ -38,11 +38,6 @@ jobs:
       - name: Setup Ninja
         uses: ashutoshvarma/setup-ninja@master
 
-      - name: Setup GCC
-        uses: Dup4/actions-setup-gcc@v1
-        with:
-          version: latest
-        
       - name: Setup Vulkan SDK
         uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:
