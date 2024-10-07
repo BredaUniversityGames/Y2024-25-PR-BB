@@ -13,6 +13,7 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
+#include <Jolt/Jolt.h>
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {

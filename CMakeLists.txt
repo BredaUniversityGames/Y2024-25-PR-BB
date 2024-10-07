@@ -1,6 +1,7 @@
 ### PROJECT ###
 cmake_minimum_required(VERSION 3.22.1)
 project(Project)
+include(FetchContent)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
@@ -24,9 +25,34 @@ endif ()
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "engine/source/*.cpp")
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 
+
+# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+set(USE_SSE4_1 ON)
+set(USE_SSE4_2 ON)
+set(USE_AVX ON)
+set(USE_AVX2 ON)
+set(USE_AVX512 OFF)
+set(USE_LZCNT ON)
+set(USE_TZCNT ON)
+set(USE_F16C ON)
+set(USE_FMADD ON)
+
+# Include Jolt
+FetchContent_Declare(
+        JoltPhysics
+        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
+        SOURCE_SUBDIR "Build"
+)
+FetchContent_MakeAvailable(JoltPhysics)
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+
 # EXECUTABLE TARGET
 add_executable(Engine ${sources} ${headers})
 target_compile_options(Engine PRIVATE -Wall)
+target_include_directories(Engine PUBLIC ${JoltPhysics_SOURCE_DIR}/..)
+target_link_libraries(Engine PUBLIC Jolt)
 
 option(WARNINGS_AS_ERRORS OFF)
 
