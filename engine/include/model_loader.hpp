@@ -20,7 +20,7 @@ public:
 
     ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer);
 
-    MeshPrimitiveHandle LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+    ResourceHandle<wip::Mesh> LoadMesh(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
@@ -53,4 +53,7 @@ private:
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
         glm::mat4 matrix);
+
+    wip::Mesh::Primitive LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+        ResourceHandle<Material> material);
 };

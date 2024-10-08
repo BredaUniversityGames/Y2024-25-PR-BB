@@ -70,26 +70,12 @@ struct Cubemap
     vk::UniqueSampler sampler;
 };
 
-struct MeshPrimitiveHandle
-{
-    uint32_t count;
-    uint32_t vertexOffset;
-    uint32_t indexOffset;
-
-    ResourceHandle<Material> material;
-};
-
-struct MeshHandle
-{
-    std::vector<MeshPrimitiveHandle> primitives;
-};
-
 struct Hierarchy
 {
     struct Node
     {
         glm::mat4 transform;
-        std::shared_ptr<MeshHandle> mesh;
+        ResourceHandle<wip::Mesh> mesh;
     };
 
     std::vector<Node> allNodes;
@@ -97,7 +83,7 @@ struct Hierarchy
 
 struct ModelHandle
 {
-    std::vector<std::shared_ptr<MeshHandle>> meshes;
+    std::vector<ResourceHandle<wip::Mesh>> meshes;
     std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
 

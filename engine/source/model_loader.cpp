@@ -444,17 +444,19 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
     // Load meshes
     for (auto& mesh : gltf.meshes)
     {
-        MeshHandle meshHandle {};
+        wip::Mesh meshHandle {};
 
         for (const auto& primitive : mesh.primitives)
         {
             MeshPrimitive processedPrimitive = ProcessPrimitive(primitive, gltf);
-            MeshPrimitiveHandle primitivea = LoadPrimitive(processedPrimitive, commandBuffer, batchBuffer,
+            wip::Mesh::Primitive gpuPrimitive = LoadPrimitive(processedPrimitive, commandBuffer, batchBuffer,
                 primitive.materialIndex.has_value() ? modelHandle.materials[primitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
-            meshHandle.primitives.emplace_back(primitivea);
+            meshHandle.primitives.emplace_back(gpuPrimitive);
         }
 
-        modelHandle.meshes.emplace_back(std::make_shared<MeshHandle>(meshHandle));
+        auto handle = _brain.GetMeshResourceManager().Create(meshHandle);
+
+        modelHandle.meshes.emplace_back(handle);
     }
 
     for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
@@ -465,11 +467,11 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
     return modelHandle;
 }
 
-MeshPrimitiveHandle
+wip::Mesh::Primitive
 ModelLoader::LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
     ResourceHandle<Material> material)
 {
-    MeshPrimitiveHandle primitiveHandle {};
+    wip::Mesh::Primitive primitiveHandle {}; // TODO: rename
     primitiveHandle.material = _brain.GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitiveHandle.count = primitive.indices.size();
     primitiveHandle.vertexOffset = batchBuffer.AppendVertices(primitive.vertices, commandBuffer);
@@ -536,4 +538,13 @@ void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBuffer
             }
         }
     }
+}
+
+ResourceHandle<wip::Mesh> ModelLoader::LoadMesh(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer, ResourceHandle<Material> material)
+{
+    auto loadedPrimitive = LoadPrimitive(primitive, commandBuffer, batchBuffer, material);
+    wip::Mesh mesh;
+    mesh.primitives.emplace_back(loadedPrimitive);
+
+    return _brain.GetMeshResourceManager().Create(mesh);
 }

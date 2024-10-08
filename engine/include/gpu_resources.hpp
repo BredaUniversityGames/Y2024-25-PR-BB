@@ -118,3 +118,22 @@ struct Material
     ResourceHandle<Image> occlusionMap;
     ResourceHandle<Image> emissiveMap;
 };
+
+namespace wip
+{
+
+struct Mesh
+{
+    struct Primitive
+    {
+        uint32_t count;
+        uint32_t vertexOffset;
+        uint32_t indexOffset;
+
+        ResourceHandle<Material> material;
+    };
+
+    std::vector<Primitive> primitives;
+};
+
+}
