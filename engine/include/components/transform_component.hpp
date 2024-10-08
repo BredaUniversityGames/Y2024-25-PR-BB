@@ -2,6 +2,7 @@
 #include <vector>
 #include <entity/entity.hpp>
 #include <glm/glm.hpp>
+#include <entity/component.hpp>
 
 class Editor;
 class TransformComponent
@@ -73,4 +74,15 @@ private:
     entt::entity _owner = entt::null;
     TransformComponent* _parent {};
     std::vector<std::reference_wrapper<TransformComponent>> _children {};
+};
+
+// Enabling pointer stability in entt
+template <>
+struct entt::component_traits<TransformComponent, void>
+{
+    using type = TransformComponent;
+
+    static constexpr bool in_place_delete = true;
+
+    static constexpr std::size_t page_size = internal::page_size<TransformComponent>::value;
 };
