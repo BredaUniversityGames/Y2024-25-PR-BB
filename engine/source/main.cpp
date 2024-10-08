@@ -1,4 +1,4 @@
-#include "engine.hpp"
+#include "old_engine.hpp"
 #include "sdl_app.hpp"
 #include <filesystem>
 #include <spdlog/spdlog.h>
@@ -10,7 +10,7 @@
 #endif
 
 std::shared_ptr<Application> g_app;
-std::unique_ptr<Engine> g_engine;
+std::unique_ptr<OldEngine> g_engine;
 
 int main(int argc, char* argv[])
 {
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 
     g_app = std::make_shared<SDLApp>(parameters);
 
-    g_engine = std::make_unique<Engine>(g_app->GetInitInfo(), g_app);
+    g_engine = std::make_unique<OldEngine>(g_app->GetInitInfo(), g_app);
 
     try
     {

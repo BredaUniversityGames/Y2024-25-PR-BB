@@ -76,7 +76,8 @@ if (ENABLE_TESTS)
 endif ()
 
 add_subdirectory(external)
-target_link_libraries(Engine PRIVATE External)
+add_subdirectory(engine/core)
+target_link_libraries(Engine PRIVATE External PRIVATE Core)
 
 target_include_directories(Engine PRIVATE engine/include external)
 target_compile_features(Engine PRIVATE cxx_std_20)

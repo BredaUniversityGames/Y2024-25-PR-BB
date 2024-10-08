@@ -33,7 +33,7 @@ public:
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
-    friend Engine;
+    friend class OldEngine;
 
     const VulkanBrain _brain;
 
