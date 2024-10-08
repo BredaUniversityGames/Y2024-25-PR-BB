@@ -15,10 +15,10 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
-    _pushConstants.albedoMIndex = _gBuffers.AlbedoM().index;
-    _pushConstants.normalRIndex = _gBuffers.NormalR().index;
-    _pushConstants.emissiveAOIndex = _gBuffers.EmissiveAO().index;
-    _pushConstants.positionIndex = _gBuffers.Position().index;
+    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].index;
+    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].index;
+    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].index;
+    _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
 
     _pushConstants.irradianceIndex = _irradianceMap.index;
     _pushConstants.prefilterIndex = _prefilterMap.index;

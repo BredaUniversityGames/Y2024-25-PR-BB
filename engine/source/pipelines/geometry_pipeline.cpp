@@ -34,10 +34,8 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         info.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
     }
 
-    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_gBuffers.AlbedoM())->view;
-    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_gBuffers.NormalR())->view;
-    colorAttachmentInfos[2].imageView = _brain.GetImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
-    colorAttachmentInfos[3].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Position())->view;
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        colorAttachmentInfos[i].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->view;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
@@ -78,7 +76,8 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         {
             const auto& node = gameObject.model->hierarchy.allNodes[i];
 
-            for (const auto& primitive : node.mesh->primitives)
+            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            for (const auto& primitive : mesh->primitives)
             {
                 _brain.drawStats.indexCount += primitive.count;
 
@@ -220,7 +219,9 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
-    std::fill(formats.begin(), formats.end(), GBuffers::GBufferFormat());
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
+
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = DEFERRED_ATTACHMENT_COUNT;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = formats.data();
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
