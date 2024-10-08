@@ -158,6 +158,42 @@ void TransformComponent::SetLocalScale(const glm::vec3 scale)
     _localScale = scale;
     UpdateWorldMatrix();
 }
+void TransformComponent::SetWorldPosition(glm::vec3 position)
+{
+    if (_parent == nullptr)
+    {
+        SetLocalPosition(position);
+    }
+    else
+    {
+        const glm::mat4 parentInverseMatrix = glm::inverse(_parent->GetWorldMatrix());
+        SetLocalPosition(glm::vec3 { parentInverseMatrix * glm::vec4 { position, 1.0f } });
+    }
+}
+void TransformComponent::SetWorldRotation(glm::quat rotation)
+{
+    if (_parent == nullptr)
+    {
+        SetLocalRotation(rotation);
+    }
+    else
+    {
+        const glm::quat parentRotation = _parent->GetWorldRotation();
+        SetLocalRotation(glm::inverse(parentRotation) * rotation);
+    }
+}
+void TransformComponent::SetWorldScale(glm::vec3 scale)
+{
+    if (_parent == nullptr)
+    {
+        SetLocalScale(scale);
+    }
+    else
+    {
+        const glm::vec3 parentScale = _parent->GetWorldScale();
+        SetLocalRotation(scale / parentScale);
+    }
+}
 const glm::mat4& TransformComponent::GetWorldMatrix() const
 {
     return _worldMatrix;
@@ -165,6 +201,30 @@ const glm::mat4& TransformComponent::GetWorldMatrix() const
 glm::mat4 TransformComponent::GetLocalMatrix() const
 {
     return ToMatrix(_localPosition, _localRotation, _localScale);
+}
+void TransformComponent::SetWorldMatrix(const glm::mat4& mat)
+{
+    glm::vec3 translation, scale, skew;
+    glm::vec4 perspective;
+    glm::quat rotation;
+
+    glm::decompose(mat, scale, rotation, translation, skew, perspective);
+
+    SetWorldPosition(translation);
+    SetWorldRotation(rotation);
+    SetWorldScale(scale);
+}
+void TransformComponent::SetLocalMatrix(const glm::mat4& mat)
+{
+    glm::vec3 translation, scale, skew;
+    glm::vec4 perspective;
+    glm::quat rotation;
+
+    glm::decompose(mat, scale, rotation, translation, skew, perspective);
+
+    _localPosition = translation;
+    _localRotation = rotation;
+    _localScale = scale;
 }
 
 void TransformComponent::UpdateWorldMatrix()
@@ -175,7 +235,7 @@ void TransformComponent::UpdateWorldMatrix()
     }
     else
     {
-        _worldMatrix = _parent->_worldMatrix * GetLocalMatrix();
+        _worldMatrix = _parent->GetWorldMatrix() * GetLocalMatrix();
     }
 
     for (TransformComponent& child : _children)

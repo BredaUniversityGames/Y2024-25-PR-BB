@@ -21,13 +21,13 @@ public:
 
     bool IsOrphan() const;
 
-    bool HasChildren() const { return _children.size() > 0; }
+    bool HasChildren() const { return !_children.empty(); }
 
     const std::vector<std::reference_wrapper<TransformComponent>>& GetChildren() const;
 
     bool IsAForeFather(const TransformComponent& potentialForeFather) const;
 
-    entt::entity GetOwner() { return _owner; }
+    entt::entity GetOwner() const { return _owner; }
 
     static void SubscribeToEvents(entt::registry& registry);
 
@@ -47,8 +47,15 @@ public:
     void SetLocalRotation(glm::quat rotation);
     void SetLocalScale(glm::vec3 scale);
 
+    void SetWorldPosition(glm::vec3 position);
+    void SetWorldRotation(glm::quat rotation);
+    void SetWorldScale(glm::vec3 scale);
+
     const glm::mat4& GetWorldMatrix() const;
     glm::mat4 GetLocalMatrix() const;
+
+    void SetWorldMatrix(const glm::mat4& mat);
+    void SetLocalMatrix(const glm::mat4& mat);
 
 private:
     void UpdateWorldMatrix();
