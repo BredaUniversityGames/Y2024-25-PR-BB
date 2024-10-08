@@ -146,6 +146,11 @@ void Engine::Run()
             }
 
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+
+            JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
+            _physicsModule->debug_renderer->SetCameraPos(cameraPos);
+            CameraUBO cameraUBO = _renderer->CalculateCamera(_scene->camera);
+            _physicsModule->debug_renderer->view_projection = cameraUBO.VP;
         }
         _lastMousePos = { mouseX, mouseY };
 
@@ -158,11 +163,11 @@ void Engine::Run()
 
         _renderer->UpdateCamera(_scene->camera);
 
-        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
+        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs, *_physicsModule);
 
         _renderer->Render();
-
         _performanceTracker.Update();
+        _physicsModule->debug_renderer->NextFrame();
 
         FrameMark;
     }

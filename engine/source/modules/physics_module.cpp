@@ -1,4 +1,6 @@
 ﻿#include "modules/physics_module.hpp"
+
+#include "../../../build/WSL-Debug/_deps/joltphysics-src/Jolt/Renderer/DebugRendererSimple.h"
 PhysicsModule::PhysicsModule()
 {
     // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
@@ -40,11 +42,15 @@ PhysicsModule::PhysicsModule()
     // Now we can create the actual physics system.
     physics_system = new JPH::PhysicsSystem();
     physics_system->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *broad_phase_layer_interface, *object_vs_broadphase_layer_filter, *object_vs_object_layer_filter);
+    physics_system->SetGravity(JPH::Vec3Arg(0, -9.81f, 0));
 
+    debug_renderer = new MyDebugRenderer();
+    JPH::DebugRenderer::sInstance = debug_renderer;
     // A body activation listener gets notified when bodies activate and go to sleep
     // Note that this is called from a job so whatever you do here needs to be thread safe.
     // Registering one is entirely optional.
-    body_activation_listener = new MyBodyActivationListener();
+    body_activation_listener
+        = new MyBodyActivationListener();
     physics_system->SetBodyActivationListener(body_activation_listener);
 
     // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
@@ -72,5 +78,5 @@ PhysicsModule::~PhysicsModule()
 void PhysicsModule::UpdatePhysicsEngine(float deltaTime)
 {
     // Step the world
-    physics_system->Update(deltaTime, cCollisionSteps, temp_allocator, job_system);
+    physics_system->Update(1.0 / 60.0, cCollisionSteps, temp_allocator, job_system);
 }

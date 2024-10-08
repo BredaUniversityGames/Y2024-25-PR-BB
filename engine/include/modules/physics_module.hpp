@@ -5,6 +5,8 @@
 #pragma once
 #include "Jolt/Jolt.h"
 // Jolt includes
+#include "../../../build/WSL-Debug/_deps/joltphysics-src/Jolt/Renderer/DebugRendererSimple.h"
+
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -16,6 +18,11 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
+#define JPH_DEBUG_RENDERER
+namespace JPH
+{
+class DebugRendererSimple;
+}
 JPH_SUPPRESS_WARNINGS
 
 // Layer that objects can be in, determines which other objects it can collide with
@@ -165,6 +172,85 @@ public:
     }
 };
 
+class MyDebugRenderer : public JPH::DebugRendererSimple
+{
+public:
+    void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
+    {
+
+        glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
+        glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
+
+        ImVec2 from = WorldToScreen(fromPos, view_projection);
+        ImVec2 to = WorldToScreen(toPos, view_projection);
+
+        // Convert JPH::ColorArg to ImGui color format
+        ImU32 color = IM_COL32(inColor.r * 255, inColor.g * 255, inColor.b * 255, inColor.a * 255);
+
+        // Use ImGui to draw the line
+        draw_list->AddLine(from, to, color);
+    }
+
+    void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
+    {
+        std::cout << "Drawing Text" << std::endl;
+
+        // Implement
+    }
+
+    void RenderDebugOverlay()
+    {
+        // Get display size
+        ImGuiIO& io = ImGui::GetIO();
+        ImVec2 windowSize = io.DisplaySize;
+
+        // Set window properties
+        ImGui::SetNextWindowSize(windowSize); // Fullscreen size
+        ImGui::SetNextWindowPos(ImVec2(0, 0)); // Position at the top-left corner
+
+        // Create a window with no title bar, no resize, no move, no scrollbars, and no background
+        ImGui::Begin("DebugOverlay", nullptr,
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs | // No mouse/keyboard input
+                ImGuiWindowFlags_NoBackground); // No background
+
+        // Draw your debug lines or shapes here
+
+        // Get the foreground draw list
+        draw_list = ImGui::GetWindowDrawList();
+
+        // End the window
+        ImGui::End();
+    }
+
+    void UpdateViewProjection(const glm::mat4& inViewProjection)
+    {
+        view_projection = inViewProjection;
+    }
+    ImDrawList* draw_list = nullptr;
+    glm::mat4 view_projection;
+
+private:
+    ImVec2 WorldToScreen(const glm::vec3& worldPos, const glm::mat4& viewProjection)
+    {
+        // Identity model matrix since we're transforming world coordinates directly
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // Get ImGui display size
+        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+
+        // Define the viewport: origin at (0,0), width and height as per the display size
+        glm::vec4 viewport = glm::vec4(0.0f, 0.0f, displaySize.x, displaySize.y);
+
+        // Project the 3D point to 2D screen coordinates
+        glm::vec3 screenPos = glm::project(worldPos, model, viewProjection, viewport);
+
+        // Adjust for ImGui's coordinate system (origin at top-left)
+        // screenPos.y = displaySize.y - screenPos.y;
+
+        return ImVec2(screenPos.x, screenPos.y);
+    }
+};
+
 class PhysicsModule
 {
 public:
@@ -172,6 +258,8 @@ public:
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
     JPH::BodyInterface* body_interface = nullptr;
+    MyDebugRenderer* debug_renderer = nullptr;
+    JPH::PhysicsSystem* physics_system = nullptr;
 
 private:
     // This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
@@ -195,13 +283,11 @@ private:
     // If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
     const int cCollisionSteps = 1;
 
-    JPH::PhysicsSystem* physics_system = nullptr;
     MyBodyActivationListener* body_activation_listener = nullptr;
     MyContactListener* contact_listener = nullptr;
     BPLayerInterfaceImpl* broad_phase_layer_interface = nullptr;
     ObjectVsBroadPhaseLayerFilterImpl* object_vs_broadphase_layer_filter = nullptr;
     ObjectLayerPairFilterImpl* object_vs_object_layer_filter = nullptr;
-
     // for updates
     JPH::TempAllocatorImpl* temp_allocator = nullptr;
     JPH::JobSystemThreadPool* job_system = nullptr;

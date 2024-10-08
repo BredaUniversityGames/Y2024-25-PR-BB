@@ -5,6 +5,7 @@
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
+#include "modules/physics_module.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "ECS.hpp"
@@ -44,7 +45,7 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs, PhysicsModule& physicsModule)
 {
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
@@ -52,6 +53,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     performanceTracker.Render();
     bloomSettings.Render();
+
+    physicsModule.debug_renderer->RenderDebugOverlay();
+    JPH::BodyManager::DrawSettings drawSettings;
+    physicsModule.physics_system->DrawBodies(drawSettings, physicsModule.debug_renderer);
 
     // Render systems inspect
     for (const auto& system : ecs._systems)
