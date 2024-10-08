@@ -84,7 +84,8 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         {
             const auto& node = gameObject.model->hierarchy.allNodes[i];
 
-            for (const auto& primitive : node.mesh->primitives)
+            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            for (const auto& primitive : mesh->primitives)
             {
                 _brain.drawStats.indexCount += primitive.count;
 
@@ -330,7 +331,9 @@ void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const SceneDesc
     {
         for (auto& node : gameObject.model->hierarchy.allNodes)
         {
-            for (const auto& primitive : node.mesh->primitives)
+
+            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            for (const auto& primitive : mesh->primitives)
             {
                 assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
                 assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
