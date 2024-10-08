@@ -4,21 +4,22 @@
 #include "mesh.hpp"
 
 class BatchBuffer;
+class GPUScene;
 
 class GeometryPipeline
 {
 public:
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene);
 
     ~GeometryPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const GPUScene& gpuScene, const BatchBuffer& batchBuffer);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline();
+    void CreatePipeline(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

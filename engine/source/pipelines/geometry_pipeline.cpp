@@ -1,18 +1,19 @@
 #include "pipelines/geometry_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
 VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
 {
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera)
+GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
 {
-    CreatePipeline();
+    CreatePipeline(gpuScene);
 }
 
 GeometryPipeline::~GeometryPipeline()
@@ -21,7 +22,7 @@ GeometryPipeline::~GeometryPipeline()
     _brain.device.destroy(_pipelineLayout);
 }
 
-void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer)
+void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const GPUScene& gpuScene, const BatchBuffer& batchBuffer)
 {
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
@@ -89,7 +90,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     batchBuffer.WriteDraws(_drawCommands, currentFrame);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &gpuScene.GetObjectInstanceDescriptorSet(currentFrame), 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
 
     vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
@@ -104,10 +105,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void GeometryPipeline::CreatePipeline()
+void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, _descriptorSetLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, gpuScene.GetObjectInstanceDescriptorSetLayout(), _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;

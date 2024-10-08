@@ -20,6 +20,11 @@ public:
 
     void Update(uint32_t frameIndex);
 
+    const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData[frameIndex].descriptorSet; }
+    const vk::DescriptorSet& GetObjectInstanceDescriptorSet(uint32_t frameIndex) const { return _objectInstanceFrameData[frameIndex].descriptorSet; }
+    const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetObjectInstanceDescriptorSetLayout() const { return _objectInstanceDescriptorSetLayout; }
+
     const SceneDescription& scene;
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;

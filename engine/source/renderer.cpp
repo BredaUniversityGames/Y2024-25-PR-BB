@@ -45,21 +45,11 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
-    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
-        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
-
-    CreateCommandBuffers();
-    CreateSyncObjects();
 
     GPUSceneCreation gpuSceneCreation
     {
@@ -72,6 +62,17 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     };
 
     _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
+
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
+
+    CreateCommandBuffers();
+    CreateSyncObjects();
 }
 
 std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
@@ -174,8 +175,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_gpuScene, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_gpuScene, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);

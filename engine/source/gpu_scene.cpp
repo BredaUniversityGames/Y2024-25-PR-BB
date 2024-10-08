@@ -110,7 +110,7 @@ void GPUScene::CreateSceneDescriptorSetLayout()
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstanceDescriptorSetLayout),
+    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_sceneDescriptorSetLayout),
         "Failed creating scene descriptor set layout!");
 }
 
