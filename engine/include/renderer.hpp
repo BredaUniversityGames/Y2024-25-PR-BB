@@ -32,6 +32,9 @@ public:
 
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
+    ModelLoader& GetModelLoader() const { return *_modelLoader; }
+    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+
 private:
     friend Engine;
 

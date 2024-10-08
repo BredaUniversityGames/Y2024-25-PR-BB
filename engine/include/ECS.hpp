@@ -1,5 +1,6 @@
 #pragma once
 
+#include "model_loader.hpp"
 #include "entity/registry.hpp"
 #include "systems/system.hpp"
 #include <spdlog/spdlog.h>
@@ -24,6 +25,7 @@ public:
 
     void RemovedDestroyed();
 
+    void LoadGLTFIntoScene(std::string_view path, ModelLoader& loader, BatchBuffer& batchBuffer /* temp, should not have to be included when mesh creation goes through resource manager*/);
     void DestroyEntity(entt::entity entity);
 
     entt::registry _registry {};

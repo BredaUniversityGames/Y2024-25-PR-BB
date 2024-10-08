@@ -1,4 +1,6 @@
 #include "model_loader.hpp"
+
+#include "ECS.hpp"
 #include "spdlog/spdlog.h"
 #include <fastgltf/tools.hpp>
 #include <fastgltf/glm_element_traits.hpp>
@@ -487,9 +489,10 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& 
         node.mesh = modelHandle.meshes[gltfNode.meshIndex.value()];
 
     fastgltf::math::fmat4x4 transform = fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
+
     matrix = detail::ToMat4(transform);
     node.transform = matrix;
-
+    node.name = gltfNode.name;
     if (gltfNode.meshIndex.has_value())
         modelHandle.hierarchy.allNodes.emplace_back(node);
 

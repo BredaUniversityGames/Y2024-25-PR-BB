@@ -40,6 +40,8 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _scene->models = _renderer->FrontLoadModels(modelPaths);
 
+    _ecs->LoadGLTFIntoScene("assets/models/test.gltf", _renderer->GetModelLoader(), _renderer->GetBatchBuffer());
+
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
     {
@@ -51,7 +53,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, *_application, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
+    _editor = std::make_unique<Editor>(_renderer->_brain, *_application, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);

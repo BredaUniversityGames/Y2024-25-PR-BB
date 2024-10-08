@@ -88,6 +88,7 @@ struct Hierarchy
 {
     struct Node
     {
+        std::string name;
         glm::mat4 transform;
         std::shared_ptr<MeshHandle> mesh;
     };
@@ -102,6 +103,23 @@ struct ModelHandle
     std::vector<ResourceHandle<Image>> textures;
 
     Hierarchy hierarchy;
+};
+
+// todo : TEMP!!!
+struct TransformComponent
+{
+    glm::mat4 transform;
+};
+
+struct NameComponent
+{
+    std::string name;
+};
+
+struct StaticMeshComponent
+{
+    // todo: replace this with resource handle
+    std::shared_ptr<MeshHandle> mesh;
 };
 
 struct GameObject
