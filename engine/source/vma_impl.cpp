@@ -1,8 +1,8 @@
-#pragma clang diagnostic push
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/bundled/printf.h>
 
-#pragma clang diagnostic ignored "-Wnullability-completeness"
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 #define VMA_IMPLEMENTATION
 #define VMA_LEAK_LOG_FORMAT(format, ...)                 \
@@ -13,4 +13,4 @@
 
 #include "vk_mem_alloc.h"
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop

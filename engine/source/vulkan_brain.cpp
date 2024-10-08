@@ -90,7 +90,8 @@ void VulkanBrain::UpdateBindlessImages() const
         if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
             image = _imageResourceManager.Access(_fallbackImage);
 
-        BindlessBinding dstBinding;
+        BindlessBinding dstBinding = BindlessBinding::eNone;
+
         if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eColor)
             dstBinding = BindlessBinding::eColor;
 
