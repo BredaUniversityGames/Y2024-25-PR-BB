@@ -6,6 +6,8 @@
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
 
+#include <fstream>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include "ECS.hpp"
 
@@ -187,6 +189,32 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, glm::vec3 { count * 7.0f, 0.0f, 0.0f });
         transform = glm::scale(transform, glm::vec3 { 10.0f });
         scene.gameObjects.emplace_back(transform, scene.models[1]);
+    }
+
+    ImGui::End();
+
+    ImGui::Begin("Dump VMA stats");
+
+    if (ImGui::Button("Dump json"))
+    {
+        char* statsJson;
+        vmaBuildStatsString(_brain.vmaAllocator, &statsJson, true);
+
+        const char* outputFilePath = "vma_stats.json";
+
+        std::ofstream file { outputFilePath };
+        if (file.is_open())
+        {
+            file << statsJson;
+
+            file.close();
+        }
+        else
+        {
+            spdlog::error("Failed writing VMA stats to file!");
+        }
+
+        vmaFreeStatsString(_brain.vmaAllocator, statsJson);
     }
 
     ImGui::End();

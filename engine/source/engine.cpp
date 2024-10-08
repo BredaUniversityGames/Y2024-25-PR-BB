@@ -1,11 +1,7 @@
 #include "engine.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-
 #include "ECS.hpp"
-
-#include <stb_image.h>
-
+#include "stb/stb_image.h"
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"

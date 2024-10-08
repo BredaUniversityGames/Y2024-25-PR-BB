@@ -3,8 +3,8 @@
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
-#include "image_resource_manager.hpp"
-#include "material_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -33,7 +33,8 @@ enum class BindlessBinding
     eDepth,
     eCubemap,
     eShadowmap,
-    eMaterial
+    eMaterial,
+    eNone,
 };
 
 class VulkanBrain
@@ -70,6 +71,11 @@ public:
     MaterialResourceManager& GetMaterialResourceManager() const
     {
         return _materialResourceManager;
+    }
+
+    ResourceManager<Mesh>& GetMeshResourceManager() const
+    {
+        return _meshResourceManager;
     }
 
     struct DrawStats
@@ -113,8 +119,9 @@ private:
         VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
     };
 
-    mutable class ImageResourceManager _imageResourceManager;
-    mutable class MaterialResourceManager _materialResourceManager;
+    mutable ImageResourceManager _imageResourceManager;
+    mutable MaterialResourceManager _materialResourceManager;
+    mutable ResourceManager<Mesh> _meshResourceManager;
 
     void UpdateBindlessImages() const;
     void UpdateBindlessMaterials() const;

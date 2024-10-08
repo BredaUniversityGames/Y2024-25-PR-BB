@@ -9,10 +9,10 @@ layout (location = 2) in vec2 texCoord;
 layout (location = 4) in mat3 TBN;
 layout (location = 3) in flat int drawID;
 
-layout (location = 0) out vec4 outAlbedoM;    // RGB: Albedo,   A: Metallic
-layout (location = 1) out vec4 outNormalR;    // RGB: Normal,   A: Roughness
-layout (location = 2) out vec4 outEmissiveAO; // RGB: Emissive, A: AO
-layout (location = 3) out vec4 outPosition;   // RGB: Position, A: Unused
+layout (location = 0) out vec4 outAlbedoM;     // RGB: Albedo,   A: Metallic
+layout (location = 1) out vec4 outNormalR;     // RGB: Normal,   A: Roughness
+layout (location = 2) out vec4 outEmissiveAO;  // RGB: Emissive, A: AO
+layout (location = 3) out vec4 outPosition;    // RGB: Position  A: unused
 
 struct Instance
 {
@@ -60,8 +60,7 @@ void main()
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
-    outNormalR = vec4(normalize(normal), mrSample.g);
+    outNormalR = vec4(normal, mrSample.g);
     outEmissiveAO = vec4(emissiveSample.rgb, occlusionSample.r);
-
-    outPosition = vec4(position, 1.0);
+    outPosition = vec4(position, 0.0);
 }

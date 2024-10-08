@@ -40,7 +40,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _brain };
-    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
+    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
@@ -225,7 +225,10 @@ void Renderer::InitializeCameraUBODescriptors()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         std::string name = "[] Camera UBO";
-        name.insert(1, std::to_string(i));
+
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eUniformBuffer,
             _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
