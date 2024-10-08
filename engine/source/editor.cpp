@@ -12,6 +12,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
+#include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
@@ -52,16 +53,18 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::NewFrame();
 
     // Hierarchy panel
-
     const auto displayEntity = [&](const auto& self, entt::entity entity, const TransformComponent* transform) -> void
     {
-        // TODO Get name from name componenent instead
-        std::string name = "Entity- " + std::to_string(static_cast<uint32_t>(entity));
-        static ImGuiTreeNodeFlags nodeflags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        const std::string name = NameComponent::GetDisplayName(ecs._registry, entity);
+        static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
         if (transform->HasChildren())
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeflags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeFlags, "%s", name.c_str());
 
+            if (ImGui::IsItemClicked())
+            {
+                _selectedEntity = entity;
+            }
             if (nodeOpen)
             {
                 for (auto child : transform->GetChildren())
@@ -79,7 +82,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeflags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            if (ImGui::IsItemClicked())
+            {
+                _selectedEntity = entity;
+            }
         }
     };
 
@@ -107,6 +114,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
             ImGui::EndChild();
         }
+        ImGui::End();
+    }
+
+    if (ImGui::Begin("Entity Details"))
+    {
+        DisplaySelectedEntityDetails(ecs);
+
         ImGui::End();
     }
 
@@ -188,6 +202,42 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
     }
+}
+void Editor::DisplaySelectedEntityDetails(ECS& ecs)
+{
+    if (_selectedEntity == entt::null)
+    {
+        ImGui::Text("No entity selected");
+        return;
+    }
+
+    if (!ecs._registry.valid(_selectedEntity))
+    {
+        ImGui::Text("Selected entity is not valid");
+        return;
+    }
+    const std::string name = NameComponent::GetDisplayName(ecs._registry, _selectedEntity);
+    ImGui::LabelText("##EntityDetails", "%s", name.c_str());
+
+    if (ImGui::Button("Delete"))
+    {
+        ecs.DestroyEntity(_selectedEntity);
+        _selectedEntity = entt::null;
+        return;
+    }
+    ImGui::PushID(reinterpret_cast<void*>(_selectedEntity));
+
+    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
+    if (transform != nullptr)
+    {
+        // Inspect Transform component
+        ImGui::DragFloat3("Position", &transform->_localPosition.x);
+        ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
+        ImGui::DragFloat3("Scale", &transform->_localScale.x);
+    }
+
+    ImGui::PopID();
+    // inspect other components
 }
 
 Editor::~Editor()

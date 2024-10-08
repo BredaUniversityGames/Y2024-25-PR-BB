@@ -1,6 +1,8 @@
 #pragma once
 #include "class_decorations.hpp"
 
+#include <entity/entity.hpp>
+
 class ECS;
 class VulkanBrain;
 class Application;
@@ -24,4 +26,8 @@ private:
     Application& _application;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
     GBuffers& _gBuffers;
+
+    entt::entity _selectedEntity = entt::null;
+
+    void DisplaySelectedEntityDetails(ECS& ecs);
 };

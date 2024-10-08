@@ -1,6 +1,7 @@
 #pragma once
 #include <entity/entity.hpp>
 
+class Editor;
 class TransformComponent
 {
 public:
@@ -33,6 +34,8 @@ public:
     static void UnsubscribeFromEvents(entt::registry& registry);
 
 private:
+    friend Editor;
+
     glm::vec3 _localPosition {};
     glm::quat _localRotation { 1.0f, 0.f, 0.f, 0.f };
     glm::vec3 _localScale { 1.0f, 1.0f, 1.0f };
