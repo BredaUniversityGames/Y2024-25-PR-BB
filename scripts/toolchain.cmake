@@ -11,5 +11,5 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 
 if (WIN32)
     message(STATUS "### Using Static Linking for Compatibility")
-    set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif ()
