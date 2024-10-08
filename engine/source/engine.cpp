@@ -154,6 +154,10 @@ void Engine::Run()
         }
         _lastMousePos = { mouseX, mouseY };
 
+        _scene->gameObjects[0].transform = transform.GetWorldMatrix();
+        _scene->gameObjects[1].transform = transform2.GetWorldMatrix();
+        _scene->gameObjects[2].transform = transform3.GetWorldMatrix();
+
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
 

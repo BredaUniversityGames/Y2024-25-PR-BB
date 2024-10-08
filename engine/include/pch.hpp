@@ -22,6 +22,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #pragma clang diagnostic push
 
 #pragma clang diagnostic ignored "-Wnullability-completeness"

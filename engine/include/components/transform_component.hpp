@@ -33,8 +33,29 @@ public:
 
     static void UnsubscribeFromEvents(entt::registry& registry);
 
+    static glm::mat4 ToMatrix(glm::vec3 position, glm::quat rotation, glm::vec3 scale);
+
+    glm::vec3 GetLocalPosition() const;
+    glm::quat GetLocalRotation() const;
+    glm::vec3 GetLocalScale() const;
+
+    glm::vec3 GetWorldPosition() const;
+    glm::quat GetWorldRotation() const;
+    glm::vec3 GetWorldScale() const;
+
+    void SetLocalPosition(glm::vec3 position);
+    void SetLocalRotation(glm::quat rotation);
+    void SetLocalScale(glm::vec3 scale);
+
+    const glm::mat4& GetWorldMatrix() const;
+    glm::mat4 GetLocalMatrix() const;
+
 private:
+    void UpdateWorldMatrix();
+
     friend Editor;
+
+    glm::mat4 _worldMatrix { 1.0f };
 
     glm::vec3 _localPosition {};
     glm::quat _localRotation { 1.0f, 0.f, 0.f, 0.f };

@@ -230,10 +230,16 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
     TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
     if (transform != nullptr)
     {
+        int changed = 0;
         // Inspect Transform component
-        ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
-        ImGui::DragFloat3("Scale", &transform->_localScale.x);
+        changed += ImGui::DragFloat3("Position", &transform->_localPosition.x);
+        changed += ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
+        changed += ImGui::DragFloat3("Scale", &transform->_localScale.x);
+
+        if (changed > 0)
+        {
+            transform->UpdateWorldMatrix();
+        }
     }
 
     ImGui::PopID();
