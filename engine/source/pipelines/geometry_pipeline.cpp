@@ -90,7 +90,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             {
                 _brain.drawStats.indexCount += primitive.count;
 
-                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
+                    .indexCount = primitive.count,
+                    .instanceCount = 1,
+                    .firstIndex = primitive.indexOffset,
+                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                    .firstInstance = 0 });
             }
         }
     }
