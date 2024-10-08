@@ -53,8 +53,8 @@ add_subdirectory(fastgltf)
 
 # Tracy Profiler
 
-set(TRACY_ENABLE "" ON)
-set(TRACY_ON_DEMAND "" ON)
+set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
+set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
 add_subdirectory(tracy)
 
 # EnTT
