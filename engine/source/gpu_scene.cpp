@@ -67,7 +67,8 @@ void GPUScene::UpdateObjectInstanceData(uint32_t frameIndex)
     {
         for (auto& node : gameObject.model->hierarchy.allNodes)
         {
-            for (const auto& primitive : node.mesh->primitives)
+            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            for (const auto& primitive : mesh->primitives)
             {
                 assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
                 assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
