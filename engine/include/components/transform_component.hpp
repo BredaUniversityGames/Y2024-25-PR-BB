@@ -1,5 +1,7 @@
 #pragma once
+#include <vector>
 #include <entity/entity.hpp>
+#include <glm/glm.hpp>
 
 class Editor;
 class TransformComponent

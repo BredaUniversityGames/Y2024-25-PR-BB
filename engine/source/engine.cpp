@@ -73,21 +73,6 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
-
-    entt::entity entity1 = _ecs->_registry.create();
-
-    auto& transform = _ecs->_registry.emplace<TransformComponent>(entity1);
-
-    entt::entity entity2 = _ecs->_registry.create();
-
-    auto& transform2 = _ecs->_registry.emplace<TransformComponent>(entity2);
-
-    entt::entity entity3 = _ecs->_registry.create();
-
-    auto& transform3 = _ecs->_registry.emplace<TransformComponent>(entity3);
-
-    transform3.SetParent(&transform2);
-
     while (!ShouldQuit())
     {
         // update input
@@ -149,10 +134,6 @@ void Engine::Run()
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
         }
         _lastMousePos = { mouseX, mouseY };
-
-        _scene->gameObjects[0].transform = transform.GetWorldMatrix();
-        _scene->gameObjects[1].transform = transform2.GetWorldMatrix();
-        _scene->gameObjects[2].transform = transform3.GetWorldMatrix();
 
         if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
             Quit();
