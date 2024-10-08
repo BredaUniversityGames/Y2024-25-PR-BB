@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "sdl_app.hpp"
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 #if defined(TESTS_ENABLED)
 #undef None
