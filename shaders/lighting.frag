@@ -33,10 +33,10 @@ layout (set = 2, binding = 0) uniform SceneUBO
 {
     DirectionalLightData directionalLight;
 
-    uint32_t irradianceIndex;
-    uint32_t prefilterIndex;
-    uint32_t brdfLUTIndex;
-    uint32_t shadowMapIndex;
+    uint irradianceIndex;
+    uint prefilterIndex;
+    uint brdfLUTIndex;
+    uint shadowMapIndex;
 } scene;
 
 layout (set = 3, binding = 0) uniform BloomSettingsUBO
