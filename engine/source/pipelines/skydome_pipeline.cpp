@@ -4,7 +4,7 @@
 #include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<wip::Mesh> sphere, const CameraStructure& camera,
+SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)

@@ -20,7 +20,7 @@ public:
 
     ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer);
 
-    ResourceHandle<wip::Mesh> LoadMesh(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+    ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
@@ -31,17 +31,15 @@ private:
     vk::UniqueSampler _sampler;
     ResourceHandle<Material> _defaultMaterial;
 
-    MeshPrimitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
+    StagingMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
     ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data, std::string_view name);
     MaterialCreation ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<ResourceHandle<Image>>& modelTextures, const fastgltf::Asset& gltf);
 
     vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology);
 
-    vk::IndexType MapIndexType(fastgltf::ComponentType componentType);
-
     uint32_t MapTextureIndexToImageIndex(uint32_t textureIndex, const fastgltf::Asset& gltf);
 
-    void CalculateTangents(MeshPrimitive& primitive);
+    void CalculateTangents(StagingMesh::Primitive& stagingPrimitive);
 
     ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name);
 
@@ -54,6 +52,6 @@ private:
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
         glm::mat4 matrix);
 
-    wip::Mesh::Primitive LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+    Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
 };

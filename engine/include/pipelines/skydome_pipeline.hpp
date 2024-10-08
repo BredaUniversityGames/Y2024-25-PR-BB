@@ -10,7 +10,7 @@ class BatchBuffer;
 class SkydomePipeline
 {
 public:
-    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<wip::Mesh> sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
+    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
         ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
 
     ~SkydomePipeline();
@@ -32,7 +32,7 @@ private:
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
 
-    ResourceHandle<wip::Mesh> _sphere;
+    ResourceHandle<Mesh> _sphere;
     vk::UniqueSampler _sampler;
     const BloomSettings& _bloomSettings;
 

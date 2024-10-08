@@ -73,7 +73,7 @@ public:
         return _materialResourceManager;
     }
 
-    ResourceManager<wip::Mesh>& GetMeshResourceManager() const
+    ResourceManager<Mesh>& GetMeshResourceManager() const
     {
         return _meshResourceManager;
     }
@@ -121,7 +121,7 @@ private:
 
     mutable ImageResourceManager _imageResourceManager;
     mutable MaterialResourceManager _materialResourceManager;
-    mutable ResourceManager<wip::Mesh> _meshResourceManager;
+    mutable ResourceManager<Mesh> _meshResourceManager;
 
     void UpdateBindlessImages() const;
     void UpdateBindlessMaterials() const;

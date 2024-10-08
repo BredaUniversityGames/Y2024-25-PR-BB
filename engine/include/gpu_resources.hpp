@@ -119,9 +119,6 @@ struct Material
     ResourceHandle<Image> emissiveMap;
 };
 
-namespace wip
-{
-
 struct Mesh
 {
     struct Primitive
@@ -135,5 +132,3 @@ struct Mesh
 
     std::vector<Primitive> primitives;
 };
-
-}
