@@ -11,6 +11,7 @@ public:
     ~PhysicsSystem();
 
     void CreatePhysicsEntity();
+    void CreatePhysicsEntity(RigidbodyComponent& rb);
     void AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody);
 
     void Update([[maybe_unused]] ECS& ecs, [[maybe_unused]] float deltaTime) override;

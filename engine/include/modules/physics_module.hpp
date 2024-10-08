@@ -181,14 +181,16 @@ public:
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
-        ImVec2 from = WorldToScreen(fromPos, view_projection);
-        ImVec2 to = WorldToScreen(toPos, view_projection);
+        glm::vec2 from = WorldToScreen(fromPos, view_projection);
+        glm::vec2 to = WorldToScreen(toPos, view_projection);
+        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
 
         // Convert JPH::ColorArg to ImGui color format
-        ImU32 color = IM_COL32(inColor.r * 255, inColor.g * 255, inColor.b * 255, inColor.a * 255);
+        ImU32 color = IM_COL32(0, 255, 0, 255);
 
         // Use ImGui to draw the line
-        draw_list->AddLine(from, to, color);
+
+        draw_list->AddLine(ImVec2(from.x, from.y), ImVec2(to.x, to.y), color);
     }
 
     void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
@@ -230,7 +232,7 @@ public:
     glm::mat4 view_projection;
 
 private:
-    ImVec2 WorldToScreen(const glm::vec3& worldPos, const glm::mat4& viewProjection)
+    glm::vec2 WorldToScreen(const glm::vec3& worldPos, const glm::mat4& viewProjection)
     {
         // Identity model matrix since we're transforming world coordinates directly
         glm::mat4 model = glm::mat4(1.0f);
@@ -247,7 +249,7 @@ private:
         // Adjust for ImGui's coordinate system (origin at top-left)
         // screenPos.y = displaySize.y - screenPos.y;
 
-        return ImVec2(screenPos.x, screenPos.y);
+        return glm::vec2(screenPos.x, screenPos.y);
     }
 };
 

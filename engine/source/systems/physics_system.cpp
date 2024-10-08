@@ -17,6 +17,13 @@ void PhysicsSystem::CreatePhysicsEntity()
     RigidbodyComponent rb(*_physicsModule.body_interface);
     _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
 }
+
+void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
+{
+    entt::entity entity = _ecs._registry.create();
+    _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+}
+
 void PhysicsSystem::AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody)
 {
 }
@@ -34,6 +41,14 @@ void PhysicsSystem::Inspect()
     if (ImGui::Button("Create Physics Entity"))
     {
         CreatePhysicsEntity();
+    }
+
+    if (ImGui::Button("Create Plane Entity"))
+    {
+        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+
+        RigidbodyComponent newRigidBody(*_physicsModule.body_interface, plane_settings);
+        CreatePhysicsEntity(newRigidBody);
     }
     ImGui::End();
 }
