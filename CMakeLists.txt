@@ -25,8 +25,8 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "engine/source/*.cpp")
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "engine/include/*.hpp")
 
 # EXECUTABLE TARGET
+
 add_executable(Engine ${sources} ${headers})
-target_compile_options(Engine PRIVATE -Wall)
 
 ### SHADERS ###
 
