@@ -7,8 +7,6 @@
 #include <cstring>
 #include <set>
 #include <thread>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/bundled/printf.h>
 #include <memory>
 #include <optional>
 #include <functional>
@@ -22,15 +20,12 @@
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
 
-#pragma clang diagnostic push
-
-#pragma clang diagnostic ignored "-Wnullability-completeness"
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 #include "vk_mem_alloc.h"
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 #include "class_decorations.hpp"
 #include "vulkan_brain.hpp"
@@ -40,14 +35,14 @@
 
 inline void* operator new(std::size_t count)
 {
-    auto ptr = malloc(count);
+    auto ptr = std::malloc(count);
     TracyAlloc(ptr, count);
     return ptr;
 }
 inline void operator delete(void* ptr) noexcept
 {
     TracyFree(ptr);
-    free(ptr);
+    std::free(ptr);
 }
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };
