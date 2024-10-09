@@ -62,15 +62,16 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE)
 
 set(SKIP_PERFORMANCE_COMPARISON ON)
-set(BUILD_DOC "Build documentation" OFF)
-set(BUILD_SANDBOX "Build sandbox examples" OFF)
+set(BUILD_SANDBOX OFF )
+set(BUILD_TESTS OFF )
+set(BUILD_DOC OFF )
 
 FetchContent_MakeAvailable(cereal)
 
 set(SKIP_PERFORMANCE_COMPARISON OFF)
 set(BUILD_DOC "Build documentation" ON)
 set(BUILD_SANDBOX "Build sandbox examples" ON)
-
+set(BUILD_TESTS ON)
 # Tracy Profiler
 
 set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
