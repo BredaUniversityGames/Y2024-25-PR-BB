@@ -1,7 +1,6 @@
 #include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
 
-#include "entt.hpp"
 #include "ECS.hpp"
 #include "particles/emitter_component.hpp"
 

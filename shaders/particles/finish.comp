@@ -7,5 +7,5 @@ void main()
 {
     uint particleCount = particleCounters.culledCount;
 
-    // TODO: check if we need indirect draw argument buffers for the indirect draw calls
+    // TODO: update indirect draw args
 }

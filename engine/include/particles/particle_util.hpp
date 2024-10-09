@@ -38,7 +38,7 @@ struct alignas(16) ParticleCounters
 
 enum class ParticleType
 {
-    eBillboard = 0,
-    eRibbon,
-    eNone // TODO: is this required? good practice?
+    eNone = 0,
+    eBillboard,
+    eRibbon
 };
