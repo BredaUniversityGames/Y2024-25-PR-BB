@@ -22,6 +22,7 @@ class ModelLoader;
 class Engine;
 class BatchBuffer;
 class ECS;
+class GPUScene;
 
 class Renderer
 {
@@ -35,7 +36,7 @@ public:
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
-    friend Engine;
+    friend class OldEngine;
 
     const VulkanBrain _brain;
 
@@ -55,6 +56,7 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
+    std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
