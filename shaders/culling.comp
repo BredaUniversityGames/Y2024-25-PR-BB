@@ -11,18 +11,23 @@ struct DrawCall
 
 // TODO: Add culling
 
-layout (std140, binding = 0) buffer DrawCalls
+layout (std430, binding = 0, set = 0) buffer DrawCalls
 {
     DrawCall drawCalls[];
 };
 
-layout (local_size_x = 16) in;
+layout (local_size_x = 64) in;
 
 bool IsVisible(uint objectIndex);
 
 void main()
 {
-    int x = 0;
+    uint gId = gl_GlobalInvocationID.x;
+
+    if (gId < drawCalls.length())
+    {
+        drawCalls[gId].instanceCount = 0;
+    }
 }
 
 bool IsVisible(uint objectIndex)

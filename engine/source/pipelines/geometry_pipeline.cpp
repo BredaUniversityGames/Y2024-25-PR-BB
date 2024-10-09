@@ -49,13 +49,24 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             }
         }
     }
-
     batchBuffer.WriteDraws(_drawCommands, currentFrame);
 
-    const uint32_t localSize = 16;
+    const uint32_t localSize = 64;
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { batchBuffer.DrawBufferDescriptorSet(currentFrame) }, {});
-    commandBuffer.dispatch(_drawCommands.size() / localSize, 0, 0);
+    commandBuffer.dispatch((_drawCommands.size() + localSize - 1) / localSize, 1, 1);
+
+    vk::BufferMemoryBarrier bufferMemoryBarrier {
+        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer = batchBuffer.IndirectDrawBuffer(currentFrame),
+        .offset = 0,
+        .size = vk::WholeSize,
+    };
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, { bufferMemoryBarrier }, {});
 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)

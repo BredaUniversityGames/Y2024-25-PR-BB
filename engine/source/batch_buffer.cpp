@@ -49,6 +49,8 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
 
 BatchBuffer::~BatchBuffer()
 {
+    _brain.device.destroy(_drawBufferDescriptorSetLayout);
+
     vmaDestroyBuffer(_brain.vmaAllocator, _vertexBuffer, _vertexBufferAllocation);
     vmaDestroyBuffer(_brain.vmaAllocator, _indexBuffer, _indexBufferAllocation);
 
