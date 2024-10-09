@@ -126,6 +126,7 @@ struct Mesh
         uint32_t count;
         uint32_t vertexOffset;
         uint32_t indexOffset;
+        float boundingRadius;
 
         ResourceHandle<Material> material;
     };

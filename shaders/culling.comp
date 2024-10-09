@@ -1,6 +1,8 @@
 #version 460
 
-struct DrawCall
+#include "camera.glsl"
+
+struct DrawCommand
 {
     uint indexCount;
     uint instanceCount;
@@ -9,12 +11,27 @@ struct DrawCall
     uint firstInstance;
 };
 
-// TODO: Add culling
-
-layout (std430, binding = 0, set = 0) buffer DrawCalls
+layout (std430, set = 0, binding = 0) buffer DrawCommands
 {
-    DrawCall drawCalls[];
+    DrawCommand drawCommands[];
 };
+
+struct Instance
+{
+    mat4 model;
+    uint materialIndex;
+    float boundingRadius;
+};
+
+layout (std430, set = 1, binding = 0) readonly buffer InstanceData
+{
+    Instance data[];
+} instances;
+
+layout (set = 2, binding = 0) readonly uniform CameraUBO
+{
+    Camera camera;
+} cameraUbo;
 
 layout (local_size_x = 64) in;
 
@@ -24,37 +41,41 @@ void main()
 {
     uint gId = gl_GlobalInvocationID.x;
 
-    if (gId < drawCalls.length())
+    if (gId < drawCommands.length())
     {
-        drawCalls[gId].instanceCount = 0;
+        if (!IsVisible(gId))
+        {
+            drawCommands[gId].instanceCount = 0;
+        }
     }
 }
 
 bool IsVisible(uint objectIndex)
 {
-/*
     //grab sphere cull data from the object buffer
-    vec4 sphereBounds = objectBuffer.objects[objectIndex].spherebounds;
+    vec3 center = vec3(instances.data[objectIndex].model[3][0], instances.data[objectIndex].model[3][1], instances.data[objectIndex].model[3][2]);
+    center = (cameraUbo.camera.view * vec4(center, 1.f)).xyz;
 
-    vec3 center = sphereBounds.xyz;
-    center = (cullData.view * vec4(center, 1.f)).xyz;
-    float radius = sphereBounds.w;
+    // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
+    vec4 r = vec4(instances.data[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
+    r *= instances.data[objectIndex].model;
+
+    float radius = length(r);
+
 
     bool visible = true;
 
     //frustrum culling
-    visible = visible && center.z * cullData.frustum[1] - abs(center.x) * cullData.frustum[0] > -radius;
-    visible = visible && center.z * cullData.frustum[3] - abs(center.y) * cullData.frustum[2] > -radius;
+    visible = visible && center.z * cameraUbo.camera.frustum[1] - abs(center.x) * cameraUbo.camera.frustum[0] > -radius;
+    visible = visible && center.z * cameraUbo.camera.frustum[3] - abs(center.y) * cameraUbo.camera.frustum[2] > -radius;
 
-    if (cullData.distCull != 0)
+    if (cameraUbo.camera.distCull != 0)
     {
         // the near/far plane culling uses camera space Z directly
-        visible = visible && center.z + radius > cullData.znear && center.z - radius < cullData.zfar;
+        visible = visible && -center.z + radius > cameraUbo.camera.zNear && -center.z - radius < cameraUbo.camera.zFar;
     }
 
-    visible = visible || cullData.cullingEnabled == 0;
+    visible = visible && cameraUbo.camera.cullingEnabled != 0;
 
     return visible;
-    */
-    return true;
 }

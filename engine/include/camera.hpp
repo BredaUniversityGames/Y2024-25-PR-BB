@@ -18,6 +18,13 @@ struct alignas(16) CameraUBO
     glm::mat4 skydomeMVP;
 
     glm::vec3 cameraPosition;
+    bool distCull;
+    float frustum[4];
+    float zNear;
+    float zFar;
+    bool cullingEnabled;
+
+    glm::vec3 _padding {};
 };
 
 struct CameraStructure

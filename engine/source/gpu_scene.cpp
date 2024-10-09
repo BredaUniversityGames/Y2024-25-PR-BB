@@ -74,6 +74,7 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
 
                 instances[count].model = gameObject.transform * node.transform;
                 instances[count].materialIndex = primitive.material.index;
+                instances[count].boundingRadius = primitive.boundingRadius;
 
                 count++;
             }
@@ -124,7 +125,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
     descriptorSetLayoutBinding.binding = 0;
     descriptorSetLayoutBinding.descriptorCount = 1;
     descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
     descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
     vk::DescriptorSetLayoutCreateInfo createInfo {};

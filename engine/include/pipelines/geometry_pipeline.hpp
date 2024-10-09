@@ -21,7 +21,7 @@ public:
 
 private:
     void CreatePipeline(const GPUScene& gpuScene);
-    void CreateCullingPipeline(const BatchBuffer& batchBuffer);
+    void CreateCullingPipeline(const BatchBuffer& batchBuffer, const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

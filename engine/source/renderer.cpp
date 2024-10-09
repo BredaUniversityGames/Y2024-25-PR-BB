@@ -226,7 +226,7 @@ void Renderer::CreateDescriptorSetLayout()
     cameraUBODescriptorSetBinding.binding = 0;
     cameraUBODescriptorSetBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
     cameraUBODescriptorSetBinding.descriptorCount = 1;
-    cameraUBODescriptorSetBinding.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+    cameraUBODescriptorSetBinding.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutCreateInfo cameraUBOCreateInfo {};
     cameraUBOCreateInfo.bindingCount = 1;
@@ -292,7 +292,10 @@ void Renderer::UpdateCameraDescriptorSet(uint32_t currentFrame)
 
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
-
+glm::vec4 normalizePlane(glm::vec4 p)
+{
+    return p / length(glm::vec3(p));
+}
 CameraUBO Renderer::CalculateCamera(const Camera& camera)
 {
     CameraUBO ubo {};
@@ -302,7 +305,8 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
 
     ubo.view = glm::inverse(cameraTranslation * cameraRotation);
 
-    ubo.proj = glm::perspective(camera.fov, _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y), camera.nearPlane,
+    float aspectRatio = _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y);
+    ubo.proj = glm::perspective(camera.fov, aspectRatio, camera.nearPlane,
         camera.farPlane);
     ubo.proj[1][1] *= -1;
 
@@ -314,6 +318,22 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.skydomeMVP[3][1] = 0.0f;
     ubo.skydomeMVP[3][2] = 0.0f;
     ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
+
+    glm::mat4 projT = glm::transpose(ubo.proj);
+
+    glm::vec4 frustumX = normalizePlane(projT[3] + projT[0]);
+    glm::vec4 frustumY = normalizePlane(projT[3] + projT[1]);
+
+    ubo.frustum[0] = frustumX.x;
+    ubo.frustum[1] = frustumX.z;
+    ubo.frustum[2] = frustumY.y;
+    ubo.frustum[3] = frustumY.z;
+
+    ubo.zNear = camera.nearPlane;
+    ubo.zFar = camera.farPlane;
+
+    ubo.distCull = true;
+    ubo.cullingEnabled = true;
 
     return ubo;
 }

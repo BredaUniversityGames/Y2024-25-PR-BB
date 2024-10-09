@@ -1,6 +1,8 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier: enable
 
+
+#include "camera.glsl"
 #include "bindless.glsl"
 
 layout (push_constant) uniform PushConstants
@@ -13,12 +15,7 @@ layout (push_constant) uniform PushConstants
 
 layout (set = 1, binding = 0) uniform CameraUBO
 {
-    mat4 VP;
-    mat4 view;
-    mat4 proj;
-    mat4 skydomeMVP;
-    vec3 cameraPosition;
-    float _padding;
+    Camera camera;
 } cameraUbo;
 
 struct DirectionalLightData
@@ -83,7 +80,7 @@ void main()
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);
-    vec3 V = normalize(cameraUbo.cameraPosition - position);
+    vec3 V = normalize(cameraUbo.camera.cameraPosition - position);
 
     vec3 L = lightDir;
     vec3 H = normalize(V + L);

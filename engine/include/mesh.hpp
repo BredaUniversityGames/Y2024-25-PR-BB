@@ -41,6 +41,7 @@ struct StagingMesh
     {
         std::vector<uint32_t> indices;
         std::vector<Vertex> vertices;
+        float boundingRadius;
 
         std::optional<uint32_t> materialIndex;
     };

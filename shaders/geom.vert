@@ -1,9 +1,12 @@
 #version 460
 
+#include "camera.glsl"
+
 struct Instance
 {
     mat4 model;
     uint materialIndex;
+    float boundingRadius;
 };
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
@@ -13,13 +16,9 @@ layout (std430, set = 1, binding = 0) buffer InstanceData
 
 layout (set = 2, binding = 0) uniform CameraUBO
 {
-    mat4 VP;
-    mat4 view;
-    mat4 proj;
-    mat4 skydomeMVP;
-    vec3 cameraPosition;
-    float _padding;
+    Camera camera;
 } cameraUbo;
+
 
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
@@ -44,5 +43,5 @@ void main()
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 
-    gl_Position = (cameraUbo.VP) * vec4(position, 1.0);
+    gl_Position = (cameraUbo.camera.VP) * vec4(position, 1.0);
 }

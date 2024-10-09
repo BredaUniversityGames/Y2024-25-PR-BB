@@ -62,6 +62,7 @@ private:
         glm::mat4 model;
 
         uint32_t materialIndex;
+        float boundingRadius;
     };
 
     struct FrameData
