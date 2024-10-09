@@ -177,8 +177,9 @@ class MyDebugRenderer : public JPH::DebugRendererSimple
 public:
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
     {
-
-        glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
+        linePositions.push_back(glm::vec3(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ()));
+        linePositions.push_back(glm::vec3(inTo.GetX(), inTo.GetY(), inTo.GetZ()));
+        /*glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
         glm::vec2 from = WorldToScreen(fromPos, view_projection);
@@ -190,7 +191,7 @@ public:
 
         // Use ImGui to draw the line
 
-        draw_list->AddLine(ImVec2(from.x, from.y), ImVec2(to.x, to.y), color);
+        draw_list->AddLine(ImVec2(from.x, from.y), ImVec2(to.x, to.y), color);*/
     }
 
     void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
@@ -229,6 +230,7 @@ public:
         view_projection = inViewProjection;
     }
     ImDrawList* draw_list = nullptr;
+    std::vector<glm::vec3> linePositions;
     glm::mat4 view_projection;
 
 private:

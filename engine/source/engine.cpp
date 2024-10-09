@@ -15,6 +15,7 @@
 #include "editor.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
+#include "pipelines/physics_render_pipeline.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {

@@ -42,7 +42,7 @@ PhysicsModule::PhysicsModule()
     // Now we can create the actual physics system.
     physics_system = new JPH::PhysicsSystem();
     physics_system->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *broad_phase_layer_interface, *object_vs_broadphase_layer_filter, *object_vs_object_layer_filter);
-    physics_system->SetGravity(JPH::Vec3Arg(0, -9.81f, 0));
+    physics_system->SetGravity(JPH::Vec3Arg(0, 0, 0));
 
     debug_renderer = new MyDebugRenderer();
     JPH::DebugRenderer::sInstance = debug_renderer;
