@@ -1,4 +1,4 @@
-#include "image_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "vulkan_brain.hpp"
 #include "vulkan_helper.hpp"
 

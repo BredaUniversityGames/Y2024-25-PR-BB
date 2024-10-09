@@ -4,7 +4,7 @@
 #include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera,
+SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)
@@ -80,8 +80,10 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindVertexBuffers(0, 1, vertexBuffer, offsets);
     commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
 
-    commandBuffer.drawIndexed(_sphere.count, 1, _sphere.indexOffset, _sphere.vertexOffset, 0);
-    _brain.drawStats.indexCount += _sphere.count;
+    auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
+    auto primitive = sphere->primitives[0];
+    commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+    _brain.drawStats.indexCount += primitive.count;
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
