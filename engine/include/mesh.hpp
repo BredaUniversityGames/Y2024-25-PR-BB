@@ -35,53 +35,17 @@ struct Vertex
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
-struct MeshPrimitive
+struct StagingMesh
 {
-    std::vector<uint32_t> indices;
-    std::vector<Vertex> vertices;
-
-    std::optional<uint32_t> materialIndex;
-};
-
-struct Mesh
-{
-    std::vector<MeshPrimitive> primitives;
-};
-
-struct HDR
-{
-    uint32_t width, height, numChannels;
-    std::vector<float> data;
-
-    vk::Format GetFormat() const
+    struct Primitive
     {
-        return vk::Format::eR32G32B32A32Sfloat;
-    }
-};
+        std::vector<uint32_t> indices;
+        std::vector<Vertex> vertices;
 
-struct Cubemap
-{
-    vk::Format format;
-    size_t size;
-    size_t mipLevels;
-    vk::Image image;
-    VmaAllocation allocation;
-    vk::ImageView view;
-    vk::UniqueSampler sampler;
-};
+        std::optional<uint32_t> materialIndex;
+    };
 
-struct MeshPrimitiveHandle
-{
-    uint32_t count;
-    uint32_t vertexOffset;
-    uint32_t indexOffset;
-
-    ResourceHandle<Material> material;
-};
-
-struct MeshHandle
-{
-    std::vector<MeshPrimitiveHandle> primitives;
+    std::vector<StagingMesh::Primitive> primitives;
 };
 
 struct Hierarchy
@@ -89,7 +53,7 @@ struct Hierarchy
     struct Node
     {
         glm::mat4 transform;
-        std::shared_ptr<MeshHandle> mesh;
+        ResourceHandle<Mesh> mesh;
     };
 
     std::vector<Node> allNodes;
@@ -97,7 +61,7 @@ struct Hierarchy
 
 struct ModelHandle
 {
-    std::vector<std::shared_ptr<MeshHandle>> meshes;
+    std::vector<ResourceHandle<Mesh>> meshes;
     std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
 
