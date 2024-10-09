@@ -42,7 +42,7 @@ PhysicsModule::PhysicsModule(std::vector<glm::vec3>& linePositionsRef)
     // Now we can create the actual physics system.
     physics_system = new JPH::PhysicsSystem();
     physics_system->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *broad_phase_layer_interface, *object_vs_broadphase_layer_filter, *object_vs_object_layer_filter);
-    physics_system->SetGravity(JPH::Vec3Arg(0, 0, 0));
+    physics_system->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
 
     debug_renderer = new MyDebugRenderer(linePositionsRef);
     JPH::DebugRenderer::sInstance = debug_renderer;

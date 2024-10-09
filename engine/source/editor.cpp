@@ -131,6 +131,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
     ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();
 

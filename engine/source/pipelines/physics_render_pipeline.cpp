@@ -91,7 +91,8 @@ void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
 
     // Draw the lines
     commandBuffer.draw(static_cast<uint32_t>(linePoints.size()), 1, 0, 0);
-
+    _brain.drawStats.drawCalls++;
+    _brain.drawStats.debugLines = static_cast<uint32_t>(linePoints.size() / 2);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     commandBuffer.endRenderingKHR(_brain.dldi);
 
@@ -199,7 +200,7 @@ void PhysicsRenderPipeline::CreatePipeline()
 }
 void PhysicsRenderPipeline::CreateVertexBuffer()
 {
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * linePoints.size() * 8000;
+    vk::DeviceSize bufferSize = sizeof(glm::vec3) * linePoints.size() * 1024 * 2048;
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {

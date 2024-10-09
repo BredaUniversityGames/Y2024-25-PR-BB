@@ -69,6 +69,7 @@ public:
     {
         uint32_t indexCount;
         uint32_t drawCalls;
+        uint32_t debugLines;
     } mutable drawStats;
 
     void UpdateBindlessSet() const;
