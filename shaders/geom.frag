@@ -17,12 +17,12 @@ layout (location = 3) out vec4 outPosition;    // RGB: Position  A: unused
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
-    Instance data[];
-} instances;
+    Instance instances[];
+};
 
 void main()
 {
-    Material material = bindless_materials[nonuniformEXT(instances.data[drawID].materialIndex)];
+    Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
 
     vec4 albedoSample = pow(material.albedoFactor, vec4(2.2));
     vec4 mrSample = vec4(material.metallicFactor, material.metallicFactor, 1.0, 1.0);
