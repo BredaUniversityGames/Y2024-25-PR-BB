@@ -3,6 +3,8 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
+
+class SwapChain;
 class BatchBuffer;
 
 class PhysicsRenderPipeline
@@ -16,12 +18,12 @@ public:
         vk::DescriptorSet descriptorSet;
     };
 
-    PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline);
+    PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain);
     ~PhysicsRenderPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
 
     NON_MOVABLE(PhysicsRenderPipeline);
     NON_COPYABLE(PhysicsRenderPipeline);
@@ -37,6 +39,7 @@ private:
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
+    const SwapChain& _swapChain;
     const CameraStructure& _camera;
 
     vk::PipelineLayout _pipelineLayout;

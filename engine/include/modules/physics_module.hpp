@@ -175,13 +175,21 @@ public:
 class MyDebugRenderer : public JPH::DebugRendererSimple
 {
 public:
+    MyDebugRenderer(std::vector<glm::vec3>& linePositionsRef)
+        : JPH::DebugRendererSimple()
+        , linePositions(linePositionsRef)
+    {
+    }
+
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
     {
-        linePositions.push_back(glm::vec3(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ()));
-        linePositions.push_back(glm::vec3(inTo.GetX(), inTo.GetY(), inTo.GetZ()));
-        /*glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
+
+        glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
+        linePositions.push_back(fromPos);
+        linePositions.push_back(toPos);
+        /*
         glm::vec2 from = WorldToScreen(fromPos, view_projection);
         glm::vec2 to = WorldToScreen(toPos, view_projection);
         ImVec2 displaySize = ImGui::GetIO().DisplaySize;
@@ -230,7 +238,7 @@ public:
         view_projection = inViewProjection;
     }
     ImDrawList* draw_list = nullptr;
-    std::vector<glm::vec3> linePositions;
+    std::vector<glm::vec3>& linePositions;
     glm::mat4 view_projection;
 
 private:
@@ -258,7 +266,7 @@ private:
 class PhysicsModule
 {
 public:
-    PhysicsModule();
+    PhysicsModule(std::vector<glm::vec3>& linePositionsRef);
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
     JPH::BodyInterface* body_interface = nullptr;

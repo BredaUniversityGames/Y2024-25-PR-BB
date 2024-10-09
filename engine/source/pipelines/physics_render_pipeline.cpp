@@ -2,13 +2,16 @@
 
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
+#include "swap_chain.hpp"
 
-PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline)
+PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
     , _descriptorSetLayout(geometryPipeline.DescriptorSetLayout())
     , _geometryFrameData(geometryPipeline.GetFrameData())
+    , _swapChain(swapChain)
+
 {
 
     linePoints.push_back(glm::vec3 { 0.0f, 0.0f, 0.0f });
@@ -29,23 +32,15 @@ PhysicsRenderPipeline::~PhysicsRenderPipeline()
     }
 }
 
-void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
 {
 
-    std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
-    for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
-    {
-        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos[i] };
-        info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        info.storeOp = vk::AttachmentStoreOp::eStore;
-        info.loadOp = vk::AttachmentLoadOp::eClear;
-        info.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
-    }
-
-    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_gBuffers.AlbedoM())->view;
-    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_gBuffers.NormalR())->view;
-    colorAttachmentInfos[2].imageView = _brain.GetImageResourceManager().Access(_gBuffers.EmissiveAO())->view;
-    colorAttachmentInfos[3].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Position())->view;
+    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
+    finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
+    finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
+    finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
@@ -60,12 +55,10 @@ void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
     stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
     vk::RenderingInfoKHR renderingInfo {};
-    glm::uvec2 displaySize = _gBuffers.Size();
-    renderingInfo.renderArea.extent = vk::Extent2D { displaySize.x, displaySize.y };
+    renderingInfo.renderArea.extent = _swapChain.GetExtent();
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-    renderingInfo.layerCount = 1;
-    renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
-    renderingInfo.pColorAttachments = colorAttachmentInfos.data();
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
@@ -186,10 +179,9 @@ void PhysicsRenderPipeline::CreatePipeline()
 
     // Use dynamic rendering
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
-    std::fill(formats.begin(), formats.end(), GBuffers::GBufferFormat());
-    pipelineRenderingCreateInfo.colorAttachmentCount = DEFERRED_ATTACHMENT_COUNT;
-    pipelineRenderingCreateInfo.pColorAttachmentFormats = formats.data();
+    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    vk::Format format = _swapChain.GetFormat();
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
     pipelineRenderingCreateInfo.depthAttachmentFormat = _gBuffers.DepthFormat();
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -203,7 +195,7 @@ void PhysicsRenderPipeline::CreatePipeline()
 }
 void PhysicsRenderPipeline::CreateVertexBuffer()
 {
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * linePoints.size();
+    vk::DeviceSize bufferSize = sizeof(glm::vec3) * linePoints.size() * 8000;
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {

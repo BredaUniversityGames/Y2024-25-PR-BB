@@ -51,7 +51,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
-    _physicsRenderPipeline = std::make_unique<PhysicsRenderPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
+    _physicsRenderPipeline = std::make_unique<PhysicsRenderPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
@@ -163,7 +163,6 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _physicsRenderPipeline->RecordCommands(commandBuffer, _currentFrame);
     _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
     _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
 
@@ -184,6 +183,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+
+    _physicsRenderPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);

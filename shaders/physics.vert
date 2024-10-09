@@ -19,10 +19,8 @@ layout(set = 1, binding = 0) uniform CameraUBO
 } cameraUbo;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 0) out vec3 position;
 
 void main() {
 
-    position =  vec3(cameraUbo.VP * vec4(inPosition, 1.0));
-    gl_Position = (cameraUbo.VP) * vec4(position, 1.0);
+    gl_Position = (cameraUbo.VP) * vec4(inPosition, 1.0);
 }
