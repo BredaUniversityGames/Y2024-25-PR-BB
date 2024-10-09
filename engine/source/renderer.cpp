@@ -18,6 +18,7 @@
 #include "engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -44,18 +45,30 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
-    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
-        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
+
+    GPUSceneCreation gpuSceneCreation
+    {
+        _brain,
+        _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(),
+        _iblPipeline->BRDFLUTMap(),
+        _gBuffers->Shadow()
+    };
+
+    _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
+
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -141,7 +154,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
-    _geometryPipeline->UpdateInstanceData(_currentFrame, *_scene);
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(*_scene, _currentFrame);
+
+    const RenderSceneDescription sceneDescription
+    {
+        *_gpuScene,
+        *_scene
+    };
 
     _brain.drawStats = {};
 
@@ -161,15 +181,15 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
-    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -297,14 +317,6 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.skydomeMVP[3][2] = 0.0f;
     ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
 
-    const DirectionalLight& light = _scene->directionalLight;
-
-    const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.orthoSize, light.orthoSize, -light.orthoSize, light.orthoSize, light.nearPlane, light.farPlane);
-    depthProjectionMatrix[1][1] *= -1;
-    ubo.lightVP = depthProjectionMatrix * lightView;
-    ubo.depthBiasMVP = light.biasMatrix * ubo.lightVP;
-    ubo.lightData = glm::vec4(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.shadowBias); // save light direction here
     return ubo;
 }
 
