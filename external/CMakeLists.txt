@@ -97,5 +97,3 @@ target_include_directories(External
         INTERFACE entt/src/entt
 )
 
-# Google Test
-add_subdirectory(googletest)

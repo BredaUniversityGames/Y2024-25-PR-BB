@@ -32,6 +32,9 @@ add_subdirectory(engine)
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
 if (ENABLE_TESTS)
     message(STATUS "### Unit Tests are enabled")
+    
+    add_subdirectory(external/googletest)
+
     add_executable(UnitTests)
 
     file(GLOB_RECURSE tests CONFIGURE_DEPENDS "tests/*.cpp")
@@ -42,6 +45,7 @@ if (ENABLE_TESTS)
             PRIVATE Engine
             PRIVATE GTest::gtest_main
     )
+
 endif ()
 
 # Add game executable (currently just main.cpp)
