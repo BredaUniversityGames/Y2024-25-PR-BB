@@ -7,7 +7,7 @@
 class SwapChain;
 class BatchBuffer;
 
-class PhysicsRenderPipeline
+class DebugPipeline
 {
 public:
     struct FrameData
@@ -18,8 +18,8 @@ public:
         vk::DescriptorSet descriptorSet;
     };
 
-    PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain);
-    ~PhysicsRenderPipeline();
+    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain);
+    ~DebugPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
 
@@ -31,8 +31,8 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
 
-    NON_MOVABLE(PhysicsRenderPipeline);
-    NON_COPYABLE(PhysicsRenderPipeline);
+    NON_MOVABLE(DebugPipeline);
+    NON_COPYABLE(DebugPipeline);
 
 private:
     void CreatePipeline();

@@ -1,4 +1,4 @@
-﻿#include "pipelines/physics_render_pipeline.hpp"
+﻿#include "pipelines/debug_pipeline.hpp"
 
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
@@ -6,7 +6,7 @@
 
 #include <imgui_impl_vulkan.h>
 
-PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
@@ -23,7 +23,7 @@ PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBu
     CreatePipeline();
 }
 
-PhysicsRenderPipeline::~PhysicsRenderPipeline()
+DebugPipeline::~DebugPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
@@ -34,7 +34,7 @@ PhysicsRenderPipeline::~PhysicsRenderPipeline()
     }
 }
 
-void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
+void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
 {
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -99,7 +99,7 @@ void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void PhysicsRenderPipeline::CreatePipeline()
+void DebugPipeline::CreatePipeline()
 {
     // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
@@ -198,7 +198,7 @@ void PhysicsRenderPipeline::CreatePipeline()
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
 }
-void PhysicsRenderPipeline::CreateVertexBuffer()
+void DebugPipeline::CreateVertexBuffer()
 {
     vk::DeviceSize bufferSize = sizeof(glm::vec3) * _linesData.size() * 1024 * 2048;
 
@@ -215,7 +215,7 @@ void PhysicsRenderPipeline::CreateVertexBuffer()
     }
 }
 
-void PhysicsRenderPipeline::UpdateVertexData(uint32_t currentFrame)
+void DebugPipeline::UpdateVertexData(uint32_t currentFrame)
 {
     memcpy(_frameData[currentFrame].vertexBufferMapped, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
 }

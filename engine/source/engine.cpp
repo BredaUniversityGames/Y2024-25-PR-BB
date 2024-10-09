@@ -15,7 +15,7 @@
 #include "editor.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
-#include "pipelines/physics_render_pipeline.hpp"
+#include "pipelines/debug_pipeline.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -98,9 +98,9 @@ void Engine::Run()
         // update physics
         _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
         auto linesData = _physicsModule->debug_renderer->GetLinesData();
-        _renderer->_physicsRenderPipeline->ClearLinesData();
+        _renderer->_debugPipeline->ClearLinesData();
         _physicsModule->debug_renderer->ClearLinesData();
-        _renderer->_physicsRenderPipeline->AddLines(linesData);
+        _renderer->_debugPipeline->AddLines(linesData);
 
         // Slow down application when minimized.
         if (_application->IsMinimized())
