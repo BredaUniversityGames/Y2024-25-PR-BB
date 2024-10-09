@@ -1,9 +1,9 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier: enable
 
-
-#include "camera.glsl"
 #include "bindless.glsl"
+#include "scene.glsl"
+#include "settings.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -16,33 +16,16 @@ layout (push_constant) uniform PushConstants
 layout (set = 1, binding = 0) uniform CameraUBO
 {
     Camera camera;
-} cameraUbo;
-
-struct DirectionalLightData
-{
-    mat4 lightVP;
-    mat4 depthBiasMVP;
-
-    vec4 direction;
 };
-
 layout (set = 2, binding = 0) uniform SceneUBO
 {
-    DirectionalLightData directionalLight;
-
-    uint irradianceIndex;
-    uint prefilterIndex;
-    uint brdfLUTIndex;
-    uint shadowMapIndex;
-} scene;
+    Scene scene;
+};
 
 layout (set = 3, binding = 0) uniform BloomSettingsUBO
 {
-    float strength;
-    float gradientStrength;
-    float maxBrightnessExtraction;
-    vec3 colorWeights;
-} bloomSettings;
+    BloomSettings bloomSettings;
+};
 
 layout (location = 0) in vec2 texCoords;
 
@@ -80,7 +63,7 @@ void main()
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);
-    vec3 V = normalize(cameraUbo.camera.cameraPosition - position);
+    vec3 V = normalize(camera.cameraPosition - position);
 
     vec3 L = lightDir;
     vec3 H = normalize(V + L);

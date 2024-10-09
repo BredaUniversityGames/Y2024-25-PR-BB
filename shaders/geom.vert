@@ -1,24 +1,16 @@
 #version 460
 
-#include "camera.glsl"
-
-struct Instance
-{
-    mat4 model;
-    uint materialIndex;
-    float boundingRadius;
-};
+#include "scene.glsl"
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
-    Instance data[];
-} instances;
+    Instance instances[];
+};
 
 layout (set = 2, binding = 0) uniform CameraUBO
 {
     Camera camera;
-} cameraUbo;
-
+};
 
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
@@ -33,7 +25,7 @@ layout (location = 3) out flat int drawID;
 
 void main()
 {
-    mat4 modelTransform = instances.data[gl_DrawID].model;
+    mat4 modelTransform = instances[gl_DrawID].model;
     drawID = gl_DrawID;
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
@@ -43,5 +35,5 @@ void main()
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 
-    gl_Position = (cameraUbo.camera.VP) * vec4(position, 1.0);
+    gl_Position = (camera.VP) * vec4(position, 1.0);
 }

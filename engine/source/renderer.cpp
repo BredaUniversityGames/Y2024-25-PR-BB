@@ -15,7 +15,7 @@
 #include "pipelines/shadow_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
-#include "engine.hpp"
+#include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
@@ -65,7 +65,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
