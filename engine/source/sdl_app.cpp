@@ -1,7 +1,7 @@
 #include "sdl_app.hpp"
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_vulkan.h"
-#include <spdlog/spdlog.h>
+#include <log.hpp>
 #include "imgui/backends/imgui_impl_sdl3.h"
 #include "profile_macros.hpp"
 
@@ -10,7 +10,7 @@ SDLApp::SDLApp(const CreateParameters& parameters)
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        spdlog::error("Failed initializing SDL: {0}", SDL_GetError());
+        bblog::error("Failed initializing SDL: {0}", SDL_GetError());
         return;
     }
 
@@ -19,7 +19,7 @@ SDLApp::SDLApp(const CreateParameters& parameters)
     const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(*displayIds);
     if (dm == nullptr)
     {
-        spdlog::error("Failed retrieving DisplayMode: {0}", SDL_GetError());
+        bblog::error("Failed retrieving DisplayMode: {0}", SDL_GetError());
         return;
     }
 
@@ -31,7 +31,7 @@ SDLApp::SDLApp(const CreateParameters& parameters)
 
     if (_window == nullptr)
     {
-        spdlog::error("Failed creating SDL window: {}", SDL_GetError());
+        bblog::error("Failed creating SDL window: {}", SDL_GetError());
         SDL_Quit();
         return;
     }
@@ -47,7 +47,7 @@ SDLApp::SDLApp(const CreateParameters& parameters)
         VkSurfaceKHR surface;
         if (!SDL_Vulkan_CreateSurface(_window, instance, nullptr, &surface))
         {
-            spdlog::error("Failed creating SDL vk::Surface: {}", SDL_GetError());
+            bblog::error("Failed creating SDL vk::Surface: {}", SDL_GetError());
         }
         return vk::SurfaceKHR(surface);
     };

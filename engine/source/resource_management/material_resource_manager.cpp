@@ -1,5 +1,4 @@
 #include "resource_management/material_resource_manager.hpp"
-#include "util.hpp"
 #include "vulkan_helper.hpp"
 
 MaterialResourceManager::MaterialResourceManager(const VulkanBrain& brain)

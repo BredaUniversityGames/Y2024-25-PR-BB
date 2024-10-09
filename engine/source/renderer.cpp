@@ -19,6 +19,7 @@
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "log.hpp"
 #include "profile_macros.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
@@ -88,7 +89,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalIndexSize += indexSize;
     }
 
-    spdlog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
+    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
 
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 

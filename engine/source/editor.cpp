@@ -6,6 +6,7 @@
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
 #include "profile_macros.hpp"
+#include "log.hpp"
 
 #include <fstream>
 
@@ -136,7 +137,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            spdlog::error("Failed writing VMA stats to file!");
+            bblog::error("Failed writing VMA stats to file!");
         }
 
         vmaFreeStatsString(_brain.vmaAllocator, statsJson);

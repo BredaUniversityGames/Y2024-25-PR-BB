@@ -2,6 +2,7 @@
 #include "vulkan_helper.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_validation.hpp"
+#include "log.hpp"
 #include <map>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
@@ -338,7 +339,7 @@ void VulkanBrain::CreateDevice()
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
-    spdlog::info("Validation layers enabled: {}", ENABLE_VALIDATION_LAYERS ? "TRUE" : "FALSE");
+    bblog::info("Validation layers enabled: {}", ENABLE_VALIDATION_LAYERS ? "TRUE" : "FALSE");
 
     if (ENABLE_VALIDATION_LAYERS)
     {

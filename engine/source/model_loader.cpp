@@ -1,5 +1,5 @@
 #include "model_loader.hpp"
-#include "spdlog/spdlog.h"
+#include "log.hpp"
 #include <fastgltf/tools.hpp>
 #include <fastgltf/glm_element_traits.hpp>
 #include "stb_image.h"
@@ -79,9 +79,9 @@ ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
     fastgltf::Asset& gltf = loadedGltf.get();
 
     if (gltf.scenes.size() > 1)
-        spdlog::warn("GLTF contains more than one scene, but we only load one scene!");
+        bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    spdlog::info("Loaded model: {}", path);
+    bblog::info("Loaded model: {}", path);
 
     return LoadModel(gltf, batchBuffer, name);
 }
@@ -199,7 +199,7 @@ ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asse
                        const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
                        stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
                        if (!stbiData)
-                           spdlog::error("Failed loading data from STBI at path: {}", path);
+                           bblog::error("Failed loading data from STBI at path: {}", path);
 
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
