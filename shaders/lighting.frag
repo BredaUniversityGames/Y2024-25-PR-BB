@@ -9,11 +9,6 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
-
-    uint irradianceIndex;
-    uint prefilterIndex;
-    uint brdfLUTIndex;
-    uint shadowMapIndex;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -21,15 +16,30 @@ layout (set = 1, binding = 0) uniform CameraUBO
     mat4 VP;
     mat4 view;
     mat4 proj;
-    mat4 lightVP;
-    mat4 depthBiasMVP;
     mat4 skydomeMVP;
-    vec4 lightData;
     vec3 cameraPosition;
     float _padding;
 } cameraUbo;
 
-layout (set = 2, binding = 0) uniform BloomSettingsUBO
+struct DirectionalLightData
+{
+    mat4 lightVP;
+    mat4 depthBiasMVP;
+
+    vec4 direction;
+};
+
+layout (set = 2, binding = 0) uniform SceneUBO
+{
+    DirectionalLightData directionalLight;
+
+    uint irradianceIndex;
+    uint prefilterIndex;
+    uint brdfLUTIndex;
+    uint shadowMapIndex;
+} scene;
+
+layout (set = 3, binding = 0) uniform BloomSettingsUBO
 {
     float strength;
     float gradientStrength;
@@ -69,7 +79,7 @@ void main()
     if (normal == vec3(0.0))
     discard;
 
-    vec3 lightDir = cameraUbo.lightData.xyz;
+    vec3 lightDir = scene.directionalLight.direction.xyz;
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);
@@ -108,21 +118,21 @@ void main()
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
 
-    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(pushConstants.irradianceIndex)], -N).rgb;
+    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(scene.irradianceIndex)], -N).rgb;
     vec3 diffuse = irradiance * albedo;
 
     const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(pushConstants.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(pushConstants.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(scene.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
-    vec4 shadowCoord = cameraUbo.depthBiasMVP * vec4(position, 1.0);
-    vec4 testCoord = cameraUbo.lightVP * vec4(position, 1.0);
+    vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
+    vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
 
     float cosTheta = clamp(dot(N, lightDir), 0.0, 1.0);
-    float baseBias = cameraUbo.lightData.w;
+    float baseBias = scene.directionalLight.direction.w;
     float bias = max(baseBias * (1.0 - cosTheta), baseBias);
 
     bias = clamp(bias, 0, baseBias);
@@ -132,10 +142,10 @@ void main()
     float visibility = 1.0;
     float shadow = 0.0;
     float depthFactor = testCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(pushConstants.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
     outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
