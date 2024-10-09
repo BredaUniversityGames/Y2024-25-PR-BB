@@ -20,7 +20,7 @@ struct QueueFamilyIndices
 };
 
 constexpr bool ENABLE_VALIDATION_LAYERS =
-#if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
+#if not defined(NDEBUG)
     true;
 #else
     false;
