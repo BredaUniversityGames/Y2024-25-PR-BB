@@ -38,14 +38,14 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
@@ -175,7 +175,9 @@ void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -195,11 +197,10 @@ void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

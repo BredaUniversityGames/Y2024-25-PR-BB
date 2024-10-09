@@ -31,7 +31,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         info.storeOp = vk::AttachmentStoreOp::eStore;
         info.loadOp = vk::AttachmentLoadOp::eClear;
-        info.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+        info.clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
     }
 
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
@@ -81,7 +81,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             {
                 _brain.drawStats.indexCount += primitive.count;
 
-                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
+                    .indexCount = primitive.count,
+                    .instanceCount = 1,
+                    .firstIndex = primitive.indexOffset,
+                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                    .firstInstance = 0 });
             }
         }
     }
@@ -201,7 +206,9 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -217,7 +224,7 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
         formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
@@ -226,7 +233,6 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = formats.data();
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
