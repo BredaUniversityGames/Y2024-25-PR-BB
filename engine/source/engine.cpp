@@ -1,7 +1,7 @@
-#include "engine.hpp"
+#include "old_engine.hpp"
 
 #include "ECS.hpp"
-#include "stb/stb_image.h"
+#include <stb/stb_image.h>
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
@@ -10,7 +10,7 @@
 #include "renderer.hpp"
 #include "editor.hpp"
 
-Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
+OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -69,7 +69,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     spdlog::info("Successfully initialized engine!");
 }
 
-void Engine::Run()
+void OldEngine::Run()
 {
     while (!ShouldQuit())
     {
@@ -150,7 +150,7 @@ void Engine::Run()
     }
 }
 
-Engine::~Engine()
+OldEngine::~OldEngine()
 {
     _renderer->_brain.device.waitIdle();
 
