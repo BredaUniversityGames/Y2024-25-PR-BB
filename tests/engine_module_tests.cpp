@@ -8,7 +8,7 @@ namespace TestModules
 
 class TestModule : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
@@ -19,7 +19,7 @@ class TestModule : public ModuleInterface
 
 class DependentModule : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         engine.GetModule<TestModule>();
         return ModuleTickOrder::eFirst;
@@ -31,7 +31,7 @@ class DependentModule : public ModuleInterface
 
 class CheckUpdateModule : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine)
+    virtual ModuleTickOrder Init(Engine& engine)
     {
         return ModuleTickOrder::eTick;
     };
@@ -51,7 +51,7 @@ public:
 
 class SelfDestructModuleFirst : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
@@ -66,7 +66,7 @@ class SelfDestructModuleFirst : public ModuleInterface
 
 class SelfDestructModuleLast : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         return ModuleTickOrder::eLast;
     };
@@ -81,7 +81,7 @@ class SelfDestructModuleLast : public ModuleInterface
 
 class SetAtFreeModule : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }
@@ -99,7 +99,7 @@ public:
 
 class SetAtFreeModule2 : public ModuleInterface
 {
-    virtual uint32_t Init(Engine& engine) override
+    virtual ModuleTickOrder Init(Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }

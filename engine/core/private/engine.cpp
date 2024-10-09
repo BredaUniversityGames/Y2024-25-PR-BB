@@ -3,13 +3,13 @@
 
 void Engine::SetExit(int code)
 {
-    _exit_requested = true;
-    _exit_code = code;
+    _exitRequested = true;
+    _exitCode = code;
 }
 
 void Engine::Reset()
 {
-    for (auto it = _init_order.rbegin(); it != _init_order.rend(); ++it)
+    for (auto it = _initOrder.rbegin(); it != _initOrder.rend(); ++it)
     {
         auto* module = *it;
         module->Shutdown(*this);
@@ -17,10 +17,10 @@ void Engine::Reset()
     }
 
     _modules.clear();
-    _tick_order.clear();
-    _init_order.clear();
-    _exit_requested = false;
-    _exit_code = 0;
+    _tickOrder.clear();
+    _initOrder.clear();
+    _exitRequested = false;
+    _exitCode = 0;
 }
 ModuleInterface* Engine::GetModuleUntyped(std::type_index type) const
 {
@@ -33,7 +33,7 @@ ModuleInterface* Engine::GetModuleUntyped(std::type_index type) const
         return nullptr;
     }
 }
-void Engine::AddModuleToTickList(ModuleInterface* module, uint32_t priority)
+void Engine::AddModuleToTickList(ModuleInterface* module, ModuleTickOrder priority)
 {
     // sorted emplace, based on tick priority
 
@@ -44,8 +44,8 @@ void Engine::AddModuleToTickList(ModuleInterface* module, uint32_t priority)
 
     auto pair = ModulePriorityPair { module, priority };
 
-    auto insert_it = std::upper_bound(
-        _tick_order.begin(), _tick_order.end(), pair, compare);
+    auto insertIt = std::upper_bound(
+        _tickOrder.begin(), _tickOrder.end(), pair, compare);
 
-    _tick_order.insert(insert_it, pair);
+    _tickOrder.insert(insertIt, pair);
 }

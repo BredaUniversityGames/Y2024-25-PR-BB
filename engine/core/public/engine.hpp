@@ -34,24 +34,24 @@ protected:
     struct ModulePriorityPair
     {
         ModuleInterface* module;
-        uint32_t priority;
+        ModuleTickOrder priority;
     };
 
-    int _exit_code = 0;
-    bool _exit_requested = false;
-    std::vector<ModulePriorityPair> _tick_order {};
+    int _exitCode = 0;
+    bool _exitRequested = false;
+    std::vector<ModulePriorityPair> _tickOrder {};
 
     // Cleans up all modules
     void Reset();
 
 private:
     ModuleInterface* GetModuleUntyped(std::type_index type) const;
-    void AddModuleToTickList(ModuleInterface* module, uint32_t priority);
+    void AddModuleToTickList(ModuleInterface* module, ModuleTickOrder priority);
 
     // Raw pointers are used because deallocation order of modules is important
 
     std::unordered_map<std::type_index, ModuleInterface*> _modules {};
-    std::vector<ModuleInterface*> _init_order {};
+    std::vector<ModuleInterface*> _initOrder {};
 };
 
 template <typename Module>
@@ -64,9 +64,9 @@ inline Engine& Engine::AddModule()
 template <typename Module>
 inline Module& Engine::GetModule()
 {
-    if (auto module_ptr = GetModuleSafe<Module>())
+    if (auto modulePtr = GetModuleSafe<Module>())
     {
-        return static_cast<Module&>(*module_ptr);
+        return static_cast<Module&>(*modulePtr);
     }
 
     auto type = std::type_index(typeid(Module));
@@ -74,7 +74,7 @@ inline Module& Engine::GetModule()
     auto priority = it->second->Init(*this);
 
     AddModuleToTickList(it->second, priority);
-    _init_order.emplace_back(it->second);
+    _initOrder.emplace_back(it->second);
 
     return static_cast<Module&>(*it->second);
 }

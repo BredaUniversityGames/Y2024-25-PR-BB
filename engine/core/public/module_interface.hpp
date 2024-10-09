@@ -2,10 +2,7 @@
 #include "fwd_core.hpp"
 #include <cstdint>
 
-namespace ModuleTickOrder
-{
-
-enum Enum : uint32_t
+enum class ModuleTickOrder : uint32_t
 {
     eFirst = 0,
     ePreTick = 5,
@@ -16,8 +13,6 @@ enum Enum : uint32_t
     ePostRender = 30,
     eLast = 35
 };
-
-}
 
 // Main interface for defining engine modules
 // Requires overriding: Init, Tick, Shutdown
@@ -31,7 +26,7 @@ private:
     friend MainEngine;
 
     // Return the desired tick order for this module
-    virtual uint32_t Init(Engine& engine) = 0;
+    virtual ModuleTickOrder Init(Engine& engine) = 0;
 
     // Ticking order is decided based on the returned value from Init
     virtual void Tick(Engine& engine) = 0;

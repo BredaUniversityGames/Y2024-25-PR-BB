@@ -16,6 +16,6 @@ public:
     // Returns 0 if the exit code is not set
     int GetExitCode() const;
 
-    // Resets the engine, can be run again
-    void Reset() { Engine::Reset(); };
+    // Exposes Engine::Reset in this class (we only want this class to reset the engine)
+    using Engine::Reset;
 };

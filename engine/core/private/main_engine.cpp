@@ -2,20 +2,20 @@
 
 int MainEngine::Run()
 {
-    while (!_exit_requested)
+    while (!_exitRequested)
     {
         MainLoopOnce();
     }
 
-    return _exit_code;
+    return _exitCode;
 }
 void MainEngine::MainLoopOnce()
 {
-    for (auto module_priority_pair : _tick_order)
+    for (auto modulePriorityPair : _tickOrder)
     {
-        module_priority_pair.module->Tick(*this);
+        modulePriorityPair.module->Tick(*this);
 
-        if (_exit_requested)
+        if (_exitRequested)
         {
             return;
         }
@@ -24,5 +24,5 @@ void MainEngine::MainLoopOnce()
 
 int MainEngine::GetExitCode() const
 {
-    return _exit_code;
+    return _exitCode;
 }
