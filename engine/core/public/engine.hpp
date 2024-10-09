@@ -1,7 +1,8 @@
 #pragma once
 #include "fwd_core.hpp"
+#include "common.hpp"
 #include "module_interface.hpp"
-#include "class_decorations.hpp"
+
 
 #include <memory>
 #include <typeindex>

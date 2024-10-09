@@ -18,7 +18,6 @@ target_include_directories(Core PUBLIC "public")
 target_include_directories(Core PRIVATE "private")
 
 # Linked libraries or other modules (use PUBLIC for propagating includes)
-target_link_libraries(Core PRIVATE)
-
-# TODO: Create and link to dedicated util module
-target_include_directories(Core PUBLIC "../util")
+target_link_libraries(Core
+        PUBLIC Utility
+)

@@ -9,11 +9,13 @@ target_include_directories(Engine PUBLIC "include" "../external")
 
 # ENGINE MODULES
 
+add_subdirectory(utility)
 add_subdirectory(core)
 
 target_link_libraries(Engine
         PRIVATE ProjectSettings
         PUBLIC External
+        PUBLIC Utility
         PUBLIC Core
 )
 

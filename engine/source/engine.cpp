@@ -8,6 +8,7 @@
 #include "gbuffers.hpp"
 #include "application.hpp"
 #include "renderer.hpp"
+#include "profile.hpp"
 #include "editor.hpp"
 
 OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)

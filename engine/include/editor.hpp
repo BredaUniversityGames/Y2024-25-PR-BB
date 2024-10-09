@@ -1,5 +1,5 @@
 #pragma once
-#include "class_decorations.hpp"
+#include "common.hpp"
 
 class VulkanBrain;
 class Application;
