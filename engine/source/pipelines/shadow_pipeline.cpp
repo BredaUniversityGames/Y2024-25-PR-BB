@@ -2,15 +2,14 @@
 
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
-ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline)
+ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
-    , _descriptorSetLayout(geometryPipeline.DescriptorSetLayout())
-    , _frameData(geometryPipeline.GetFrameData())
 {
-    CreatePipeline();
+    CreatePipeline(gpuScene);
 }
 
 ShadowPipeline::~ShadowPipeline()
@@ -20,7 +19,7 @@ ShadowPipeline::~ShadowPipeline()
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const SceneDescription& scene, const BatchBuffer& batchBuffer)
+    const RenderSceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
@@ -46,7 +45,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.setViewport(0, 1, &viewport);
     commandBuffer.setScissor(0, 1, &scissor);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
     vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
 
@@ -61,11 +60,11 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void ShadowPipeline::CreatePipeline()
+void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 2> layouts = { _descriptorSetLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 2> layouts = { gpuScene.GetObjectInstancesDescriptorSetLayout(), _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -125,7 +124,9 @@ void ShadowPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 1;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -138,10 +139,10 @@ void ShadowPipeline::CreatePipeline()
     pipelineCreateInfo.layout = _pipelineLayout;
 
     // Use dynamic rendering
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    pipelineRenderingCreateInfo.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
+    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
     util::VK_ASSERT(result.result, "Failed to create shadow pipeline!");

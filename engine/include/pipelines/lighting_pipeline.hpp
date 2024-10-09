@@ -2,16 +2,18 @@
 
 #include "gbuffers.hpp"
 #include "mesh.hpp"
-#include "swap_chain.hpp"
+
+class GPUScene;
 class BloomSettings;
+struct RenderSceneDescription;
 
 class LightingPipeline
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings);
+    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings);
     ~LightingPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
     void UpdateGBufferViews();
 
     NON_MOVABLE(LightingPipeline);
@@ -24,14 +26,9 @@ private:
         uint32_t normalRIndex;
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
-
-        uint32_t irradianceIndex;
-        uint32_t prefilterIndex;
-        uint32_t brdfLUTIndex;
-        uint32_t shadowMapIndex;
     } _pushConstants;
 
-    void CreatePipeline();
+    void CreatePipeline(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

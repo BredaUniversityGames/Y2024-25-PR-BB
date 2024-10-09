@@ -20,6 +20,7 @@ class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class GPUScene;
 
 class Renderer
 {
@@ -51,6 +52,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
     std::shared_ptr<SceneDescription> _scene;
+    std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
