@@ -61,7 +61,6 @@ FetchContent_Declare(
         GIT_TAG v1.3.2
         GIT_SHALLOW TRUE)
 
-FetchContent_GetProperties(cereal)
 set(SKIP_PERFORMANCE_COMPARISON ON)
 FetchContent_MakeAvailable(cereal)
 
