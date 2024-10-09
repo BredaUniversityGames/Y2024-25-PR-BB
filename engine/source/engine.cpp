@@ -150,8 +150,6 @@ void Engine::Run()
 
             JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
             _physicsModule->debug_renderer->SetCameraPos(cameraPos);
-            CameraUBO cameraUBO = _renderer->CalculateCamera(_scene->camera);
-            _physicsModule->debug_renderer->view_projection = cameraUBO.VP;
         }
         _lastMousePos = { mouseX, mouseY };
 

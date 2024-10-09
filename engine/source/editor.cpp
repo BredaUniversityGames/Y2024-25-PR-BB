@@ -54,9 +54,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     performanceTracker.Render();
     bloomSettings.Render();
 
-    physicsModule.debug_renderer->RenderDebugOverlay();
     JPH::BodyManager::DrawSettings drawSettings;
-    physicsModule.physics_system->DrawBodies(drawSettings, physicsModule.debug_renderer);
+    physicsModule.physics_system->DrawBodies(drawSettings, physicsModule.debug_renderer); // to move i think?
 
     // Render systems inspect
     for (const auto& system : ecs._systems)

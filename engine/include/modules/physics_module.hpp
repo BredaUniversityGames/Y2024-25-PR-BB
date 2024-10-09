@@ -183,23 +183,11 @@ public:
 
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
     {
-
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
         linePositions.push_back(fromPos);
         linePositions.push_back(toPos);
-        /*
-        glm::vec2 from = WorldToScreen(fromPos, view_projection);
-        glm::vec2 to = WorldToScreen(toPos, view_projection);
-        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-
-        // Convert JPH::ColorArg to ImGui color format
-        ImU32 color = IM_COL32(0, 255, 0, 255);
-
-        // Use ImGui to draw the line
-
-        draw_list->AddLine(ImVec2(from.x, from.y), ImVec2(to.x, to.y), color);*/
     }
 
     void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
@@ -209,58 +197,8 @@ public:
         // Implement
     }
 
-    void RenderDebugOverlay()
-    {
-        // Get display size
-        ImGuiIO& io = ImGui::GetIO();
-        ImVec2 windowSize = io.DisplaySize;
-
-        // Set window properties
-        ImGui::SetNextWindowSize(windowSize); // Fullscreen size
-        ImGui::SetNextWindowPos(ImVec2(0, 0)); // Position at the top-left corner
-
-        // Create a window with no title bar, no resize, no move, no scrollbars, and no background
-        ImGui::Begin("DebugOverlay", nullptr,
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs | // No mouse/keyboard input
-                ImGuiWindowFlags_NoBackground); // No background
-
-        // Draw your debug lines or shapes here
-
-        // Get the foreground draw list
-        draw_list = ImGui::GetWindowDrawList();
-
-        // End the window
-        ImGui::End();
-    }
-
-    void UpdateViewProjection(const glm::mat4& inViewProjection)
-    {
-        view_projection = inViewProjection;
-    }
     ImDrawList* draw_list = nullptr;
     std::vector<glm::vec3>& linePositions;
-    glm::mat4 view_projection;
-
-private:
-    glm::vec2 WorldToScreen(const glm::vec3& worldPos, const glm::mat4& viewProjection)
-    {
-        // Identity model matrix since we're transforming world coordinates directly
-        glm::mat4 model = glm::mat4(1.0f);
-
-        // Get ImGui display size
-        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-
-        // Define the viewport: origin at (0,0), width and height as per the display size
-        glm::vec4 viewport = glm::vec4(0.0f, 0.0f, displaySize.x, displaySize.y);
-
-        // Project the 3D point to 2D screen coordinates
-        glm::vec3 screenPos = glm::project(worldPos, model, viewProjection, viewport);
-
-        // Adjust for ImGui's coordinate system (origin at top-left)
-        // screenPos.y = displaySize.y - screenPos.y;
-
-        return glm::vec2(screenPos.x, screenPos.y);
-    }
 };
 
 class PhysicsModule
