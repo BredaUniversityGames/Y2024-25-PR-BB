@@ -1,7 +1,7 @@
 ﻿#include "modules/physics_module.hpp"
 
 #include "../../../build/WSL-Debug/_deps/joltphysics-src/Jolt/Renderer/DebugRendererSimple.h"
-PhysicsModule::PhysicsModule(std::vector<glm::vec3>& linePositionsRef)
+PhysicsModule::PhysicsModule()
 {
     // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
     // This needs to be done before any other Jolt function is called.
@@ -44,7 +44,7 @@ PhysicsModule::PhysicsModule(std::vector<glm::vec3>& linePositionsRef)
     physics_system->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *broad_phase_layer_interface, *object_vs_broadphase_layer_filter, *object_vs_object_layer_filter);
     physics_system->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
 
-    debug_renderer = new MyDebugRenderer(linePositionsRef);
+    debug_renderer = new MyDebugRenderer();
     JPH::DebugRenderer::sInstance = debug_renderer;
     // A body activation listener gets notified when bodies activate and go to sleep
     // Note that this is called from a job so whatever you do here needs to be thread safe.

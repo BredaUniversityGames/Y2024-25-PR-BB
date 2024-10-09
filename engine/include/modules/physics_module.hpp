@@ -175,12 +175,6 @@ public:
 class MyDebugRenderer : public JPH::DebugRendererSimple
 {
 public:
-    MyDebugRenderer(std::vector<glm::vec3>& linePositionsRef)
-        : JPH::DebugRendererSimple()
-        , linePositions(linePositionsRef)
-    {
-    }
-
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
     {
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
@@ -192,19 +186,27 @@ public:
 
     void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
     {
-        std::cout << "Drawing Text" << std::endl;
-
-        // Implement
+        // Not implemented
     }
 
-    ImDrawList* draw_list = nullptr;
-    std::vector<glm::vec3>& linePositions;
+    [[nodiscard]] const std::vector<glm::vec3>& GetLinesData() const
+    {
+        return linePositions;
+    }
+
+    void ClearLinesData()
+    {
+        linePositions.clear();
+    }
+
+private:
+    std::vector<glm::vec3> linePositions;
 };
 
 class PhysicsModule
 {
 public:
-    PhysicsModule(std::vector<glm::vec3>& linePositionsRef);
+    PhysicsModule();
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
     JPH::BodyInterface* body_interface = nullptr;

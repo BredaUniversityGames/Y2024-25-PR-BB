@@ -23,12 +23,16 @@ public:
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
 
+    void AddLines(const std::vector<glm::vec3>& linesData)
+    {
+        _linesData.insert(_linesData.end(), linesData.begin(), linesData.end());
+    }
+    void ClearLinesData() { _linesData.clear(); }
+
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
 
     NON_MOVABLE(PhysicsRenderPipeline);
     NON_COPYABLE(PhysicsRenderPipeline);
-
-    std::vector<glm::vec3> linePoints;
 
 private:
     void CreatePipeline();
@@ -46,6 +50,7 @@ private:
     vk::Pipeline _pipeline;
     vk::DescriptorSetLayout& _descriptorSetLayout;
 
+    std::vector<glm::vec3> _linesData;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
     std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _geometryFrameData;
 };

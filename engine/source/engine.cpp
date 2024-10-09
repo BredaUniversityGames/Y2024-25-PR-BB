@@ -74,7 +74,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _application->SetMouseHidden(true);
 
     // modules
-    _physicsModule = std::make_unique<PhysicsModule>(_renderer->_physicsRenderPipeline->linePoints);
+    _physicsModule = std::make_unique<PhysicsModule>();
 
     // systems
     _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
@@ -97,6 +97,10 @@ void Engine::Run()
 
         // update physics
         _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
+        auto linesData = _physicsModule->debug_renderer->GetLinesData();
+        _renderer->_physicsRenderPipeline->ClearLinesData();
+        _physicsModule->debug_renderer->ClearLinesData();
+        _renderer->_physicsRenderPipeline->AddLines(linesData);
 
         // Slow down application when minimized.
         if (_application->IsMinimized())
@@ -167,7 +171,6 @@ void Engine::Run()
         _renderer->Render();
         _performanceTracker.Update();
         _physicsModule->debug_renderer->NextFrame();
-        _physicsModule->debug_renderer->linePositions.clear();
 
         FrameMark;
     }

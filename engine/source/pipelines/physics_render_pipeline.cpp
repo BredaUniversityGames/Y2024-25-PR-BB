@@ -16,8 +16,8 @@ PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBu
 
 {
 
-    linePoints.push_back(glm::vec3 { 0.0f, 0.0f, 0.0f });
-    linePoints.push_back(glm::vec3 { 0.0f, 2.0f, 0.0f });
+    _linesData.push_back(glm::vec3 { 0.0f, 0.0f, 0.0f });
+    _linesData.push_back(glm::vec3 { 0.0f, 2.0f, 0.0f });
 
     CreateVertexBuffer();
     CreatePipeline();
@@ -90,9 +90,9 @@ void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
 
     // Draw the lines
-    commandBuffer.draw(static_cast<uint32_t>(linePoints.size()), 1, 0, 0);
+    commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
     _brain.drawStats.drawCalls++;
-    _brain.drawStats.debugLines = static_cast<uint32_t>(linePoints.size() / 2);
+    _brain.drawStats.debugLines = static_cast<uint32_t>(_linesData.size() / 2);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     commandBuffer.endRenderingKHR(_brain.dldi);
 
@@ -200,7 +200,7 @@ void PhysicsRenderPipeline::CreatePipeline()
 }
 void PhysicsRenderPipeline::CreateVertexBuffer()
 {
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * linePoints.size() * 1024 * 2048;
+    vk::DeviceSize bufferSize = sizeof(glm::vec3) * _linesData.size() * 1024 * 2048;
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {
@@ -217,6 +217,5 @@ void PhysicsRenderPipeline::CreateVertexBuffer()
 
 void PhysicsRenderPipeline::UpdateVertexData(uint32_t currentFrame)
 {
-
-    memcpy(_frameData[currentFrame].vertexBufferMapped, linePoints.data(), linePoints.size() * sizeof(glm::vec3));
+    memcpy(_frameData[currentFrame].vertexBufferMapped, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
 }
