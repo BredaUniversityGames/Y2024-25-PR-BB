@@ -63,7 +63,7 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
     glm::ivec2 mousePos;
     _application->GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-
+    _ecs->WriteToFile("assets/models/scene.json");
     _application->SetMouseHidden(true);
 
     spdlog::info("Successfully initialized engine!");
