@@ -27,6 +27,9 @@ public:
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _drawBufferDescriptorSets[frameIndex]; }
 
+    vk::Buffer IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
+    uint32_t IndirectCountOffset() const { return MAX_MESHES * sizeof(vk::DrawIndexedIndirectCommand); }
+
     uint32_t AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer);
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 

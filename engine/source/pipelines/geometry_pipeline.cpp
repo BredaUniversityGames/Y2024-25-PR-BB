@@ -120,7 +120,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindVertexBuffers(0, { batchBuffer.VertexBuffer() }, { 0 });
     commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
-    commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, _drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
+    vk::Buffer drawBuffer = batchBuffer.IndirectDrawBuffer(currentFrame);
+    vk::Buffer indirectCountBuffer = batchBuffer.IndirectCountBuffer(currentFrame);
+    uint32_t indirectCountOffset = batchBuffer.IndirectCountOffset();
+    commandBuffer.drawIndexedIndirectCountKHR(drawBuffer, 0, indirectCountBuffer, indirectCountOffset, _drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);

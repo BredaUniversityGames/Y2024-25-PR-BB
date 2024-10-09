@@ -33,7 +33,7 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
     {
         util::CreateBuffer(
             _brain,
-            sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES,
+            sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t),
             vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
             _indirectDrawBuffers[i],
             true,
@@ -91,6 +91,10 @@ void BatchBuffer::WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& 
 
     _drawCount = commands.size();
     std::memcpy(_indirectDrawBufferPtr[frameIndex], commands.data(), commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+
+    uint32_t drawCount = commands.size();
+    std::byte* ptr = static_cast<std::byte*>(_indirectDrawBufferPtr[frameIndex]);
+    std::memcpy(ptr + IndirectCountOffset(), &drawCount, sizeof(uint32_t));
 }
 
 void BatchBuffer::InitializeDescriptorSets()
