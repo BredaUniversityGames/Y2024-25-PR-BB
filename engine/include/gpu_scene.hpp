@@ -17,7 +17,7 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     const GPUScene& gpuScene;
-    const SceneDescription& sceneDescription;
+    const SceneDescription& sceneDescription; // This will change to ecs
 };
 
 class GPUScene
