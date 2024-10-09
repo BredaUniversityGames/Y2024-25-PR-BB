@@ -4,10 +4,9 @@
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 
-ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene)
+ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
-    , _camera(camera)
 {
     CreatePipeline(gpuScene);
 }
@@ -46,7 +45,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.setScissor(0, 1, &scissor);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &scene.gpuScene.GetSceneDescriptorSet(currentFrame), 0, nullptr);
     vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
 
     vk::DeviceSize offsets[] = { 0 };
@@ -62,9 +61,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
 void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
-    // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 2> layouts = { gpuScene.GetObjectInstancesDescriptorSetLayout(), _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 2> layouts = { gpuScene.GetObjectInstancesDescriptorSetLayout(), gpuScene.GetSceneDescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 

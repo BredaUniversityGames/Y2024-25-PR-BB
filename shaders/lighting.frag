@@ -2,6 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier: enable
 
 #include "bindless.glsl"
+#include "scene.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -13,31 +14,12 @@ layout (push_constant) uniform PushConstants
 
 layout (set = 1, binding = 0) uniform CameraUBO
 {
-    mat4 VP;
-    mat4 view;
-    mat4 proj;
-    mat4 skydomeMVP;
-    vec3 cameraPosition;
-    float _padding;
-} cameraUbo;
-
-struct DirectionalLightData
-{
-    mat4 lightVP;
-    mat4 depthBiasMVP;
-
-    vec4 direction;
+    Camera camera;
 };
-
 layout (set = 2, binding = 0) uniform SceneUBO
 {
-    DirectionalLightData directionalLight;
-
-    uint irradianceIndex;
-    uint prefilterIndex;
-    uint brdfLUTIndex;
-    uint shadowMapIndex;
-} scene;
+    Scene scene;
+};
 
 layout (set = 3, binding = 0) uniform BloomSettingsUBO
 {
@@ -83,7 +65,7 @@ void main()
     vec3 Lo = vec3(0.0);
 
     vec3 N = normalize(normal);
-    vec3 V = normalize(cameraUbo.cameraPosition - position);
+    vec3 V = normalize(camera.cameraPosition - position);
 
     vec3 L = lightDir;
     vec3 H = normalize(V + L);
