@@ -2,6 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier: enable
 
 #include "bindless.glsl"
+#include "scene.glsl"
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normalIn;
@@ -14,20 +15,14 @@ layout (location = 1) out vec4 outNormalR;     // RGB: Normal,   A: Roughness
 layout (location = 2) out vec4 outEmissiveAO;  // RGB: Emissive, A: AO
 layout (location = 3) out vec4 outPosition;    // RGB: Position  A: unused
 
-struct Instance
-{
-    mat4 model;
-    uint materialIndex;
-};
-
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
-    Instance data[];
-} instances;
+    Instance instances[];
+};
 
 void main()
 {
-    Material material = bindless_materials[nonuniformEXT(instances.data[drawID].materialIndex)];
+    Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
 
     vec4 albedoSample = pow(material.albedoFactor, vec4(2.2));
     vec4 mrSample = vec4(material.metallicFactor, material.metallicFactor, 1.0, 1.0);

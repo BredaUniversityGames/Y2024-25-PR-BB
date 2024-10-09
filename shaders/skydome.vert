@@ -1,14 +1,11 @@
 #version 460
 
+#include "scene.glsl"
+
 layout (set = 1, binding = 0) uniform CameraUBO
 {
-    mat4 VP;
-    mat4 view;
-    mat4 proj;
-    mat4 skydomeMVP;
-    vec3 cameraPosition;
-    float _padding;
-} cameraUbo;
+    Camera camera;
+};
 
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
@@ -21,9 +18,9 @@ void main()
 {
     texCoord = inTexCoord;
 
-    mat4 transform = cameraUbo.view;
+    mat4 transform = camera.view;
 
-    transform = cameraUbo.proj * transform;
+    transform = camera.proj * transform;
 
-    gl_Position = cameraUbo.skydomeMVP * vec4(inPosition, 1.0);
+    gl_Position = camera.skydomeMVP * vec4(inPosition, 1.0);
 }
