@@ -19,7 +19,6 @@
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
-#include <tracy/Tracy.hpp>
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -52,7 +51,8 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
-    GPUSceneCreation gpuSceneCreation {
+    GPUSceneCreation gpuSceneCreation
+    {
         _brain,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
@@ -157,7 +157,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(*_scene, _currentFrame);
 
-    const RenderSceneDescription sceneDescription {
+    const RenderSceneDescription sceneDescription
+    {
         *_gpuScene,
         *_scene
     };

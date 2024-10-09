@@ -5,7 +5,6 @@
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
-#include <tracy/Tracy.hpp>
 
 #include <fstream>
 
