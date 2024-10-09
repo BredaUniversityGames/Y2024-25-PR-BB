@@ -1,7 +1,7 @@
 #include "old_engine.hpp"
 
 #include "ECS.hpp"
-#include "stb/stb_image.h"
+#include <stb/stb_image.h>
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
