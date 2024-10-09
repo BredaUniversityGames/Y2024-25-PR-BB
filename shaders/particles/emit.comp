@@ -8,7 +8,7 @@ struct Emitter
     vec3 velocity;
     float mass;
     vec3 rotationVelocity;
-    uint maxLife;
+    float maxLife;
     // TODO: image/color
 };
 
@@ -35,11 +35,12 @@ void main()
 
     // test particle variables
     Particle particle;
-    particle.position = vec3(1.0, 2.0, 3.0);
-    particle.mass = 5.0;
-    particle.velocity = vec3(0.0, 0.0, 0.0);
-    particle.maxLife = 5.0;
-    particle.life = particle.maxLife;
+    particle.position = emitter.position;
+    particle.mass = emitter.mass;
+    particle.velocity = emitter.velocity; // TODO: add something to make this more random?
+    particle.maxLife = emitter.maxLife;
+    particle.rotationVelocity = emitter.rotationVelocity;
+    particle.life = emitter.maxLife;
 
     // new particle index retrieved from dead list
     int deadCount = atomicAdd(particleCounters.deadCount, -1);

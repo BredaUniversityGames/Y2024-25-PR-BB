@@ -5,7 +5,7 @@ static constexpr uint32_t MAX_EMITTERS = 32;
 static constexpr int32_t MAX_PARTICLES = 1024;
 
 // Structs in line with shaders
-struct Emitter
+struct alignas(16) Emitter
 {
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     uint32_t count = 0;
@@ -16,7 +16,7 @@ struct Emitter
     // TODO: image/color
 };
 
-struct Particle
+struct alignas(16) Particle
 {
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     float mass = 0.0f;
@@ -27,7 +27,7 @@ struct Particle
     // TODO: image/color
 };
 
-struct ParticleCounters
+struct alignas(16) ParticleCounters
 {
     uint32_t aliveCount;
     int32_t deadCount;

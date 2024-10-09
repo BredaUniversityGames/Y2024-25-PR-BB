@@ -11,10 +11,10 @@ ParticleInterface::ParticleInterface(ECS& ecs) :
     // TODO: later, serialize emitter presets and load from file here
     // hardcoded test emitter preset for now
     Emitter emitter;
-    emitter.position = glm::vec3(0.0f);
+    emitter.position = glm::vec3(1.0f, 2.0f, 3.0f);
     emitter.count = 3;
     emitter.velocity = glm::vec3(1.0f);
-    emitter.mass = 0.0f;
+    emitter.mass = 2.0f;
     emitter.rotationVelocity = glm::vec3(1.0f);
     emitter.maxLife = 5.0f;
     _emitterPresets.emplace_back(emitter);
@@ -34,9 +34,8 @@ void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t lifet
     for(auto entity : view)
     {
         auto& emitterComponent = _ecs._registry.get<EmitterComponent>(entity);
-        if(!emitterComponent.isEmitting)
+        if(emitterComponent.lifetime == 0)
         {
-            emitterComponent.isEmitting = true;
             emitterComponent.lifetime = lifetime;
             emitterComponent.emitter = _emitterPresets[static_cast<int>(emitterPreset)];
             break;

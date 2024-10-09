@@ -6,6 +6,7 @@
 #include "ECS.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
+#include "single_time_commands.hpp"
 
 ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructure& camera)
     : _brain(brain)
@@ -39,8 +40,8 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructu
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
 {
-    UpdateBuffers();
     UpdateEmitters(ecs);
+    UpdateBuffers();
 
     // Set up memory barrier to be used in between every shader stage
     vk::MemoryBarrier memoryBarrier{};
@@ -80,7 +81,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
     {
         commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(uint32_t), &bufferOffset);
         // +63 so we always dispatch at least once.
-        commandBuffer.dispatch(_emitters[bufferOffset].count + 63, 1, 1);
+        commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
     1, &memoryBarrier, 0, nullptr, 0, nullptr);
@@ -117,20 +118,23 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs)
     for(auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
-        if(component.isEmitting)
+        if(component.lifetime != 0)
         {
             // TODO: do something with particle type later
             _emitters.emplace_back(component.emitter);
-
-            // TODO: check if this can be moved to the particle interface itself as we should only be fetching stuff here, not babysitting
-            if(--component.lifetime == 0)
-            {
-                component.isEmitting = false;
-            }
+            spdlog::info("Emitter received!");
+            component.lifetime--;
         }
     }
 }
 
+void ParticlePipeline::UpdateBuffers()
+{
+    // TODO: check if this swapping works
+    std::swap(_storageBuffers[static_cast<int>(SSBOUsage::eAliveNew)], _storageBuffers[static_cast<int>(SSBOUsage::eAliveCurrent)]);
+
+    memcpy(_emitterBuffer.bufferMapped, _emitters.data(), _emitters.size() * sizeof(Emitter));
+}
 
 void ParticlePipeline::CreatePipeline()
 {
@@ -340,20 +344,6 @@ void ParticlePipeline::UpdateParticleDescriptorSets()
 
 void ParticlePipeline::CreateBuffers()
 {
-    // Allocate new command buffer for copying staging buffers
-    VkCommandBufferAllocateInfo allocateInfo{};
-    allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocateInfo.commandPool = _brain.commandPool;
-    allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocateInfo.commandBufferCount = 1;
-    VkCommandBuffer cmdBuffer;
-    util::VK_ASSERT(vkAllocateCommandBuffers(_brain.device, &allocateInfo, &cmdBuffer), "Failed to allocate command buffer!");
-
-    // Begin recording commands
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    util::VK_ASSERT(vkBeginCommandBuffer(cmdBuffer, &beginInfo), "Failed to begin recording command buffer!");
-
     vk::Buffer stagingBuffer;
     VmaAllocation stagingBufferAllocation;
     void* data;
@@ -377,9 +367,12 @@ void ParticlePipeline::CreateBuffers()
             _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].bufferAllocation,
             VMA_MEMORY_USAGE_GPU_ONLY,
             "Particle SSBO");
-        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer, particleBufferSize);
 
-        // Clean up
+        auto cmdBuffer = util::BeginSingleTimeCommands(_brain);
+        util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::eParticle)].buffer, particleBufferSize);
+        util::EndSingleTimeCommands(_brain, cmdBuffer);
+
+        // Memory barrier and clean up
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
     }
 
@@ -389,6 +382,14 @@ void ParticlePipeline::CreateBuffers()
 
         for (size_t i = static_cast<size_t>(SSBOUsage::eAliveNew); i <= static_cast<size_t>(SSBOUsage::eDead); i++)
         {
+            std::fill(indices.begin(), indices.end(), 0);
+            if(i == static_cast<size_t>(SSBOUsage::eDead))
+            {
+                for (uint32_t j = 0; j < MAX_PARTICLES; ++j)
+                {
+                    indices[j] = j;
+                }
+            }
             // Create and map staging buffer
             util::CreateBuffer(_brain, indexBufferSize,
                 vk::BufferUsageFlagBits::eTransferSrc,
@@ -405,7 +406,10 @@ void ParticlePipeline::CreateBuffers()
                 _storageBuffers[i].buffer, false, _storageBuffers[i].bufferAllocation,
                 VMA_MEMORY_USAGE_GPU_ONLY,
                 "Index list SSBO");
+
+            auto cmdBuffer = util::BeginSingleTimeCommands(_brain);
             util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[i].buffer, indexBufferSize);
+            util::EndSingleTimeCommands(_brain, cmdBuffer);
 
             // Clean up
             vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
@@ -433,7 +437,10 @@ void ParticlePipeline::CreateBuffers()
             _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].buffer, false, _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].bufferAllocation,
             VMA_MEMORY_USAGE_GPU_ONLY,
             "Counters SSBO");
+
+        auto cmdBuffer = util::BeginSingleTimeCommands(_brain);
         util::CopyBuffer(cmdBuffer, stagingBuffer, _storageBuffers[static_cast<int>(SSBOUsage::eCounter)].buffer, counterBufferSize);
+        util::EndSingleTimeCommands(_brain, cmdBuffer);
 
         // Clean up
         vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
@@ -451,12 +458,4 @@ void ParticlePipeline::CreateBuffers()
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _emitterBuffer.bufferAllocation, &_emitterBuffer.bufferMapped),
             "Failed mapping memory for UBO!");
     }
-}
-
-void ParticlePipeline::UpdateBuffers()
-{
-    // TODO: check if this is the way to go about swapping the alive list buffers
-    std::swap(_storageBuffers[static_cast<int>(SSBOUsage::eAliveNew)], _storageBuffers[static_cast<int>(SSBOUsage::eAliveCurrent)]);
-
-    memcpy(_emitterBuffer.bufferMapped, _emitters.data(), _emitters.size() * sizeof(Emitter));
 }
