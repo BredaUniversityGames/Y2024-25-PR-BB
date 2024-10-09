@@ -16,10 +16,13 @@ GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBu
     CreateInstanceBuffers();
     CreateDescriptorSets();
     CreatePipeline();
+    CreateCullingPipeline();
 }
 
 GeometryPipeline::~GeometryPipeline()
 {
+    _brain.device.destroy(_cullingPipeline);
+    _brain.device.destroy(_cullingPipelineLayout);
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
     for (size_t i = 0; i < _frameData.size(); ++i)
@@ -32,6 +35,30 @@ GeometryPipeline::~GeometryPipeline()
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer)
 {
+    _drawCommands.clear();
+    uint32_t counter = 0;
+    for (auto& gameObject : scene.gameObjects)
+    {
+        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i, ++counter)
+        {
+            const auto& node = gameObject.model->hierarchy.allNodes[i];
+
+            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            for (const auto& primitive : mesh->primitives)
+            {
+                _brain.drawStats.indexCount += primitive.count;
+
+                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+            }
+        }
+    }
+
+    batchBuffer.WriteDraws(_drawCommands, currentFrame);
+
+    const uint32_t localSize = 16;
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
+    commandBuffer.dispatch(_drawCommands.size() / localSize, 0, 0);
+
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
@@ -75,26 +102,6 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
-
-    _drawCommands.clear();
-    uint32_t counter = 0;
-    for (auto& gameObject : scene.gameObjects)
-    {
-        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i, ++counter)
-        {
-            const auto& node = gameObject.model->hierarchy.allNodes[i];
-
-            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
-            for (const auto& primitive : mesh->primitives)
-            {
-                _brain.drawStats.indexCount += primitive.count;
-
-                _drawCommands.emplace_back(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
-            }
-        }
-    }
-
-    batchBuffer.WriteDraws(_drawCommands, currentFrame);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_frameData[currentFrame].descriptorSet, 0, nullptr);
@@ -347,4 +354,73 @@ void GeometryPipeline::UpdateInstanceData(uint32_t currentFrame, const SceneDesc
     }
 
     memcpy(_frameData[currentFrame].storageBufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
+}
+
+void GeometryPipeline::CreateCullingPipeline()
+{
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+    pipelineLayoutCreateInfo.setLayoutCount = 0;
+
+    _brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout);
+
+    vk::ShaderModule computeModule = shader::CreateShaderModule(shader::ReadFile("shaders/bin/culling.comp.spv"), _brain.device);
+
+    vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
+    shaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eCompute;
+    shaderStageCreateInfo.module = computeModule;
+    shaderStageCreateInfo.pName = "main";
+
+    vk::ComputePipelineCreateInfo computePipelineCreateInfo {};
+    computePipelineCreateInfo.layout = _cullingPipelineLayout;
+    computePipelineCreateInfo.stage = shaderStageCreateInfo;
+
+    auto result = _brain.device.createComputePipeline(nullptr, computePipelineCreateInfo, nullptr);
+
+    _cullingPipeline = result.value;
+
+    _brain.device.destroy(computeModule);
+
+    vk::DescriptorSetLayoutBinding layoutBinding {};
+    layoutBinding.binding = 0;
+    layoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+    layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+
+    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
+    descriptorSetLayoutCreateInfo.bindingCount = 1;
+    descriptorSetLayoutCreateInfo.pBindings = &layoutBinding;
+
+    _brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_cullingDescriptorSetLayout);
+
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _cullingDescriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
+    allocateInfo.descriptorPool = _brain.descriptorPool;
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocateInfo.pSetLayouts = layouts.data();
+
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+        "Failed allocating descriptor sets!");
+    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    {
+        _cullingDescriptorSet[i] = descriptorSets[i];
+        vk::DescriptorBufferInfo bufferInfo {};
+        bufferInfo.buffer = ;
+        bufferInfo.offset = 0;
+        bufferInfo.range = vk::WholeSize;
+
+        std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
+        vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
+        bufferWrite.dstSet = _cullingDescriptorSet[i];
+        bufferWrite.dstBinding = 0;
+        bufferWrite.dstArrayElement = 0;
+        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrite.descriptorCount = 1;
+        bufferWrite.pBufferInfo = &bufferInfo;
+
+        _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    }
 }

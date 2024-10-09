@@ -9,6 +9,7 @@ struct alignas(16) InstanceData
 {
     glm::mat4 model;
     uint32_t materialIndex;
+    float radius;
 };
 
 class GeometryPipeline
@@ -38,13 +39,10 @@ public:
 
 private:
     void CreatePipeline();
-
+    void CreateCullingPipeline();
     void CreateDescriptorSetLayout();
-
     void CreateDescriptorSets();
-
     void CreateInstanceBuffers();
-
     void UpdateGeometryDescriptorSet(uint32_t frameIndex);
 
     const VulkanBrain& _brain;
@@ -54,6 +52,11 @@ private:
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
+
+    vk::PipelineLayout _cullingPipelineLayout;
+    vk::Pipeline _cullingPipeline;
+    vk::DescriptorSetLayout _cullingDescriptorSetLayout;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _cullingDescriptorSet;
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
