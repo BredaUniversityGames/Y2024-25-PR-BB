@@ -24,6 +24,8 @@ public:
     uint32_t IndexBufferSize() const { return _indexBufferSize; }
 
     vk::Buffer IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
+    vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
+    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _drawBufferDescriptorSets[frameIndex]; }
 
     uint32_t AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer);
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
@@ -45,6 +47,8 @@ private:
     VmaAllocation _indexBufferAllocation;
 
     std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> _indirectDrawBuffers;
+    vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _drawBufferDescriptorSets;
     std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> _indirectDrawBufferAllocations;
     std::array<void*, MAX_FRAMES_IN_FLIGHT> _indirectDrawBufferPtr;
 
@@ -52,4 +56,6 @@ private:
     uint32_t _indexOffset { 0 };
 
     mutable uint32_t _drawCount { 0 };
+
+    void InitializeDescriptorSets();
 };

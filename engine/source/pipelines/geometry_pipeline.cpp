@@ -253,9 +253,8 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 void GeometryPipeline::CreateCullingPipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    pipelineLayoutCreateInfo.setLayoutCount = 0;
 
-    _brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout);
+    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout), "Failed creating culling pipeline layout!");
 
     vk::ShaderModule computeModule = shader::CreateShaderModule(shader::ReadFile("shaders/bin/culling.comp.spv"), _brain.device);
 
@@ -273,48 +272,4 @@ void GeometryPipeline::CreateCullingPipeline()
     _cullingPipeline = result.value;
 
     _brain.device.destroy(computeModule);
-
-    vk::DescriptorSetLayoutBinding layoutBinding {};
-    layoutBinding.binding = 0;
-    layoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
-    layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
-    descriptorSetLayoutCreateInfo.bindingCount = 1;
-    descriptorSetLayoutCreateInfo.pBindings = &layoutBinding;
-
-    _brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_cullingDescriptorSetLayout);
-
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _cullingDescriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-        "Failed allocating descriptor sets!");
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
-    {
-        _cullingDescriptorSet[i] = descriptorSets[i];
-        vk::DescriptorBufferInfo bufferInfo {};
-        bufferInfo.buffer = ;
-        bufferInfo.offset = 0;
-        bufferInfo.range = vk::WholeSize;
-
-        std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
-
-        vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
-        bufferWrite.dstSet = _cullingDescriptorSet[i];
-        bufferWrite.dstBinding = 0;
-        bufferWrite.dstArrayElement = 0;
-        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-        bufferWrite.descriptorCount = 1;
-        bufferWrite.pBufferInfo = &bufferInfo;
-
-        _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
-    }
 }

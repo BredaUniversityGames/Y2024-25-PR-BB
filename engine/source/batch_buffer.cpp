@@ -43,6 +43,8 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
 
         vmaMapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i], &_indirectDrawBufferPtr[i]);
     }
+
+    InitializeDescriptorSets();
 }
 
 BatchBuffer::~BatchBuffer()
@@ -87,4 +89,49 @@ void BatchBuffer::WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& 
 
     _drawCount = commands.size();
     std::memcpy(_indirectDrawBufferPtr[frameIndex], commands.data(), commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+}
+
+void BatchBuffer::InitializeDescriptorSets()
+{
+    vk::DescriptorSetLayoutBinding layoutBinding {};
+    layoutBinding.binding = 0;
+    layoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+    layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+
+    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
+    descriptorSetLayoutCreateInfo.bindingCount = 1;
+    descriptorSetLayoutCreateInfo.pBindings = &layoutBinding;
+
+    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _drawBufferDescriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
+    allocateInfo.descriptorPool = _brain.descriptorPool;
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocateInfo.pSetLayouts = layouts.data();
+
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+        "Failed allocating descriptor sets!");
+    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    {
+        _drawBufferDescriptorSets[i] = descriptorSets[i];
+        vk::DescriptorBufferInfo bufferInfo {};
+        bufferInfo.buffer = _indirectDrawBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = vk::WholeSize;
+
+        vk::WriteDescriptorSet bufferWrite {};
+        bufferWrite.dstSet = _drawBufferDescriptorSets[i];
+        bufferWrite.dstBinding = 0;
+        bufferWrite.dstArrayElement = 0;
+        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrite.descriptorCount = 1;
+        bufferWrite.pBufferInfo = &bufferInfo;
+
+        _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+    }
 }

@@ -32,8 +32,6 @@ private:
 
     vk::PipelineLayout _cullingPipelineLayout;
     vk::Pipeline _cullingPipeline;
-    vk::DescriptorSetLayout _cullingDescriptorSetLayout;
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _cullingDescriptorSet;
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 };
