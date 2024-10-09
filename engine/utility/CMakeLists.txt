@@ -19,4 +19,5 @@ target_include_directories(Utility PRIVATE "private")
 target_link_libraries(Utility
         PUBLIC Tracy::TracyClient
         PUBLIC spdlog::spdlog
+        PUBLIC glm::glm
 )

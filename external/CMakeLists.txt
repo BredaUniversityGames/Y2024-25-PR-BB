@@ -1,4 +1,8 @@
 
+## TODO: the external library should not exist after module transition
+## Ideally, only add_subdirectory or fetch content calls will be here
+## and each module will link to their required libraries
+
 # ImGUI and ImPlot
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -61,6 +65,10 @@ add_subdirectory(tracy)
 
 add_subdirectory(entt)
 
+# GLM
+
+add_subdirectory(glm)
+
 # SDL
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
@@ -92,7 +100,6 @@ target_link_libraries(External
 target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE Vulkan-Headers/include
-        INTERFACE glm
         INTERFACE stb
         INTERFACE entt/src/entt
 )

@@ -1,6 +1,10 @@
 #pragma once
+
+namespace detail
+{
 #include <spdlog/spdlog.h>
+}
 
 // Currently this is just an alias for spdlog,
-// But we might need more complex logging later
-namespace bblog = spdlog;
+// But we might want more complex logging logic later
+namespace bblog = detail::spdlog;

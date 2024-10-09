@@ -1,5 +1,5 @@
 #include "performance_tracker.hpp"
-#include <tracy/Tracy.hpp>
+#include "profile_macros.hpp"
 
 PerformanceTracker::PerformanceTracker()
 {

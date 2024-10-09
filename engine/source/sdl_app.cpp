@@ -3,7 +3,7 @@
 #include "SDL3/SDL_vulkan.h"
 #include <spdlog/spdlog.h>
 #include "imgui/backends/imgui_impl_sdl3.h"
-#include <tracy/Tracy.hpp>
+#include "profile_macros.hpp"
 
 SDLApp::SDLApp(const CreateParameters& parameters)
     : Application(parameters)

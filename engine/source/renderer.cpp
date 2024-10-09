@@ -19,7 +19,7 @@
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
-#include <tracy/Tracy.hpp>
+#include "profile_macros.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
