@@ -221,11 +221,16 @@ void GPUScene::CreateSceneBuffers()
 {
     for (size_t i = 0; i < _sceneFrameData.size(); ++i)
     {
+        std::string name = "[] Scene UBO";
+
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
         util::CreateBuffer(_brain, sizeof(SceneData),
             vk::BufferUsageFlagBits::eUniformBuffer,
             _sceneFrameData[i].buffer, true, _sceneFrameData[i].bufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
-            "Scene buffer");
+            name);
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _sceneFrameData[i].bufferAllocation, &_sceneFrameData[i].bufferMapped),
             "Failed mapping memory for UBO!");
@@ -238,11 +243,16 @@ void GPUScene::CreateObjectInstancesBuffers()
 
     for (size_t i = 0; i < _objectInstancesFrameData.size(); ++i)
     {
+        std::string name = "[] Object instances data";
+
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eStorageBuffer,
             _objectInstancesFrameData[i].buffer, true, _objectInstancesFrameData[i].bufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
-            "Object instances buffer");
+            name);
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation, &_objectInstancesFrameData[i].bufferMapped),
             "Failed mapping memory for UBO!");
