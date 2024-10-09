@@ -4,6 +4,8 @@
 #include "batch_buffer.hpp"
 #include "swap_chain.hpp"
 
+#include <imgui_impl_vulkan.h>
+
 PhysicsRenderPipeline::PhysicsRenderPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
@@ -89,6 +91,8 @@ void PhysicsRenderPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
 
     // Draw the lines
     commandBuffer.draw(static_cast<uint32_t>(linePoints.size()), 1, 0, 0);
+
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     commandBuffer.endRenderingKHR(_brain.dldi);
 
     util::EndLabel(commandBuffer, _brain.dldi);
