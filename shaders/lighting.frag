@@ -3,6 +3,7 @@
 
 #include "bindless.glsl"
 #include "scene.glsl"
+#include "settings.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -23,11 +24,8 @@ layout (set = 2, binding = 0) uniform SceneUBO
 
 layout (set = 3, binding = 0) uniform BloomSettingsUBO
 {
-    float strength;
-    float gradientStrength;
-    float maxBrightnessExtraction;
-    vec3 colorWeights;
-} bloomSettings;
+    BloomSettings bloomSettings;
+};
 
 layout (location = 0) in vec2 texCoords;
 
