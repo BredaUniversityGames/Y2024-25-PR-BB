@@ -161,6 +161,7 @@ void Engine::Run()
             Quit();
 
         _ecs->UpdateSystems(deltaTimeMS);
+        _ecs->GetSystem<PhysicsSystem>().CleanUp();
         _ecs->RemovedDestroyed();
         _ecs->RenderSystems();
 

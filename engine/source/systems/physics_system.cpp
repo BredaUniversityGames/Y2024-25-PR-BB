@@ -11,11 +11,12 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 PhysicsSystem::~PhysicsSystem()
 {
 }
-void PhysicsSystem::CreatePhysicsEntity()
+entt::entity PhysicsSystem::CreatePhysicsEntity()
 {
     entt::entity entity = _ecs._registry.create();
     RigidbodyComponent rb(*_physicsModule.body_interface);
     _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+    return entity;
 }
 
 void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
@@ -27,6 +28,16 @@ void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
 void PhysicsSystem::AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody)
 {
 }
+void PhysicsSystem::CleanUp()
+{
+    const auto toDestroy = _ecs._registry.view<ECS::ToDestroy, RigidbodyComponent>();
+    for (const entt::entity entity : toDestroy)
+    {
+        RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
+        _physicsModule.body_interface->RemoveBody(rb.bodyID);
+    }
+}
+
 void PhysicsSystem::Update(ECS& ecs, float deltaTime)
 {
 }
@@ -40,7 +51,9 @@ void PhysicsSystem::Inspect()
     ImGui::Text("Physics Entities: %d", view.size());
     if (ImGui::Button("Create Physics Entity"))
     {
-        CreatePhysicsEntity();
+        entt::entity newEntity = CreatePhysicsEntity();
+        RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
+        _physicsModule.body_interface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
     }
 
     if (ImGui::Button("Create Plane Entity"))
@@ -49,6 +62,12 @@ void PhysicsSystem::Inspect()
 
         RigidbodyComponent newRigidBody(*_physicsModule.body_interface, plane_settings);
         CreatePhysicsEntity(newRigidBody);
+    }
+
+    if (ImGui::Button("Clear Physics Entities"))
+    {
+        _ecs._registry.view<RigidbodyComponent>().each([&](auto entity, auto&)
+            { _ecs.DestroyEntity(entity); });
     }
     ImGui::End();
 }

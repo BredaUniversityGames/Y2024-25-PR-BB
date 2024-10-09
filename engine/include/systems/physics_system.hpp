@@ -10,9 +10,10 @@ public:
     PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule);
     ~PhysicsSystem();
 
-    void CreatePhysicsEntity();
+    entt::entity CreatePhysicsEntity();
     void CreatePhysicsEntity(RigidbodyComponent& rb);
     void AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody);
+    void CleanUp();
 
     void Update([[maybe_unused]] ECS& ecs, [[maybe_unused]] float deltaTime) override;
     void Render([[maybe_unused]] const ECS& ecs) const override;

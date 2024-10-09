@@ -1,5 +1,6 @@
 #include "ECS.hpp"
 
+#include "components/RigidbodyComponent.hpp"
 #include "systems/system.hpp"
 
 ECS::ECS() = default;
