@@ -10,7 +10,7 @@ class RenderSceneDescription;
 class GeometryPipeline
 {
 public:
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene, const BatchBuffer& batchBuffer);
 
     ~GeometryPipeline();
 
@@ -21,7 +21,7 @@ public:
 
 private:
     void CreatePipeline(const GPUScene& gpuScene);
-    void CreateCullingPipeline();
+    void CreateCullingPipeline(const BatchBuffer& batchBuffer);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

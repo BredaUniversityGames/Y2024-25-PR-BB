@@ -93,10 +93,12 @@ void BatchBuffer::WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& 
 
 void BatchBuffer::InitializeDescriptorSets()
 {
-    vk::DescriptorSetLayoutBinding layoutBinding {};
-    layoutBinding.binding = 0;
-    layoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
-    layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    vk::DescriptorSetLayoutBinding layoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
 
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
     descriptorSetLayoutCreateInfo.bindingCount = 1;
@@ -112,13 +114,10 @@ void BatchBuffer::InitializeDescriptorSets()
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _drawBufferDescriptorSets.data()),
         "Failed allocating descriptor sets!");
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    for (size_t i = 0; i < _drawBufferDescriptorSets.size(); ++i)
     {
-        _drawBufferDescriptorSets[i] = descriptorSets[i];
         vk::DescriptorBufferInfo bufferInfo {};
         bufferInfo.buffer = _indirectDrawBuffers[i];
         bufferInfo.offset = 0;

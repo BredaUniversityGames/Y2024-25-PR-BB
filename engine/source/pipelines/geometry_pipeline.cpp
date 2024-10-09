@@ -8,13 +8,13 @@ VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene)
+GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene, const BatchBuffer& batchBuffer)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
 {
     CreatePipeline(gpuScene);
-    CreateCullingPipeline();
+    CreateCullingPipeline(batchBuffer);
 }
 
 GeometryPipeline::~GeometryPipeline()
@@ -54,6 +54,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     const uint32_t localSize = 16;
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { batchBuffer.DrawBufferDescriptorSet(currentFrame) }, {});
     commandBuffer.dispatch(_drawCommands.size() / localSize, 0, 0);
 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
@@ -97,16 +98,15 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
-    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
+    commandBuffer.setViewport(0, { _gBuffers.Viewport() });
+    commandBuffer.setScissor(0, { _gBuffers.Scissor() });
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _camera.descriptorSets[currentFrame] }, {});
 
-    vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
     vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    commandBuffer.bindVertexBuffers(0, { batchBuffer.VertexBuffer() }, offsets);
     commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
     commandBuffer.drawIndexedIndirect(batchBuffer.IndirectDrawBuffer(currentFrame), 0, _drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
     _brain.drawStats.drawCalls++;
@@ -250,9 +250,13 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     _brain.device.destroy(fragModule);
 }
 
-void GeometryPipeline::CreateCullingPipeline()
+void GeometryPipeline::CreateCullingPipeline(const BatchBuffer& batchBuffer)
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+    vk::DescriptorSetLayout layout { batchBuffer.DrawBufferLayout() };
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {
+        .setLayoutCount = 1,
+        .pSetLayouts = &layout,
+    };
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout), "Failed creating culling pipeline layout!");
 
