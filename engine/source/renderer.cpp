@@ -54,7 +54,6 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     GPUSceneCreation gpuSceneCreation
     {
         _brain,
-        *_scene,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
         _iblPipeline->BRDFLUTMap(),
@@ -68,7 +67,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     CreateCommandBuffers();
@@ -155,7 +154,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 {
     ZoneScoped;
 
-    _gpuScene->Update(_currentFrame);
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(*_scene, _currentFrame);
+
+    const RenderSceneDescription sceneDescription
+    {
+        *_gpuScene,
+        *_scene
+    };
 
     _brain.drawStats = {};
 
@@ -175,15 +181,15 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_gpuScene, *_batchBuffer);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_gpuScene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
-    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);

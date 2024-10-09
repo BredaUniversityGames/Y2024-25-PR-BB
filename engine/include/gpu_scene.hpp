@@ -1,15 +1,23 @@
 #pragma once
 
 struct SceneDescription;
+class GPUScene;
 
 struct GPUSceneCreation
 {
     const VulkanBrain& brain;
-    const SceneDescription& scene;
+
+    // TODO: When we switch to ECS, fetch this data from a component in the world
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;
     ResourceHandle<Image> brdfLUTMap;
     ResourceHandle<Image> directionalShadowMap;
+};
+
+struct RenderSceneDescription
+{
+    const GPUScene& gpuScene;
+    const SceneDescription& sceneDescription;
 };
 
 class GPUScene
@@ -18,14 +26,13 @@ public:
     GPUScene(const GPUSceneCreation& creation);
     ~GPUScene();
 
-    void Update(uint32_t frameIndex);
+    void Update(const SceneDescription& scene, uint32_t frameIndex);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData[frameIndex].descriptorSet; }
-    const vk::DescriptorSet& GetObjectInstanceDescriptorSet(uint32_t frameIndex) const { return _objectInstanceFrameData[frameIndex].descriptorSet; }
+    const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData[frameIndex].descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
-    const vk::DescriptorSetLayout& GetObjectInstanceDescriptorSetLayout() const { return _objectInstanceDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
 
-    const SceneDescription& scene;
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;
     ResourceHandle<Image> brdfLUTMap;
@@ -69,24 +76,24 @@ private:
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
-    vk::DescriptorSetLayout _objectInstanceDescriptorSetLayout;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstanceFrameData;
+    vk::DescriptorSetLayout _objectInstancesDescriptorSetLayout;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
 
-    void UpdateSceneData(uint32_t frameIndex);
-    void UpdateObjectInstanceData(uint32_t frameIndex);
+    void UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex);
+    void UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex);
 
     void InitializeSceneBuffers();
-    void InitializeObjectInstanceBuffers();
+    void InitializeObjectInstancesBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
-    void CreateObjectInstanceDescriptorSets();
+    void CreateObjectInstancesDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
-    void UpdateObjectInstanceDescriptorSet(uint32_t frameIndex);
+    void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
-    void CreateObjectInstanceBuffers();
+    void CreateObjectInstancesBuffers();
 };

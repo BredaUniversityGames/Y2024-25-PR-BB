@@ -4,14 +4,13 @@
 
 GPUScene::GPUScene(const GPUSceneCreation& creation) :
     _brain(creation.brain)
-    , scene(creation.scene)
     , irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , directionalShadowMap(creation.directionalShadowMap)
 {
     InitializeSceneBuffers();
-    InitializeObjectInstanceBuffers();
+    InitializeObjectInstancesBuffers();
 }
 
 GPUScene::~GPUScene()
@@ -21,21 +20,21 @@ GPUScene::~GPUScene()
         vmaUnmapMemory(_brain.vmaAllocator, _sceneFrameData[i].bufferAllocation);
         vmaDestroyBuffer(_brain.vmaAllocator, _sceneFrameData[i].buffer, _sceneFrameData[i].bufferAllocation);
 
-        vmaUnmapMemory(_brain.vmaAllocator, _objectInstanceFrameData[i].bufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _objectInstanceFrameData[i].buffer, _objectInstanceFrameData[i].bufferAllocation);
+        vmaUnmapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation);
+        vmaDestroyBuffer(_brain.vmaAllocator, _objectInstancesFrameData[i].buffer, _objectInstancesFrameData[i].bufferAllocation);
     }
 
     _brain.device.destroy(_sceneDescriptorSetLayout);
-    _brain.device.destroy(_objectInstanceDescriptorSetLayout);
+    _brain.device.destroy(_objectInstancesDescriptorSetLayout);
 }
 
-void GPUScene::Update(uint32_t frameIndex)
+void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
 {
-    UpdateSceneData(frameIndex);
-    UpdateObjectInstanceData(frameIndex);
+    UpdateSceneData(scene, frameIndex);
+    UpdateObjectInstancesData(scene, frameIndex);
 }
 
-void GPUScene::UpdateSceneData(uint32_t frameIndex)
+void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex)
 {
     SceneData sceneData{};
 
@@ -58,7 +57,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     memcpy(_sceneFrameData[frameIndex].bufferMapped, &sceneData, sizeof(SceneData));
 }
 
-void GPUScene::UpdateObjectInstanceData(uint32_t frameIndex)
+void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex)
 {
     std::array<InstanceData, MAX_MESHES> instances{};
     uint32_t count = 0;
@@ -81,19 +80,21 @@ void GPUScene::UpdateObjectInstanceData(uint32_t frameIndex)
         }
     }
 
-    memcpy(_objectInstanceFrameData[frameIndex].bufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
+    memcpy(_objectInstancesFrameData[frameIndex].bufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
 }
 
 void GPUScene::InitializeSceneBuffers()
 {
+    CreateSceneBuffers();
     CreateSceneDescriptorSetLayout();
     CreateSceneDescriptorSets();
 }
 
-void GPUScene::InitializeObjectInstanceBuffers()
+void GPUScene::InitializeObjectInstancesBuffers()
 {
+    CreateObjectInstancesBuffers();
     CreateObjectInstanceDescriptorSetLayout();
-    CreateObjectInstanceDescriptorSets();
+    CreateObjectInstancesDescriptorSets();
 }
 
 void GPUScene::CreateSceneDescriptorSetLayout()
@@ -130,7 +131,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
     createInfo.bindingCount = bindings.size();
     createInfo.pBindings = bindings.data();
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstanceDescriptorSetLayout),
+    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstancesDescriptorSetLayout),
         "Failed creating object instance descriptor set layout!");
 }
 
@@ -155,11 +156,11 @@ void GPUScene::CreateSceneDescriptorSets()
     }
 }
 
-void GPUScene::CreateObjectInstanceDescriptorSets()
+void GPUScene::CreateObjectInstancesDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _objectInstanceDescriptorSetLayout; });
+        { l = _objectInstancesDescriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _brain.descriptorPool;
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
@@ -171,8 +172,8 @@ void GPUScene::CreateObjectInstanceDescriptorSets()
         "Failed allocating object instance descriptor sets!");
     for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
-        _objectInstanceFrameData[i].descriptorSet = descriptorSets[i];
-        UpdateObjectInstanceDescriptorSet(i);
+        _objectInstancesFrameData[i].descriptorSet = descriptorSets[i];
+        UpdateObjectInstancesDescriptorSet(i);
     }
 }
 
@@ -196,17 +197,17 @@ void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
     _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
-void GPUScene::UpdateObjectInstanceDescriptorSet(uint32_t frameIndex)
+void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _objectInstanceFrameData[frameIndex].buffer;
+    bufferInfo.buffer = _objectInstancesFrameData[frameIndex].buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
     std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
 
     vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
-    bufferWrite.dstSet = _objectInstanceFrameData[frameIndex].descriptorSet;
+    bufferWrite.dstSet = _objectInstancesFrameData[frameIndex].descriptorSet;
     bufferWrite.dstBinding = 0;
     bufferWrite.dstArrayElement = 0;
     bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -224,26 +225,26 @@ void GPUScene::CreateSceneBuffers()
             vk::BufferUsageFlagBits::eUniformBuffer,
             _sceneFrameData[i].buffer, true, _sceneFrameData[i].bufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
+            "Scene buffer");
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _sceneFrameData[i].bufferAllocation, &_sceneFrameData[i].bufferMapped),
             "Failed mapping memory for UBO!");
     }
 }
 
-void GPUScene::CreateObjectInstanceBuffers()
+void GPUScene::CreateObjectInstancesBuffers()
 {
     vk::DeviceSize bufferSize = sizeof(InstanceData) * MAX_MESHES;
 
-    for (size_t i = 0; i < _objectInstanceFrameData.size(); ++i)
+    for (size_t i = 0; i < _objectInstancesFrameData.size(); ++i)
     {
         util::CreateBuffer(_brain, bufferSize,
             vk::BufferUsageFlagBits::eStorageBuffer,
-            _objectInstanceFrameData[i].buffer, true, _objectInstanceFrameData[i].bufferAllocation,
+            _objectInstancesFrameData[i].buffer, true, _objectInstancesFrameData[i].bufferAllocation,
             VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
+            "Object instances buffer");
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _objectInstanceFrameData[i].bufferAllocation, &_objectInstanceFrameData[i].bufferMapped),
+        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation, &_objectInstancesFrameData[i].bufferMapped),
             "Failed mapping memory for UBO!");
     }
 }

@@ -5,7 +5,7 @@
 #include "geometry_pipeline.hpp"
 
 class BatchBuffer;
-class GPUScene;
+class RenderSceneDescription;
 
 class ShadowPipeline
 {
@@ -13,7 +13,7 @@ public:
     ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene);
     ~ShadowPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const GPUScene& gpuScene, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const BatchBuffer& batchBuffer);
 
     NON_MOVABLE(ShadowPipeline);
     NON_COPYABLE(ShadowPipeline);

@@ -5,6 +5,7 @@
 
 class BatchBuffer;
 class GPUScene;
+class RenderSceneDescription;
 
 class GeometryPipeline
 {
@@ -13,7 +14,7 @@ public:
 
     ~GeometryPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const GPUScene& gpuScene, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const BatchBuffer& batchBuffer);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);

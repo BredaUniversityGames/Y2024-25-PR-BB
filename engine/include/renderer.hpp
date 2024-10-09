@@ -52,6 +52,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
     std::shared_ptr<SceneDescription> _scene;
+    std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
@@ -65,7 +66,6 @@ private:
 
     std::unique_ptr<BatchBuffer> _batchBuffer;
 
-    std::unique_ptr<GPUScene> _gpuScene;
     CameraStructure _cameraStructure;
 
     BloomSettings _bloomSettings;

@@ -19,7 +19,7 @@ ShadowPipeline::~ShadowPipeline()
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const SceneDescription& scene, const GPUScene& gpuScene, const BatchBuffer& batchBuffer)
+    const RenderSceneDescription& scene, const BatchBuffer& batchBuffer)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
@@ -45,7 +45,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.setViewport(0, 1, &viewport);
     commandBuffer.setScissor(0, 1, &scissor);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &gpuScene.GetObjectInstanceDescriptorSet(currentFrame), 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
     vk::Buffer vertexBuffers[] = { batchBuffer.VertexBuffer() };
 
@@ -64,7 +64,7 @@ void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 2> layouts = { gpuScene.GetObjectInstanceDescriptorSetLayout(), _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 2> layouts = { gpuScene.GetObjectInstancesDescriptorSetLayout(), _camera.descriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
