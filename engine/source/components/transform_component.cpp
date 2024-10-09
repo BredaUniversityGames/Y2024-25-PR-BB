@@ -1,8 +1,6 @@
 #include "components/transform_component.hpp"
 
 #include <entity/registry.hpp>
-#include <entity/helper.hpp>
-#include <gmock/internal/gmock-internal-utils.h>
 #include <glm/glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
