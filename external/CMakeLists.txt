@@ -55,7 +55,6 @@ add_subdirectory(fastgltf)
 
 # Cereal
 
-
 FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
@@ -67,7 +66,6 @@ set(SKIP_PERFORMANCE_COMPARISON ON)
 FetchContent_MakeAvailable(cereal)
 
 set(SKIP_PERFORMANCE_COMPARISON OFF)
-
 
 # Tracy Profiler
 
