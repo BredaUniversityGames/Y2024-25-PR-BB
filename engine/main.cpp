@@ -4,11 +4,11 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
-std::shared_ptr<Application> g_app;
-std::unique_ptr<OldEngine> g_engine;
-
 int main(int argc, char* argv[])
 {
+    std::shared_ptr<Application> g_app;
+    std::unique_ptr<OldEngine> g_engine;
+
     Application::CreateParameters parameters { "Vulkan", true };
 
     g_app = std::make_shared<SDLApp>(parameters);

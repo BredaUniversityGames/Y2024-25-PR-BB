@@ -74,7 +74,7 @@ add_subdirectory(glm)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL)
-target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
+# target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
 
 # Main External Library
 
@@ -90,10 +90,8 @@ target_link_libraries(External
         INTERFACE ImGui
         INTERFACE SDL3::SDL3-static
         INTERFACE magic_enum::magic_enum
-        INTERFACE spdlog::spdlog
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
-        INTERFACE TracyClient
         INTERFACE ${Vulkan_LIBRARY}
 )
 

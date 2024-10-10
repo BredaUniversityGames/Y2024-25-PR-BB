@@ -1,5 +1,4 @@
 add_library(Utility)
-message(STATUS "### - Utility Module")
 
 # Specifies all compilation flags (DO NOT REMOVE)
 target_link_libraries(Utility PRIVATE ProjectSettings)

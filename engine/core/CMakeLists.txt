@@ -1,6 +1,5 @@
 # Declare module library
 add_library(Core)
-message(STATUS "### - Core Module")
 
 # Specifies all compilation flags (DO NOT REMOVE)
 target_link_libraries(Core PRIVATE ProjectSettings)
