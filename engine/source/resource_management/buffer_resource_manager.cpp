@@ -23,7 +23,7 @@ ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creat
     if (creation.isMappable)
     {
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, bufferResource.allocation, &bufferResource.mappedPtr),
-        "Failed mapping memory for buffer!");
+        "Failed mapping memory for buffer: " + creation.name);
     }
 
     return ResourceManager::Create(bufferResource);
