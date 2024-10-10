@@ -23,12 +23,12 @@
 // TODO: Tracy inclusion should probably be under a build system option
 // #if defined(TRACY_PROFILE)
 
-// #include <cstddef>
+#include <cstddef>
 
-// void* operator new(size_t size);
-// void operator delete(void* ptr) noexcept;
-//
-// void* operator new[](size_t size);
-// void operator delete[](void* ptr) noexcept;
+void* operator new(size_t size);
+void operator delete(void* ptr) noexcept;
+
+void* operator new[](size_t size);
+void operator delete[](void* ptr) noexcept;
 
 // #endif
