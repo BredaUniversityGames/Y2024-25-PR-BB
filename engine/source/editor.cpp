@@ -9,13 +9,16 @@
 #include <fstream>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "ECS.hpp"
+#include <filesystem>
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
-Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
-    : _brain(brain)
+Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
+    : _ecs(ecs)
+    , _brain(brain)
     , _application(application)
     , _gBuffers(gBuffers)
 {
@@ -49,6 +52,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
     ImGui::NewFrame();
+
+    DrawMainMenuBar();
 
     performanceTracker.Render();
     bloomSettings.Render();
@@ -153,6 +158,21 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
+    }
+}
+void Editor::DrawMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Save Scene"))
+            {
+                _ecs.WriteToFile("assets/models/testscene.json");
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
     }
 }
 

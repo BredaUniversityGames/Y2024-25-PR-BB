@@ -55,10 +55,10 @@ void ECS::AddSystem(Args&&... args)
     spdlog::info("{}, created", typeid(*system).name());
 }
 
-class EntitySerialisation
+class EntitySerialisor
 {
 public:
-    EntitySerialisation(entt::registry& registry, entt::entity entity = entt::null)
+    EntitySerialisor(entt::registry& registry, entt::entity entity = entt::null)
         : _registry(registry)
         , _entity(entity)
     {
@@ -71,24 +71,19 @@ private:
     entt::registry& _registry;
     entt::entity _entity;
 };
-CEREAL_CLASS_VERSION(EntitySerialisation, 1);
-template <class Archive>
-void EntitySerialisation::save(Archive& archive, uint32_t const version) const
-{
 
-    auto trySaveComponent = [&]<typename T>()
+CEREAL_CLASS_VERSION(EntitySerialisor, 0);
+template <class Archive>
+void EntitySerialisor::save(Archive& archive, uint32_t const version) const
+{
+    static auto trySaveComponent = [&]<typename T>()
     {
         if (auto component = _registry.try_get<T>(_entity); component != nullptr)
             archive(cereal::make_nvp(typeid(T).name(), *component));
     };
+
     if (version == 1)
     {
         trySaveComponent.template operator()<int>();
-        trySaveComponent.template operator()<bool>();
-        trySaveComponent.template operator()<float>();
-        trySaveComponent.template operator()<float>();
-        trySaveComponent.template operator()<float>();
-        trySaveComponent.template operator()<float>();
-        trySaveComponent.template operator()<float>();
     }
 }
