@@ -39,13 +39,13 @@ add_subdirectory(magic_enum)
 add_subdirectory(spdlog)
 
 # Vulkan
-find_package(Vulkan)
 
-if (NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Could not find Vulkan library!")
-else ()
-    message(STATUS ${Vulkan_LIBRARY})
-endif ()
+#TODO: Check if you can remove Vulkan-Headers from repo
+find_package(Vulkan REQUIRED)
+
+add_library(VulkanAPI INTERFACE)
+target_link_libraries(VulkanAPI INTERFACE ${Vulkan_LIBRARY})
+target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
 
 # Vulkan Memory allocator
 
@@ -74,7 +74,6 @@ add_subdirectory(glm)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL)
-# target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
 
 # Main External Library
 
@@ -92,12 +91,11 @@ target_link_libraries(External
         INTERFACE magic_enum::magic_enum
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
-        INTERFACE ${Vulkan_LIBRARY}
+        INTERFACE VulkanAPI
 )
 
 target_include_directories(External
         INTERFACE external/SDL/include
-        INTERFACE Vulkan-Headers/include
         INTERFACE stb
         INTERFACE entt/src/entt
 )

@@ -2,7 +2,6 @@
 #include "common.hpp"
 #include "module_interface.hpp"
 
-#include <memory>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
@@ -46,6 +45,7 @@ protected:
 private:
     ModuleInterface* GetModuleUntyped(std::type_index type) const;
     void AddModuleToTickList(ModuleInterface* module, ModuleTickOrder priority);
+    void RegisterNewModule(std::type_index moduleType, ModuleInterface* module);
 
     // Raw pointers are used because deallocation order of modules is important
 
@@ -69,13 +69,10 @@ inline Module& Engine::GetModule()
     }
 
     auto type = std::type_index(typeid(Module));
-    auto [it, success] = _modules.emplace(type, new Module());
-    auto priority = it->second->Init(*this);
+    auto* newModule = new Module();
 
-    AddModuleToTickList(it->second, priority);
-    _initOrder.emplace_back(it->second);
-
-    return static_cast<Module&>(*it->second);
+    RegisterNewModule(type, newModule);
+    return *newModule;
 }
 template <typename Module>
 Module* Engine::GetModuleSafe()

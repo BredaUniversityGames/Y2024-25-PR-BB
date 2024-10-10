@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "common.hpp"
 
 class Engine;
 class MainEngine;
@@ -21,6 +22,7 @@ enum class ModuleTickOrder : uint32_t
 class ModuleInterface
 {
 public:
+    ModuleInterface() = default;
     virtual ~ModuleInterface() = default;
 
     NON_COPYABLE(ModuleInterface);

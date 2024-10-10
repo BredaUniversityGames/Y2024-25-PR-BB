@@ -49,3 +49,12 @@ void Engine::AddModuleToTickList(ModuleInterface* module, ModuleTickOrder priori
 
     _tickOrder.insert(insertIt, pair);
 }
+
+void Engine::RegisterNewModule(std::type_index moduleType, ModuleInterface* module)
+{
+    auto [it, success] = _modules.emplace(moduleType, module);
+    auto priority = it->second->Init(*this);
+
+    AddModuleToTickList(it->second, priority);
+    _initOrder.emplace_back(it->second);
+}
