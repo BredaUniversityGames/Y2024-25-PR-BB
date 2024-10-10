@@ -15,6 +15,7 @@ public:
     };
 
     void SpawnEmitter(EmitterPreset emitterPreset, uint32_t lifetime = 1);
+
 private:
     ECS& _ecs;
     std::vector<Emitter> _emitterPresets;

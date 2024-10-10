@@ -4,8 +4,8 @@
 #include "ECS.hpp"
 #include "particles/emitter_component.hpp"
 
-ParticleInterface::ParticleInterface(ECS& ecs) :
-    _ecs(ecs)
+ParticleInterface::ParticleInterface(ECS& ecs)
+    : _ecs(ecs)
 {
     // TODO: later, serialize emitter presets and load from file here
     // hardcoded test emitter preset for now
@@ -19,7 +19,7 @@ ParticleInterface::ParticleInterface(ECS& ecs) :
     _emitterPresets.emplace_back(emitter);
 
     // fill ECS with emitters
-    for(size_t i = 0; i < MAX_EMITTERS; i++)
+    for (size_t i = 0; i < MAX_EMITTERS; i++)
     {
         auto entity = _ecs._registry.create();
         EmitterComponent emitterComponent;
@@ -30,10 +30,10 @@ ParticleInterface::ParticleInterface(ECS& ecs) :
 void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t lifetime)
 {
     auto view = _ecs._registry.view<EmitterComponent>();
-    for(auto entity : view)
+    for (auto entity : view)
     {
         auto& emitterComponent = _ecs._registry.get<EmitterComponent>(entity);
-        if(emitterComponent.lifetime == 0)
+        if (emitterComponent.lifetime == 0)
         {
             emitterComponent.lifetime = lifetime;
             emitterComponent.emitter = _emitterPresets[static_cast<int>(emitterPreset)];

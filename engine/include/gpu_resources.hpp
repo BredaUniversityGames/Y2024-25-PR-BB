@@ -121,11 +121,11 @@ struct Material
 
 struct BufferCreation
 {
-    vk::DeviceSize size{};
-    vk::BufferUsageFlags usage{};
+    vk::DeviceSize size {};
+    vk::BufferUsageFlags usage {};
     bool isMappable = true;
     VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
-    std::string name{};
+    std::string name {};
 
     BufferCreation& SetSize(vk::DeviceSize size);
     BufferCreation& SetUsageFlags(vk::BufferUsageFlags usage);
@@ -136,8 +136,8 @@ struct BufferCreation
 
 struct Buffer
 {
-    vk::Buffer buffer{};
-    VmaAllocation allocation{};
+    vk::Buffer buffer {};
+    VmaAllocation allocation {};
     void* mappedPtr = nullptr;
 };
 

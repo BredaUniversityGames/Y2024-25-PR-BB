@@ -2,8 +2,8 @@
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
 
-GPUScene::GPUScene(const GPUSceneCreation& creation) :
-    _brain(creation.brain)
+GPUScene::GPUScene(const GPUSceneCreation& creation)
+    : _brain(creation.brain)
     , irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
@@ -33,7 +33,7 @@ void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
 
 void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex)
 {
-    SceneData sceneData{};
+    SceneData sceneData {};
 
     const DirectionalLight& light = scene.directionalLight;
 
@@ -57,7 +57,7 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
 
 void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex)
 {
-    std::array<InstanceData, MAX_MESHES> instances{};
+    std::array<InstanceData, MAX_MESHES> instances {};
     uint32_t count = 0;
 
     for (auto& gameObject : scene.gameObjects)
@@ -229,7 +229,7 @@ void GPUScene::CreateSceneBuffers()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(sizeof(SceneData))
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);
@@ -249,7 +249,7 @@ void GPUScene::CreateObjectInstancesBuffers()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(bufferSize)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
             .SetName(name);

@@ -4,7 +4,6 @@ struct CameraStructure;
 struct Emitter;
 class ECS;
 
-
 class ParticlePipeline
 {
 public:
@@ -27,14 +26,6 @@ private:
         eNone
     };
 
-    // struct Buffer
-    // {
-    //     vk::Buffer buffer;
-    //     VmaAllocation bufferAllocation;
-    //     void* bufferMapped;
-    //     vk::DescriptorSet descriptorSet;
-    // };
-
     struct PushConstantSize
     {
         float padding;
@@ -47,14 +38,15 @@ private:
     std::vector<std::string> _particlePaths;
 
     std::vector<vk::Pipeline> _pipelines;
+    vk::PipelineLayout _pipelineLayout;
+    // ssbos
     std::array<ResourceHandle<Buffer>, 5> _storageBuffers;
     std::array<vk::DescriptorSet, 5> _storageBufferDescriptorSets;
+    vk::DescriptorSetLayout _storageLayout;
+    // ubo
     ResourceHandle<Buffer> _emitterBuffer;
     vk::DescriptorSet _emitterBufferDescriptorSet;
-
-    vk::DescriptorSetLayout _storageLayout;
     vk::DescriptorSetLayout _uniformLayout;
-    vk::PipelineLayout _pipelineLayout;
 
     void UpdateEmitters(ECS& ecs);
 

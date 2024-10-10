@@ -54,8 +54,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
-    GPUSceneCreation gpuSceneCreation
-    {
+    GPUSceneCreation gpuSceneCreation {
         _brain,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
@@ -160,8 +159,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(*_scene, _currentFrame);
 
-    const RenderSceneDescription sceneDescription
-    {
+    const RenderSceneDescription sceneDescription {
         *_gpuScene,
         *_scene
     };
@@ -255,7 +253,7 @@ void Renderer::InitializeCameraUBODescriptors()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(bufferSize)
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)

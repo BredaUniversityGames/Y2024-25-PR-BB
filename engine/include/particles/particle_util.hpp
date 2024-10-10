@@ -35,7 +35,6 @@ struct alignas(16) ParticleCounters
     uint32_t culledCount;
 };
 
-
 enum class ParticleType
 {
     eNone = 0,
