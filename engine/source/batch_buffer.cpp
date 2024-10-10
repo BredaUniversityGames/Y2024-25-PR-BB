@@ -9,7 +9,7 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
     , _indexType(vk::IndexType::eUint32)
     , _topology(vk::PrimitiveTopology::eTriangleList)
 {
-    BufferCreation vertexBufferCreation{};
+    BufferCreation vertexBufferCreation {};
     vertexBufferCreation.SetSize(vertexBufferSize)
         .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
         .SetIsMappable(false)
@@ -18,7 +18,7 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
 
     _vertexBuffer = _brain.GetBufferResourceManager().Create(vertexBufferCreation);
 
-    BufferCreation indexBufferCreation{};
+    BufferCreation indexBufferCreation {};
     indexBufferCreation.SetSize(indexBufferSize)
         .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer)
         .SetIsMappable(false)
@@ -34,7 +34,7 @@ BatchBuffer::BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, ui
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES)
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)

@@ -161,7 +161,6 @@ void OldEngine::Run()
         _ecs->RemovedDestroyed();
         _ecs->RenderSystems();
 
-        
         JPH::BodyManager::DrawSettings drawSettings;
         _physicsModule->physics_system->DrawBodies(drawSettings, _physicsModule->debug_renderer);
 
