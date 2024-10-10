@@ -5,7 +5,7 @@
 #include "log.hpp"
 #include <map>
 
-VulkanBrain::VulkanBrain(const InitInfo& initInfo)
+VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
     : _imageResourceManager(*this)
     , _materialResourceManager(*this)
 {
@@ -148,7 +148,7 @@ void VulkanBrain::UpdateBindlessMaterials() const
     device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
 }
 
-void VulkanBrain::CreateInstance(const InitInfo& initInfo)
+void VulkanBrain::CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo)
 {
     CheckValidationLayerSupport();
     if (ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
@@ -285,7 +285,7 @@ bool VulkanBrain::CheckValidationLayerSupport()
     return result;
 }
 
-std::vector<const char*> VulkanBrain::GetRequiredExtensions(const InitInfo& initInfo)
+std::vector<const char*> VulkanBrain::GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo)
 {
     std::vector<const char*> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
     if (ENABLE_VALIDATION_LAYERS)

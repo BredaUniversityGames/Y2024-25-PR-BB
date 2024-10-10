@@ -1,7 +1,7 @@
 #include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
-#include "application.hpp"
+#include "application_module.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -14,11 +14,12 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
+
+#include <imgui_impl_sdl3.h>
 #undef GLM_ENABLE_EXPERIMENTAL
 
-Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
+Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
     : _brain(brain)
-    , _application(application)
     , _gBuffers(gBuffers)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
@@ -49,7 +50,8 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
 {
     ImGui_ImplVulkan_NewFrame();
-    _application.NewImGuiFrame();
+    ImGui_ImplSDL3_NewFrame();
+
     ImGui::NewFrame();
 
     performanceTracker.Render();
@@ -160,9 +162,4 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
 Editor::~Editor()
 {
-    ImGui_ImplVulkan_Shutdown();
-    _application.ShutdownImGui();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
 }

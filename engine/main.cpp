@@ -4,11 +4,11 @@
 // #include <filesystem>
 // #include <spdlog/spdlog.h>
 
-//#include "pch.hpp"
+#include "pch.hpp"
 #include "main_engine.hpp"
 #include "application_module.hpp"
-#include "vulkan/vulkan.hpp"
-//#include "old_engine.hpp"
+#include "old_engine.hpp"
+#include "renderer.hpp"
 
 // int main(int argc, char* argv[])
 // {
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     instance
         .AddModule<ApplicationModule>()
-    ;
+        .AddModule<OldEngine>();
 
     return instance.Run();
 }

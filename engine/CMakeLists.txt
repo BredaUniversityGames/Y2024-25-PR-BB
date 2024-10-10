@@ -17,22 +17,21 @@ function(target_add_module target directory module)
 endfunction()
 
 # TODO: Replace with engine modules
-#add_library(OldProject)
-#
-#file(GLOB_RECURSE sources CONFIGURE_DEPENDS "source/*.cpp")
-#file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.hpp")
-#
-#target_sources(OldProject PUBLIC ${headers} PRIVATE ${sources})
-#target_include_directories(OldProject PUBLIC "include" "../external")
-#target_link_libraries(OldProject PUBLIC External)
-#
-#option(ENABLE_PCH "Compile with precompiled header" ON)
-#if (ENABLE_PCH)
-#    target_precompile_headers(OldProject PRIVATE [["pch.hpp"]])
-#endif ()
-#
-#target_link_libraries(OldProject PRIVATE Application PRIVATE Utility PRIVATE Core PRIVATE External)
-#target_link_libraries(Engine INTERFACE OldProject)
+add_library(OldProject)
+
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS "source/*.cpp")
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.hpp")
+
+target_sources(OldProject PUBLIC ${headers} PRIVATE ${sources})
+target_include_directories(OldProject PUBLIC "include" "../external")
+
+option(ENABLE_PCH "Compile with precompiled header" ON)
+if (ENABLE_PCH)
+    target_precompile_headers(OldProject PRIVATE [["pch.hpp"]])
+endif ()
+
+target_link_libraries(OldProject PUBLIC Application PUBLIC External)
+target_link_libraries(Engine INTERFACE OldProject INTERFACE External)
 
 # ENGINE MODULES
 

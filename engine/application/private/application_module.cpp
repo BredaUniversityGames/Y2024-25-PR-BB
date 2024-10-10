@@ -78,6 +78,7 @@ void ApplicationModule::Tick(Engine& engine)
     while (SDL_PollEvent(&event))
     {
         _inputManager->UpdateEvent(event);
+        ImGui_ImplSDL3_ProcessEvent(&event);
 
         if (event.type == SDL_EventType::SDL_EVENT_QUIT)
         {

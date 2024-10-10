@@ -1,4 +1,6 @@
 #include "input_manager.hpp"
+#include "log.hpp"
+
 #include <SDL3/SDL.h>
 
 InputManager::InputManager()
@@ -26,14 +28,14 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     case SDL_EVENT_KEY_DOWN:
         if (event.key.repeat == 0)
         { // Only process on first keydown, not when holding
-            KeyCode key = static_cast<KeyCode>(event.key.scancode);
+            KeyCode key = static_cast<KeyCode>(event.key.key);
             keyPressed[key] = true;
             keyHeld[key] = true;
         }
         break;
     case SDL_EVENT_KEY_UP:
     {
-        KeyCode key = static_cast<KeyCode>(event.key.scancode);
+        KeyCode key = static_cast<KeyCode>(event.key.key);
         keyHeld[key] = false;
         keyReleased[key] = true;
         break;

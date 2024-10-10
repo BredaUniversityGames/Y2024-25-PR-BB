@@ -1,3 +1,6 @@
+#include "engine.hpp"
+#include "application_module.hpp"
+#include "input_manager.hpp"
 #include "old_engine.hpp"
 
 #include "ECS.hpp"
@@ -6,12 +9,13 @@
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
 #include "gbuffers.hpp"
-#include "application.hpp"
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
 
-OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)
+#include <imgui_impl_sdl3.h>
+
+ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -26,8 +30,11 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
 
     spdlog::info("Starting engine...");
 
-    _application = std::move(application);
-    _renderer = std::make_unique<Renderer>(initInfo, _application);
+    auto& application_module = engine.GetModule<ApplicationModule>();
+
+    _renderer = std::make_unique<Renderer>(application_module);
+
+    ImGui_ImplSDL3_InitForVulkan(application_module.GetWindowHandle());
 
     _ecs = std::make_unique<ECS>();
 
@@ -52,7 +59,7 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, *_application, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
+    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -62,100 +69,107 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
-    _application->GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    application_module.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _application->SetMouseHidden(true);
-
-    spdlog::info("Successfully initialized engine!");
+    bblog::info("Successfully initialized engine!");
+    return ModuleTickOrder::eTick;
 }
 
-void OldEngine::Run()
+void OldEngine::Tick(Engine& engine)
 {
-    while (!ShouldQuit())
+    // update input
+    auto& application_module = engine.GetModule<ApplicationModule>();
+    auto& input = application_module.GetInputManager();
+
+    ZoneNamed(zone, "");
+    auto currentFrameTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
+    _lastFrameTime = currentFrameTime;
+    float deltaTimeMS = deltaTime.count();
+
+    // Slow down application when minimized.
+    if (application_module.isMinimized())
     {
-        // update input
-        ZoneNamed(zone, "");
-        _application->ProcessWindowEvents();
-        auto currentFrameTime = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
-        _lastFrameTime = currentFrameTime;
-        float deltaTimeMS = deltaTime.count();
-
-        // Slow down application when minimized.
-        if (_application->IsMinimized())
-        {
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(16ms);
-            return;
-        }
-
-        int32_t mouseX, mouseY;
-        _application->GetInputManager().GetMousePosition(mouseX, mouseY);
-
-        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::H))
-            _application->SetMouseHidden(!_application->GetMouseHidden());
-
-        if (_application->GetMouseHidden())
-        {
-            ZoneNamedN(zone, "Update Camera", true);
-
-            glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
-
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float CAM_SPEED = 0.003f;
-
-            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-            // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
-
-            _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-            _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
-
-            glm::vec3 movement_dir {};
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
-                movement_dir -= FORWARD;
-
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::S))
-                movement_dir += FORWARD;
-
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::D))
-                movement_dir += RIGHT;
-
-            if (_application->GetInputManager().IsKeyHeld(InputManager::Key::A))
-                movement_dir -= RIGHT;
-
-            if (glm::length(movement_dir) != 0.0f)
-            {
-                movement_dir = glm::normalize(movement_dir);
-            }
-
-            _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
-        }
-        _lastMousePos = { mouseX, mouseY };
-
-        if (_application->GetInputManager().IsKeyPressed(InputManager::Key::Escape))
-            Quit();
-
-        _ecs->UpdateSystems(deltaTimeMS);
-        _ecs->RemovedDestroyed();
-        _ecs->RenderSystems();
-
-        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
-
-        _renderer->Render();
-
-        _performanceTracker.Update();
-
-        FrameMark;
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(16ms);
+        return;
     }
+
+    int32_t mouseX, mouseY;
+    input.GetMousePosition(mouseX, mouseY);
+
+    if (input.IsKeyPressed(KeyCode::eH))
+        application_module.SetMouseHidden(!application_module.GetMouseHidden());
+
+    if (application_module.GetMouseHidden())
+    {
+        ZoneNamedN(zone, "Update Camera", true);
+
+        glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+
+        constexpr float MOUSE_SENSITIVITY = 0.003f;
+        constexpr float CAM_SPEED = 0.003f;
+
+        constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
+        constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+        // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
+
+        _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+        _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+
+        glm::vec3 movement_dir {};
+        if (input.IsKeyHeld(KeyCode::eW))
+            movement_dir -= FORWARD;
+
+        if (input.IsKeyHeld(KeyCode::eS))
+            movement_dir += FORWARD;
+
+        if (input.IsKeyHeld(KeyCode::eD))
+            movement_dir += RIGHT;
+
+        if (input.IsKeyHeld(KeyCode::eA))
+            movement_dir -= RIGHT;
+
+        if (glm::length(movement_dir) != 0.0f)
+        {
+            movement_dir = glm::normalize(movement_dir);
+        }
+
+        _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+    }
+    _lastMousePos = { mouseX, mouseY };
+
+    if (input.IsKeyPressed(KeyCode::eESCAPE))
+        engine.SetExit(0);
+
+    _ecs->UpdateSystems(deltaTimeMS);
+    _ecs->RemovedDestroyed();
+    _ecs->RenderSystems();
+
+    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+
+    _renderer->Render();
+
+    _performanceTracker.Update();
+
+    FrameMark;
 }
 
-OldEngine::~OldEngine()
+void OldEngine::Shutdown(Engine& engine)
 {
     _renderer->_brain.device.waitIdle();
+
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+
+    ImPlot::DestroyContext();
+    ImGui::DestroyContext();
 
     _editor.reset();
     _renderer.reset();
     _ecs.reset();
 }
+
+OldEngine::OldEngine() = default;
+OldEngine::~OldEngine() = default;

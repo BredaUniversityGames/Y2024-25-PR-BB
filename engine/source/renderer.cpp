@@ -14,7 +14,7 @@
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "gbuffers.hpp"
-#include "application.hpp"
+#include "application_module.hpp"
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
@@ -22,15 +22,14 @@
 #include "log.hpp"
 #include "profile_macros.hpp"
 
-Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
-    : _brain(initInfo)
+Renderer::Renderer(ApplicationModule& application)
+    : _brain(application.GetVulkanInfo())
     , _application(application)
     , _bloomSettings(_brain)
 {
 
-    _application->InitImGui();
-
-    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { initInfo.width, initInfo.height });
+    auto vulkanInfo = application.GetVulkanInfo();
+    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
 
     CreateDescriptorSetLayout();
     InitializeCameraUBODescriptors();
@@ -397,8 +396,8 @@ void Renderer::Render()
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
-            _swapChain->Resize(_application->DisplaySize());
-            _gBuffers->Resize(_application->DisplaySize());
+            _swapChain->Resize(_application.DisplaySize());
+            _gBuffers->Resize(_application.DisplaySize());
 
             return;
         }
@@ -449,10 +448,10 @@ void Renderer::Render()
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
 
-    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application.DisplaySize())
     {
-        _swapChain->Resize(_application->DisplaySize());
-        _gBuffers->Resize(_application->DisplaySize());
+        _swapChain->Resize(_application.DisplaySize());
+        _gBuffers->Resize(_application.DisplaySize());
     }
     else
     {
