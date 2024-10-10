@@ -20,7 +20,7 @@ DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers,
     _linesData.push_back(glm::vec3 { 0.0f, 2.0f, 0.0f });
 
     CreateVertexBuffer();
-    CreatePipeline(gpuScene);
+    CreatePipeline();
 }
 
 DebugPipeline::~DebugPipeline()
@@ -34,7 +34,7 @@ DebugPipeline::~DebugPipeline()
     }
 }
 
-void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex, const RenderSceneDescription& scene)
+void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
 {
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -75,9 +75,6 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     // Bind descriptor sets
-    uint32_t dynamicOffset = static_cast<uint32_t>(sizeof(CameraUBO));
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
-        &scene.gpuScene.GetSceneDescriptorSet(currentFrame), 1, &dynamicOffset);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
         &_camera.descriptorSets[currentFrame], 0, nullptr);
 
@@ -99,7 +96,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void DebugPipeline::CreatePipeline(const GPUScene& gpuScene)
+void DebugPipeline::CreatePipeline()
 {
     // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};

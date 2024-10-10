@@ -202,7 +202,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
-    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex, sceneDescription);
+    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);

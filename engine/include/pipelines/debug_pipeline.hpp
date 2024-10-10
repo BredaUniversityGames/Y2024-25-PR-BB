@@ -16,12 +16,10 @@ public:
         VmaAllocation vertexBufferAllocation;
         void* vertexBufferMapped;
         vk::DescriptorSet descriptorSet;
-    };
+    }; // x
 
     DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
     ~DebugPipeline();
-
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
 
     void AddLines(const std::vector<glm::vec3>& linesData)
     {
@@ -29,13 +27,13 @@ public:
     }
     void ClearLinesData() { _linesData.clear(); }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
 
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);
 
 private:
-    void CreatePipeline(const GPUScene& gpuScene);
+    void CreatePipeline();
 
     void CreateVertexBuffer();
 
