@@ -11,6 +11,9 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();
+
+    InitializeIndirectDrawBuffer();
+    InitializeIndirectDrawDescriptor();
 }
 
 GPUScene::~GPUScene()
@@ -22,8 +25,12 @@ GPUScene::~GPUScene()
 
         vmaUnmapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation);
         vmaDestroyBuffer(_brain.vmaAllocator, _objectInstancesFrameData[i].buffer, _objectInstancesFrameData[i].bufferAllocation);
+
+        vmaUnmapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i]);
+        vmaDestroyBuffer(_brain.vmaAllocator, _indirectDrawBuffers[i], _indirectDrawBufferAllocations[i]);
     }
 
+    _brain.device.destroy(_drawBufferDescriptorSetLayout);
     _brain.device.destroy(_sceneDescriptorSetLayout);
     _brain.device.destroy(_objectInstancesDescriptorSetLayout);
 }
@@ -32,6 +39,7 @@ void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
 {
     UpdateSceneData(scene, frameIndex);
     UpdateObjectInstancesData(scene, frameIndex);
+    WriteDraws(frameIndex);
 }
 
 void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex)
@@ -62,6 +70,8 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
     std::array<InstanceData, MAX_MESHES> instances {};
     uint32_t count = 0;
 
+    _drawCommands.clear();
+
     for (auto& gameObject : scene.gameObjects)
     {
         for (auto& node : gameObject.model->hierarchy.allNodes)
@@ -75,6 +85,13 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
                 instances[count].model = gameObject.transform * node.transform;
                 instances[count].materialIndex = primitive.material.index;
                 instances[count].boundingRadius = primitive.boundingRadius;
+
+                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
+                    .indexCount = primitive.count,
+                    .instanceCount = 1,
+                    .firstIndex = primitive.indexOffset,
+                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                    .firstInstance = 0 });
 
                 count++;
             }
@@ -240,7 +257,7 @@ void GPUScene::CreateSceneBuffers()
 
 void GPUScene::CreateObjectInstancesBuffers()
 {
-    vk::DeviceSize bufferSize = sizeof(InstanceData) * MAX_MESHES;
+    vk::DeviceSize bufferSize = sizeof(InstanceData) * MAX_INSTANCES;
 
     for (size_t i = 0; i < _objectInstancesFrameData.size(); ++i)
     {
@@ -258,4 +275,78 @@ void GPUScene::CreateObjectInstancesBuffers()
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation, &_objectInstancesFrameData[i].bufferMapped),
             "Failed mapping memory for UBO!");
     }
+}
+
+void GPUScene::InitializeIndirectDrawBuffer()
+{
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        util::CreateBuffer(
+            _brain,
+            sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t),
+            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
+            _indirectDrawBuffers[i],
+            true,
+            _indirectDrawBufferAllocations[i],
+            VMA_MEMORY_USAGE_AUTO,
+            "Indirect draw buffer");
+
+        vmaMapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i], &_indirectDrawBufferPtr[i]);
+    }
+}
+
+void GPUScene::InitializeIndirectDrawDescriptor()
+{
+    vk::DescriptorSetLayoutBinding layoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
+
+    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
+    descriptorSetLayoutCreateInfo.bindingCount = 1;
+    descriptorSetLayoutCreateInfo.pBindings = &layoutBinding;
+
+    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _drawBufferDescriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
+    allocateInfo.descriptorPool = _brain.descriptorPool;
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocateInfo.pSetLayouts = layouts.data();
+
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _drawBufferDescriptorSets.data()),
+        "Failed allocating descriptor sets!");
+    for (size_t i = 0; i < _drawBufferDescriptorSets.size(); ++i)
+    {
+        vk::DescriptorBufferInfo bufferInfo {};
+        bufferInfo.buffer = _indirectDrawBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = vk::WholeSize;
+
+        vk::WriteDescriptorSet bufferWrite {};
+        bufferWrite.dstSet = _drawBufferDescriptorSets[i];
+        bufferWrite.dstBinding = 0;
+        bufferWrite.dstArrayElement = 0;
+        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrite.descriptorCount = 1;
+        bufferWrite.pBufferInfo = &bufferInfo;
+
+        _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+    }
+}
+
+void GPUScene::WriteDraws(uint32_t frameIndex)
+{
+    assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
+
+    std::memcpy(_indirectDrawBufferPtr[frameIndex], _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+
+    // Write draw count in the final 4 bytes of the indirect draw buffer.
+    uint32_t drawCount = _drawCommands.size();
+    std::byte* ptr = static_cast<std::byte*>(_indirectDrawBufferPtr[frameIndex]);
+    std::memcpy(ptr + IndirectCountOffset(), &drawCount, sizeof(uint32_t));
 }

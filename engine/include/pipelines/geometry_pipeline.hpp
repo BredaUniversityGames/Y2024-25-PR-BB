@@ -10,18 +10,18 @@ class RenderSceneDescription;
 class GeometryPipeline
 {
 public:
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene, const BatchBuffer& batchBuffer);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene);
 
     ~GeometryPipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
 private:
     void CreatePipeline(const GPUScene& gpuScene);
-    void CreateCullingPipeline(const BatchBuffer& batchBuffer, const GPUScene& gpuScene);
+    void CreateCullingPipeline(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
@@ -32,6 +32,4 @@ private:
 
     vk::PipelineLayout _cullingPipelineLayout;
     vk::Pipeline _cullingPipeline;
-
-    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 };

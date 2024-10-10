@@ -5,7 +5,7 @@
 #include "mesh.hpp"
 
 class BloomSettings;
-class BatchBuffer;
+class RenderSceneDescription;
 
 class SkydomePipeline
 {
@@ -15,7 +15,7 @@ public:
 
     ~SkydomePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);

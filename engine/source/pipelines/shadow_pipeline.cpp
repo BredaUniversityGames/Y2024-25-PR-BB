@@ -18,7 +18,7 @@ ShadowPipeline::~ShadowPipeline()
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const RenderSceneDescription& scene, const BatchBuffer& batchBuffer)
+    const RenderSceneDescription& scene)
 {
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
@@ -47,12 +47,12 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &scene.gpuScene.GetSceneDescriptorSet(currentFrame), 0, nullptr);
 
-    commandBuffer.bindVertexBuffers(0, { batchBuffer.VertexBuffer() }, { 0 });
-    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
-    vk::Buffer drawBuffer = batchBuffer.IndirectDrawBuffer(currentFrame);
-    vk::Buffer indirectCountBuffer = batchBuffer.IndirectCountBuffer(currentFrame);
-    uint32_t indirectCountOffset = batchBuffer.IndirectCountOffset();
-    commandBuffer.drawIndexedIndirectCountKHR(drawBuffer, 0, indirectCountBuffer, indirectCountOffset, batchBuffer.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
+    commandBuffer.bindVertexBuffers(0, { scene.batchBuffer.VertexBuffer() }, { 0 });
+    commandBuffer.bindIndexBuffer(scene.batchBuffer.IndexBuffer(), 0, scene.batchBuffer.IndexType());
+    vk::Buffer drawBuffer = scene.gpuScene.IndirectDrawBuffer(currentFrame);
+    vk::Buffer indirectCountBuffer = scene.gpuScene.IndirectCountBuffer(currentFrame);
+    uint32_t indirectCountOffset = scene.gpuScene.IndirectCountOffset();
+    commandBuffer.drawIndexedIndirectCountKHR(drawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);

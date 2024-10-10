@@ -3,6 +3,7 @@
 #include "vulkan_helper.hpp"
 #include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
@@ -28,7 +29,7 @@ SkydomePipeline::~SkydomePipeline()
     _brain.device.destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer)
+void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
@@ -75,10 +76,8 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
 
-    vk::DeviceSize offsets[] = { 0 };
-    vk::Buffer vertexBuffer[] = { batchBuffer.VertexBuffer() };
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
+    commandBuffer.bindVertexBuffers(0, { scene.batchBuffer.VertexBuffer() }, { 0 });
+    commandBuffer.bindIndexBuffer(scene.batchBuffer.IndexBuffer(), 0, scene.batchBuffer.IndexType());
 
     auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
     auto primitive = sphere->primitives[0];
