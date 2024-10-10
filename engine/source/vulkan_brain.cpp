@@ -473,6 +473,7 @@ void VulkanBrain::CreateBindlessMaterialBuffer()
     BufferCreation creation{};
     creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_CPU_ONLY)
         .SetName("Bindless material uniform buffer");
 
     _bindlessMaterialBuffer = _bufferResourceManager.Create(creation);

@@ -62,6 +62,7 @@ void BloomSettings::CreateUniformBuffers()
         BufferCreation creation{};
         creation.SetSize(sizeof(FrameData))
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_CPU_ONLY)
             .SetName(name);
 
         _frameData.buffers[i] = _brain.GetBufferResourceManager().Create(creation);

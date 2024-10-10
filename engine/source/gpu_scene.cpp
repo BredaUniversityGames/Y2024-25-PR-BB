@@ -232,6 +232,7 @@ void GPUScene::CreateSceneBuffers()
         BufferCreation creation{};
         creation.SetSize(sizeof(SceneData))
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_CPU_ONLY)
             .SetName(name);
 
         _sceneFrameData[i].buffer = _brain.GetBufferResourceManager().Create(creation);
@@ -252,6 +253,7 @@ void GPUScene::CreateObjectInstancesBuffers()
         BufferCreation creation{};
         creation.SetSize(bufferSize)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_CPU_ONLY)
             .SetName(name);
 
         _objectInstancesFrameData[i].buffer = _brain.GetBufferResourceManager().Create(creation);

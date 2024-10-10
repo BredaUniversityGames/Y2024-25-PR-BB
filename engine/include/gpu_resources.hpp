@@ -124,7 +124,7 @@ struct BufferCreation
     vk::DeviceSize size{};
     vk::BufferUsageFlags usage{};
     bool isMappable = true;
-    VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
+    VmaMemoryUsage memoryUsage{};
     std::string name{};
 
     BufferCreation& SetSize(vk::DeviceSize size);
