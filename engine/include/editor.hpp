@@ -18,7 +18,7 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs, PhysicsModule& physicsModule);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs);
 
 private:
     const VulkanBrain& _brain;

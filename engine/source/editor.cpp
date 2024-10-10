@@ -45,7 +45,7 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs, PhysicsModule& physicsModule)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     _application.NewImGuiFrame();
@@ -53,9 +53,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     performanceTracker.Render();
     bloomSettings.Render();
-
-    JPH::BodyManager::DrawSettings drawSettings;
-    physicsModule.physics_system->DrawBodies(drawSettings, physicsModule.debug_renderer); // to move i think?
 
     // Render systems inspect
     for (const auto& system : ecs._systems)

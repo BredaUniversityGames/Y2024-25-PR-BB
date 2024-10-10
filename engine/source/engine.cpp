@@ -166,8 +166,10 @@ void Engine::Run()
         _ecs->RenderSystems();
 
         _renderer->UpdateCamera(_scene->camera);
+        JPH::BodyManager::DrawSettings drawSettings;
+        _physicsModule->physics_system->DrawBodies(drawSettings, _physicsModule->debug_renderer);
 
-        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs, *_physicsModule);
+        _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
         _renderer->Render();
         _performanceTracker.Update();
