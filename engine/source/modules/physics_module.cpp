@@ -1,6 +1,5 @@
 ﻿#include "modules/physics_module.hpp"
 
-#include "../../../build/WSL-Debug/_deps/joltphysics-src/Jolt/Renderer/DebugRendererSimple.h"
 PhysicsModule::PhysicsModule()
 {
     // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).

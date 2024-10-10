@@ -4,8 +4,7 @@
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
 #include "Jolt/Jolt.h"
-// Jolt includes
-#include "../../../build/WSL-Debug/_deps/joltphysics-src/Jolt/Renderer/DebugRendererSimple.h"
+#include "Jolt/Renderer/DebugRendererSimple.h"
 
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
