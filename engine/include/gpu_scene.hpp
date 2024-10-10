@@ -66,9 +66,7 @@ private:
 
     struct FrameData
     {
-        vk::Buffer buffer;
-        VmaAllocation bufferAllocation;
-        void* bufferMapped;
+        ResourceHandle<Buffer> buffer;
         vk::DescriptorSet descriptorSet;
     };
 

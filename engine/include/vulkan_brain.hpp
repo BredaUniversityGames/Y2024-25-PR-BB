@@ -101,9 +101,7 @@ private:
     mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
     mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;
 
-    vk::Buffer _bindlessMaterialBuffer;
-    VmaAllocation _bindlessMaterialBufferAllocation;
-    void* _bindlessMaterialBufferMappedPtr;
+    ResourceHandle<Buffer> _bindlessMaterialBuffer;
     mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
     mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 
