@@ -27,13 +27,13 @@ private:
         eNone
     };
 
-    struct Buffer
-    {
-        vk::Buffer buffer;
-        VmaAllocation bufferAllocation;
-        void* bufferMapped;
-        vk::DescriptorSet descriptorSet;
-    };
+    // struct Buffer
+    // {
+    //     vk::Buffer buffer;
+    //     VmaAllocation bufferAllocation;
+    //     void* bufferMapped;
+    //     vk::DescriptorSet descriptorSet;
+    // };
 
     struct PushConstantSize
     {
@@ -47,8 +47,10 @@ private:
     std::vector<std::string> _particlePaths;
 
     std::vector<vk::Pipeline> _pipelines;
-    std::array<Buffer, 5> _storageBuffers;
-    Buffer _emitterBuffer;
+    std::array<ResourceHandle<Buffer>, 5> _storageBuffers;
+    std::array<vk::DescriptorSet, 5> _storageBufferDescriptorSets;
+    ResourceHandle<Buffer> _emitterBuffer;
+    vk::DescriptorSet _emitterBufferDescriptorSet;
 
     vk::DescriptorSetLayout _storageLayout;
     vk::DescriptorSetLayout _uniformLayout;
