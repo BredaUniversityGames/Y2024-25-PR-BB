@@ -52,8 +52,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
-    GPUSceneCreation gpuSceneCreation
-    {
+    GPUSceneCreation gpuSceneCreation {
         _brain,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
@@ -68,8 +67,8 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
-     _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline, *_swapChain);
-   
+    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, _cameraStructure, *_swapChain, *_gpuScene);
+
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
@@ -159,8 +158,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(*_scene, _currentFrame);
 
-    const RenderSceneDescription sceneDescription
-    {
+    const RenderSceneDescription sceneDescription {
         *_gpuScene,
         *_scene
     };
@@ -204,7 +202,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
-    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex, sceneDescription);
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
@@ -253,7 +251,7 @@ void Renderer::InitializeCameraUBODescriptors()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(bufferSize)
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)

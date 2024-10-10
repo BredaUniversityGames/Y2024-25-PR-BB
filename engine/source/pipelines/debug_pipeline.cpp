@@ -2,16 +2,16 @@
 
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 #include "swap_chain.hpp"
 
 #include <imgui_impl_vulkan.h>
 
-DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
-    , _descriptorSetLayout(geometryPipeline.DescriptorSetLayout())
-    , _geometryFrameData(geometryPipeline.GetFrameData())
+    , _descriptorSetLayout(gpuScene.GetSceneDescriptorSetLayout())
     , _swapChain(swapChain)
 
 {
@@ -20,7 +20,7 @@ DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers,
     _linesData.push_back(glm::vec3 { 0.0f, 2.0f, 0.0f });
 
     CreateVertexBuffer();
-    CreatePipeline();
+    CreatePipeline(gpuScene);
 }
 
 DebugPipeline::~DebugPipeline()
@@ -34,7 +34,7 @@ DebugPipeline::~DebugPipeline()
     }
 }
 
-void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
+void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex, const RenderSceneDescription& scene)
 {
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -42,7 +42,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
-    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
@@ -75,9 +75,9 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     // Bind descriptor sets
-    uint32_t dynamicOffset = static_cast<uint32_t>(sizeof(UBO));
+    uint32_t dynamicOffset = static_cast<uint32_t>(sizeof(CameraUBO));
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1,
-        &_geometryFrameData[currentFrame].descriptorSet, 1, &dynamicOffset);
+        &scene.gpuScene.GetSceneDescriptorSet(currentFrame), 1, &dynamicOffset);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
         &_camera.descriptorSets[currentFrame], 0, nullptr);
 
@@ -99,7 +99,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void DebugPipeline::CreatePipeline()
+void DebugPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     // Pipeline layout with two descriptor sets: object data and light camera data
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};

@@ -18,7 +18,7 @@ public:
         vk::DescriptorSet descriptorSet;
     };
 
-    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, GeometryPipeline& geometryPipeline, const SwapChain& swapChain);
+    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
     ~DebugPipeline();
 
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
@@ -29,13 +29,13 @@ public:
     }
     void ClearLinesData() { _linesData.clear(); }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex, const RenderSceneDescription& scene);
 
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);
 
 private:
-    void CreatePipeline();
+    void CreatePipeline(const GPUScene& gpuScene);
 
     void CreateVertexBuffer();
 
@@ -48,9 +48,8 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
-    vk::DescriptorSetLayout& _descriptorSetLayout;
+    const vk::DescriptorSetLayout& _descriptorSetLayout;
 
     std::vector<glm::vec3> _linesData;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
-    std::array<GeometryPipeline::FrameData, MAX_FRAMES_IN_FLIGHT>& _geometryFrameData;
 };
