@@ -15,8 +15,7 @@ public:
         vk::Buffer vertexBuffer;
         VmaAllocation vertexBufferAllocation;
         void* vertexBufferMapped;
-        vk::DescriptorSet descriptorSet;
-    }; // x
+    };
 
     DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
     ~DebugPipeline();

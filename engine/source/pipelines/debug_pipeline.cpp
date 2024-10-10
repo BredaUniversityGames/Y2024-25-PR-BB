@@ -15,10 +15,7 @@ DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers,
     , _swapChain(swapChain)
 
 {
-
-    _linesData.push_back(glm::vec3 { 0.0f, 0.0f, 0.0f });
-    _linesData.push_back(glm::vec3 { 0.0f, 2.0f, 0.0f });
-
+    _linesData.reserve(2048); // pre allocate some memory
     CreateVertexBuffer();
     CreatePipeline();
 }
@@ -197,7 +194,7 @@ void DebugPipeline::CreatePipeline()
 }
 void DebugPipeline::CreateVertexBuffer()
 {
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * _linesData.size() * 1024 * 2048;
+    vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // big enough we probably won't need to resize
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {

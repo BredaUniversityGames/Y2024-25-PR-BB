@@ -48,12 +48,18 @@ void PhysicsSystem::Inspect()
 {
     ImGui::Begin("Physics System");
     const auto view = _ecs._registry.view<RigidbodyComponent>();
+    static int amount = 1;
     ImGui::Text("Physics Entities: %d", view.size());
-    if (ImGui::Button("Create Physics Entity"))
+
+    ImGui::DragInt("Amout", &amount, 1, 1, 100);
+    if (ImGui::Button("Create Physics Entities"))
     {
-        entt::entity newEntity = CreatePhysicsEntity();
-        RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
-        _physicsModule.body_interface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
+        for (int i = 0; i < amount; i++)
+        {
+            entt::entity newEntity = CreatePhysicsEntity();
+            RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
+            _physicsModule.body_interface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
+        }
     }
 
     if (ImGui::Button("Create Plane Entity"))
