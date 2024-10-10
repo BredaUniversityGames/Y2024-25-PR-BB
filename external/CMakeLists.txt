@@ -54,8 +54,8 @@ add_subdirectory(fastgltf)
 
 # Tracy Profiler
 
-set(TRACY_ENABLE "" ON)
-set(TRACY_ON_DEMAND "" ON)
+set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
+set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
 add_subdirectory(tracy)
 
 # EnTT
@@ -91,7 +91,6 @@ set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL)
 target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
-# Disabling warnings from SDL3 compilation
 
 # Main External Library
 
@@ -122,3 +121,4 @@ target_include_directories(External
         INTERFACE stb
         INTERFACE entt/src/entt
 )
+

@@ -1,11 +1,7 @@
-#include "engine.hpp"
-
-#define STB_IMAGE_IMPLEMENTATION
+#include "old_engine.hpp"
 
 #include "ECS.hpp"
-
-#include <stb_image.h>
-
+#include <stb/stb_image.h>
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
 #include "model_loader.hpp"
@@ -17,7 +13,7 @@
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 
-Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
+OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -41,7 +37,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _renderer->_scene = _scene;
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/DamagedHelmet.glb",
+        "assets/models/DamagedHelmet.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
@@ -53,7 +49,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-        _scene->gameObjects.emplace_back(transform, _scene->models[0]);
+        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
 
     _renderer->UpdateBindless();
@@ -82,7 +78,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     spdlog::info("Successfully initialized engine!");
 }
 
-void Engine::Run()
+void OldEngine::Run()
 {
     while (!ShouldQuit())
     {
@@ -165,7 +161,7 @@ void Engine::Run()
         _ecs->RemovedDestroyed();
         _ecs->RenderSystems();
 
-        _renderer->UpdateCamera(_scene->camera);
+        
         JPH::BodyManager::DrawSettings drawSettings;
         _physicsModule->physics_system->DrawBodies(drawSettings, _physicsModule->debug_renderer);
 
@@ -179,7 +175,7 @@ void Engine::Run()
     }
 }
 
-Engine::~Engine()
+OldEngine::~OldEngine()
 {
     _renderer->_brain.device.waitIdle();
 

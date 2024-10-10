@@ -3,7 +3,9 @@
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
-#include "image_resource_manager.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -19,7 +21,7 @@ struct QueueFamilyIndices
 };
 
 constexpr bool ENABLE_VALIDATION_LAYERS =
-#if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
+#if not defined(NDEBUG)
     true;
 #else
     false;
@@ -31,7 +33,9 @@ enum class BindlessBinding
     eColor = 0,
     eDepth,
     eCubemap,
-    eShadowmap
+    eShadowmap,
+    eMaterial,
+    eNone,
 };
 
 class VulkanBrain
@@ -60,9 +64,24 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
+    BufferResourceManager& GetBufferResourceManager() const
+    {
+        return _bufferResourceManager;
+    }
+
     ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
+    }
+
+    MaterialResourceManager& GetMaterialResourceManager() const
+    {
+        return _materialResourceManager;
+    }
+
+    ResourceManager<Mesh>& GetMeshResourceManager() const
+    {
+        return _meshResourceManager;
     }
 
     struct DrawStats
@@ -81,7 +100,11 @@ private:
     ResourceHandle<Image> _fallbackImage;
 
     mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
-    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessWrites;
+    mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;
+
+    ResourceHandle<Buffer> _bindlessMaterialBuffer;
+    mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
+    mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 
     const std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
@@ -98,9 +121,16 @@ private:
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+        VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
     };
 
-    mutable class ImageResourceManager _imageResourceManager;
+    mutable BufferResourceManager _bufferResourceManager;
+    mutable ImageResourceManager _imageResourceManager;
+    mutable MaterialResourceManager _materialResourceManager;
+    mutable ResourceManager<Mesh> _meshResourceManager;
+
+    void UpdateBindlessImages() const;
+    void UpdateBindlessMaterials() const;
 
     void CreateInstance(const InitInfo& initInfo);
 
@@ -123,4 +153,6 @@ private:
     void CreateDescriptorPool();
 
     void CreateBindlessDescriptorSet();
+
+    void CreateBindlessMaterialBuffer();
 };

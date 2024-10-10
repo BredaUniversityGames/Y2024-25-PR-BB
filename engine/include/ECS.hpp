@@ -2,6 +2,8 @@
 
 #include "entity/registry.hpp"
 #include "systems/system.hpp"
+#include <spdlog/spdlog.h>
+
 class System;
 
 class ECS

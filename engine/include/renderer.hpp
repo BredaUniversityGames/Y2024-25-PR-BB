@@ -21,6 +21,7 @@ class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class GPUScene;
 
 class Renderer
 {
@@ -34,14 +35,13 @@ public:
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
-    friend Engine;
+    friend class OldEngine;
 
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
     std::shared_ptr<Application> _application;
 
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
@@ -54,6 +54,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
     std::shared_ptr<SceneDescription> _scene;
+    std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;

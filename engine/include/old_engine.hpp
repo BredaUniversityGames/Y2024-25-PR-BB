@@ -9,13 +9,13 @@ class Application;
 class Renderer;
 class Editor;
 class PhysicsModule;
-class Engine
+class OldEngine
 {
 public:
-    Engine(const InitInfo& initInfo, std::shared_ptr<Application> application);
-    ~Engine();
-    NON_COPYABLE(Engine);
-    NON_MOVABLE(Engine);
+    OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application);
+    ~OldEngine();
+    NON_COPYABLE(OldEngine);
+    NON_MOVABLE(OldEngine);
 
     void Run();
     bool ShouldQuit() const { return _shouldQuit; };

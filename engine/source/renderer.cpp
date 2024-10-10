@@ -16,9 +16,10 @@
 #include "pipelines/debug_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application.hpp"
-#include "engine.hpp"
+#include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
 Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
     : _brain(initInfo)
@@ -36,28 +37,41 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_brain, _materialDescriptorSetLayout);
+    _modelLoader = std::make_unique<ModelLoader>(_brain);
 
     _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _brain };
-    MeshPrimitiveHandle uvSphere = _modelLoader->LoadPrimitive(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer);
+    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _materialDescriptorSetLayout, _cameraStructure);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
-    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline);
-    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, _cameraStructure, _iblPipeline->IrradianceMap(),
-        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
+
+    GPUSceneCreation gpuSceneCreation
+    {
+        _brain,
+        _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(),
+        _iblPipeline->BRDFLUTMap(),
+        _gBuffers->Shadow()
+    };
+
+    _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
+
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
+     _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, _cameraStructure, *_geometryPipeline, *_swapChain);
+   
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
+        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -114,20 +128,17 @@ Renderer::~Renderer()
         }
         for (auto& material : model->materials)
         {
-            vmaDestroyBuffer(_brain.vmaAllocator, material->materialUniformBuffer, material->materialUniformAllocation);
+            _brain.GetMaterialResourceManager().Destroy(material);
         }
     }
 
     _brain.device.destroy(_cameraStructure.descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vmaUnmapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i]);
-        vmaDestroyBuffer(_brain.vmaAllocator, _cameraStructure.buffers[i], _cameraStructure.allocations[i]);
+        _brain.GetBufferResourceManager().Destroy(_cameraStructure.buffers[i]);
     }
 
     _swapChain.reset();
-
-    _brain.device.destroy(_materialDescriptorSetLayout);
 }
 
 void Renderer::CreateCommandBuffers()
@@ -144,6 +155,15 @@ void Renderer::CreateCommandBuffers()
 void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
 {
     ZoneScoped;
+
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(*_scene, _currentFrame);
+
+    const RenderSceneDescription sceneDescription
+    {
+        *_gpuScene,
+        *_scene
+    };
 
     _brain.drawStats = {};
 
@@ -163,15 +183,15 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, *_scene, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
-    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame);
+    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -208,13 +228,6 @@ void Renderer::CreateSyncObjects()
 
 void Renderer::CreateDescriptorSetLayout()
 {
-    auto materialLayoutBindings = MaterialHandle::GetLayoutBindings();
-    vk::DescriptorSetLayoutCreateInfo materialCreateInfo {};
-    materialCreateInfo.bindingCount = materialLayoutBindings.size();
-    materialCreateInfo.pBindings = materialLayoutBindings.data();
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&materialCreateInfo, nullptr, &_materialDescriptorSetLayout),
-        "Failed creating material descriptor set layout!");
-
     vk::DescriptorSetLayoutBinding cameraUBODescriptorSetBinding {};
     cameraUBODescriptorSetBinding.binding = 0;
     cameraUBODescriptorSetBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -235,13 +248,18 @@ void Renderer::InitializeCameraUBODescriptors()
     // Create buffers.
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::CreateBuffer(_brain, bufferSize,
-            vk::BufferUsageFlagBits::eUniformBuffer,
-            _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
+        std::string name = "[] Camera UBO";
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
+        BufferCreation creation{};
+        creation.SetSize(bufferSize)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetName(name);
+
+        _cameraStructure.buffers[i] = _brain.GetBufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
@@ -263,8 +281,10 @@ void Renderer::InitializeCameraUBODescriptors()
 
 void Renderer::UpdateCameraDescriptorSet(uint32_t currentFrame)
 {
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[currentFrame]);
+
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _cameraStructure.buffers[currentFrame];
+    bufferInfo.buffer = buffer->buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(CameraUBO);
 
@@ -297,14 +317,12 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.VP = ubo.proj * ubo.view;
     ubo.cameraPosition = camera.position;
 
-    const DirectionalLight& light = _scene->directionalLight;
+    ubo.skydomeMVP = ubo.view;
+    ubo.skydomeMVP[3][0] = 0.0f;
+    ubo.skydomeMVP[3][1] = 0.0f;
+    ubo.skydomeMVP[3][2] = 0.0f;
+    ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
 
-    const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.orthoSize, light.orthoSize, -light.orthoSize, light.orthoSize, light.nearPlane, light.farPlane);
-    depthProjectionMatrix[1][1] *= -1;
-    ubo.lightVP = depthProjectionMatrix * lightView;
-    ubo.depthBiasMVP = light.biasMatrix * ubo.lightVP;
-    ubo.lightData = glm::vec4(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.shadowBias); // save light direction here
     return ubo;
 }
 
@@ -354,7 +372,8 @@ void Renderer::LoadEnvironmentMap()
 void Renderer::UpdateCamera(const Camera& camera)
 {
     CameraUBO cameraUBO = CalculateCamera(camera);
-    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[_currentFrame]);
+    std::memcpy(buffer->mappedPtr, &cameraUBO, sizeof(CameraUBO));
 }
 void Renderer::UpdateBindless()
 {
@@ -364,13 +383,15 @@ void Renderer::Render()
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
 
-    _bloomSettings.Update(_currentFrame);
-
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
+
+    _bloomSettings.Update(_currentFrame);
+
+    UpdateCamera(_scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};

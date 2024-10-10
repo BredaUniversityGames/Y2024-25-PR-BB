@@ -14,24 +14,9 @@ public:
 
     void Resize(glm::uvec2 size);
 
-    ResourceHandle<Image> AlbedoM() const
+    const auto& Attachments() const
     {
-        return _albedoM;
-    }
-
-    ResourceHandle<Image> NormalR() const
-    {
-        return _normalR;
-    }
-
-    ResourceHandle<Image> EmissiveAO() const
-    {
-        return _emissiveAO;
-    }
-
-    ResourceHandle<Image> Position() const
-    {
-        return _position;
+        return _attachments;
     }
 
     ResourceHandle<Image> Depth() const
@@ -64,21 +49,13 @@ public:
         return _viewport;
     }
 
-    static vk::Format GBufferFormat()
-    {
-        return vk::Format::eR16G16B16A16Sfloat;
-    }
-
     void TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 private:
     const VulkanBrain& _brain;
     glm::uvec2 _size;
 
-    ResourceHandle<Image> _albedoM;
-    ResourceHandle<Image> _normalR;
-    ResourceHandle<Image> _emissiveAO;
-    ResourceHandle<Image> _position;
+    std::array<ResourceHandle<Image>, DEFERRED_ATTACHMENT_COUNT> _attachments;
 
     ResourceHandle<Image> _depthImage;
 
@@ -90,11 +67,6 @@ private:
 
     vk::Viewport _viewport;
     vk::Rect2D _scissor;
-
-    static constexpr std::array<std::string_view, DEFERRED_ATTACHMENT_COUNT> _names = {
-        "[VIEW] GBuffer RGB: Albedo A: Metallic", "[VIEW] GBuffer RGB: Normal A: Roughness",
-        "[VIEW] GBuffer RGB: Emissive A: AO", "[VIEW] GBuffer RGB: Position A: Unused"
-    };
 
     void CreateGBuffers();
 

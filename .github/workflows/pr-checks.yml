@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
-      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCOMPILE_SHADERS=OFF
       PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
       PRESET_SUFFIX: ${{ matrix.configuration }}
 
@@ -54,5 +54,5 @@ jobs:
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
 
       - name: Test Project
-        run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/Engine -T
+        run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/UnitTests
           
