@@ -332,7 +332,7 @@ CameraUBO Renderer::CalculateCamera(const Camera& camera)
     ubo.zNear = camera.nearPlane;
     ubo.zFar = camera.farPlane;
 
-    ubo.distCull = true;
+    ubo.distanceCullingEnabled = true;
     ubo.cullingEnabled = true;
 
     return ubo;
