@@ -1,5 +1,4 @@
 #pragma once
-#include "pch.hpp"
 #include "entity/registry.hpp"
 #include "systems/system.hpp"
 #include <spdlog/spdlog.h>
