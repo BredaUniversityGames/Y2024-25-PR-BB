@@ -5,7 +5,8 @@
 #include <map>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
-    : _imageResourceManager(*this)
+    : _bufferResourceManager(*this)
+    , _imageResourceManager(*this)
     , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);

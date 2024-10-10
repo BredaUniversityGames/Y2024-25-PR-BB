@@ -119,6 +119,28 @@ struct Material
     ResourceHandle<Image> emissiveMap;
 };
 
+struct BufferCreation
+{
+    vk::DeviceSize size{};
+    vk::BufferUsageFlags usage{};
+    bool isMappable = true;
+    VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
+    std::string name{};
+
+    BufferCreation& SetSize(vk::DeviceSize size);
+    BufferCreation& SetUsageFlags(vk::BufferUsageFlags usage);
+    BufferCreation& SetIsMappable(bool isMappable);
+    BufferCreation& SetMemoryUsage(VmaMemoryUsage memoryUsage);
+    BufferCreation& SetName(std::string_view name);
+};
+
+struct Buffer
+{
+    vk::Buffer buffer{};
+    VmaAllocation allocation{};
+    void* mappedPtr = nullptr;
+};
+
 struct Mesh
 {
     struct Primitive
