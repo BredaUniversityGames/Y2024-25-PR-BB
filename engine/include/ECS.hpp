@@ -55,10 +55,10 @@ void ECS::AddSystem(Args&&... args)
     spdlog::info("{}, created", typeid(*system).name());
 }
 
-class EntitySerialisor
+class EntitySerializor
 {
 public:
-    EntitySerialisor(entt::registry& registry, entt::entity entity = entt::null)
+    EntitySerializor(entt::registry& registry, entt::entity entity = entt::null)
         : _registry(registry)
         , _entity(entity)
     {
@@ -72,11 +72,11 @@ private:
     entt::entity _entity;
 };
 
-CEREAL_CLASS_VERSION(EntitySerialisor, 0);
+CEREAL_CLASS_VERSION(EntitySerializor, 0);
 template <class Archive>
-void EntitySerialisor::save(Archive& archive, uint32_t const version) const
+void EntitySerializor::save(Archive& archive, uint32_t const version) const
 {
-    static auto trySaveComponent = [&]<typename T>()
+    x static auto trySaveComponent = [&]<typename T>()
     {
         if (auto component = _registry.try_get<T>(_entity); component != nullptr)
             archive(cereal::make_nvp(typeid(T).name(), *component));

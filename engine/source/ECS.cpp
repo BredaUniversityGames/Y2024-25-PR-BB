@@ -45,7 +45,7 @@ void ECS::WriteToFile(const std::filesystem::path& filePath)
     auto entityView = _registry.view<entt::entity>();
     for (auto entity : entityView)
     {
-        archive(EntitySerialisor(_registry, entity));
+        archive(EntitySerializor(_registry, entity));
     }
 }
 
