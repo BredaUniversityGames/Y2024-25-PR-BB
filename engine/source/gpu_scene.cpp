@@ -20,14 +20,9 @@ GPUScene::~GPUScene()
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vmaUnmapMemory(_brain.vmaAllocator, _sceneFrameData[i].bufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _sceneFrameData[i].buffer, _sceneFrameData[i].bufferAllocation);
-
-        vmaUnmapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _objectInstancesFrameData[i].buffer, _objectInstancesFrameData[i].bufferAllocation);
-
-        vmaUnmapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i]);
-        vmaDestroyBuffer(_brain.vmaAllocator, _indirectDrawBuffers[i], _indirectDrawBufferAllocations[i]);
+        _brain.GetBufferResourceManager().Destroy(_sceneFrameData[i].buffer);
+        _brain.GetBufferResourceManager().Destroy(_objectInstancesFrameData[i].buffer);
+        _brain.GetBufferResourceManager().Destroy(_indirectDrawFrameData[i].buffer);
     }
 
     _brain.device.destroy(_drawBufferDescriptorSetLayout);
@@ -62,7 +57,8 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
     sceneData.brdfLUTIndex = brdfLUTMap.index;
     sceneData.shadowMapIndex = directionalShadowMap.index;
 
-    memcpy(_sceneFrameData[frameIndex].bufferMapped, &sceneData, sizeof(SceneData));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
+    memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
 }
 
 void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex)
@@ -98,7 +94,8 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
         }
     }
 
-    memcpy(_objectInstancesFrameData[frameIndex].bufferMapped, instances.data(), instances.size() * sizeof(InstanceData));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
+    memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
 }
 
 void GPUScene::InitializeSceneBuffers()
@@ -197,8 +194,10 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
 
 void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
 {
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
+
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _sceneFrameData[frameIndex].buffer;
+    bufferInfo.buffer = buffer->buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
@@ -217,8 +216,10 @@ void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
 
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
+
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _objectInstancesFrameData[frameIndex].buffer;
+    bufferInfo.buffer = buffer->buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
@@ -244,14 +245,12 @@ void GPUScene::CreateSceneBuffers()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        util::CreateBuffer(_brain, sizeof(SceneData),
-            vk::BufferUsageFlagBits::eUniformBuffer,
-            _sceneFrameData[i].buffer, true, _sceneFrameData[i].bufferAllocation,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            name);
+        BufferCreation creation {};
+        creation.SetSize(sizeof(SceneData))
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetName(name);
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _sceneFrameData[i].bufferAllocation, &_sceneFrameData[i].bufferMapped),
-            "Failed mapping memory for UBO!");
+        _sceneFrameData[i].buffer = _brain.GetBufferResourceManager().Create(creation);
     }
 }
 
@@ -266,14 +265,12 @@ void GPUScene::CreateObjectInstancesBuffers()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        util::CreateBuffer(_brain, bufferSize,
-            vk::BufferUsageFlagBits::eStorageBuffer,
-            _objectInstancesFrameData[i].buffer, true, _objectInstancesFrameData[i].bufferAllocation,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            name);
+        BufferCreation creation {};
+        creation.SetSize(bufferSize)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+            .SetName(name);
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _objectInstancesFrameData[i].bufferAllocation, &_objectInstancesFrameData[i].bufferMapped),
-            "Failed mapping memory for UBO!");
+        _objectInstancesFrameData[i].buffer = _brain.GetBufferResourceManager().Create(creation);
     }
 }
 
@@ -281,17 +278,14 @@ void GPUScene::InitializeIndirectDrawBuffer()
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::CreateBuffer(
-            _brain,
-            sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t),
-            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
-            _indirectDrawBuffers[i],
-            true,
-            _indirectDrawBufferAllocations[i],
-            VMA_MEMORY_USAGE_AUTO,
-            "Indirect draw buffer");
+        BufferCreation creation {};
+        creation.SetSize(sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t))
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetIsMappable(true)
+            .SetName("Indirect draw buffer");
 
-        vmaMapMemory(_brain.vmaAllocator, _indirectDrawBufferAllocations[i], &_indirectDrawBufferPtr[i]);
+        _indirectDrawFrameData[i].buffer = _brain.GetBufferResourceManager().Create(creation);
     }
 }
 
@@ -318,17 +312,23 @@ void GPUScene::InitializeIndirectDrawDescriptor()
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _drawBufferDescriptorSets.data()),
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
         "Failed allocating descriptor sets!");
-    for (size_t i = 0; i < _drawBufferDescriptorSets.size(); ++i)
+
+    for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
+        _indirectDrawFrameData[i].descriptorSet = descriptorSets[i];
+
+        const Buffer* buffer = _brain.GetBufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
+
         vk::DescriptorBufferInfo bufferInfo {};
-        bufferInfo.buffer = _indirectDrawBuffers[i];
+        bufferInfo.buffer = buffer->buffer;
         bufferInfo.offset = 0;
         bufferInfo.range = vk::WholeSize;
 
         vk::WriteDescriptorSet bufferWrite {};
-        bufferWrite.dstSet = _drawBufferDescriptorSets[i];
+        bufferWrite.dstSet = _indirectDrawFrameData[i].descriptorSet;
         bufferWrite.dstBinding = 0;
         bufferWrite.dstArrayElement = 0;
         bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -343,10 +343,12 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
 {
     assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
 
-    std::memcpy(_indirectDrawBufferPtr[frameIndex], _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
+
+    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 
     // Write draw count in the final 4 bytes of the indirect draw buffer.
     uint32_t drawCount = _drawCommands.size();
-    std::byte* ptr = static_cast<std::byte*>(_indirectDrawBufferPtr[frameIndex]);
+    std::byte* ptr = static_cast<std::byte*>(buffer->mappedPtr);
     std::memcpy(ptr + IndirectCountOffset(), &drawCount, sizeof(uint32_t));
 }

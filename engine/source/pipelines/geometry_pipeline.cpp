@@ -34,12 +34,14 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { _camera.descriptorSets[currentFrame] }, {});
     commandBuffer.dispatch((scene.gpuScene.DrawCount() + localSize - 1) / localSize, 1, 1);
 
+    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectDrawBuffer(currentFrame))->buffer;
+
     vk::BufferMemoryBarrier bufferMemoryBarrier {
         .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
         .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = scene.gpuScene.IndirectDrawBuffer(currentFrame),
+        .buffer = indirectDrawBuffer,
         .offset = 0,
         .size = vk::WholeSize,
     };
@@ -94,12 +96,14 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _camera.descriptorSets[currentFrame] }, {});
 
-    commandBuffer.bindVertexBuffers(0, { scene.batchBuffer.VertexBuffer() }, { 0 });
-    commandBuffer.bindIndexBuffer(scene.batchBuffer.IndexBuffer(), 0, scene.batchBuffer.IndexType());
-    vk::Buffer drawBuffer = scene.gpuScene.IndirectDrawBuffer(currentFrame);
-    vk::Buffer indirectCountBuffer = scene.gpuScene.IndirectCountBuffer(currentFrame);
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectCountBuffer(currentFrame))->buffer;
     uint32_t indirectCountOffset = scene.gpuScene.IndirectCountOffset();
-    commandBuffer.drawIndexedIndirectCountKHR(drawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
+
+    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
+    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);

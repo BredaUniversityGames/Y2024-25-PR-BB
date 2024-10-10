@@ -5,7 +5,8 @@
 #include <map>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
-    : _imageResourceManager(*this)
+    : _bufferResourceManager(*this)
+    , _imageResourceManager(*this)
     , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);
@@ -60,8 +61,7 @@ VulkanBrain::~VulkanBrain()
     device.destroy(bindlessLayout);
     device.destroy(bindlessPool);
 
-    vmaUnmapMemory(vmaAllocator, _bindlessMaterialBufferAllocation);
-    vmaDestroyBuffer(vmaAllocator, _bindlessMaterialBuffer, _bindlessMaterialBufferAllocation);
+    _bufferResourceManager.Destroy(_bindlessMaterialBuffer);
 
     _sampler.reset();
 
@@ -131,9 +131,10 @@ void VulkanBrain::UpdateBindlessMaterials() const
         materialGPUData[i] = material->gpuInfo;
     }
 
-    std::memcpy(_bindlessMaterialBufferMappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
+    const Buffer* buffer = _bufferResourceManager.Access(_bindlessMaterialBuffer);
+    std::memcpy(buffer->mappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
 
-    _bindlessMaterialInfo.buffer = _bindlessMaterialBuffer;
+    _bindlessMaterialInfo.buffer = buffer->buffer;
     _bindlessMaterialInfo.offset = 0;
     _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager.Resources().size();
 
@@ -469,13 +470,12 @@ void VulkanBrain::CreateBindlessDescriptorSet()
 
 void VulkanBrain::CreateBindlessMaterialBuffer()
 {
-    util::CreateBuffer(*this, MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo),
-        vk::BufferUsageFlagBits::eStorageBuffer,
-        _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        "Bindless material uniform buffer");
+    BufferCreation creation {};
+    creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetName("Bindless material uniform buffer");
 
-    util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &_bindlessMaterialBufferMappedPtr), "Failed mapping memory for UBO!");
+    _bindlessMaterialBuffer = _bufferResourceManager.Create(creation);
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)

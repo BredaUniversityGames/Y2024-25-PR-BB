@@ -31,7 +31,5 @@ struct CameraStructure
 {
     vk::DescriptorSetLayout descriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> buffers;
-    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> allocations;
-    std::array<void*, MAX_FRAMES_IN_FLIGHT> mappedPtrs;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
 };

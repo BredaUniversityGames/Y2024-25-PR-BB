@@ -37,11 +37,11 @@ public:
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
 
-    vk::Buffer IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
+    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
-    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _drawBufferDescriptorSets[frameIndex]; }
+    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
 
-    vk::Buffer IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
+    ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
@@ -80,9 +80,7 @@ private:
 
     struct FrameData
     {
-        vk::Buffer buffer;
-        VmaAllocation bufferAllocation;
-        void* bufferMapped;
+        ResourceHandle<Buffer> buffer;
         vk::DescriptorSet descriptorSet;
     };
 
@@ -92,12 +90,8 @@ private:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
     vk::DescriptorSetLayout _objectInstancesDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
-
-    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> _indirectDrawBuffers;
     vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _drawBufferDescriptorSets;
-    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> _indirectDrawBufferAllocations;
-    std::array<void*, MAX_FRAMES_IN_FLIGHT> _indirectDrawBufferPtr;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
