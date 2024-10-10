@@ -3,6 +3,7 @@
 #include "vulkan/vulkan.hpp"
 #include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 
@@ -63,6 +64,11 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
+    BufferResourceManager& GetBufferResourceManager() const
+    {
+        return _bufferResourceManager;
+    }
+
     ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
@@ -95,9 +101,7 @@ private:
     mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
     mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;
 
-    vk::Buffer _bindlessMaterialBuffer;
-    VmaAllocation _bindlessMaterialBufferAllocation;
-    void* _bindlessMaterialBufferMappedPtr;
+    ResourceHandle<Buffer> _bindlessMaterialBuffer;
     mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
     mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 
@@ -119,6 +123,7 @@ private:
         VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
     };
 
+    mutable BufferResourceManager _bufferResourceManager;
     mutable ImageResourceManager _imageResourceManager;
     mutable MaterialResourceManager _materialResourceManager;
     mutable ResourceManager<Mesh> _meshResourceManager;
