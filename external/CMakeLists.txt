@@ -1,5 +1,7 @@
 include(FetchContent)
 
+include(FetchContent)
+
 # ImGUI and ImPlot
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -52,6 +54,25 @@ add_subdirectory(VulkanMemoryAllocator)
 
 add_subdirectory(fastgltf)
 
+# Cereal
+
+FetchContent_Declare(
+        cereal
+        GIT_REPOSITORY https://github.com/USCiLab/cereal.git
+        GIT_TAG v1.3.2
+        GIT_SHALLOW TRUE)
+
+set(SKIP_PERFORMANCE_COMPARISON ON)
+set(BUILD_SANDBOX OFF )
+set(BUILD_TESTS OFF )
+set(BUILD_DOC OFF )
+
+FetchContent_MakeAvailable(cereal)
+
+set(SKIP_PERFORMANCE_COMPARISON OFF)
+set(BUILD_DOC "Build documentation" ON)
+set(BUILD_SANDBOX "Build sandbox examples" ON)
+set(BUILD_TESTS ON)
 # Tracy Profiler
 
 set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
@@ -120,5 +141,6 @@ target_include_directories(External
         INTERFACE glm
         INTERFACE stb
         INTERFACE entt/src/entt
+        INTERFACE ${cereal_SOURCE_DIR}/include
 )
 
