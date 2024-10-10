@@ -10,11 +10,10 @@ BloomSettings::BloomSettings(const VulkanBrain& brain)
 
 BloomSettings::~BloomSettings()
 {
-    _brain.device.destroy(_frameData.descriptorSetLayout);
+    _brain.device.destroy(_descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vmaUnmapMemory(_brain.vmaAllocator, _frameData.allocations[i]);
-        vmaDestroyBuffer(_brain.vmaAllocator, _frameData.buffers[i], _frameData.allocations[i]);
+        _brain.GetBufferResourceManager().Destroy(_frameData.buffers[i]);
     }
 }
 
@@ -32,7 +31,8 @@ void BloomSettings::Render()
 
 void BloomSettings::Update(uint32_t currentFrame)
 {
-    memcpy(_frameData.mappedPtrs[currentFrame], &_data, sizeof(SettingsData));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    memcpy(buffer->mappedPtr, &_data, sizeof(SettingsData));
 }
 
 void BloomSettings::CreateDescriptorSetLayout()
@@ -46,7 +46,7 @@ void BloomSettings::CreateDescriptorSetLayout()
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
     descriptorSetLayoutCreateInfo.bindingCount = 1;
     descriptorSetLayoutCreateInfo.pBindings = &descriptorSetBinding;
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_frameData.descriptorSetLayout),
+    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_descriptorSetLayout),
         "Failed creating bloom settings UBO descriptor set layout!");
 }
 
@@ -54,18 +54,22 @@ void BloomSettings::CreateUniformBuffers()
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::CreateBuffer(_brain, sizeof(FrameData),
-            vk::BufferUsageFlagBits::eUniformBuffer,
-            _frameData.buffers[i], true, _frameData.allocations[i],
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            "Bloom settings uniform buffer");
+        std::string name = "[] Bloom settings UBO";
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData.allocations[i], &_frameData.mappedPtrs[i]), "Failed mapping memory for UBO!");
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
+        BufferCreation creation{};
+        creation.SetSize(sizeof(FrameData))
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetName(name);
+
+        _frameData.buffers[i] = _brain.GetBufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _frameData.descriptorSetLayout; });
+        { l = _descriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _brain.descriptorPool;
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
@@ -82,8 +86,10 @@ void BloomSettings::CreateUniformBuffers()
 
 void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
 {
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _frameData.buffers[currentFrame];
+    bufferInfo.buffer = buffer->buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(SettingsData);
 
