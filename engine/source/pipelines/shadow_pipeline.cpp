@@ -8,6 +8,7 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _shadowCamera(_brain)
+    , _culler(_brain, gpuScene)
 {
     CreatePipeline(gpuScene);
 }
@@ -22,6 +23,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     const RenderSceneDescription& scene)
 {
     _shadowCamera.Update(currentFrame, scene.sceneDescription.directionalLight.camera);
+
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera);
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;

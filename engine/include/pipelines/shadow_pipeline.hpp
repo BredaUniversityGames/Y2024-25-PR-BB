@@ -3,6 +3,7 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
+#include "indirect_culler.hpp"
 
 class BatchBuffer;
 class RenderSceneDescription;
@@ -25,6 +26,7 @@ private:
     const GBuffers& _gBuffers;
 
     CameraResource _shadowCamera;
+    IndirectCuller _culler;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

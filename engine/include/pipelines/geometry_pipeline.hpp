@@ -2,6 +2,7 @@
 
 #include "gbuffers.hpp"
 #include "mesh.hpp"
+#include "indirect_culler.hpp"
 
 class BatchBuffer;
 class GPUScene;
@@ -25,6 +26,8 @@ private:
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const CameraResource& _camera;
+
+    IndirectCuller _culler;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

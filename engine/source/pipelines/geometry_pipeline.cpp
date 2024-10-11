@@ -12,6 +12,7 @@ GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBu
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
+    , _culler(_brain, gpuScene)
 {
     CreatePipeline(gpuScene);
 }
@@ -24,6 +25,8 @@ GeometryPipeline::~GeometryPipeline()
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    //_culler.RecordCommands(commandBuffer, currentFrame, scene, _camera);
+
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
