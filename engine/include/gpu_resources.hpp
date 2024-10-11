@@ -155,3 +155,20 @@ struct Mesh
 
     std::vector<Primitive> primitives;
 };
+
+struct alignas(16) GPUCamera
+{
+    glm::mat4 VP;
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::mat4 skydomeMVP; // TODO: remove this
+
+    glm::vec3 cameraPosition;
+    bool distanceCullingEnabled;
+    float frustum[4];
+    float zNear;
+    float zFar;
+    bool cullingEnabled;
+
+    glm::vec3 _padding {};
+};

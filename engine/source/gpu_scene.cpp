@@ -43,14 +43,20 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
 
     const DirectionalLight& light = scene.directionalLight;
 
-    const glm::mat4 lightView = glm::lookAt(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.targetPos, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.orthoSize, light.orthoSize, -light.orthoSize, light.orthoSize, light.nearPlane, light.farPlane);
+    // Calculate light direction from Euler rotation
+    glm::vec3 direction = glm::vec3(
+        cos(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x),
+        sin(light.camera.eulerRotation.x),
+        sin(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x));
+
+    const glm::mat4 lightView = glm::lookAt(light.camera.position, light.camera.position - direction, glm::vec3(0, 1, 0));
+    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
     depthProjectionMatrix[1][1] *= -1;
 
     DirectionalLightData& directionalLightData = sceneData.directionalLight;
     directionalLightData.lightVP = depthProjectionMatrix * lightView;
-    directionalLightData.depthBiasMVP = light.biasMatrix * directionalLightData.lightVP;
-    directionalLightData.direction = glm::vec4(light.targetPos - normalize(light.lightDir) * light.sceneDistance, light.shadowBias);
+    directionalLightData.depthBiasMVP = DirectionalLight::biasMatrix * directionalLightData.lightVP;
+    directionalLightData.direction = glm::vec4(direction, light.shadowBias);
 
     sceneData.irradianceIndex = irradianceMap.index;
     sceneData.prefilterIndex = prefilterMap.index;
@@ -133,18 +139,17 @@ void GPUScene::CreateSceneDescriptorSetLayout()
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-    vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
-    descriptorSetLayoutBinding.binding = 0;
-    descriptorSetLayoutBinding.descriptorCount = 1;
-    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-    descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+    vk::DescriptorSetLayoutBinding descriptorSetLayoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
+        .pImmutableSamplers = nullptr,
+    };
 
     vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
+    createInfo.bindingCount = 1;
+    createInfo.pBindings = &descriptorSetLayoutBinding;
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstancesDescriptorSetLayout),
         "Failed creating object instance descriptor set layout!");
@@ -298,9 +303,10 @@ void GPUScene::InitializeIndirectDrawDescriptor()
         .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
-    descriptorSetLayoutCreateInfo.bindingCount = 1;
-    descriptorSetLayoutCreateInfo.pBindings = &layoutBinding;
+    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
+        .bindingCount = 1,
+        .pBindings = &layoutBinding,
+    };
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
 

@@ -24,6 +24,8 @@ private:
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
 
+    CameraResource _shadowCamera;
+
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 };

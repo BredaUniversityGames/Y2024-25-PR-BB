@@ -46,7 +46,7 @@ void main()
 bool IsVisible(uint objectIndex)
 {
     // Grab position from world matrix and convert it into view space.
-    vec3 center = vec3(instances[objectIndex].model[3][0], instances[objectIndex].model[3][1], instances[objectIndex].model[3][2]);
+    vec3 center = instances[objectIndex].model[3].xyz;
     center = (camera.view * vec4(center, 1.f)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.

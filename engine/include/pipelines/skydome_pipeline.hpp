@@ -10,7 +10,7 @@ class RenderSceneDescription;
 class SkydomePipeline
 {
 public:
-    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
+    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
         ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
 
     ~SkydomePipeline();
@@ -27,7 +27,7 @@ private:
     } _pushConstants;
 
     const VulkanBrain& _brain;
-    const CameraStructure& _camera;
+    const CameraResource& _camera;
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
