@@ -15,7 +15,10 @@
 
 #include "gbuffers.hpp"
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
@@ -55,11 +58,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::NewFrame();
 
     // Hierarchy panel
-    const auto displayEntity = [&](const auto& self, entt::entity entity, const TransformComponent* transform) -> void
+    const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
+        RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
         const std::string name = NameComponent::GetDisplayName(ecs._registry, entity);
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-        if (transform->HasChildren())
+
+        if (relationship != nullptr && relationship->_children > 0)
         {
             const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeFlags, "%s", name.c_str());
 
@@ -69,13 +74,12 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             }
             if (nodeOpen)
             {
-                for (auto child : transform->GetChildren())
+                entt::entity current = entity;
+                for (size_t i {}; i < relationship->_children; ++i)
                 {
-                    entt::entity childEntity = child.get().GetOwner();
-                    if (ecs._registry.valid(childEntity))
+                    if (ecs._registry.valid(current))
                     {
-                        const TransformComponent* childTransform = ecs._registry.try_get<TransformComponent>(childEntity);
-                        self(self, childEntity, childTransform);
+                        self(self, current);
                     }
                 }
 
@@ -99,32 +103,30 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             entt::entity entity = ecs._registry.create();
 
             ecs._registry.emplace<TransformComponent>(entity);
+            ecs._registry.emplace<WorldMatrixComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
             for (const auto [entity] : ecs._registry.storage<entt::entity>().each())
             {
-                TransformComponent* transform = ecs._registry.try_get<TransformComponent>(entity);
+                RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
 
-                if (transform == nullptr
-                    || transform->IsOrphan())
+                if (relationship == nullptr || relationship->_parent == entt::null)
                 {
-                    displayEntity(displayEntity, entity, transform);
+                    displayEntity(displayEntity, entity);
                 }
             }
-
-            ImGui::EndChild();
         }
-        ImGui::End();
+        ImGui::EndChild();
     }
+    ImGui::End();
 
     if (ImGui::Begin("Entity Details"))
     {
         DisplaySelectedEntityDetails(ecs);
-
-        ImGui::End();
     }
+    ImGui::End();
 
     performanceTracker.Render();
     bloomSettings.Render();
@@ -266,7 +268,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 
         if (changed > 0)
         {
-            transform->UpdateWorldMatrix();
+            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
         }
     }
 

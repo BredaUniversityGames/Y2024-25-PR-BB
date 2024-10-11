@@ -9,6 +9,8 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
+#include "components/relationship_component.hpp"
+#include "components/relationship_helpers.hpp"
 #include "components/transform_component.hpp"
 
 Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> application)
@@ -30,7 +32,7 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
     _renderer = std::make_unique<Renderer>(initInfo, _application);
 
     _ecs = std::make_unique<ECS>();
-    TransformComponent::SubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -73,6 +75,28 @@ Engine::Engine(const InitInfo& initInfo, std::shared_ptr<Application> applicatio
 
 void Engine::Run()
 {
+    auto e1 = _ecs->_registry.create();
+    auto e2 = _ecs->_registry.create();
+    auto e3 = _ecs->_registry.create();
+    auto e4 = _ecs->_registry.create();
+    auto e5 = _ecs->_registry.create();
+
+    auto t1 = _ecs->_registry.emplace<TransformComponent>(e1);
+    auto t2 = _ecs->_registry.emplace<TransformComponent>(e2);
+    auto t3 = _ecs->_registry.emplace<TransformComponent>(e3);
+    auto t4 = _ecs->_registry.emplace<TransformComponent>(e4);
+    auto t5 = _ecs->_registry.emplace<TransformComponent>(e5);
+
+    auto r1 = _ecs->_registry.emplace<RelationshipComponent>(e1);
+    auto r2 = _ecs->_registry.emplace<RelationshipComponent>(e2);
+    auto r3 = _ecs->_registry.emplace<RelationshipComponent>(e3);
+    auto r4 = _ecs->_registry.emplace<RelationshipComponent>(e4);
+    auto r5 = _ecs->_registry.emplace<RelationshipComponent>(e5);
+
+    RelationshipHelpers::SetParent(_ecs->_registry, e2, e1);
+    RelationshipHelpers::SetParent(_ecs->_registry, e3, e2);
+    RelationshipHelpers::SetParent(_ecs->_registry, e4, e2);
+
     while (!ShouldQuit())
     {
         // update input
@@ -159,6 +183,6 @@ Engine::~Engine()
     _editor.reset();
     _renderer.reset();
 
-    TransformComponent::UnsubscribeFromEvents(_ecs->_registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
     _ecs.reset();
 }
