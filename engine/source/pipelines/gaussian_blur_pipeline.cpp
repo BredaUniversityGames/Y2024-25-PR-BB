@@ -57,21 +57,27 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
             }
         }
 
-        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-        finalColorAttachmentInfo.imageView = target->views[0];
-        finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
-        finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-        finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
+            .imageView = target->views[0],
+            .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
+            .loadOp = vk::AttachmentLoadOp::eClear,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .clearValue = { { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } } },
+        };
 
-        vk::RenderingInfoKHR renderingInfo {};
-        renderingInfo.renderArea.extent = vk::Extent2D { target->width, target->height };
-        renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-        renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
-        renderingInfo.layerCount = 1;
-        renderingInfo.pDepthAttachment = nullptr;
-        renderingInfo.pStencilAttachment = nullptr;
+        vk::Rect2D renderArea {
+            .offset = { 0, 0 },
+            .extent = { target->width, target->height },
+        };
+
+        vk::RenderingInfoKHR renderingInfo {
+            .renderArea = renderArea,
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &finalColorAttachmentInfo,
+            .pDepthAttachment = nullptr,
+            .pStencilAttachment = nullptr,
+        };
 
         commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -91,14 +97,16 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
 
 void GaussianBlurPipeline::CreatePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &_descriptorSetLayout;
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {
+        .setLayoutCount = 1,
+        .pSetLayouts = &_descriptorSetLayout,
+    };
 
-    vk::PushConstantRange pushConstantRange {};
-    pushConstantRange.size = sizeof(uint32_t);
-    pushConstantRange.offset = 0;
-    pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    vk::PushConstantRange pushConstantRange {
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+        .offset = 0,
+        .size = sizeof(uint32_t),
+    };
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -175,7 +183,9 @@ void GaussianBlurPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -191,12 +201,11 @@ void GaussianBlurPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     vk::Format format = _brain.GetImageResourceManager().Access(_source)->format;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

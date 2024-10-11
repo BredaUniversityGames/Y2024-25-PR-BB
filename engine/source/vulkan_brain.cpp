@@ -5,7 +5,8 @@
 #include <map>
 
 VulkanBrain::VulkanBrain(const InitInfo& initInfo)
-    : _imageResourceManager(*this)
+    : _bufferResourceManager(*this)
+    , _imageResourceManager(*this)
     , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);
@@ -60,8 +61,7 @@ VulkanBrain::~VulkanBrain()
     device.destroy(bindlessLayout);
     device.destroy(bindlessPool);
 
-    vmaUnmapMemory(vmaAllocator, _bindlessMaterialBufferAllocation);
-    vmaDestroyBuffer(vmaAllocator, _bindlessMaterialBuffer, _bindlessMaterialBufferAllocation);
+    _bufferResourceManager.Destroy(_bindlessMaterialBuffer);
 
     _sampler.reset();
 
@@ -131,9 +131,10 @@ void VulkanBrain::UpdateBindlessMaterials() const
         materialGPUData[i] = material->gpuInfo;
     }
 
-    std::memcpy(_bindlessMaterialBufferMappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
+    const Buffer* buffer = _bufferResourceManager.Access(_bindlessMaterialBuffer);
+    std::memcpy(buffer->mappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
 
-    _bindlessMaterialInfo.buffer = _bindlessMaterialBuffer;
+    _bindlessMaterialInfo.buffer = buffer->buffer;
     _bindlessMaterialInfo.offset = 0;
     _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager.Resources().size();
 
@@ -160,27 +161,32 @@ void VulkanBrain::CreateInstance(const InitInfo& initInfo)
     appInfo.apiVersion = vk::makeApiVersion(0, 1, 1, 0);
     appInfo.pEngineName = "No engine";
 
-    auto extensions = GetRequiredExtensions(initInfo);
-    vk::InstanceCreateInfo createInfo {
-        vk::InstanceCreateFlags {},
-        &appInfo,
-        0, nullptr, // Validation layers.
-        static_cast<uint32_t>(extensions.size()), extensions.data() // Extensions.
-    };
+    vk::StructureChain<vk::InstanceCreateInfo, vk::DebugUtilsMessengerCreateInfoEXT> structureChain;
 
-    vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo {};
+    auto extensions = GetRequiredExtensions(initInfo);
+    structureChain.assign({
+        .flags = vk::InstanceCreateFlags {},
+        .pApplicationInfo = &appInfo,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr, // Validation layers.
+        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+        .ppEnabledExtensionNames = extensions.data() // Extensions.
+    });
+
+    auto& createInfo = structureChain.get<vk::InstanceCreateInfo>();
+
     if (ENABLE_VALIDATION_LAYERS)
     {
         createInfo.enabledLayerCount = _validationLayers.size();
         createInfo.ppEnabledLayerNames = _validationLayers.data();
 
-        util::PopulateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext = &debugCreateInfo;
+        util::PopulateDebugMessengerCreateInfo(structureChain.get<vk::DebugUtilsMessengerCreateInfoEXT>());
     }
     else
     {
+        // Make sure the debug extension is unlinked.
+        structureChain.unlink<vk::DebugUtilsMessengerCreateInfoEXT>();
         createInfo.enabledLayerCount = 0;
-        createInfo.pNext = nullptr;
     }
 
     util::VK_ASSERT(vk::createInstance(&createInfo, nullptr, &instance), "Failed to create vk instance!");
@@ -208,9 +214,11 @@ void VulkanBrain::PickPhysicalDevice()
 
 uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
 {
-    vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
-    vk::PhysicalDeviceFeatures2 deviceFeatures;
-    deviceFeatures.pNext = &indexingFeatures;
+    vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDescriptorIndexingFeatures> structureChain;
+
+    auto& indexingFeatures = structureChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
+    auto& deviceFeatures = structureChain.get<vk::PhysicalDeviceFeatures2>();
+
     vk::PhysicalDeviceProperties deviceProperties;
     deviceToRate.getProperties(&deviceProperties);
     deviceToRate.getFeatures2(&deviceFeatures);
@@ -306,33 +314,28 @@ void VulkanBrain::SetupDebugMessenger()
 void VulkanBrain::CreateDevice()
 {
     queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(physicalDevice, surface);
-
-    vk::PhysicalDeviceDescriptorIndexingFeatures indexingFeatures;
-    vk::PhysicalDeviceFeatures2 deviceFeatures;
-    deviceFeatures.pNext = &indexingFeatures;
-    physicalDevice.getFeatures2(&deviceFeatures);
-
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos {};
     std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
     float queuePriority { 1.0f };
 
     for (uint32_t familyQueueIndex : uniqueQueueFamilies)
-        queueCreateInfos.emplace_back(vk::DeviceQueueCreateFlags {}, familyQueueIndex, 1, &queuePriority);
+        queueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo { .flags = vk::DeviceQueueCreateFlags {}, .queueFamilyIndex = familyQueueIndex, .queueCount = 1, .pQueuePriorities = &queuePriority });
 
-    vk::PhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeaturesKhr {};
+    vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures> structureChain;
+    auto& indexingFeatures = structureChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
+    auto& deviceFeatures = structureChain.get<vk::PhysicalDeviceFeatures2>();
+    physicalDevice.getFeatures2(&deviceFeatures);
+
+    auto& dynamicRenderingFeaturesKhr = structureChain.get<vk::PhysicalDeviceDynamicRenderingFeaturesKHR>();
     dynamicRenderingFeaturesKhr.dynamicRendering = true;
 
     indexingFeatures.runtimeDescriptorArray = true;
     indexingFeatures.descriptorBindingPartiallyBound = true;
 
-    deviceFeatures.pNext = &dynamicRenderingFeaturesKhr;
-    dynamicRenderingFeaturesKhr.pNext = &indexingFeatures;
-
-    vk::DeviceCreateInfo createInfo {};
-    createInfo.pNext = &deviceFeatures;
+    auto& createInfo = structureChain.get<vk::DeviceCreateInfo>();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = nullptr; // Shouldn't be set because we already pass a pnext for DeviceFeatures2.
+    createInfo.pEnabledFeatures = nullptr;
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
@@ -435,7 +438,9 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eMaterial);
     materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
 
-    vk::DescriptorSetLayoutCreateInfo layoutCreateInfo {};
+    vk::StructureChain<vk::DescriptorSetLayoutCreateInfo, vk::DescriptorSetLayoutBindingFlagsCreateInfo> structureChain;
+
+    auto& layoutCreateInfo = structureChain.get<vk::DescriptorSetLayoutCreateInfo>();
     layoutCreateInfo.bindingCount = bindings.size();
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
@@ -448,11 +453,9 @@ void VulkanBrain::CreateBindlessDescriptorSet()
         vk::DescriptorBindingFlagBits::ePartiallyBound
     };
 
-    vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT extInfo {};
+    auto& extInfo = structureChain.get<vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT>();
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
-
-    layoutCreateInfo.pNext = &extInfo;
 
     util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout),
         "Failed creating bindless descriptor set layout.");
@@ -467,13 +470,12 @@ void VulkanBrain::CreateBindlessDescriptorSet()
 
 void VulkanBrain::CreateBindlessMaterialBuffer()
 {
-    util::CreateBuffer(*this, MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo),
-        vk::BufferUsageFlagBits::eStorageBuffer,
-        _bindlessMaterialBuffer, true, _bindlessMaterialBufferAllocation,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        "Bindless material uniform buffer");
+    BufferCreation creation{};
+    creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetName("Bindless material uniform buffer");
 
-    util::VK_ASSERT(vmaMapMemory(vmaAllocator, _bindlessMaterialBufferAllocation, &_bindlessMaterialBufferMappedPtr), "Failed mapping memory for UBO!");
+    _bindlessMaterialBuffer = _bufferResourceManager.Create(creation);
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)

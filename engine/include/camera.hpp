@@ -10,27 +10,19 @@ struct Camera
     float farPlane {};
 };
 
-struct CameraUBO
+struct alignas(16) CameraUBO
 {
-    alignas(16)
-        glm::mat4 VP;
+    glm::mat4 VP;
     glm::mat4 view;
     glm::mat4 proj;
-
-    glm::mat4 lightVP;
-    glm::mat4 depthBiasMVP;
-
     glm::mat4 skydomeMVP;
-    glm::vec4 lightData; // we can store light direction here
-    alignas(16)
-        glm::vec3 cameraPosition;
+
+    glm::vec3 cameraPosition;
 };
 
 struct CameraStructure
 {
     vk::DescriptorSetLayout descriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> buffers;
-    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> allocations;
-    std::array<void*, MAX_FRAMES_IN_FLIGHT> mappedPtrs;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
 };
