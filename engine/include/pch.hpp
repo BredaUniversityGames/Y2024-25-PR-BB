@@ -29,7 +29,7 @@
 
 #pragma GCC diagnostic pop
 
-#include "class_decorations.hpp"
+#include "common.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>
