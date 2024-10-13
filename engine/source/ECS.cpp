@@ -5,7 +5,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <cereal/archives/json.hpp>
 
 ECS::ECS() = default;
 ECS::~ECS() = default;
