@@ -27,11 +27,11 @@ target_include_directories(OldEngine PUBLIC "include" "../external")
 
 option(ENABLE_PCH "Compile with precompiled header" ON)
 if (ENABLE_PCH)
-    target_precompile_headers(OldProject PRIVATE [["pch.hpp"]])
+    target_precompile_headers(OldEngine PRIVATE [["pch.hpp"]])
 endif ()
 
 target_link_libraries(OldEngine PUBLIC Application PUBLIC External)
-target_link_libraries(Engine INTERFACE OldProject INTERFACE External)
+target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)
 
 # ENGINE MODULES
 
