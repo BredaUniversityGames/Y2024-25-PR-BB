@@ -4,9 +4,14 @@ Checks: '
 
 modernize-*,
 -modernize-use-trailing-return-type,
+-modernize-use-auto,
 
 readability-*,
 -readability-identifier-length,
+-readability-uppercase-literal-suffix,
+-readability-simplify-boolean-expr,
+-readability-use-anyofallof,
+-readability-else-after-return,
 -readability-redundant-member-init,
 
 performance-*,
@@ -16,6 +21,9 @@ misc-*,
 -misc-non-private-member-variables-in-classes
 
 bugprone-*
+
+cppcoreguidelines-*
+clang-analyzer-*
 '
 
 CheckOptions:
