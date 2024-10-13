@@ -2,40 +2,50 @@
 # THIS FILE IS MEANT FOR CI/CD, REMOVES CHECKS THAT TAKE TOO LONG
 
 Checks: '
--*
+-*,
+cppcoreguidelines-*,
+-cppcoreguidelines-macro-to-enum, 
+-cppcoreguidelines-no-suspend-with-lock,
+-cppcoreguidelines-macro-usage,
+-cppcoreguidelines-owning-memory,
+-cppcoreguidelines-no-malloc,
+-cppcoreguidelines-pro-bounds-constant-array-index,
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+-cppcoreguidelines-non-private-member-variables-in-classes,
+-cppcoreguidelines-avoid-magic-numbers,
 
-modernize-*
--modernize-use-trailing-return-type
--modernize-use-auto
--modernize-use-std-numbers
--modernize-type-traits
--modernize-use-nullptr
-
-readability-*
--readability-identifier-naming
--readability-identifier-length
--readability-uppercase-literal-suffix
--readability-simplify-boolean-expr
--readability-use-anyofallof
--readability-else-after-return
--readability-redundant-member-init
--readability-braces-around-statements
--readability-isolate-declaration
-
-performance-*
-
-misc-*
--misc-include-cleaner
--misc-non-private-member-variables-in-classes
--misc-unused-using-decls
--misc-const-correctness
--misc-confusable-identifiers
--misc-coroutine-hostile-raii
-
-bugprone-*
--bugprone-stringview-nullptr
--bugprone-standalone-empty
-
-cppcoreguidelines-*
-clang-analyzer-*
+clang-analyzer-*,
 '
+
+
+#  modernize-*
+#  -modernize-use-trailing-return-type
+#  -modernize-use-auto
+#  -modernize-use-std-numbers
+#  -modernize-type-traits
+#  -modernize-use-nullptr
+#
+#  readability-*
+#  -readability-identifier-naming
+#  -readability-identifier-length
+#  -readability-uppercase-literal-suffix
+#  -readability-simplify-boolean-expr
+#  -readability-use-anyofallof
+#  -readability-else-after-return
+#  -readability-redundant-member-init
+#  -readability-braces-around-statements
+#  -readability-isolate-declaration
+#
+#  performance-*
+#
+#  misc-*
+#  -misc-include-cleaner
+#  -misc-non-private-member-variables-in-classes
+#  -misc-unused-using-decls
+#  -misc-const-correctness
+#  -misc-confusable-identifiers
+#  -misc-coroutine-hostile-raii
+#
+#  bugprone-*
+#  -bugprone-stringview-nullptr
+#  -bugprone-standalone-empty

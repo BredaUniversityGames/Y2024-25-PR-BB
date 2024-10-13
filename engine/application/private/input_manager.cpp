@@ -1,6 +1,7 @@
 #include "input_manager.hpp"
 #include "log.hpp"
 
+#define SDL_DISABLE_ANALYZE_MACROS
 #include <SDL3/SDL.h>
 
 InputManager::InputManager()

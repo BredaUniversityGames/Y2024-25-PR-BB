@@ -3,6 +3,7 @@
 #include "input_manager.hpp"
 #include "engine.hpp"
 
+#define SDL_DISABLE_ANALYZE_MACROS
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>

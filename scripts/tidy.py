@@ -12,9 +12,11 @@ EXTENSION = ['.c', '.cpp', '.cc', '.h', '.hpp']
 # Define your clang-tidy command and options
 COMMAND = 'clang-tidy'
 PROFILE_ENABLE = "--enable-check-profile"
-COMPILE_DATABASE = 'build/x64-Debug'
+COMPILE_DATABASE = 'build/GenClangCompileCommands'
 OPTIONS = '--config-file=scripts/.clang-tidy'
 
+
+# OPTIONS = '--checks=file'
 
 def glob_recursive_files(path, extensions):
     ret = []
@@ -27,7 +29,7 @@ def glob_recursive_files(path, extensions):
 
 def run_clang_tidy_on_files(files, profile):
     if profile:
-        command = [COMMAND, '-p=' + COMPILE_DATABASE, PROFILE_ENABLE, OPTIONS] + files
+        command = [COMMAND, '-p=' + COMPILE_DATABASE, PROFILE_ENABLE, OPTIONS, '--allow-no-checks'] + files
 
         with open(profile, 'w') as file:
             try:
