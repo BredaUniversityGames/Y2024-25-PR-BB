@@ -70,6 +70,10 @@ set(SKIP_PERFORMANCE_COMPARISON OFF)
 set(BUILD_DOC "Build documentation" ON)
 set(BUILD_SANDBOX "Build sandbox exsamples" ON)
 
+# Suppress the specific warning when compiling code that includes cereal headers
+target_compile_options(cereal INTERFACE
+        $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wno-dangling-reference>)
+
 # Tracy Profiler
 
 set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
