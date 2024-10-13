@@ -25,7 +25,6 @@ set(SHADERS
         ${SHADER_DIR}/irradiance.frag
         ${SHADER_DIR}/irradiance.vert
         ${SHADER_DIR}/lighting.frag
-        ${SHADER_DIR}/lighting.vert
         ${SHADER_DIR}/prefilter.frag
         ${SHADER_DIR}/prefilter.vert
         ${SHADER_DIR}/shadow.vert

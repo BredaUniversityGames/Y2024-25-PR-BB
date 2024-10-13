@@ -29,10 +29,11 @@
 
 #pragma GCC diagnostic pop
 
-#include "common.hpp"
+#include "class_decorations.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>
+#include "tracy/Tracy.hpp"
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };
 constexpr uint32_t DEFERRED_ATTACHMENT_COUNT { 4 };
