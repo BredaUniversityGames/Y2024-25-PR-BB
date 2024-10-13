@@ -5,7 +5,6 @@
 #include "include_cereal.hpp"
 #include <entity/registry.hpp>
 
-
 class EntitySerializer
 {
 public:
