@@ -2,23 +2,24 @@
 // Created by luuk on 10-10-2024.
 //
 #pragma once
-#include  <cereal/archives/json.hpp>
+#include "include_cereal.hpp"
 #include <entity/registry.hpp>
+
 
 class EntitySerializer
 {
 public:
-    EntitySerializer(entt::registry& registry, entt::entity entity = entt::null)
+    EntitySerializer(const entt::registry& registry, entt::entity entity = entt::null)
         : _registry(registry)
         , _entity(entity)
     {
     }
-
+    
     template <class Archive>
     void save(Archive& archive, uint32_t const version) const;
 
 private:
-    entt::registry& _registry;
+    const entt::registry& _registry;
     entt::entity _entity;
 };
 

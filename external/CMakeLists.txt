@@ -64,15 +64,11 @@ FetchContent_Declare(
 set(SKIP_PERFORMANCE_COMPARISON ON)
 set(BUILD_DOC "Build documentation" OFF)
 set(BUILD_SANDBOX "Build sandbox examples" OFF)
-
 FetchContent_MakeAvailable(cereal)
-target_compile_options(cereal INTERFACE -Werror=dangling-reference)
 
 set(SKIP_PERFORMANCE_COMPARISON OFF)
 set(BUILD_DOC "Build documentation" ON)
-set(BUILD_SANDBOX "Build sandbox examples" ON)
-
-
+set(BUILD_SANDBOX "Build sandbox exsamples" ON)
 
 # Tracy Profiler
 

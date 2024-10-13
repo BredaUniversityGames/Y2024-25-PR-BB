@@ -32,23 +32,6 @@ void ECS::RemovedDestroyed()
         _registry.destroy(entity);
     }
 }
-void ECS::WriteToFile(const std::filesystem::path& filePath)
-{
-    std::ofstream ofs(filePath);
-
-    if (!ofs)
-    {
-        throw std::runtime_error("Could not open file " + filePath.string());
-    }
-
-    cereal::JSONOutputArchive archive(ofs);
-
-    auto entityView = _registry.view<entt::entity>();
-    for (auto entity : entityView)
-    {
-        archive(EntitySerializer(_registry, entity));
-    }
-}
 
 void ECS::DestroyEntity(entt::entity entity)
 {
