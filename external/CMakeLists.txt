@@ -61,15 +61,10 @@ FetchContent_Declare(
         GIT_TAG v1.3.2
         GIT_SHALLOW TRUE)
 
-set(SKIP_PERFORMANCE_COMPARISON ON)
-set(BUILD_DOC "Build documentation" OFF)
-set(BUILD_SANDBOX "Build sandbox examples" OFF)
+option(BUILD_DOC "Build documentation" OFF)
+option(BUILD_SANDBOX "Build sandbox examples" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 FetchContent_MakeAvailable(cereal)
-
-set(SKIP_PERFORMANCE_COMPARISON OFF)
-set(BUILD_DOC "Build documentation" ON)
-set(BUILD_SANDBOX "Build sandbox exsamples" ON)
-
 
 # Tracy Profiler
 
@@ -82,7 +77,7 @@ add_subdirectory(tracy)
 add_subdirectory(entt)
 
 # SDL
-
+set(BUILD_TESTS OFF)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL)

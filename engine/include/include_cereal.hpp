@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 //x11 macro undefinition
 #ifdef Bool
     #undef Bool
