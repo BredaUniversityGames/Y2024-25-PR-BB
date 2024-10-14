@@ -46,7 +46,7 @@ private:
     std::vector<vk::PipelineLayout> _pipelineLayouts;
     // ssbs
     std::array<ResourceHandle<Buffer>, 5> _storageBuffers;
-    std::array<vk::DescriptorSet, 5> _storageBufferDescriptorSets;
+    vk::DescriptorSet _storageBufferDescriptorSet;
     vk::DescriptorSetLayout _storageLayout;
     // ub
     ResourceHandle<Buffer> _emitterBuffer;
