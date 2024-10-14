@@ -5,33 +5,6 @@ macro(override_option option_name option_value)
     set(${option_name} ${option_value} CACHE BOOL "" FORCE)
 endmacro()
 
-# ImGUI and ImPlot (cannot be used with FetchContent without forking)
-
-file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
-file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
-
-set(imgui_files ${imgui_sources} ${imgui_headers}
-        imgui/misc/cpp/imgui_stdlib.cpp
-        imgui/misc/freetype/imgui_freetype.cpp
-        imgui/backends/imgui_impl_vulkan.cpp
-        imgui/backends/imgui_impl_sdl3.cpp
-)
-
-file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
-file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
-set(implot_files ${implot_sources} ${implot_headers})
-
-add_library(ImGui ${imgui_files} ${implot_files})
-
-target_include_directories(ImGui
-        PRIVATE freetype/include
-        PRIVATE Vulkan-Headers/include
-        PRIVATE SDL/include
-        PUBLIC imgui
-        PUBLIC imgui/backends
-        PUBLIC implot
-)
-
 # Magic Enum
 
 FetchContent_Declare(
@@ -141,6 +114,64 @@ override_option(SDL_SHARED OFF)
 override_option(SDL_STATIC ON)
 FetchContent_MakeAvailable(SDL)
 
+# GLM
+
+FetchContent_Declare(
+        GLM
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(GLM)
+
+# GoogleTest
+
+FetchContent_Declare(
+        GoogleTest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.15.2
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+override_option(gtest_force_shared_crt ON)
+FetchContent_MakeAvailable(GoogleTest)
+
+# ImGUI and ImPlot (cannot be used with FetchContent without forking)
+
+file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
+file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
+
+set(imgui_files ${imgui_sources} ${imgui_headers}
+        imgui/misc/cpp/imgui_stdlib.cpp
+        imgui/misc/freetype/imgui_freetype.cpp
+        imgui/backends/imgui_impl_vulkan.cpp
+        imgui/backends/imgui_impl_sdl3.cpp
+)
+
+file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
+file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
+set(implot_files ${implot_sources} ${implot_headers})
+
+add_library(ImGui ${imgui_files} ${implot_files})
+
+target_link_libraries(ImGui
+        PRIVATE SDL3::SDL3-static
+)
+
+target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
+
+target_include_directories(ImGui
+        PRIVATE freetype/include
+        PRIVATE Vulkan-Headers/include
+        PUBLIC imgui
+        PUBLIC imgui/backends
+        PUBLIC implot
+)
+
 # Main External Library
 
 add_library(External INTERFACE)
@@ -156,6 +187,8 @@ target_link_libraries(External
         INTERFACE SDL3::SDL3-static
         INTERFACE magic_enum::magic_enum
         INTERFACE spdlog::spdlog
+        INTERFACE glm::glm
+        INTERFACE EnTT::EnTT
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
         INTERFACE TracyClient
@@ -165,9 +198,7 @@ target_link_libraries(External
 target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE Vulkan-Headers/include
-        INTERFACE glm
         INTERFACE stb
-        INTERFACE entt/src/entt
         INTERFACE ${cereal_SOURCE_DIR}/include
 )
 
