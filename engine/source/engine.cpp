@@ -30,11 +30,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     spdlog::info("Starting engine...");
 
-    auto& application_module = engine.GetModule<ApplicationModule>();
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
 
-    _renderer = std::make_unique<Renderer>(application_module);
+    _renderer = std::make_unique<Renderer>(applicationModule);
 
-    ImGui_ImplSDL3_InitForVulkan(application_module.GetWindowHandle());
+    ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
     _ecs = std::make_unique<ECS>();
 
@@ -69,7 +69,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
-    application_module.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
     bblog::info("Successfully initialized engine!");
@@ -79,8 +79,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 void OldEngine::Tick(Engine& engine)
 {
     // update input
-    auto& application_module = engine.GetModule<ApplicationModule>();
-    auto& input = application_module.GetInputManager();
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& input = applicationModule.GetInputManager();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -89,7 +89,7 @@ void OldEngine::Tick(Engine& engine)
     float deltaTimeMS = deltaTime.count();
 
     // Slow down application when minimized.
-    if (application_module.isMinimized())
+    if (applicationModule.isMinimized())
     {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(16ms);
@@ -100,13 +100,13 @@ void OldEngine::Tick(Engine& engine)
     input.GetMousePosition(mouseX, mouseY);
 
     if (input.IsKeyPressed(KeyboardCode::eH))
-        application_module.SetMouseHidden(!application_module.GetMouseHidden());
+        applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
-    if (application_module.GetMouseHidden())
+    if (applicationModule.GetMouseHidden())
     {
         ZoneNamedN(zone, "Update Camera", true);
 
-        glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+        glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
         constexpr float MOUSE_SENSITIVITY = 0.003f;
         constexpr float CAM_SPEED = 0.003f;
@@ -115,28 +115,28 @@ void OldEngine::Tick(Engine& engine)
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
         // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-        _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+        _scene->camera.euler_rotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+        _scene->camera.euler_rotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
-        glm::vec3 movement_dir {};
+        glm::vec3 movementDir {};
         if (input.IsKeyHeld(KeyboardCode::eW))
-            movement_dir -= FORWARD;
+            movementDir -= FORWARD;
 
         if (input.IsKeyHeld(KeyboardCode::eS))
-            movement_dir += FORWARD;
+            movementDir += FORWARD;
 
         if (input.IsKeyHeld(KeyboardCode::eD))
-            movement_dir += RIGHT;
+            movementDir += RIGHT;
 
         if (input.IsKeyHeld(KeyboardCode::eA))
-            movement_dir -= RIGHT;
+            movementDir -= RIGHT;
 
-        if (glm::length(movement_dir) != 0.0f)
+        if (glm::length(movementDir) != 0.0f)
         {
-            movement_dir = glm::normalize(movement_dir);
+            movementDir = glm::normalize(movementDir);
         }
 
-        _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+        _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movementDir * deltaTimeMS * CAM_SPEED;
     }
     _lastMousePos = { mouseX, mouseY };
 
