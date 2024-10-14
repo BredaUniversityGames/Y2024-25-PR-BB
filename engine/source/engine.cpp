@@ -9,9 +9,7 @@
 #include "application.hpp"
 #include "renderer.hpp"
 #include "editor.hpp"
-#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
-#include "components/transform_component.hpp"
 
 OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -75,28 +73,6 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
 
 void OldEngine::Run()
 {
-    auto e1 = _ecs->_registry.create();
-    auto e2 = _ecs->_registry.create();
-    auto e3 = _ecs->_registry.create();
-    auto e4 = _ecs->_registry.create();
-    auto e5 = _ecs->_registry.create();
-
-    auto& t1 = _ecs->_registry.emplace<TransformComponent>(e1);
-    auto& t2 = _ecs->_registry.emplace<TransformComponent>(e2);
-    auto& t3 = _ecs->_registry.emplace<TransformComponent>(e3);
-    auto& t4 = _ecs->_registry.emplace<TransformComponent>(e4);
-    auto& t5 = _ecs->_registry.emplace<TransformComponent>(e5);
-
-    auto& r1 = _ecs->_registry.emplace<RelationshipComponent>(e1);
-    auto& r2 = _ecs->_registry.emplace<RelationshipComponent>(e2);
-    auto& r3 = _ecs->_registry.emplace<RelationshipComponent>(e3);
-    auto& r4 = _ecs->_registry.emplace<RelationshipComponent>(e4);
-    auto& r5 = _ecs->_registry.emplace<RelationshipComponent>(e5);
-
-    RelationshipHelpers::SetParent(_ecs->_registry, e2, e1);
-    RelationshipHelpers::SetParent(_ecs->_registry, e3, e2);
-    RelationshipHelpers::SetParent(_ecs->_registry, e4, e2);
-
     while (!ShouldQuit())
     {
         // update input
