@@ -33,6 +33,7 @@ void PhysicsSystem::CleanUp()
     {
         RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
         _physicsModule.bodyInterface->RemoveBody(rb.bodyID);
+        _physicsModule.bodyInterface->DestroyBody(rb.bodyID);
     }
 }
 
