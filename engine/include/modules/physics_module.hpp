@@ -4,7 +4,6 @@
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
 
-
 #undef Convex
 #undef None
 
@@ -22,15 +21,12 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include "Jolt/Renderer/DebugRendererSimple.h"
 
-
 JPH_SUPPRESS_WARNINGS
 
 namespace JPH
 {
 class DebugRendererSimple;
 }
-JPH_SUPPRESS_WARNINGS
-
 // Layer that objects can be in, determines which other objects it can collide with
 // Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
 // layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics simulation
@@ -141,7 +137,7 @@ public:
     // See: ContactListener
     virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1, const JPH::Body& inBody2, JPH::RVec3Arg inBaseOffset, const JPH::CollideShapeResult& inCollisionResult) override
     {
-        //std::cout << "Contact validate callback" << std::endl;
+        // std::cout << "Contact validate callback" << std::endl;
 
         // Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
@@ -149,17 +145,17 @@ public:
 
     virtual void OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
     {
-        //std::cout << "A contact was added" << std::endl;
+        // std::cout << "A contact was added" << std::endl;
     }
 
     virtual void OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
     {
-       // std::cout << "A contact was persisted" << std::endl;
+        // std::cout << "A contact was persisted" << std::endl;
     }
 
     virtual void OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override
     {
-        //std::cout << "A contact was removed" << std::endl;
+        // std::cout << "A contact was removed" << std::endl;
     }
 };
 

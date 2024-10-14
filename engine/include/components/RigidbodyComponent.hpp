@@ -13,7 +13,6 @@ struct RigidbodyComponent
     RigidbodyComponent(JPH::BodyInterface& body_interface, JPH::BodyCreationSettings& body_creation_settings)
     {
         bodyID = body_interface.CreateAndAddBody(body_creation_settings, JPH::EActivation::Activate);
-        body_interface.SetLinearVelocity(bodyID, JPH::Vec3(0.0f, 0.0f, 0.0f));
     }
 
     JPH::BodyID bodyID;
