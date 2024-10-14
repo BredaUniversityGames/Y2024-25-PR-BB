@@ -107,12 +107,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JoltPhysics)
 SET_INTERPROCEDURAL_OPTIMIZATION()
 
-# Set compiler options for Jolt
-target_compile_options(Jolt PRIVATE
-        -w          # Suppress all warnings
-        -Wno-error  # Do not treat warnings as errors
-)
-
 # SDL
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
