@@ -68,7 +68,7 @@ private:
 
     std::unique_ptr<BatchBuffer> _batchBuffer;
 
-    CameraStructure _cameraStructure;
+    std::unique_ptr<CameraResource> _camera;
 
     BloomSettings _bloomSettings;
 
@@ -76,17 +76,12 @@ private:
 
     uint32_t _currentFrame { 0 };
 
-    void CreateDescriptorSetLayout();
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex);
     void CreateSyncObjects();
-    void InitializeCameraUBODescriptors();
-    void UpdateCameraDescriptorSet(uint32_t currentFrame);
-    CameraUBO CalculateCamera(const Camera& camera);
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
-    void UpdateCamera(const Camera& camera);
     void UpdateBindless();
     void Render();
 };

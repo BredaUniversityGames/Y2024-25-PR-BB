@@ -125,8 +125,10 @@ void OldEngine::Run()
             constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
             // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-            _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-            _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+            _scene->camera.aspectRatio = static_cast<float>(_application->DisplaySize().x) / _application->DisplaySize().y;
+
+            _scene->camera.eulerRotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
+            _scene->camera.eulerRotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
 
             glm::vec3 movement_dir {};
             if (_application->GetInputManager().IsKeyHeld(InputManager::Key::W))
@@ -146,8 +148,7 @@ void OldEngine::Run()
                 movement_dir = glm::normalize(movement_dir);
             }
 
-            _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
-
+            _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movement_dir * deltaTimeMS * CAM_SPEED;
             JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
             _physicsModule->debugRenderer->SetCameraPos(cameraPos);
         }
