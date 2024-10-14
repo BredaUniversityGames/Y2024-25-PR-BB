@@ -55,7 +55,7 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
 
     DirectionalLightData& directionalLightData = sceneData.directionalLight;
     directionalLightData.lightVP = depthProjectionMatrix * lightView;
-    directionalLightData.depthBiasMVP = DirectionalLight::biasMatrix * directionalLightData.lightVP;
+    directionalLightData.depthBiasMVP = DirectionalLight::BIAS_MATRIX * directionalLightData.lightVP;
     directionalLightData.direction = glm::vec4(direction, light.shadowBias);
 
     sceneData.irradianceIndex = irradianceMap.index;
