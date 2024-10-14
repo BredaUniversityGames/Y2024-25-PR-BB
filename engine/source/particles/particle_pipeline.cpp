@@ -367,12 +367,11 @@ void ParticlePipeline::CreateBuffers()
         std::vector<Particle> particles(MAX_PARTICLES);
         vk::DeviceSize particleBufferSize = sizeof(Particle) * MAX_PARTICLES;
 
-        // Create and copy to SSB
         BufferCreation creation {};
         creation.SetName("Particle SSB")
             .SetSize(particleBufferSize)
             .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
         _storageBuffers[static_cast<int>(SSBUsage::eParticle)] = _brain.GetBufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(particles, 0, _brain.GetBufferResourceManager().Access(_storageBuffers[static_cast<int>(SSBUsage::eParticle)])->buffer);
@@ -392,12 +391,11 @@ void ParticlePipeline::CreateBuffers()
                 }
             }
 
-            // Create and copy to SSB
             BufferCreation creation {};
             creation.SetName("Index list SSB")
                 .SetSize(indexBufferSize)
                 .SetIsMappable(false)
-                .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+                .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
                 .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
             _storageBuffers[i] = _brain.GetBufferResourceManager().Create(creation);
             cmdBuffer.CopyIntoLocalBuffer(indices, 0, _brain.GetBufferResourceManager().Access(_storageBuffers[i])->buffer);
@@ -409,12 +407,11 @@ void ParticlePipeline::CreateBuffers()
         particleCounters[0].deadCount = MAX_PARTICLES;
         vk::DeviceSize counterBufferSize = sizeof(ParticleCounters);
 
-        // Create and copy to SSB
         BufferCreation creation {};
         creation.SetName("Counters SSB")
             .SetSize(counterBufferSize)
             .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
         _storageBuffers[static_cast<int>(SSBUsage::eCounter)] = _brain.GetBufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(particleCounters, 0, _brain.GetBufferResourceManager().Access(_storageBuffers[static_cast<int>(SSBUsage::eCounter)])->buffer);
@@ -428,7 +425,7 @@ void ParticlePipeline::CreateBuffers()
         creation.SetName("Emitter UB")
             .SetSize(bufferSize)
             .SetIsMappable(true)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_CPU_ONLY)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_HOST)
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer);
         _emitterBuffer = _brain.GetBufferResourceManager().Create(creation);
     }
