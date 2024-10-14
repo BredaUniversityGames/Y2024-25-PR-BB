@@ -109,12 +109,6 @@ target_include_directories(External
         INTERFACE Vulkan-Headers/include
         INTERFACE glm
         INTERFACE stb
-        INTERFACE entt/src/entt
-      
-)
-
-# System include directory for cereal
-target_include_directories(External
-        SYSTEM INTERFACE
-        ${cereal_SOURCE_DIR}/include
+        INTERFACE entt/src/entt  
+        INTERFACE ${cereal_SOURCE_DIR}/include
 )

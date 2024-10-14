@@ -66,7 +66,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
 
@@ -132,8 +132,7 @@ Renderer::~Renderer()
     _brain.device.destroy(_cameraStructure.descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        vmaUnmapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i]);
-        vmaDestroyBuffer(_brain.vmaAllocator, _cameraStructure.buffers[i], _cameraStructure.allocations[i]);
+        _brain.GetBufferResourceManager().Destroy(_cameraStructure.buffers[i]);
     }
 
     _swapChain.reset();
@@ -249,13 +248,13 @@ void Renderer::InitializeCameraUBODescriptors()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        util::CreateBuffer(_brain, bufferSize,
-            vk::BufferUsageFlagBits::eUniformBuffer,
-            _cameraStructure.buffers[i], true, _cameraStructure.allocations[i],
-            VMA_MEMORY_USAGE_AUTO,
-            name);
+        BufferCreation creation{};
+        creation.SetSize(bufferSize)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetName(name);
 
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _cameraStructure.allocations[i], &_cameraStructure.mappedPtrs[i]), "Failed mapping memory for UBO!");
+        _cameraStructure.buffers[i] = _brain.GetBufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
@@ -277,8 +276,10 @@ void Renderer::InitializeCameraUBODescriptors()
 
 void Renderer::UpdateCameraDescriptorSet(uint32_t currentFrame)
 {
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[currentFrame]);
+
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = _cameraStructure.buffers[currentFrame];
+    bufferInfo.buffer = buffer->buffer;
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(CameraUBO);
 
@@ -366,7 +367,8 @@ void Renderer::LoadEnvironmentMap()
 void Renderer::UpdateCamera(const Camera& camera)
 {
     CameraUBO cameraUBO = CalculateCamera(camera);
-    std::memcpy(_cameraStructure.mappedPtrs[_currentFrame], &cameraUBO, sizeof(CameraUBO));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[_currentFrame]);
+    std::memcpy(buffer->mappedPtr, &cameraUBO, sizeof(CameraUBO));
 }
 void Renderer::UpdateBindless()
 {
