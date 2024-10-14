@@ -153,7 +153,7 @@ void OldEngine::Run()
 
         _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
 
-        _renderer->Render();
+        _renderer->Render(deltaTimeMS);
 
         _performanceTracker.Update();
 

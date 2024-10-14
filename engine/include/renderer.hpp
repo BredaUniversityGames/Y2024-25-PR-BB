@@ -80,7 +80,7 @@ private:
 
     void CreateDescriptorSetLayout();
     void CreateCommandBuffers();
-    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex);
+    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
     void CreateSyncObjects();
     void InitializeCameraUBODescriptors();
     void UpdateCameraDescriptorSet(uint32_t currentFrame);
@@ -90,5 +90,5 @@ private:
     void LoadEnvironmentMap();
     void UpdateCamera(const Camera& camera);
     void UpdateBindless();
-    void Render();
+    void Render(float deltaTime);
 };

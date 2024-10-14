@@ -10,7 +10,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const CameraStructure& camera);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs);
+    void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -26,7 +26,7 @@ private:
         eNone
     };
 
-    struct PushConstantSize
+    struct alignas(16) PushConstantSize
     {
         float padding;
     } _pushConstantSize;

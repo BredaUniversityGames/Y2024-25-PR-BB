@@ -37,7 +37,7 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_uniformLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs, float deltaTime)
 {
     UpdateEmitters(ecs);
     UpdateBuffers();
@@ -87,9 +87,18 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
     util::EndLabel(commandBuffer, _brain.dldi);
 
     // -- simulate shader pass --
-    // commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &deltaTime);
-    // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
-    // 1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[2]);
+
+    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &deltaTime);
+
+    commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
+    1, &memoryBarrier, 0, nullptr, 0, nullptr);
+
+    util::EndLabel(commandBuffer, _brain.dldi);
 
     // -- finish shader pass --
     util::BeginLabel(commandBuffer, "Finish particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
@@ -97,14 +106,12 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[3]);
 
     commandBuffer.dispatch(1, 1, 1);
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, vk::DependencyFlags { 0 },
         1, &memoryBarrier, 0, nullptr, 0, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    // TODO: execution barrier between compute and graphics render
-
-    // -- indirect draw call rendering --
+    // TODO: indirect draw call rendering
 }
 
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
