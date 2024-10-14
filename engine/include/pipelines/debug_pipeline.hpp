@@ -10,7 +10,7 @@ class BatchBuffer;
 class DebugPipeline
 {
 public:
-    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
+    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
     ~DebugPipeline();
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -40,7 +40,7 @@ private:
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
-    const CameraStructure& _camera;
+    const CameraResource& _camera;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
