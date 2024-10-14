@@ -30,7 +30,7 @@ struct alignas(16) Particle
 struct alignas(16) ParticleCounters
 {
     uint32_t aliveCount;
-    int32_t deadCount;
+    uint32_t deadCount;
     uint32_t aliveCountAfterSimulation;
     uint32_t culledCount;
 };
