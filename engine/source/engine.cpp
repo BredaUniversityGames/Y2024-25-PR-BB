@@ -115,8 +115,8 @@ void OldEngine::Tick(Engine& engine)
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
         // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        _scene->camera.euler_rotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
-        _scene->camera.euler_rotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+        _scene->camera.eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+        _scene->camera.eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
         glm::vec3 movementDir {};
         if (input.IsKeyHeld(KeyboardCode::eW))
@@ -136,7 +136,7 @@ void OldEngine::Tick(Engine& engine)
             movementDir = glm::normalize(movementDir);
         }
 
-        _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movementDir * deltaTimeMS * CAM_SPEED;
+        _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
     }
     _lastMousePos = { mouseX, mouseY };
 
