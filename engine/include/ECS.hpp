@@ -1,6 +1,7 @@
 #pragma once
+
 #include "entity_serializer.hpp"
-#include "entity/registry.hpp"
+#include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
 
 #include <spdlog/spdlog.h>
