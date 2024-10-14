@@ -99,11 +99,12 @@ struct DirectionalLight
 
     float shadowBias = 0.002f;
 
-    constexpr static glm::mat4 biasMatrix = glm::mat4(
+    constexpr static glm::mat4 BIAS_MATRIX {
         0.5, 0.0, 0.0, 0.0,
         0.0, 0.5, 0.0, 0.0,
         0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0);
+        0.5, 0.5, 0.5, 1.0
+    };
 };
 
 struct SceneDescription
