@@ -32,7 +32,7 @@ public:
     }
     void ClearLinesData() { _linesData.clear(); }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
 
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);
