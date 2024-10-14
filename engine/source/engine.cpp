@@ -81,17 +81,17 @@ void OldEngine::Run()
     auto e4 = _ecs->_registry.create();
     auto e5 = _ecs->_registry.create();
 
-    auto t1 = _ecs->_registry.emplace<TransformComponent>(e1);
-    auto t2 = _ecs->_registry.emplace<TransformComponent>(e2);
-    auto t3 = _ecs->_registry.emplace<TransformComponent>(e3);
-    auto t4 = _ecs->_registry.emplace<TransformComponent>(e4);
-    auto t5 = _ecs->_registry.emplace<TransformComponent>(e5);
+    auto& t1 = _ecs->_registry.emplace<TransformComponent>(e1);
+    auto& t2 = _ecs->_registry.emplace<TransformComponent>(e2);
+    auto& t3 = _ecs->_registry.emplace<TransformComponent>(e3);
+    auto& t4 = _ecs->_registry.emplace<TransformComponent>(e4);
+    auto& t5 = _ecs->_registry.emplace<TransformComponent>(e5);
 
-    auto r1 = _ecs->_registry.emplace<RelationshipComponent>(e1);
-    auto r2 = _ecs->_registry.emplace<RelationshipComponent>(e2);
-    auto r3 = _ecs->_registry.emplace<RelationshipComponent>(e3);
-    auto r4 = _ecs->_registry.emplace<RelationshipComponent>(e4);
-    auto r5 = _ecs->_registry.emplace<RelationshipComponent>(e5);
+    auto& r1 = _ecs->_registry.emplace<RelationshipComponent>(e1);
+    auto& r2 = _ecs->_registry.emplace<RelationshipComponent>(e2);
+    auto& r3 = _ecs->_registry.emplace<RelationshipComponent>(e3);
+    auto& r4 = _ecs->_registry.emplace<RelationshipComponent>(e4);
+    auto& r5 = _ecs->_registry.emplace<RelationshipComponent>(e5);
 
     RelationshipHelpers::SetParent(_ecs->_registry, e2, e1);
     RelationshipHelpers::SetParent(_ecs->_registry, e3, e2);

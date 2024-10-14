@@ -35,9 +35,11 @@ void RelationshipHelpers::AttachChild(entt::registry& reg, entt::entity entity, 
         RelationshipComponent& firstChild = reg.get<RelationshipComponent>(parentRelationship._first);
 
         firstChild._prev = child;
+        childRelationship._next = parentRelationship._first;
         parentRelationship._first = child;
     }
 
+    childRelationship._parent = entity;
     ++parentRelationship._children;
 }
 void RelationshipHelpers::DetachChild(entt::registry& reg, entt::entity entity, entt::entity child)

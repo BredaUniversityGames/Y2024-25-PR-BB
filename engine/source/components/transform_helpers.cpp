@@ -98,6 +98,7 @@ glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat&
 }
 void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entity)
 {
+    assert(reg.valid(entity));
     const RelationshipComponent* relationship = reg.try_get<RelationshipComponent>(entity);
     WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
 
@@ -120,8 +121,11 @@ void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entit
     entt::entity current = relationship->_first;
     for (size_t i {}; i < relationship->_children; ++i)
     {
-        UpdateWorldMatrix(reg, current);
+        if (current != entt::null)
+        {
+            UpdateWorldMatrix(reg, current);
 
-        current = reg.get<RelationshipComponent>(current)._next;
+            current = reg.get<RelationshipComponent>(current)._next;
+        }
     }
 }

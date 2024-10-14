@@ -74,12 +74,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             }
             if (nodeOpen)
             {
-                entt::entity current = entity;
+                entt::entity current = relationship->_first;
                 for (size_t i {}; i < relationship->_children; ++i)
                 {
                     if (ecs._registry.valid(current))
                     {
                         self(self, current);
+                        current = ecs._registry.get<RelationshipComponent>(current)._next;
                     }
                 }
 
