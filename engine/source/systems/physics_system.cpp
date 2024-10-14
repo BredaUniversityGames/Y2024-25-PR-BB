@@ -62,7 +62,7 @@ void PhysicsSystem::Inspect()
 
     if (ImGui::Button("Create Plane Entity"))
     {
-        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
         RigidbodyComponent newRigidBody(*_physicsModule.body_interface, plane_settings);
         CreatePhysicsEntity(newRigidBody);

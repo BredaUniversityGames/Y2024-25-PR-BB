@@ -55,8 +55,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     _brain.drawStats.indexCount += 3;
     _brain.drawStats.drawCalls++;
 
-    // ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
 }

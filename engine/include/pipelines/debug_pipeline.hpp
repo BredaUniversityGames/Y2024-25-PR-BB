@@ -24,6 +24,12 @@ public:
     {
         _linesData.insert(_linesData.end(), linesData.begin(), linesData.end());
     }
+
+    void AddLine(const glm::vec3& start, const glm::vec3& end)
+    {
+        _linesData.push_back(start);
+        _linesData.push_back(end);
+    }
     void ClearLinesData() { _linesData.clear(); }
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t, uint32_t swapChainIndex);
