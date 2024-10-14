@@ -33,8 +33,6 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { initInfo.width, initInfo.height });
 
-    CreateDescriptorSetLayout();
-    InitializeCameraUBODescriptors();
     InitializeHDRTarget();
     InitializeBloomTargets();
     LoadEnvironmentMap();
@@ -64,13 +62,14 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
 
     _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
 
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, _cameraStructure, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), _cameraStructure, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _camera = std::make_unique<CameraResource>(_brain);
+
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, *_camera, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, _cameraStructure, _iblPipeline->IrradianceMap(),
-        _iblPipeline->PrefilterMap(), _iblPipeline->BRDFLUTMap(), _bloomSettings);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_brain, _cameraStructure);
 
     CreateCommandBuffers();
@@ -132,12 +131,6 @@ Renderer::~Renderer()
         }
     }
 
-    _brain.device.destroy(_cameraStructure.descriptorSetLayout);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        _brain.GetBufferResourceManager().Destroy(_cameraStructure.buffers[i]);
-    }
-
     _swapChain.reset();
 }
 
@@ -160,8 +153,9 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     _gpuScene->Update(*_scene, _currentFrame);
 
     const RenderSceneDescription sceneDescription {
-        *_gpuScene,
-        *_scene
+        .gpuScene = *_gpuScene,
+        .sceneDescription = *_scene,
+        .batchBuffer = *_batchBuffer
     };
 
     _brain.drawStats = {};
@@ -182,14 +176,14 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
         vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription, *_batchBuffer);
+    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
+    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
     _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
-    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, *_batchBuffer);
+    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
     // TODO: pass in delta time
@@ -224,106 +218,6 @@ void Renderer::CreateSyncObjects()
         util::VK_ASSERT(_brain.device.createSemaphore(&semaphoreCreateInfo, nullptr, &_renderFinishedSemaphores[i]), errorMsg);
         util::VK_ASSERT(_brain.device.createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
     }
-}
-
-void Renderer::CreateDescriptorSetLayout()
-{
-    vk::DescriptorSetLayoutBinding cameraUBODescriptorSetBinding {};
-    cameraUBODescriptorSetBinding.binding = 0;
-    cameraUBODescriptorSetBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-    cameraUBODescriptorSetBinding.descriptorCount = 1;
-    cameraUBODescriptorSetBinding.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
-
-    vk::DescriptorSetLayoutCreateInfo cameraUBOCreateInfo {};
-    cameraUBOCreateInfo.bindingCount = 1;
-    cameraUBOCreateInfo.pBindings = &cameraUBODescriptorSetBinding;
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&cameraUBOCreateInfo, nullptr, &_cameraStructure.descriptorSetLayout),
-        "Failed creating camera UBO descriptor set layout!");
-}
-
-void Renderer::InitializeCameraUBODescriptors()
-{
-    vk::DeviceSize bufferSize = sizeof(CameraUBO);
-
-    // Create buffers.
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        std::string name = "[] Camera UBO";
-
-        // Inserts i in the middle of []
-        name.insert(1, 1, static_cast<char>(i + '0'));
-
-        BufferCreation creation {};
-        creation.SetSize(bufferSize)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
-            .SetName(name);
-
-        _cameraStructure.buffers[i] = _brain.GetBufferResourceManager().Create(creation);
-    }
-
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _cameraStructure.descriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _cameraStructure.descriptorSets.data()),
-        "Failed allocating descriptor sets!");
-
-    for (size_t i = 0; i < _cameraStructure.descriptorSets.size(); ++i)
-    {
-        UpdateCameraDescriptorSet(i);
-    }
-}
-
-void Renderer::UpdateCameraDescriptorSet(uint32_t currentFrame)
-{
-    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[currentFrame]);
-
-    vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
-    bufferInfo.offset = 0;
-    bufferInfo.range = sizeof(CameraUBO);
-
-    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
-
-    vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
-    bufferWrite.dstSet = _cameraStructure.descriptorSets[currentFrame];
-    bufferWrite.dstBinding = 0;
-    bufferWrite.dstArrayElement = 0;
-    bufferWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
-    bufferWrite.descriptorCount = 1;
-    bufferWrite.pBufferInfo = &bufferInfo;
-
-    _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
-}
-
-CameraUBO Renderer::CalculateCamera(const Camera& camera)
-{
-    CameraUBO ubo {};
-
-    glm::mat4 cameraRotation = glm::mat4_cast(glm::quat(camera.euler_rotation));
-    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, camera.position);
-
-    ubo.view = glm::inverse(cameraTranslation * cameraRotation);
-
-    ubo.proj = glm::perspective(camera.fov, _gBuffers->Size().x / static_cast<float>(_gBuffers->Size().y), camera.nearPlane,
-        camera.farPlane);
-    ubo.proj[1][1] *= -1;
-
-    ubo.VP = ubo.proj * ubo.view;
-    ubo.cameraPosition = camera.position;
-
-    ubo.skydomeMVP = ubo.view;
-    ubo.skydomeMVP[3][0] = 0.0f;
-    ubo.skydomeMVP[3][1] = 0.0f;
-    ubo.skydomeMVP[3][2] = 0.0f;
-    ubo.skydomeMVP = ubo.proj * ubo.skydomeMVP;
-
-    return ubo;
 }
 
 void Renderer::InitializeHDRTarget()
@@ -369,16 +263,12 @@ void Renderer::LoadEnvironmentMap()
 
     _environmentMap = _brain.GetImageResourceManager().Create(envMapCreation);
 }
-void Renderer::UpdateCamera(const Camera& camera)
-{
-    CameraUBO cameraUBO = CalculateCamera(camera);
-    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_cameraStructure.buffers[_currentFrame]);
-    std::memcpy(buffer->mappedPtr, &cameraUBO, sizeof(CameraUBO));
-}
+
 void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
+
 void Renderer::Render()
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
@@ -391,7 +281,7 @@ void Renderer::Render()
 
     _bloomSettings.Update(_currentFrame);
 
-    UpdateCamera(_scene->camera);
+    _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};

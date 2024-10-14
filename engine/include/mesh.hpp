@@ -41,6 +41,7 @@ struct StagingMesh
     {
         std::vector<uint32_t> indices;
         std::vector<Vertex> vertices;
+        float boundingRadius;
 
         std::optional<uint32_t> materialIndex;
     };
@@ -86,19 +87,24 @@ struct GameObject
 
 struct DirectionalLight
 {
-    glm::vec3 targetPos = glm::vec3(0.0f, 1.5f, -0.25f);
-    glm::vec3 lightDir = glm::vec3(0.2f, -0.15f, 0.15f);
-    float sceneDistance = 1.0f;
-    float orthoSize = 17.0f;
-    float farPlane = 32.0f;
-    float nearPlane = -16.0f;
+    Camera camera {
+        .projection = Camera::Projection::eOrthographic,
+        .position = glm::vec3 { 7.3f, 1.25f, 4.75f },
+        .eulerRotation = glm::vec3 { 0.4f, 3.75f, 0.0f },
+        .orthographicSize = 17.0f,
+        .nearPlane = -16.0f,
+        .farPlane = 32.0f,
+        .aspectRatio = 1.0f,
+    };
+
     float shadowBias = 0.002f;
 
-    const glm::mat4 biasMatrix = glm::mat4(
+    constexpr static glm::mat4 BIAS_MATRIX {
         0.5, 0.0, 0.0, 0.0,
         0.0, 0.5, 0.0, 0.0,
         0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0);
+        0.5, 0.5, 0.5, 1.0
+    };
 };
 
 struct SceneDescription

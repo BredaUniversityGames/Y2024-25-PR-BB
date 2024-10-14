@@ -7,7 +7,7 @@ layout (std430, set = 0, binding = 0) buffer InstanceData
     Instance instances[];
 };
 
-layout (set = 1, binding = 0) uniform SceneUBO
+layout (set = 2, binding = 0) uniform SceneUBO
 {
     Scene scene;
 };
