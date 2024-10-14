@@ -7,12 +7,6 @@ void RelationshipHelpers::SetParent(entt::registry& reg, entt::entity entity, en
 {
     assert(reg.valid(entity));
     assert(reg.valid(parent));
-    // Remove from possible previous parent
-    RelationshipComponent& childRelationship = reg.get<RelationshipComponent>(entity);
-    if (childRelationship._parent != entt::null)
-    {
-        DetachChild(reg, childRelationship._parent, entity);
-    }
 
     AttachChild(reg, parent, entity);
 }

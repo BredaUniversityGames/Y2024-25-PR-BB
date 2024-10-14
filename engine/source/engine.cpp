@@ -10,6 +10,7 @@
 #include "renderer.hpp"
 #include "editor.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/transform_helpers.hpp"
 
 OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application)
 {
@@ -30,6 +31,7 @@ OldEngine::OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> appl
     _renderer = std::make_unique<Renderer>(initInfo, _application);
 
     _ecs = std::make_unique<ECS>();
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
@@ -159,6 +161,7 @@ OldEngine::~OldEngine()
     _editor.reset();
     _renderer.reset();
 
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
     _ecs.reset();
 }

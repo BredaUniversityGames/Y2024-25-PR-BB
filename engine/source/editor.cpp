@@ -19,6 +19,8 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
+
+#include <entt/src/entt/entity/entity.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
@@ -66,7 +68,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
         if (relationship != nullptr && relationship->_children > 0)
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeFlags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags, "%s", name.c_str());
 
             if (ImGui::IsItemClicked())
             {
@@ -89,7 +91,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<long long>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
@@ -104,7 +106,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             entt::entity entity = ecs._registry.create();
 
             ecs._registry.emplace<TransformComponent>(entity);
-            ecs._registry.emplace<WorldMatrixComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
@@ -256,18 +257,19 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         _selectedEntity = entt::null;
         return;
     }
-    ImGui::PushID(reinterpret_cast<void*>(_selectedEntity));
+    ImGui::PushID(static_cast<int>(_selectedEntity));
 
     TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
     if (transform != nullptr)
     {
-        int changed = 0;
+        bool changed = false;
         // Inspect Transform component
-        changed += ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        changed += ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
-        changed += ImGui::DragFloat3("Scale", &transform->_localScale.x);
+        // TODO use euler angles instead of quaternion
+        changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
+        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
+        changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
 
-        if (changed > 0)
+        if (changed)
         {
             TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
         }
