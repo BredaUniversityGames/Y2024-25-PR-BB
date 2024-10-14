@@ -1,58 +1,61 @@
 include(FetchContent)
 
-include(FetchContent)
-
-# ImGUI and ImPlot
-
-file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
-file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
-
-set(imgui_files ${imgui_sources} ${imgui_headers}
-        imgui/misc/cpp/imgui_stdlib.cpp
-        imgui/misc/freetype/imgui_freetype.cpp
-        imgui/backends/imgui_impl_vulkan.cpp
-        imgui/backends/imgui_impl_sdl3.cpp
-)
-
-file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
-file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
-set(implot_files ${implot_sources} ${implot_headers})
-
-add_library(ImGui ${imgui_files} ${implot_files})
-
-target_include_directories(ImGui
-        PRIVATE freetype/include
-        PRIVATE Vulkan-Headers/include
-        PRIVATE SDL/include
-        PUBLIC imgui
-        PUBLIC imgui/backends
-        PUBLIC implot
-)
+# Macro for overriding default values for options before adding a library
+macro(override_option option_name option_value)
+    set(${option_name} ${option_value} CACHE BOOL "" FORCE)
+endmacro()
 
 # Magic Enum
 
-add_subdirectory(magic_enum)
+FetchContent_Declare(
+        MagicEnum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+        GIT_TAG v0.9.6
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(MagicEnum)
 
 # SpdLog
 
-add_subdirectory(spdlog)
+FetchContent_Declare(
+        SpdLog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.14.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(SpdLog)
 
 # Vulkan
-find_package(Vulkan)
 
-if (NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Could not find Vulkan library!")
-else ()
-    message(STATUS ${Vulkan_LIBRARY})
-endif ()
+find_package(Vulkan REQUIRED)
 
 # Vulkan Memory allocator
 
-add_subdirectory(VulkanMemoryAllocator)
+FetchContent_Declare(
+        VMA
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG v3.1.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(VMA)
 
 # FastGLTF
 
-add_subdirectory(fastgltf)
+FetchContent_Declare(
+        FastGLTF
+        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+        GIT_TAG v0.8.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(FastGLTF)
 
 # Cereal
 
@@ -60,28 +63,68 @@ FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
         GIT_TAG v1.3.2
-        GIT_SHALLOW TRUE)
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
 
-set(SKIP_PERFORMANCE_COMPARISON ON)
-set(BUILD_SANDBOX OFF)
-set(BUILD_TESTS OFF)
-set(BUILD_DOC OFF)
+override_option(SKIP_PERFORMANCE_COMPARISON ON)
+override_option(BUILD_SANDBOX OFF)
+override_option(BUILD_TESTS OFF)
+override_option(BUILD_DOC OFF)
 
 FetchContent_MakeAvailable(cereal)
 
-set(SKIP_PERFORMANCE_COMPARISON OFF)
-set(BUILD_DOC "Build documentation" ON)
-set(BUILD_SANDBOX "Build sandbox examples" ON)
-set(BUILD_TESTS ON)
 # Tracy Profiler
 
-set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
-set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
-add_subdirectory(tracy)
+FetchContent_Declare(
+        Tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG v0.11.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(TRACY_ENABLE ON)
+override_option(TRACY_ON_DEMAND ON)
+FetchContent_MakeAvailable(Tracy)
 
 # EnTT
 
-add_subdirectory(entt)
+FetchContent_Declare(
+        EnTT
+        GIT_REPOSITORY https://github.com/skypjack/entt.git
+        GIT_TAG v3.13.2
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(EnTT)
+
+# SDL
+
+FetchContent_Declare(
+        SDL
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG preview-3.1.3
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(SDL_SHARED OFF)
+override_option(SDL_STATIC ON)
+FetchContent_MakeAvailable(SDL)
+
+# GLM
+
+FetchContent_Declare(
+        GLM
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(GLM)
 
 # Jolt
 
@@ -114,12 +157,50 @@ target_compile_options(Jolt PRIVATE
         -Wno-error  # Do not treat warnings as errors
 )
 
-# SDL
+# GoogleTest
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(SDL)
-target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
+FetchContent_Declare(
+        GoogleTest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.15.2
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+override_option(gtest_force_shared_crt ON)
+FetchContent_MakeAvailable(GoogleTest)
+
+# ImGUI and ImPlot (cannot be used with FetchContent without forking)
+
+file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
+file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
+
+set(imgui_files ${imgui_sources} ${imgui_headers}
+        imgui/misc/cpp/imgui_stdlib.cpp
+        imgui/misc/freetype/imgui_freetype.cpp
+        imgui/backends/imgui_impl_vulkan.cpp
+        imgui/backends/imgui_impl_sdl3.cpp
+)
+
+file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
+file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
+set(implot_files ${implot_sources} ${implot_headers})
+
+add_library(ImGui ${imgui_files} ${implot_files})
+target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
+
+target_link_libraries(ImGui
+        PRIVATE SDL3::SDL3-static
+)
+
+target_include_directories(ImGui
+        PRIVATE freetype/include
+        PRIVATE Vulkan-Headers/include
+        PUBLIC imgui
+        PUBLIC imgui/backends
+        PUBLIC implot
+)
 
 # Main External Library
 
@@ -136,6 +217,8 @@ target_link_libraries(External
         INTERFACE SDL3::SDL3-static
         INTERFACE magic_enum::magic_enum
         INTERFACE spdlog::spdlog
+        INTERFACE glm::glm
+        INTERFACE EnTT::EnTT
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
         INTERFACE TracyClient
@@ -146,9 +229,7 @@ target_link_libraries(External
 target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE Vulkan-Headers/include
-        INTERFACE glm
         INTERFACE stb
-        INTERFACE entt/src/entt
         INTERFACE ${cereal_SOURCE_DIR}/include
 )
 
