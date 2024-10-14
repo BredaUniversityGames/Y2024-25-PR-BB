@@ -2,16 +2,15 @@
 
 #include <entity/entity.hpp>
 
-class RelationshipHelpers
+namespace RelationshipHelpers
 {
-public:
-    static void SetParent(entt::registry& reg, entt::entity entity, entt::entity parent);
+void SetParent(entt::registry& reg, entt::entity entity, entt::entity parent);
 
-    static void AttachChild(entt::registry& reg, entt::entity entity, entt::entity child);
-    static void DetachChild(entt::registry& reg, entt::entity entity, entt::entity child);
+void AttachChild(entt::registry& reg, entt::entity entity, entt::entity child);
+void DetachChild(entt::registry& reg, entt::entity entity, entt::entity child);
 
-    static void OnDestroyRelationship(entt::registry& reg, entt::entity entity);
+void OnDestroyRelationship(entt::registry& reg, entt::entity entity);
 
-    static void SubscribeToEvents(entt::registry& reg);
-    static void UnsubscribeToEvents(entt::registry& reg);
-};
+void SubscribeToEvents(entt::registry& reg);
+void UnsubscribeToEvents(entt::registry& reg);
+}
