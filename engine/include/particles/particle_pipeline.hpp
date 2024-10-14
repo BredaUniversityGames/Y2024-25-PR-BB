@@ -1,13 +1,13 @@
 #pragma once
 
-struct CameraStructure;
 struct Emitter;
+class CameraResource;
 class ECS;
 
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const VulkanBrain& brain, const CameraStructure& camera);
+    ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera);
     ~ParticlePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs);
@@ -37,7 +37,7 @@ private:
     } _emitPushConstant;
 
     const VulkanBrain& _brain;
-    const CameraStructure& _camera;
+    const CameraResource& _camera;
 
     std::vector<Emitter> _emitters;
 

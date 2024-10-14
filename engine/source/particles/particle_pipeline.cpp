@@ -8,7 +8,7 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 
-ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraStructure& camera)
+ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera)
     : _brain(brain)
     , _camera(camera)
 {
@@ -142,7 +142,7 @@ void ParticlePipeline::UpdateBuffers()
 void ParticlePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 4> layouts = { _brain.bindlessLayout, _storageLayout, _uniformLayout, _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 4> layouts = { _brain.bindlessLayout, _storageLayout, _uniformLayout, _camera.DescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 

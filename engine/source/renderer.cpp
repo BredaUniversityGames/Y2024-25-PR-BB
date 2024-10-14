@@ -70,7 +70,7 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, _cameraStructure);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera);
 
     CreateCommandBuffers();
     CreateSyncObjects();
