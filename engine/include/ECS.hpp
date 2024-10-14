@@ -58,6 +58,6 @@ T& ECS::GetSystem()
         if (found)
             return *found;
     }
-    assert(false);
-    return *dynamic_cast<T*>(_systems[0].get()); // This line will always fail
+    assert(false && "Could not find system");
+    return *static_cast<T*>(nullptr); // This line will always fail
 }

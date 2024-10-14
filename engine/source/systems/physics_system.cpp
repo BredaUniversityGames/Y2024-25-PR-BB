@@ -8,9 +8,7 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     , _physicsModule(physicsModule)
 {
 }
-PhysicsSystem::~PhysicsSystem()
-{
-}
+
 entt::entity PhysicsSystem::CreatePhysicsEntity()
 {
     entt::entity entity = _ecs._registry.create();

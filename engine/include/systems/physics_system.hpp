@@ -7,7 +7,7 @@ class PhysicsSystem : public System
 {
 public:
     PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule);
-    ~PhysicsSystem();
+    ~PhysicsSystem() = default;
 
     entt::entity CreatePhysicsEntity();
     void CreatePhysicsEntity(RigidbodyComponent& rb);
