@@ -17,7 +17,6 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
-#define JPH_DEBUG_RENDERER
 namespace JPH
 {
 class DebugRendererSimple;

@@ -63,9 +63,9 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE)
 
 set(SKIP_PERFORMANCE_COMPARISON ON)
-set(BUILD_SANDBOX OFF )
-set(BUILD_TESTS OFF )
-set(BUILD_DOC OFF )
+set(BUILD_SANDBOX OFF)
+set(BUILD_TESTS OFF)
+set(BUILD_DOC OFF)
 
 FetchContent_MakeAvailable(cereal)
 
@@ -95,6 +95,7 @@ set(USE_LZCNT ON)
 set(USE_TZCNT ON)
 set(USE_F16C ON)
 set(USE_FMADD ON)
+set(CPP_RTTI_ENABLED ON)
 
 # Include Jolt
 FetchContent_Declare(
