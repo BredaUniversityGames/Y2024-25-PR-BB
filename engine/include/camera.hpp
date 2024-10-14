@@ -2,7 +2,7 @@
 
 class VulkanBrain;
 
-struct alignas(16) Camera
+struct Camera
 {
     enum class Projection
     {
