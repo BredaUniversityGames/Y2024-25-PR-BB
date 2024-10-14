@@ -1,7 +1,11 @@
-
 include(FetchContent)
 
-# ImGUI and ImPlot
+# Macro for overriding default values for options before adding a library
+macro(override_option option_name option_value)
+    set(${option_name} ${option_value} CACHE BOOL "" FORCE)
+endmacro()
+
+# ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
 file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
@@ -30,28 +34,55 @@ target_include_directories(ImGui
 
 # Magic Enum
 
-add_subdirectory(magic_enum)
+FetchContent_Declare(
+        MagicEnum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+        GIT_TAG v0.9.6
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(MagicEnum)
 
 # SpdLog
 
-add_subdirectory(spdlog)
+FetchContent_Declare(
+        SpdLog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.14.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(SpdLog)
 
 # Vulkan
-find_package(Vulkan)
 
-if (NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Could not find Vulkan library!")
-else ()
-    message(STATUS ${Vulkan_LIBRARY})
-endif ()
+find_package(Vulkan REQUIRED)
 
 # Vulkan Memory allocator
 
-add_subdirectory(VulkanMemoryAllocator)
+FetchContent_Declare(
+        VMA
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG v3.1.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(VMA)
 
 # FastGLTF
 
-add_subdirectory(fastgltf)
+FetchContent_Declare(
+        FastGLTF
+        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+        GIT_TAG v0.8.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(FastGLTF)
 
 # Cereal
 
@@ -59,35 +90,56 @@ FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
         GIT_TAG v1.3.2
-        GIT_SHALLOW TRUE)
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
 
-set(SKIP_PERFORMANCE_COMPARISON ON)
-set(BUILD_SANDBOX OFF )
-set(BUILD_TESTS OFF )
-set(BUILD_DOC OFF )
+override_option(SKIP_PERFORMANCE_COMPARISON ON)
+override_option(BUILD_SANDBOX OFF)
+override_option(BUILD_TESTS OFF)
+override_option(BUILD_DOC OFF)
 
 FetchContent_MakeAvailable(cereal)
 
-set(SKIP_PERFORMANCE_COMPARISON OFF)
-set(BUILD_DOC "Build documentation" ON)
-set(BUILD_SANDBOX "Build sandbox examples" ON)
-set(BUILD_TESTS ON)
 # Tracy Profiler
 
-set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
-set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
-add_subdirectory(tracy)
+FetchContent_Declare(
+        Tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG v0.11.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(TRACY_ENABLE ON)
+override_option(TRACY_ON_DEMAND ON)
+FetchContent_MakeAvailable(Tracy)
 
 # EnTT
 
-add_subdirectory(entt)
+FetchContent_Declare(
+        EnTT
+        GIT_REPOSITORY https://github.com/skypjack/entt.git
+        GIT_TAG v3.13.2
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(EnTT)
 
 # SDL
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(SDL)
-target_compile_options(SDL3-static PRIVATE "-Wno-deprecated-declarations")
+FetchContent_Declare(
+        SDL
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG preview-3.1.3
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(SDL_SHARED OFF)
+override_option(SDL_STATIC ON)
+FetchContent_MakeAvailable(SDL)
 
 # Main External Library
 
