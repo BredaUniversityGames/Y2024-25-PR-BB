@@ -3,7 +3,7 @@
 
 // Modified from SDL_keycode.h
 
-enum class KeyCode : uint32_t
+enum class KeyboardCode : uint32_t
 {
     eUNKNOWN = 0x00000000u /* 0 */
     ,

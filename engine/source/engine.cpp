@@ -99,7 +99,7 @@ void OldEngine::Tick(Engine& engine)
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
 
-    if (input.IsKeyPressed(KeyCode::eH))
+    if (input.IsKeyPressed(KeyboardCode::eH))
         application_module.SetMouseHidden(!application_module.GetMouseHidden());
 
     if (application_module.GetMouseHidden())
@@ -119,16 +119,16 @@ void OldEngine::Tick(Engine& engine)
         _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
 
         glm::vec3 movement_dir {};
-        if (input.IsKeyHeld(KeyCode::eW))
+        if (input.IsKeyHeld(KeyboardCode::eW))
             movement_dir -= FORWARD;
 
-        if (input.IsKeyHeld(KeyCode::eS))
+        if (input.IsKeyHeld(KeyboardCode::eS))
             movement_dir += FORWARD;
 
-        if (input.IsKeyHeld(KeyCode::eD))
+        if (input.IsKeyHeld(KeyboardCode::eD))
             movement_dir += RIGHT;
 
-        if (input.IsKeyHeld(KeyCode::eA))
+        if (input.IsKeyHeld(KeyboardCode::eA))
             movement_dir -= RIGHT;
 
         if (glm::length(movement_dir) != 0.0f)
@@ -140,7 +140,7 @@ void OldEngine::Tick(Engine& engine)
     }
     _lastMousePos = { mouseX, mouseY };
 
-    if (input.IsKeyPressed(KeyCode::eESCAPE))
+    if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
     _ecs->UpdateSystems(deltaTimeMS);

@@ -28,14 +28,14 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     case SDL_EVENT_KEY_DOWN:
         if (event.key.repeat == 0)
         { // Only process on first keydown, not when holding
-            KeyCode key = static_cast<KeyCode>(event.key.key);
+            KeyboardCode key = static_cast<KeyboardCode>(event.key.key);
             keyPressed[key] = true;
             keyHeld[key] = true;
         }
         break;
     case SDL_EVENT_KEY_UP:
     {
-        KeyCode key = static_cast<KeyCode>(event.key.key);
+        KeyboardCode key = static_cast<KeyboardCode>(event.key.key);
         keyHeld[key] = false;
         keyReleased[key] = true;
         break;
@@ -69,17 +69,17 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     }
 }
 
-bool InputManager::IsKeyPressed(KeyCode key) const
+bool InputManager::IsKeyPressed(KeyboardCode key) const
 {
     return keyPressed[key];
 }
 
-bool InputManager::IsKeyHeld(KeyCode key) const
+bool InputManager::IsKeyHeld(KeyboardCode key) const
 {
     return keyHeld[key];
 }
 
-bool InputManager::IsKeyReleased(KeyCode key) const
+bool InputManager::IsKeyReleased(KeyboardCode key) const
 {
     return keyReleased[key];
 }
