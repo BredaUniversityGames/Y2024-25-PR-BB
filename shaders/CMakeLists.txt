@@ -15,6 +15,10 @@ file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS
         ${SHADER_DIR}/*.comp
 )
 
+file(GLOB_RECURSE GLSL_SHADERS CONFIGURE_DEPENDS
+        ${SHADER_DIR}/*.glsl
+)
+
 set(SPIRV_BIN "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 file(MAKE_DIRECTORY ${SPIRV_BIN})
 
@@ -27,6 +31,7 @@ function(compile_shader shader)
             COMMAND "${GLSLC}" ${shader} -o ${SPIRV_OUTPUT}
             COMMAND_EXPAND_LISTS
             COMMENT "Compiling ${shader} to SPIR-V"
+            DEPENDS ${shader} ${GLSL_SHADERS}
             VERBATIM
     )
 
