@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "systems/system.hpp"
-#include "entt.hpp"
 
 class PhysicsModule;
 struct RigidbodyComponent;
