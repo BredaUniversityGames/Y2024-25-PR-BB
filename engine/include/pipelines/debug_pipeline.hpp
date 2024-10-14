@@ -10,13 +10,6 @@ class BatchBuffer;
 class DebugPipeline
 {
 public:
-    struct FrameData
-    {
-        vk::Buffer vertexBuffer;
-        VmaAllocation vertexBufferAllocation;
-        void* vertexBufferMapped;
-    };
-
     DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
     ~DebugPipeline();
 
@@ -32,7 +25,7 @@ public:
     }
     void ClearLines() { _linesData.clear(); }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex);
 
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);
@@ -42,7 +35,7 @@ private:
 
     void CreateVertexBuffer();
 
-    void UpdateVertexData(uint32_t currentFrame);
+    void UpdateVertexData();
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
@@ -54,7 +47,5 @@ private:
     const vk::DescriptorSetLayout& _descriptorSetLayout;
 
     std::vector<glm::vec3> _linesData;
-    // std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
-
     ResourceHandle<Buffer> _vertexBuffer;
 };

@@ -28,7 +28,7 @@ DebugPipeline::~DebugPipeline()
     _brain.GetBufferResourceManager().Destroy(_vertexBuffer);
 }
 
-void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
+void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex)
 {
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -72,13 +72,12 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
         &_camera.descriptorSets[currentFrame], 0, nullptr);
 
-    UpdateVertexData(currentFrame);
+    UpdateVertexData();
 
     // to draw lines
     // Bind the vertex buffer
-
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
-    vk::DeviceSize offsets[] = { 0 };
+    const vk::DeviceSize offsets[] = { 0 };
     commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets);
 
     // Draw the lines
@@ -106,8 +105,8 @@ void DebugPipeline::CreatePipeline()
     auto vertByteCode = shader::ReadFile("shaders/physics-v.spv");
     auto fragByteCode = shader::ReadFile("shaders/physics-f.spv");
 
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
+    const vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
+    const vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
 
     vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
     vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
@@ -119,7 +118,7 @@ void DebugPipeline::CreatePipeline()
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
+    const vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
     // Vertex input
     auto bindingDesc = LineVertex::GetBindingDescription();
@@ -177,7 +176,7 @@ void DebugPipeline::CreatePipeline()
     // Use dynamic rendering
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
     pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    vk::Format format = _swapChain.GetFormat();
+    const vk::Format format = _swapChain.GetFormat();
     pipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
     pipelineRenderingCreateInfo.depthAttachmentFormat = _gBuffers.DepthFormat();
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
@@ -192,32 +191,18 @@ void DebugPipeline::CreatePipeline()
 }
 void DebugPipeline::CreateVertexBuffer()
 {
-    /*vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // big enough we probably won't need to resize
-
-    for (size_t i = 0; i < _frameData.size(); ++i)
-    {
-        util::CreateBuffer(_brain, bufferSize,
-            vk::BufferUsageFlagBits::eVertexBuffer,
-            _frameData[i].vertexBuffer, true, _frameData[i].vertexBufferAllocation,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-            "Uniform buffer");
-
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].vertexBufferAllocation, &_frameData[i].vertexBufferMapped),
-            "Failed mapping memory for UBO!");
-    }*/
-
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048;
+    const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048;
     BufferCreation vertexBufferCreation {};
     vertexBufferCreation.SetSize(bufferSize)
         .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
         .SetIsMappable(true)
-        .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_HOST)
         .SetName("Debug vertex buffer");
 
     _vertexBuffer = _brain.GetBufferResourceManager().Create(vertexBufferCreation);
 }
 
-void DebugPipeline::UpdateVertexData(uint32_t currentFrame)
+void DebugPipeline::UpdateVertexData()
 {
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
     memcpy(buffer->mappedPtr, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
