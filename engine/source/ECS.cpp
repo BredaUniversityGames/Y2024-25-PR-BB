@@ -1,8 +1,6 @@
 #include "ECS.hpp"
 
 #include "systems/system.hpp"
-#include <fstream>
-
 ECS::ECS() = default;
 ECS::~ECS() = default;
 

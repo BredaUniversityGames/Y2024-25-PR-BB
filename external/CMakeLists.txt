@@ -70,9 +70,6 @@ set(SKIP_PERFORMANCE_COMPARISON OFF)
 set(BUILD_DOC "Build documentation" ON)
 set(BUILD_SANDBOX "Build sandbox exsamples" ON)
 
-# Suppress the specific warning when compiling code that includes cereal headers
-target_compile_options(cereal INTERFACE
-        $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wno-dangling-reference>)
 
 # Tracy Profiler
 
@@ -118,6 +115,6 @@ target_include_directories(External
         INTERFACE glm
         INTERFACE stb
         INTERFACE entt/src/entt
-        INTERFACE ${cereal_SOURCE_DIR}/include
+        SYSTEM INTERFACE ${cereal_SOURCE_DIR}/include
 )
 

@@ -6,8 +6,7 @@
 
 #include <filesystem>
 #include <fstream>
-#include "cereal/cereal.hpp"
-#include "cereal/archives/json.hpp"
+#include "include_cereal.hpp"
 
 namespace Serialization
 {

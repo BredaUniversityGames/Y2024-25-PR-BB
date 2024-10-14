@@ -2,7 +2,7 @@
 // Created by luuk on 10-10-2024.
 //
 #pragma once
-#include "cereal/cereal.hpp"
+#include "include_cereal.hpp"
 #include <entity/registry.hpp>
 
 class EntitySerializer
