@@ -115,6 +115,11 @@ target_include_directories(External
         INTERFACE glm
         INTERFACE stb
         INTERFACE entt/src/entt
-        SYSTEM INTERFACE ${cereal_SOURCE_DIR}/include
+      
 )
 
+# System include directory for cereal
+target_include_directories(External
+        SYSTEM INTERFACE
+        ${cereal_SOURCE_DIR}/include
+)
