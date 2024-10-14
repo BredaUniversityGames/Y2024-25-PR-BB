@@ -15,6 +15,7 @@ DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers,
     , _swapChain(swapChain)
 
 {
+
     _linesData.reserve(2048); // pre allocate some memory
     CreateVertexBuffer();
     CreatePipeline();
@@ -24,11 +25,7 @@ DebugPipeline::~DebugPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
-    for (size_t i = 0; i < _frameData.size(); ++i)
-    {
-        vmaUnmapMemory(_brain.vmaAllocator, _frameData[i].vertexBufferAllocation);
-        vmaDestroyBuffer(_brain.vmaAllocator, _frameData[i].vertexBuffer, _frameData[i].vertexBufferAllocation);
-    }
+    _brain.GetBufferResourceManager().Destroy(_vertexBuffer);
 }
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
@@ -79,9 +76,10 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
     // to draw lines
     // Bind the vertex buffer
-    vk::Buffer vertexBuffers[] = { _frameData[currentFrame].vertexBuffer };
+
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
     vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets);
 
     // Draw the lines
     commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
@@ -194,7 +192,7 @@ void DebugPipeline::CreatePipeline()
 }
 void DebugPipeline::CreateVertexBuffer()
 {
-    vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // big enough we probably won't need to resize
+    /*vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // big enough we probably won't need to resize
 
     for (size_t i = 0; i < _frameData.size(); ++i)
     {
@@ -206,10 +204,21 @@ void DebugPipeline::CreateVertexBuffer()
 
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, _frameData[i].vertexBufferAllocation, &_frameData[i].vertexBufferMapped),
             "Failed mapping memory for UBO!");
-    }
+    }*/
+
+    vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048;
+    BufferCreation vertexBufferCreation {};
+    vertexBufferCreation.SetSize(bufferSize)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
+        .SetIsMappable(true)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+        .SetName("Debug vertex buffer");
+
+    _vertexBuffer = _brain.GetBufferResourceManager().Create(vertexBufferCreation);
 }
 
 void DebugPipeline::UpdateVertexData(uint32_t currentFrame)
 {
-    memcpy(_frameData[currentFrame].vertexBufferMapped, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
+    memcpy(buffer->mappedPtr, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
 }

@@ -54,5 +54,7 @@ private:
     const vk::DescriptorSetLayout& _descriptorSetLayout;
 
     std::vector<glm::vec3> _linesData;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
+    // std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
+
+    ResourceHandle<Buffer> _vertexBuffer;
 };
