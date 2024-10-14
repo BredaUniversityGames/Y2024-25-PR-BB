@@ -97,6 +97,7 @@ StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& 
     bool verticesReserved = false;
     bool tangentFound = false;
     bool texCoordFound = false;
+    float squaredBoundingRadius = 0.0f;
 
     for (auto& attribute : gltfPrimitive.attributes)
     {
@@ -144,8 +145,19 @@ StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& 
 
             std::byte* writeTarget = reinterpret_cast<std::byte*>(&stagingPrimitive.vertices[i]) + offset;
             std::memcpy(writeTarget, element, fastgltf::getElementByteSize(accessor.type, accessor.componentType));
+
+            if (attribute.name == "POSITION")
+            {
+                const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
+                float squaredLength = position->x * position->x + position->y * position->y + position->z * position->z;
+
+                if (squaredLength > squaredBoundingRadius)
+                    squaredBoundingRadius = squaredLength;
+            }
         }
     }
+
+    stagingPrimitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {
@@ -463,6 +475,7 @@ ModelLoader::LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, Singl
     primitive.count = stagingPrimitive.indices.size();
     primitive.vertexOffset = batchBuffer.AppendVertices(stagingPrimitive.vertices, commandBuffer);
     primitive.indexOffset = batchBuffer.AppendIndices(stagingPrimitive.indices, commandBuffer);
+    primitive.boundingRadius = stagingPrimitive.boundingRadius;
 
     return primitive;
 }

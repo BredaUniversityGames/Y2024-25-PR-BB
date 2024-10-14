@@ -9,7 +9,7 @@ BufferResourceManager::BufferResourceManager(const VulkanBrain& brain)
 
 ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creation)
 {
-    Buffer bufferResource{};
+    Buffer bufferResource {};
 
     util::CreateBuffer(_brain,
         creation.size,
@@ -20,10 +20,13 @@ ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creat
         creation.memoryUsage,
         creation.name);
 
+    bufferResource.size = creation.size;
+    bufferResource.usage = creation.usage;
+
     if (creation.isMappable)
     {
         util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, bufferResource.allocation, &bufferResource.mappedPtr),
-        "Failed mapping memory for buffer: " + creation.name);
+            "Failed mapping memory for buffer: " + creation.name);
     }
 
     return ResourceManager::Create(bufferResource);

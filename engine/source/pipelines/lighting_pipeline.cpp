@@ -3,15 +3,12 @@
 #include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _camera(camera)
-    , _irradianceMap(irradianceMap)
-    , _prefilterMap(prefilterMap)
-    , _brdfLUT(brdfLUT)
     , _bloomSettings(bloomSettings)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
@@ -67,9 +64,9 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &scene.gpuScene.GetSceneDescriptorSet(currentFrame), 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -88,7 +85,7 @@ LightingPipeline::~LightingPipeline()
 
 void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
-    std::array<vk::DescriptorSetLayout, 4> descriptorLayouts = { _brain.bindlessLayout, _camera.descriptorSetLayout, gpuScene.GetSceneDescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 4> descriptorLayouts = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), gpuScene.GetSceneDescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();

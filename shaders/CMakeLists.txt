@@ -6,31 +6,17 @@ endif ()
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS 
-  SHADER_DIR/*.frag
-  SHADER_DIR/*.vert
-  SHADER_DIR/*.tesc
-  SHADER_DIR/*.tese
-  SHADER_DIR/*.geom
-  SHADER_DIR/*.comp
+file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS
+        ${SHADER_DIR}/*.frag
+        ${SHADER_DIR}/*.vert
+        ${SHADER_DIR}/*.tesc
+        ${SHADER_DIR}/*.tese
+        ${SHADER_DIR}/*.geom
+        ${SHADER_DIR}/*.comp
 )
 
-set(SHADERS
-        ${SHADER_DIR}/brdf_integration.frag
-        ${SHADER_DIR}/brdf_integration.vert
-        ${SHADER_DIR}/fullscreen.vert
-        ${SHADER_DIR}/gaussian_blur.frag
-        ${SHADER_DIR}/geom.frag
-        ${SHADER_DIR}/geom.vert
-        ${SHADER_DIR}/irradiance.frag
-        ${SHADER_DIR}/irradiance.vert
-        ${SHADER_DIR}/lighting.frag
-        ${SHADER_DIR}/prefilter.frag
-        ${SHADER_DIR}/prefilter.vert
-        ${SHADER_DIR}/shadow.vert
-        ${SHADER_DIR}/skydome.frag
-        ${SHADER_DIR}/skydome.vert
-        ${SHADER_DIR}/tonemapping.frag
+file(GLOB_RECURSE GLSL_SHADERS CONFIGURE_DEPENDS
+        ${SHADER_DIR}/*.glsl
 )
 
 set(SPIRV_BIN "${CMAKE_CURRENT_SOURCE_DIR}/bin")
@@ -45,6 +31,7 @@ function(compile_shader shader)
             COMMAND "${GLSLC}" ${shader} -o ${SPIRV_OUTPUT}
             COMMAND_EXPAND_LISTS
             COMMENT "Compiling ${shader} to SPIR-V"
+            DEPENDS ${shader} ${GLSL_SHADERS}
             VERBATIM
     )
 

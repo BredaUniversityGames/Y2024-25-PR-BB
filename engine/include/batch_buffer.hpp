@@ -28,10 +28,6 @@ public:
     uint32_t AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer);
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
-    uint32_t DrawCount() const { return _drawCount; };
-
-    void WriteDraws(const std::vector<vk::DrawIndexedIndirectCommand>& commands, uint32_t frameIndex) const;
-
 private:
     const VulkanBrain& _brain;
 
@@ -46,6 +42,4 @@ private:
 
     uint32_t _vertexOffset { 0 };
     uint32_t _indexOffset { 0 };
-
-    mutable uint32_t _drawCount { 0 };
 };
