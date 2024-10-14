@@ -196,7 +196,7 @@ public:
         return linePositions;
     }
 
-    void ClearLinesData()
+    void ClearLines()
     {
         linePositions.clear();
     }

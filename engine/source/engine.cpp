@@ -94,8 +94,8 @@ void OldEngine::Run()
         // update physics
         _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
         auto linesData = _physicsModule->debugRenderer->GetLinesData();
-        _renderer->_debugPipeline->ClearLinesData();
-        _physicsModule->debugRenderer->ClearLinesData();
+        _renderer->_debugPipeline->ClearLines();
+        _physicsModule->debugRenderer->ClearLines();
         _renderer->_debugPipeline->AddLines(linesData);
 
         // Slow down application when minimized.

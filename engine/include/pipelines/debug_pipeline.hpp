@@ -30,7 +30,7 @@ public:
         _linesData.push_back(start);
         _linesData.push_back(end);
     }
-    void ClearLinesData() { _linesData.clear(); }
+    void ClearLines() { _linesData.clear(); }
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
 
