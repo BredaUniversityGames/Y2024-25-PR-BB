@@ -22,6 +22,7 @@ public:
 
 private:
     void CreatePipeline(const GPUScene& gpuScene);
+    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
@@ -31,4 +32,7 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
+
+    ResourceHandle<Buffer> _drawBuffer;
+    vk::DescriptorSet _drawBufferDescriptorSet;
 };

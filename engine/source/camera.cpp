@@ -122,13 +122,37 @@ void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
     switch (camera.projection)
     {
     case Camera::Projection::ePerspective:
+    {
         cameraBuffer.proj = glm::perspective(camera.fov, camera.aspectRatio, camera.nearPlane, camera.farPlane);
-        break;
+
+        glm::mat4 projT = glm::transpose(cameraBuffer.proj);
+
+        glm::vec4 frustumX = normalizePlane(projT[3] + projT[0]);
+        glm::vec4 frustumY = normalizePlane(projT[3] + projT[1]);
+
+        cameraBuffer.frustum[0] = frustumX.x;
+        cameraBuffer.frustum[1] = frustumX.z;
+        cameraBuffer.frustum[2] = frustumY.y;
+        cameraBuffer.frustum[3] = frustumY.z;
+    }
+    break;
     case Camera::Projection::eOrthographic:
-        cameraBuffer.proj = glm::ortho<float>(-camera.orthographicSize, camera.orthographicSize, -camera.orthographicSize, camera.orthographicSize, camera.nearPlane, camera.farPlane);
-        break;
+    {
+        float left = -camera.orthographicSize;
+        float right = camera.orthographicSize;
+        float bottom = -camera.orthographicSize;
+        float top = camera.orthographicSize;
+        cameraBuffer.proj = glm::ortho<float>(left, right, bottom, top, camera.nearPlane, camera.farPlane);
+
+        cameraBuffer.frustum[0] = left;
+        cameraBuffer.frustum[1] = right;
+        cameraBuffer.frustum[2] = bottom;
+        cameraBuffer.frustum[3] = top;
+    }
+    break;
     }
     cameraBuffer.proj[1][1] *= -1;
+    cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
 
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
     cameraBuffer.cameraPosition = camera.position;
@@ -138,16 +162,6 @@ void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
     cameraBuffer.skydomeMVP[3][1] = 0.0f;
     cameraBuffer.skydomeMVP[3][2] = 0.0f;
     cameraBuffer.skydomeMVP = cameraBuffer.proj * cameraBuffer.skydomeMVP;
-
-    glm::mat4 projT = glm::transpose(cameraBuffer.proj);
-
-    glm::vec4 frustumX = normalizePlane(projT[3] + projT[0]);
-    glm::vec4 frustumY = normalizePlane(projT[3] + projT[1]);
-
-    cameraBuffer.frustum[0] = frustumX.x;
-    cameraBuffer.frustum[1] = frustumX.z;
-    cameraBuffer.frustum[2] = frustumY.y;
-    cameraBuffer.frustum[3] = frustumY.z;
 
     cameraBuffer.zNear = camera.nearPlane;
     cameraBuffer.zFar = camera.farPlane;

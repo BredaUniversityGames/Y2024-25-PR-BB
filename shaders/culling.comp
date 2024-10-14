@@ -11,17 +11,22 @@ struct DrawCommand
     uint firstInstance;
 };
 
-layout (std430, set = 0, binding = 0) buffer DrawCommands
+layout (std430, set = 0, binding = 0) readonly buffer DrawCommandsIn
 {
-    DrawCommand drawCommands[];
+    DrawCommand drawCommandsIn[];
 };
 
-layout (std430, set = 1, binding = 0) buffer InstanceData
+layout (std430, set = 1, binding = 0) buffer DrawCommandsOut
+{
+    DrawCommand drawCommandsOut[];
+};
+
+layout (std430, set = 2, binding = 0) buffer InstanceData
 {
     Instance instances[];
 };
 
-layout (set = 2, binding = 0) uniform CameraUBO
+layout (set = 3, binding = 0) uniform CameraUBO
 {
     Camera camera;
 };
@@ -34,11 +39,12 @@ void main()
 {
     uint gId = gl_GlobalInvocationID.x;
 
-    if (gId < drawCommands.length())
+    if (gId < drawCommandsIn.length())
     {
+        drawCommandsOut[gId] = drawCommandsIn[gId];
         if (!IsVisible(gId))
         {
-            drawCommands[gId].instanceCount = 0;
+            drawCommandsOut[gId].instanceCount = 0;
         }
     }
 }
@@ -57,8 +63,18 @@ bool IsVisible(uint objectIndex)
     bool visible = true;
 
     // Test against frustum.
-    visible = visible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
-    visible = visible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
+    if (camera.projectionType == 0)
+    {
+        visible = visible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
+        visible = visible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
+    }
+    else if (camera.projectionType == 1)
+    {
+        visible = visible && center.x + radius > camera.frustum[0]; // Left plane
+        visible = visible && center.x - radius < camera.frustum[1]; // Right plane
+        visible = visible && center.y + radius > camera.frustum[2]; // Bottom plane
+        visible = visible && center.y - radius < camera.frustum[3]; // Top plane
+    }
 
     if (camera.distanceCullingEnabled != 0)
     {

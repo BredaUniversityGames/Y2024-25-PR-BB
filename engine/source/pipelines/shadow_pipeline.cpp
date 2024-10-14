@@ -11,20 +11,39 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     , _culler(_brain, gpuScene)
 {
     CreatePipeline(gpuScene);
+
+    auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
+    const auto* mainDrawBuffer = _brain.GetBufferResourceManager().Access(mainDrawBufferHandle);
+
+    BufferCreation creation {
+        .size = mainDrawBuffer->size,
+        .usage = mainDrawBuffer->usage,
+        .isMappable = false,
+        .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .name = "Shadow draw buffer",
+    };
+
+    _drawBuffer = _brain.GetBufferResourceManager().Create(creation);
+
+    CreateDrawBufferDescriptorSet(gpuScene);
 }
 
 ShadowPipeline::~ShadowPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
+
+    _brain.GetBufferResourceManager().Destroy(_drawBuffer);
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
     const RenderSceneDescription& scene)
 {
+    util::BeginLabel(commandBuffer, "Shadow pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
+
     _shadowCamera.Update(currentFrame, scene.sceneDescription.directionalLight.camera);
 
-    _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera);
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera, _drawBuffer, _drawBufferDescriptorSet);
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
@@ -37,8 +56,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     renderingInfo.renderArea.extent = vk::Extent2D { 4096, 4096 }; // Shadow map size
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
-
-    util::BeginLabel(commandBuffer, "Shadow pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -56,7 +73,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
     vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
-    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectDrawBuffer(currentFrame))->buffer;
+    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(_drawBuffer)->buffer;
     vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectCountBuffer(currentFrame))->buffer;
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
@@ -158,4 +175,36 @@ void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)
     _pipeline = result.value;
 
     _brain.device.destroy(vertModule);
+}
+
+void ShadowPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
+{
+    vk::DescriptorSetLayout layout = gpuScene.DrawBufferLayout();
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _brain.descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layout,
+    };
+
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_drawBufferDescriptorSet),
+        "Failed allocating descriptor sets!");
+
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_drawBuffer);
+
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = _drawBufferDescriptorSet,
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
+
+    _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }

@@ -139,6 +139,8 @@ struct Buffer
     vk::Buffer buffer {};
     VmaAllocation allocation {};
     void* mappedPtr = nullptr;
+    vk::DeviceSize size {};
+    vk::BufferUsageFlags usage {};
 };
 
 struct Mesh
@@ -169,6 +171,7 @@ struct alignas(16) GPUCamera
     float zNear;
     float zFar;
     bool cullingEnabled;
+    int32_t projectionType;
 
-    glm::vec3 _padding {};
+    glm::vec2 _padding {};
 };

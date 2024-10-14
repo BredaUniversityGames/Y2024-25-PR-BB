@@ -10,8 +10,9 @@ struct Camera
     float zNear;
     float zFar;
     int cullingEnabled;
+    int projectionType;
 
-    vec3 _padding;
+    vec2 _padding;
 };
 
 struct DirectionalLight
