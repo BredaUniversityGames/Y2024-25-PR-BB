@@ -1,43 +1,16 @@
-[submodule "external/magic_enum"]
-	path = external/magic_enum
-	url = https://github.com/Neargye/magic_enum.git
-[submodule "external/spdlog"]
-	path = external/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "external/fastgltf"]
-	path = external/fastgltf
-	url = https://github.com/spnda/fastgltf.git
 [submodule "external/Vulkan-Headers"]
 	path = external/Vulkan-Headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git
 [submodule "external/stb"]
 	path = external/stb
 	url = https://github.com/nothings/stb.git
-[submodule "external/glm"]
-	path = external/glm
-	url = https://github.com/g-truc/glm.git
-[submodule "external/SDL"]
-	path = external/SDL
-	url = https://github.com/libsdl-org/SDL.git
 [submodule "external/imgui"]
 	path = external/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
-[submodule "external/VulkanMemoryAllocator"]
-	path = external/VulkanMemoryAllocator
-	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "external/implot"]
 	path = external/implot
 	url = https://github.com/epezent/implot.git
 [submodule "external/freetype"]
 	path = external/freetype
 	url = https://github.com/freetype/freetype.git
-[submodule "external/tracy"]
-	path = external/tracy
-	url = https://github.com/wolfpld/tracy.git
-[submodule "external/googletest"]
-	path = external/googletest
-	url = https://github.com/google/googletest.git
-[submodule "external/entt"]
-	path = external/entt
-	url = https://github.com/skypjack/entt
