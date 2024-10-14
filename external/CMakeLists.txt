@@ -85,6 +85,7 @@ add_subdirectory(entt)
 
 # Jolt
 
+set(INTERPROCEDURAL_OPTIMIZATION ON)
 # Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
 set(USE_SSE4_1 ON)
 set(USE_SSE4_2 ON)

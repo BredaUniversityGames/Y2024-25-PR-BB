@@ -4,8 +4,11 @@
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
 
+
+#undef Convex
+#undef None
+
 #include "Jolt/Jolt.h"
-#include "Jolt/Renderer/DebugRendererSimple.h"
 
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
@@ -17,6 +20,8 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include "Jolt/Renderer/DebugRendererSimple.h"
+
 
 JPH_SUPPRESS_WARNINGS
 
