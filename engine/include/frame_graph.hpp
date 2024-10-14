@@ -42,20 +42,20 @@ struct FrameGraphResourceInfo
 struct FrameGraphResourceCreation
 {
     FrameGraphResourceType type = FrameGraphResourceType::eNone;
-    FrameGraphResourceInfo info{};
+    FrameGraphResourceInfo info {};
 
-    std::string name{};
+    std::string name {};
 };
 
 struct FrameGraphResource
 {
     FrameGraphResourceType type = FrameGraphResourceType::eNone;
-    FrameGraphResourceInfo info{};
+    FrameGraphResourceInfo info {};
 
     FrameGraphNodeHandle producer = 0;
     FrameGraphResourceHandle output = 0;
 
-    std::string name{};
+    std::string name {};
 };
 
 struct FrameGraphRenderPass
@@ -68,11 +68,11 @@ struct FrameGraphNodeCreation
 {
     const FrameGraphRenderPass* renderPass = nullptr;
 
-    std::vector<FrameGraphResourceCreation> inputs{};
-    std::vector<FrameGraphResourceCreation> outputs{};
+    std::vector<FrameGraphResourceCreation> inputs {};
+    std::vector<FrameGraphResourceCreation> outputs {};
 
     bool isEnabled = true;
-    std::string name{};
+    std::string name {};
 
     FrameGraphNodeCreation& SetRenderPass(const FrameGraphRenderPass* renderPass);
 
@@ -86,13 +86,13 @@ struct FrameGraphNode
 {
     FrameGraphRenderPassHandle renderPass = 0;
 
-    std::vector<FrameGraphResourceHandle> inputs{};
-    std::vector<FrameGraphResourceHandle> outputs{};
+    std::vector<FrameGraphResourceHandle> inputs {};
+    std::vector<FrameGraphResourceHandle> outputs {};
 
-    std::vector<FrameGraphNodeHandle> edges{};
+    std::vector<FrameGraphNodeHandle> edges {};
 
     bool isEnabled = true;
-    std::string name{};
+    std::string name {};
 };
 
 class FrameGraph
@@ -110,13 +110,13 @@ public:
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
 
 private:
-    std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap{};
+    std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};
 
-    std::vector<FrameGraphResource> _resources{};
-    std::vector<FrameGraphNode> _nodes{};
-    std::vector<const FrameGraphRenderPass*> _renderPasses{};
+    std::vector<FrameGraphResource> _resources {};
+    std::vector<FrameGraphNode> _nodes {};
+    std::vector<const FrameGraphRenderPass*> _renderPasses {};
 
-    std::vector<FrameGraphNodeHandle> _sortedNodes{};
+    std::vector<FrameGraphNodeHandle> _sortedNodes {};
 
     void ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle);
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);

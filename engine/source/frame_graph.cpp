@@ -2,7 +2,6 @@
 
 FrameGraph::FrameGraph()
 {
-
 }
 
 void FrameGraph::Build()
@@ -28,7 +27,7 @@ void FrameGraph::Build()
 
     std::vector<FrameGraphNodeHandle> reverseSortedNodes(_nodes.size());
     std::vector<NodeStatus> nodesStatus(_nodes.size(), NodeStatus::eNotProcessed);
-    std::vector<FrameGraphNodeHandle> nodesToProcess{};
+    std::vector<FrameGraphNodeHandle> nodesToProcess {};
     nodesToProcess.reserve(_nodes.size());
 
     for (int i = 0; i < _nodes.size(); i++)
@@ -40,7 +39,7 @@ void FrameGraph::Build()
 
         nodesToProcess.push_back(i);
 
-        while(!nodesToProcess.empty())
+        while (!nodesToProcess.empty())
         {
             const FrameGraphNodeHandle nodeHandle = nodesToProcess.back();
 
@@ -74,7 +73,7 @@ void FrameGraph::Build()
             // If the node is not a leaf node, add its children for processing
             for (const FrameGraphNodeHandle childNodeHandle : node.edges)
             {
-                if(nodesStatus[childNodeHandle] != NodeStatus::eNotProcessed)
+                if (nodesStatus[childNodeHandle] != NodeStatus::eNotProcessed)
                 {
                     nodesToProcess.push_back(childNodeHandle);
                 }
@@ -92,7 +91,6 @@ void FrameGraph::Build()
 
 void FrameGraph::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-
 }
 
 FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
