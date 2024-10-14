@@ -62,7 +62,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
-    util::BeginLabel(commandBuffer, "Physics render pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
+    util::BeginLabel(commandBuffer, "Debug render pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -102,7 +102,7 @@ void DebugPipeline::CreatePipeline()
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-        "Failed to create physics rendering pipeline layout!");
+        "Failed to create debug rendering pipeline layout!");
 
     // Load shaders (simple vertex shader for depth only)
     auto vertByteCode = shader::ReadFile("shaders/physics-v.spv");
@@ -186,7 +186,7 @@ void DebugPipeline::CreatePipeline()
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed to create physics render pipeline!");
+    util::VK_ASSERT(result.result, "Failed to create debug render pipeline!");
     _pipeline = result.value;
 
     _brain.device.destroy(vertModule);
