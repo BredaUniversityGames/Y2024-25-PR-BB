@@ -6,13 +6,13 @@ endif ()
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS 
-  SHADER_DIR/*.frag
-  SHADER_DIR/*.vert
-  SHADER_DIR/*.tesc
-  SHADER_DIR/*.tese
-  SHADER_DIR/*.geom
-  SHADER_DIR/*.comp
+file(GLOB_RECURSE SHADERS CONFIGURE_DEPENDS
+        SHADER_DIR/*.frag
+        SHADER_DIR/*.vert
+        SHADER_DIR/*.tesc
+        SHADER_DIR/*.tese
+        SHADER_DIR/*.geom
+        SHADER_DIR/*.comp
 )
 
 set(SHADERS
@@ -31,6 +31,9 @@ set(SHADERS
         ${SHADER_DIR}/skydome.frag
         ${SHADER_DIR}/skydome.vert
         ${SHADER_DIR}/tonemapping.frag
+        ${SHADER_DIR}/debug.frag
+        ${SHADER_DIR}/debug.vert
+
 )
 
 set(SPIRV_BIN "${CMAKE_CURRENT_SOURCE_DIR}/bin")

@@ -30,6 +30,8 @@ DebugPipeline::~DebugPipeline()
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex)
 {
+    // Update the lines data
+    UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
     finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
@@ -72,8 +74,6 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1,
         &_camera.descriptorSets[currentFrame], 0, nullptr);
 
-    UpdateVertexData();
-
     // to draw lines
     // Bind the vertex buffer
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
@@ -102,8 +102,8 @@ void DebugPipeline::CreatePipeline()
         "Failed to create debug rendering pipeline layout!");
 
     // Load shaders (simple vertex shader for depth only)
-    auto vertByteCode = shader::ReadFile("shaders/physics-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/physics-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/debug.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/debug.frag.spv");
 
     const vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     const vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
