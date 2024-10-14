@@ -1,6 +1,6 @@
 #include "components/relationship_helpers.hpp"
 
-#include <entity/registry.hpp>
+#include <entt/entity/registry.hpp>
 #include "components/relationship_component.hpp"
 
 void RelationshipHelpers::SetParent(entt::registry& reg, entt::entity entity, entt::entity parent)

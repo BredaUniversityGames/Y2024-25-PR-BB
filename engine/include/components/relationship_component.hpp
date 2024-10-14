@@ -1,5 +1,5 @@
 #pragma once
-#include <entity/entity.hpp>
+#include <entt/entity/entity.hpp>
 
 struct RelationshipComponent
 {

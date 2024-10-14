@@ -1,7 +1,7 @@
 #pragma once
 #include "class_decorations.hpp"
 
-#include <entity/entity.hpp>
+#include <entt/entity/entity.hpp>
 
 class ECS;
 class VulkanBrain;

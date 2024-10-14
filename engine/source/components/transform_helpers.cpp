@@ -6,7 +6,7 @@
 #include "components/transform_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/world_matrix_component.hpp"
-#include <entity/registry.hpp>
+#include <entt/entity/registry.hpp>
 
 void TransformHelpers::SetLocalPosition(entt::registry& reg, entt::entity entity, const glm::vec3& position)
 {

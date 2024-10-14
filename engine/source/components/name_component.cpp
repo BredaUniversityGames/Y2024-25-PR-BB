@@ -1,9 +1,13 @@
 #include "components/name_component.hpp"
 
-#include <entity/registry.hpp>
+#include <entt/entity/registry.hpp>
 
-std::string NameComponent::GetDisplayName(const entt::registry& registry, entt::entity entity)
+std::string_view NameComponent::GetDisplayName(const entt::registry& registry, entt::entity entity)
 {
-    const NameComponent* nameComponent = registry.try_get<NameComponent>(entity);
-    return nameComponent == nullptr ? std::string("Entity-") + std::to_string(static_cast<uint32_t>(entity)) : nameComponent->_name;
+    if (auto* ptr = registry.try_get<NameComponent>(entity))
+    {
+        return std::string_view { ptr->_name };
+    }
+
+    return std::string_view { "Unnamed Entity" };
 }

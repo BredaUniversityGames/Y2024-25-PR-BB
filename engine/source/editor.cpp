@@ -1,6 +1,7 @@
 #include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 #include "application.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
@@ -20,7 +21,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 
-#include <entt/src/entt/entity/entity.hpp>
+#include <entt/entity/entity.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
@@ -63,7 +64,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
         RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
-        const std::string name = NameComponent::GetDisplayName(ecs._registry, entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->_children > 0)
@@ -74,6 +75,12 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             {
                 _selectedEntity = entity;
             }
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+            {
+                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
+            }
+
             if (nodeOpen)
             {
                 entt::entity current = relationship->_first;
@@ -95,6 +102,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
+            }
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+            {
+                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
             }
         }
     };
@@ -247,7 +259,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = NameComponent::GetDisplayName(ecs._registry, _selectedEntity);
+    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
@@ -259,6 +271,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
     TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -272,6 +285,11 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         {
             TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
         }
+    }
+
+    if (nameComponent != nullptr)
+    {
+        ImGui::InputText("Name", &nameComponent->_name);
     }
 
     ImGui::PopID();
