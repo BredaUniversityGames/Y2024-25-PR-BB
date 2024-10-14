@@ -16,7 +16,7 @@ public:
     NON_MOVABLE(ParticlePipeline);
 
 private:
-    enum class SSBOUsage
+    enum class SSBUsage
     {
         eParticle = 0,
         eAliveNew,
@@ -26,24 +26,29 @@ private:
         eNone
     };
 
-    struct PushConstantSize
+    struct SimulatePushConstant
     {
-        float padding;
-    } _pushConstantSize;
+        float deltaTime;
+    } _simulatePushConstant;
+
+    struct EmitPushConstant
+    {
+        uint32_t bufferOffset;
+    } _emitPushConstant;
 
     const VulkanBrain& _brain;
     const CameraStructure& _camera;
 
     std::vector<Emitter> _emitters;
-    std::vector<std::string> _particlePaths;
 
+    std::vector<std::string> _shaderPaths;
     std::vector<vk::Pipeline> _pipelines;
-    vk::PipelineLayout _pipelineLayout;
-    // ssbos
+    std::vector<vk::PipelineLayout> _pipelineLayouts;
+    // ssbs
     std::array<ResourceHandle<Buffer>, 5> _storageBuffers;
     std::array<vk::DescriptorSet, 5> _storageBufferDescriptorSets;
     vk::DescriptorSetLayout _storageLayout;
-    // ubo
+    // ub
     ResourceHandle<Buffer> _emitterBuffer;
     vk::DescriptorSet _emitterBufferDescriptorSet;
     vk::DescriptorSetLayout _uniformLayout;

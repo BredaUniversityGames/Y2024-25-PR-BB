@@ -43,7 +43,7 @@ void main()
     particle.life = emitter.maxLife;
 
     // new particle index retrieved from dead list
-    int deadCount = atomicAdd(particleCounters.deadCount, -1);
+    uint deadCount = atomicAdd(particleCounters.deadCount, -1);
     if(deadCount < 1)
         return;
 
@@ -52,6 +52,6 @@ void main()
     particles[newParticleIndex] = particle;
 
     // add index to alive list
-    uint aliveCount = atomicAdd(particleCounters.aliveCount_afterSimulation, 1);
-    aliveBuffer_CURRENT[aliveCount] = newParticleIndex;
+    uint aliveCount = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
+    aliveBufferCURRENT[aliveCount] = newParticleIndex;
 }

@@ -11,8 +11,8 @@ struct Particle
 struct ParticleCounters
 {
     uint aliveCount;
-    int deadCount;
-    uint aliveCount_afterSimulation;
+    uint deadCount;
+    uint aliveCountAfterSimulation;
     uint culledCount;
 };
 
@@ -30,12 +30,12 @@ layout(set = 1, binding = 0) buffer ParticleSSBO
 
 layout(set = 1, binding = 1) buffer AliveNEWSSBO
 {
-    uint aliveBuffer_NEW[MAX_PARTICLES];
+    uint aliveBufferNEW[MAX_PARTICLES];
 };
 
 layout(set = 1, binding = 2) buffer AliveCURRENTSSBO
 {
-    uint aliveBuffer_CURRENT[MAX_PARTICLES];
+    uint aliveBufferCURRENT[MAX_PARTICLES];
 };
 
 layout(set = 1, binding = 3) buffer DeadSSBO
