@@ -12,7 +12,7 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 entt::entity PhysicsSystem::CreatePhysicsEntity()
 {
     entt::entity entity = _ecs._registry.create();
-    RigidbodyComponent rb(*_physicsModule.body_interface);
+    RigidbodyComponent rb(*_physicsModule.bodyInterface);
     _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
     return entity;
 }
@@ -32,7 +32,7 @@ void PhysicsSystem::CleanUp()
     for (const entt::entity entity : toDestroy)
     {
         RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
-        _physicsModule.body_interface->RemoveBody(rb.bodyID);
+        _physicsModule.bodyInterface->RemoveBody(rb.bodyID);
     }
 }
 
@@ -56,7 +56,7 @@ void PhysicsSystem::Inspect()
         {
             entt::entity newEntity = CreatePhysicsEntity();
             RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
-            _physicsModule.body_interface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
+            _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
         }
     }
 
@@ -64,7 +64,7 @@ void PhysicsSystem::Inspect()
     {
         JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
-        RigidbodyComponent newRigidBody(*_physicsModule.body_interface, plane_settings);
+        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings);
         CreatePhysicsEntity(newRigidBody);
     }
 

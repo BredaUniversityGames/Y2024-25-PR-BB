@@ -19,48 +19,48 @@ PhysicsModule::PhysicsModule()
     // pre-allocating 10 MB to avoid having to do allocations during the physics update.
     // If you don't want to pre-allocate you can also use TempAllocatorMalloc to fall back to
     // malloc / free.
-    temp_allocator = new JPH::TempAllocatorImpl(10 * 1024 * 1024);
+    _tempAllocator = new JPH::TempAllocatorImpl(10 * 1024 * 1024);
 
     // We need a job system that will execute physics jobs on multiple threads. Typically
     // you would implement the JobSystem interface yourself and let Jolt Physics run on top
     // of your own job scheduler. JobSystemThreadPool is an example implementation.
-    job_system = new JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, JPH::thread::hardware_concurrency() - 1);
+    _jobSystem = new JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, JPH::thread::hardware_concurrency() - 1);
 
     // Create mapping table from object layer to broadphase layer
     // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    broad_phase_layer_interface = new BPLayerInterfaceImpl();
+    _broadPhaseLayerInterface = new BPLayerInterfaceImpl();
 
     // Create class that filters object vs broadphase layers
     // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    object_vs_broadphase_layer_filter = new ObjectVsBroadPhaseLayerFilterImpl();
+    _objectVsBroadphaseLayerFilter = new ObjectVsBroadPhaseLayerFilterImpl();
 
     // Create class that filters object vs object layers
     // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    object_vs_object_layer_filter = new ObjectLayerPairFilterImpl();
+    _objectVsObjectLayerFilter = new ObjectLayerPairFilterImpl();
 
     // Now we can create the actual physics system.
-    physics_system = new JPH::PhysicsSystem();
-    physics_system->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *broad_phase_layer_interface, *object_vs_broadphase_layer_filter, *object_vs_object_layer_filter);
-    physics_system->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
+    physicsSystem = new JPH::PhysicsSystem();
+    physicsSystem->Init(_maxBodies, _numBodyMutexes, _maxBodyPairs, _maxContactConstraints, *_broadPhaseLayerInterface, *_objectVsBroadphaseLayerFilter, *_objectVsObjectLayerFilter);
+    physicsSystem->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
 
-    debug_renderer = new MyDebugRenderer();
-    JPH::DebugRenderer::sInstance = debug_renderer;
+    debugRenderer = new MyDebugRenderer();
+    JPH::DebugRenderer::sInstance = debugRenderer;
     // A body activation listener gets notified when bodies activate and go to sleep
     // Note that this is called from a job so whatever you do here needs to be thread safe.
     // Registering one is entirely optional.
-    body_activation_listener
+    _bodyActivationListener
         = new MyBodyActivationListener();
-    physics_system->SetBodyActivationListener(body_activation_listener);
+    physicsSystem->SetBodyActivationListener(_bodyActivationListener);
 
     // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
     // Note that this is called from a job so whatever you do here needs to be thread safe.
     // Registering one is entirely optional.
-    contact_listener = new MyContactListener();
-    physics_system->SetContactListener(contact_listener);
+    _contactListener = new MyContactListener();
+    physicsSystem->SetContactListener(_contactListener);
 
     // The main way to interact with the bodies in the physics system is through the body interface. There is a locking and a non-locking
     // variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
-    body_interface = &physics_system->GetBodyInterface();
+    bodyInterface = &physicsSystem->GetBodyInterface();
 
     // just for testing now
 }
@@ -71,11 +71,11 @@ PhysicsModule::~PhysicsModule()
     delete JPH::Factory::sInstance;
     JPH::Factory::sInstance = nullptr;
 
-    delete temp_allocator;
-    delete job_system;
+    delete _tempAllocator;
+    delete _jobSystem;
 }
 void PhysicsModule::UpdatePhysicsEngine(float deltaTime)
 {
     // Step the world
-    physics_system->Update(1.0 / 60.0, cCollisionSteps, temp_allocator, job_system);
+    physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
 }

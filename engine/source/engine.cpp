@@ -93,9 +93,9 @@ void OldEngine::Run()
 
         // update physics
         _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
-        auto linesData = _physicsModule->debug_renderer->GetLinesData();
+        auto linesData = _physicsModule->debugRenderer->GetLinesData();
         _renderer->_debugPipeline->ClearLinesData();
-        _physicsModule->debug_renderer->ClearLinesData();
+        _physicsModule->debugRenderer->ClearLinesData();
         _renderer->_debugPipeline->AddLines(linesData);
 
         // Slow down application when minimized.
@@ -149,7 +149,7 @@ void OldEngine::Run()
             _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
 
             JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
-            _physicsModule->debug_renderer->SetCameraPos(cameraPos);
+            _physicsModule->debugRenderer->SetCameraPos(cameraPos);
         }
         _lastMousePos = { mouseX, mouseY };
 
@@ -162,13 +162,13 @@ void OldEngine::Run()
         _ecs->RenderSystems();
 
         JPH::BodyManager::DrawSettings drawSettings;
-        _physicsModule->physics_system->DrawBodies(drawSettings, _physicsModule->debug_renderer);
+        _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
         _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
         _renderer->Render();
         _performanceTracker.Update();
-        _physicsModule->debug_renderer->NextFrame();
+        _physicsModule->debugRenderer->NextFrame();
 
         FrameMark;
     }
