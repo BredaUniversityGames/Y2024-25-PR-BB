@@ -43,7 +43,7 @@ PhysicsModule::PhysicsModule()
     physicsSystem->Init(_maxBodies, _numBodyMutexes, _maxBodyPairs, _maxContactConstraints, *_broadPhaseLayerInterface, *_objectVsBroadphaseLayerFilter, *_objectVsObjectLayerFilter);
     physicsSystem->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
 
-    debugRenderer = new MyDebugRenderer();
+    debugRenderer = new DebugRendererSimpleImpl();
     JPH::DebugRenderer::sInstance = debugRenderer;
     // A body activation listener gets notified when bodies activate and go to sleep
     // Note that this is called from a job so whatever you do here needs to be thread safe.

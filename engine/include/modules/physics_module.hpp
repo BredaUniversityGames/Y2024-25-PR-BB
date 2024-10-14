@@ -174,7 +174,7 @@ public:
     }
 };
 
-class MyDebugRenderer : public JPH::DebugRendererSimple
+class DebugRendererSimpleImpl : public JPH::DebugRendererSimple
 {
 public:
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
@@ -212,7 +212,7 @@ public:
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
     JPH::BodyInterface* bodyInterface = nullptr;
-    MyDebugRenderer* debugRenderer = nullptr;
+    DebugRendererSimpleImpl* debugRenderer = nullptr;
     JPH::PhysicsSystem* physicsSystem = nullptr;
 
 private:
