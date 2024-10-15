@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vkpp.hpp"
+
 namespace util
 {
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(

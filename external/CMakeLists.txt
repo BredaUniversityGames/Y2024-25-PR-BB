@@ -1,10 +1,3 @@
-include(FetchContent)
-
-# Macro for overriding default values for options before adding a library
-macro(override_option option_name option_value)
-    set(${option_name} ${option_value} CACHE BOOL "" FORCE)
-endmacro()
-
 # Magic Enum
 
 FetchContent_Declare(
@@ -159,27 +152,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
 
-SET_INTERPROCEDURAL_OPTIMIZATION()
-
 # Set compiler options for Jolt
 target_compile_options(Jolt PRIVATE
         -w          # Suppress all warnings
         -Wno-error  # Do not treat warnings as errors
 )
-
-# GoogleTest
-
-FetchContent_Declare(
-        GoogleTest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.15.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-override_option(gtest_force_shared_crt ON)
-FetchContent_MakeAvailable(GoogleTest)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 

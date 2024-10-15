@@ -2,8 +2,6 @@
 
 #include "mesh.hpp"
 #include <string>
-
-#undef None
 #include <fastgltf/core.hpp>
 
 class SingleTimeCommands;

@@ -2,6 +2,7 @@
 #include "ECS.hpp"
 #include "modules/physics_module.hpp"
 #include "components/rigidbody_component.hpp"
+#include "imgui/imgui.h"
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)

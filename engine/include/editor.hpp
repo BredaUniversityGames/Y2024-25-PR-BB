@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 
+#include "vkpp.hpp"
 #include <entt/entity/entity.hpp>
 
 class ECS;

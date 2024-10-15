@@ -21,6 +21,7 @@
 #include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
+#include "implot/implot.h"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {

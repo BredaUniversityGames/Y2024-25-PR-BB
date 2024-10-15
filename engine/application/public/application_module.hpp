@@ -2,8 +2,10 @@
 #include "module_interface.hpp"
 #include <memory>
 #include <functional>
-#include <vulkan/vulkan.hpp>
 #include <glm/vec2.hpp>
+
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#include <vulkan/vulkan.hpp>
 
 class InputManager;
 struct SDL_Window;
