@@ -39,11 +39,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
+    _ecs = std::make_unique<ECS>();
+
     _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    _ecs = std::make_unique<ECS>();
     TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
