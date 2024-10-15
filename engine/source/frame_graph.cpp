@@ -1,11 +1,71 @@
 #include "frame_graph.hpp"
+#include "vulkan_brain.hpp"
+#include "gpu_resources.hpp"
+#include "spdlog/spdlog.h"
 
-FrameGraph::FrameGraph()
+FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(const FrameGraphRenderPass* renderPass)
+{
+    this->renderPass = renderPass;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> image, FrameGraphResourceType type)
+{
+    FrameGraphResourceCreation& creation = inputs.emplace_back();
+    creation.type = type;
+    creation.info.image.handle = image;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type)
+{
+    FrameGraphResourceCreation& creation = inputs.emplace_back();
+    creation.type = type;
+    creation.info.buffer.handle = buffer;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type)
+{
+    FrameGraphResourceCreation& creation = outputs.emplace_back();
+    creation.type = type;
+    creation.info.image.handle = image;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type)
+{
+    FrameGraphResourceCreation& creation = outputs.emplace_back();
+    creation.type = type;
+    creation.info.buffer.handle = buffer;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::SetIsEnabled(bool isEnabled)
+{
+    this->isEnabled = isEnabled;
+    return *this;
+}
+
+FrameGraphNodeCreation& FrameGraphNodeCreation::SetName(std::string_view name)
+{
+    this->name = name;
+    return *this;
+}
+
+FrameGraph::FrameGraph(const VulkanBrain& brain) :
+    _brain(brain)
 {
 }
 
 void FrameGraph::Build()
 {
+    // Clear the previous edges
+    for (auto& node : _nodes)
+    {
+        node.edges.clear();
+    }
+
     // First compute edges between nodes
     for (uint32_t i = 0; i < _nodes.size(); i++)
     {
@@ -25,12 +85,15 @@ void FrameGraph::Build()
         eAdded
     };
 
-    std::vector<FrameGraphNodeHandle> reverseSortedNodes(_nodes.size());
+    std::vector<FrameGraphNodeHandle> reverseSortedNodes{};
+    reverseSortedNodes.reserve(_nodes.size());
+
     std::vector<NodeStatus> nodesStatus(_nodes.size(), NodeStatus::eNotProcessed);
+
     std::vector<FrameGraphNodeHandle> nodesToProcess {};
     nodesToProcess.reserve(_nodes.size());
 
-    for (int i = 0; i < _nodes.size(); i++)
+    for (uint32_t i = 0; i < _nodes.size(); ++i)
     {
         if (!_nodes[i].isEnabled)
         {
@@ -54,7 +117,7 @@ void FrameGraph::Build()
             // it means we processed all of its children, and it can be added to the list of sorted nodes.
             if (nodesStatus[nodeHandle] == NodeStatus::eVisited)
             {
-                nodesStatus[nodeHandle] == NodeStatus::eAdded;
+                nodesStatus[nodeHandle] = NodeStatus::eAdded;
 
                 reverseSortedNodes.push_back(nodeHandle);
                 nodesToProcess.pop_back();
@@ -73,7 +136,7 @@ void FrameGraph::Build()
             // If the node is not a leaf node, add its children for processing
             for (const FrameGraphNodeHandle childNodeHandle : node.edges)
             {
-                if (nodesStatus[childNodeHandle] != NodeStatus::eNotProcessed)
+                if (nodesStatus[childNodeHandle] == NodeStatus::eNotProcessed)
                 {
                     nodesToProcess.push_back(childNodeHandle);
                 }
@@ -81,12 +144,16 @@ void FrameGraph::Build()
         }
     }
 
+    assert(_nodes.size() == reverseSortedNodes.size() && "There is something really wrong if this happens, contact Marcin (:");
+
     _sortedNodes.clear();
 
-    for (uint32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
+    for (int32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
     }
+
+    _nodes.clear();
 }
 
 void FrameGraph::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -136,25 +203,29 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
 
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
+
+        spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
     }
 }
 
 FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer)
 {
-    assert(creation.type == FrameGraphResourceType::eNone && "FrameGraphResource must have a type.");
+    assert(HasFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back();
     resource.type = creation.type;
-    resource.name = creation.name;
+    resource.name = GetResourceName(creation);
 
-    if (creation.type != FrameGraphResourceType::eReference)
+    if (!HasFlags(creation.type, FrameGraphResourceType::eReference))
     {
+        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource. Please use the eReference resource type to reference resources produced by multiple nodes.");
+
         resource.info = creation.info;
         resource.output = resourceHandle;
         resource.producer = producer;
 
-        _outputResourcesMap.emplace(creation.name, resourceHandle);
+        _outputResourcesMap.emplace(resource.name, resourceHandle);
     }
 
     return resourceHandle;
@@ -162,12 +233,31 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
 
 FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourceCreation& creation)
 {
-    assert(creation.type == FrameGraphResourceType::eNone && "FrameGraphResource must have a type.");
+    assert(HasFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back();
     resource.type = creation.type;
-    resource.name = creation.name;
+    resource.name = GetResourceName(creation);
 
     return resourceHandle;
+}
+
+// TODO: Use templates to avoid if statements?
+std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creation)
+{
+    if (HasFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
+    {
+        const Image* image = _brain.GetImageResourceManager().Access(creation.info.image.handle);
+        return image->name;
+    }
+
+    if (HasFlags(creation.type, FrameGraphResourceType::eBuffer))
+    {
+        const Buffer* buffer = _brain.GetBufferResourceManager().Access(creation.info.buffer.handle);
+        return buffer->name;
+    }
+
+    assert(false && "Unsupported resource type!");
+    return "";
 }
