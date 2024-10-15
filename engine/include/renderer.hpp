@@ -6,6 +6,7 @@
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 
+class DebugPipeline;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
@@ -54,6 +55,7 @@ private:
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
+    std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
