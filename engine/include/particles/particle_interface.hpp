@@ -14,7 +14,7 @@ public:
         eNone
     };
 
-    void SpawnEmitter(EmitterPreset emitterPreset, uint32_t lifetime = 1);
+    void SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit = 1);
 
 private:
     ECS& _ecs;

@@ -1,4 +1,4 @@
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 #include <spdlog/fmt/bundled/printf.h>
 
 #pragma GCC diagnostic push
@@ -8,7 +8,7 @@
 #define VMA_LEAK_LOG_FORMAT(format, ...)                 \
     do                                                   \
     {                                                    \
-        spdlog::info(fmt::sprintf(format, __VA_ARGS__)); \
+        bblog::error(fmt::sprintf(format, __VA_ARGS__)); \
     } while (false)
 
 #include "vk_mem_alloc.h"

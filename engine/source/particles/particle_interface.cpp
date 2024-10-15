@@ -27,15 +27,15 @@ ParticleInterface::ParticleInterface(ECS& ecs)
     }
 }
 
-void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t lifetime)
+void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit)
 {
     auto view = _ecs._registry.view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& emitterComponent = _ecs._registry.get<EmitterComponent>(entity);
-        if (emitterComponent.lifetime == 0)
+        if (emitterComponent.timesToEmit == 0)
         {
-            emitterComponent.lifetime = lifetime;
+            emitterComponent.timesToEmit = timesToEmit;
             emitterComponent.emitter = _emitterPresets[static_cast<int>(emitterPreset)];
             break;
         }

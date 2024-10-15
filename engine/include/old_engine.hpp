@@ -1,26 +1,24 @@
 #pragma once
 
-#include "engine_init_info.hpp"
+#include "module_interface.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 #include "particles/particle_interface.hpp"
+#include <memory>
 
 class ECS;
-class Application;
 class Renderer;
 class Editor;
-
-class OldEngine
+class PhysicsModule;
+class OldEngine : public ModuleInterface
 {
-public:
-    OldEngine(const InitInfo& initInfo, std::shared_ptr<Application> application);
-    ~OldEngine();
-    NON_COPYABLE(OldEngine);
-    NON_MOVABLE(OldEngine);
+    virtual ModuleTickOrder Init(Engine& engine) override;
+    virtual void Tick(Engine& engine) override;
+    virtual void Shutdown(Engine& engine) override;
 
-    void Run();
-    bool ShouldQuit() const { return _shouldQuit; };
-    void Quit() { _shouldQuit = true; };
+public:
+    OldEngine();
+    ~OldEngine() override;
 
 private:
     friend Renderer;
@@ -37,13 +35,14 @@ private:
 
     std::shared_ptr<SceneDescription> _scene;
 
-    std::shared_ptr<Application> _application;
-
     glm::ivec2 _lastMousePos {};
 
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
     PerformanceTracker _performanceTracker;
+
+    // modules
+    std::unique_ptr<PhysicsModule> _physicsModule;
 
     bool _shouldQuit = false;
 };

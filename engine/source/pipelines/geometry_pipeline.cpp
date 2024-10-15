@@ -3,27 +3,44 @@
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 
-VkDeviceSize align(VkDeviceSize value, VkDeviceSize alignment)
-{
-    return (value + alignment - 1) & ~(alignment - 1);
-}
-
-GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera, const GPUScene& gpuScene)
+GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)
+    , _culler(_brain, gpuScene)
 {
     CreatePipeline(gpuScene);
+
+    auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
+    const auto* mainDrawBuffer = _brain.GetBufferResourceManager().Access(mainDrawBufferHandle);
+
+    BufferCreation creation {
+        .size = mainDrawBuffer->size,
+        .usage = mainDrawBuffer->usage,
+        .isMappable = false,
+        .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .name = "Geometry draw buffer",
+    };
+
+    _drawBuffer = _brain.GetBufferResourceManager().Create(creation);
+
+    CreateDrawBufferDescriptorSet(gpuScene);
 }
 
 GeometryPipeline::~GeometryPipeline()
 {
     _brain.device.destroy(_pipeline);
     _brain.device.destroy(_pipelineLayout);
+
+    _brain.GetBufferResourceManager().Destroy(_drawBuffer);
 }
 
-void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const BatchBuffer& batchBuffer)
+void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    util::BeginLabel(commandBuffer, "Geometry pass", glm::vec3 { 6.0f, 214.0f, 160.0f } / 255.0f, _brain.dldi);
+
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, _camera, _drawBuffer, _drawBufferDescriptorSet);
+
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
@@ -59,54 +76,26 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
-    util::BeginLabel(commandBuffer, "Geometry pass", glm::vec3 { 6.0f, 214.0f, 160.0f } / 255.0f, _brain.dldi);
-
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
-    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
+    commandBuffer.setViewport(0, { _gBuffers.Viewport() });
+    commandBuffer.setScissor(0, { _gBuffers.Scissor() });
 
-    _drawCommands.clear();
-    uint32_t counter = 0;
-    for (auto& gameObject : scene.sceneDescription.gameObjects)
-    {
-        for (size_t i = 0; i < gameObject.model->hierarchy.allNodes.size(); ++i, ++counter)
-        {
-            const auto& node = gameObject.model->hierarchy.allNodes[i];
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
 
-            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
-            for (const auto& primitive : mesh->primitives)
-            {
-                _brain.drawStats.indexCount += primitive.count;
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(_drawBuffer)->buffer;
+    vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectCountBuffer(currentFrame))->buffer;
+    uint32_t indirectCountOffset = scene.gpuScene.IndirectCountOffset();
 
-                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
-                    .indexCount = primitive.count,
-                    .instanceCount = 1,
-                    .firstIndex = primitive.indexOffset,
-                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
-                    .firstInstance = 0 });
-            }
-        }
-    }
-
-    batchBuffer.WriteDraws(_drawCommands, currentFrame);
-
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame), 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-
-    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(batchBuffer.VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(batchBuffer.IndexBuffer())->buffer;
-    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(batchBuffer.IndirectDrawBuffer(currentFrame))->buffer;
-
-    vk::Buffer vertexBuffers[] = { vertexBuffer };
-    vk::DeviceSize offsets[] = { 0 };
-
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, batchBuffer.IndexType());
-    commandBuffer.drawIndexedIndirect(indirectDrawBuffer, 0, _drawCommands.size(), sizeof(vk::DrawIndexedIndirectCommand));
+    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
+    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
@@ -117,7 +106,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, gpuScene.GetObjectInstancesDescriptorSetLayout(), _camera.descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, gpuScene.GetObjectInstancesDescriptorSetLayout(), CameraResource::DescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
@@ -246,4 +235,35 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
+}
+
+void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
+{
+    vk::DescriptorSetLayout layout = gpuScene.DrawBufferLayout();
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _brain.descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layout,
+    };
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_drawBufferDescriptorSet),
+        "Failed allocating descriptor sets!");
+
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_drawBuffer);
+
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = _drawBufferDescriptorSet,
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
+
+    _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }

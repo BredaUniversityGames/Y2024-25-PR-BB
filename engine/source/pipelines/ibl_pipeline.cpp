@@ -2,7 +2,6 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
-#include "stopwatch.hpp"
 
 IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap)
     : _brain(brain)

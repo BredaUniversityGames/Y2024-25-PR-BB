@@ -139,6 +139,8 @@ struct Buffer
     vk::Buffer buffer {};
     VmaAllocation allocation {};
     void* mappedPtr = nullptr;
+    vk::DeviceSize size {};
+    vk::BufferUsageFlags usage {};
 };
 
 struct Mesh
@@ -148,9 +150,28 @@ struct Mesh
         uint32_t count;
         uint32_t vertexOffset;
         uint32_t indexOffset;
+        float boundingRadius;
 
         ResourceHandle<Material> material;
     };
 
     std::vector<Primitive> primitives;
+};
+
+struct alignas(16) GPUCamera
+{
+    glm::mat4 VP;
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::mat4 skydomeMVP; // TODO: remove this
+
+    glm::vec3 cameraPosition;
+    bool distanceCullingEnabled;
+    float frustum[4];
+    float zNear;
+    float zFar;
+    bool cullingEnabled;
+    int32_t projectionType;
+
+    glm::vec2 _padding {};
 };
