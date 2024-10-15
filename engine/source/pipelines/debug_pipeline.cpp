@@ -154,6 +154,15 @@ void DebugPipeline::CreatePipeline()
     vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
     multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
 
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
+    colorBlendAttachmentState.blendEnable = vk::False;
+    colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    colorBlendStateCreateInfo.logicOpEnable = vk::False;
+    colorBlendStateCreateInfo.attachmentCount = 1;
+    colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
+
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
     depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
@@ -164,6 +173,7 @@ void DebugPipeline::CreatePipeline()
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
+    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
     pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
     pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
     pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
