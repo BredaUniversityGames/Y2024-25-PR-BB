@@ -70,9 +70,9 @@ void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entit
         return;
     }
 
-    if (relationship && relationship->_parent != entt::null)
+    if (relationship && relationship->parent != entt::null)
     {
-        WorldMatrixComponent* parentWorldMatrix = reg.try_get<WorldMatrixComponent>(relationship->_parent);
+        WorldMatrixComponent* parentWorldMatrix = reg.try_get<WorldMatrixComponent>(relationship->parent);
 
         glm::vec3 parentScale, skew, parentTranslation;
         glm::quat parentOrientation;
@@ -165,25 +165,25 @@ void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entit
         return;
     }
 
-    if (relationship->_parent == entt::null)
+    if (relationship->parent == entt::null)
     {
         worldMatrix._worldMatrix = GetLocalMatrix(reg, entity);
     }
     else
     {
         // TODO optimize by sorting based on relationship components
-        worldMatrix._worldMatrix = GetWorldMatrix(reg, relationship->_parent) * GetLocalMatrix(reg, entity);
+        worldMatrix._worldMatrix = GetWorldMatrix(reg, relationship->parent) * GetLocalMatrix(reg, entity);
     }
 
     // Iterate over all children and update their world matrices
-    entt::entity current = relationship->_first;
-    for (size_t i {}; i < relationship->_children; ++i)
+    entt::entity current = relationship->first;
+    for (size_t i {}; i < relationship->childrenCount; ++i)
     {
         if (current != entt::null)
         {
             UpdateWorldMatrix(reg, current);
 
-            current = reg.get<RelationshipComponent>(current)._next;
+            current = reg.get<RelationshipComponent>(current).next;
         }
     }
 }
