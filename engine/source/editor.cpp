@@ -1,21 +1,30 @@
 #include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
-#include "application_module.hpp"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
+#include "modules/physics_module.hpp"
 #include "profile_macros.hpp"
 #include "log.hpp"
 
 #include <fstream>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "ECS.hpp"
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
 
 #include <imgui_impl_sdl3.h>
+#include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+
+#include <entt/entity/entity.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
@@ -47,16 +56,103 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
 
     ImGui::NewFrame();
 
+    // Hierarchy panel
+    const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
+    {
+        RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, entity));
+        static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+
+        if (relationship != nullptr && relationship->childrenCount > 0)
+        {
+            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags, "%s", name.c_str());
+
+            if (ImGui::IsItemClicked())
+            {
+                _selectedEntity = entity;
+            }
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+            {
+                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
+            }
+
+            if (nodeOpen)
+            {
+                entt::entity current = relationship->first;
+                for (size_t i {}; i < relationship->childrenCount; ++i)
+                {
+                    if (ecs._registry.valid(current))
+                    {
+                        self(self, current);
+                        current = ecs._registry.get<RelationshipComponent>(current).next;
+                    }
+                }
+
+                ImGui::TreePop();
+            }
+        }
+        else
+        {
+            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            if (ImGui::IsItemClicked())
+            {
+                _selectedEntity = entity;
+            }
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+            {
+                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
+            }
+        }
+    };
+
+    if (ImGui::Begin("World Inspector"))
+    {
+        if (ImGui::Button("+ Add entity"))
+        {
+            entt::entity entity = ecs._registry.create();
+
+            ecs._registry.emplace<TransformComponent>(entity);
+        }
+
+        if (ImGui::BeginChild("Hierarchy Panel"))
+        {
+            for (const auto [entity] : ecs._registry.storage<entt::entity>().each())
+            {
+                RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
+
+                if (relationship == nullptr || relationship->parent == entt::null)
+                {
+                    displayEntity(displayEntity, entity);
+                }
+            }
+        }
+        ImGui::EndChild();
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Entity Details"))
+    {
+        DisplaySelectedEntityDetails(ecs);
+    }
+    ImGui::End();
+
     performanceTracker.Render();
     bloomSettings.Render();
 
+    // Render systems inspect
+    for (const auto& system : ecs._systems)
+    {
+        system->Inspect();
+    }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
@@ -150,6 +246,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
     ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();
 
@@ -157,6 +254,55 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
     }
+}
+void Editor::DisplaySelectedEntityDetails(ECS& ecs)
+{
+    if (_selectedEntity == entt::null)
+    {
+        ImGui::Text("No entity selected");
+        return;
+    }
+
+    if (!ecs._registry.valid(_selectedEntity))
+    {
+        ImGui::Text("Selected entity is not valid");
+        return;
+    }
+    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
+    ImGui::LabelText("##EntityDetails", "%s", name.c_str());
+
+    if (ImGui::Button("Delete"))
+    {
+        ecs.DestroyEntity(_selectedEntity);
+        _selectedEntity = entt::null;
+        return;
+    }
+    ImGui::PushID(static_cast<int>(_selectedEntity));
+
+    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
+    if (transform != nullptr)
+    {
+        bool changed = false;
+        // Inspect Transform component
+        // TODO use euler angles instead of quaternion
+        changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
+        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
+        changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
+
+        if (changed)
+        {
+            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
+        }
+    }
+
+    if (nameComponent != nullptr)
+    {
+        ImGui::InputText("Name", &nameComponent->_name);
+    }
+
+    ImGui::PopID();
+    // inspect other components
 }
 
 Editor::~Editor()
