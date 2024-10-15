@@ -37,8 +37,8 @@ target_include_directories(OldEngine PUBLIC "include" "../external")
 target_link_libraries(OldEngine PRIVATE External PRIVATE ProjectSettings)
 
 if (ENABLE_PCH)
-    #target_precompile_headers(OldEngine REUSE_FROM PCH)
-    target_precompile_headers(OldEngine PRIVATE [["pch.hpp"]])
+    # target_precompile_headers(OldEngine REUSE_FROM PCH)
+    # target_precompile_headers(OldEngine PRIVATE [["pch.hpp"]])
 endif ()
 
 target_link_libraries(OldEngine PUBLIC Application PUBLIC External PRIVATE PCH)

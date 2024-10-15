@@ -132,7 +132,8 @@ FetchContent_MakeAvailable(GLM)
 
 # Jolt
 
-set(INTERPROCEDURAL_OPTIMIZATION ON)
+set(INTERPROCEDURAL_OPTIMIZATION OFF)
+
 # Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
 set(USE_SSE4_1 ON)
 set(USE_SSE4_2 ON)
@@ -153,7 +154,6 @@ FetchContent_Declare(
         SOURCE_SUBDIR "Build"
 )
 FetchContent_MakeAvailable(JoltPhysics)
-SET_INTERPROCEDURAL_OPTIMIZATION()
 
 # Set compiler options for Jolt
 target_compile_options(Jolt PRIVATE
