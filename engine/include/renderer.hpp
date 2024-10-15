@@ -1,7 +1,7 @@
 #pragma once
 
 #include "swap_chain.hpp"
-#include "engine_init_info.hpp"
+#include "application_module.hpp"
 #include "mesh.hpp"
 #include "camera.hpp"
 #include "bloom_settings.hpp"
@@ -27,7 +27,7 @@ class GPUScene;
 class Renderer
 {
 public:
-    Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -41,7 +41,9 @@ private:
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
-    std::shared_ptr<Application> _application;
+
+    // TODO: Unavoidable currently, this needs to become a module
+    ApplicationModule& _application;
     std::shared_ptr<ECS> _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "class_decorations.hpp"
+#include "common.hpp"
 
 class GPUScene;
 class VulkanBrain;

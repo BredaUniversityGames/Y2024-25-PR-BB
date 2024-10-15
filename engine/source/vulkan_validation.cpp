@@ -1,5 +1,5 @@
 #include "vulkan_validation.hpp"
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 
 void util::PopulateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo)
 {
@@ -30,7 +30,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
     }
 
     static std::string severity {};
-    spdlog::level::level_enum logLevel {};
+    bblog::level::level_enum logLevel {};
     switch (messageSeverity)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -54,7 +54,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
     }
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-        spdlog::log(logLevel, "{0} Validation layer: {1}", type, pCallbackData->pMessage);
+        bblog::log(logLevel, "{0} Validation layer: {1}", type, pCallbackData->pMessage);
 
     return VK_FALSE;
 }

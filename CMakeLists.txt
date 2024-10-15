@@ -9,6 +9,7 @@ option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
+target_compile_options(ProjectSettings INTERFACE "-Wall")
 
 if (WARNINGS_AS_ERRORS)
     message(STATUS "### Warnings are enabled as Errors")
