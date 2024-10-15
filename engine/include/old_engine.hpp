@@ -4,6 +4,7 @@
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 #include "particles/particle_interface.hpp"
+
 #include <memory>
 
 class ECS;

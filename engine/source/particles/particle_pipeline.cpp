@@ -25,7 +25,7 @@ ParticlePipeline::~ParticlePipeline()
     {
         _brain.device.destroy(pipeline);
     }
-    for(auto& layout : _pipelineLayouts)
+    for (auto& layout : _pipelineLayouts)
     {
         _brain.device.destroy(layout);
     }
@@ -101,8 +101,8 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 },
-    1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
+        1, &memoryBarrier, 0, nullptr, 0, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
@@ -165,12 +165,12 @@ void ParticlePipeline::CreatePipeline()
 
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 
-        if(_shaderPaths[i] == "emit")
+        if (_shaderPaths[i] == "emit")
         {
             pcRange.size = sizeof(_emitPushConstant);
             pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
         }
-        else if(_shaderPaths[i] == "simulate")
+        else if (_shaderPaths[i] == "simulate")
         {
             pcRange.size = sizeof(_simulatePushConstant);
             pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
@@ -180,9 +180,9 @@ void ParticlePipeline::CreatePipeline()
             pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
         }
 
-        _pipelineLayouts.push_back(vk::PipelineLayout{});
+        _pipelineLayouts.push_back(vk::PipelineLayout {});
         util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayouts[i]),
-        "Failed creating " + _shaderPaths[i] + " pipeline layout!");
+            "Failed creating " + _shaderPaths[i] + " pipeline layout!");
 
         auto byteCode = shader::ReadFile("shaders/bin/" + _shaderPaths[i] + ".comp.spv");
 
@@ -207,7 +207,7 @@ void ParticlePipeline::CreatePipeline()
 
 void ParticlePipeline::CreateDescriptorSetLayout()
 {
-    {   // Shader Storage Buffer
+    { // Shader Storage Buffer
         std::array<vk::DescriptorSetLayoutBinding, 5> bindings {};
         for (size_t i = 0; i < 5; i++)
         {
@@ -227,7 +227,7 @@ void ParticlePipeline::CreateDescriptorSetLayout()
             "Failed creating particle descriptor set layout!");
     }
 
-    {   // Uniform Buffer
+    { // Uniform Buffer
         std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
 
         vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
@@ -248,7 +248,7 @@ void ParticlePipeline::CreateDescriptorSetLayout()
 
 void ParticlePipeline::CreateDescriptorSets()
 {
-    {   // Shader Storage Buffer
+    { // Shader Storage Buffer
         vk::DescriptorSetAllocateInfo allocateInfo {};
         allocateInfo.descriptorPool = _brain.descriptorPool;
         allocateInfo.descriptorSetCount = 1;
@@ -262,7 +262,7 @@ void ParticlePipeline::CreateDescriptorSets()
         _storageBufferDescriptorSet = descriptorSets[0];
     }
 
-    {   // Uniform Buffer
+    { // Uniform Buffer
         vk::DescriptorSetAllocateInfo allocateInfo {};
         allocateInfo.descriptorPool = _brain.descriptorPool;
         allocateInfo.descriptorSetCount = 1;
@@ -373,7 +373,7 @@ void ParticlePipeline::CreateBuffers()
 {
     auto cmdBuffer = SingleTimeCommands(_brain);
 
-    {   // Particle SSB
+    { // Particle SSB
         std::vector<Particle> particles(MAX_PARTICLES);
         vk::DeviceSize particleBufferSize = sizeof(Particle) * MAX_PARTICLES;
 
@@ -387,7 +387,7 @@ void ParticlePipeline::CreateBuffers()
         cmdBuffer.CopyIntoLocalBuffer(particles, 0, _brain.GetBufferResourceManager().Access(_storageBuffers[static_cast<int>(SSBUsage::eParticle)])->buffer);
     }
 
-    {   // Alive and Dead SSBs
+    { // Alive and Dead SSBs
         vk::DeviceSize indexBufferSize = sizeof(uint32_t) * MAX_PARTICLES;
 
         for (size_t i = static_cast<size_t>(SSBUsage::eAliveNew); i <= static_cast<size_t>(SSBUsage::eDead); i++)
@@ -412,7 +412,7 @@ void ParticlePipeline::CreateBuffers()
         }
     }
 
-    {   // Counter SSB
+    { // Counter SSB
         std::vector<ParticleCounters> particleCounters(1);
         particleCounters[0].deadCount = MAX_PARTICLES;
         vk::DeviceSize counterBufferSize = sizeof(ParticleCounters);
@@ -429,7 +429,7 @@ void ParticlePipeline::CreateBuffers()
 
     cmdBuffer.Submit();
 
-    {   // Emitter UB
+    { // Emitter UB
         vk::DeviceSize bufferSize = sizeof(Emitter) * MAX_EMITTERS;
         BufferCreation creation {};
         creation.SetName("Emitter UB")
