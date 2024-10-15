@@ -1,10 +1,14 @@
 #pragma once
 
+#include "common.hpp"
+#include "application_module.hpp"
+
 #include "vulkan/vulkan.hpp"
-#include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
-#include "image_resource_manager.hpp"
-#include "material_resource_manager.hpp"
+#include "application_module.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
 
 struct QueueFamilyIndices
 {
@@ -20,7 +24,7 @@ struct QueueFamilyIndices
 };
 
 constexpr bool ENABLE_VALIDATION_LAYERS =
-#if defined(DEBUG_BUILD) || defined(RELWITHDEBINFO_BUILD)
+#if not defined(NDEBUG)
     true;
 #else
     false;
@@ -40,7 +44,7 @@ enum class BindlessBinding
 class VulkanBrain
 {
 public:
-    explicit VulkanBrain(const InitInfo& initInfo);
+    explicit VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo);
 
     ~VulkanBrain();
     NON_COPYABLE(VulkanBrain);
@@ -63,6 +67,11 @@ public:
     vk::DescriptorSetLayout bindlessLayout;
     vk::DescriptorSet bindlessSet;
 
+    BufferResourceManager& GetBufferResourceManager() const
+    {
+        return _bufferResourceManager;
+    }
+
     ImageResourceManager& GetImageResourceManager() const
     {
         return _imageResourceManager;
@@ -71,6 +80,11 @@ public:
     MaterialResourceManager& GetMaterialResourceManager() const
     {
         return _materialResourceManager;
+    }
+
+    ResourceManager<Mesh>& GetMeshResourceManager() const
+    {
+        return _meshResourceManager;
     }
 
     struct DrawStats
@@ -90,9 +104,7 @@ private:
     mutable std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
     mutable std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;
 
-    vk::Buffer _bindlessMaterialBuffer;
-    VmaAllocation _bindlessMaterialBufferAllocation;
-    void* _bindlessMaterialBufferMappedPtr;
+    ResourceHandle<Buffer> _bindlessMaterialBuffer;
     mutable vk::DescriptorBufferInfo _bindlessMaterialInfo;
     mutable vk::WriteDescriptorSet _bindlessMaterialWrite;
 
@@ -112,15 +124,18 @@ private:
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
         VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+        VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME
     };
 
-    mutable class ImageResourceManager _imageResourceManager;
-    mutable class MaterialResourceManager _materialResourceManager;
+    mutable BufferResourceManager _bufferResourceManager;
+    mutable ImageResourceManager _imageResourceManager;
+    mutable MaterialResourceManager _materialResourceManager;
+    mutable ResourceManager<Mesh> _meshResourceManager;
 
     void UpdateBindlessImages() const;
     void UpdateBindlessMaterials() const;
 
-    void CreateInstance(const InitInfo& initInfo);
+    void CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo);
 
     void PickPhysicalDevice();
 
@@ -130,7 +145,7 @@ private:
 
     bool CheckValidationLayerSupport();
 
-    std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);
+    std::vector<const char*> GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo);
 
     void SetupDebugMessenger();
 

@@ -2,59 +2,37 @@
 
 #include "gbuffers.hpp"
 #include "mesh.hpp"
+#include "indirect_culler.hpp"
 
 class BatchBuffer;
-
-struct alignas(16) InstanceData
-{
-    glm::mat4 model;
-    uint32_t materialIndex;
-};
+class GPUScene;
+class RenderSceneDescription;
 
 class GeometryPipeline
 {
 public:
-    struct FrameData
-    {
-        vk::Buffer storageBuffer;
-        VmaAllocation storageBufferAllocation;
-        void* storageBufferMapped;
-        vk::DescriptorSet descriptorSet;
-    };
-
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraStructure& camera);
+    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
 
     ~GeometryPipeline();
 
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT>& GetFrameData() { return _frameData; }
-    vk::DescriptorSetLayout& DescriptorSetLayout() { return _descriptorSetLayout; }
-
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const SceneDescription& scene, const BatchBuffer& batchBuffer);
-
-    void UpdateInstanceData(uint32_t currentFrame, const SceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline();
-
-    void CreateDescriptorSetLayout();
-
-    void CreateDescriptorSets();
-
-    void CreateInstanceBuffers();
-
-    void UpdateGeometryDescriptorSet(uint32_t frameIndex);
+    void CreatePipeline(const GPUScene& gpuScene);
+    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
-    const CameraStructure& _camera;
+    const CameraResource& _camera;
 
-    vk::DescriptorSetLayout _descriptorSetLayout;
+    IndirectCuller _culler;
+
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _frameData;
-    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
+    ResourceHandle<Buffer> _drawBuffer;
+    vk::DescriptorSet _drawBufferDescriptorSet;
 };

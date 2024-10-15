@@ -1,9 +1,8 @@
 #pragma once
 
-#include "model_loader.hpp"
-#include "entity/registry.hpp"
+#include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 
 class System;
 

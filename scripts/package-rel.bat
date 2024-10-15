@@ -1,3 +1,3 @@
 cd ..
-python scripts/package.py -o "package" -e "build/WSL-Release/Engine" -a "assets" "shaders"
+python scripts/package.py -o "package" -e "build/WSL-Release/Game" -a "assets" "shaders/bin"
 pause

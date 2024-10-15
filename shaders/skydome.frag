@@ -2,6 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier: enable
 
 #include "bindless.glsl"
+#include "settings.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -10,11 +11,8 @@ layout (push_constant) uniform PushConstants
 
 layout (set = 2, binding = 0) uniform BloomSettingsUBO
 {
-    float strength;
-    float gradientStrength;
-    float maxBrightnessExtraction;
-    vec3 colorWeights;
-} bloomSettings;
+    BloomSettings bloomSettings;
+};
 
 layout (location = 0) in vec2 texCoord;
 

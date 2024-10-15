@@ -1,4 +1,5 @@
 #include "performance_tracker.hpp"
+#include "profile_macros.hpp"
 
 PerformanceTracker::PerformanceTracker()
 {

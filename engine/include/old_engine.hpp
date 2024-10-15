@@ -1,25 +1,24 @@
 #pragma once
 
-#include "engine_init_info.hpp"
+#include "module_interface.hpp"
 #include "performance_tracker.hpp"
 #include "mesh.hpp"
 
+#include <memory>
+
 class ECS;
-class Application;
 class Renderer;
 class Editor;
 
-class Engine
+class OldEngine : public ModuleInterface
 {
-public:
-    Engine(const InitInfo& initInfo, std::shared_ptr<Application> application);
-    ~Engine();
-    NON_COPYABLE(Engine);
-    NON_MOVABLE(Engine);
+    virtual ModuleTickOrder Init(Engine& engine) override;
+    virtual void Tick(Engine& engine) override;
+    virtual void Shutdown(Engine& engine) override;
 
-    void Run();
-    bool ShouldQuit() const { return _shouldQuit; };
-    void Quit() { _shouldQuit = true; };
+public:
+    OldEngine();
+    ~OldEngine() override;
 
 private:
     friend Renderer;
@@ -33,8 +32,6 @@ private:
     std::unique_ptr<ECS> _ecs;
 
     std::shared_ptr<SceneDescription> _scene;
-
-    std::shared_ptr<Application> _application;
 
     glm::ivec2 _lastMousePos {};
 
