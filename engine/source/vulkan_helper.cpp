@@ -20,6 +20,21 @@ void util::VK_ASSERT(VkResult result, std::string_view message)
     VK_ASSERT(vk::Result(result), message);
 }
 
+void util::VK_ASSERT(SpvReflectResult result, std::string_view message)
+{
+    if (result == SPV_REFLECT_RESULT_SUCCESS)
+        return;
+
+    static std::string completeMessage {};
+    completeMessage = "[] ";
+    auto resultStr = magic_enum::enum_name(result);
+
+    completeMessage.insert(1, resultStr);
+    completeMessage.insert(completeMessage.size(), message);
+
+    throw std::runtime_error(completeMessage.c_str());
+}
+
 bool util::HasStencilComponent(vk::Format format)
 {
     return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
