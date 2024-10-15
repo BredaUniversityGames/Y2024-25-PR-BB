@@ -26,7 +26,7 @@ void main()
         // simulate particles
         vec3 velocity = particle.velocity;
         velocity.y += particle.mass;
-        particle.position += velocity * dt;
+        particle.position += velocity * deltaTime;
 
         // TODO: kill particle on depth collision and break
 
