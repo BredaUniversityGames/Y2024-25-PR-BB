@@ -15,21 +15,22 @@
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "gbuffers.hpp"
-#include "application.hpp"
+#include "application_module.hpp"
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "log.hpp"
+#include "profile_macros.hpp"
 
-Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
-    : _brain(initInfo)
+Renderer::Renderer(ApplicationModule& application)
+    : _brain(application.GetVulkanInfo())
     , _application(application)
     , _bloomSettings(_brain)
 {
 
-    _application->InitImGui();
-
-    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { initInfo.width, initInfo.height });
+    auto vulkanInfo = application.GetVulkanInfo();
+    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
 
     InitializeHDRTarget();
     InitializeBloomTargets();
@@ -88,7 +89,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalIndexSize += indexSize;
     }
 
-    spdlog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
+    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
 
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 
@@ -278,6 +279,8 @@ void Renderer::Render()
 
     _bloomSettings.Update(_currentFrame);
 
+    // TODO: handle this more gracefully
+    assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};
@@ -291,8 +294,8 @@ void Renderer::Render()
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
-            _swapChain->Resize(_application->DisplaySize());
-            _gBuffers->Resize(_application->DisplaySize());
+            _swapChain->Resize(_application.DisplaySize());
+            _gBuffers->Resize(_application.DisplaySize());
 
             return;
         }
@@ -343,10 +346,10 @@ void Renderer::Render()
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
 
-    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application.DisplaySize())
     {
-        _swapChain->Resize(_application->DisplaySize());
-        _gBuffers->Resize(_application->DisplaySize());
+        _swapChain->Resize(_application.DisplaySize());
+        _gBuffers->Resize(_application.DisplaySize());
     }
     else
     {

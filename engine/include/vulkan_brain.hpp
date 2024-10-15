@@ -1,8 +1,11 @@
 #pragma once
 
+#include "common.hpp"
+#include "application_module.hpp"
+
 #include "vulkan/vulkan.hpp"
-#include "engine_init_info.hpp"
 #include "gpu_resources.hpp"
+#include "application_module.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -41,7 +44,7 @@ enum class BindlessBinding
 class VulkanBrain
 {
 public:
-    explicit VulkanBrain(const InitInfo& initInfo);
+    explicit VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo);
 
     ~VulkanBrain();
     NON_COPYABLE(VulkanBrain);
@@ -133,7 +136,7 @@ private:
     void UpdateBindlessImages() const;
     void UpdateBindlessMaterials() const;
 
-    void CreateInstance(const InitInfo& initInfo);
+    void CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo);
 
     void PickPhysicalDevice();
 
@@ -143,7 +146,7 @@ private:
 
     bool CheckValidationLayerSupport();
 
-    std::vector<const char*> GetRequiredExtensions(const InitInfo& initInfo);
+    std::vector<const char*> GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo);
 
     void SetupDebugMessenger();
 
