@@ -5,7 +5,10 @@ project(Project)
 
 ### COMPILATION SETTINGS ###
 
+option(ENABLE_TESTS "Compile with Unit Tests" ON)
 option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
+option(ENABLE_PCH "Compile with precompiled header" ON)
+option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
@@ -16,13 +19,6 @@ if (WARNINGS_AS_ERRORS)
     target_compile_options(ProjectSettings INTERFACE -Werror)
 endif ()
 
-#TODO: Use reused precompiled headers
-#option(ENABLE_PCH "Compile with precompiled header" ON)
-#
-#if (ENABLE_PCH)
-#    target_precompile_headers(ProjectSettings INTERFACE "engine/pch.hpp")
-#endif ()
-
 # Add external dependencies
 add_subdirectory(external)
 
@@ -30,7 +26,6 @@ add_subdirectory(external)
 add_subdirectory(engine)
 
 # Add unit testing target executable
-option(ENABLE_TESTS "Compile with Unit Tests" ON)
 if (ENABLE_TESTS)
     message(STATUS "### Unit Tests are enabled")
 
@@ -56,7 +51,6 @@ target_link_libraries(Game
 
 ### SHADERS COMPILE STEP ###
 
-option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)
