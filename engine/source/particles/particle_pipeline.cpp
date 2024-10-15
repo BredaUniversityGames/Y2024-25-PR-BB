@@ -59,8 +59,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
 
     commandBuffer.dispatch(1, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
-        1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
@@ -82,8 +81,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
-        1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
 
     _emitters.clear();
 
@@ -97,12 +95,11 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[2], 1, _storageBufferDescriptorSet, nullptr);
 
     _simulatePushConstant.deltaTime = deltaTime;
-    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &_simulatePushConstant);
+    commandBuffer.pushConstants(_pipelineLayouts[2], vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &_simulatePushConstant);
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
-        1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
@@ -115,12 +112,10 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
 
     commandBuffer.dispatch(1, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 },
-        1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
-    // TODO: execution barrier between compute and graphics render
 
     // -- indirect draw call rendering --
 }

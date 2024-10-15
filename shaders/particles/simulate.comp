@@ -18,7 +18,7 @@ void main()
         return;
     }
 
-    uint particleIndex = aliveBuffer_CURRENT[index];
+    uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
 
     if(particle.life > 0)
@@ -36,8 +36,8 @@ void main()
         particles[particleIndex] = particle;
 
         // add to new alive list:
-        uint newAliveIndex = atomicAdd(particleCounters.aliveCount_afterSimulation, 1);
-        aliveBuffer_NEW[newAliveIndex] = particleIndex;
+        uint newAliveIndex = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
+        aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // TODO: generate vertex, normal, uv, index data
 
