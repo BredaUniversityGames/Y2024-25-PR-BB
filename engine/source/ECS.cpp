@@ -27,18 +27,6 @@ void ECS::RemovedDestroyed()
         _registry.destroy(entity);
     }
 }
-void ECS::LoadGLTFIntoScene(std::string_view path, ModelLoader& loader, BatchBuffer& batchBuffer)
-{
-    auto model = loader.Load(path, batchBuffer);
-
-    for (auto& node : model.hierarchy.allNodes)
-    {
-        entt::entity entity = _registry.create();
-        _registry.emplace<NameComponent>(entity, node.name);
-        _registry.emplace<TransformComponent>(entity, node.transform);
-        _registry.emplace<StaticMeshComponent>(entity).mesh = node.mesh;
-    }
-}
 void ECS::DestroyEntity(entt::entity entity)
 {
     assert(_registry.valid(entity));
