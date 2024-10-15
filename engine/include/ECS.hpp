@@ -3,8 +3,7 @@
 #include "entity_serializer.hpp"
 #include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
-
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 
 class System;
 

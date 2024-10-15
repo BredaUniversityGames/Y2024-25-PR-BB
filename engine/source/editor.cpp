@@ -1,10 +1,12 @@
 #include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
-#include "application.hpp"
+#include "application_module.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
+#include "profile_macros.hpp"
+#include "log.hpp"
 
 #include <fstream>
 
@@ -16,10 +18,9 @@
 #include "serialization.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
-Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
+Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
     : _ecs(ecs)
     , _brain(brain)
-    , _application(application)
     , _gBuffers(gBuffers)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
@@ -50,7 +51,8 @@ Editor::Editor(const VulkanBrain& brain, Application& application, vk::Format sw
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
 {
     ImGui_ImplVulkan_NewFrame();
-    _application.NewImGuiFrame();
+    ImGui_ImplSDL3_NewFrame();
+
     ImGui::NewFrame();
 
     DrawMainMenuBar();
@@ -62,12 +64,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // for debug info
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
-    ImGui::DragFloat3("Light dir", &light.lightDir.x, 0.05f);
-    ImGui::DragFloat("scene distance", &light.sceneDistance, 0.05f);
-    ImGui::DragFloat3("Target Position", &light.targetPos.x, 0.05f);
-    ImGui::DragFloat("Ortho Size", &light.orthoSize, 0.1f);
-    ImGui::DragFloat("Far Plane", &light.farPlane, 0.1f);
-    ImGui::DragFloat("Near Plane", &light.nearPlane, 0.1f);
+    ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
+    ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
+    ImGui::DragFloat("Ortho Size", &light.camera.orthographicSize, 0.1f);
+    ImGui::DragFloat("Far Plane", &light.camera.farPlane, 0.1f);
+    ImGui::DragFloat("Near Plane", &light.camera.nearPlane, 0.1f);
     ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
@@ -140,7 +141,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            spdlog::error("Failed writing VMA stats to file!");
+            bblog::error("Failed writing VMA stats to file!");
         }
 
         vmaFreeStatsString(_brain.vmaAllocator, statsJson);
@@ -178,9 +179,4 @@ void Editor::DrawMainMenuBar()
 
 Editor::~Editor()
 {
-    ImGui_ImplVulkan_Shutdown();
-    _application.ShutdownImGui();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
 }
