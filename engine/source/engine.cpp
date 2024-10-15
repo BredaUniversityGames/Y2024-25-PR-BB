@@ -12,10 +12,14 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "components/relationship_helpers.hpp"
+#include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 
+#include "particles/particle_util.hpp"
+#include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
@@ -35,11 +39,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
-    _renderer = std::make_unique<Renderer>(applicationModule);
+    _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
     _ecs = std::make_unique<ECS>();
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -73,6 +79,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
+
+    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
@@ -164,6 +172,12 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    if (input.IsKeyPressed(KeyboardCode::eP))
+    {
+        _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        spdlog::info("Spawned emitter!");
+    }
+
     _ecs->UpdateSystems(deltaTimeMS);
     _ecs->GetSystem<PhysicsSystem>().CleanUp();
     _ecs->RemovedDestroyed();
@@ -174,7 +188,7 @@ void OldEngine::Tick(Engine& engine)
 
     _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
-    _renderer->Render();
+    _renderer->Render(deltaTimeMS);
 
     _performanceTracker.Update();
 
@@ -195,6 +209,9 @@ void OldEngine::Shutdown(Engine& engine)
 
     _editor.reset();
     _renderer.reset();
+
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
     _ecs.reset();
 }
 

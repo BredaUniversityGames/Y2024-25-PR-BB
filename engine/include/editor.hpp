@@ -1,6 +1,10 @@
 #pragma once
 #include "common.hpp"
 
+
+#include <entt/entity/entity.hpp>
+
+
 class ECS;
 class PhysicsModule;
 class VulkanBrain;
@@ -27,4 +31,8 @@ private:
     const VulkanBrain& _brain;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
     GBuffers& _gBuffers;
+
+    entt::entity _selectedEntity = entt::null;
+
+    void DisplaySelectedEntityDetails(ECS& ecs);
 };
