@@ -2,7 +2,6 @@
 
 #include "mesh.hpp"
 #include <string>
-
 #undef None
 #include <fastgltf/core.hpp>
 
@@ -14,11 +13,12 @@ class ModelLoader
 public:
     ModelLoader(const VulkanBrain& brain);
     ~ModelLoader();
-
+    
+    
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer);
+    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer,Hierarchy::LoadMode loadMode);
 
     ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
@@ -41,7 +41,7 @@ private:
 
     void CalculateTangents(StagingMesh::Primitive& stagingPrimitive);
 
-    ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name);
+    ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, Hierarchy::LoadMode loadMode);
 
     glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
         glm::vec3 normal);
@@ -50,7 +50,7 @@ private:
         const std::vector<Material>& materials, BatchBuffer& batchBuffer, const fastgltf::Asset& gltf);
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
-        glm::mat4 matrix);
+        glm::mat4 matrix,Hierarchy::Node* parent = nullptr);
 
     Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);

@@ -42,7 +42,7 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs)
 {
-    UpdateEmitters(ecs);
+   // UpdateEmitters(ecs);
     UpdateBuffers();
 
     // Set up memory barrier to be used in between every shader stage

@@ -79,9 +79,17 @@ struct Hierarchy
         std::string name;
         glm::mat4 transform;
         ResourceHandle<Mesh> mesh;
+        std::vector<Node> children;
     };
-
+    
+    enum class LoadMode
+    {
+        flat = 0,
+        hierarchical
+    };
+    
     std::vector<Node> allNodes;
+private:
 };
 
 struct ModelHandle
@@ -93,21 +101,9 @@ struct ModelHandle
     Hierarchy hierarchy;
 };
 
-// todo : TEMP!!!
-struct TransformComponent
-{
-    glm::mat4 transform;
-};
-
-struct NameComponent
-{
-    std::string name;
-};
-
 struct StaticMeshComponent
 {
-    // todo: replace this with resource handle
-    std::shared_ptr<MeshHandle> mesh;
+    ResourceHandle<Mesh> mesh;
 };
 
 struct GameObject

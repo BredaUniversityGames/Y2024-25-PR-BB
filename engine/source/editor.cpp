@@ -28,9 +28,10 @@
 #undef GLM_ENABLE_EXPERIMENTAL
 
 
-Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers)
+Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers,ECS& ecs)
     : _brain(brain)
     , _gBuffers(gBuffers)
+,_ecs(ecs)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
@@ -250,14 +251,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();
-
-    if (ImGui::Begin("hierarchy"))
-    {
-        auto view = _Ecs._registry.view<NameComponent>();
-        for (const auto& [entity, name] : view.each())
-            ImGui::Text(name.name.c_str());
-        ImGui::End();
-    }
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();

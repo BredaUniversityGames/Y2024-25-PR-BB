@@ -12,6 +12,7 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "prefab.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
@@ -57,8 +58,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _scene->models = _renderer->FrontLoadModels(modelPaths);
 
-    _ecs->LoadGLTFIntoScene("assets/models/test.gltf", _renderer->GetModelLoader(), _renderer->GetBatchBuffer());
 
+    LoadModelIntoECSAsHierarchy(*_ecs,
+        _renderer->GetModelLoader().Load("assets/models/ABeautifulGame/ABeautifulGame.gltf", _renderer->GetBatchBuffer(),Hierarchy::LoadMode::hierarchical));
+    
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
     {
@@ -70,7 +73,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
+    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers,*_ecs);
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
