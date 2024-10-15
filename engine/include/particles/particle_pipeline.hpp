@@ -10,7 +10,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs);
+    void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);

@@ -188,7 +188,7 @@ void OldEngine::Tick(Engine& engine)
 
     _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
-    _renderer->Render();
+    _renderer->Render(deltaTimeMS);
 
     _performanceTracker.Update();
 

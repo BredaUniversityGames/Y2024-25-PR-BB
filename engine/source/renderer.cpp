@@ -148,7 +148,7 @@ void Renderer::CreateCommandBuffers()
         "Failed allocating command buffer!");
 }
 
-void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
+void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime)
 {
     ZoneScoped;
 
@@ -189,8 +189,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
-    // TODO: pass in delta time
-    _particlePipeline->RecordCommands(commandBuffer, *_ecs);
+    _particlePipeline->RecordCommands(commandBuffer, *_ecs, deltaTime);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -273,8 +272,7 @@ void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
-
-void Renderer::Render()
+void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
 
@@ -319,7 +317,7 @@ void Renderer::Render()
 
     _commandBuffers[_currentFrame].reset();
 
-    RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex);
+    RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
 
     vk::SubmitInfo submitInfo {};
     vk::Semaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
