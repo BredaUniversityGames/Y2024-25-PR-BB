@@ -23,6 +23,8 @@
 #include <stb_image.h>
 #include <spirv_reflect.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
