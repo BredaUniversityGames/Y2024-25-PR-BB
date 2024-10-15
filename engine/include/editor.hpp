@@ -4,11 +4,13 @@
 #include <entt/entity/entity.hpp>
 
 class ECS;
+class PhysicsModule;
 class VulkanBrain;
 class PerformanceTracker;
 class BloomSettings;
 struct SceneDescription;
 class GBuffers;
+class ECS;
 class Editor
 {
 public:
