@@ -13,19 +13,22 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
+#include "particles/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "gbuffers.hpp"
 #include "application_module.hpp"
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "ECS.hpp"
 #include "gpu_scene.hpp"
 #include "log.hpp"
 #include "profile_macros.hpp"
 
-Renderer::Renderer(ApplicationModule& application)
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& ecs)
     : _brain(application.GetVulkanInfo())
     , _application(application)
+    , _ecs(ecs)
     , _bloomSettings(_brain)
 {
 
@@ -70,6 +73,7 @@ Renderer::Renderer(ApplicationModule& application)
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -184,6 +188,9 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
+
+    // TODO: pass in delta time
+    _particlePipeline->RecordCommands(commandBuffer, *_ecs);
 
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
