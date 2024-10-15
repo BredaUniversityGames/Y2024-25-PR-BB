@@ -15,18 +15,20 @@ class TonemappingPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
+class ParticlePipeline;
 class SwapChain;
 class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class ECS;
 class GPUScene;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -43,6 +45,7 @@ private:
 
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
+    std::shared_ptr<ECS> _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
@@ -54,6 +57,7 @@ private:
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
+    std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
     std::unique_ptr<GPUScene> _gpuScene;
