@@ -33,6 +33,10 @@ FetchContent_MakeAvailable(SpdLog)
 
 find_package(Vulkan REQUIRED)
 
+add_library(VulkanAPI INTERFACE)
+target_link_libraries(VulkanAPI INTERFACE ${Vulkan_LIBRARY})
+target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
+
 # Vulkan Memory allocator
 
 FetchContent_Declare(
@@ -190,13 +194,11 @@ target_link_libraries(External
         INTERFACE EnTT::EnTT
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
-        INTERFACE TracyClient
-        INTERFACE ${Vulkan_LIBRARY}
+        INTERFACE VulkanAPI
 )
 
 target_include_directories(External
         INTERFACE external/SDL/include
-        INTERFACE Vulkan-Headers/include
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
 )

@@ -1,6 +1,9 @@
 #pragma once
-#include "fwd_core.hpp"
 #include <cstdint>
+#include "common.hpp"
+
+class Engine;
+class MainEngine;
 
 enum class ModuleTickOrder : uint32_t
 {
@@ -19,7 +22,11 @@ enum class ModuleTickOrder : uint32_t
 class ModuleInterface
 {
 public:
+    ModuleInterface() = default;
     virtual ~ModuleInterface() = default;
+
+    NON_COPYABLE(ModuleInterface);
+    NON_MOVABLE(ModuleInterface);
 
 private:
     friend Engine;
