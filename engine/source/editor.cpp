@@ -2,8 +2,6 @@
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
-#include "application.hpp"
-#include "application_module.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -24,7 +22,6 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
 
 #include <entt/entity/entity.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL

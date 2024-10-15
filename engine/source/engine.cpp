@@ -104,7 +104,7 @@ void OldEngine::Tick(Engine& engine)
     input.GetMousePosition(mouseX, mouseY);
 
     auto windowSize = applicationModule.DisplaySize();
-    //_scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
+    _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
     if (input.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
