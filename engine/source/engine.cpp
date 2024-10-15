@@ -18,6 +18,8 @@
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 
+#include "particles/particle_util.hpp"
+#include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
@@ -37,7 +39,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
-    _renderer = std::make_unique<Renderer>(applicationModule);
+    _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
@@ -78,6 +80,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
+
+    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
@@ -168,12 +172,17 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    if (input.IsKeyPressed(KeyboardCode::eP))
+    {
+        _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        spdlog::info("Spawned emitter!");
+    }
+
     _ecs->UpdateSystems(deltaTimeMS);
     _ecs->GetSystem<PhysicsSystem>().CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
