@@ -204,7 +204,7 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
 
-        spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
     }
 }
 
