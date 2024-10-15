@@ -19,6 +19,9 @@ public:
     template <typename T, typename... Args>
     void AddSystem(Args&&... args);
 
+    template <typename T>
+    T& GetSystem();
+
     void UpdateSystems(float dt);
 
     void RenderSystems() const;
@@ -57,4 +60,15 @@ void save(Archive& archive,ECS const & ecs, uint32_t version)
     {
         archive(EntitySerializer(ecs._registry, entity));
     }
+template <typename T>
+T& ECS::GetSystem()
+{
+    for (auto& s : _systems)
+    {
+        T* found = dynamic_cast<T*>(s.get());
+        if (found)
+            return *found;
+    }
+    assert(false && "Could not find system");
+    return *static_cast<T*>(nullptr); // This line will always fail
 }

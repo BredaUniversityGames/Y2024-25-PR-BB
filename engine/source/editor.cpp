@@ -6,6 +6,7 @@
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
+#include "modules/physics_module.hpp"
 #include "profile_macros.hpp"
 #include "log.hpp"
 
@@ -49,7 +50,7 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
     _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -61,6 +62,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     performanceTracker.Render();
     bloomSettings.Render();
 
+    // Render systems inspect
+    for (const auto& system : ecs._systems)
+    {
+        system->Inspect();
+    }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
     static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
@@ -154,6 +160,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
     ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();
 

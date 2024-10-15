@@ -12,6 +12,9 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "systems/physics_system.hpp"
+#include "modules/physics_module.hpp"
+#include "pipelines/debug_pipeline.hpp"
 
 #include <imgui_impl_sdl3.h>
 
@@ -70,7 +73,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-  
+
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
+
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
 
@@ -88,6 +97,13 @@ void OldEngine::Tick(Engine& engine)
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
 
+    // update physics
+    _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
+    auto linesData = _physicsModule->debugRenderer->GetLinesData();
+    _renderer->_debugPipeline->ClearLines();
+    _physicsModule->debugRenderer->ClearLines();
+    _renderer->_debugPipeline->AddLines(linesData);
+
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
     {
@@ -100,7 +116,7 @@ void OldEngine::Tick(Engine& engine)
     input.GetMousePosition(mouseX, mouseY);
 
     auto windowSize = applicationModule.DisplaySize();
-    //_scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
+    _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
     if (input.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
@@ -140,6 +156,8 @@ void OldEngine::Tick(Engine& engine)
         }
 
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
+        JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
+        _physicsModule->debugRenderer->SetCameraPos(cameraPos);
     }
     _lastMousePos = { mouseX, mouseY };
 
@@ -147,14 +165,20 @@ void OldEngine::Tick(Engine& engine)
         engine.SetExit(0);
 
     _ecs->UpdateSystems(deltaTimeMS);
+    _ecs->GetSystem<PhysicsSystem>().CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+    JPH::BodyManager::DrawSettings drawSettings;
+    _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
+
+    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
     _renderer->Render();
 
     _performanceTracker.Update();
+
+    _physicsModule->debugRenderer->NextFrame();
 
     FrameMark;
 }
