@@ -22,6 +22,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <stb_image.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
@@ -29,29 +31,11 @@
 
 #pragma GCC diagnostic pop
 
-#include "class_decorations.hpp"
+#include "common.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>
 #include "tracy/Tracy.hpp"
 
-inline void* operator new(std::size_t count)
-{
-    auto ptr = std::malloc(count);
-    TracyAlloc(ptr, count);
-    return ptr;
-}
-inline void operator delete(void* ptr) noexcept
-{
-    TracyFree(ptr);
-    std::free(ptr);
-}
-
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };
 constexpr uint32_t DEFERRED_ATTACHMENT_COUNT { 4 };
-
-#ifdef _WIN32
-#define WINDOWS
-#elif __linux__
-#define LINUX
-#endif

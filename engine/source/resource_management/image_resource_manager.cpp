@@ -1,6 +1,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "vulkan_brain.hpp"
 #include "vulkan_helper.hpp"
+#include "log.hpp"
 
 ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)
     : _brain(brain)
@@ -168,7 +169,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     }
     else
     {
-        SPDLOG_WARN("Creating an unnamed image!");
+        bblog::warn("Creating an unnamed image!");
     }
 
     return ResourceManager::Create(imageResource);

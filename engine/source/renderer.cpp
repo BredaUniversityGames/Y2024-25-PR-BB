@@ -13,22 +13,27 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
+#include "particles/particle_pipeline.hpp"
+#include "pipelines/debug_pipeline.hpp"
 #include "gbuffers.hpp"
-#include "application.hpp"
+#include "application_module.hpp"
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "ECS.hpp"
 #include "gpu_scene.hpp"
+#include "log.hpp"
+#include "profile_macros.hpp"
 
-Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application)
-    : _brain(initInfo)
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& ecs)
+    : _brain(application.GetVulkanInfo())
     , _application(application)
+    , _ecs(ecs)
     , _bloomSettings(_brain)
 {
 
-    _application->InitImGui();
-
-    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { initInfo.width, initInfo.height });
+    auto vulkanInfo = application.GetVulkanInfo();
+    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
 
     InitializeHDRTarget();
     InitializeBloomTargets();
@@ -66,7 +71,9 @@ Renderer::Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>&
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
+    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -86,7 +93,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalIndexSize += indexSize;
     }
 
-    spdlog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
+    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
 
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 
@@ -141,7 +148,7 @@ void Renderer::CreateCommandBuffers()
         "Failed allocating command buffer!");
 }
 
-void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex)
+void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime)
 {
     ZoneScoped;
 
@@ -182,6 +189,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
     _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
+    _particlePipeline->RecordCommands(commandBuffer, *_ecs, deltaTime);
+
     util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
     util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
@@ -192,6 +201,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+
+    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
@@ -261,8 +272,7 @@ void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
-
-void Renderer::Render()
+void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
 
@@ -274,6 +284,8 @@ void Renderer::Render()
 
     _bloomSettings.Update(_currentFrame);
 
+    // TODO: handle this more gracefully
+    assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};
@@ -287,8 +299,8 @@ void Renderer::Render()
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
-            _swapChain->Resize(_application->DisplaySize());
-            _gBuffers->Resize(_application->DisplaySize());
+            _swapChain->Resize(_application.DisplaySize());
+            _gBuffers->Resize(_application.DisplaySize());
 
             return;
         }
@@ -305,7 +317,7 @@ void Renderer::Render()
 
     _commandBuffers[_currentFrame].reset();
 
-    RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex);
+    RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
 
     vk::SubmitInfo submitInfo {};
     vk::Semaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
@@ -339,10 +351,10 @@ void Renderer::Render()
         result = _brain.presentQueue.presentKHR(&presentInfo);
     }
 
-    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application->DisplaySize())
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application.DisplaySize())
     {
-        _swapChain->Resize(_application->DisplaySize());
-        _gBuffers->Resize(_application->DisplaySize());
+        _swapChain->Resize(_application.DisplaySize());
+        _gBuffers->Resize(_application.DisplaySize());
     }
     else
     {

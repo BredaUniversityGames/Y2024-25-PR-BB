@@ -2,7 +2,7 @@
 
 #include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 
 class System;
 
@@ -17,6 +17,9 @@ public:
 
     template <typename T, typename... Args>
     void AddSystem(Args&&... args);
+
+    template <typename T>
+    T& GetSystem();
 
     void UpdateSystems(float dt);
 
@@ -44,4 +47,17 @@ void ECS::AddSystem(Args&&... args)
     _systems.emplace_back(std::unique_ptr<System>(system));
 
     spdlog::info("{}, created", typeid(*system).name());
+}
+
+template <typename T>
+T& ECS::GetSystem()
+{
+    for (auto& s : _systems)
+    {
+        T* found = dynamic_cast<T*>(s.get());
+        if (found)
+            return *found;
+    }
+    assert(false && "Could not find system");
+    return *static_cast<T*>(nullptr); // This line will always fail
 }

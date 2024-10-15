@@ -1,0 +1,52 @@
+#version 460
+#include "particle_vars.glsl"
+
+layout(push_constant) uniform DeltaTime
+{
+    float deltaTime;
+};
+
+layout ( local_size_x = 256, local_size_y = 1, local_size_z = 1 ) in;
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+
+    uint aliveCount = particleCounters.aliveCount;
+    if (index >= aliveCount)
+    {
+        return;
+    }
+
+    uint particleIndex = aliveBufferCURRENT[index];
+    Particle particle = particles[particleIndex];
+
+    if(particle.life > 0)
+    {
+        // simulate particles
+        vec3 velocity = particle.velocity;
+        velocity.y += particle.mass;
+        particle.position += velocity * deltaTime;
+
+        // TODO: kill particle on depth collision and break
+
+        particle.life -= deltaTime;
+
+        // write simulated particle back into particle buffer
+        particles[particleIndex] = particle;
+
+        // add to new alive list:
+        uint newAliveIndex = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
+        aliveBufferNEW[newAliveIndex] = particleIndex;
+
+        // TODO: generate vertex, normal, uv, index data
+
+        // TODO: frustum culling
+    }
+    else // if dead
+    {
+        // add to dead buffer
+        uint deadIndex = atomicAdd(particleCounters.deadCount, 1);
+        deadBuffer[deadIndex] = particleIndex;
+    }
+}

@@ -1,7 +1,6 @@
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
-#include "imgui_impl_vulkan.h"
 #include "bloom_settings.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
@@ -55,8 +54,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     commandBuffer.draw(3, 1, 0, 0);
     _brain.drawStats.indexCount += 3;
     _brain.drawStats.drawCalls++;
-
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
