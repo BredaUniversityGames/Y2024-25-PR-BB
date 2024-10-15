@@ -42,7 +42,6 @@ private:
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
-
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
     std::shared_ptr<ECS> _ecs;
@@ -83,11 +82,11 @@ private:
     uint32_t _currentFrame { 0 };
 
     void CreateCommandBuffers();
-    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex);
+    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
     void UpdateBindless();
-    void Render();
+    void Render(float deltaTime);
 };

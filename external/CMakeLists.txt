@@ -155,6 +155,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JoltPhysics)
 
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
+endif ()
+
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
 # Set compiler options for Jolt
 target_compile_options(Jolt PRIVATE
         -w          # Suppress all warnings
