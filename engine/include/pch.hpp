@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.hpp"
+
 #include <iostream>
 #include <cstdint>
 #include <vector>
@@ -31,7 +33,6 @@
 
 #pragma GCC diagnostic pop
 
-#include "common.hpp"
 #include "vulkan_brain.hpp"
 #include "imgui.h"
 #include <implot.h>

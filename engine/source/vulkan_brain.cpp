@@ -2,6 +2,7 @@
 #include "vulkan_helper.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_validation.hpp"
+#include "vulkan_cpu_allocator.hpp"
 #include "log.hpp"
 #include <map>
 
@@ -190,7 +191,10 @@ void VulkanBrain::CreateInstance(const ApplicationModule::VulkanInitInfo& initIn
         createInfo.enabledLayerCount = 0;
     }
 
-    util::VK_ASSERT(vk::createInstance(&createInfo, nullptr, &instance), "Failed to create vk instance!");
+    auto alloc = MakeVkAllocationCallbacks();
+    util::VK_ASSERT(
+        vk::createInstance(&createInfo, &alloc, &instance),
+        "Failed to create vk instance!");
 }
 
 void VulkanBrain::PickPhysicalDevice()
@@ -308,7 +312,9 @@ void VulkanBrain::SetupDebugMessenger()
     util::PopulateDebugMessengerCreateInfo(createInfo);
     createInfo.pUserData = nullptr;
 
-    util::VK_ASSERT(instance.createDebugUtilsMessengerEXT(&createInfo, nullptr, &_debugMessenger, dldi),
+    auto alloc = MakeVkAllocationCallbacks();
+    util::VK_ASSERT(
+        instance.createDebugUtilsMessengerEXT(&createInfo, &alloc, &_debugMessenger, dldi),
         "Failed to create debug messenger!");
 }
 
@@ -352,7 +358,10 @@ void VulkanBrain::CreateDevice()
         createInfo.enabledLayerCount = 0;
     }
 
-    util::VK_ASSERT(physicalDevice.createDevice(&createInfo, nullptr, &device), "Failed creating a logical device!");
+    auto alloc = MakeVkAllocationCallbacks();
+    util::VK_ASSERT(
+        physicalDevice.createDevice(&createInfo, &alloc, &device),
+        "Failed creating a logical device!");
 
     device.getQueue(queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
     device.getQueue(queueFamilyIndices.presentFamily.value(), 0, &presentQueue);
@@ -388,7 +397,9 @@ void VulkanBrain::CreateDescriptorPool()
     createInfo.pPoolSizes = poolSizes.data();
     createInfo.maxSets = 200;
     createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    util::VK_ASSERT(device.createDescriptorPool(&createInfo, nullptr, &descriptorPool), "Failed creating descriptor pool!");
+
+    auto alloc = MakeVkAllocationCallbacks();
+    util::VK_ASSERT(device.createDescriptorPool(&createInfo, &alloc, &descriptorPool), "Failed creating descriptor pool!");
 }
 
 void VulkanBrain::CreateBindlessDescriptorSet()
@@ -406,7 +417,9 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * poolSizes.size();
     poolCreateInfo.poolSizeCount = poolSizes.size();
     poolCreateInfo.pPoolSizes = poolSizes.data();
-    util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
+
+    auto alloc = MakeVkAllocationCallbacks();
+    util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, &alloc, &bindlessPool), "Failed creating bindless pool!");
 
     std::array<vk::DescriptorSetLayoutBinding, 5> bindings;
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
@@ -458,7 +471,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
-    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout),
+    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, &alloc, &bindlessLayout),
         "Failed creating bindless descriptor set layout.");
 
     vk::DescriptorSetAllocateInfo allocInfo {};
