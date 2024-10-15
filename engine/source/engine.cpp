@@ -39,9 +39,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    _application = std::move(application);
-    _renderer = std::make_unique<Renderer>(initInfo, _application, _ecs);
-
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
 
@@ -105,7 +102,7 @@ void OldEngine::Tick(Engine& engine)
     input.GetMousePosition(mouseX, mouseY);
 
     auto windowSize = applicationModule.DisplaySize();
-    //_scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
+    _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
     if (input.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
@@ -151,7 +148,7 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (_application->GetInputManager().IsKeyPressed(KeyboardCode::P))
+    if (input.IsKeyPressed(KeyboardCode::eP))
     {
         _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
         spdlog::info("Spawned emitter!");
