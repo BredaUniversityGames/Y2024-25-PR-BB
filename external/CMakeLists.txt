@@ -130,6 +130,37 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(GLM)
 
+# Jolt
+
+set(INTERPROCEDURAL_OPTIMIZATION ON)
+# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+set(USE_SSE4_1 ON)
+set(USE_SSE4_2 ON)
+set(USE_AVX ON)
+set(USE_AVX2 ON)
+set(USE_AVX512 OFF)
+set(USE_LZCNT ON)
+set(USE_TZCNT ON)
+set(USE_F16C ON)
+set(USE_FMADD ON)
+set(CPP_RTTI_ENABLED ON)
+
+# Include Jolt
+FetchContent_Declare(
+        JoltPhysics
+        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
+        SOURCE_SUBDIR "Build"
+)
+FetchContent_MakeAvailable(JoltPhysics)
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+# Set compiler options for Jolt
+target_compile_options(Jolt PRIVATE
+        -w          # Suppress all warnings
+        -Wno-error  # Do not treat warnings as errors
+)
+
 # GoogleTest
 
 FetchContent_Declare(
@@ -202,6 +233,7 @@ target_link_libraries(External
         INTERFACE fastgltf::fastgltf
         INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
+        INTERFACE Jolt
 )
 
 target_include_directories(External
