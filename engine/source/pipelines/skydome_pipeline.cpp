@@ -3,8 +3,9 @@
 #include "vulkan_helper.hpp"
 #include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, MeshPrimitiveHandle&& sphere, const CameraStructure& camera,
+SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)
@@ -28,7 +29,7 @@ SkydomePipeline::~SkydomePipeline()
     _brain.device.destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer)
+void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
@@ -37,14 +38,13 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
-    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = vk::Extent2D { _brain.GetImageResourceManager().Access(_hdrTarget)->width,
@@ -59,22 +59,33 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     util::BeginLabel(commandBuffer, "Skydome pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
+    vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f,
+        static_cast<float>(renderingInfo.renderArea.extent.width),
+        static_cast<float>(renderingInfo.renderArea.extent.height),
+        0.0f, 1.0f };
+
+    vk::Rect2D scissor = vk::Rect2D { renderingInfo.renderArea.offset, renderingInfo.renderArea.extent };
+    commandBuffer.setViewport(0, 1, &viewport);
+    commandBuffer.setScissor(0, 1, &scissor);
+
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0,
-        nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
-    vk::DeviceSize offsets[] = { 0 };
-    vk::Buffer vertexBuffer[] = { batchBuffer.VertexBuffer() };
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffer, offsets);
-    commandBuffer.bindIndexBuffer(batchBuffer.IndexBuffer(), 0, batchBuffer.IndexType());
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
 
-    commandBuffer.drawIndexed(_sphere.count, 1, _sphere.indexOffset, _sphere.vertexOffset, 0);
-    _brain.drawStats.indexCount += _sphere.count;
+    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
+
+    auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
+    auto primitive = sphere->primitives[0];
+    commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+    _brain.drawStats.indexCount += primitive.count;
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
@@ -85,7 +96,7 @@ void SkydomePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
 
-    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, _camera.descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
 
@@ -100,8 +111,8 @@ void SkydomePipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/skydome-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/skydome-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/skydome.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/skydome.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -179,7 +190,9 @@ void SkydomePipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -199,11 +212,10 @@ void SkydomePipeline::CreatePipeline()
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

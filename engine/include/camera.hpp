@@ -1,34 +1,53 @@
 #pragma once
+#include <array>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+
+class VulkanBrain;
 
 struct Camera
 {
+    enum class Projection
+    {
+        ePerspective,
+        eOrthographic
+    } projection;
+
     glm::vec3 position {};
-    glm::vec3 euler_rotation {};
+    glm::vec3 eulerRotation {};
     float fov {};
+
+    float orthographicSize;
 
     float nearPlane {};
     float farPlane {};
+    float aspectRatio {};
 };
 
-struct CameraUBO
+class CameraResource
 {
-    alignas(16)
-        glm::mat4 VP;
-    glm::mat4 view;
-    glm::mat4 proj;
+public:
+    CameraResource(const VulkanBrain& brain);
+    ~CameraResource();
 
-    glm::mat4 lightVP;
-    glm::mat4 depthBiasMVP;
-    glm::vec4 lightData; // we can store light direction here
-    alignas(16)
-        glm::vec3 cameraPosition;
-};
+    void Update(uint32_t currentFrame, const Camera& camera);
 
-struct CameraStructure
-{
-    vk::DescriptorSetLayout descriptorSetLayout;
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> buffers;
-    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> allocations;
-    std::array<void*, MAX_FRAMES_IN_FLIGHT> mappedPtrs;
+    vk::DescriptorSet DescriptorSet(uint32_t frameIndex) const { return _descriptorSets[frameIndex]; }
+    ResourceHandle<Buffer> BufferResource(uint32_t frameIndex) const { return _buffers[frameIndex]; }
+
+    static vk::DescriptorSetLayout DescriptorSetLayout();
+
+    NON_COPYABLE(CameraResource);
+    NON_MOVABLE(CameraResource);
+
+private:
+    const VulkanBrain& _brain;
+
+    static vk::DescriptorSetLayout _descriptorSetLayout;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _descriptorSets;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _buffers;
+
+    static void CreateDescriptorSetLayout(const VulkanBrain& brain);
+    void CreateBuffers();
+    void CreateDescriptorSets();
 };

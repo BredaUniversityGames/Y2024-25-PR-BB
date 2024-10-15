@@ -1,7 +1,7 @@
 #pragma once
 
 #include "swap_chain.hpp"
-#include "engine_init_info.hpp"
+#include "application_module.hpp"
 #include "mesh.hpp"
 #include "camera.hpp"
 #include "bloom_settings.hpp"
@@ -20,11 +20,12 @@ class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class GPUScene;
 
 class Renderer
 {
 public:
-    Renderer(const InitInfo& initInfo, const std::shared_ptr<Application>& application);
+    Renderer(ApplicationModule& application_module);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -33,14 +34,15 @@ public:
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
 private:
-    friend Engine;
+    friend class OldEngine;
 
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
-    std::shared_ptr<Application> _application;
 
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
+    // TODO: Unavoidable currently, this needs to become a module
+    ApplicationModule& _application;
+
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
@@ -52,6 +54,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
 
     std::shared_ptr<SceneDescription> _scene;
+    std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
@@ -65,7 +68,7 @@ private:
 
     std::unique_ptr<BatchBuffer> _batchBuffer;
 
-    CameraStructure _cameraStructure;
+    std::unique_ptr<CameraResource> _camera;
 
     BloomSettings _bloomSettings;
 
@@ -73,17 +76,12 @@ private:
 
     uint32_t _currentFrame { 0 };
 
-    void CreateDescriptorSetLayout();
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex);
     void CreateSyncObjects();
-    void InitializeCameraUBODescriptors();
-    void UpdateCameraDescriptorSet(uint32_t currentFrame);
-    CameraUBO CalculateCamera(const Camera& camera);
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
-    void UpdateCamera(const Camera& camera);
     void UpdateBindless();
     void Render();
 };

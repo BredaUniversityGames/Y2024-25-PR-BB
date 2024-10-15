@@ -1,39 +1,32 @@
 #include "pipelines/lighting_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
+#include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraStructure& camera, ResourceHandle<Image> irradianceMap, ResourceHandle<Image> prefilterMap, ResourceHandle<Image> brdfLUT, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _camera(camera)
-    , _irradianceMap(irradianceMap)
-    , _prefilterMap(prefilterMap)
-    , _brdfLUT(brdfLUT)
     , _bloomSettings(bloomSettings)
 {
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
-    _pushConstants.albedoMIndex = _gBuffers.AlbedoM().index;
-    _pushConstants.normalRIndex = _gBuffers.NormalR().index;
-    _pushConstants.emissiveAOIndex = _gBuffers.EmissiveAO().index;
-    _pushConstants.positionIndex = _gBuffers.Position().index;
-
-    _pushConstants.irradianceIndex = _irradianceMap.index;
-    _pushConstants.prefilterIndex = _prefilterMap.index;
-    _pushConstants.brdfLUTIndex = _brdfLUT.index;
-    _pushConstants.shadowMapIndex = _gBuffers.Shadow().index;
+    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].index;
+    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].index;
+    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].index;
+    _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     // shaodw sampler
     vk::PhysicalDeviceProperties properties {};
     _brain.physicalDevice.getProperties(&properties);
 
-    CreatePipeline();
+    CreatePipeline(gpuScene);
 }
 
-void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
@@ -42,14 +35,14 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
-    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
@@ -63,13 +56,17 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::BeginLabel(commandBuffer, "Lighting pass", glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
+    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
+    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
+
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -86,9 +83,9 @@ LightingPipeline::~LightingPipeline()
     _brain.device.destroy(_pipelineLayout);
 }
 
-void LightingPipeline::CreatePipeline()
+void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
-    std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _brain.bindlessLayout, _camera.descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 4> descriptorLayouts = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), gpuScene.GetSceneDescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
@@ -104,8 +101,8 @@ void LightingPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/lighting-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/lighting-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -175,7 +172,9 @@ void LightingPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -195,11 +194,10 @@ void LightingPipeline::CreatePipeline()
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

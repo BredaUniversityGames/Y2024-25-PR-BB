@@ -2,6 +2,7 @@
 
 #include <magic_enum.hpp>
 #include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 #include "mesh.hpp"
 
 namespace util
@@ -16,7 +17,6 @@ void CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::BufferUsage
 vk::CommandBuffer BeginSingleTimeCommands(const VulkanBrain& brain);
 void EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer commandBuffer);
 void CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset = 0);
-MaterialHandle CreateMaterial(const VulkanBrain& brain, const std::array<ResourceHandle<Image>, 5>& textures, const MaterialHandle::MaterialInfo& info, vk::Sampler sampler, vk::DescriptorSetLayout materialLayout, std::shared_ptr<MaterialHandle> defaultMaterial = nullptr);
 vk::UniqueSampler CreateSampler(const VulkanBrain& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels);
 void TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 void CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
