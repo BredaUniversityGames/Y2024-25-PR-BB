@@ -275,6 +275,8 @@ void Renderer::Render()
 
     _bloomSettings.Update(_currentFrame);
 
+    // TODO: handle this more gracefully
+    assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};

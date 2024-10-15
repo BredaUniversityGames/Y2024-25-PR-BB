@@ -21,7 +21,7 @@ struct Camera
 
     float nearPlane {};
     float farPlane {};
-    float aspectRatio;
+    float aspectRatio {};
 };
 
 class CameraResource
