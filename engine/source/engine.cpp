@@ -12,6 +12,8 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "components/relationship_helpers.hpp"
+#include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
@@ -35,12 +37,15 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     spdlog::info("Starting engine...");
 
-    _ecs = std::make_shared<ECS>();
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
     _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
+
+    _ecs = std::make_unique<ECS>();
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -77,7 +82,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastMousePos = mousePos;
 
     _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
-    
+
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
 
@@ -204,6 +209,9 @@ void OldEngine::Shutdown(Engine& engine)
 
     _editor.reset();
     _renderer.reset();
+
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
     _ecs.reset();
 }
 
