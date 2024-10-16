@@ -67,7 +67,7 @@ void FrameGraph::Build()
     ComputeEdges();
 
     // Now run the topological sort
-    enum class NodeStatus
+    enum class NodeStatus : uint8_t
     {
         eNotProcessed,
         eVisited,
@@ -133,7 +133,7 @@ void FrameGraph::Build()
         }
     }
 
-    assert(_nodes.size() == reverseSortedNodes.size() && "There is something really wrong if this happens, contact Marcin (:");
+    assert(_nodes.size() == reverseSortedNodes.size() && "There is something really wrong if this happens, this should never happen");
 
     _sortedNodes.clear();
 
@@ -145,7 +145,7 @@ void FrameGraph::Build()
     _nodes.clear();
 }
 
-void FrameGraph::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
     {
@@ -153,9 +153,53 @@ void FrameGraph::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, 
 
         util::BeginLabel(commandBuffer, node.name, glm::linearRand(glm::vec3(0.0f), glm::vec3(1.0f)), _brain.dldi);
 
-        // TODO: Input memory barriers
+        // Handle input memory barriers
+        for (const FrameGraphResourceHandle inputHandle : node.inputs)
+        {
+            const FrameGraphResource& resource = _resources[inputHandle];
 
-        // TODO: Output memory barriers
+            if (resource.type == FrameGraphResourceType::eTexture)
+            {
+                const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+
+                if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+                {
+                    util::TransitionImageLayout(commandBuffer, texture->image, texture->format, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                        vk::ImageLayout::eShaderReadOnlyOptimal, texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
+                }
+                else
+                {
+                    util::TransitionImageLayout(commandBuffer, texture->image, texture->format,
+                        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+                }
+            }
+            else if (resource.type == FrameGraphResourceType::eBuffer)
+            {
+                // TODO: Handle barriers for buffers
+            }
+        }
+
+        // Handle output memory barriers
+        for (const FrameGraphResourceHandle outputHandle : node.outputs)
+        {
+            const FrameGraphResource& resource = _resources[outputHandle];
+
+            if (resource.type == FrameGraphResourceType::eAttachment)
+            {
+                const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+
+                if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+                {
+                    util::TransitionImageLayout(commandBuffer, attachment->image, attachment->format, vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eDepthStencilAttachmentOptimal, attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eDepth);
+                }
+                else
+                {
+                    util::TransitionImageLayout(commandBuffer, attachment->image, attachment->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+                }
+            }
+        }
 
         // TODO: Viewport and scissor?
 
@@ -224,7 +268,7 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
 
-        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+        spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
     }
 }
 

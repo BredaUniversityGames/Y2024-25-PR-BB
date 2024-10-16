@@ -4,7 +4,7 @@ struct RenderSceneDescription;
 struct Image;
 struct Buffer;
 
-enum class FrameGraphResourceType
+enum class FrameGraphResourceType : uint8_t
 {
     eNone = 0 << 0,
 
@@ -38,7 +38,6 @@ inline bool HasFlags(FrameGraphResourceType lhs, FrameGraphResourceType rhs)
 
 using FrameGraphNodeHandle = uint32_t;
 using FrameGraphResourceHandle = uint32_t;
-using FrameGraphRenderPassHandle = uint32_t;
 
 struct FrameGraphResourceInfo
 {
@@ -123,7 +122,7 @@ public:
     void Build();
 
     // Calls all the render passes from the built graph.
-    void Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
     // Adds a new node to the graph. To actually use the node, you also need to build the graph, by calling FrameGraph::Build().
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
