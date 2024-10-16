@@ -2,7 +2,7 @@
 message(STATUS "### Unit Tests are enabled")
 
 add_executable(UnitTests)
-target_output_dir(UnitTests CMAKE_BINARY_DIR)
+target_output_dir(UnitTests ${CMAKE_BINARY_DIR})
 
 file(GLOB_RECURSE tests CONFIGURE_DEPENDS "*.cpp")
 target_sources(UnitTests PRIVATE ${tests})
