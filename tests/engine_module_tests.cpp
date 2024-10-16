@@ -1,5 +1,3 @@
-#undef None
-#undef Bool
 #include <gtest/gtest.h>
 #include "main_engine.hpp"
 

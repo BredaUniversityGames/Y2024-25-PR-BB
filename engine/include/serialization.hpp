@@ -2,7 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
-#include "lib/include_cereal.hpp"
+
+#include "cereal/cereal.hpp"
+#include "cereal/archives/json.hpp"
 
 namespace Serialization
 {

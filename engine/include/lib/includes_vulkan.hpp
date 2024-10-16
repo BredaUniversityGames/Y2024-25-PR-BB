@@ -1,5 +1,9 @@
 #pragma once
 
-#pragma GCC diagnostic push
 #include <vulkan/vulkan.hpp>
-#pragma GCC diagnostic pop
+
+// Undefining problematic X11 defines
+
+#undef Bool
+#undef None
+#undef Convex

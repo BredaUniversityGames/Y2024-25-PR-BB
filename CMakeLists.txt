@@ -15,17 +15,17 @@ option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 
-# Add external dependencies
-add_subdirectory(external)
-
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
-target_compile_options(ProjectSettings INTERFACE -Wall INTERFACE -Wextra INTERFACE -Werror)
+target_compile_options(ProjectSettings INTERFACE -Wall INTERFACE -Wextra)
 
 if (WARNINGS_AS_ERRORS)
     message(STATUS "### Warnings are enabled as Errors")
     target_compile_options(ProjectSettings INTERFACE -Werror)
 endif ()
+
+# Add external dependencies
+add_subdirectory(external)
 
 # Add engine library
 add_subdirectory(engine)
