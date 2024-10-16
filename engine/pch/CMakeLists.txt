@@ -6,6 +6,6 @@ target_precompile_headers(PCH PRIVATE "pch.hpp")
 
 target_link_libraries(PCH
         PRIVATE ProjectSettings
-        PRIVATE External
-        PRIVATE Utility
+        PUBLIC External
+        PUBLIC Utility
 )
