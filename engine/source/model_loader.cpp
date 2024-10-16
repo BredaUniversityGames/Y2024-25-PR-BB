@@ -9,8 +9,8 @@
 #pragma GCC diagnostic push
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #include <fastgltf/tools.hpp>
-// #include <fastgltf/glm_element_traits.hpp>
 
 #pragma GCC diagnostic pop
 
