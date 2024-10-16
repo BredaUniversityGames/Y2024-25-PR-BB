@@ -141,8 +141,6 @@ void FrameGraph::Build()
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
     }
-
-    _nodes.clear();
 }
 
 void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
