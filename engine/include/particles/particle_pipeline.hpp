@@ -2,12 +2,13 @@
 
 struct Emitter;
 class CameraResource;
+class SwapChain;
 class ECS;
 
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera);
+    ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t _currentFrame, ECS& ecs, float deltaTime);
@@ -46,11 +47,12 @@ private:
 
     const VulkanBrain& _brain;
     const CameraResource& _camera;
+    const SwapChain& _swapChain;
 
     std::vector<Emitter> _emitters;
 
-    std::array<vk::Pipeline, 5> _pipelines;
-    std::array<vk::PipelineLayout, 5> _pipelineLayouts;
+    std::array<vk::Pipeline, 4> _pipelines;
+    std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
     // particle instances storage buffers
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _particleInstancesBuffers;

@@ -1,4 +1,4 @@
-#include "particles.glsl"
+#include "particle_vars.glsl"
 
 layout(set = 1, binding = 0) buffer ParticleSSB
 {

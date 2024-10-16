@@ -1,6 +1,7 @@
 #include "particles/particle_pipeline.hpp"
 
 #include "camera.hpp"
+#include "swap_chain.hpp"
 #include "particles/particle_util.hpp"
 #include "particles/emitter_component.hpp"
 #include "ECS.hpp"
@@ -8,9 +9,10 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 
-ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera)
+ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
     , _camera(camera)
+    , _swapChain(swapChain)
 {
     CreateDescriptorSetLayouts();
     CreateBuffers();
@@ -61,12 +63,12 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<int>(ShaderStages::eKickOff)]);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eKickOff)], 1, _particlesBuffersDescriptorSet, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eKickOff)], 2, _instancesDescriptorSets[currentFrame], nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eKickOff)], 1, _particlesBuffersDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eKickOff)], 2, _instancesDescriptorSets[currentFrame], {});
 
     commandBuffer.dispatch(1, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
@@ -75,8 +77,8 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<int>(ShaderStages::eEmit)]);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eEmit)], 1, _particlesBuffersDescriptorSet, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eEmit)], 2, _emittersDescriptorSet, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eEmit)], 1, _particlesBuffersDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eEmit)], 2, _emittersDescriptorSet, {});
 
     // spawn as many threads as there's particles to emit
     uint32_t bufferOffset = 0;
@@ -88,7 +90,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     _emitters.clear();
 
@@ -99,19 +101,30 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<int>(ShaderStages::eSimulate)]);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eSimulate)], 2, _instancesDescriptorSets[currentFrame], nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<int>(ShaderStages::eSimulate)], 2, _instancesDescriptorSets[currentFrame], {});
 
     _simulatePushConstant.deltaTime = deltaTime;
     commandBuffer.pushConstants(_pipelineLayouts[static_cast<int>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &_simulatePushConstant);
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
     // -- instanced rendering --
+    util::BeginLabel(commandBuffer, "Particle rendering pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<int>(ShaderStages::eRenderInstanced)]);
+
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<int>(ShaderStages::eRenderInstanced)], 0, _brain.bindlessSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<int>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSets[currentFrame], {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<int>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
+
+    // TODO: drawIndexed
+
+    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
@@ -244,8 +257,119 @@ void ParticlePipeline::CreatePipelines()
         _brain.device.destroy(shaderModule);
     }
 
-    { // instanced rendering
-        // TODO: set-up and implement graphics pipeline
+    { // instanced rendering (billboard)
+        std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _brain.bindlessLayout, _instancesDescriptorSetLayout, _camera.DescriptorSetLayout() };
+
+        vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
+        pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
+        pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
+
+        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+
+        util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayouts[static_cast<int>(ShaderStages::eRenderInstanced)]),
+            "Failed creating particle rendering pipeline layout!");
+
+        auto vertByteCode = shader::ReadFile("shaders/bin/billboard.vert.spv");
+        auto fragByteCode = shader::ReadFile("shaders/bin/particle.frag.spv");
+
+        vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
+        vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
+
+        vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
+        vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
+        vertShaderStageCreateInfo.module = vertModule;
+        vertShaderStageCreateInfo.pName = "main";
+
+        vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
+        fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
+        fragShaderStageCreateInfo.module = fragModule;
+        fragShaderStageCreateInfo.pName = "main";
+
+        vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
+
+        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+        inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
+        inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
+
+        std::array<vk::DynamicState, 2> dynamicStates = {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor,
+        };
+
+        vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
+        dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
+        dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+
+        vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
+        viewportStateCreateInfo.viewportCount = 1;
+        viewportStateCreateInfo.scissorCount = 1;
+
+        vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
+        rasterizationStateCreateInfo.depthClampEnable = vk::False;
+        rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
+        rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
+        rasterizationStateCreateInfo.lineWidth = 1.0f;
+        rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+        rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+        rasterizationStateCreateInfo.depthBiasEnable = vk::False;
+        rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
+        rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
+        rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+
+        vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
+        multisampleStateCreateInfo.sampleShadingEnable = vk::False;
+        multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+        multisampleStateCreateInfo.minSampleShading = 1.0f;
+        multisampleStateCreateInfo.pSampleMask = nullptr;
+        multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
+        multisampleStateCreateInfo.alphaToOneEnable = vk::False;
+
+        vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
+        colorBlendAttachmentState.blendEnable = vk::False;
+        colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+
+        vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+        colorBlendStateCreateInfo.logicOpEnable = vk::False;
+        colorBlendStateCreateInfo.attachmentCount = 1;
+        colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
+
+        vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+        depthStencilStateCreateInfo.depthTestEnable = false;
+        depthStencilStateCreateInfo.depthWriteEnable = false;
+
+        vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+        auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
+        pipelineCreateInfo.stageCount = 2;
+        pipelineCreateInfo.pStages = shaderStages;
+        pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
+        pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
+        pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+        pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
+        pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
+        pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
+        pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
+        pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
+        pipelineCreateInfo.layout = _pipelineLayouts[static_cast<int>(ShaderStages::eRenderInstanced)];
+        pipelineCreateInfo.subpass = 0;
+        pipelineCreateInfo.basePipelineHandle = nullptr;
+        pipelineCreateInfo.basePipelineIndex = -1;
+
+        auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
+        pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
+        vk::Format format = _swapChain.GetFormat();
+        pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
+
+        pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
+
+        auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
+        util::VK_ASSERT(result.result, "Failed creating the particle rendering pipeline layout!");
+        _pipelines[static_cast<int>(ShaderStages::eRenderInstanced)] = result.value;
+
+        _brain.device.destroy(vertModule);
+        _brain.device.destroy(fragModule);
     }
 }
 
