@@ -38,6 +38,13 @@ static constexpr JPH::ObjectLayer MOVING = 1;
 static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
 };
 
+enum PhysicsShapes
+{
+    eSPHERE,
+    eBOX,
+    eCONVEXHULL,
+};
+
 /// Class that determines if two object layers can collide
 class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
 {

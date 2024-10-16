@@ -1,5 +1,6 @@
 ﻿#include "systems/physics_system.hpp"
 #include "ECS.hpp"
+#include "components/name_component.hpp"
 #include "modules/physics_module.hpp"
 #include "components/rigidbody_component.hpp"
 
@@ -48,15 +49,37 @@ void PhysicsSystem::Inspect()
     ImGui::Begin("Physics System");
     const auto view = _ecs._registry.view<RigidbodyComponent>();
     static int amount = 1;
+    static PhysicsShapes currentShape = eSPHERE;
     ImGui::Text("Physics Entities: %lu", view.size());
 
     ImGui::DragInt("Amout", &amount, 1, 1, 100);
+    const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
+    const char* currentItem = shapeNames[currentShape];
+
+    if (ImGui::BeginCombo("Select Physics Shape", currentItem)) // Dropdown name
+    {
+        for (int n = 0; n < IM_ARRAYSIZE(shapeNames); n++)
+        {
+            bool isSelected = (currentShape == n);
+            if (ImGui::Selectable(shapeNames[n], isSelected))
+            {
+                currentShape = static_cast<PhysicsShapes>(n);
+            }
+            if (isSelected)
+                ImGui::SetItemDefaultFocus(); // Ensure the currently selected item is focused
+        }
+        ImGui::EndCombo();
+    }
     if (ImGui::Button("Create Physics Entities"))
     {
         for (int i = 0; i < amount; i++)
         {
-            entt::entity newEntity = CreatePhysicsEntity();
-            RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
+            entt::entity entity = _ecs._registry.create();
+            RigidbodyComponent rb(*_physicsModule.bodyInterface, currentShape);
+            NameComponent node;
+            node._name = "Physics Entity";
+            _ecs._registry.emplace<NameComponent>(entity, node);
+            _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
             _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
         }
     }
@@ -75,4 +98,54 @@ void PhysicsSystem::Inspect()
             { _ecs.DestroyEntity(entity); });
     }
     ImGui::End();
+}
+void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
+{
+    ImGui::Text("Body ID: %lu", rb.bodyID);
+
+    JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
+    float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };
+    if (ImGui::DragFloat3("Position", pos, 0.1f))
+    {
+        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(pos[0], pos[1], pos[2]), JPH::EActivation::Activate);
+    }
+
+    const auto joltRotation = _physicsModule.bodyInterface->GetRotation(rb.bodyID).GetEulerAngles();
+    float euler[3] = { joltRotation.GetX(), joltRotation.GetY(), joltRotation.GetZ() };
+    if (ImGui::DragFloat3("Rotation", euler))
+    {
+        JPH::Quat newRotation = JPH::Quat::sEulerAngles(JPH::Vec3(euler[0], euler[1], euler[2]));
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
+    }
+
+    if (rb.shapeType == PhysicsShapes::eSPHERE)
+    {
+        const auto& shape = _physicsModule.bodyInterface->GetShape(rb.bodyID);
+        float radius = shape->GetInnerRadius();
+
+        if (ImGui::DragFloat("Radius", &radius, 0.1f))
+        {
+            radius = glm::max(radius, 0.01f);
+            _physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::SphereShape(radius), true, JPH::EActivation::Activate);
+        }
+    }
+
+    if (rb.shapeType == PhysicsShapes::eBOX)
+    {
+        const auto& shape = _physicsModule.bodyInterface->GetShape(rb.bodyID);
+        auto boxShape = JPH::StaticCast<JPH::BoxShape>(shape);
+        if (boxShape == nullptr)
+        {
+            return;
+        }
+        const auto joltSize = boxShape->GetHalfExtent();
+        float size[3] = { joltSize.GetX(), joltSize.GetY(), joltSize.GetZ() };
+        if (ImGui::DragFloat3("Size", size, 0.1f))
+        {
+            size[0] = glm::max(size[0], 0.1f);
+            size[1] = glm::max(size[1], 0.1f);
+            size[2] = glm::max(size[2], 0.1f);
+            _physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
+        }
+    }
 }

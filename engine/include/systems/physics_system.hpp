@@ -17,6 +17,7 @@ public:
     void Update([[maybe_unused]] ECS& ecs, [[maybe_unused]] float deltaTime) override;
     void Render([[maybe_unused]] const ECS& ecs) const override;
     void Inspect() override;
+    void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
     ECS& _ecs;

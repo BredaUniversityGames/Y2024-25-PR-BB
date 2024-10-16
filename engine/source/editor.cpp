@@ -1,5 +1,5 @@
 #include <imgui_impl_sdl3.h>
- #include "editor.hpp"
+#include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -7,6 +7,7 @@
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
 #include "modules/physics_module.hpp"
+#include "systems/physics_system.hpp"
 #include "profile_macros.hpp"
 #include "log.hpp"
 
@@ -22,6 +23,7 @@
 #include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 
@@ -266,13 +268,13 @@ void Editor::DrawMainMenuBar()
         {
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json",_ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
             }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
-} 
+}
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
     if (_selectedEntity == entt::null)
@@ -299,6 +301,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 
     TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
     NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
+
     if (transform != nullptr)
     {
         bool changed = false;
@@ -312,6 +315,12 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         {
             TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
         }
+    }
+
+    RigidbodyComponent* rigidbody = ecs._registry.try_get<RigidbodyComponent>(_selectedEntity);
+    if (rigidbody != nullptr)
+    {
+        ecs.GetSystem<PhysicsSystem>().InspectRigidBody(*rigidbody);
     }
 
     if (nameComponent != nullptr)
