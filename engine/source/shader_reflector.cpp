@@ -37,6 +37,7 @@ ShaderReflector::~ShaderReflector()
     for (auto& shaderStage : _shaderStages)
     {
         spvReflectDestroyShaderModule(&shaderStage.reflectModule);
+        _brain.device.destroy(shaderStage.shaderModule);
     }
 }
 
@@ -47,11 +48,15 @@ void ShaderReflector::AddShaderStage(vk::ShaderStageFlagBits stage, const std::v
     util::VK_ASSERT(spvReflectCreateShaderModule(spirvBytes.size(), spirvBytes.data(), &reflectModule),
         "Failed reflecting on shader module!");
 
+    vk::ShaderModule shaderModule = CreateShaderModule(spirvBytes);
+
     _shaderStages.emplace_back(ShaderStage {
         .stage = stage,
         .entryPoint = entryPoint,
         .spirvBytes = spirvBytes,
-        .reflectModule = reflectModule });
+        .reflectModule = reflectModule,
+        .shaderModule = shaderModule,
+    });
 }
 
 void ShaderReflector::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
@@ -59,6 +64,25 @@ void ShaderReflector::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& 
     ReflectShaders();
     CreatePipelineLayout(pipelineLayout);
     CreatePipeline(pipeline);
+}
+
+vk::DescriptorSetLayout ShaderReflector::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
+{
+    size_t hash = HashBindings(bindings);
+
+    if (_cacheDescriptorSetLayouts.find(hash) == _cacheDescriptorSetLayouts.end())
+    {
+        vk::DescriptorSetLayoutCreateInfo layoutInfo {
+            .bindingCount = static_cast<uint32_t>(bindings.size()),
+            .pBindings = bindings.data(),
+        };
+
+        vk::DescriptorSetLayout layout { brain.device.createDescriptorSetLayout(layoutInfo, nullptr) };
+
+        _cacheDescriptorSetLayouts[hash] = layout;
+    }
+
+    return _cacheDescriptorSetLayouts[hash];
 }
 
 void ShaderReflector::ReflectShaders()
@@ -72,10 +96,9 @@ void ShaderReflector::ReflectShaders()
         ReflectPushConstants(shaderStage);
         ReflectDescriptorLayouts(shaderStage);
 
-        vk::ShaderModule module = CreateShaderModule(shaderStage.spirvBytes);
         vk::PipelineShaderStageCreateInfo pipelineShaderStageCreateInfo {
             .stage = shaderStage.stage,
-            .module = module,
+            .module = shaderStage.shaderModule,
             .pName = shaderStage.entryPoint.data(),
         };
         _pipelineShaderStages.emplace_back(pipelineShaderStageCreateInfo);
@@ -154,7 +177,7 @@ void ShaderReflector::ReflectDescriptorLayouts(const ShaderReflector::ShaderStag
                 .binding = reflectBinding->binding,
                 .descriptorType = static_cast<vk::DescriptorType>(reflectBinding->descriptor_type),
                 .descriptorCount = reflectBinding->count,
-                .stageFlags = vk::ShaderStageFlagBits::eAllGraphics, // shaderStage.stage,
+                .stageFlags = vk::ShaderStageFlagBits::eAll, // shaderStage.stage,
                 .pImmutableSamplers = nullptr,
             };
 
@@ -267,7 +290,7 @@ size_t ShaderReflector::HashBindings(const std::vector<vk::DescriptorSetLayoutBi
     {
         seed ^= std::hash<uint32_t> {}(binding.binding) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<uint32_t> {}(static_cast<uint32_t>(binding.descriptorType)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= std::hash<uint32_t> {}(binding.descriptorCount) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= std::hash<uint32_t> {}(binding.descriptorCount) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         // seed ^= std::hash<uint32_t>{}(static_cast<uint32_t>(binding.stageFlags)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;

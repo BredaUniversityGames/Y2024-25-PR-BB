@@ -15,6 +15,8 @@ public:
     void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+
     void SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo) { _inputAssemblyStateCreateInfo = createInfo; }
     void SetViewportState(const vk::PipelineViewportStateCreateInfo& createInfo) { _viewportStateCreateInfo = createInfo; }
     void SetRasterizationState(const vk::PipelineRasterizationStateCreateInfo& createInfo) { _rasterizationStateCreateInfo = createInfo; }
@@ -39,6 +41,7 @@ private:
         std::string_view entryPoint;
         std::vector<std::byte> spirvBytes; // TODO: Consider keeping this a reference to prevent copy.
         SpvReflectShaderModule reflectModule;
+        vk::ShaderModule shaderModule;
     };
 
     const VulkanBrain& _brain;
@@ -76,5 +79,5 @@ private:
 
     vk::ShaderModule CreateShaderModule(const std::vector<std::byte>& spirvBytes);
 
-    size_t HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+    static size_t HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
 };

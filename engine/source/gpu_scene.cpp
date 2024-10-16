@@ -1,6 +1,7 @@
 #include "gpu_scene.hpp"
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
+#include "shader_reflector.hpp"
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : _brain(creation.brain)
@@ -147,12 +148,9 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
         .pImmutableSamplers = nullptr,
     };
 
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = 1;
-    createInfo.pBindings = &descriptorSetLayoutBinding;
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetLayoutBinding };
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstancesDescriptorSetLayout),
-        "Failed creating object instance descriptor set layout!");
+    _objectInstancesDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings);
 }
 
 void GPUScene::CreateSceneDescriptorSets()

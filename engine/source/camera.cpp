@@ -1,5 +1,6 @@
 #include "camera.hpp"
 #include "vulkan_helper.hpp"
+#include "shader_reflector.hpp"
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;
 
@@ -29,23 +30,19 @@ void CameraResource::CreateDescriptorSetLayout(const VulkanBrain& brain)
 {
     if (_descriptorSetLayout)
     {
-        brain.device.destroy(_descriptorSetLayout);
+        return;
     }
 
     vk::DescriptorSetLayoutBinding descriptorSetBinding {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
     };
 
-    vk::DescriptorSetLayoutCreateInfo cameraUBOCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &descriptorSetBinding,
-    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
 
-    util::VK_ASSERT(brain.device.createDescriptorSetLayout(&cameraUBOCreateInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating camera descriptor set layout!");
+    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(brain, bindings);
 }
 
 void CameraResource::CreateBuffers()
