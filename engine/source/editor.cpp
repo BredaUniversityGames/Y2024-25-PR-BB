@@ -1,4 +1,5 @@
-#include "editor.hpp"
+#include <imgui_impl_sdl3.h>
+ #include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -13,10 +14,10 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "ECS.hpp"
-
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
+#include "serialization.hpp"
 
 #include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
@@ -28,8 +29,9 @@
 #undef GLM_ENABLE_EXPERIMENTAL
 
 
-Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers,ECS& ecs)
-    : _brain(brain)
+Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
+    : _ecs(ecs)
+    , _brain(brain)
     , _gBuffers(gBuffers)
 ,_ecs(ecs)
 {
@@ -65,6 +67,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::NewFrame();
 
+    DrawMainMenuBar();
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -256,6 +259,21 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         ImGui::Render();
     }
 }
+void Editor::DrawMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Save Scene"))
+            {
+                Serialization::SerialiseToJSON("assets/maps/scene.json",_ecs);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+} 
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
     if (_selectedEntity == entt::null)

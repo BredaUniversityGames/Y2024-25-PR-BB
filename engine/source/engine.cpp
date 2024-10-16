@@ -40,11 +40,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
+    _ecs = std::make_unique<ECS>();
+
     _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    _ecs = std::make_unique<ECS>();
     TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
@@ -74,7 +75,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _renderer->UpdateBindless();
 
     _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers,*_ecs);
-
+    
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -96,6 +97,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
+
 }
 
 void OldEngine::Tick(Engine& engine)
@@ -193,7 +195,7 @@ void OldEngine::Tick(Engine& engine)
 
     _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
 
-    _renderer->Render();
+    _renderer->Render(deltaTimeMS);
 
     _performanceTracker.Update();
 

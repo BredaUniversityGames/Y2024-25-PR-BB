@@ -71,10 +71,9 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(SKIP_PERFORMANCE_COMPARISON ON)
-override_option(BUILD_SANDBOX OFF)
-override_option(BUILD_TESTS OFF)
-override_option(BUILD_DOC OFF)
+option(BUILD_DOC "Build documentation" OFF)
+option(BUILD_SANDBOX "Build sandbox examples" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
 
@@ -153,6 +152,11 @@ FetchContent_Declare(
         SOURCE_SUBDIR "Build"
 )
 FetchContent_MakeAvailable(JoltPhysics)
+
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
+endif ()
+
 SET_INTERPROCEDURAL_OPTIMIZATION()
 
 # Set compiler options for Jolt
@@ -206,6 +210,7 @@ target_include_directories(ImGui
         PUBLIC implot
 )
 
+
 # Main External Library
 
 add_library(External INTERFACE)
@@ -234,4 +239,3 @@ target_include_directories(External
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
 )
-
