@@ -2,6 +2,7 @@
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "shader_reflector.hpp"
 
 GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _brain(brain)
@@ -105,6 +106,56 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
 void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
+    std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
+    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    {
+        blendAttachmentState.blendEnable = vk::False;
+        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    }
+
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    colorBlendStateCreateInfo.logicOpEnable = vk::False;
+    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
+    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
+
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+    depthStencilStateCreateInfo.depthTestEnable = true;
+    depthStencilStateCreateInfo.depthWriteEnable = true;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
+    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.stencilTestEnable = false;
+
+    std::vector<vk::Format> formats(DEFERRED_ATTACHMENT_COUNT);
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
+
+    std::array<vk::DynamicState, 2> dynamicStates = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
+    };
+
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
+    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
+    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+
+    std::vector<std::byte> geomVertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
+    std::vector<std::byte> geomFragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
+
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, geomVertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, geomFragSpv);
+
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
+    reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
+    reflector.SetDynamicState(dynamicStateCreateInfo);
+
+    reflector.BuildPipeline(_pipeline, _pipelineLayout);
+
+    return;
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
     std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, gpuScene.GetObjectInstancesDescriptorSetLayout(), CameraResource::DescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
@@ -146,15 +197,6 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
 
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
     viewportStateCreateInfo.viewportCount = 1;
     viewportStateCreateInfo.scissorCount = 1;
@@ -179,27 +221,6 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
-    {
-        blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    }
-
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
-    colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
-    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
-
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = true;
-    depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
-    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.stencilTestEnable = false;
-
     vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
 
     auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
@@ -219,9 +240,6 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     pipelineCreateInfo.basePipelineIndex = -1;
 
     auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
-    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
 
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = DEFERRED_ATTACHMENT_COUNT;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = formats.data();

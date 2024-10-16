@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include <map>
 
 class ShaderReflector
 {
@@ -12,7 +13,7 @@ public:
     NON_MOVABLE(ShaderReflector);
 
     void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
-    vk::Pipeline BuildPipeline();
+    void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
     void SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo) { _inputAssemblyStateCreateInfo = createInfo; }
     void SetViewportState(const vk::PipelineViewportStateCreateInfo& createInfo) { _viewportStateCreateInfo = createInfo; }
@@ -20,6 +21,7 @@ public:
     void SetMultisampleState(const vk::PipelineMultisampleStateCreateInfo& createInfo) { _multisampleStateCreateInfo = createInfo; }
     void SetColorBlendState(const vk::PipelineColorBlendStateCreateInfo& createInfo) { _colorBlendStateCreateInfo = createInfo; }
     void SetDepthStencilState(const vk::PipelineDepthStencilStateCreateInfo& createInfo) { _depthStencilStateCreateInfo = createInfo; }
+    void SetDynamicState(const vk::PipelineDynamicStateCreateInfo& createInfo) { _dynamicStateCreateInfo = createInfo; }
 
     void SetColorAttachmentFormats(const std::vector<vk::Format>& formats) { _colorAttachmentFormats = formats; }
     void SetDepthAttachmentFormat(vk::Format format) { _depthFormat = format; }
@@ -42,7 +44,12 @@ private:
     const VulkanBrain& _brain;
     std::vector<vk::PipelineShaderStageCreateInfo> _pipelineShaderStages;
     std::vector<ShaderStage> _shaderStages;
+
+    vk::Pipeline _pipeline;
     vk::PipelineLayout _pipelineLayout;
+
+    static std::unordered_map<size_t, vk::DescriptorSetLayout> _cacheDescriptorSetLayouts;
+
     std::vector<vk::DescriptorSetLayout> _descriptorSetLayouts;
     std::vector<vk::PushConstantRange> _pushConstantRanges;
 
@@ -55,6 +62,7 @@ private:
     std::optional<vk::PipelineMultisampleStateCreateInfo> _multisampleStateCreateInfo;
     std::optional<vk::PipelineColorBlendStateCreateInfo> _colorBlendStateCreateInfo;
     std::optional<vk::PipelineDepthStencilStateCreateInfo> _depthStencilStateCreateInfo;
+    std::optional<vk::PipelineDynamicStateCreateInfo> _dynamicStateCreateInfo;
 
     std::vector<vk::Format> _colorAttachmentFormats;
     vk::Format _depthFormat;
@@ -63,8 +71,10 @@ private:
     void ReflectVertexInput(const ShaderStage& shaderStage);
     void ReflectPushConstants(const ShaderStage& shaderStage);
     void ReflectDescriptorLayouts(const ShaderStage& shaderStage);
-    void CreatePipelineLayout();
-    vk::Pipeline CreatePipeline();
+    void CreatePipelineLayout(vk::PipelineLayout& pipelineLayout);
+    void CreatePipeline(vk::Pipeline& pipeline);
 
     vk::ShaderModule CreateShaderModule(const std::vector<std::byte>& spirvBytes);
+
+    size_t HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
 };

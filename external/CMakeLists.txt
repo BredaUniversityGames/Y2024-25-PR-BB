@@ -179,6 +179,18 @@ FetchContent_Declare(
 override_option(gtest_force_shared_crt ON)
 FetchContent_MakeAvailable(GoogleTest)
 
+# SPIRV-Reflect
+
+FetchContent_Declare(
+        SPIRV-Reflect
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
+        GIT_TAG vulkan-sdk-1.3.296.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+override_option(SPIRV_REFLECT_STATIC_LIB ON)
+FetchContent_MakeAvailable(SPIRV-Reflect)
+
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -209,12 +221,6 @@ target_include_directories(ImGui
         PUBLIC imgui/backends
         PUBLIC implot
 )
-
-# SPIRV-Reflect
-
-set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "" FORCE)
-add_subdirectory(SPIRV-Reflect)
-
 
 # Main External Library
 

@@ -272,6 +272,7 @@ void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
+
 void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
