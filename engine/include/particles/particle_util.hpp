@@ -32,7 +32,6 @@ struct alignas(16) ParticleCounters
     uint32_t aliveCount = 0;
     uint32_t deadCount = MAX_PARTICLES;
     uint32_t aliveCountAfterSimulation = 0;
-    uint32_t culledCount = 0;
 };
 
 struct alignas(16) ParticleInstance

@@ -15,7 +15,6 @@ struct ParticleCounters
     uint aliveCount;
     uint deadCount;
     uint aliveCountAfterSimulation;
-    uint culledCount;
 };
 
 struct ParticleInstance
