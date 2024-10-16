@@ -1,8 +1,9 @@
 #include <imgui_impl_sdl3.h>
- #include "editor.hpp"
+#include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
+#include "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -24,6 +25,7 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 
 #include <entt/entity/entity.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
@@ -55,7 +57,13 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _entityEditor.registerComponent<TransformComponent>("Transform");
+    _entityEditor.registerComponent<NameComponent>("Name");
+    _entityEditor.registerComponent<RelationshipComponent>("Relationship");
+    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+
+    _basicSampler
+        = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
@@ -266,13 +274,13 @@ void Editor::DrawMainMenuBar()
         {
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json",_ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
             }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
-} 
+}
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
     if (_selectedEntity == entt::null)
@@ -286,6 +294,9 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         ImGui::Text("Selected entity is not valid");
         return;
     }
+
+    _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
+
     const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 

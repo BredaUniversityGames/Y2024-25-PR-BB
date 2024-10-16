@@ -2,6 +2,7 @@
 #include "particles/particle_interface.hpp"
 
 #include "ECS.hpp"
+#include "components/name_component.hpp"
 #include "particles/emitter_component.hpp"
 
 ParticleInterface::ParticleInterface(ECS& ecs)
@@ -24,6 +25,8 @@ ParticleInterface::ParticleInterface(ECS& ecs)
         auto entity = _ecs._registry.create();
         EmitterComponent emitterComponent;
         _ecs._registry.emplace<EmitterComponent>(entity, emitterComponent);
+        auto& name = _ecs._registry.emplace<NameComponent>(entity);
+        name._name = "Particle Emitter " + std::to_string(i);
     }
 }
 

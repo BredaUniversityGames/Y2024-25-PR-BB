@@ -29,5 +29,6 @@ public:
 
 private:
     friend class Editor;
+    friend struct TransformComponent;
     static void UpdateWorldMatrix(entt::registry& reg, entt::entity entity);
 };

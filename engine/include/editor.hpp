@@ -1,9 +1,8 @@
 #pragma once
 #include "common.hpp"
-
+#include "imgui_entt_entity_editor.hpp"
 
 #include <entt/entity/entity.hpp>
-
 
 class ECS;
 class PhysicsModule;
@@ -33,6 +32,8 @@ private:
     GBuffers& _gBuffers;
 
     entt::entity _selectedEntity = entt::null;
+
+    MM::EntityEditor<entt::entity> _entityEditor {};
 
     void DisplaySelectedEntityDetails(ECS& ecs);
 };

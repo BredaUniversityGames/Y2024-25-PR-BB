@@ -195,7 +195,7 @@ file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
 file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
 set(implot_files ${implot_sources} ${implot_headers})
 
-add_library(ImGui ${imgui_files} ${implot_files})
+add_library(ImGui ${imgui_files} ${implot_files} "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp")
 target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
 
 target_link_libraries(ImGui
@@ -208,8 +208,8 @@ target_include_directories(ImGui
         PUBLIC imgui
         PUBLIC imgui/backends
         PUBLIC implot
+        PUBLIC imgui_entt_entity_editor
 )
-
 
 # Main External Library
 

@@ -1,6 +1,7 @@
 #include "components/name_component.hpp"
 
 #include <entt/entity/registry.hpp>
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 std::string_view NameComponent::GetDisplayName(const entt::registry& registry, entt::entity entity)
 {
@@ -10,4 +11,13 @@ std::string_view NameComponent::GetDisplayName(const entt::registry& registry, e
     }
 
     return std::string_view { "Unnamed Entity" };
+}
+namespace MM
+{
+template <>
+void ComponentEditorWidget<NameComponent>(entt::registry& reg, entt::registry::entity_type e)
+{
+    auto& comp = reg.get<NameComponent>(e);
+    ImGui::InputText("Name##NameComponent", &comp._name);
+}
 }
