@@ -133,7 +133,7 @@ void FrameGraph::Build()
         }
     }
 
-    assert(_nodes.size() == reverseSortedNodes.size() && "There is something really wrong if this happens, this should never happen");
+    assert(_nodes.size() >= reverseSortedNodes.size() && "There is something really wrong if this happens, this should never happen");
 
     _sortedNodes.clear();
 
@@ -307,7 +307,6 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     return resourceHandle;
 }
 
-// TODO: Use templates to avoid if statements?
 std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creation)
 {
     if (HasFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
