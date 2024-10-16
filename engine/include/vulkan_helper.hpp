@@ -42,4 +42,6 @@ static void NameObject(T object, std::string_view label, vk::Device device, cons
     if (result != vk::Result::eSuccess)
         spdlog::warn("Failed debug naming object!");
 }
+
+uint32_t FormatSize(vk::Format format);
 }
