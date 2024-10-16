@@ -1,7 +1,9 @@
 #pragma once
 #include "common.hpp"
 
+
 #include <entt/entity/entity.hpp>
+
 
 class ECS;
 class PhysicsModule;
@@ -14,7 +16,7 @@ class ECS;
 class Editor
 {
 public:
-    Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers);
+    Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs);
     ~Editor();
 
     NON_MOVABLE(Editor);
@@ -23,6 +25,9 @@ public:
     void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs);
 
 private:
+    void DrawMainMenuBar();
+
+    ECS& _ecs;
     const VulkanBrain& _brain;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
     GBuffers& _gBuffers;
