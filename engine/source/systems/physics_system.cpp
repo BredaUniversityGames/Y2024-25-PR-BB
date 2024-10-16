@@ -148,4 +148,32 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
             _physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
         }
     }
+
+    JPH::EMotionType rbType = _physicsModule.bodyInterface->GetMotionType(rb.bodyID);
+    const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
+    const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
+
+    if (ImGui::BeginCombo("Body type", currentItem))
+    {
+        for (uint8_t n = 0; n < IM_ARRAYSIZE(rbTypeNames); n++)
+        {
+            bool isSelected = (rbType == static_cast<JPH::EMotionType>(n));
+            if (ImGui::Selectable(rbTypeNames[n], isSelected))
+            {
+                _physicsModule.bodyInterface->SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
+
+                if (rbType == JPH::EMotionType::Static)
+                {
+                    _physicsModule.bodyInterface->SetObjectLayer(rb.bodyID, PhysicsLayers::NON_MOVING);
+                }
+                else
+                {
+                    _physicsModule.bodyInterface->SetObjectLayer(rb.bodyID, PhysicsLayers::MOVING);
+                }
+            }
+            if (isSelected)
+                ImGui::SetItemDefaultFocus(); // Ensure the currently selected item is focused
+        }
+        ImGui::EndCombo();
+    }
 }
