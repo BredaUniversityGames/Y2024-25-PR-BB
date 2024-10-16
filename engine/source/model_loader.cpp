@@ -6,14 +6,6 @@
 #include "batch_buffer.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#pragma GCC diagnostic push
-
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
-#include <fastgltf/tools.hpp>
-
-#pragma GCC diagnostic pop
-
 namespace detail
 {
 
