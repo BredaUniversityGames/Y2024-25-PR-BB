@@ -49,7 +49,7 @@ void PhysicsSystem::Inspect()
     ImGui::Begin("Physics System");
     const auto view = _ecs._registry.view<RigidbodyComponent>();
     static int amount = 1;
-    ImGui::Text("Physics Entities: %llu", view.size());
+    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
 
     ImGui::DragInt("Amout", &amount, 1, 1, 100);
     if (ImGui::Button("Create Physics Entities"))
