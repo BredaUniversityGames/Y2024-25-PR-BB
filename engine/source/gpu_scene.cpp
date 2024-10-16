@@ -51,7 +51,7 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
         sin(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x));
 
     const glm::mat4 lightView = glm::lookAt(light.camera.position, light.camera.position - direction, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::orthoRH_ZO(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
+    glm::mat4 depthProjectionMatrix = glm::ortho(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
     depthProjectionMatrix[1][1] *= -1;
 
     DirectionalLightData& directionalLightData = sceneData.directionalLight;

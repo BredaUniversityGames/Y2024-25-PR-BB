@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "application_module.hpp"
 
-#include "vkpp.hpp"
+#include "vulkan/vulkan.hpp"
 #include "gpu_resources.hpp"
 #include "application_module.hpp"
 #include "resource_management/buffer_resource_manager.hpp"

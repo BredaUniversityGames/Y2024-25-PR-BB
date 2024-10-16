@@ -1,5 +1,5 @@
 #pragma once
-#include <vkpp.hpp>
+#include "vulkan/vulkan.hpp"
 #include <vector>
 
 namespace shader

@@ -25,10 +25,11 @@ FetchContent_MakeAvailable(SpdLog)
 # Vulkan
 
 find_package(Vulkan REQUIRED)
-
 add_library(VulkanAPI INTERFACE)
+
 target_link_libraries(VulkanAPI INTERFACE ${Vulkan_LIBRARY})
 target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
+target_compile_definitions(VulkanAPI INTERFACE VULKAN_HPP_NO_CONSTRUCTORS)
 
 # Vulkan Memory allocator
 
@@ -123,6 +124,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(GLM)
 
+# Guarantees GLM follows the same perspective convention as Vulkan
+target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL)
+
 # Jolt
 
 set(INTERPROCEDURAL_OPTIMIZATION OFF)
@@ -152,11 +156,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
 
-# Set compiler options for Jolt
-target_compile_options(Jolt PRIVATE
-        -w          # Suppress all warnings
-        -Wno-error  # Do not treat warnings as errors
-)
+# Suppress all warnings for Jolt compilation
+target_compile_options(Jolt PRIVATE -w)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
@@ -179,11 +180,11 @@ target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
 
 target_link_libraries(ImGui
         PRIVATE SDL3::SDL3-static
+        PRIVATE VulkanAPI
 )
 
 target_include_directories(ImGui
         PRIVATE freetype/include
-        PRIVATE Vulkan-Headers/include
         PUBLIC imgui
         PUBLIC imgui/backends
         PUBLIC implot

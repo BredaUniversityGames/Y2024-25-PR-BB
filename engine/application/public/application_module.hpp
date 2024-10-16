@@ -3,8 +3,6 @@
 #include <memory>
 #include <functional>
 #include <glm/vec2.hpp>
-
-#define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 
 class InputManager;
