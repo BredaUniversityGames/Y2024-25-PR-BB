@@ -76,7 +76,7 @@ struct FrameGraphResource
 struct FrameGraphRenderPass
 {
     virtual ~FrameGraphRenderPass() = default;
-    virtual void Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) = 0;
+    virtual void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) const = 0;
 };
 
 struct FrameGraphNodeCreation
@@ -103,7 +103,7 @@ struct FrameGraphNodeCreation
 
 struct FrameGraphNode
 {
-    FrameGraphRenderPassHandle renderPass = 0;
+    const FrameGraphRenderPass* renderPass = nullptr;
 
     std::vector<FrameGraphResourceHandle> inputs {};
     std::vector<FrameGraphResourceHandle> outputs {};
@@ -135,10 +135,10 @@ private:
 
     std::vector<FrameGraphResource> _resources {};
     std::vector<FrameGraphNode> _nodes {};
-    std::vector<const FrameGraphRenderPass*> _renderPasses {};
 
     std::vector<FrameGraphNodeHandle> _sortedNodes {};
 
+    void ComputeEdges();
     void ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle);
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);

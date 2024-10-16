@@ -1,7 +1,10 @@
 #include "frame_graph.hpp"
 #include "vulkan_brain.hpp"
 #include "gpu_resources.hpp"
+#include "vulkan_helper.hpp"
+#include "glm/gtc/random.hpp"
 #include "spdlog/spdlog.h"
+#include "glm/gtx/range.hpp"
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(const FrameGraphRenderPass* renderPass)
 {
@@ -60,22 +63,8 @@ FrameGraph::FrameGraph(const VulkanBrain& brain) :
 
 void FrameGraph::Build()
 {
-    // Clear the previous edges
-    for (auto& node : _nodes)
-    {
-        node.edges.clear();
-    }
-
     // First compute edges between nodes
-    for (uint32_t i = 0; i < _nodes.size(); i++)
-    {
-        if (!_nodes[i].isEnabled)
-        {
-            continue;
-        }
-
-        ComputeNodeEdges(_nodes[i], i);
-    }
+    ComputeEdges();
 
     // Now run the topological sort
     enum class NodeStatus
@@ -158,6 +147,22 @@ void FrameGraph::Build()
 
 void FrameGraph::Render(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
+    {
+        const FrameGraphNode& node = _nodes[nodeHandle];
+
+        util::BeginLabel(commandBuffer, node.name, glm::linearRand(glm::vec3(0.0f), glm::vec3(1.0f)), _brain.dldi);
+
+        // TODO: Input memory barriers
+
+        // TODO: Output memory barriers
+
+        // TODO: Viewport and scissor?
+
+        node.renderPass->RecordCommands(commandBuffer, currentFrame, scene);
+
+        util::EndLabel(commandBuffer, _brain.dldi);
+    }
 }
 
 FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
@@ -166,10 +171,7 @@ FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
     FrameGraphNode& node = _nodes.emplace_back();
     node.name = creation.name;
     node.isEnabled = creation.isEnabled;
-
-    const FrameGraphRenderPassHandle renderPassHandle = _renderPasses.size();
-    _renderPasses.push_back(creation.renderPass);
-    node.renderPass = renderPassHandle;
+    node.renderPass = creation.renderPass;
 
     for (const auto& resourceCreation : creation.outputs)
     {
@@ -184,6 +186,24 @@ FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
     }
 
     return *this;
+}
+
+void FrameGraph::ComputeEdges()
+{
+    for (auto& node : _nodes)
+    {
+        node.edges.clear();
+    }
+
+    for (uint32_t i = 0; i < _nodes.size(); i++)
+    {
+        if (!_nodes[i].isEnabled)
+        {
+            continue;
+        }
+
+        ComputeNodeEdges(_nodes[i], i);
+    }
 }
 
 void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle)
