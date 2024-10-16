@@ -2,7 +2,6 @@
 
 #include "components/rigidbody_component.hpp"
 #include "systems/system.hpp"
-
 ECS::ECS() = default;
 ECS::~ECS() = default;
 
@@ -28,6 +27,7 @@ void ECS::RemovedDestroyed()
         _registry.destroy(entity);
     }
 }
+
 void ECS::DestroyEntity(entt::entity entity)
 {
     assert(_registry.valid(entity));

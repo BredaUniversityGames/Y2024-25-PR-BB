@@ -69,8 +69,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
-
+    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers,*_ecs);
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -92,6 +91,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
+
 }
 
 void OldEngine::Tick(Engine& engine)
