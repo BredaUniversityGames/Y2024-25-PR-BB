@@ -74,8 +74,9 @@ PhysicsModule::~PhysicsModule()
     delete _tempAllocator;
     delete _jobSystem;
 }
-void PhysicsModule::UpdatePhysicsEngine(float deltaTime)
+void PhysicsModule::UpdatePhysicsEngine(MAYBE_UNUSED float deltaTime)
 {
     // Step the world
+    // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
 }

@@ -2,7 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
-#include "include_cereal.hpp"
+#include "lib/include_cereal.hpp"
 
 namespace Serialization
 {
@@ -12,14 +12,14 @@ namespace Serialization
  * @param path File to write to.
  * @param object Object to serialize.
  */
-template<typename Object>
-void SerialiseToJSON(const std::filesystem::path& path,const Object& object) 
+template <typename Object>
+void SerialiseToJSON(const std::filesystem::path& path, const Object& object)
 {
     std::ofstream os;
     os.exceptions(std::ofstream::failbit | std::ofstream::badbit);
     os.open(path);
-        
+
     cereal::JSONOutputArchive ar(os);
-    ar(cereal::make_nvp(typeid(Object).name(),object));
+    ar(cereal::make_nvp(typeid(Object).name(), object));
 }
 }

@@ -1,12 +1,18 @@
 #include "model_loader.hpp"
 #include "log.hpp"
-#include <fastgltf/tools.hpp>
-#include <fastgltf/glm_element_traits.hpp>
 #include "stb_image.h"
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
+#pragma GCC diagnostic push
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <fastgltf/tools.hpp>
+// #include <fastgltf/glm_element_traits.hpp>
+
+#pragma GCC diagnostic pop
 
 namespace detail
 {
@@ -201,7 +207,7 @@ ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asse
     ImageCreation imageCreation {};
 
     std::visit(fastgltf::visitor {
-                   [](auto& arg) {},
+                   [](MAYBE_UNUSED auto& arg) {},
                    [&](const fastgltf::sources::URI& filePath)
                    {
                        assert(filePath.fileByteOffset == 0); // We don't support offsets with stbi.
@@ -242,7 +248,7 @@ ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asse
                        std::visit(
                            fastgltf::visitor { // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning
                                // all buffers are already loaded into a vector.
-                               [](auto& arg) {},
+                               [](MAYBE_UNUSED auto& arg) {},
                                [&](const fastgltf::sources::Array& vector)
                                {
                                    int32_t width, height, nrChannels;

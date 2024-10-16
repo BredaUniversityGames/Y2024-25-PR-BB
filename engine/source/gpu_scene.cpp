@@ -4,11 +4,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
-    : _brain(creation.brain)
-    , irradianceMap(creation.irradianceMap)
+    : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , directionalShadowMap(creation.directionalShadowMap)
+    , _brain(creation.brain)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();

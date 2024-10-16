@@ -1,5 +1,5 @@
 #include <imgui_impl_sdl3.h>
- #include "editor.hpp"
+#include "editor.hpp"
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -12,7 +12,6 @@
 
 #include <fstream>
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include "ECS.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -26,7 +25,6 @@
 #include "components/transform_helpers.hpp"
 
 #include <entt/entity/entity.hpp>
-#undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
     : _ecs(ecs)
@@ -266,13 +264,13 @@ void Editor::DrawMainMenuBar()
         {
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json",_ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
             }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
-} 
+}
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
     if (_selectedEntity == entt::null)

@@ -2,7 +2,14 @@
 
 #include "mesh.hpp"
 #include <string>
+
+#pragma GCC diagnostic push
+
+#pragma GCC diagnostic ignored "-Wredundant-move"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <fastgltf/core.hpp>
+
+#pragma GCC diagnostic pop
 
 class SingleTimeCommands;
 class BatchBuffer;
