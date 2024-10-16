@@ -74,7 +74,7 @@ class SelfDestructModuleLast : public ModuleInterface
         engine.SetExit(-2);
     };
 
-    virtual void Shutdown(Engine& engine) override {};
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class SetAtFreeModule : public ModuleInterface
@@ -84,7 +84,7 @@ class SetAtFreeModule : public ModuleInterface
         return ModuleTickOrder::eFirst;
     }
 
-    virtual void Tick(Engine& engine) override {};
+    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
 
     virtual void Shutdown(MAYBE_UNUSED Engine& engine)
     {
