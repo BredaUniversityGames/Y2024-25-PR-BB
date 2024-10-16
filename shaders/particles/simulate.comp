@@ -1,6 +1,19 @@
 #version 460
 #include "particle_vars.glsl"
 
+struct ParticleInstance
+{
+    mat4 model;
+    uint materialIndex;
+};
+
+layout(set = 2, binding = 0) uniform ParticleInstancesSSB
+{
+    ParticleInstance instances[MAX_PARTICLES];
+};
+
+// TODO: add camera resource layout
+
 layout(push_constant) uniform DeltaTime
 {
     float deltaTime;
@@ -39,9 +52,9 @@ void main()
         uint newAliveIndex = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
-        // TODO: generate vertex, normal, uv, index data
-
         // TODO: frustum culling
+
+        // TODO: generate instance data
     }
     else // if dead
     {

@@ -10,7 +10,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t _currentFrame, ECS& ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -25,40 +25,58 @@ private:
         eCounter,
         eNone
     };
+    enum class ShaderStages
+    {
+        eKickOff = 0,
+        eEmit,
+        eSimulate,
+        eRenderInstanced,
+        eNone
+    };
 
+    // push constants
     struct SimulatePushConstant
     {
         float deltaTime;
     } _simulatePushConstant;
-
     struct EmitPushConstant
     {
         uint32_t bufferOffset;
     } _emitPushConstant;
+
+    struct FrameData
+    {
+        ResourceHandle<Buffer> buffer;
+        vk::DescriptorSet descriptorSet;
+    };
 
     const VulkanBrain& _brain;
     const CameraResource& _camera;
 
     std::vector<Emitter> _emitters;
 
-    std::vector<std::string> _shaderPaths;
-    std::vector<vk::Pipeline> _pipelines;
-    std::vector<vk::PipelineLayout> _pipelineLayouts;
-    // ssbs
-    std::array<ResourceHandle<Buffer>, 5> _storageBuffers;
-    vk::DescriptorSet _storageBufferDescriptorSet;
-    vk::DescriptorSetLayout _storageLayout;
-    // ub
-    ResourceHandle<Buffer> _emitterBuffer;
-    vk::DescriptorSet _emitterBufferDescriptorSet;
-    vk::DescriptorSetLayout _uniformLayout;
+    std::array<vk::Pipeline, 5> _pipelines;
+    std::array<vk::PipelineLayout, 5> _pipelineLayouts;
+
+    // particle instances storage buffer
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _particleInstancesFrameData;
+    vk::DescriptorSetLayout _particleInstancesDescriptorSetLayout;
+    // particle storage buffers
+    std::array<ResourceHandle<Buffer>, 5> _particlesBuffers;
+    vk::DescriptorSet _particlesBuffersDescriptorSet;
+    vk::DescriptorSetLayout _particlesBuffersDescriptorSetLayout;
+    // emitter uniform buffer
+    FrameData _emittersFrameData;
+    vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
 
     void UpdateEmitters(ECS& ecs);
 
-    void CreatePipeline();
-    void CreateDescriptorSetLayout();
+    void CreatePipelines();
+    void CreateDescriptorSetLayouts();
     void CreateDescriptorSets();
     void CreateBuffers();
+
     void UpdateBuffers();
-    void UpdateParticleDescriptorSets();
+    void UpdateParticleBuffersDescriptorSets();
+    void UpdateParticleInstancesData(uint32_t frameIndex);
 };

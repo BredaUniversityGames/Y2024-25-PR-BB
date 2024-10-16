@@ -23,27 +23,27 @@ const uint PARTICLECOUNTER_OFFSET_DEADCOUNT = 1;
 const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION = 2;
 const uint PARTICLECOUNTER_OFFSET_CULLEDCOUNT = 3;
 
-layout(set = 1, binding = 0) buffer ParticleSSBO
+layout(set = 1, binding = 0) buffer ParticleSSB
 {
     Particle particles[MAX_PARTICLES];
 };
 
-layout(set = 1, binding = 1) buffer AliveNEWSSBO
+layout(set = 1, binding = 1) buffer AliveNEWSSB
 {
     uint aliveBufferNEW[MAX_PARTICLES];
 };
 
-layout(set = 1, binding = 2) buffer AliveCURRENTSSBO
+layout(set = 1, binding = 2) buffer AliveCURRENTSSB
 {
     uint aliveBufferCURRENT[MAX_PARTICLES];
 };
 
-layout(set = 1, binding = 3) buffer DeadSSBO
+layout(set = 1, binding = 3) buffer DeadSSB
 {
     uint deadBuffer[MAX_PARTICLES];
 };
 
-layout(set = 1, binding = 4) buffer CounterSSBO
+layout(set = 1, binding = 4) buffer CounterSSB
 {
     ParticleCounters particleCounters;
 };
