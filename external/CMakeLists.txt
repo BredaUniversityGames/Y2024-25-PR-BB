@@ -71,10 +71,9 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(SKIP_PERFORMANCE_COMPARISON ON)
-override_option(BUILD_SANDBOX OFF)
-override_option(BUILD_TESTS OFF)
-override_option(BUILD_DOC OFF)
+option(BUILD_DOC "Build documentation" OFF)
+option(BUILD_SANDBOX "Build sandbox examples" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
 
@@ -246,4 +245,3 @@ target_include_directories(External
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
 )
-

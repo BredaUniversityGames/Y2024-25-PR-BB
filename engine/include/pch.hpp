@@ -11,6 +11,8 @@
 #include <optional>
 #include <functional>
 #include <chrono>
+#include <cereal/cereal.hpp>
+#include <filesystem>
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity_serializer.hpp"
 #include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
 #include "log.hpp"
@@ -49,6 +50,16 @@ void ECS::AddSystem(Args&&... args)
     spdlog::info("{}, created", typeid(*system).name());
 }
 
+CEREAL_CLASS_VERSION(ECS, 0);
+template <class Archive>
+void save(Archive& archive, ECS const& ecs, uint32_t version)
+{
+    auto entityView = ecs._registry.view<entt::entity>();
+    for (auto entity : entityView)
+    {
+        archive(EntitySerializer(ecs._registry, entity));
+    }
+}
 template <typename T>
 T& ECS::GetSystem()
 {
