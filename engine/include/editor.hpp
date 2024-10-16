@@ -16,7 +16,7 @@ class ECS;
 class Editor
 {
 public:
-    Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS&);
+    Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs);
     ~Editor();
 
     NON_MOVABLE(Editor);

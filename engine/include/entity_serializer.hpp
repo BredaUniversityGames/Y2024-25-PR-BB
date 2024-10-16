@@ -1,6 +1,3 @@
-//
-// Created by luuk on 10-10-2024.
-//
 #pragma once
 #include "include_cereal.hpp"
 
@@ -13,7 +10,7 @@ public:
         : _registry(registry)
         , _entity(entity)
     {
-    }
+    }   
     
     template <class Archive>
     void save(Archive& archive, uint32_t const version) const;
@@ -25,7 +22,7 @@ private:
 
 CEREAL_CLASS_VERSION(EntitySerializer, 0);
 template <class Archive>
-void EntitySerializer::save(Archive& archive, uint32_t const version) const
+void EntitySerializer::save(Archive& archive, uint32_t version) const
 {
     static auto trySaveComponent = [&]<typename T>()
     {
