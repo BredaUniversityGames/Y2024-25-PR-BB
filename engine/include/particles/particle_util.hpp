@@ -37,7 +37,7 @@ struct alignas(16) ParticleCounters
 
 struct alignas(16) ParticleInstance
 {
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     uint32_t materialIndex = 0;
 };
 

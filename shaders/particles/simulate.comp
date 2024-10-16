@@ -1,18 +1,15 @@
 #version 460
-#include "particle_vars.glsl"
+#include "particle_binds.glsl"
 
-struct ParticleInstance
+layout(set = 2, binding = 0) buffer ParticleInstancesSSB
 {
-    mat4 model;
-    uint materialIndex;
+    ParticleInstance particleInstances[MAX_PARTICLES];
 };
 
-layout(set = 2, binding = 0) uniform ParticleInstancesSSB
+layout(set = 2, binding = 1) buffer CulledInstanceSSB
 {
-    ParticleInstance instances[MAX_PARTICLES];
+    CulledInstance culledInstance;
 };
-
-// TODO: add camera resource layout
 
 layout(push_constant) uniform DeltaTime
 {
@@ -53,8 +50,14 @@ void main()
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // TODO: frustum culling
+        // for now add all to culled list:
+        uint newCulledIndex = atomicAdd(culledInstance.count, 1);
+        culledInstance.indices[newCulledIndex] = particleIndex;
 
-        // TODO: generate instance data
+        // set particle instance data
+        ParticleInstance instance;
+        instance.position = particle.position;
+        particleInstances[particleIndex] = instance;
     }
     else // if dead
     {

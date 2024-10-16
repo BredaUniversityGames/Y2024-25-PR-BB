@@ -16,7 +16,7 @@ public:
     NON_MOVABLE(ParticlePipeline);
 
 private:
-    enum class SSBUsage
+    enum class ParticleBufferUsage
     {
         eParticle = 0,
         eAliveNew,
@@ -44,12 +44,6 @@ private:
         uint32_t bufferOffset;
     } _emitPushConstant;
 
-    struct FrameData
-    {
-        ResourceHandle<Buffer> buffer;
-        vk::DescriptorSet descriptorSet;
-    };
-
     const VulkanBrain& _brain;
     const CameraResource& _camera;
 
@@ -58,15 +52,18 @@ private:
     std::array<vk::Pipeline, 5> _pipelines;
     std::array<vk::PipelineLayout, 5> _pipelineLayouts;
 
-    // particle instances storage buffer
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _particleInstancesFrameData;
-    vk::DescriptorSetLayout _particleInstancesDescriptorSetLayout;
+    // particle instances storage buffers
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _particleInstancesBuffers;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _culledIndicesBuffers;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _instancesDescriptorSets;
+    vk::DescriptorSetLayout _instancesDescriptorSetLayout;
     // particle storage buffers
     std::array<ResourceHandle<Buffer>, 5> _particlesBuffers;
     vk::DescriptorSet _particlesBuffersDescriptorSet;
     vk::DescriptorSetLayout _particlesBuffersDescriptorSetLayout;
     // emitter uniform buffer
-    FrameData _emittersFrameData;
+    ResourceHandle<Buffer> _emittersBuffer;
+    vk::DescriptorSet _emittersDescriptorSet;
     vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
 
     void UpdateEmitters(ECS& ecs);
