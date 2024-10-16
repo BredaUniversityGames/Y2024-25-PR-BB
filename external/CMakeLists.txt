@@ -128,9 +128,19 @@ target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENA
 
 # Jolt
 
-set(INTERPROCEDURAL_OPTIMIZATION OFF)
 
-# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+FetchContent_Declare(
+        JoltPhysics
+        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
+        SOURCE_SUBDIR "Build"
+)
+
+set(INTERPROCEDURAL_OPTIMIZATION OFF)
+set(CPP_RTTI_ENABLED ON)
+set(ENABLE_ALL_WARNINGS OFF)
+
+# TODO: These options enable vectorization optimizations
 set(USE_SSE4_1 ON)
 set(USE_SSE4_2 ON)
 set(USE_AVX ON)
@@ -140,23 +150,12 @@ set(USE_LZCNT ON)
 set(USE_TZCNT ON)
 set(USE_F16C ON)
 set(USE_FMADD ON)
-set(CPP_RTTI_ENABLED ON)
 
-# Include Jolt
-FetchContent_Declare(
-        JoltPhysics
-        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
-        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
-        SOURCE_SUBDIR "Build"
-)
 FetchContent_MakeAvailable(JoltPhysics)
 
 if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
-
-# Suppress all warnings for Jolt compilation
-target_compile_options(Jolt PRIVATE -w)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 

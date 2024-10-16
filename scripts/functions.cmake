@@ -7,6 +7,7 @@ endfunction()
 
 # FUNCTION THAT DECLARES ALL THE DEFAULTS OF A MODULE
 function(module_default_init module)
+
     target_link_libraries(${module} PRIVATE ProjectSettings)
 
     file(GLOB_RECURSE public_files CONFIGURE_DEPENDS "public/*.hpp")
@@ -15,9 +16,11 @@ function(module_default_init module)
     target_sources(${module} PUBLIC ${public_files} PRIVATE ${private_files})
     target_include_directories(${module} PUBLIC "public" PRIVATE "private")
 
-    #    if (ENABLE_PCH)
-    #        target_precompile_headers(${module} REUSE_FROM PCH)
-    #    endif ()
+    if (ENABLE_PCH)
+        target_link_libraries(${module} PRIVATE PCH)
+        target_precompile_headers(${module} REUSE_FROM PCH)
+    endif ()
+
 endfunction()
 
 # FUNCTION THAT ADDS A MODULE TO THE MAIN ENGINE LIBRARY
