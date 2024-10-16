@@ -76,7 +76,7 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
 
     for (auto& gameObject : scene.gameObjects)
     {
-        for (auto& node : gameObject.model->hierarchy.allNodes)
+        for (auto& node : gameObject.model->hierarchy.baseNodes)
         {
             auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
             for (const auto& primitive : mesh->primitives)

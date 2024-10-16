@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mesh.hpp"
-#include <string>
 #undef None
 #include <fastgltf/core.hpp>
 
@@ -13,12 +12,18 @@ class ModelLoader
 public:
     ModelLoader(const VulkanBrain& brain);
     ~ModelLoader();
+
+    enum class LoadMode : uint8_t
+    {
+        flat,
+        hierarchical
+    };
     
     
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer,Hierarchy::LoadMode loadMode);
+    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer,LoadMode loadMode);
 
     ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
@@ -41,7 +46,7 @@ private:
 
     void CalculateTangents(StagingMesh::Primitive& stagingPrimitive);
 
-    ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, Hierarchy::LoadMode loadMode);
+    ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode);
 
     glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
         glm::vec3 normal);

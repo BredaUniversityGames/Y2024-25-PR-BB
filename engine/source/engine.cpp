@@ -59,8 +59,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->models = _renderer->FrontLoadModels(modelPaths);
 
 
-    LoadModelIntoECSAsHierarchy(*_ecs,
-        _renderer->GetModelLoader().Load("assets/models/ABeautifulGame/ABeautifulGame.gltf", _renderer->GetBatchBuffer(),Hierarchy::LoadMode::hierarchical));
+    SceneLoader::LoadModelIntoECSAsHierarchy(_renderer->_brain,*_ecs,
+        _renderer->GetModelLoader().Load("assets/models/ABeautifulGame/ABeautifulGame.gltf", _renderer->GetBatchBuffer(),ModelLoader::LoadMode::hierarchical));
     
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)

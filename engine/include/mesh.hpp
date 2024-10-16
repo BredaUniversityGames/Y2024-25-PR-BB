@@ -82,14 +82,7 @@ struct Hierarchy
         std::vector<Node> children;
     };
     
-    enum class LoadMode
-    {
-        flat = 0,
-        hierarchical
-    };
-    
-    std::vector<Node> allNodes;
-private:
+    std::vector<Node> baseNodes;
 };
 
 struct ModelHandle
