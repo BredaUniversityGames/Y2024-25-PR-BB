@@ -90,7 +90,7 @@ struct ModelHandle
     std::vector<ResourceHandle<Mesh>> meshes;
     std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
-
+    
     Hierarchy hierarchy;
 };
 

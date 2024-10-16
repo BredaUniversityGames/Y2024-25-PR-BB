@@ -63,6 +63,7 @@ ModelLoader::~ModelLoader()
 
 ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer,LoadMode loadMode)
 {
+    auto start = std::chrono::steady_clock::now();
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
@@ -74,15 +75,18 @@ ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer,Lo
     auto loadedGltf = _parser.loadGltf(fileStream, directory,
         fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
+
     if (!loadedGltf)
         throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
 
     fastgltf::Asset& gltf = loadedGltf.get();
-
+    auto end = std::chrono::steady_clock::now();
+   
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
     bblog::info("Loaded model: {}", path);
+    bblog::info("fastgltf parsing took {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
     return LoadModel(gltf, batchBuffer, name,loadMode);
 }
@@ -422,12 +426,11 @@ ModelHandle
 ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
 {
     SingleTimeCommands commandBuffer { _brain };
-
+    
     ModelHandle modelHandle {};
-
     // Load textures
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
-
+    
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
@@ -440,7 +443,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
         MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
         modelHandle.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
-
+    
     // Load meshes
     for (auto& gltfMesh : gltf.meshes)
     {
@@ -458,7 +461,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
 
         modelHandle.meshes.emplace_back(handle);
     }
-
+    
     if(loadMode == LoadMode::flat)
     {
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
@@ -472,6 +475,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
             RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f }, &baseNode);
     }
+    
     commandBuffer.Submit();
 
     return modelHandle;

@@ -12,7 +12,6 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
-#include "prefab.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
@@ -60,9 +59,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->models = _renderer->FrontLoadModels(modelPaths);
 
 
-    SceneLoader::LoadModelIntoECSAsHierarchy(_renderer->_brain,*_ecs,
-        _renderer->GetModelLoader().Load("assets/models/ABeautifulGame/ABeautifulGame.gltf", _renderer->GetBatchBuffer(),ModelLoader::LoadMode::hierarchical));
-    
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
     {
@@ -74,7 +70,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers,*_ecs);
+    _editor = std::make_unique<Editor>(*_ecs,*_renderer);
     
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -193,7 +189,7 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
+    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
 
     _renderer->Render(deltaTimeMS);
 

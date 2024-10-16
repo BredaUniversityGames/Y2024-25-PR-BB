@@ -1,4 +1,4 @@
-#include "prefab.hpp"
+#include "scene_loader.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -12,12 +12,15 @@
 
 void SceneLoader::LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const ModelHandle& model)
 {
-    ZoneNamedN(zz, "SceneLoader::LoadModelIntoECSAsHierarchy", true);
-    //todo: add timer here to determine load time.
+    auto start = std::chrono::steady_clock::now();
+
     for (const auto& i : model.hierarchy.baseNodes)
     {
         LoadNodeRecursive(brain, ecs,i);
     }
+    
+    auto end = std::chrono::steady_clock::now();
+    bblog::info("loading model into scene took {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
     
 entt::entity SceneLoader::LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs,const Hierarchy::Node& currentNode)
@@ -37,7 +40,7 @@ entt::entity SceneLoader::LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs,c
 
     for(const auto& i : currentNode.children)
     {   
-        const entt::entity childEntity = LoadNodeRecursive(ecs, i);
+        const entt::entity childEntity = LoadNodeRecursive(brain, ecs, i);
         RelationshipHelpers::AttachChild(ecs._registry, entity, childEntity);
     }
     

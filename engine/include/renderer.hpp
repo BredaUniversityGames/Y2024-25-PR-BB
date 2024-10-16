@@ -41,7 +41,7 @@ public:
 
 private:
     friend class OldEngine;
-
+    friend class Editor;
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
