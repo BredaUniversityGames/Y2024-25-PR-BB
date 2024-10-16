@@ -151,6 +151,9 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         util::BeginLabel(commandBuffer, node.name, glm::linearRand(glm::vec3(0.0f), glm::vec3(1.0f)), _brain.dldi);
 
+        uint16_t width = 0;
+        uint16_t height = 0;
+
         // Handle input memory barriers
         for (const FrameGraphResourceHandle inputHandle : node.inputs)
         {
@@ -171,6 +174,13 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
                 }
             }
+            else if (resource.type == FrameGraphResourceType::eAttachment)
+            {
+                const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+
+                width = attachment->width;
+                height = attachment->height;
+            }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
                 // TODO: Handle barriers for buffers
@@ -186,6 +196,9 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
             {
                 const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
 
+                width = attachment->width;
+                height = attachment->height;
+
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
                 {
                     util::TransitionImageLayout(commandBuffer, attachment->image, attachment->format, vk::ImageLayout::eUndefined,
@@ -199,7 +212,13 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
             }
         }
 
-        // TODO: Viewport and scissor?
+        // Set viewport and scissor based on input/output attachment
+        auto fWidth = static_cast<float>(width);
+        auto fHeight = static_cast<float>(height);
+        vk::Viewport viewport { 0.0f, 0.0f, fWidth, fHeight, 0.0f, 1.0f };
+        vk::Rect2D scissor { vk::Offset2D { 0, 0 }, vk::Extent2D { width, height } };
+        commandBuffer.setViewport(0, 1, &viewport);
+        commandBuffer.setScissor(0, 1, &scissor);
 
         node.renderPass->RecordCommands(commandBuffer, currentFrame, scene);
 
