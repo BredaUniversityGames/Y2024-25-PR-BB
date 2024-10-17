@@ -1,5 +1,8 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
+#include "constants.hpp"
+
 struct SceneDescription;
 class GPUScene;
 class BatchBuffer;

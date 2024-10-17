@@ -1,8 +1,5 @@
 #pragma once
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations" // Suppress warnings about meta deprecated
-#include "entt/entt.hpp"
-#pragma GCC diagnostic pop
+
 struct SceneDescription;
 class ECS;
 

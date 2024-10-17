@@ -10,6 +10,11 @@
     ClassName(ClassName&&) = delete; \
     ClassName& operator=(ClassName&&) = delete;
 
+// Attribute macros
+
+#define MAYBE_UNUSED [[maybe_unused]]
+#define NO_DISCARD [[nodiscard]]
+
 // System Macro definitions
 
 #ifdef _WIN32
@@ -30,5 +35,9 @@ void operator delete(void* ptr) noexcept;
 
 void* operator new[](size_t size);
 void operator delete[](void* ptr) noexcept;
+
+// Sized variants: preferred by C++ 14 (but they are identical to the normal deletes)
+void operator delete(void* ptr, size_t) noexcept;
+void operator delete[](void* ptr, size_t) noexcept;
 
 // #endif

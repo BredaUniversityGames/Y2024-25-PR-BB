@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "entity_serializer.hpp"
 #include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
@@ -27,7 +28,7 @@ public:
     void RenderSystems() const;
 
     void RemovedDestroyed();
-    
+
     void DestroyEntity(entt::entity entity);
 
     entt::registry _registry {};
@@ -37,7 +38,6 @@ public:
     class ToDestroy
     {
     };
-    
 };
 
 template <typename T, typename... Args>
@@ -52,8 +52,8 @@ void ECS::AddSystem(Args&&... args)
 }
 
 CEREAL_CLASS_VERSION(ECS, 0);
-template<class Archive>
-void save(Archive& archive,ECS const & ecs, uint32_t version)
+template <class Archive>
+void save(Archive& archive, ECS const& ecs, MAYBE_UNUSED uint32_t version)
 {
     auto entityView = ecs._registry.view<entt::entity>();
     for (auto entity : entityView)

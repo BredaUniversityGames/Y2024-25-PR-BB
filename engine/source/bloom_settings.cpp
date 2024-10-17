@@ -1,5 +1,6 @@
 #include "bloom_settings.hpp"
 #include "vulkan_helper.hpp"
+#include "imgui/imgui.h"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
     : _brain(brain)
