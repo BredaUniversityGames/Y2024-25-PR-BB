@@ -2,20 +2,21 @@
 
 #include "bloom_settings.hpp"
 #include "swap_chain.hpp"
+#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 class BloomSettings;
-class BatchBuffer;
+class RenderSceneDescription;
 
 class SkydomePipeline
 {
 public:
-    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera, ResourceHandle<Image> hdrTarget,
+    SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
         ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
 
     ~SkydomePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);
@@ -27,7 +28,7 @@ private:
     } _pushConstants;
 
     const VulkanBrain& _brain;
-    const CameraStructure& _camera;
+    const CameraResource& _camera;
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;

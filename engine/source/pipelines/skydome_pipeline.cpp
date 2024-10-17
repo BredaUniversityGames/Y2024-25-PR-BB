@@ -3,8 +3,9 @@
 #include "vulkan_helper.hpp"
 #include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
+#include "gpu_scene.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraStructure& camera,
+SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)
@@ -28,7 +29,7 @@ SkydomePipeline::~SkydomePipeline()
     _brain.device.destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const BatchBuffer& batchBuffer)
+void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
@@ -71,18 +72,15 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, 1, &_camera.descriptorSets[currentFrame], 0, nullptr);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, 1, &_bloomSettings.GetDescriptorSetData(currentFrame), 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
-    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(batchBuffer.VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
 
-    vk::Buffer vertexBuffers[] = { vertexBuffer };
-    vk::DeviceSize offsets[] = { 0 };
-
-    commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, batchBuffer.IndexType());
+    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
 
     auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
     auto primitive = sphere->primitives[0];
@@ -98,7 +96,7 @@ void SkydomePipeline::CreatePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
 
-    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, _camera.descriptorSetLayout, _bloomSettings.GetDescriptorSetLayout() };
+    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
     pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
 

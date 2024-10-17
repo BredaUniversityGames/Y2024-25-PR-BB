@@ -1,6 +1,8 @@
 #pragma once
 
-#include "entity/registry.hpp"
+#include "common.hpp"
+#include "entity_serializer.hpp"
+#include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
 #include "log.hpp"
 
@@ -17,6 +19,9 @@ public:
 
     template <typename T, typename... Args>
     void AddSystem(Args&&... args);
+
+    template <typename T>
+    T& GetSystem();
 
     void UpdateSystems(float dt);
 
@@ -44,4 +49,27 @@ void ECS::AddSystem(Args&&... args)
     _systems.emplace_back(std::unique_ptr<System>(system));
 
     spdlog::info("{}, created", typeid(*system).name());
+}
+
+CEREAL_CLASS_VERSION(ECS, 0);
+template <class Archive>
+void save(Archive& archive, ECS const& ecs, MAYBE_UNUSED uint32_t version)
+{
+    auto entityView = ecs._registry.view<entt::entity>();
+    for (auto entity : entityView)
+    {
+        archive(EntitySerializer(ecs._registry, entity));
+    }
+}
+template <typename T>
+T& ECS::GetSystem()
+{
+    for (auto& s : _systems)
+    {
+        T* found = dynamic_cast<T*>(s.get());
+        if (found)
+            return *found;
+    }
+    assert(false && "Could not find system");
+    return *static_cast<T*>(nullptr); // This line will always fail
 }

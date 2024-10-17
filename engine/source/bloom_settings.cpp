@@ -1,5 +1,6 @@
 #include "bloom_settings.hpp"
 #include "vulkan_helper.hpp"
+#include "imgui/imgui.h"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
     : _brain(brain)
@@ -59,7 +60,7 @@ void BloomSettings::CreateUniformBuffers()
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
-        BufferCreation creation{};
+        BufferCreation creation {};
         creation.SetSize(sizeof(FrameData))
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);

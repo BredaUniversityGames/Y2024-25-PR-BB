@@ -17,8 +17,7 @@ readability-*,
 performance-*,
 
 misc-*,
--misc-include-cleaner,
--misc-non-private-member-variables-in-classes
+-misc-non-private-member-variables-in-classes,
 
 bugprone-*
 

@@ -1,5 +1,6 @@
 #include "vulkan_validation.hpp"
 #include "log.hpp"
+#include "common.hpp"
 
 void util::PopulateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo)
 {
@@ -13,7 +14,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
+    MAYBE_UNUSED void* pUserData)
 {
     static std::string type;
     switch (messageType)

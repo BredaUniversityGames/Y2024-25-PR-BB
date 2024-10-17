@@ -1,7 +1,11 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
+#include "constants.hpp"
+
 struct SceneDescription;
 class GPUScene;
+class BatchBuffer;
 
 struct GPUSceneCreation
 {
@@ -18,7 +22,10 @@ struct RenderSceneDescription
 {
     const GPUScene& gpuScene;
     const SceneDescription& sceneDescription; // This will change to ecs
+    const BatchBuffer& batchBuffer;
 };
+
+constexpr uint32_t MAX_INSTANCES = 2048;
 
 class GPUScene
 {
@@ -32,6 +39,15 @@ public:
     const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData[frameIndex].descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
+
+    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
+    vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
+    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+
+    ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
+    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
+
+    uint32_t DrawCount() const { return _drawCommands.size(); };
 
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;
@@ -62,6 +78,7 @@ private:
         glm::mat4 model;
 
         uint32_t materialIndex;
+        float boundingRadius;
     };
 
     struct FrameData
@@ -76,6 +93,10 @@ private:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
     vk::DescriptorSetLayout _objectInstancesDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
+    vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
+
+    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
     void UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex);
     void UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex);
@@ -94,4 +115,9 @@ private:
 
     void CreateSceneBuffers();
     void CreateObjectInstancesBuffers();
+
+    void InitializeIndirectDrawBuffer();
+    void InitializeIndirectDrawDescriptor();
+
+    void WriteDraws(uint32_t frameIndex);
 };

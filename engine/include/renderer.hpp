@@ -6,6 +6,7 @@
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 
+class DebugPipeline;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
@@ -14,18 +15,20 @@ class TonemappingPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
+class ParticlePipeline;
 class SwapChain;
 class GBuffers;
 class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
+class ECS;
 class GPUScene;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -39,9 +42,9 @@ private:
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
-
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
+    std::shared_ptr<ECS> _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
@@ -51,7 +54,9 @@ private:
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
+    std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
+    std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
     std::unique_ptr<GPUScene> _gpuScene;
@@ -68,7 +73,7 @@ private:
 
     std::unique_ptr<BatchBuffer> _batchBuffer;
 
-    CameraStructure _cameraStructure;
+    std::unique_ptr<CameraResource> _camera;
 
     BloomSettings _bloomSettings;
 
@@ -76,17 +81,12 @@ private:
 
     uint32_t _currentFrame { 0 };
 
-    void CreateDescriptorSetLayout();
     void CreateCommandBuffers();
-    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex);
+    void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
     void CreateSyncObjects();
-    void InitializeCameraUBODescriptors();
-    void UpdateCameraDescriptorSet(uint32_t currentFrame);
-    CameraUBO CalculateCamera(const Camera& camera);
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
-    void UpdateCamera(const Camera& camera);
     void UpdateBindless();
-    void Render();
+    void Render(float deltaTime);
 };

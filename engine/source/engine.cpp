@@ -12,8 +12,16 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "components/relationship_helpers.hpp"
+#include "components/transform_helpers.hpp"
+#include "systems/physics_system.hpp"
+#include "modules/physics_module.hpp"
+#include "pipelines/debug_pipeline.hpp"
 
+#include "particles/particle_util.hpp"
+#include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
+#include "implot/implot.h"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -30,13 +38,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     spdlog::info("Starting engine...");
 
-    auto& application_module = engine.GetModule<ApplicationModule>();
-
-    _renderer = std::make_unique<Renderer>(application_module);
-
-    ImGui_ImplSDL3_InitForVulkan(application_module.GetWindowHandle());
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
 
     _ecs = std::make_unique<ECS>();
+
+    _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
+
+    ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
+
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -59,8 +70,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers);
-
+    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -69,8 +79,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
-    application_module.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
+
+    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
+
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -79,8 +97,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 void OldEngine::Tick(Engine& engine)
 {
     // update input
-    auto& application_module = engine.GetModule<ApplicationModule>();
-    auto& input = application_module.GetInputManager();
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& input = applicationModule.GetInputManager();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -88,8 +106,15 @@ void OldEngine::Tick(Engine& engine)
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
 
+    // update physics
+    _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
+    auto linesData = _physicsModule->debugRenderer->GetLinesData();
+    _renderer->_debugPipeline->ClearLines();
+    _physicsModule->debugRenderer->ClearLines();
+    _renderer->_debugPipeline->AddLines(linesData);
+
     // Slow down application when minimized.
-    if (application_module.isMinimized())
+    if (applicationModule.isMinimized())
     {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(16ms);
@@ -99,14 +124,17 @@ void OldEngine::Tick(Engine& engine)
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
 
-    if (input.IsKeyPressed(KeyCode::eH))
-        application_module.SetMouseHidden(!application_module.GetMouseHidden());
+    auto windowSize = applicationModule.DisplaySize();
+    _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
-    if (application_module.GetMouseHidden())
+    if (input.IsKeyPressed(KeyboardCode::eH))
+        applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
+
+    if (applicationModule.GetMouseHidden())
     {
         ZoneNamedN(zone, "Update Camera", true);
 
-        glm::ivec2 mouse_delta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+        glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
         constexpr float MOUSE_SENSITIVITY = 0.003f;
         constexpr float CAM_SPEED = 0.003f;
@@ -115,48 +143,62 @@ void OldEngine::Tick(Engine& engine)
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
         // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        _scene->camera.euler_rotation.x -= mouse_delta.y * MOUSE_SENSITIVITY;
-        _scene->camera.euler_rotation.y -= mouse_delta.x * MOUSE_SENSITIVITY;
+        _scene->camera.eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+        _scene->camera.eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
-        glm::vec3 movement_dir {};
-        if (input.IsKeyHeld(KeyCode::eW))
-            movement_dir -= FORWARD;
+        glm::vec3 movementDir {};
+        if (input.IsKeyHeld(KeyboardCode::eW))
+            movementDir -= FORWARD;
 
-        if (input.IsKeyHeld(KeyCode::eS))
-            movement_dir += FORWARD;
+        if (input.IsKeyHeld(KeyboardCode::eS))
+            movementDir += FORWARD;
 
-        if (input.IsKeyHeld(KeyCode::eD))
-            movement_dir += RIGHT;
+        if (input.IsKeyHeld(KeyboardCode::eD))
+            movementDir += RIGHT;
 
-        if (input.IsKeyHeld(KeyCode::eA))
-            movement_dir -= RIGHT;
+        if (input.IsKeyHeld(KeyboardCode::eA))
+            movementDir -= RIGHT;
 
-        if (glm::length(movement_dir) != 0.0f)
+        if (glm::length(movementDir) != 0.0f)
         {
-            movement_dir = glm::normalize(movement_dir);
+            movementDir = glm::normalize(movementDir);
         }
 
-        _scene->camera.position += glm::quat(_scene->camera.euler_rotation) * movement_dir * deltaTimeMS * CAM_SPEED;
+        _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
+        JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
+        _physicsModule->debugRenderer->SetCameraPos(cameraPos);
     }
     _lastMousePos = { mouseX, mouseY };
 
-    if (input.IsKeyPressed(KeyCode::eESCAPE))
+    if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    if (input.IsKeyPressed(KeyboardCode::eP))
+    {
+        _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        spdlog::info("Spawned emitter!");
+    }
+
     _ecs->UpdateSystems(deltaTimeMS);
+    _ecs->GetSystem<PhysicsSystem>().CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+    JPH::BodyManager::DrawSettings drawSettings;
+    _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _renderer->Render();
+    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
+
+    _renderer->Render(deltaTimeMS);
 
     _performanceTracker.Update();
+
+    _physicsModule->debugRenderer->NextFrame();
 
     FrameMark;
 }
 
-void OldEngine::Shutdown(Engine& engine)
+void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _renderer->_brain.device.waitIdle();
 
@@ -168,6 +210,9 @@ void OldEngine::Shutdown(Engine& engine)
 
     _editor.reset();
     _renderer.reset();
+
+    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
     _ecs.reset();
 }
 

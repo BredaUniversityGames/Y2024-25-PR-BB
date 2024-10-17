@@ -1,4 +1,5 @@
 #include "gbuffers.hpp"
+#include "vulkan_brain.hpp"
 
 GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
     : _brain(brain)
@@ -81,9 +82,9 @@ void GBuffers::CreateShadowMapResources()
     vk::SamplerCreateInfo shadowSamplerInfo {};
     shadowSamplerInfo.magFilter = vk::Filter::eLinear;
     shadowSamplerInfo.minFilter = vk::Filter::eLinear;
-    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
-    shadowSamplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToBorder;
+    shadowSamplerInfo.addressModeV = vk::SamplerAddressMode::eClampToBorder;
+    shadowSamplerInfo.addressModeW = vk::SamplerAddressMode::eClampToBorder;
     shadowSamplerInfo.anisotropyEnable = 1;
     shadowSamplerInfo.maxAnisotropy = 16;
     shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;

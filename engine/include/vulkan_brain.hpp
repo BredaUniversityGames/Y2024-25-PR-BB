@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "application_module.hpp"
 
-#include "vulkan/vulkan.hpp"
+#include "lib/includes_vulkan.hpp"
 #include "gpu_resources.hpp"
 #include "application_module.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
@@ -91,6 +91,7 @@ public:
     {
         uint32_t indexCount;
         uint32_t drawCalls;
+        uint32_t debugLines;
     } mutable drawStats;
 
     void UpdateBindlessSet() const;
@@ -124,6 +125,7 @@ private:
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
         VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+        VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME
     };
 
     mutable BufferResourceManager _bufferResourceManager;

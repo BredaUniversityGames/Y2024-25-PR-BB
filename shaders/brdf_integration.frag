@@ -1,8 +1,8 @@
 #version 460
 
-layout(location = 0) in vec2 texCoords;
+layout (location = 0) in vec2 texCoords;
 
-layout(location = 0) out vec4 outColor;
+layout (location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
 
@@ -90,7 +90,7 @@ vec2 IntegrateBRDF(float NoV, float roughness)
     vec3 N = vec3(0.0, 0.0, 1.0);
 
     const uint SAMPLE_COUNT = 1024;
-    for(uint i = 0; i < SAMPLE_COUNT; ++i)
+    for (uint i = 0; i < SAMPLE_COUNT; ++i)
     {
         vec2 Xi = Hammersley(i, SAMPLE_COUNT);
         vec3 H = ImportantceSampleGGX(Xi, N, roughness);
@@ -100,7 +100,7 @@ vec2 IntegrateBRDF(float NoV, float roughness)
         float NoH = max(H.z, 0.0);
         float VoH = max(dot(V, H), 0.0);
 
-        if(NoL > 0.0)
+        if (NoL > 0.0)
         {
             float G = GeometrySmith_IBL(N, V, L, roughness);
             float G_Vis = (G * VoH) / (NoH * NoV);

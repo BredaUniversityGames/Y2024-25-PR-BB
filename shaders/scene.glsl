@@ -5,7 +5,14 @@ struct Camera
     mat4 proj;
     mat4 skydomeMVP;
     vec3 cameraPosition;
-    float _padding;
+    int distanceCullingEnabled;
+    vec4 frustum;
+    float zNear;
+    float zFar;
+    int cullingEnabled;
+    int projectionType;
+
+    vec2 _padding;
 };
 
 struct DirectionalLight
@@ -30,4 +37,5 @@ struct Instance
 {
     mat4 model;
     uint materialIndex;
+    float boundingRadius;
 };

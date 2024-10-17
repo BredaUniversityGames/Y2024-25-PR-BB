@@ -15,9 +15,9 @@ public:
     void Update();
     void UpdateEvent(const SDL_Event& event);
 
-    bool IsKeyPressed(KeyCode key) const;
-    bool IsKeyHeld(KeyCode key) const;
-    bool IsKeyReleased(KeyCode key) const;
+    bool IsKeyPressed(KeyboardCode key) const;
+    bool IsKeyHeld(KeyboardCode key) const;
+    bool IsKeyReleased(KeyboardCode key) const;
 
     bool IsMouseButtonPressed(MouseButton button) const;
     bool IsMouseButtonHeld(MouseButton button) const;
@@ -26,13 +26,13 @@ public:
     void GetMousePosition(int& x, int& y) const;
 
 private:
-    mutable std::unordered_map<KeyCode, bool> keyPressed;
-    mutable std::unordered_map<KeyCode, bool> keyHeld;
-    mutable std::unordered_map<KeyCode, bool> keyReleased;
+    std::unordered_map<KeyboardCode, bool> _keyPressed;
+    std::unordered_map<KeyboardCode, bool> _keyHeld;
+    std::unordered_map<KeyboardCode, bool> _keyReleased;
 
-    mutable std::unordered_map<MouseButton, bool> mouseButtonPressed;
-    mutable std::unordered_map<MouseButton, bool> mouseButtonHeld;
-    mutable std::unordered_map<MouseButton, bool> mouseButtonReleased;
+    std::unordered_map<MouseButton, bool> _mouseButtonPressed;
+    std::unordered_map<MouseButton, bool> _mouseButtonHeld;
+    std::unordered_map<MouseButton, bool> _mouseButtonReleased;
 
-    float mouseX, mouseY;
+    float _mouseX {}, _mouseY {};
 };

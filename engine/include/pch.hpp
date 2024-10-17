@@ -11,11 +11,10 @@
 #include <optional>
 #include <functional>
 #include <chrono>
+#include <cereal/cereal.hpp>
+#include <filesystem>
 
-#define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
-
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,6 +33,3 @@
 #include "imgui.h"
 #include <implot.h>
 #include "tracy/Tracy.hpp"
-
-constexpr uint32_t MAX_FRAMES_IN_FLIGHT { 3 };
-constexpr uint32_t DEFERRED_ATTACHMENT_COUNT { 4 };
