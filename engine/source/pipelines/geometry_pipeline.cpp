@@ -250,20 +250,37 @@ void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
 
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_drawBuffer);
 
-    vk::DescriptorBufferInfo bufferInfo {
+    std::array<vk::DescriptorBufferInfo, 2> bufferInfos {};
+    bufferInfos[0] = vk::DescriptorBufferInfo {
         .buffer = buffer->buffer,
         .offset = 0,
         .range = vk::WholeSize,
     };
 
-    vk::WriteDescriptorSet bufferWrite {
+    bufferInfos[1] = vk::DescriptorBufferInfo {
+        .buffer = buffer->buffer,
+        .offset = gpuScene.IndirectCountOffset(),
+        .range = sizeof(uint32_t),
+    };
+
+    std::array<vk::WriteDescriptorSet, 2> bufferWrites {};
+    bufferWrites[0] = vk::WriteDescriptorSet {
         .dstSet = _drawBufferDescriptorSet,
         .dstBinding = 0,
         .dstArrayElement = 0,
         .descriptorCount = 1,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .pBufferInfo = &bufferInfo,
+        .pBufferInfo = &bufferInfos[0],
     };
 
-    _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+    bufferWrites[1] = vk::WriteDescriptorSet {
+        .dstSet = _drawBufferDescriptorSet,
+        .dstBinding = 1,
+        .dstArrayElement = 0,
+        .descriptorCount = bufferInfos.size(),
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfos[1],
+    };
+
+    _brain.device.updateDescriptorSets(bufferWrites, {});
 }

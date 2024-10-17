@@ -16,9 +16,19 @@ layout (std430, set = 0, binding = 0) readonly buffer DrawCommandsIn
     DrawCommand drawCommandsIn[];
 };
 
+layout (std430, set = 0, binding = 1) readonly buffer DrawCommandCountIn
+{
+    uint counterIn;
+};
+
 layout (std430, set = 1, binding = 0) buffer DrawCommandsOut
 {
     DrawCommand drawCommandsOut[];
+};
+
+layout (std430, set = 0, binding = 1) buffer DrawCommandCountOut
+{
+    uint counterOut;
 };
 
 layout (std430, set = 2, binding = 0) buffer InstanceData

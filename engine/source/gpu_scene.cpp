@@ -296,16 +296,25 @@ void GPUScene::InitializeIndirectDrawBuffer()
 
 void GPUScene::InitializeIndirectDrawDescriptor()
 {
-    vk::DescriptorSetLayoutBinding layoutBinding {
+    std::array<vk::DescriptorSetLayoutBinding, 2> bindings;
+
+    bindings[0] = {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
 
+    bindings[1] = {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
+
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
+        .bindingCount = bindings.size(),
+        .pBindings = bindings.data(),
     };
 
     util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
@@ -326,22 +335,42 @@ void GPUScene::InitializeIndirectDrawDescriptor()
     {
         _indirectDrawFrameData[i].descriptorSet = descriptorSets[i];
 
-        const Buffer* buffer = _brain.GetBufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
+        const Buffer* drawBuffer = _brain.GetBufferResourceManager().Access(IndirectDrawBuffer(i));
+        const Buffer* countBuffer = _brain.GetBufferResourceManager().Access(IndirectCountBuffer(i));
 
-        vk::DescriptorBufferInfo bufferInfo {};
-        bufferInfo.buffer = buffer->buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = vk::WholeSize;
+        std::array<vk::DescriptorBufferInfo, 2> bufferInfos {};
+        bufferInfos[0] = vk::DescriptorBufferInfo {
+            .buffer = drawBuffer->buffer,
+            .offset = 0,
+            .range = vk::WholeSize,
+        };
 
-        vk::WriteDescriptorSet bufferWrite {};
-        bufferWrite.dstSet = _indirectDrawFrameData[i].descriptorSet;
-        bufferWrite.dstBinding = 0;
-        bufferWrite.dstArrayElement = 0;
-        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-        bufferWrite.descriptorCount = 1;
-        bufferWrite.pBufferInfo = &bufferInfo;
+        bufferInfos[1] = vk::DescriptorBufferInfo {
+            .buffer = countBuffer->buffer,
+            .offset = IndirectCountOffset(),
+            .range = sizeof(uint32_t),
+        };
 
-        _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+        std::array<vk::WriteDescriptorSet, 2> bufferWrites {};
+        bufferWrites[0] = vk::WriteDescriptorSet {
+            .dstSet = _indirectDrawFrameData[i].descriptorSet,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfos[0],
+        };
+
+        bufferWrites[1] = vk::WriteDescriptorSet {
+            .dstSet = _indirectDrawFrameData[i].descriptorSet,
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = bufferInfos.size(),
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfos[1],
+        };
+
+        _brain.device.updateDescriptorSets(bufferWrites, {});
     }
 }
 
