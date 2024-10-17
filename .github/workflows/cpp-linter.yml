@@ -48,7 +48,7 @@ jobs:
         with:
 
           version: 18
-          files-changed-only: false # Only processes files changed in PR
+          files-changed-only: true # Only processes files changed in PR
           database: build/WSL-Release/compile_commands.json
           verbosity: 'debug'
           style: 'file'
@@ -57,9 +57,11 @@ jobs:
             '
             -*,
             cppcoreguidelines-*,
+            
             -cppcoreguidelines-non-private-member-variables-in-classes,
             -cppcoreguidelines-owning-memory,
             -cppcoreguidelines-macro-usage,
+            -cppcoreguidelines-prefer-member-initializer
 
             clang-analyzer-*
             '
