@@ -48,7 +48,7 @@ jobs:
         with:
 
           version: 18
-          files-changed-only: true # Only processes files changed in PR
+          files-changed-only: false # Only processes files changed in PR
           database: build/WSL-Release/compile_commands.json
           verbosity: 'debug'
           style: 'file=scripts/.clang-tidy'
