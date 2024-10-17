@@ -170,8 +170,8 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                 }
                 else
                 {
-                    util::TransitionImageLayout(commandBuffer, texture->image, texture->format,
-                        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+                    util::TransitionImageLayout(commandBuffer, texture->image, texture->format, vk::ImageLayout::eColorAttachmentOptimal,
+                                vk::ImageLayout::eShaderReadOnlyOptimal, texture->layers, 0, texture->mips);
                 }
             }
             else if (resource.type == FrameGraphResourceType::eAttachment)
@@ -206,8 +206,8 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                 }
                 else
                 {
-                    util::TransitionImageLayout(commandBuffer, attachment->image, attachment->format,
-                        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+                    util::TransitionImageLayout(commandBuffer, attachment->image, attachment->format, vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eColorAttachmentOptimal, attachment->layers, 0, attachment->mips);
                 }
             }
         }
