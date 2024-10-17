@@ -99,6 +99,7 @@ void PhysicsSystem::Inspect()
     }
     ImGui::End();
 }
+
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
     ImGui::Text("Body ID: %lu", rb.bodyID);
@@ -162,7 +163,7 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
             {
                 _physicsModule.bodyInterface->SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
 
-                if (rbType == JPH::EMotionType::Static)
+                if (static_cast<JPH::EMotionType>(n) == JPH::EMotionType::Static)
                 {
                     _physicsModule.bodyInterface->SetObjectLayer(rb.bodyID, PhysicsLayers::NON_MOVING);
                 }
