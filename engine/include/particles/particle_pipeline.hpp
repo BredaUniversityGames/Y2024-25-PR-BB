@@ -11,7 +11,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t _currentFrame, ECS& ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -35,7 +35,6 @@ private:
         eNone
     };
 
-    // push constants
     struct SimulatePushConstant
     {
         float deltaTime;
@@ -55,18 +54,21 @@ private:
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
     // particle instances storage buffers
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _particleInstancesBuffers;
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _culledIndicesBuffers;
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _instancesDescriptorSets;
+    ResourceHandle<Buffer> _particleInstancesBuffer;
+    ResourceHandle<Buffer> _culledIndicesBuffer;
+    vk::DescriptorSet _instancesDescriptorSet;
     vk::DescriptorSetLayout _instancesDescriptorSetLayout;
     // particle storage buffers
     std::array<ResourceHandle<Buffer>, 5> _particlesBuffers;
     vk::DescriptorSet _particlesBuffersDescriptorSet;
     vk::DescriptorSetLayout _particlesBuffersDescriptorSetLayout;
-    // emitter uniform buffer
+    // emitter uniform buffers
     ResourceHandle<Buffer> _emittersBuffer;
     vk::DescriptorSet _emittersDescriptorSet;
     vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
+    // staging buffer
+    vk::Buffer _stagingBuffer;
+    VmaAllocation _stagingBufferAllocation;
 
     void UpdateEmitters(ECS& ecs);
 
@@ -75,7 +77,8 @@ private:
     void CreateDescriptorSets();
     void CreateBuffers();
 
-    void UpdateBuffers();
+    void UpdateBuffers(vk::CommandBuffer commandBuffer);
     void UpdateParticleBuffersDescriptorSets();
-    void UpdateParticleInstancesData(uint32_t frameIndex);
+    void UpdateParticleInstancesBuffersDescriptorSets();
+    void UpdateEmittersBuffersDescriptorSets();
 };
