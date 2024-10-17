@@ -74,11 +74,13 @@ jobs:
             -bugprone-infinite-loop,
             -bugprone-multiple-statement-macro,
             -bugprone-inc-dec-in-conditions,
+            -bugprone-suspicious-string-compare,
+            -bugprone-suspicious-semicolon,
+            -bugprone-forward-declaration-namespace,
             -bugprone-easily-swappable-parameters,
             -bugprone-multiple-new-in-one-expression,
-            -bugprone-signed-char-misuse,
 
             performance-*,
-            -performance-move-const-arg,
+            -performance-avoid-endl,
             '
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
