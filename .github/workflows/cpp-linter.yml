@@ -17,7 +17,7 @@ jobs:
       pull-requests: write
 
     env:
-      EXTRA_ARGS: -DENABLE_PCH=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=OFF -DCOMPILE_SHADERS=OFF -DENABLE_PCH=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
     steps:
       - name: Checkout Project
