@@ -26,7 +26,7 @@ layout (std430, set = 1, binding = 0) buffer DrawCommandsOut
     DrawCommand drawCommandsOut[];
 };
 
-layout (std430, set = 0, binding = 1) buffer DrawCommandCountOut
+layout (std430, set = 1, binding = 1) buffer DrawCommandCountOut
 {
     uint counterOut;
 };
@@ -52,7 +52,11 @@ void main()
     if (gId < drawCommandsIn.length())
     {
         drawCommandsOut[gId] = drawCommandsIn[gId];
-        if (!IsVisible(gId))
+        if (IsVisible(gId))
+        {
+            atomicAdd(counterOut, 1);
+        }
+        else
         {
             drawCommandsOut[gId].instanceCount = 0;
         }

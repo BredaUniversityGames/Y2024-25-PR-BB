@@ -90,7 +90,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
     vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
     vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(_drawBuffer)->buffer;
-    vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectCountBuffer(currentFrame))->buffer;
+    vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(_drawBuffer)->buffer;
     uint32_t indirectCountOffset = scene.gpuScene.IndirectCountOffset();
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
@@ -277,7 +277,7 @@ void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
         .dstSet = _drawBufferDescriptorSet,
         .dstBinding = 1,
         .dstArrayElement = 0,
-        .descriptorCount = bufferInfos.size(),
+        .descriptorCount = 1,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .pBufferInfo = &bufferInfos[1],
     };

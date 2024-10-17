@@ -365,7 +365,7 @@ void GPUScene::InitializeIndirectDrawDescriptor()
             .dstSet = _indirectDrawFrameData[i].descriptorSet,
             .dstBinding = 1,
             .dstArrayElement = 0,
-            .descriptorCount = bufferInfos.size(),
+            .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .pBufferInfo = &bufferInfos[1],
         };
