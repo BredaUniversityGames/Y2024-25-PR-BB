@@ -25,17 +25,3 @@ target_add_module(Engine application Application)
 target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)
 
 
-
-target_link_libraries(OldEngine PUBLIC Application PUBLIC External)
-target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)
-
-# ENGINE MODULES
-
-message(STATUS "### Linking Engine Modules:")
-target_add_module(Engine core Core)
-target_add_module(Engine utility Utility)
-target_add_module(Engine application Application)
-
-# TODO: Replace with reusing precompiled headers
-
-
