@@ -1,5 +1,5 @@
 #pragma once
-#include "include_cereal.hpp"
+#include "cereal/cereal.hpp"
 
 #include <entt/entity/registry.hpp>
 
@@ -10,8 +10,8 @@ public:
         : _registry(registry)
         , _entity(entity)
     {
-    }   
-    
+    }
+
     template <class Archive>
     void save(Archive& archive, uint32_t const version) const;
 
@@ -24,7 +24,7 @@ CEREAL_CLASS_VERSION(EntitySerializer, 0);
 template <class Archive>
 void EntitySerializer::save(Archive& archive, uint32_t version) const
 {
-    static auto trySaveComponent = [&]<typename T>()
+    MAYBE_UNUSED static auto trySaveComponent = [&]<typename T>()
     {
         if (auto component = _registry.try_get<T>(_entity); component != nullptr)
             archive(cereal::make_nvp(typeid(T).name(), *component));
@@ -32,6 +32,6 @@ void EntitySerializer::save(Archive& archive, uint32_t version) const
 
     if (version == 0)
     {
-        //add components here
+        // add components here
     }
 }

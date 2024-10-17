@@ -1,5 +1,8 @@
 #pragma once
 
+#include "common.hpp"
+#include "vulkan_brain.hpp"
+
 struct Emitter;
 class CameraResource;
 class SwapChain;

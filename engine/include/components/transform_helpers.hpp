@@ -1,6 +1,8 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <entt/entity/registry.hpp>
 
 class TransformHelpers
 {

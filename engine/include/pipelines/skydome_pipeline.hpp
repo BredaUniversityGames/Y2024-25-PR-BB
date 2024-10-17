@@ -2,6 +2,7 @@
 
 #include "bloom_settings.hpp"
 #include "swap_chain.hpp"
+#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 class BloomSettings;

@@ -10,9 +10,9 @@
 DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
+    , _swapChain(swapChain)
     , _camera(camera)
     , _descriptorSetLayout(gpuScene.GetSceneDescriptorSetLayout())
-    , _swapChain(swapChain)
 
 {
 

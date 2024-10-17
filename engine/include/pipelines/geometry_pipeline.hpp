@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "indirect_culler.hpp"

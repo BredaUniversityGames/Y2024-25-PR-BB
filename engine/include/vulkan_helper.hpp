@@ -1,8 +1,9 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
 #include <magic_enum.hpp>
 #include <glm/glm.hpp>
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 #include "mesh.hpp"
 
 namespace util
