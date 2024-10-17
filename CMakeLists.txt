@@ -11,7 +11,7 @@ include(scripts/functions.cmake)
 ### COMPILATION SETTINGS ###
 
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
-option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
+option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 
