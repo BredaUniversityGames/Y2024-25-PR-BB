@@ -9,7 +9,6 @@ modernize-*,
 readability-*,
 -readability-identifier-length,
 -readability-uppercase-literal-suffix,
--readability-simplify-boolean-expr,
 -readability-use-anyofallof,
 -readability-else-after-return,
 -readability-redundant-member-init,
@@ -86,9 +85,9 @@ CheckOptions:
   # Naming convention for constexpr variables
   - key: readability-identifier-naming.ConstexprVariableCase
     value: UPPER_CASE
-  - key: readability-identifier-naming.ConstexprVariablPrefix
+  - key: readability-identifier-naming.ConstexprVariablePrefix
     value: ''
-  - key: readability-identifier-naming.ConstexprVariablSuffix
+  - key: readability-identifier-naming.ConstexprVariableSuffix
     value: ''
 
   # Naming convention for template parameters

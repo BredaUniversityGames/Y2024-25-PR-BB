@@ -63,6 +63,7 @@ jobs:
             -cppcoreguidelines-macro-usage,
             -cppcoreguidelines-prefer-member-initializer
 
-            clang-analyzer-*
+            bugprone-*,
+            performance-*,
             '
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
