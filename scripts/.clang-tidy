@@ -4,19 +4,19 @@
 Checks: '
 -*,
 cppcoreguidelines-*,
--cppcoreguidelines-macro-to-enum, 
--cppcoreguidelines-no-suspend-with-lock,
--cppcoreguidelines-macro-usage,
--cppcoreguidelines-owning-memory,
--cppcoreguidelines-no-malloc,
--cppcoreguidelines-pro-bounds-constant-array-index,
--cppcoreguidelines-pro-bounds-array-to-pointer-decay,
--cppcoreguidelines-non-private-member-variables-in-classes,
--cppcoreguidelines-avoid-magic-numbers,
 
 clang-analyzer-*,
 '
 
+# -cppcoreguidelines-macro-to-enum, 
+# -cppcoreguidelines-no-suspend-with-lock,
+# -cppcoreguidelines-macro-usage,
+# -cppcoreguidelines-owning-memory,
+# -cppcoreguidelines-no-malloc,
+# -cppcoreguidelines-pro-bounds-constant-array-index,
+# -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+# -cppcoreguidelines-non-private-member-variables-in-classes,
+# -cppcoreguidelines-avoid-magic-numbers,
 
 #  modernize-*
 #  -modernize-use-trailing-return-type
