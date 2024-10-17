@@ -3,8 +3,7 @@
 #include "mesh.hpp"
 #include <string>
 
-#undef None
-#include <fastgltf/core.hpp>
+#include "lib/include_fastgltf.hpp"
 
 class SingleTimeCommands;
 class BatchBuffer;

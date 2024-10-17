@@ -3,6 +3,7 @@
 #include "swap_chain.hpp"
 #include "vulkan_validation.hpp"
 #include "log.hpp"
+#include <set>
 #include <map>
 
 VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)

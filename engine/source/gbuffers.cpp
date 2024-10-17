@@ -1,4 +1,5 @@
 #include "gbuffers.hpp"
+#include "vulkan_brain.hpp"
 
 GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
     : _brain(brain)
