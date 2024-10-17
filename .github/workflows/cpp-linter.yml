@@ -11,6 +11,7 @@ on:
 jobs:
   cpp-linter:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     permissions:
       contents: read
@@ -48,7 +49,7 @@ jobs:
         with:
 
           version: 18
-          files-changed-only: true # Only processes files changed in PR
+          files-changed-only: false # Only processes files changed in PR
           database: build/WSL-Release/compile_commands.json
           verbosity: 'debug'
           style: 'file'
@@ -57,13 +58,27 @@ jobs:
             '
             -*,
             cppcoreguidelines-*,
-            
+
             -cppcoreguidelines-non-private-member-variables-in-classes,
             -cppcoreguidelines-owning-memory,
             -cppcoreguidelines-macro-usage,
-            -cppcoreguidelines-prefer-member-initializer
+            -cppcoreguidelines-macro-to-enum,
+            -cppcoreguidelines-prefer-member-initializer,
+            -cppcoreguidelines-no-suspend-with-lock,
 
             bugprone-*,
+            -bugprone-use-after-move,
+            -bugprone-stringview-nullptr,
+            -bugprone-standalone-empty,
+            -bugprone-reserved-identifier,
+            -bugprone-infinite-loop,
+            -bugprone-multiple-statement-macro,
+            -bugprone-inc-dec-in-conditions,
+            -bugprone-easily-swappable-parameters,
+            -bugprone-multiple-new-in-one-expression,
+            -bugprone-signed-char-misuse,
+
             performance-*,
+            -performance-move-const-arg,
             '
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}

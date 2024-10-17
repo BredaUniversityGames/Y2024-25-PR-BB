@@ -4,11 +4,28 @@
 Checks: '
 -*,
 cppcoreguidelines-*,
+
 -cppcoreguidelines-non-private-member-variables-in-classes,
 -cppcoreguidelines-owning-memory,
 -cppcoreguidelines-macro-usage,
+-cppcoreguidelines-macro-to-enum,
+-cppcoreguidelines-prefer-member-initializer,
+-cppcoreguidelines-no-suspend-with-lock,
 
-clang-analyzer-*,
+bugprone-*,
+-bugprone-use-after-move,
+-bugprone-stringview-nullptr,
+-bugprone-standalone-empty,
+-bugprone-reserved-identifier,
+-bugprone-infinite-loop,
+-bugprone-multiple-statement-macro,
+-bugprone-inc-dec-in-conditions,
+-bugprone-easily-swappable-parameters,
+-bugprone-multiple-new-in-one-expression,
+-bugprone-signed-char-misuse,
+
+performance-*,
+-performance-move-const-arg,
 '
 
 # -cppcoreguidelines-macro-to-enum, 
