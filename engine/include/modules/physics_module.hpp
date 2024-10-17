@@ -6,7 +6,8 @@
 
 #include "Jolt/Jolt.h"
 
-#pragma GCC diagnostic push
+JPH_SUPPRESS_WARNING_PUSH
+
 JPH_SUPPRESS_WARNINGS
 
 #include <Jolt/RegisterTypes.h>
@@ -21,7 +22,7 @@ JPH_SUPPRESS_WARNINGS
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include "Jolt/Renderer/DebugRendererSimple.h"
 
-#pragma GCC diagnostic pop
+JPH_SUPPRESS_WARNING_POP
 
 // TODO: should be using Log.hpp
 #include "common.hpp"
