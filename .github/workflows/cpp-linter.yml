@@ -51,7 +51,16 @@ jobs:
           files-changed-only: false # Only processes files changed in PR
           database: build/WSL-Release/compile_commands.json
           verbosity: 'debug'
-          style: 'file=scripts/.clang-tidy'
+          style: 'file'
           ignore: 'external | build | VULKAN_SDK' # Also ignore Vulkan SDK folder
-          tidy-checks: ''
+          tidy-checks: # Reduced checks for performance
+            '
+            -*,
+            cppcoreguidelines-*,
+            -cppcoreguidelines-non-private-member-variables-in-classes,
+            -cppcoreguidelines-owning-memory,
+            -cppcoreguidelines-macro-usage,
+
+            clang-analyzer-*
+            '
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
