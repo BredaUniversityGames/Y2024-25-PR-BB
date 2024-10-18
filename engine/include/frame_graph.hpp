@@ -106,6 +106,7 @@ struct FrameGraphNodeCreation
 
     bool isEnabled = true;
     std::string name {};
+    glm::vec3 debugLabelColor = glm::vec3(0.0f);
 
     FrameGraphNodeCreation& SetRenderPass(const FrameGraphRenderPass* renderPass);
 
@@ -117,6 +118,7 @@ struct FrameGraphNodeCreation
 
     FrameGraphNodeCreation& SetIsEnabled(bool isEnabled);
     FrameGraphNodeCreation& SetName(std::string_view name);
+    FrameGraphNodeCreation& SetDebugLabelColor(const glm::vec3& color);
 };
 
 struct FrameGraphNode
@@ -136,6 +138,7 @@ struct FrameGraphNode
 
     bool isEnabled = true;
     std::string name {};
+    glm::vec3 debugLabelColor = glm::vec3(0.0f);
 };
 
 class FrameGraph

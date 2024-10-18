@@ -58,6 +58,12 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetName(std::string_view name)
     return *this;
 }
 
+FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::vec3& color)
+{
+    debugLabelColor = color;
+    return *this;
+}
+
 FrameGraph::FrameGraph(const VulkanBrain& brain) :
     _brain(brain)
 {
@@ -78,7 +84,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
     {
         const FrameGraphNode& node = _nodes[nodeHandle];
 
-        util::BeginLabel(commandBuffer, node.name, glm::linearRand(glm::vec3(0.0f), glm::vec3(1.0f)), _brain.dldi);
+        util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _brain.dldi);
 
         // Place memory barriers
         for (const ImageMemoryBarrier& imageBarrier : node.imageMemoryBarriers)
