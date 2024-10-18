@@ -1,5 +1,8 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
+#include "resource_manager.hpp"
+
 struct RenderSceneDescription;
 struct Image;
 struct Buffer;
@@ -46,6 +49,7 @@ struct FrameGraphResourceInfo
         struct
         {
             ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Invalid();
+            vk::PipelineStageFlags stageUsage;
         } buffer;
 
         struct
@@ -72,10 +76,25 @@ struct FrameGraphResource
     std::string name {};
 };
 
-struct FrameGraphRenderPass
+class FrameGraphRenderPass
 {
+public:
     virtual ~FrameGraphRenderPass() = default;
     virtual void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) const = 0;
+};
+
+struct ImageMemoryBarrier
+{
+    vk::PipelineStageFlags srcStage{};
+    vk::PipelineStageFlags dstStage{};
+    vk::ImageMemoryBarrier barrier{};
+};
+
+struct BufferMemoryBarrier
+{
+    vk::PipelineStageFlags srcStage{};
+    vk::PipelineStageFlags dstStage{};
+    vk::BufferMemoryBarrier barrier{};
 };
 
 struct FrameGraphNodeCreation
@@ -91,10 +110,10 @@ struct FrameGraphNodeCreation
     FrameGraphNodeCreation& SetRenderPass(const FrameGraphRenderPass* renderPass);
 
     FrameGraphNodeCreation& AddInput(ResourceHandle<Image> image, FrameGraphResourceType type);
-    FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type);
+    FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
 
     FrameGraphNodeCreation& AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type);
-    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type);
+    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
 
     FrameGraphNodeCreation& SetIsEnabled(bool isEnabled);
     FrameGraphNodeCreation& SetName(std::string_view name);
@@ -108,6 +127,12 @@ struct FrameGraphNode
     std::vector<FrameGraphResourceHandle> outputs {};
 
     std::vector<FrameGraphNodeHandle> edges {};
+
+    std::vector<ImageMemoryBarrier> imageMemoryBarriers {};
+    std::vector<BufferMemoryBarrier> bufferMemoryBarriers {};
+
+    vk::Viewport viewport{};
+    vk::Rect2D scissor{};
 
     bool isEnabled = true;
     std::string name {};
@@ -137,9 +162,13 @@ private:
 
     std::vector<FrameGraphNodeHandle> _sortedNodes {};
 
-    void ComputeEdges();
+    void ProcessNodes();
     void ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle);
+    void ComputeNodeMemoryBarriers(FrameGraphNode& node);
+    void SortGraph();
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);
     std::string GetResourceName(const FrameGraphResourceCreation& creation);
+    // TODO: Coped from vulkan utils, refactor this
+    ImageMemoryBarrier GetImageMemoryBarrier(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 };
