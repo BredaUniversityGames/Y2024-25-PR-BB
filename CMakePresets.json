@@ -67,5 +67,19 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     }
+  ],
+  "buildPresets": [
+    {
+      "name": "WSL-Release",
+      "configurePreset": "WSL-Release"
+    },
+    {
+      "name": "WSL-Debug",
+      "configurePreset": "WSL-Debug"
+    },
+    {
+      "name": "WSL-RelWithDebInfo",
+      "configurePreset": "WSL-RelWithDebInfo"
+    }
   ]
 }

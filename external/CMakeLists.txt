@@ -109,6 +109,7 @@ FetchContent_Declare(
 
 override_option(SDL_SHARED OFF)
 override_option(SDL_STATIC ON)
+
 FetchContent_MakeAvailable(SDL)
 
 # GLM
