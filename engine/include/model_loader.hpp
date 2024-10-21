@@ -3,8 +3,7 @@
 #include "mesh.hpp"
 #include <string>
 
-#undef None
-#include <fastgltf/core.hpp>
+#include "lib/include_fastgltf.hpp"
 
 class SingleTimeCommands;
 class BatchBuffer;
@@ -12,8 +11,7 @@ class BatchBuffer;
 class ModelLoader
 {
 public:
-    ModelLoader(const VulkanBrain& brain, vk::DescriptorSetLayout materialDescriptorSetLayout);
-
+    ModelLoader(const VulkanBrain& brain);
     ~ModelLoader();
 
     NON_COPYABLE(ModelLoader);
@@ -21,8 +19,8 @@ public:
 
     ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer);
 
-    MeshPrimitiveHandle LoadPrimitive(const MeshPrimitive& primitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
-        std::shared_ptr<MaterialHandle> material = nullptr);
+    ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+        ResourceHandle<Material> material);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
@@ -30,26 +28,19 @@ private:
     const VulkanBrain& _brain;
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;
-    std::shared_ptr<MaterialHandle> _defaultMaterial;
-    vk::DescriptorSetLayout _materialDescriptorSetLayout;
+    ResourceHandle<Material> _defaultMaterial;
 
-    Mesh ProcessMesh(const fastgltf::Mesh& gltfMesh, const fastgltf::Asset& gltf);
-
-    MeshPrimitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
-
-    ImageCreation
-    ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
-        std::string_view name);
-
-    Material ProcessMaterial(const fastgltf::Material& gltfMaterial, const fastgltf::Asset& gltf);
+    StagingMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);
+    ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data, std::string_view name);
+    MaterialCreation ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<ResourceHandle<Image>>& modelTextures, const fastgltf::Asset& gltf);
 
     vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology);
 
-    vk::IndexType MapIndexType(fastgltf::ComponentType componentType);
-
     uint32_t MapTextureIndexToImageIndex(uint32_t textureIndex, const fastgltf::Asset& gltf);
 
-    void CalculateTangents(MeshPrimitive& primitive);
+    void CalculateTangents(StagingMesh::Primitive& stagingPrimitive);
+
+    ModelHandle LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name);
 
     glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
         glm::vec3 normal);
@@ -59,4 +50,7 @@ private:
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
         glm::mat4 matrix);
+
+    Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
+        ResourceHandle<Material> material);
 };

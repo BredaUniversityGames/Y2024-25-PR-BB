@@ -1,7 +1,7 @@
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
 #include "vulkan/vulkan.h"
-#include "engine.hpp"
+#include "old_engine.hpp"
 
 SwapChain::SwapChain(const VulkanBrain& brain, const glm::uvec2& screenSize)
     : _brain(brain)
@@ -87,12 +87,12 @@ void SwapChain::CreateSwapChainImageViews()
     for (size_t i = 0; i < _imageViews.size(); ++i)
     {
         vk::ImageViewCreateInfo createInfo {
-            vk::ImageViewCreateFlags {},
-            _images[i],
-            vk::ImageViewType::e2D,
-            _format,
-            vk::ComponentMapping { vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity },
-            vk::ImageSubresourceRange {
+            .flags = vk::ImageViewCreateFlags {},
+            .image = _images[i],
+            .viewType = vk::ImageViewType::e2D,
+            .format = _format,
+            .components = vk::ComponentMapping { vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity },
+            .subresourceRange = vk::ImageSubresourceRange {
                 vk::ImageAspectFlagBits::eColor, // aspect mask
                 0, // base mip level
                 1, // level count

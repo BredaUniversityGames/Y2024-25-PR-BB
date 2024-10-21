@@ -1,5 +1,5 @@
 #pragma once
-#include "vulkan/vulkan.hpp"
+#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 class VulkanBrain;

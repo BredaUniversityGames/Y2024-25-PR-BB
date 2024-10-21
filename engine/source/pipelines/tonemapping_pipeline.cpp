@@ -1,7 +1,6 @@
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
-#include "imgui_impl_vulkan.h"
 #include "bloom_settings.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
@@ -30,7 +29,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { 0.0f, 0.0f, 0.0f, 0.0f };
+    finalColorAttachmentInfo.clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = _swapChain.GetExtent();
@@ -56,8 +55,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     _brain.drawStats.indexCount += 3;
     _brain.drawStats.drawCalls++;
 
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
 }
@@ -81,8 +78,8 @@ void TonemappingPipeline::CreatePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/fullscreen-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/tonemapping-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/tonemapping.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -151,7 +148,9 @@ void TonemappingPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthTestEnable = false;
     depthStencilStateCreateInfo.depthWriteEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -167,12 +166,11 @@ void TonemappingPipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     vk::Format format = _swapChain.GetFormat();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);

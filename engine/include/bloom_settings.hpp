@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+#include "vulkan_brain.hpp"
+#include "constants.hpp"
+
 class BloomSettings
 {
 public:
@@ -12,7 +16,7 @@ public:
         float gradientStrength = 0.2f;
 
         /// The maximum amount of brightness that can be extracted per pixel.
-        float maxBrightnessExtraction = 50.0f;
+        float maxBrightnessExtraction = 5.0f;
 
         /// How much brightness is extracted from each color channel.
         glm::vec3 colorWeights = glm::vec3(0.2126f, 0.7152f, 0.0722f);
@@ -20,11 +24,8 @@ public:
 
     struct FrameData
     {
-        vk::DescriptorSetLayout descriptorSetLayout;
         std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-        std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> buffers;
-        std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> allocations;
-        std::array<void*, MAX_FRAMES_IN_FLIGHT> mappedPtrs;
+        std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
     };
 
     BloomSettings(const VulkanBrain& brain);
@@ -32,7 +33,7 @@ public:
     void Render();
     void Update(uint32_t currentFrame);
     const vk::DescriptorSet& GetDescriptorSetData(uint32_t currentFrame) const { return _frameData.descriptorSets[currentFrame]; }
-    const vk::DescriptorSetLayout& GetDescriptorSetLayout() const { return _frameData.descriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetDescriptorSetLayout() const { return _descriptorSetLayout; }
 
     SettingsData _data;
 

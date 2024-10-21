@@ -1,5 +1,11 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 class VulkanBrain;
 struct Texture;
 struct TextureHandle;

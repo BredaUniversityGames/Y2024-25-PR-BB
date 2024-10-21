@@ -78,3 +78,33 @@ ImageCreation& ImageCreation::SetSampler(vk::Sampler sampler)
     this->sampler = sampler;
     return *this;
 }
+
+BufferCreation& BufferCreation::SetSize(vk::DeviceSize size)
+{
+    this->size = size;
+    return *this;
+}
+
+BufferCreation& BufferCreation::SetUsageFlags(vk::BufferUsageFlags usage)
+{
+    this->usage = usage;
+    return *this;
+}
+
+BufferCreation& BufferCreation::SetIsMappable(bool isMappable)
+{
+    this->isMappable = isMappable;
+    return *this;
+}
+
+BufferCreation& BufferCreation::SetMemoryUsage(VmaMemoryUsage memoryUsage)
+{
+    this->memoryUsage = memoryUsage;
+    return *this;
+}
+
+BufferCreation& BufferCreation::SetName(std::string_view name)
+{
+    this->name = name;
+    return *this;
+}

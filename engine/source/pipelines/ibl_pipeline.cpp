@@ -2,7 +2,6 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
-#include "stopwatch.hpp"
 
 IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap)
     : _brain(brain)
@@ -196,8 +195,8 @@ void IBLPipeline::CreateIrradiancePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_irradiancePipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/irradiance-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/irradiance-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/irradiance.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/irradiance.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -274,7 +273,9 @@ void IBLPipeline::CreateIrradiancePipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -290,11 +291,10 @@ void IBLPipeline::CreateIrradiancePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_irradianceMap)->format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
@@ -323,8 +323,8 @@ void IBLPipeline::CreatePrefilterPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_prefilterPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/prefilter-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/prefilter-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/prefilter.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/prefilter.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -401,7 +401,9 @@ void IBLPipeline::CreatePrefilterPipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -417,11 +419,10 @@ void IBLPipeline::CreatePrefilterPipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_prefilterMap)->format;
 
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
@@ -444,8 +445,8 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_brdfLUTPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/brdf_integration-v.spv");
-    auto fragByteCode = shader::ReadFile("shaders/brdf_integration-f.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/brdf_integration.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -522,7 +523,9 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
     depthStencilStateCreateInfo.stencilTestEnable = false;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+
+    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
     pipelineCreateInfo.stageCount = 2;
     pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
@@ -538,12 +541,9 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_brdfLUT)->format;
-
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfoKhr;
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
     util::VK_ASSERT(result.result, "Failed creating the IBL pipeline!");

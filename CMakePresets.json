@@ -11,14 +11,14 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/compile.cmake"
+      "toolchainFile": "${sourceDir}/scripts/toolchain.cmake"
     },
     {
       "name": "WSL",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/compile.cmake",
+      "toolchainFile": "${sourceDir}/scripts/toolchain.cmake",
       "vendor": {
         "jetbrains.com/clion": {
           "toolchain": "WSL"

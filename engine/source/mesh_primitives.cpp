@@ -1,5 +1,5 @@
 #include "mesh_primitives.hpp"
-#include <concepts>
+#include <glm/gtc/constants.hpp>
 
 void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangle)
 {
@@ -8,9 +8,9 @@ void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangl
     indices.emplace_back(triangle[2]);
 }
 
-MeshPrimitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
+StagingMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
 {
-    MeshPrimitive primitive;
+    StagingMesh::Primitive primitive;
 
     uint32_t totalVertices = 2 + (stacks - 1) * slices;
 

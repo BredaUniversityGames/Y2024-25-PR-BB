@@ -1,7 +1,31 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include "camera.hpp"
+
+struct LineVertex
+{
+    glm::vec3 position;
+    static vk::VertexInputBindingDescription GetBindingDescription()
+    {
+        vk::VertexInputBindingDescription bindingDescription {};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(LineVertex);
+        bindingDescription.inputRate = vk::VertexInputRate::eVertex;
+        return bindingDescription;
+    }
+
+    static std::array<vk::VertexInputAttributeDescription, 1> GetAttributeDescriptions()
+    {
+        std::array<vk::VertexInputAttributeDescription, 1> attributeDescriptions {};
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0; // Matches location in shader
+        attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
+        attributeDescriptions[0].offset = offsetof(LineVertex, position);
+        return attributeDescriptions;
+    }
+};
 
 struct Vertex
 {
@@ -35,150 +59,18 @@ struct Vertex
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
-struct MeshPrimitive
+struct StagingMesh
 {
-    std::vector<uint32_t> indices;
-    std::vector<Vertex> vertices;
-
-    std::optional<uint32_t> materialIndex;
-};
-
-struct Mesh
-{
-    std::vector<MeshPrimitive> primitives;
-};
-
-struct Texture
-{
-    uint32_t width, height, numChannels;
-    std::vector<std::byte> data;
-    bool isHDR = false;
-    vk::Format format = vk::Format::eR8G8B8A8Unorm;
-
-    vk::Format GetFormat() const
+    struct Primitive
     {
-        if (isHDR)
-            return vk::Format::eR32G32B32A32Sfloat;
+        std::vector<uint32_t> indices;
+        std::vector<Vertex> vertices;
+        float boundingRadius;
 
-        return format;
-    }
-};
-
-struct HDR
-{
-    uint32_t width, height, numChannels;
-    std::vector<float> data;
-
-    vk::Format GetFormat() const
-    {
-        return vk::Format::eR32G32B32A32Sfloat;
-    }
-};
-
-struct Cubemap
-{
-    vk::Format format;
-    size_t size;
-    size_t mipLevels;
-    vk::Image image;
-    VmaAllocation allocation;
-    vk::ImageView view;
-    vk::UniqueSampler sampler;
-};
-
-struct Material
-{
-    std::optional<uint32_t> albedoIndex;
-    glm::vec4 albedoFactor;
-    uint32_t albedoUVChannel;
-
-    std::optional<uint32_t> metallicRoughnessIndex;
-    float metallicFactor;
-    float roughnessFactor;
-    std::optional<uint32_t> metallicRoughnessUVChannel;
-
-    std::optional<uint32_t> normalIndex;
-    float normalScale;
-    uint32_t normalUVChannel;
-
-    std::optional<uint32_t> occlusionIndex;
-    float occlusionStrength;
-    uint32_t occlusionUVChannel;
-
-    std::optional<uint32_t> emissiveIndex;
-    glm::vec3 emissiveFactor;
-    uint32_t emissiveUVChannel;
-};
-
-struct TextureHandle
-{
-    std::string name;
-    vk::Image image;
-    VmaAllocation imageAllocation;
-    vk::ImageView imageView;
-    uint32_t width, height;
-    vk::Format format;
-};
-
-struct MaterialHandle
-{
-    struct alignas(16) MaterialInfo
-    {
-        glm::vec4 albedoFactor { 0.0f };
-
-        float metallicFactor { 0.0f };
-        float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
-        float occlusionStrength { 0.0f };
-
-        glm::vec3 emissiveFactor { 0.0f };
-        int32_t useEmissiveMap { false };
-
-        int32_t useAlbedoMap { false };
-        int32_t useMRMap { false };
-        int32_t useNormalMap { false };
-        int32_t useOcclusionMap { false };
-
-        int32_t albedoMapIndex;
-        int32_t mrMapIndex;
-        int32_t normalMapIndex;
-        int32_t occlusionMapIndex;
-        int32_t emissiveMapIndex;
+        std::optional<uint32_t> materialIndex;
     };
 
-    const static uint32_t TEXTURE_COUNT = 5;
-
-    vk::DescriptorSet descriptorSet;
-    vk::Buffer materialUniformBuffer;
-    VmaAllocation materialUniformAllocation;
-
-    std::array<ResourceHandle<Image>, TEXTURE_COUNT> textures;
-
-    static std::array<vk::DescriptorSetLayoutBinding, 1> GetLayoutBindings()
-    {
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-        bindings[0].binding = 0;
-        bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-        bindings[0].descriptorCount = 1;
-        bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-        return bindings;
-    }
-};
-
-struct MeshPrimitiveHandle
-{
-    uint32_t count;
-    uint32_t vertexOffset;
-    uint32_t indexOffset;
-
-    std::shared_ptr<MaterialHandle> material;
-};
-
-struct MeshHandle
-{
-    std::vector<MeshPrimitiveHandle> primitives;
+    std::vector<StagingMesh::Primitive> primitives;
 };
 
 struct Hierarchy
@@ -186,7 +78,7 @@ struct Hierarchy
     struct Node
     {
         glm::mat4 transform;
-        std::shared_ptr<MeshHandle> mesh;
+        ResourceHandle<Mesh> mesh;
     };
 
     std::vector<Node> allNodes;
@@ -194,8 +86,8 @@ struct Hierarchy
 
 struct ModelHandle
 {
-    std::vector<std::shared_ptr<MeshHandle>> meshes;
-    std::vector<std::shared_ptr<MaterialHandle>> materials;
+    std::vector<ResourceHandle<Mesh>> meshes;
+    std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
 
     Hierarchy hierarchy;
@@ -219,19 +111,24 @@ struct GameObject
 
 struct DirectionalLight
 {
-    glm::vec3 targetPos = glm::vec3(0.0f, 1.5f, -0.25f);
-    glm::vec3 lightDir = glm::vec3(0.2f, -0.15f, 0.15f);
-    float sceneDistance = 1.0f;
-    float orthoSize = 17.0f;
-    float farPlane = 32.0f;
-    float nearPlane = -16.0f;
+    Camera camera {
+        .projection = Camera::Projection::eOrthographic,
+        .position = glm::vec3 { 7.3f, 1.25f, 4.75f },
+        .eulerRotation = glm::vec3 { 0.4f, 3.75f, 0.0f },
+        .orthographicSize = 17.0f,
+        .nearPlane = -16.0f,
+        .farPlane = 32.0f,
+        .aspectRatio = 1.0f,
+    };
+
     float shadowBias = 0.002f;
 
-    const glm::mat4 biasMatrix = glm::mat4(
+    constexpr static glm::mat4 BIAS_MATRIX {
         0.5, 0.0, 0.0, 0.0,
         0.0, 0.5, 0.0, 0.0,
         0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0);
+        0.5, 0.5, 0.5, 1.0
+    };
 };
 
 struct SceneDescription
