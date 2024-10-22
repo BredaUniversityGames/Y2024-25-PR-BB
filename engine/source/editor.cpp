@@ -156,7 +156,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);

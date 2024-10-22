@@ -56,17 +56,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    util::BeginLabel(commandBuffer, "Skydome pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
-
-    vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f,
-        static_cast<float>(renderingInfo.renderArea.extent.width),
-        static_cast<float>(renderingInfo.renderArea.extent.height),
-        0.0f, 1.0f };
-
-    vk::Rect2D scissor = vk::Rect2D { renderingInfo.renderArea.offset, renderingInfo.renderArea.extent };
-    commandBuffer.setViewport(0, 1, &viewport);
-    commandBuffer.setScissor(0, 1, &scissor);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
@@ -89,7 +79,6 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void SkydomePipeline::CreatePipeline()

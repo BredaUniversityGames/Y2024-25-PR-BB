@@ -3,7 +3,6 @@
 #include "gpu_resources.hpp"
 #include "vulkan_helper.hpp"
 #include "glm/gtc/random.hpp"
-#include "spdlog/spdlog.h"
 #include "glm/gtx/range.hpp"
 
 ImageMemoryBarrier::ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageAspectFlagBits imageAspect)
@@ -19,7 +18,7 @@ ImageMemoryBarrier::ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLa
     dstStage = destinationState.pipelineStage;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(const FrameGraphRenderPass* renderPass)
+FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(std::shared_ptr<FrameGraphRenderPass> renderPass)
 {
     this->renderPass = renderPass;
     return *this;
@@ -77,8 +76,9 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::ve
     return *this;
 }
 
-FrameGraph::FrameGraph(const VulkanBrain& brain) :
-    _brain(brain)
+FrameGraph::FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain)
+    : _brain(brain)
+    , _swapChain(swapChain)
 {
 }
 
@@ -121,6 +121,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                 0, nullptr);
         }
 
+        // TODO: Don't set and calculate viewport for compute passes
         commandBuffer.setViewport(0, 1, &node.viewport);
         commandBuffer.setScissor(0, 1, &node.scissor);
 
@@ -137,6 +138,8 @@ FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
     node.name = creation.name;
     node.isEnabled = creation.isEnabled;
     node.renderPass = creation.renderPass;
+
+    // TODO: Check for stupid resource inputs (multiple resource types, for example texture and attachment set for 1 resource)
 
     for (const auto& resourceCreation : creation.outputs)
     {
@@ -200,19 +203,19 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 {
     FrameGraphNode& node = _nodes[nodeHandle];
 
-    uint16_t viewportWidth = 0;
-    uint16_t viewportHeight = 0;
+    glm::uvec2 viewportSize = _swapChain.GetImageSize();
 
     for (const FrameGraphResourceHandle inputHandle : node.inputs)
     {
         const FrameGraphResource& resource = _resources[inputHandle];
 
-        if (resource.type == FrameGraphResourceType::eAttachment)
+        if (HasAnyFlags(resource.type, FrameGraphResourceType::eAttachment))
         {
             const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
 
-            viewportWidth = attachment->width;
-            viewportHeight = attachment->height;
+            viewportSize.x = attachment->width;
+            viewportSize.y = attachment->height;
+            break;
         }
     }
 
@@ -220,19 +223,20 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
     {
         const FrameGraphResource& resource = _resources[outputHandle];
 
+        // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
             const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
 
-            viewportWidth = attachment->width;
-            viewportHeight = attachment->height;
+            viewportSize.x = attachment->width;
+            viewportSize.y = attachment->height;
+            break;
         }
     }
 
-    auto fWidth = static_cast<float>(viewportWidth);
-    auto fHeight = static_cast<float>(viewportHeight);
-    node.viewport = vk::Viewport(0.0f, 0.0f, fWidth, fHeight, 0.0f, 1.0f);
-    node.scissor = vk::Rect2D(vk::Offset2D { 0, 0 }, vk::Extent2D { viewportWidth, viewportHeight });
+    const glm::vec2 fViewportSize = viewportSize;
+    node.viewport = vk::Viewport(0.0f, 0.0f, fViewportSize.x, fViewportSize.y, 0.0f, 1.0f);
+    node.scissor = vk::Rect2D(vk::Offset2D { 0, 0 }, vk::Extent2D { viewportSize.x, viewportSize.y });
 }
 
 void FrameGraph::CreateMemoryBarriers()
@@ -253,7 +257,7 @@ void FrameGraph::CreateMemoryBarriers()
             const FrameGraphResource& resource = _resources[inputHandle];
 
             // If the resource was already used as an input, we know it has to be in the correct state to be used as an input again,
-            // as switching resource types is not possible. So no memory barrier is needed and we can skip to the nex resource
+            // as switching resource types is not possible in the inputs. So no memory barrier is needed and we can skip to the next resource
             if (outputResourceStates[resource.output])
             {
                 continue;
@@ -404,16 +408,16 @@ void FrameGraph::SortGraph()
 
 FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer)
 {
-    assert(HasFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
+    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back();
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
-    if (!HasFlags(creation.type, FrameGraphResourceType::eReference))
+    if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
     {
-        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource, which is no possible. If you want to change the order of nodes, please use the eReference resource type to reference resources produced by multiple nodes.");
+        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource, which is not possible. If you want to change the order of nodes, please use the eReference resource type to reference resources produced by multiple nodes.");
 
         resource.info = creation.info;
         resource.output = resourceHandle;
@@ -427,7 +431,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
 
 FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourceCreation& creation)
 {
-    assert(HasFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
+    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back();
@@ -439,13 +443,13 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
 
 std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creation)
 {
-    if (HasFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
+    if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
         const Image* image = _brain.GetImageResourceManager().Access(creation.info.image.handle);
         return image->name;
     }
 
-    if (HasFlags(creation.type, FrameGraphResourceType::eBuffer))
+    if (HasAnyFlags(creation.type, FrameGraphResourceType::eBuffer))
     {
         const Buffer* buffer = _brain.GetBufferResourceManager().Access(creation.info.buffer.handle);
         return buffer->name;

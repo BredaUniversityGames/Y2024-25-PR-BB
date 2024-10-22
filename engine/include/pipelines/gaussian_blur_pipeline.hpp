@@ -3,14 +3,15 @@
 #include <vulkan_brain.hpp>
 #include <resource_manager.hpp>
 #include "constants.hpp"
+#include "frame_graph.hpp"
 
-class GaussianBlurPipeline
+class GaussianBlurPipeline : public FrameGraphRenderPass
 {
 public:
     GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target);
-    ~GaussianBlurPipeline();
+    ~GaussianBlurPipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t blurPasses);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
 
     NON_COPYABLE(GaussianBlurPipeline);
     NON_MOVABLE(GaussianBlurPipeline);

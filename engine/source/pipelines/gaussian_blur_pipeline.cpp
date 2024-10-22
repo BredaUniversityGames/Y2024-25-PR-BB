@@ -25,16 +25,15 @@ GaussianBlurPipeline::~GaussianBlurPipeline()
     _brain.device.destroy(_descriptorSetLayout);
 }
 
-void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t blurPasses)
+void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    util::BeginLabel(commandBuffer, "Gaussian blur pass", glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f, _brain.dldi);
-
-    // The horizontal target is created by this pass, so we need to transition it from undefined layout
+    // The vertical target is created by this pass, so we need to transition it from undefined layout
     auto verticalTarget = _brain.GetImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     auto descriptorSet = &_sourceDescriptorSets[currentFrame];
 
+    const uint32_t blurPasses = 5; // TODO: Get from bloom settings
     for (uint32_t i = 0; i < blurPasses * 2; ++i)
     {
         uint32_t isVerticalPass = i % 2;
@@ -91,8 +90,6 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
         _brain.drawStats.drawCalls++;
         commandBuffer.endRenderingKHR(_brain.dldi);
     }
-
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void GaussianBlurPipeline::CreatePipeline()
