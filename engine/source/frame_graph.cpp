@@ -6,6 +6,19 @@
 #include "spdlog/spdlog.h"
 #include "glm/gtx/range.hpp"
 
+ImageMemoryBarrier::ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageAspectFlagBits imageAspect)
+{
+    util::InitializeImageMemoryBarrier(barrier, image.image, image.format, oldLayout, newLayout, image.layers, 0, image.mips, imageAspect);
+
+    util::ImageLayoutTransitionState sourceState = util::GetImageLayoutTransitionSourceState(oldLayout);
+    util::ImageLayoutTransitionState destinationState = util::GetImageLayoutTransitionDestinationState(newLayout);
+
+    barrier.srcAccessMask = sourceState.accessFlags;
+    barrier.dstAccessMask = destinationState.accessFlags;
+    srcStage = sourceState.pipelineStage;
+    dstStage = destinationState.pipelineStage;
+}
+
 FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(const FrameGraphRenderPass* renderPass)
 {
     this->renderPass = renderPass;
@@ -193,17 +206,16 @@ void FrameGraph::ComputeNodeMemoryBarriers(FrameGraphNode& node)
         if (resource.type == FrameGraphResourceType::eTexture)
         {
             const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
-            ImageMemoryBarrier& barrier = node.imageMemoryBarriers.emplace_back();
 
             if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
             {
-                barrier = GetImageMemoryBarrier(texture->image, texture->format, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                    vk::ImageLayout::eShaderReadOnlyOptimal, texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
+                node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                    vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eDepth);
             }
             else
             {
-                barrier = GetImageMemoryBarrier(texture->image, texture->format, vk::ImageLayout::eColorAttachmentOptimal,
-                            vk::ImageLayout::eShaderReadOnlyOptimal, texture->layers, 0, texture->mips);
+                node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eColorAttachmentOptimal,
+                            vk::ImageLayout::eShaderReadOnlyOptimal);
             }
         }
         else if (resource.type == FrameGraphResourceType::eAttachment)
@@ -244,20 +256,19 @@ void FrameGraph::ComputeNodeMemoryBarriers(FrameGraphNode& node)
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
             const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
-            ImageMemoryBarrier& barrier = node.imageMemoryBarriers.emplace_back();
 
             width = attachment->width;
             height = attachment->height;
 
             if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
             {
-                barrier = GetImageMemoryBarrier(attachment->image, attachment->format, vk::ImageLayout::eUndefined,
-                    vk::ImageLayout::eDepthStencilAttachmentOptimal, attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eDepth);
+                node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
+                    vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageAspectFlagBits::eDepth);
             }
             else
             {
-                barrier = GetImageMemoryBarrier(attachment->image, attachment->format, vk::ImageLayout::eUndefined,
-                    vk::ImageLayout::eColorAttachmentOptimal, attachment->layers, 0, attachment->mips);
+                node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
+                    vk::ImageLayout::eColorAttachmentOptimal);
             }
         }
     }
@@ -398,122 +409,4 @@ std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creati
 
     assert(false && "Unsupported resource type!");
     return "";
-}
-
-ImageMemoryBarrier FrameGraph::GetImageMemoryBarrier(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount, vk::ImageAspectFlagBits imageAspect)
-{
-    ImageMemoryBarrier imageBarrier{};
-    vk::ImageMemoryBarrier& barrier = imageBarrier.barrier;
-    barrier.oldLayout = oldLayout;
-    barrier.newLayout = newLayout;
-    barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-    barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-    barrier.image = image;
-    barrier.subresourceRange.aspectMask = imageAspect;
-    barrier.subresourceRange.baseMipLevel = mipLevel;
-    barrier.subresourceRange.levelCount = mipCount;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = numLayers;
-
-    vk::PipelineStageFlags& sourceStage = imageBarrier.srcStage;
-    vk::PipelineStageFlags& destinationStage = imageBarrier.dstStage;
-
-    if (newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
-    {
-        barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-        if (util::HasStencilComponent(format))
-            barrier.subresourceRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
-    }
-
-    if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlags { 0 };
-        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-        destinationStage = vk::PipelineStageFlagBits::eTransfer;
-    }
-    else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eTransferSrcOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eTransfer;
-        destinationStage = vk::PipelineStageFlagBits::eTransfer;
-    }
-    else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eTransfer;
-        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-    }
-    else if (oldLayout == vk::ImageLayout::eTransferSrcOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eTransfer;
-        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-    }
-    else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-    }
-    else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
-    {
-        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-        destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    }
-    else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-        barrier.dstAccessMask = vk::AccessFlags { 0 };
-
-        sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
-    }
-    else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlags { 0 };
-        barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-
-        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-        destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
-    }
-    else if (oldLayout == vk::ImageLayout::eShaderReadOnlyOptimal && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
-        barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-
-        sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
-        destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    }
-    else if (oldLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eLateFragmentTests;
-        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-    }
-    else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilReadOnlyOptimal)
-    {
-        barrier.srcAccessMask = vk::AccessFlags { 0 };
-        barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead;
-
-        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-        destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
-    }
-    else
-    {
-        throw std::runtime_error("Unsupported layout transition!");
-    }
-
-    return imageBarrier;
 }

@@ -85,6 +85,8 @@ public:
 
 struct ImageMemoryBarrier
 {
+    ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
+
     vk::PipelineStageFlags srcStage{};
     vk::PipelineStageFlags dstStage{};
     vk::ImageMemoryBarrier barrier{};
@@ -172,6 +174,4 @@ private:
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);
     std::string GetResourceName(const FrameGraphResourceCreation& creation);
-    // TODO: Coped from vulkan utils, refactor this
-    ImageMemoryBarrier GetImageMemoryBarrier(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 };
