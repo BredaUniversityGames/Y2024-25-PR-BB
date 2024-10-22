@@ -169,7 +169,8 @@ private:
 
     void ProcessNodes();
     void ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle);
-    void ComputeNodeMemoryBarriers(FrameGraphNode& node);
+    void ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle);
+    void CreateMemoryBarriers();
     void SortGraph();
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);

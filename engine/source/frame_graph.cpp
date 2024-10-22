@@ -89,6 +89,9 @@ void FrameGraph::Build()
 
     // Sort the graph based on the node connections made
     SortGraph();
+
+    // Traverse sorted graph to create memory barriers, we do this after sorting to get rid of unneeded barriers
+    CreateMemoryBarriers();
 }
 
 void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -159,7 +162,7 @@ void FrameGraph::ProcessNodes()
 
     for (uint32_t i = 0; i < _nodes.size(); i++)
     {
-        FrameGraphNode& node = _nodes[i];
+        const FrameGraphNode& node = _nodes[i];
 
         if (!node.isEnabled)
         {
@@ -167,7 +170,7 @@ void FrameGraph::ProcessNodes()
         }
 
         ComputeNodeEdges(node, i);
-        ComputeNodeMemoryBarriers(node);
+        ComputeNodeViewportAndScissor(i);
     }
 }
 
@@ -193,62 +196,26 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
     }
 }
 
-void FrameGraph::ComputeNodeMemoryBarriers(FrameGraphNode& node)
+void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 {
-    uint16_t width = 0;
-    uint16_t height = 0;
+    FrameGraphNode& node = _nodes[nodeHandle];
 
-    // Handle input memory barriers
+    uint16_t viewportWidth = 0;
+    uint16_t viewportHeight = 0;
+
     for (const FrameGraphResourceHandle inputHandle : node.inputs)
     {
         const FrameGraphResource& resource = _resources[inputHandle];
 
-        if (resource.type == FrameGraphResourceType::eTexture)
-        {
-            const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
-
-            if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-            {
-                node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                    vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eDepth);
-            }
-            else
-            {
-                node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eColorAttachmentOptimal,
-                            vk::ImageLayout::eShaderReadOnlyOptimal);
-            }
-        }
-        else if (resource.type == FrameGraphResourceType::eAttachment)
+        if (resource.type == FrameGraphResourceType::eAttachment)
         {
             const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
 
-            width = attachment->width;
-            height = attachment->height;
-        }
-        else if (resource.type == FrameGraphResourceType::eBuffer)
-        {
-            const Buffer* buffer = _brain.GetBufferResourceManager().Access(resource.info.buffer.handle);
-            BufferMemoryBarrier& bufferBarrier = node.bufferMemoryBarriers.emplace_back();
-
-            // Get the buffer created before here and create barrier based on its stage usage
-            const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[resource.name];
-            const FrameGraphResource& outputResource = _resources[outputResourceHandle];
-
-            bufferBarrier.srcStage = outputResource.info.buffer.stageUsage;
-            bufferBarrier.dstStage = resource.info.buffer.stageUsage;
-
-            vk::BufferMemoryBarrier& barrier = bufferBarrier.barrier;
-            barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
-            barrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
-            barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-            barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-            barrier.buffer = buffer->buffer;
-            barrier.offset = 0;
-            barrier.size = vk::WholeSize;
+            viewportWidth = attachment->width;
+            viewportHeight = attachment->height;
         }
     }
 
-    // Handle output memory barriers
     for (const FrameGraphResourceHandle outputHandle : node.outputs)
     {
         const FrameGraphResource& resource = _resources[outputHandle];
@@ -257,27 +224,104 @@ void FrameGraph::ComputeNodeMemoryBarriers(FrameGraphNode& node)
         {
             const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
 
-            width = attachment->width;
-            height = attachment->height;
-
-            if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-            {
-                node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
-                    vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageAspectFlagBits::eDepth);
-            }
-            else
-            {
-                node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
-                    vk::ImageLayout::eColorAttachmentOptimal);
-            }
+            viewportWidth = attachment->width;
+            viewportHeight = attachment->height;
         }
     }
 
-    // Add automatic viewport and scissor based on input/output attachment
-    auto fWidth = static_cast<float>(width);
-    auto fHeight = static_cast<float>(height);
+    auto fWidth = static_cast<float>(viewportWidth);
+    auto fHeight = static_cast<float>(viewportHeight);
     node.viewport = vk::Viewport(0.0f, 0.0f, fWidth, fHeight, 0.0f, 1.0f);
-    node.scissor = vk::Rect2D(vk::Offset2D { 0, 0 }, vk::Extent2D { width, height });
+    node.scissor = vk::Rect2D(vk::Offset2D { 0, 0 }, vk::Extent2D { viewportWidth, viewportHeight });
+}
+
+void FrameGraph::CreateMemoryBarriers()
+{
+    // Describes if an output has already been used as an input
+    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates{};
+
+    for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
+    {
+        FrameGraphNode& node = _nodes[nodeHandle];
+
+        node.imageMemoryBarriers.clear();
+        node.bufferMemoryBarriers.clear();
+
+        // Handle input memory barriers
+        for (const FrameGraphResourceHandle inputHandle : node.inputs)
+        {
+            const FrameGraphResource& resource = _resources[inputHandle];
+
+            // If the resource was already used as an input, we know it has to be in the correct state to be used as an input again,
+            // as switching resource types is not possible. So no memory barrier is needed and we can skip to the nex resource
+            if (outputResourceStates[resource.output])
+            {
+                continue;
+            }
+
+            outputResourceStates[resource.output] = true;
+
+            if (resource.type == FrameGraphResourceType::eTexture)
+            {
+                const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+
+                if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+                {
+                    node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                        vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eDepth);
+                }
+                else
+                {
+                    node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eColorAttachmentOptimal,
+                                vk::ImageLayout::eShaderReadOnlyOptimal);
+                }
+            }
+            else if (resource.type == FrameGraphResourceType::eBuffer)
+            {
+                const Buffer* buffer = _brain.GetBufferResourceManager().Access(resource.info.buffer.handle);
+                BufferMemoryBarrier& bufferBarrier = node.bufferMemoryBarriers.emplace_back();
+
+                // Get the buffer created before here and create barrier based on its stage usage
+                const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[resource.name];
+                const FrameGraphResource& outputResource = _resources[outputResourceHandle];
+
+                bufferBarrier.srcStage = outputResource.info.buffer.stageUsage;
+                bufferBarrier.dstStage = resource.info.buffer.stageUsage;
+
+                vk::BufferMemoryBarrier& barrier = bufferBarrier.barrier;
+                barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+                barrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
+                barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+                barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+                barrier.buffer = buffer->buffer;
+                barrier.offset = 0;
+                barrier.size = vk::WholeSize;
+            }
+        }
+
+        // Handle output memory barriers
+        for (const FrameGraphResourceHandle outputHandle : node.outputs)
+        {
+            const FrameGraphResource& resource = _resources[outputHandle];
+            outputResourceStates[outputHandle] = false;
+
+            if (resource.type == FrameGraphResourceType::eAttachment)
+            {
+                const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+
+                if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+                {
+                    node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageAspectFlagBits::eDepth);
+                }
+                else
+                {
+                    node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eColorAttachmentOptimal);
+                }
+            }
+        }
+    }
 }
 
 void FrameGraph::SortGraph()
@@ -348,7 +392,7 @@ void FrameGraph::SortGraph()
         }
     }
 
-    assert(_nodes.size() >= reverseSortedNodes.size() && "There is something really wrong if this happens, this should never happen");
+    assert(_nodes.size() >= reverseSortedNodes.size() && "The amount of sorted nodes is not the same as the amount of nodes given to the frame graph, this should never happen");
 
     _sortedNodes.clear();
 
@@ -369,7 +413,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
 
     if (!HasFlags(creation.type, FrameGraphResourceType::eReference))
     {
-        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource. Please use the eReference resource type to reference resources produced by multiple nodes.");
+        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource, which is no possible. If you want to change the order of nodes, please use the eReference resource type to reference resources produced by multiple nodes.");
 
         resource.info = creation.info;
         resource.output = resourceHandle;
