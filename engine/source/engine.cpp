@@ -12,7 +12,9 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
@@ -41,6 +43,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = std::make_unique<ECS>();
 
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
+
     _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
@@ -63,13 +71,38 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     {
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
-
         _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+
+        // add colliders
+        for (size_t x = 0; x < _scene->models[1]->hierarchy.allNodes.size(); x++)
+        {
+            glm::mat4 transformMatrix = _scene->models[1]->hierarchy.allNodes[x].transform;
+
+            glm::mat4 test = transform * transformMatrix;
+            glm::vec3 position = test[3];
+            entt::entity entity = _ecs->_registry.create();
+            JPH::BodyCreationSettings coliderSettings(new JPH::BoxShape(JPH::Vec3(0.5, 1.0, 0.5)), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+
+            RigidbodyComponent rb(*_physicsModule->bodyInterface, coliderSettings);
+            NameComponent node;
+            node._name = "Colider";
+            _ecs->_registry.emplace<NameComponent>(entity, node);
+            _ecs->_registry.emplace<RigidbodyComponent>(entity, rb);
+        }
     }
+
+    // add a plane
+    JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(18.0f, 0.1f, 18.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+    RigidbodyComponent newRigidBody(*_physicsModule->bodyInterface, plane_settings);
+    entt::entity entity = _ecs->_registry.create();
+    _ecs->_registry.emplace<RigidbodyComponent>(entity, newRigidBody);
+    NameComponent node;
+    node._name = "Plane";
+    _ecs->_registry.emplace<NameComponent>(entity, node);
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers,*_ecs);
+    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -83,15 +116,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
-
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
-
 }
 
 void OldEngine::Tick(Engine& engine)
