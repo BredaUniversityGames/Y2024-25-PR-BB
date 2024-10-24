@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <stdint.h>
-#include <glm/vec3.hpp>
 
 class InputManager;
 class UIPipeline;
@@ -47,13 +46,13 @@ public:
     /**
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
-    [[nodiscard]] const glm::vec2& GetRelativeLocation() const { return _relativeLocation; }
+    NO_DISCARD const glm::vec2& GetRelativeLocation() const { return _relativeLocation; }
 
     virtual void SubmitDrawInfo(UIPipeline& pipeline) const
     {
     }
 
-    virtual void Update([[maybe_unused]] const InputManager& input)
+    virtual void Update(MAYBE_UNUSED const InputManager& input)
     {
         for (auto& i : _children)
             i->Update(input);
@@ -62,12 +61,16 @@ public:
     void AddChild(std::unique_ptr<UIElement> child)
     {
         if (_children.size() < _maxChildren && child != nullptr)
-            _children.push_back(std::move(child));
+        {
+            _children.emplace_back(std::move(child));
+            std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+                { return v1->zLevel < v2->zLevel; });
+        }
         else
             spdlog::warn("UIElement::AddChild: Can't add, Too many children");
     }
 
-    [[nodiscard]] const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
+    NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
     {
         return _children;
     }
@@ -76,6 +79,7 @@ public:
         = AnchorPoint::eMiddle;
 
     bool visible = true;
+    uint16_t zLevel = 0;
 
     virtual void UpdateChildAbsoluteLocations() = 0;
 

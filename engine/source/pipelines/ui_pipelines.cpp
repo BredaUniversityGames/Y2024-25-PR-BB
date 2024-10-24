@@ -1,13 +1,13 @@
 //
 // Created by luuk on 6-10-2024.
 //
-#include "pipelines/ui_pipelines.hpp"
+#include "../../user_interface/public/ui_pipelines.hpp"
 
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "ui/ui_core.hpp"
 
-void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fragshader)
+void UIPipeline::CreatePipeLine(std::string_view vertshader, std::string_view fragshader)
 {
     auto vertShaderCode = shader::ReadFile(vertshader);
     auto fragShaderCode = shader::ReadFile(fragshader);
@@ -170,7 +170,7 @@ void UIPipeLine::CreatePipeLine(std::string_view vertshader, std::string_view fr
     m_brain.device.destroy(fragModule);
 }
 
-UIPipeLine::~UIPipeLine()
+UIPipeline::~UIPipeLine()
 {
     m_brain.device.destroy(m_pipeline);
 }

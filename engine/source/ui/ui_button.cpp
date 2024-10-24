@@ -4,7 +4,7 @@
 
 #include "ui/ui_button.hpp"
 #include "input_manager.hpp"
-#include "pipelines/ui_pipelines.hpp"
+#include "../../user_interface/public/ui_pipelines.hpp"
 
 void UIButton::Update(const InputManager& input)
 {

@@ -3,7 +3,7 @@
 //
 
 #include "ui/ui_text.hpp"
-#include "pipelines/ui_pipelines.hpp"
+#include "../../user_interface/public/ui_pipelines.hpp"
 #include "ui/fonts.hpp"
 
 void UITextRenderSystem::Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain& brain)

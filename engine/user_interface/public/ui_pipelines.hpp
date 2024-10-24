@@ -2,20 +2,22 @@
 // Created by luuk on 6-10-2024.
 //
 #pragma once
-#include "pch.hpp"
+#include "../../include/pch.hpp"
 
 class VulkanBrain;
-class UIPipeLine
+class UIPipeline
 {
 public:
     void CreatePipeLine(std::string_view vertshader, std::string_view fragshader);
-    explicit UIPipeLine(const VulkanBrain& brain)
+    explicit UIPipeline(const VulkanBrain& brain)
         : m_brain(brain) {};
 
-    NON_COPYABLE(UIPipeLine);
-    NON_MOVABLE(UIPipeLine);
+    NON_COPYABLE(UIPipeline);
+    NON_MOVABLE(UIPipeline);
 
-    ~UIPipeLine();
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
+
+    ~UIPipeline();
 
     VkPipeline m_pipeline;
     vk::PipelineLayout m_pipelineLayout;

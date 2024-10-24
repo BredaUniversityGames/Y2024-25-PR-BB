@@ -6,7 +6,7 @@
 
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include "pipelines/ui_pipelines.hpp"
+#include "../user_interface/public/ui_pipelines.hpp"
 #include "shaders/shader_loader.hpp"
 #include "ui/fonts.hpp"
 #include "ui/ui_button.hpp"

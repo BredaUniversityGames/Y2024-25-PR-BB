@@ -6,16 +6,9 @@
 
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
-#include "ui/ui_core.hpp"
+#include "ui_core.hpp"
 
-struct ButtonDrawInfo
-{
-    glm::vec2 position;
-    glm::vec2 Scale;
-    ResourceHandle<Image> Image;
-};
-
-class UIButton : public UIElement
+struct UIButton : public UIElement
 {
 public:
     UIButton()
@@ -25,26 +18,26 @@ public:
 
     enum class ButtonState
     {
-        NORMAL,
-        HOVERED,
-        PRESSED
-    } m_State
-        = ButtonState::NORMAL;
+        eNormal,
+        eHovered,
+        ePressed
+    } m_State = ButtonState::eNormal;
 
-    void Update(const InputManager&) override;
-
-    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
+    void Update(const InputManager& inputManager) override;
+ 
+    void SubmitDrawInfo(UIPipeline& uiPipeline) const override;
 
     void UpdateChildAbsoluteLocations() override;
 
     struct ButtonStyle
     {
-        ResourceHandle<Image> m_NormalImage = {};
-        ResourceHandle<Image> m_HoveredImage = {};
-        ResourceHandle<Image> m_PressedImage = {};
-    } m_Style {};
-    std::function<void()> m_OnBeginHoverCallBack {};
-    std::function<void()> m_OnMouseDownCallBack {};
+        ResourceHandle<Image> normalImage = {};
+        ResourceHandle<Image> hoveredImage = {};
+        ResourceHandle<Image> pressedImage = {};
+    } style {};
+    
+    std::function<void()> onBeginHoverCallBack {};
+    std::function<void()> oOnMouseDownCallBack {};
 };
 
 class UIButtonRenderSystem : public UIRenderSystem<ButtonDrawInfo>
