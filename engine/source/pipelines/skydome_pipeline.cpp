@@ -6,12 +6,13 @@
 #include "gpu_scene.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
-    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings)
+    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _environmentMap(environmentMap)
+    , _gBuffers(gBuffers)
     , _sphere(sphere)
     , _bloomSettings(bloomSettings)
 {
@@ -31,6 +32,18 @@ SkydomePipeline::~SkydomePipeline()
 
 void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
+    depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+
+    vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
+    stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
@@ -53,8 +66,8 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
     renderingInfo.layerCount = 1;
-    renderingInfo.pDepthAttachment = nullptr;
-    renderingInfo.pStencilAttachment = nullptr;
+    renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+    renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -176,8 +189,10 @@ void SkydomePipeline::CreatePipeline()
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = false;
-    depthStencilStateCreateInfo.depthWriteEnable = false;
+    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 
     vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
 
@@ -204,6 +219,7 @@ void SkydomePipeline::CreatePipeline()
     auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 

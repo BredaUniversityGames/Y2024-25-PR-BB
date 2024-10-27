@@ -69,9 +69,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
 
     _camera = std::make_unique<CameraResource>(_brain);
 
-    // TODO: Make unique ptr again
+    // TODO: Avoid using shared_ptr?
     _geometryPipeline = std::make_shared<GeometryPipeline>(_brain, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_shared<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _skydomePipeline = std::make_shared<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, _bloomSettings);
     _tonemappingPipeline = std::make_shared<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_shared<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_shared<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
@@ -114,6 +114,8 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
         .SetRenderPass(_skydomePipeline)
+        // Does nothing in this situation, but the debug pass uses the depth buffer
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         // Making sure the sky dome pass runs after the lighting pass with a reference
         .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
         // Not needed references, just for clarity this pass also contributes to those targets
@@ -148,7 +150,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
         .AddNode(lightingPass)
-        .AddNode(skyDomePass) // TODO: Skydome pass overrides lighting pass
+        .AddNode(skyDomePass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
         .AddNode(debugPass)

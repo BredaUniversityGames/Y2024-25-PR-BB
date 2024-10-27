@@ -4,6 +4,7 @@
 #include "vulkan_brain.hpp"
 #include "mesh.hpp"
 #include "frame_graph.hpp"
+#include "gbuffers.hpp"
 
 class BloomSettings;
 class RenderSceneDescription;
@@ -12,7 +13,7 @@ class SkydomePipeline : public FrameGraphRenderPass
 {
 public:
     SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
+        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
     ~SkydomePipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -31,6 +32,7 @@ private:
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
+    const GBuffers& _gBuffers;
 
     ResourceHandle<Mesh> _sphere;
     vk::UniqueSampler _sampler;
