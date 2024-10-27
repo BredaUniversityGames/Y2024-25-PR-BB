@@ -12,14 +12,15 @@ void Viewport::Update(const InputManager& input) const
 
 void Viewport::Render(UIPipeline& pipeline) const
 {
-    for (const auto& i : baseElements)
+    for (auto& i : baseElements)
     {
         i->SubmitDrawInfo(pipeline);
     }
 }
+
 void Viewport::AddElement(std::unique_ptr<UIElement> element)
 {
     baseElements.emplace_back(std::move(element));
-    std::sort(baseElements.begin(), baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+    std::ranges::sort(baseElements.begin(), baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
 }

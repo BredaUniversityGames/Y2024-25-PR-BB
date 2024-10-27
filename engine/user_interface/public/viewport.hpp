@@ -18,10 +18,12 @@ public:
      */
     void Render(UIPipeline& pipeline) const;
 
+    void AddElement(std::unique_ptr<UIElement> element);
+
     /**
      * \brief Base elements present in viewport.
      */
     std::vector<std::unique_ptr<UIElement>> baseElements;
 
-    void AddElement(std::unique_ptr<UIElement> element);
+private:
 };

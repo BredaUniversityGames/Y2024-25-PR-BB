@@ -1,0 +1,2953 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "_deps/sdl-build/libSDL3.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_compile_options",
+			"SDL_AddCommonCompilerFlags",
+			"sdl_target_compile_option_all_languages",
+			"sdl_compile_options",
+			"target_compile_definitions",
+			"sdl_compile_definitions",
+			"target_include_directories",
+			"sdl_include_directories",
+			"target_precompile_headers",
+			"target_sources",
+			"sdl_glob_sources",
+			"sdl_sources",
+			"CheckHIDAPI"
+		],
+		"files" : 
+		[
+			"cmake-build-debug/_deps/sdl-src/CMakeLists.txt",
+			"cmake-build-debug/_deps/sdl-src/cmake/sdlcompilers.cmake",
+			"cmake-build-debug/_deps/sdl-src/cmake/sdltargets.cmake",
+			"cmake-build-debug/_deps/sdl-src/cmake/sdlchecks.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 396,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 398,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 61,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 69,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 74,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 8
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 79,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 10
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 116,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 12
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 121,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 14
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 126,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 16
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 159,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 23,
+				"parent" : 18
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 463,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 2,
+				"line" : 131,
+				"parent" : 20
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 3389,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 112,
+				"parent" : 22
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 3369,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 454,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 112,
+				"parent" : 25
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 455,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 2,
+				"line" : 160,
+				"parent" : 27
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 3371,
+				"parent" : 0
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 3385,
+				"parent" : 0
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1113,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 31
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 1152,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 33
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1180,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 35
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1186,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 37
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1196,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 39
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1228,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 41
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1235,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 43
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1828,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 45
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1829,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 47
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1839,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 49
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1920,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 51
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1927,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 53
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1934,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 55
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 1954,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 57
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1970,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 59
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 1975,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 61
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1979,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 63
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1983,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 65
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1990,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 67
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1992,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 69
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 1999,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 71
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2003,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 73
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2007,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 75
+			},
+			{
+				"command" : 13,
+				"file" : 0,
+				"line" : 2038,
+				"parent" : 0
+			},
+			{
+				"command" : 11,
+				"file" : 3,
+				"line" : 1088,
+				"parent" : 77
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 78
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2042,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 80
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2064,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 82
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2075,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 84
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 2841,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 86
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 2854,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 88
+			},
+			{
+				"command" : 12,
+				"file" : 0,
+				"line" : 2863,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 26,
+				"parent" : 90
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2865,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 92
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2917,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 94
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2925,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 96
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2930,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 98
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 2935,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 100
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 3026,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 102
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-gdwarf-4"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-Wundef"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-Wfloat-conversion"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-Wno-unused-local-typedefs"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-Wimplicit-fallthrough"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-idirafterC:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/video/khronos"
+				},
+				{
+					"fragment" : "-Winvalid-pch -x c-header -include C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL3-static.dir/cmake_pch.h"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MAJOR_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MICRO_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MINOR_VERSION=1"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "SDL_STATIC_LIB"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "USING_GENERATED_CONFIG_H"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include-config-debug/build_config"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/include"
+				},
+				{
+					"backtrace" : 29,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 30,
+					"header" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/SDL_internal.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-gdwarf-4"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-Wundef"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-Wfloat-conversion"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-Wno-unused-local-typedefs"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-Wimplicit-fallthrough"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-idirafterC:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/video/khronos"
+				},
+				{
+					"fragment" : "-Winvalid-pch -include C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL3-static.dir/cmake_pch.h"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MAJOR_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MICRO_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MINOR_VERSION=1"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "SDL_STATIC_LIB"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "USING_GENERATED_CONFIG_H"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include-config-debug/build_config"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/include"
+				},
+				{
+					"backtrace" : 29,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 30,
+					"header" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/SDL_internal.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112,
+				113,
+				114,
+				115,
+				116,
+				117,
+				118,
+				119,
+				120,
+				121,
+				122,
+				123,
+				124,
+				125,
+				126,
+				127,
+				128,
+				129,
+				155,
+				156,
+				157,
+				158,
+				159,
+				160,
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182,
+				183,
+				184,
+				185,
+				186,
+				187,
+				188,
+				189,
+				190,
+				191,
+				192,
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214,
+				215,
+				216,
+				217,
+				218,
+				219,
+				220,
+				221,
+				222,
+				223,
+				224,
+				225,
+				226,
+				227,
+				228,
+				229,
+				230,
+				231,
+				232,
+				233,
+				234,
+				235,
+				236,
+				237,
+				238,
+				239,
+				240,
+				241,
+				242,
+				243,
+				244
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-gdwarf-4"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-Wundef"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-Wfloat-conversion"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-Wno-unused-local-typedefs"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-Wimplicit-fallthrough"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-idirafterC:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/video/khronos"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MAJOR_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MICRO_VERSION=3"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "SDL_BUILD_MINOR_VERSION=1"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "SDL_STATIC_LIB"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "USING_GENERATED_CONFIG_H"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include-config-debug/build_config"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/include"
+				},
+				{
+					"backtrace" : 29,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 30,
+					"header" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/src/SDL_internal.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				24
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"id" : "SDL_uclibc::@fc7b397d5a055aba6d5e"
+		}
+	],
+	"id" : "SDL3-static::@fc7b397d5a055aba6d5e",
+	"name" : "SDL3-static",
+	"nameOnDisk" : "libSDL3.a",
+	"paths" : 
+	{
+		"build" : "_deps/sdl-build",
+		"source" : "cmake-build-debug/_deps/sdl-src"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112,
+				113,
+				114,
+				115,
+				116,
+				117,
+				118,
+				119,
+				120,
+				121,
+				122,
+				123,
+				124,
+				125,
+				126,
+				127,
+				128,
+				129,
+				155,
+				156,
+				157,
+				158,
+				159,
+				160,
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182,
+				183,
+				184,
+				185,
+				186,
+				187,
+				188,
+				189,
+				190,
+				191,
+				192,
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214,
+				215,
+				216,
+				217,
+				218,
+				219,
+				220,
+				221,
+				222,
+				223,
+				224,
+				225,
+				226,
+				227,
+				228,
+				229,
+				230,
+				231,
+				232,
+				233,
+				234,
+				235,
+				236,
+				237,
+				238,
+				239,
+				240,
+				241,
+				242,
+				243,
+				244
+			]
+		},
+		{
+			"name" : "Object Libraries",
+			"sourceIndexes" : 
+			[
+				130,
+				131,
+				132,
+				133,
+				134,
+				135,
+				136,
+				137,
+				138,
+				139,
+				140,
+				141,
+				142,
+				143,
+				144,
+				145,
+				146,
+				147,
+				148,
+				149,
+				150,
+				151,
+				152,
+				153,
+				154
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				245
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 0,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL3-static.dir/cmake_pch.h.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_assert.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_error.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_guid.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_hashtable.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_hints.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_list.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_log.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_properties.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/SDL_utils.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/atomic/SDL_atomic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/atomic/SDL_spinlock.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audiocvt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audiodev.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audioqueue.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audioresample.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_audiotypecvt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_mixer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/SDL_wave.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/camera/SDL_camera.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/SDL_core_unsupported.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/cpuinfo/SDL_cpuinfo.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 2,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/dynapi/SDL_dynapi.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_categories.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_clipboardevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_displayevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_dropevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_events.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_keyboard.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_keymap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_keysym_to_scancode.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_mouse.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_pen.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_quit.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_scancode_tables.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_touch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/SDL_windowevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/events/imKStoUCS.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/file/SDL_iostream.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/filesystem/SDL_filesystem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/gpu/SDL_gpu.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/haptic/SDL_haptic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/hidapi/SDL_hidapi.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/SDL_gamepad.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/SDL_joystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/SDL_steam_virtual_gamepad.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/controller_type.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/locale/SDL_locale.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/main/SDL_main_callbacks.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/main/SDL_runapp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/misc/SDL_url.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/power/SDL_power.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/SDL_d3dmath.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/SDL_render.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/SDL_render_unsupported.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/SDL_yuv_sw.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d/SDL_render_d3d.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d/SDL_shaders_d3d.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d11/SDL_render_d3d11.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d11/SDL_shaders_d3d11.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d12/SDL_render_d3d12.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/direct3d12/SDL_shaders_d3d12.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/gpu/SDL_pipeline_gpu.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/gpu/SDL_render_gpu.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/gpu/SDL_shaders_gpu.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/opengl/SDL_render_gl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/opengl/SDL_shaders_gl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/opengles2/SDL_render_gles2.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/opengles2/SDL_shaders_gles2.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/ps2/SDL_render_ps2.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/psp/SDL_render_psp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_blendfillrect.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_blendline.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_blendpoint.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_drawline.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_drawpoint.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_render_sw.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_rotate.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/software/SDL_triangle.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/vitagxm/SDL_render_vita_gxm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/vitagxm/SDL_render_vita_gxm_memory.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/vitagxm/SDL_render_vita_gxm_tools.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/vulkan/SDL_render_vulkan.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/render/vulkan/SDL_shaders_vulkan.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/sensor/SDL_sensor.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_crc16.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_crc32.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_getenv.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_iconv.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_malloc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_memcpy.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_memmove.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_memset.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_mslibc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_murmur3.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_qsort.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_random.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_stdlib.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_string.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/stdlib/SDL_strtokr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/storage/SDL_storage.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/SDL_thread.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/time/SDL_time.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/timer/SDL_timer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_RLEaccel.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_0.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_1.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_A.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_N.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_auto.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_copy.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_blit_slow.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_bmp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_clipboard.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_egl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_fillrect.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_pixels.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_rect.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_stretch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_surface.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_video.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_video_unsupported.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_vulkan_utils.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/SDL_yuv.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/yuv2rgb/yuv_rgb_lsx.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/yuv2rgb/yuv_rgb_sse.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 32,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/yuv2rgb/yuv_rgb_std.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_atan2.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_exp.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_fmod.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_log.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_log10.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_pow.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_rem_pio2.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/e_sqrt.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/k_cos.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/k_rem_pio2.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/k_sin.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/k_tan.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_atan.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_copysign.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_cos.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_fabs.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_floor.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_isinf.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_isinff.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_isnan.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_isnanf.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_modf.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_scalbn.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_sin.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 34,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL_uclibc.dir/src/libm/s_tan.c.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 36,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/dummy/SDL_dummyaudio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 38,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/disk/SDL_diskaudio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 40,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/camera/dummy/SDL_camera_dummy.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 42,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/virtual/SDL_virtualjoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 44,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/dummy/SDL_nullevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 44,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/dummy/SDL_nullframebuffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 44,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/dummy/SDL_nullvideo.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 46,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/windows/SDL_hid.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 46,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/windows/SDL_immdevice.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 46,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/windows/SDL_windows.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 46,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/windows/SDL_xinput.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 46,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/core/windows/pch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 48,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/main/windows/SDL_sysmain_runapp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 50,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/misc/windows/SDL_sysurl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 52,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/directsound/SDL_directsound.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 54,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/wasapi/SDL_wasapi.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 54,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/audio/wasapi/SDL_wasapi_win32.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsclipboard.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsframebuffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsgameinput.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowskeyboard.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsmessagebox.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsmodes.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsmouse.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsopengl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsopengles.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsrawinput.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsshape.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsvideo.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowsvulkan.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 56,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/windows/SDL_windowswindow.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/generic/SDL_syscond.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/generic/SDL_sysrwlock.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_syscond_cv.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_sysmutex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_sysrwlock_srw.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_syssem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_systhread.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 58,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/thread/windows/SDL_systls.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 60,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/sensor/windows/SDL_windowssensor.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/power/windows/SDL_syspower.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 64,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/locale/windows/SDL_syslocale.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 66,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/filesystem/windows/SDL_sysfilesystem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 66,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/filesystem/windows/SDL_sysfsops.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 68,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/storage/generic/SDL_genericstorage.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 70,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/storage/steam/SDL_steamstorage.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 72,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/time/windows/SDL_systime.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 74,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/timer/windows/SDL_systimer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 76,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/loadso/windows/SDL_sysloadso.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_combined.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_gamecube.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_luna.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_ps3.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_ps4.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_ps5.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_rumble.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_shield.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_stadia.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_steam.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_steam_hori.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_steamdeck.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_switch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_wii.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_xbox360.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_xbox360w.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapi_xboxone.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 79,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/hidapi/SDL_hidapijoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 81,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/windows/SDL_dinputjoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 81,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/windows/SDL_rawinputjoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 81,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/windows/SDL_windows_gaming_input.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 81,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/windows/SDL_windowsjoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 81,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/joystick/windows/SDL_xinputjoystick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 83,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/haptic/windows/SDL_dinputhaptic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 83,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/haptic/windows/SDL_windowshaptic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 85,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/camera/mediafoundation/SDL_camera_mediafoundation.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 87,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/dialog/SDL_dialog_utils.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 89,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/dialog/windows/SDL_windowsdialog.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 91,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/process/SDL_process.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 93,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/process/windows/SDL_windowsprocess.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenevents.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenframebuffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenopengles.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenvideo.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenvulkan.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 95,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/video/offscreen/SDL_offscreenwindow.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 97,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/gpu/d3d11/SDL_gpu_d3d11.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 99,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/gpu/d3d12/SDL_gpu_d3d12.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 101,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/gpu/vulkan/SDL_gpu_vulkan.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 103,
+			"compileGroupIndex" : 1,
+			"path" : "cmake-build-debug/_deps/sdl-src/src/main/generic/SDL_sysmain_callbacks.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"path" : "cmake-build-debug/_deps/sdl-build/CMakeFiles/SDL3-static.dir/cmake_pch.h",
+			"sourceGroupIndex" : 2
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

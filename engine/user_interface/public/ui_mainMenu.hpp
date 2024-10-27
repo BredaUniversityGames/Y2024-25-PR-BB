@@ -4,10 +4,11 @@
 #pragma once
 
 #include "ui_button.hpp"
-#include "ui/ui_core.hpp"
+#include "../public/ui_core.hpp"
 
+class VulkanBrain;
 class MainMenuCanvas : public Canvas
 {
 public:
-    void InitElements(const VulkanBrain& brain);
+    MainMenuCanvas(const VulkanBrain& brain);
 };

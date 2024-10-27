@@ -1,28 +1,45 @@
-//
-// Created by luuk on 6-10-2024.
-//
 #pragma once
 #include "../../include/pch.hpp"
 
+class SwapChain;
 class VulkanBrain;
+
+struct alignas(16) QuadDrawInfo
+{
+    glm::mat4 projection;
+    alignas(16) glm::vec4 color = { 1.f, 1.f, 1.f, 1.f };
+    alignas(8) glm::vec2 uvp1 = { 0.f, 0.f };
+    alignas(8) glm::vec2 uvp2 = { 1.f, 1.f };
+    alignas(4) uint32_t textureIndex;
+};
+
+struct UIPushConstants
+{
+    QuadDrawInfo quad;
+};
+
 class UIPipeline
 {
 public:
-    void CreatePipeLine(std::string_view vertshader, std::string_view fragshader);
+    void CreatePipeLine();
     explicit UIPipeline(const VulkanBrain& brain)
-        : m_brain(brain) {};
+        : _brain(brain)
+    {
+        CreatePipeLine();
+    };
 
     NON_COPYABLE(UIPipeline);
     NON_MOVABLE(UIPipeline);
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, const SwapChain& swapChain, uint32_t swapChainIndex, const glm::mat4& projectionMatrix);
 
     ~UIPipeline();
 
-    VkPipeline m_pipeline;
-    vk::PipelineLayout m_pipelineLayout;
-    vk::DescriptorSet m_descriptorSet {};
+    vk::Pipeline _pipeline;
+    vk::PipelineLayout _pipelineLayout;
 
-    const VulkanBrain& m_brain;
-    vk::UniqueSampler m_sampler;
+    const VulkanBrain& _brain;
+    vk::UniqueSampler _sampler;
+
+    std::vector<QuadDrawInfo> _drawlist;
 };

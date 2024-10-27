@@ -3,7 +3,7 @@
 #include "ECS.hpp"
 #include "components/test_component.hpp"
 
-void TestSystem::Update(ECS& ecs, float dt)
+void TestSystem::Update(ECS& ecs, MAYBE_UNUSED float dt)
 {
     const auto view = ecs._registry.view<TestComponent>();
 

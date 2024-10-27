@@ -2,16 +2,14 @@
 
 #include <stb_image.h>
 
-
 ImageCreation& ImageCreation::LoadFromFile(std::string_view file_path)
 {
     int width;
     int height;
-    int nrChannels; //dummy
+    int nrChannels; // dummy
 
-    //yes we have to construct a string from a string_view here anyway but keeping the argument as a string_view keeps things consistent.
     initialData = reinterpret_cast<std::byte*>(stbi_load(std::string(file_path).c_str(), &width, &height, &nrChannels,
-                                                         4));
+        4));
 
     if (initialData == nullptr)
     {
@@ -26,7 +24,6 @@ ImageCreation& ImageCreation::LoadFromFile(std::string_view file_path)
 
     return *this;
 }
-
 
 ImageCreation& ImageCreation::SetData(std::byte* data)
 {
@@ -64,7 +61,6 @@ ImageCreation& ImageCreation::SetName(std::string_view name)
 {
     this->name = name;
     return *this;
-
 }
 
 ImageCreation& ImageCreation::SetType(ImageType type)

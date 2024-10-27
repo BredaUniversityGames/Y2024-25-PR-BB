@@ -1,6 +1,7 @@
 //
 // Created by luuk on 23-9-2024.
 //
+/*
 
 #include "ui/fonts.hpp"
 
@@ -59,3 +60,4 @@ void Fonts::LoadFont(std::string_view filepath, int fontsize, const VulkanBrain&
     FT_Done_Face(fontFace);
     FT_Done_FreeType(library);
 }
+*/

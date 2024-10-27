@@ -1,0 +1,522 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "engine/application/libApplication.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_libraries",
+			"module_default_init",
+			"target_precompile_headers",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"engine/application/CMakeLists.txt",
+			"scripts/functions.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 2,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 20,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 4,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 21,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 11,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 17,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 16,
+				"parent" : 2
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu++20 -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wextra"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wno-unknown-pragmas"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Werror"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-DVK_USE_PLATFORM_WIN32_KHR"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-Og"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mavx2"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mbmi"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mpopcnt"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mlzcnt"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mf16c"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mfma"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mfpmath=sse"
+				},
+				{
+					"fragment" : "-Winvalid-pch -include C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/engine/pch/CMakeFiles/PCH.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_ENABLE_DEPRECATED_EXT=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_USE_64BIT_FLOAT=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_USE_CUSTOM_SMALLVECTOR=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "GLM_ENABLE_EXPERIMENTAL"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_DEBUG_RENDERER"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_OBJECT_STREAM"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_PROFILE_ENABLED"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_AVX"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_AVX2"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_F16C"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_FMADD"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_LZCNT"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_SSE4_1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_SSE4_2"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_TZCNT"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "SPDLOG_COMPILED_LIB"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "TRACY_ENABLE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "TRACY_ON_DEMAND"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "VULKAN_HPP_NO_CONSTRUCTORS"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "_DEBUG"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/application/public"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/application/private"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/freetype/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/external/SDL/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/stb"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/cereal-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/external/freetype/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/imgui"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/imgui/backends"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/implot"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/magicenum-src/include/magic_enum"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/spdlog-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/glm-src"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/entt-src/src"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/vma-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/fastgltf-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/fastgltf-src/deps/simdjson"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/Vulkan-Headers/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/joltphysics-src/Build/.."
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/utility/public"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/core/public"
+				},
+				{
+					"backtrace" : 3,
+					"isSystem" : true,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/tracy-src/public"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					6,
+					3,
+					3
+				],
+				"standard" : "20"
+			},
+			"sourceIndexes" : 
+			[
+				4,
+				5
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "ImGui::@89556154f30252d09d22"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "spdlog::@eb35cfce7893ccfeff1e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "fastgltf::@5a6bec4670e55059daa4"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "TracyClient::@5312c6e87bd9d431bdc8"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "SDL3-static::@fc7b397d5a055aba6d5e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "Jolt::@964e89b4b52406ed572e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "glm::@ce54d98d7b326a3e12a8"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "freetype::@fe56bd744a704dcc51eb"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "Core::@daec77c92998606c5111"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "Utility::@8cb0130eb290f003738e"
+		}
+	],
+	"id" : "Application::@484d7b09246f7b20346f",
+	"name" : "Application",
+	"nameOnDisk" : "libApplication.a",
+	"paths" : 
+	{
+		"build" : "engine/application",
+		"source" : "engine/application"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		},
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				4,
+				5
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				6
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 8,
+			"path" : "engine/application/public/application_module.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/application/public/input_codes/keys.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/application/public/input_codes/mousebuttons.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/application/public/input_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/application/private/application_module.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/application/private/input_manager.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"path" : "cmake-build-debug/engine/pch/CMakeFiles/PCH.dir/cmake_pch.hxx",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/pch/pch.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/common.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/log.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/profile_macros.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/timers.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/engine.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/main_engine.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/module_interface.hpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

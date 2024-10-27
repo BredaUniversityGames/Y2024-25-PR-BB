@@ -36,7 +36,7 @@ public:
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
      */
-    void UpdateAbsoluteLocation(const glm::vec2& location, bool updateChildren = true)
+    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true)
     {
         _absoluteLocation = location;
         if (updateChildren)
@@ -47,12 +47,13 @@ public:
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
     NO_DISCARD const glm::vec2& GetRelativeLocation() const { return _relativeLocation; }
+    NO_DISCARD const glm::vec2& GetAbsouluteLocation() const { return _absoluteLocation; }
 
-    virtual void SubmitDrawInfo(UIPipeline& pipeline) const
+    virtual void SubmitDrawInfo(MAYBE_UNUSED UIPipeline& pipeline) const
     {
     }
 
-    virtual void Update(MAYBE_UNUSED const InputManager& input)
+    virtual void Update(const InputManager& input)
     {
         for (auto& i : _children)
             i->Update(input);

@@ -12,6 +12,7 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "ui_mainMenu.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
@@ -21,6 +22,7 @@
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
+#include "viewport.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -76,10 +78,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->camera.farPlane = 100.0f;
 
     // Fonts::LoadFont("assets/fonts/JosyWine-G33rg.ttf", 30, _renderer->_brain);
+    _viewport = std::make_unique<Viewport>();
 
-    m_MainMenuCanvas = std::make_shared<MainMenuCanvas>();
-    m_MainMenuCanvas->InitElements(_renderer->_brain);
-    _renderer->m_UIElementToRender = m_MainMenuCanvas;
+    _viewport->AddElement(std::make_unique<MainMenuCanvas>(_renderer->_brain));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -128,7 +129,8 @@ void OldEngine::Tick(Engine& engine)
 
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
-
+    _viewport->Update(input);
+    _viewport->Render(*_renderer->_uiPipeline);
     auto windowSize = applicationModule.DisplaySize();
     _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
@@ -184,10 +186,12 @@ void OldEngine::Tick(Engine& engine)
         spdlog::info("Spawned emitter!");
     }
 
-    _ecs->UpdateSystems(deltaTimeMS);
-    _ecs->GetSystem<PhysicsSystem>().CleanUp();
-    _ecs->RemovedDestroyed();
-    _ecs->RenderSystems();
+    //_ecs->UpdateSystems(deltaTimeMS);
+
+    // _ecs->GetSystem<PhysicsSystem>().CleanUp();
+    // _ecs->RemovedDestroyed();
+
+    //  _ecs->RenderSystems();
 
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);

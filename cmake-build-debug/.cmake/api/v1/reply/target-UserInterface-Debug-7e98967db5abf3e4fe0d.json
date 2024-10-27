@@ -1,0 +1,958 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "engine/user_interface/libUserInterface.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_libraries",
+			"module_default_init",
+			"target_precompile_headers",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"engine/user_interface/CMakeLists.txt",
+			"scripts/functions.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 2,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 20,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 5,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 21,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 11,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 17,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 16,
+				"parent" : 2
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu++20 -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wextra"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wno-unknown-pragmas"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Werror"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-DVK_USE_PLATFORM_WIN32_KHR"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-Og"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mavx2"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mbmi"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mpopcnt"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mlzcnt"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mf16c"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mfma"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-mfpmath=sse"
+				},
+				{
+					"fragment" : "-Winvalid-pch -include C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/engine/pch/CMakeFiles/PCH.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_ENABLE_DEPRECATED_EXT=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_USE_64BIT_FLOAT=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FASTGLTF_USE_CUSTOM_SMALLVECTOR=0"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "GLM_ENABLE_EXPERIMENTAL"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_DEBUG_RENDERER"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_OBJECT_STREAM"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_PROFILE_ENABLED"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_AVX"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_AVX2"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_F16C"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_FMADD"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_LZCNT"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_SSE4_1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_SSE4_2"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "JPH_USE_TZCNT"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "SPDLOG_COMPILED_LIB"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "TRACY_ENABLE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "TRACY_ON_DEMAND"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "VULKAN_HPP_NO_CONSTRUCTORS"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "_DEBUG"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/public"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/freetype/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/external/SDL/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/stb"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/cereal-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/external/freetype/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/imgui"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/imgui/backends"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/implot"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-build/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/sdl-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/magicenum-src/include/magic_enum"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/spdlog-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/glm-src"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/entt-src/src"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/vma-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/fastgltf-src/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/fastgltf-src/deps/simdjson"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/external/Vulkan-Headers/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/joltphysics-src/Build/.."
+				},
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/utility/public"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/core/public"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/application/public"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/public"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/../external"
+				},
+				{
+					"backtrace" : 3,
+					"isSystem" : true,
+					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/cmake-build-debug/_deps/tracy-src/public"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					6,
+					3,
+					3
+				],
+				"standard" : "20"
+			},
+			"sourceIndexes" : 
+			[
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "ImGui::@89556154f30252d09d22"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "spdlog::@eb35cfce7893ccfeff1e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "fastgltf::@5a6bec4670e55059daa4"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "TracyClient::@5312c6e87bd9d431bdc8"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "SDL3-static::@fc7b397d5a055aba6d5e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "Jolt::@964e89b4b52406ed572e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "glm::@ce54d98d7b326a3e12a8"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "freetype::@fe56bd744a704dcc51eb"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "Core::@daec77c92998606c5111"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "Utility::@8cb0130eb290f003738e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "Application::@484d7b09246f7b20346f"
+		}
+	],
+	"id" : "UserInterface::@e2eb953512876efcf487",
+	"name" : "UserInterface",
+	"nameOnDisk" : "libUserInterface.a",
+	"paths" : 
+	{
+		"build" : "engine/user_interface",
+		"source" : "engine/user_interface"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82
+			]
+		},
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				15
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/fonts.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_button.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_components.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_core.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_element.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_mainMenu.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_pipelines.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/ui_text.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"path" : "engine/user_interface/public/viewport.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/fonts.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/ui_button.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/ui_core.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/ui_mainMenu.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/ui_pipelines.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/viewport.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"path" : "cmake-build-debug/engine/pch/CMakeFiles/PCH.dir/cmake_pch.hxx",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/pch/pch.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/common.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/log.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/profile_macros.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 3,
+			"path" : "engine/utility/public/timers.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/engine.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/main_engine.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/core/public/module_interface.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/application/public/application_module.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/application/public/input_codes/keys.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/application/public/input_codes/mousebuttons.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/application/public/input_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/ECS.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/batch_buffer.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/bloom_settings.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/camera.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/name_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/relationship_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/relationship_helpers.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/rigidbody_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/test_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/transform_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/transform_helpers.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/components/world_matrix_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/constants.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/editor.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/entity_serializer.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/gbuffers.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/gpu_resources.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/gpu_scene.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/indirect_culler.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/lib/include_fastgltf.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/lib/includes_vulkan.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/mesh.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/mesh_primitives.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/model_loader.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/modules/physics_module.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/old_engine.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/particles/emitter_component.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/particles/particle_interface.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/particles/particle_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/particles/particle_util.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pch.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/performance_tracker.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/debug_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/gaussian_blur_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/geometry_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/ibl_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/lighting_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/shadow_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/skydome_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/pipelines/tonemapping_pipeline.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/renderer.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/resource_management/buffer_resource_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/resource_management/image_resource_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/resource_management/material_resource_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/resource_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/serialization.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/shaders/shader_loader.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/single_time_commands.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/swap_chain.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/systems/physics_system.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/systems/system.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/systems/test_system.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/vulkan_brain.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/vulkan_helper.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "engine/include/vulkan_validation.hpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

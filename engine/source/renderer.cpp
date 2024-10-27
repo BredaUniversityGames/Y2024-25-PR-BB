@@ -20,7 +20,7 @@
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
-#include "ui/ui_core.hpp"
+#include "../user_interface/public/ui_pipelines.hpp"
 #include "ECS.hpp"
 #include "gpu_scene.hpp"
 #include "log.hpp"
@@ -77,6 +77,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
     _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera);
+    _uiPipeline = std::make_unique<UIPipeline>(_brain);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -204,6 +205,9 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
     _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
+
+    glm::mat4 projection = glm::ortho(0.0f, float(_swapChain->GetExtent().width), 0.0f, float(_swapChain->GetExtent().height));
+    _uiPipeline->RecordCommands(commandBuffer, *_swapChain, swapChainImageIndex, projection);
 
     _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
 

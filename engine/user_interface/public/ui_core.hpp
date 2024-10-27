@@ -4,17 +4,9 @@
 
 #pragma once
 #include "typeindex"
-#include <pch.hpp>
 #include <queue>
-
+#include "../public/ui_element.hpp"
 class UIPipeline;
-
-
-
-
-void UpdateUI(const InputManager& input, UIElement* element);
-
-void RenderUI(UIElement* element, UserInterfaceRenderer& context, const vk::CommandBuffer&, const VulkanBrain&, SwapChain& swapChain, int swapChainIndex);
 
 /**
  * holds free floating elements. elements can be anchored to one of the 4 corners of the canvas. anchors help preserve
@@ -28,6 +20,5 @@ public:
     {
     }
     void UpdateChildAbsoluteLocations() override;
-    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
+    void SubmitDrawInfo(UIPipeline& pipeline) const override;
 };
-
