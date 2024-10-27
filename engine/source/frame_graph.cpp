@@ -29,6 +29,13 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> i
     FrameGraphResourceCreation& creation = inputs.emplace_back();
     creation.type = type;
     creation.info.image.handle = image;
+
+    // If there are any input attachments we know this is a graphics queue, otherwise we assume this is compute
+    if (HasAnyFlags(type, FrameGraphResourceType::eAttachment))
+    {
+        queueType = FrameGraphQueueType::eGraphics;
+    }
+
     return *this;
 }
 
@@ -46,6 +53,13 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> 
     FrameGraphResourceCreation& creation = outputs.emplace_back();
     creation.type = type;
     creation.info.image.handle = image;
+
+    // If there are any output attachments we know this is a graphics queue, otherwise we assume this is compute
+    if (HasAnyFlags(type, FrameGraphResourceType::eAttachment))
+    {
+        queueType = FrameGraphQueueType::eGraphics;
+    }
+
     return *this;
 }
 
@@ -121,9 +135,11 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                 0, nullptr);
         }
 
-        // TODO: Don't set and calculate viewport for compute passes
-        commandBuffer.setViewport(0, 1, &node.viewport);
-        commandBuffer.setScissor(0, 1, &node.scissor);
+        if (node.queueType == FrameGraphQueueType::eGraphics)
+        {
+            commandBuffer.setViewport(0, 1, &node.viewport);
+            commandBuffer.setScissor(0, 1, &node.scissor);
+        }
 
         node.renderPass->RecordCommands(commandBuffer, currentFrame, scene);
 
@@ -133,13 +149,14 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
 FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
 {
+    assert(creation.renderPass && "A frame graph node has no render pass attached, make sure to set a render pass for all used nodes.");
+
     const FrameGraphNodeHandle nodeHandle = _nodes.size();
     FrameGraphNode& node = _nodes.emplace_back();
     node.name = creation.name;
     node.isEnabled = creation.isEnabled;
     node.renderPass = creation.renderPass;
-
-    // TODO: Check for stupid resource inputs (multiple resource types, for example texture and attachment set for 1 resource)
+    node.queueType = creation.queueType;
 
     for (const auto& resourceCreation : creation.outputs)
     {
@@ -202,6 +219,12 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
 void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 {
     FrameGraphNode& node = _nodes[nodeHandle];
+
+    // Only graphics queue render passes need a viewport and scissor
+    if (node.queueType == FrameGraphQueueType::eGraphics)
+    {
+        return;
+    }
 
     glm::uvec2 viewportSize = _swapChain.GetImageSize();
 

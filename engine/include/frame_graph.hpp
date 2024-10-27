@@ -8,6 +8,12 @@ struct RenderSceneDescription;
 struct Image;
 struct Buffer;
 
+enum class FrameGraphQueueType : uint8_t
+{
+    eCompute,
+    eGraphics,
+};
+
 enum class FrameGraphResourceType : uint8_t
 {
     eNone = 1 << 0,
@@ -94,6 +100,7 @@ struct BufferMemoryBarrier
 
 struct FrameGraphNodeCreation
 {
+    FrameGraphQueueType queueType = FrameGraphQueueType::eCompute;
     std::shared_ptr<FrameGraphRenderPass> renderPass = nullptr;
 
     std::vector<FrameGraphResourceCreation> inputs {};
@@ -118,6 +125,7 @@ struct FrameGraphNodeCreation
 
 struct FrameGraphNode
 {
+    FrameGraphQueueType queueType = FrameGraphQueueType::eCompute;
     std::shared_ptr<FrameGraphRenderPass> renderPass = nullptr;
 
     std::vector<FrameGraphResourceHandle> inputs {};
