@@ -53,20 +53,20 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _renderer->_scene = _scene;
 
     std::vector<std::string> modelPaths = {
-        "assets/models/DamagedHelmet.glb",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+        "assets/models/CathedralGLB_GLTF.glb",
+        "assets/models/Terrain/scene.gltf"
     };
 
     _scene->models = _renderer->FrontLoadModels(modelPaths);
 
-    glm::vec3 scale { 10.0f };
-    for (size_t i = 0; i < 10; ++i)
-    {
-        glm::vec3 translate { i / 3, 0.0f, i % 3 };
-        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
+    glm::mat4 t = glm::mat4 { 1.0f };
+    t = glm::rotate(t, glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f });
+    _scene->gameObjects.emplace_back(t, _scene->models[0]);
 
-        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
-    }
+    t = glm::mat4 { 1.0f };
+    t = glm::translate(t, glm::vec3 { 106, 14, 145 });
+    t = glm::scale(t, glm::vec3 { 4.0f });
+    _scene->gameObjects.emplace_back(t, _scene->models[1]);
 
     _renderer->UpdateBindless();
 
@@ -74,7 +74,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
-    _scene->camera.farPlane = 100.0f;
+    _scene->camera.farPlane = 600.0f;
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
