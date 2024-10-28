@@ -7,6 +7,7 @@
 
 #include <memory>
 
+struct RigidbodyComponent;
 class ECS;
 class Renderer;
 class Editor;
@@ -35,6 +36,8 @@ private:
     std::shared_ptr<ECS> _ecs;
 
     std::shared_ptr<SceneDescription> _scene;
+
+    std::unordered_map<GameObject*, RigidbodyComponent> _projectiles;
 
     glm::ivec2 _lastMousePos {};
 

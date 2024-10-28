@@ -30,6 +30,7 @@ DebugPipeline::~DebugPipeline()
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex)
 {
+
     // Update the lines data
     UpdateVertexData();
 
@@ -80,9 +81,13 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32
     commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets);
 
     // Draw the lines
-    commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
-    _brain.drawStats.drawCalls++;
-    _brain.drawStats.debugLines = static_cast<uint32_t>(_linesData.size() / 2);
+    if (_isEnabled)
+    {
+        commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
+        _brain.drawStats.drawCalls++;
+        _brain.drawStats.debugLines = static_cast<uint32_t>(_linesData.size() / 2);
+    }
+
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     commandBuffer.endRenderingKHR(_brain.dldi);
 

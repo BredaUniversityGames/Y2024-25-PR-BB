@@ -24,6 +24,7 @@
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
+#include "glm/gtx/quaternion.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -194,10 +195,55 @@ void OldEngine::Tick(Engine& engine)
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
-        _ecs->GetSystem<PhysicsSystem>().SetCameraPosition(_scene->camera.position);
-        _ecs->GetSystem<PhysicsSystem>().SetCameraDirection((glm::quat(_scene->camera.eulerRotation) * -FORWARD));
+
+        // shoot balls
+        if (ImGui::IsKeyPressed(ImGuiKey_Space))
+        {
+            // spawn model
+            glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, _scene->camera.position) * glm::scale(glm::mat4 { 1.0f }, glm::vec3(0.45));
+            _scene->gameObjects.emplace_back(transform, _scene->models[0]);
+
+            entt::entity entity = _ecs->_registry.create();
+            RigidbodyComponent rb(*_physicsModule->bodyInterface, eSPHERE);
+            NameComponent node;
+            node._name = "Ball";
+            _ecs->_registry.emplace<NameComponent>(entity, node);
+            _ecs->_registry.emplace<RigidbodyComponent>(entity, rb);
+            _physicsModule->bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(_scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z), JPH::EActivation::Activate);
+
+            glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
+            _physicsModule->bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 25.0f);
+
+            _projectiles[&_scene->gameObjects.back()] = rb;
+        }
     }
     _lastMousePos = { mouseX, mouseY };
+
+    // Update projectiles
+    {
+        for (auto& projectile : _projectiles)
+        {
+            // Retrieve position and rotation from the physics body
+            JPH::Vec3 position = _physicsModule->bodyInterface->GetPosition(projectile.second.bodyID);
+            JPH::Quat rotation = _physicsModule->bodyInterface->GetRotation(projectile.second.bodyID);
+
+            // Convert Jolt Physics types to glm types
+            glm::vec3 glmPosition(position.GetX(), position.GetY(), position.GetZ());
+            glm::quat glmRotation(rotation.GetW(), rotation.GetX(), rotation.GetY(), rotation.GetZ());
+
+            // Build the transformation matrix including both translation and rotation
+            glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glmPosition) * glm::scale(glm::mat4(1.0f), glm::vec3(0.45));
+            glm::mat4 rotationMatrix = glm::toMat4(glmRotation);
+
+            // Combine translation and rotation
+            projectile.first->transform = translationMatrix * rotationMatrix;
+        }
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF9))
+    {
+        _renderer->_debugPipeline->SetState(!(_renderer->_debugPipeline->GetState()));
+    }
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);

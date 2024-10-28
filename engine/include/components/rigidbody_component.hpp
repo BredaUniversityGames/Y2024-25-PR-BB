@@ -24,6 +24,8 @@ struct RigidbodyComponent
         bodyID = bodyInterface.CreateAndAddBody(bodyCreationSettings, JPH::EActivation::Activate);
     }
 
+    RigidbodyComponent() = default;
+
     JPH::BodyID bodyID;
     PhysicsShapes shapeType;
 };
