@@ -55,6 +55,8 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     _entityEditor.registerComponent<TransformComponent>("Transform");
     _entityEditor.registerComponent<NameComponent>("Name");
     _entityEditor.registerComponent<RelationshipComponent>("Relationship");
@@ -148,11 +150,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    if (ImGui::Begin("Entity Details"))
-    {
-        DisplaySelectedEntityDetails(ecs);
-    }
-    ImGui::End();
+    DisplaySelectedEntityDetails(ecs);
 
     performanceTracker.Render();
     bloomSettings.Render();
@@ -281,55 +279,10 @@ void Editor::DrawMainMenuBar()
 }
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
-    if (_selectedEntity == entt::null)
+    if (_selectedEntity != entt::null && ecs._registry.valid(_selectedEntity))
     {
-        ImGui::Text("No entity selected");
-        return;
+        _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
     }
-
-    if (!ecs._registry.valid(_selectedEntity))
-    {
-        ImGui::Text("Selected entity is not valid");
-        return;
-    }
-
-    _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
-
-    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
-    ImGui::LabelText("##EntityDetails", "%s", name.c_str());
-
-    if (ImGui::Button("Delete"))
-    {
-        ecs.DestroyEntity(_selectedEntity);
-        _selectedEntity = entt::null;
-        return;
-    }
-    ImGui::PushID(static_cast<int>(_selectedEntity));
-
-    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
-    if (transform != nullptr)
-    {
-        bool changed = false;
-        // Inspect Transform component
-        // TODO use euler angles instead of quaternion
-        changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
-        changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
-
-        if (changed)
-        {
-            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
-        }
-    }
-
-    if (nameComponent != nullptr)
-    {
-        ImGui::InputText("Name", &nameComponent->_name);
-    }
-
-    ImGui::PopID();
-    // inspect other components
 }
 
 Editor::~Editor()
