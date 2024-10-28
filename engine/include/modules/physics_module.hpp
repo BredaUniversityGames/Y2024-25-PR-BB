@@ -4,10 +4,11 @@
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
 
-#undef Convex
-#undef None
-
 #include "Jolt/Jolt.h"
+
+JPH_SUPPRESS_WARNING_PUSH
+
+JPH_SUPPRESS_WARNINGS
 
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
@@ -21,7 +22,12 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include "Jolt/Renderer/DebugRendererSimple.h"
 
-JPH_SUPPRESS_WARNINGS
+JPH_SUPPRESS_WARNING_POP
+
+// TODO: should be using Log.hpp
+#include "common.hpp"
+#include <iostream>
+#include <glm/glm.hpp>
 
 namespace JPH
 {
@@ -135,7 +141,11 @@ class MyContactListener : public JPH::ContactListener
 {
 public:
     // See: ContactListener
-    virtual JPH::ValidateResult OnContactValidate(const JPH::Body& inBody1, const JPH::Body& inBody2, JPH::RVec3Arg inBaseOffset, const JPH::CollideShapeResult& inCollisionResult) override
+    virtual JPH::ValidateResult OnContactValidate(
+        MAYBE_UNUSED const JPH::Body& inBody1,
+        MAYBE_UNUSED const JPH::Body& inBody2,
+        MAYBE_UNUSED JPH::RVec3Arg inBaseOffset,
+        MAYBE_UNUSED const JPH::CollideShapeResult& inCollisionResult) override
     {
         // std::cout << "Contact validate callback" << std::endl;
 
@@ -143,17 +153,25 @@ public:
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
-    virtual void OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
+    virtual void OnContactAdded(
+        MAYBE_UNUSED const JPH::Body& inBody1,
+        MAYBE_UNUSED const JPH::Body& inBody2,
+        MAYBE_UNUSED const JPH::ContactManifold& inManifold,
+        MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
     {
         // std::cout << "A contact was added" << std::endl;
     }
 
-    virtual void OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
+    virtual void OnContactPersisted(
+        MAYBE_UNUSED const JPH::Body& inBody1,
+        MAYBE_UNUSED const JPH::Body& inBody2,
+        MAYBE_UNUSED const JPH::ContactManifold& inManifold,
+        MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
     {
         // std::cout << "A contact was persisted" << std::endl;
     }
 
-    virtual void OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override
+    virtual void OnContactRemoved(MAYBE_UNUSED const JPH::SubShapeIDPair& inSubShapePair) override
     {
         // std::cout << "A contact was removed" << std::endl;
     }
@@ -163,12 +181,12 @@ public:
 class MyBodyActivationListener : public JPH::BodyActivationListener
 {
 public:
-    virtual void OnBodyActivated(const JPH::BodyID& inBodyID, JPH::uint64 inBodyUserData) override
+    virtual void OnBodyActivated(MAYBE_UNUSED const JPH::BodyID& inBodyID, MAYBE_UNUSED JPH::uint64 inBodyUserData) override
     {
         std::cout << "A body got activated" << std::endl;
     }
 
-    virtual void OnBodyDeactivated(const JPH::BodyID& inBodyID, JPH::uint64 inBodyUserData) override
+    virtual void OnBodyDeactivated(MAYBE_UNUSED const JPH::BodyID& inBodyID, MAYBE_UNUSED JPH::uint64 inBodyUserData) override
     {
         std::cout << "A body went to sleep" << std::endl;
     }
@@ -177,7 +195,7 @@ public:
 class DebugRendererSimpleImpl : public JPH::DebugRendererSimple
 {
 public:
-    void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override
+    void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor) override
     {
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
@@ -186,7 +204,11 @@ public:
         linePositions.push_back(toPos);
     }
 
-    void DrawText3D(JPH::RVec3Arg inPosition, const std::string_view& inString, JPH::ColorArg inColor, float inHeight) override
+    void DrawText3D(
+        MAYBE_UNUSED JPH::RVec3Arg inPosition,
+        MAYBE_UNUSED const std::string_view& inString,
+        MAYBE_UNUSED JPH::ColorArg inColor,
+        MAYBE_UNUSED float inHeight) override
     {
         // Not implemented
     }

@@ -27,7 +27,19 @@ void operator delete(void* ptr) noexcept
     std::free(ptr);
 }
 
+void operator delete(void* ptr, size_t) noexcept
+{
+    TracyFree(ptr);
+    std::free(ptr);
+}
+
 void operator delete[](void* ptr) noexcept
+{
+    TracyFree(ptr);
+    std::free(ptr);
+}
+
+void operator delete[](void* ptr, size_t) noexcept
 {
     TracyFree(ptr);
     std::free(ptr);

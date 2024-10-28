@@ -1,5 +1,3 @@
-#undef None
-#undef Bool
 #include <gtest/gtest.h>
 #include "main_engine.hpp"
 
@@ -8,40 +6,40 @@ namespace TestModules
 
 class TestModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
 
-    virtual void Tick(Engine& engine) override {};
-    virtual void Shutdown(Engine& engine) {};
+    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {};
 };
 
 class DependentModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         engine.GetModule<TestModule>();
         return ModuleTickOrder::eFirst;
     };
 
-    virtual void Tick(Engine& engine) override {};
-    virtual void Shutdown(Engine& engine) {};
+    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {};
 };
 
 class CheckUpdateModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine)
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine)
     {
         return ModuleTickOrder::eTick;
     };
 
-    virtual void Tick(Engine& engine)
+    virtual void Tick(MAYBE_UNUSED Engine& engine)
     {
         _has_updated = true;
     };
 
-    virtual void Shutdown(Engine& engine) {
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {
 
     };
 
@@ -51,7 +49,7 @@ public:
 
 class SelfDestructModuleFirst : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
@@ -61,12 +59,12 @@ class SelfDestructModuleFirst : public ModuleInterface
         engine.SetExit(-1);
     };
 
-    virtual void Shutdown(Engine& engine) override {};
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class SelfDestructModuleLast : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eLast;
     };
@@ -76,19 +74,19 @@ class SelfDestructModuleLast : public ModuleInterface
         engine.SetExit(-2);
     };
 
-    virtual void Shutdown(Engine& engine) override {};
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class SetAtFreeModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }
 
-    virtual void Tick(Engine& engine) override {};
+    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
 
-    virtual void Shutdown(Engine& engine)
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine)
     {
         *target = 1;
     };
@@ -99,14 +97,14 @@ public:
 
 class SetAtFreeModule2 : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override
+    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }
 
-    virtual void Tick(Engine& engine) override {};
+    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
 
-    virtual void Shutdown(Engine& engine)
+    virtual void Shutdown(MAYBE_UNUSED Engine& engine)
     {
         *target = 2;
     };
@@ -142,8 +140,8 @@ TEST(EngineModuleTests, EngineExit)
 
     e.MainLoopOnce();
 
-    auto exit_code = e.GetExitCode();
-    EXPECT_EQ(exit_code, -1) << "SelfDestructFirst was not able to set the exit code to -1";
+    auto exitCode = e.GetExitCode();
+    EXPECT_EQ(exitCode, -1) << "SelfDestructFirst was not able to set the exit code to -1";
 }
 
 TEST(EngineModuleTests, EngineReset)

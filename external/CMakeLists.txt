@@ -1,10 +1,3 @@
-include(FetchContent)
-
-# Macro for overriding default values for options before adding a library
-macro(override_option option_name option_value)
-    set(${option_name} ${option_value} CACHE BOOL "" FORCE)
-endmacro()
-
 # Magic Enum
 
 FetchContent_Declare(
@@ -32,10 +25,11 @@ FetchContent_MakeAvailable(SpdLog)
 # Vulkan
 
 find_package(Vulkan REQUIRED)
-
 add_library(VulkanAPI INTERFACE)
+
 target_link_libraries(VulkanAPI INTERFACE ${Vulkan_LIBRARY})
 target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
+target_compile_definitions(VulkanAPI INTERFACE VULKAN_HPP_NO_CONSTRUCTORS)
 
 # Vulkan Memory allocator
 
@@ -129,10 +123,24 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(GLM)
 
+# Guarantees GLM follows the same perspective convention as Vulkan
+target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL)
+
 # Jolt
 
-set(INTERPROCEDURAL_OPTIMIZATION ON)
-# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+
+FetchContent_Declare(
+        JoltPhysics
+        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
+        SOURCE_SUBDIR "Build"
+)
+
+set(INTERPROCEDURAL_OPTIMIZATION OFF)
+set(CPP_RTTI_ENABLED ON)
+set(ENABLE_ALL_WARNINGS OFF)
+
+# TODO: These options enable vectorization optimizations
 set(USE_SSE4_1 ON)
 set(USE_SSE4_2 ON)
 set(USE_AVX ON)
@@ -142,42 +150,12 @@ set(USE_LZCNT ON)
 set(USE_TZCNT ON)
 set(USE_F16C ON)
 set(USE_FMADD ON)
-set(CPP_RTTI_ENABLED ON)
 
-# Include Jolt
-FetchContent_Declare(
-        JoltPhysics
-        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
-        GIT_TAG "0a7d2501b33e1251101392d2be403c551ce5f963"
-        SOURCE_SUBDIR "Build"
-)
 FetchContent_MakeAvailable(JoltPhysics)
 
 if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
-
-SET_INTERPROCEDURAL_OPTIMIZATION()
-
-# Set compiler options for Jolt
-target_compile_options(Jolt PRIVATE
-        -w          # Suppress all warnings
-        -Wno-error  # Do not treat warnings as errors
-)
-
-# GoogleTest
-
-FetchContent_Declare(
-        GoogleTest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.15.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-override_option(gtest_force_shared_crt ON)
-FetchContent_MakeAvailable(GoogleTest)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
@@ -200,11 +178,11 @@ target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
 
 target_link_libraries(ImGui
         PRIVATE SDL3::SDL3-static
+        PRIVATE VulkanAPI
 )
 
 target_include_directories(ImGui
         PRIVATE freetype/include
-        PRIVATE Vulkan-Headers/include
         PUBLIC imgui
         PUBLIC imgui/backends
         PUBLIC implot

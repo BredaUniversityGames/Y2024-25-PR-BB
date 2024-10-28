@@ -1,6 +1,8 @@
 #pragma once
 #include "imgui_entt_entity_editor.hpp"
 
+#include <glm/glm.hpp>
+
 struct WorldMatrixComponent
 {
 private:

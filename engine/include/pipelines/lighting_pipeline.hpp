@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gbuffers.hpp"
+#include "vulkan_brain.hpp"
 #include "mesh.hpp"
 
 class GPUScene;

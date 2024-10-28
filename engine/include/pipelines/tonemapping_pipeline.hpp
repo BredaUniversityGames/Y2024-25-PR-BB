@@ -1,5 +1,6 @@
 #pragma once
 #include "swap_chain.hpp"
+#include "vulkan_brain.hpp"
 
 class BloomSettings;
 
