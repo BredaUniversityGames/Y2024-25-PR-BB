@@ -7,8 +7,6 @@
 
 #include <memory>
 
-#include <memory>
-
 class ECS;
 class Renderer;
 class Editor;
