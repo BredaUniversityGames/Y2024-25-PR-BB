@@ -1,0 +1,977 @@
+{
+  "General": {
+    "API": "Vulkan",
+    "apiVersion": "1.3.261",
+    "GPU": "AMD Custom GPU 0405 (RADV VANGOGH)",
+    "deviceType": 1,
+    "maxMemoryAllocationCount": 4294967295,
+    "bufferImageGranularity": 1,
+    "nonCoherentAtomSize": 64,
+    "memoryHeapCount": 2,
+    "memoryTypeCount": 11
+  },
+  "Total": {
+    "BlockCount": 10,
+    "BlockBytes": 1778384896,
+    "AllocationCount": 77,
+    "AllocationBytes": 1453652560,
+    "UnusedRangeCount": 17,
+    "AllocationSizeMin": 48,
+    "AllocationSizeMax": 268435456,
+    "UnusedRangeSizeMin": 4080,
+    "UnusedRangeSizeMax": 234881024
+  },
+  "MemoryInfo": {
+    "Heap 0": {
+      "Flags": [],
+      "Size": 3198853120,
+      "Budget": {
+        "BudgetBytes": 2559082496,
+        "UsageBytes": 33554432
+      },
+      "Stats": {
+        "BlockCount": 1,
+        "BlockBytes": 33554432,
+        "AllocationCount": 10,
+        "AllocationBytes": 504432,
+        "UnusedRangeCount": 1,
+        "AllocationSizeMin": 48,
+        "AllocationSizeMax": 163840
+      },
+      "MemoryPools": {
+        "Type 2": {
+          "Flags": [
+            "HOST_VISIBLE",
+            "HOST_COHERENT"
+          ],
+          "Stats": {
+            "BlockCount": 1,
+            "BlockBytes": 33554432,
+            "AllocationCount": 10,
+            "AllocationBytes": 504432,
+            "UnusedRangeCount": 1,
+            "AllocationSizeMin": 48,
+            "AllocationSizeMax": 163840
+          }
+        },
+        "Type 5": {
+          "Flags": [
+            "HOST_VISIBLE",
+            "HOST_COHERENT",
+            "HOST_CACHED"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 6": {
+          "Flags": [
+            "HOST_VISIBLE",
+            "HOST_COHERENT",
+            "HOST_CACHED"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 8": {
+          "Flags": [
+            "HOST_VISIBLE",
+            "HOST_COHERENT",
+            "DEVICE_COHERENT_AMD",
+            "DEVICE_UNCACHED_AMD"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 10": {
+          "Flags": [
+            "HOST_VISIBLE",
+            "HOST_COHERENT",
+            "HOST_CACHED",
+            "DEVICE_COHERENT_AMD",
+            "DEVICE_UNCACHED_AMD"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        }
+      }
+    },
+    "Heap 1": {
+      "Flags": [
+        "DEVICE_LOCAL"
+      ],
+      "Size": 6397714432,
+      "Budget": {
+        "BudgetBytes": 5118171545,
+        "UsageBytes": 1744830464
+      },
+      "Stats": {
+        "BlockCount": 9,
+        "BlockBytes": 1744830464,
+        "AllocationCount": 67,
+        "AllocationBytes": 1453148128,
+        "UnusedRangeCount": 16,
+        "AllocationSizeMin": 320,
+        "AllocationSizeMax": 268435456,
+        "UnusedRangeSizeMin": 4080,
+        "UnusedRangeSizeMax": 234881024
+      },
+      "MemoryPools": {
+        "Type 0": {
+          "Flags": [
+            "DEVICE_LOCAL"
+          ],
+          "Stats": {
+            "BlockCount": 8,
+            "BlockBytes": 1711276032,
+            "AllocationCount": 58,
+            "AllocationBytes": 1453023280,
+            "UnusedRangeCount": 15,
+            "AllocationSizeMin": 4096,
+            "AllocationSizeMax": 268435456,
+            "UnusedRangeSizeMin": 4080,
+            "UnusedRangeSizeMax": 234881024
+          }
+        },
+        "Type 1": {
+          "Flags": [
+            "DEVICE_LOCAL"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 3": {
+          "Flags": [
+            "DEVICE_LOCAL",
+            "HOST_VISIBLE",
+            "HOST_COHERENT"
+          ],
+          "Stats": {
+            "BlockCount": 1,
+            "BlockBytes": 33554432,
+            "AllocationCount": 9,
+            "AllocationBytes": 124848,
+            "UnusedRangeCount": 1,
+            "AllocationSizeMin": 320,
+            "AllocationSizeMax": 40976
+          }
+        },
+        "Type 4": {
+          "Flags": [
+            "DEVICE_LOCAL",
+            "HOST_VISIBLE",
+            "HOST_COHERENT"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 7": {
+          "Flags": [
+            "DEVICE_LOCAL",
+            "DEVICE_COHERENT_AMD",
+            "DEVICE_UNCACHED_AMD"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        },
+        "Type 9": {
+          "Flags": [
+            "DEVICE_LOCAL",
+            "HOST_VISIBLE",
+            "HOST_COHERENT",
+            "DEVICE_COHERENT_AMD",
+            "DEVICE_UNCACHED_AMD"
+          ],
+          "Stats": {
+            "BlockCount": 0,
+            "BlockBytes": 0,
+            "AllocationCount": 0,
+            "AllocationBytes": 0,
+            "UnusedRangeCount": 0
+          }
+        }
+      }
+    }
+  },
+  "DefaultPools": {
+    "Type 0": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+        "3": {
+          "MapRefCount": 0,
+          "TotalBytes": 268435456,
+          "UnusedBytes": 0,
+          "Allocations": 16,
+          "UnusedRanges": 0,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] DamagedHelmet"
+            },
+            {
+              "Offset": 16777216,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 33554432,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 50331648,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 67108864,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 83886080,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 100663296,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 117440512,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 134217728,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 150994944,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 167772160,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 184549376,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 201326592,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 218103808,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 234881024,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 251658240,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            }
+          ]
+        },
+        "4": {
+          "MapRefCount": 0,
+          "TotalBytes": 268435456,
+          "UnusedBytes": 0,
+          "Allocations": 16,
+          "UnusedRanges": 0,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 16777216,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 33554432,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 50331648,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 67108864,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 83886080,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 100663296,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 117440512,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 134217728,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 150994944,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 167772160,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 184549376,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 201326592,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 218103808,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 234881024,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 251658240,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            }
+          ]
+        },
+        "0": {
+          "MapRefCount": 0,
+          "TotalBytes": 33554432,
+          "UnusedBytes": 884704,
+          "Allocations": 10,
+          "UnusedRanges": 5,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 4096,
+              "Usage": 6,
+              "Name": "[ALLOCATION] Fallback texture"
+            },
+            {
+              "Offset": 4096,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 49152,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Irradiance cubemap"
+            },
+            {
+              "Offset": 53248,
+              "Type": "FREE",
+              "Size": 12288
+            },
+            {
+              "Offset": 65536,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 17121280,
+              "Usage": 20,
+              "Name": "[ALLOCATION] HDR Target"
+            },
+            {
+              "Offset": 17186816,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 4096,
+              "Usage": 6,
+              "Name": "[ALLOCATION] Default image"
+            },
+            {
+              "Offset": 17190912,
+              "Type": "BUFFER",
+              "Size": 40976,
+              "Usage": 290,
+              "Name": "Geometry draw buffer"
+            },
+            {
+              "Offset": 17231888,
+              "Type": "FREE",
+              "Size": 4080
+            },
+            {
+              "Offset": 17235968,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 8568832,
+              "Usage": 20,
+              "Name": "[ALLOCATION] HDR Bloom Target"
+            },
+            {
+              "Offset": 25804800,
+              "Type": "FREE",
+              "Size": 16384
+            },
+            {
+              "Offset": 25821184,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 4612096,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Albedo Metallic"
+            },
+            {
+              "Offset": 30433280,
+              "Type": "FREE",
+              "Size": 40960
+            },
+            {
+              "Offset": 30474240,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 1179648,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Prefilter cubemap"
+            },
+            {
+              "Offset": 31653888,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 1048576,
+              "Usage": 20,
+              "Name": "[ALLOCATION] BRDF LUT"
+            },
+            {
+              "Offset": 32702464,
+              "Type": "BUFFER",
+              "Size": 40976,
+              "Usage": 290,
+              "Name": "Shadow draw buffer"
+            },
+            {
+              "Offset": 32743440,
+              "Type": "FREE",
+              "Size": 810992
+            }
+          ]
+        },
+        "1": {
+          "MapRefCount": 0,
+          "TotalBytes": 67108864,
+          "UnusedBytes": 6758392,
+          "Allocations": 7,
+          "UnusedRanges": 7,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 8568832,
+              "Usage": 20,
+              "Name": "[ALLOCATION] HDR Blurred Bloom Target"
+            },
+            {
+              "Offset": 8568832,
+              "Type": "FREE",
+              "Size": 16384
+            },
+            {
+              "Offset": 8585216,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 8568832,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Normal Roughness"
+            },
+            {
+              "Offset": 17154048,
+              "Type": "FREE",
+              "Size": 16384
+            },
+            {
+              "Offset": 17170432,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 4612096,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Emissive AO"
+            },
+            {
+              "Offset": 21782528,
+              "Type": "FREE",
+              "Size": 40960
+            },
+            {
+              "Offset": 21823488,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 8568832,
+              "Usage": 20,
+              "Name": "[ALLOCATION] Position"
+            },
+            {
+              "Offset": 30392320,
+              "Type": "FREE",
+              "Size": 16384
+            },
+            {
+              "Offset": 30408704,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 4685832,
+              "Usage": 32,
+              "Name": "[ALLOCATION] Depth image"
+            },
+            {
+              "Offset": 35094536,
+              "Type": "FREE",
+              "Size": 32760
+            },
+            {
+              "Offset": 35127296,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 8568832,
+              "Usage": 20,
+              "Name": "[ALLOCATION] HDR Blurred Bloom Target | vertical"
+            },
+            {
+              "Offset": 43696128,
+              "Type": "FREE",
+              "Size": 16384
+            },
+            {
+              "Offset": 43712512,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] DamagedHelmet"
+            },
+            {
+              "Offset": 60489728,
+              "Type": "FREE",
+              "Size": 6619136
+            }
+          ]
+        },
+        "2": {
+          "MapRefCount": 0,
+          "TotalBytes": 268435456,
+          "UnusedBytes": 15728632,
+          "Allocations": 5,
+          "UnusedRanges": 2,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 134217728,
+              "Usage": 6,
+              "Name": "[ALLOCATION] Environment HDRI"
+            },
+            {
+              "Offset": 134217728,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 68157448,
+              "Usage": 36,
+              "Name": "[ALLOCATION] Shadow image"
+            },
+            {
+              "Offset": 202375176,
+              "Type": "FREE",
+              "Size": 65528
+            },
+            {
+              "Offset": 202440704,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] DamagedHelmet"
+            },
+            {
+              "Offset": 219217920,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] DamagedHelmet"
+            },
+            {
+              "Offset": 235995136,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] DamagedHelmet"
+            },
+            {
+              "Offset": 252772352,
+              "Type": "FREE",
+              "Size": 15663104
+            }
+          ]
+        },
+        "5": {
+          "MapRefCount": 0,
+          "TotalBytes": 268435456,
+          "UnusedBytes": 234881024,
+          "Allocations": 2,
+          "UnusedRanges": 1,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 16777216,
+              "Type": "IMAGE_OPTIMAL",
+              "Size": 16777216,
+              "Usage": 6,
+              "Name": "[ALLOCATION] ABeautifulGame"
+            },
+            {
+              "Offset": 33554432,
+              "Type": "FREE",
+              "Size": 234881024
+            }
+          ]
+        }
+      },
+      "DedicatedAllocations": [
+        {
+          "Type": "BUFFER",
+          "Size": 268435456,
+          "Usage": 130,
+          "Name": "Unified vertex buffer"
+        },
+        {
+          "Type": "BUFFER",
+          "Size": 268435456,
+          "Usage": 66,
+          "Name": "Unified index buffer"
+        }
+      ]
+    },
+    "Type 1": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+      },
+      "DedicatedAllocations": [
+      ]
+    },
+    "Type 2": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+        "0": {
+          "MapRefCount": 10,
+          "TotalBytes": 33554432,
+          "UnusedBytes": 33050000,
+          "Allocations": 10,
+          "UnusedRanges": 1,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "BUFFER",
+              "Size": 12288,
+              "Usage": 32,
+              "Name": "Bindless material uniform buffer"
+            },
+            {
+              "Offset": 12288,
+              "Type": "BUFFER",
+              "Size": 48,
+              "Usage": 16,
+              "Name": "[0] Bloom settings UBO"
+            },
+            {
+              "Offset": 12336,
+              "Type": "BUFFER",
+              "Size": 48,
+              "Usage": 16,
+              "Name": "[1] Bloom settings UBO"
+            },
+            {
+              "Offset": 12384,
+              "Type": "BUFFER",
+              "Size": 48,
+              "Usage": 16,
+              "Name": "[2] Bloom settings UBO"
+            },
+            {
+              "Offset": 12432,
+              "Type": "BUFFER",
+              "Size": 160,
+              "Usage": 16,
+              "Name": "[0] Scene UBO"
+            },
+            {
+              "Offset": 12592,
+              "Type": "BUFFER",
+              "Size": 160,
+              "Usage": 16,
+              "Name": "[1] Scene UBO"
+            },
+            {
+              "Offset": 12752,
+              "Type": "BUFFER",
+              "Size": 160,
+              "Usage": 16,
+              "Name": "[2] Scene UBO"
+            },
+            {
+              "Offset": 12912,
+              "Type": "BUFFER",
+              "Size": 163840,
+              "Usage": 32,
+              "Name": "[0] Object instances data"
+            },
+            {
+              "Offset": 176752,
+              "Type": "BUFFER",
+              "Size": 163840,
+              "Usage": 32,
+              "Name": "[1] Object instances data"
+            },
+            {
+              "Offset": 340592,
+              "Type": "BUFFER",
+              "Size": 163840,
+              "Usage": 32,
+              "Name": "[2] Object instances data"
+            },
+            {
+              "Offset": 504432,
+              "Type": "FREE",
+              "Size": 33050000
+            }
+          ]
+        }
+      },
+      "DedicatedAllocations": [
+      ]
+    },
+    "Type 3": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+        "0": {
+          "MapRefCount": 9,
+          "TotalBytes": 33554432,
+          "UnusedBytes": 33429584,
+          "Allocations": 9,
+          "UnusedRanges": 1,
+          "Suballocations": [
+            {
+              "Offset": 0,
+              "Type": "BUFFER",
+              "Size": 40976,
+              "Usage": 290,
+              "Name": "Indirect draw buffer"
+            },
+            {
+              "Offset": 40976,
+              "Type": "BUFFER",
+              "Size": 40976,
+              "Usage": 290,
+              "Name": "Indirect draw buffer"
+            },
+            {
+              "Offset": 81952,
+              "Type": "BUFFER",
+              "Size": 40976,
+              "Usage": 290,
+              "Name": "Indirect draw buffer"
+            },
+            {
+              "Offset": 122928,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[0] Camera Buffer"
+            },
+            {
+              "Offset": 123248,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[1] Camera Buffer"
+            },
+            {
+              "Offset": 123568,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[2] Camera Buffer"
+            },
+            {
+              "Offset": 123888,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[0] Camera Buffer"
+            },
+            {
+              "Offset": 124208,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[1] Camera Buffer"
+            },
+            {
+              "Offset": 124528,
+              "Type": "BUFFER",
+              "Size": 320,
+              "Usage": 16,
+              "Name": "[2] Camera Buffer"
+            },
+            {
+              "Offset": 124848,
+              "Type": "FREE",
+              "Size": 33429584
+            }
+          ]
+        }
+      },
+      "DedicatedAllocations": [
+      ]
+    },
+    "Type 4": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+      },
+      "DedicatedAllocations": [
+      ]
+    },
+    "Type 5": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+      },
+      "DedicatedAllocations": [
+      ]
+    },
+    "Type 6": {
+      "PreferredBlockSize": 268435456,
+      "Blocks": {
+      },
+      "DedicatedAllocations": [
+      ]
+    }
+  },
+  "CustomPools": {
+  }
+}
