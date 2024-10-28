@@ -74,7 +74,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetName(std::string_view name)
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::vec3& color)
 {
-    debugLabelColor = color;
+    this->debugLabelColor = color;
     return *this;
 }
 
