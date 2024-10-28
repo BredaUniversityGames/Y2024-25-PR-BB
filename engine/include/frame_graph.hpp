@@ -8,6 +8,27 @@ struct RenderSceneDescription;
 struct Image;
 struct Buffer;
 
+#ifdef __cplusplus
+#define GENERATE_ENUM_FLAG_OPERATORS(EnumType) \
+extern "C++" { \
+inline EnumType operator | (EnumType a, EnumType b) { return EnumType(((int)a) | ((int)b)); } \
+inline EnumType &operator |= (EnumType &a, EnumType b) { return (EnumType &)(((int &)a) |= ((int)b)); } \
+inline EnumType operator & (EnumType a, EnumType b) { return EnumType(((int)a) & ((int)b)); } \
+inline EnumType &operator &= (EnumType &a, EnumType b) { return (EnumType &)(((int &)a) &= ((int)b)); } \
+inline EnumType operator ~ (EnumType a) { return EnumType(~((int)a)); } \
+inline EnumType operator ^ (EnumType a, EnumType b) { return EnumType(((int)a) ^ ((int)b)); } \
+inline EnumType &operator ^= (EnumType &a, EnumType b) { return (EnumType &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define GENERATE_ENUM_FLAG_OPERATORS(EnumType) /* */
+#endif
+
+template<typename EnumType>
+bool HasAnyFlags(EnumType lhs, EnumType rhs)
+{
+    return static_cast<int>(lhs & rhs) != 0;
+}
+
 enum class FrameGraphRenderPassType : uint8_t
 {
     eGraphics,
@@ -30,13 +51,7 @@ enum class FrameGraphResourceType : uint8_t
     // Type exclusively used to ensure correct node ordering when the pass does not actually use the resource
     eReference = 1 << 4,
 };
-DEFINE_ENUM_FLAG_OPERATORS(FrameGraphResourceType)
-
-template<typename EnumerationType>
-bool HasAnyFlags(EnumerationType lhs, EnumerationType rhs)
-{
-    return static_cast<int>(lhs & rhs) != 0;
-}
+GENERATE_ENUM_FLAG_OPERATORS(FrameGraphResourceType)
 
 using FrameGraphNodeHandle = uint32_t;
 using FrameGraphResourceHandle = uint32_t;
