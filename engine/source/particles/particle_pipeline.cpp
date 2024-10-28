@@ -198,6 +198,8 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs)
         if (component.timesToEmit != 0)
         {
             // TODO: do something with particle type later
+            srand(time(0));
+            component.emitter.randomValue = rand();
             _emitters.emplace_back(component.emitter);
             spdlog::info("Emitter received!");
             component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU

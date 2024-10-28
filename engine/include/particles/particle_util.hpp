@@ -16,7 +16,8 @@ struct alignas(16) Emitter
     float mass = 0.0f;
     glm::vec3 rotationVelocity = { 0.0f, 0.0f, 0.0f };
     float maxLife = 1.0f;
-    // TODO: image/color
+    float randomValue = 0.0f;
+    glm::vec3 color = { 0.0f, 0.0f, 0.0f }; // TODO: image/color
 };
 
 struct alignas(16) Particle

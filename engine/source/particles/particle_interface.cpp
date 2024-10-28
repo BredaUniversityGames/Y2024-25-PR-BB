@@ -12,7 +12,7 @@ ParticleInterface::ParticleInterface(ECS& ecs)
     Emitter emitter;
     emitter.position = glm::vec3(1.0f, 2.0f, 3.0f);
     emitter.count = 3;
-    emitter.velocity = glm::vec3(1.0f);
+    emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     emitter.mass = 2.0f;
     emitter.rotationVelocity = glm::vec3(1.0f);
     emitter.maxLife = 5.0f;

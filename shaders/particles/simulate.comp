@@ -34,9 +34,8 @@ void main()
     if(particle.life > 0)
     {
         // simulate particles
-        vec3 velocity = particle.velocity;
-        velocity.y += particle.mass;
-        particle.position += velocity * deltaTime;
+        particle.velocity.y -= particle.mass * deltaTime;
+        particle.position += particle.velocity * deltaTime;
 
         // TODO: kill particle on depth collision and break
 
