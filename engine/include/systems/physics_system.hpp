@@ -20,7 +20,12 @@ public:
     void Inspect() override;
     void InspectRigidBody(RigidbodyComponent& rb);
 
+    void SetCameraPosition(const glm::vec3& position) { _cameraPosition = position; }
+    void SetCameraDirection(const glm::vec3& direction) { _cameraDirection = direction; }
+
 private:
     ECS& _ecs;
     PhysicsModule& _physicsModule;
+    glm::vec3 _cameraPosition;
+    glm::vec3 _cameraDirection;
 };

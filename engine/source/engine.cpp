@@ -194,6 +194,8 @@ void OldEngine::Tick(Engine& engine)
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+        _ecs->GetSystem<PhysicsSystem>().SetCameraPosition(_scene->camera.position);
+        _ecs->GetSystem<PhysicsSystem>().SetCameraDirection((glm::quat(_scene->camera.eulerRotation) * -FORWARD));
     }
     _lastMousePos = { mouseX, mouseY };
 

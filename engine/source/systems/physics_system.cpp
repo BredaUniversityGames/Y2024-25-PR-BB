@@ -41,6 +41,17 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
+    if (ImGui::IsKeyPressed(ImGuiKey_Space))
+    {
+        entt::entity entity = _ecs._registry.create();
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, eSPHERE);
+        NameComponent node;
+        node._name = "Ball";
+        _ecs._registry.emplace<NameComponent>(entity, node);
+        _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(_cameraPosition.x, _cameraPosition.y, _cameraPosition.z), JPH::EActivation::Activate);
+        _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(_cameraDirection.x, _cameraDirection.y, _cameraDirection.z) * 25.0f);
+    }
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 {
