@@ -49,15 +49,15 @@ private:
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
-    std::shared_ptr<GeometryPipeline> _geometryPipeline;
-    std::shared_ptr<LightingPipeline> _lightingPipeline;
-    std::shared_ptr<SkydomePipeline> _skydomePipeline;
-    std::shared_ptr<TonemappingPipeline> _tonemappingPipeline;
-    std::shared_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
-    std::shared_ptr<ShadowPipeline> _shadowPipeline;
-    std::shared_ptr<DebugPipeline> _debugPipeline;
-    std::shared_ptr<IBLPipeline> _iblPipeline;
-    std::shared_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<GeometryPipeline> _geometryPipeline;
+    std::unique_ptr<LightingPipeline> _lightingPipeline;
+    std::unique_ptr<SkydomePipeline> _skydomePipeline;
+    std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
+    std::unique_ptr<ShadowPipeline> _shadowPipeline;
+    std::unique_ptr<DebugPipeline> _debugPipeline;
+    std::unique_ptr<IBLPipeline> _iblPipeline;
+    std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
     std::unique_ptr<GPUScene> _gpuScene;

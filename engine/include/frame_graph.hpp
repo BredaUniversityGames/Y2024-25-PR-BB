@@ -8,10 +8,10 @@ struct RenderSceneDescription;
 struct Image;
 struct Buffer;
 
-enum class FrameGraphQueueType : uint8_t
+enum class FrameGraphRenderPassType : uint8_t
 {
-    eCompute,
     eGraphics,
+    eCompute,
 };
 
 enum class FrameGraphResourceType : uint8_t
@@ -100,8 +100,8 @@ struct BufferMemoryBarrier
 
 struct FrameGraphNodeCreation
 {
-    FrameGraphQueueType queueType = FrameGraphQueueType::eCompute;
-    std::shared_ptr<FrameGraphRenderPass> renderPass = nullptr;
+    FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics;
+    FrameGraphRenderPass& renderPass;
 
     std::vector<FrameGraphResourceCreation> inputs {};
     std::vector<FrameGraphResourceCreation> outputs {};
@@ -110,7 +110,7 @@ struct FrameGraphNodeCreation
     std::string name {};
     glm::vec3 debugLabelColor = glm::vec3(0.0f);
 
-    FrameGraphNodeCreation& SetRenderPass(std::shared_ptr<FrameGraphRenderPass> renderPass);
+    FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics);
 
     FrameGraphNodeCreation& AddInput(ResourceHandle<Image> image, FrameGraphResourceType type);
     FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
@@ -125,8 +125,8 @@ struct FrameGraphNodeCreation
 
 struct FrameGraphNode
 {
-    FrameGraphQueueType queueType = FrameGraphQueueType::eCompute;
-    std::shared_ptr<FrameGraphRenderPass> renderPass = nullptr;
+    FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics;
+    FrameGraphRenderPass& renderPass;
 
     std::vector<FrameGraphResourceHandle> inputs {};
     std::vector<FrameGraphResourceHandle> outputs {};
@@ -142,6 +142,8 @@ struct FrameGraphNode
     bool isEnabled = true;
     std::string name {};
     glm::vec3 debugLabelColor = glm::vec3(0.0f);
+
+    FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType);
 };
 
 class FrameGraph

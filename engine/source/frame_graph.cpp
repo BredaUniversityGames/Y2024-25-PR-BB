@@ -18,10 +18,10 @@ ImageMemoryBarrier::ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLa
     dstStage = destinationState.pipelineStage;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::SetRenderPass(std::shared_ptr<FrameGraphRenderPass> renderPass)
+ FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+    : queueType(queueType)
+    , renderPass(renderPass)
 {
-    this->renderPass = renderPass;
-    return *this;
 }
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> image, FrameGraphResourceType type)
@@ -29,12 +29,6 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> i
     FrameGraphResourceCreation& creation = inputs.emplace_back();
     creation.type = type;
     creation.info.image.handle = image;
-
-    // If there are any input attachments we know this is a graphics queue, otherwise we assume this is compute
-    if (HasAnyFlags(type, FrameGraphResourceType::eAttachment))
-    {
-        queueType = FrameGraphQueueType::eGraphics;
-    }
 
     return *this;
 }
@@ -53,12 +47,6 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> 
     FrameGraphResourceCreation& creation = outputs.emplace_back();
     creation.type = type;
     creation.info.image.handle = image;
-
-    // If there are any output attachments we know this is a graphics queue, otherwise we assume this is compute
-    if (HasAnyFlags(type, FrameGraphResourceType::eAttachment))
-    {
-        queueType = FrameGraphQueueType::eGraphics;
-    }
 
     return *this;
 }
@@ -88,6 +76,12 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::ve
 {
     debugLabelColor = color;
     return *this;
+}
+
+ FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+    : queueType(queueType)
+    , renderPass(renderPass)
+{
 }
 
 FrameGraph::FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain)
@@ -135,13 +129,13 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
                 0, nullptr);
         }
 
-        if (node.queueType == FrameGraphQueueType::eGraphics)
+        if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {
             commandBuffer.setViewport(0, 1, &node.viewport);
             commandBuffer.setScissor(0, 1, &node.scissor);
         }
 
-        node.renderPass->RecordCommands(commandBuffer, currentFrame, scene);
+        node.renderPass.RecordCommands(commandBuffer, currentFrame, scene);
 
         util::EndLabel(commandBuffer, _brain.dldi);
     }
@@ -149,14 +143,10 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
 FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
 {
-    assert(creation.renderPass && "A frame graph node has no render pass attached, make sure to set a render pass for all used nodes.");
-
     const FrameGraphNodeHandle nodeHandle = _nodes.size();
-    FrameGraphNode& node = _nodes.emplace_back();
+    FrameGraphNode& node = _nodes.emplace_back(creation.renderPass, creation.queueType);
     node.name = creation.name;
     node.isEnabled = creation.isEnabled;
-    node.renderPass = creation.renderPass;
-    node.queueType = creation.queueType;
 
     for (const auto& resourceCreation : creation.outputs)
     {
@@ -221,7 +211,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
     FrameGraphNode& node = _nodes[nodeHandle];
 
     // Only graphics queue render passes need a viewport and scissor
-    if (node.queueType == FrameGraphQueueType::eGraphics)
+    if (node.queueType != FrameGraphRenderPassType::eGraphics)
     {
         return;
     }
