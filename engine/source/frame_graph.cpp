@@ -92,7 +92,7 @@ FrameGraph::FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain)
 
 void FrameGraph::Build()
 {
-    // First compute edges between nodes and create memory barriers
+    // First compute edges between nodes and their viewports and scissors
     ProcessNodes();
 
     // Sort the graph based on the node connections made
