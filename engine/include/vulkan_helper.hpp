@@ -10,8 +10,8 @@ namespace util
 {
 struct ImageLayoutTransitionState
 {
-    vk::PipelineStageFlags2 pipelineStage{};
-    vk::AccessFlags2 accessFlags{};
+    vk::PipelineStageFlags2 pipelineStage {};
+    vk::AccessFlags2 accessFlags {};
 };
 
 void VK_ASSERT(vk::Result result, std::string_view message);

@@ -116,8 +116,8 @@ struct FrameGraphNode
     std::vector<vk::ImageMemoryBarrier2> imageMemoryBarriers {};
     std::vector<vk::BufferMemoryBarrier2> bufferMemoryBarriers {};
 
-    vk::Viewport viewport{};
-    vk::Rect2D scissor{};
+    vk::Viewport viewport {};
+    vk::Rect2D scissor {};
 
     bool isEnabled = true;
     std::string name {};

@@ -131,50 +131,25 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
 
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout)
 {
-    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> sourceStateMap =
-    {
-        {
-            vk::ImageLayout::eUndefined,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eTopOfPipe,
-                .accessFlags=vk::AccessFlags2 { 0 }
-            }
-        },
-        {
-            vk::ImageLayout::eTransferDstOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eTransfer,
-                .accessFlags=vk::AccessFlagBits2::eTransferWrite
-            }
-        },
-        {
-            vk::ImageLayout::eTransferSrcOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eTransfer,
-                .accessFlags=vk::AccessFlagBits2::eTransferWrite
-            }
-        },
-        {
-            vk::ImageLayout::eShaderReadOnlyOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eFragmentShader,
-                .accessFlags=vk::AccessFlagBits2::eShaderRead
-            }
-        },
-        {
-            vk::ImageLayout::eColorAttachmentOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                .accessFlags=vk::AccessFlagBits2::eColorAttachmentWrite
-            }
-        },
-        {
-            vk::ImageLayout::eDepthStencilAttachmentOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eLateFragmentTests,
-                .accessFlags=vk::AccessFlagBits2::eDepthStencilAttachmentWrite
-            }
-        },
+    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> sourceStateMap = {
+        { vk::ImageLayout::eUndefined,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eTopOfPipe,
+                .accessFlags = vk::AccessFlags2 { 0 } } },
+        { vk::ImageLayout::eTransferDstOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eTransfer,
+                .accessFlags = vk::AccessFlagBits2::eTransferWrite } },
+        { vk::ImageLayout::eTransferSrcOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eTransfer,
+                .accessFlags = vk::AccessFlagBits2::eTransferWrite } },
+        { vk::ImageLayout::eShaderReadOnlyOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eFragmentShader,
+                .accessFlags = vk::AccessFlagBits2::eShaderRead } },
+        { vk::ImageLayout::eColorAttachmentOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                .accessFlags = vk::AccessFlagBits2::eColorAttachmentWrite } },
+        { vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eLateFragmentTests,
+                .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentWrite } },
     };
 
     auto it = sourceStateMap.find(sourceLayout);
@@ -189,57 +164,28 @@ util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::I
 
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionDestinationState(vk::ImageLayout destinationLayout)
 {
-    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> destinationStateMap =
-    {
-        {
-            vk::ImageLayout::eTransferDstOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eTransfer,
-                .accessFlags=vk::AccessFlagBits2::eTransferWrite
-            }
-        },
-        {
-            vk::ImageLayout::eTransferSrcOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eTransfer,
-                .accessFlags=vk::AccessFlagBits2::eTransferRead
-            }
-        },
-        {
-            vk::ImageLayout::eShaderReadOnlyOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eFragmentShader,
-                .accessFlags=vk::AccessFlagBits2::eShaderRead
-            }
-        },
-        {
-            vk::ImageLayout::eColorAttachmentOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                .accessFlags=vk::AccessFlagBits2::eColorAttachmentWrite
-            }
-        },
-        {
-            vk::ImageLayout::eDepthStencilAttachmentOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eEarlyFragmentTests,
-                .accessFlags=vk::AccessFlagBits2::eDepthStencilAttachmentRead | vk::AccessFlagBits2::eDepthStencilAttachmentWrite
-            }
-        },
-        {
-            vk::ImageLayout::ePresentSrcKHR,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eBottomOfPipe,
-                .accessFlags=vk::AccessFlags2 { 0 }
-            }
-        },
-        {
-            vk::ImageLayout::eDepthStencilReadOnlyOptimal,
-            {
-                .pipelineStage=vk::PipelineStageFlagBits2::eEarlyFragmentTests,
-                .accessFlags=vk::AccessFlagBits2::eDepthStencilAttachmentRead
-            }
-        }
+    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> destinationStateMap = {
+        { vk::ImageLayout::eTransferDstOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eTransfer,
+                .accessFlags = vk::AccessFlagBits2::eTransferWrite } },
+        { vk::ImageLayout::eTransferSrcOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eTransfer,
+                .accessFlags = vk::AccessFlagBits2::eTransferRead } },
+        { vk::ImageLayout::eShaderReadOnlyOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eFragmentShader,
+                .accessFlags = vk::AccessFlagBits2::eShaderRead } },
+        { vk::ImageLayout::eColorAttachmentOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                .accessFlags = vk::AccessFlagBits2::eColorAttachmentWrite } },
+        { vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eEarlyFragmentTests,
+                .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentRead | vk::AccessFlagBits2::eDepthStencilAttachmentWrite } },
+        { vk::ImageLayout::ePresentSrcKHR,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eBottomOfPipe,
+                .accessFlags = vk::AccessFlags2 { 0 } } },
+        { vk::ImageLayout::eDepthStencilReadOnlyOptimal,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eEarlyFragmentTests,
+                .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentRead } }
     };
 
     auto it = destinationStateMap.find(destinationLayout);
@@ -283,10 +229,10 @@ void util::InitializeImageMemoryBarrier(vk::ImageMemoryBarrier2& barrier, vk::Im
 
 void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers, uint32_t mipLevel, uint32_t mipCount, vk::ImageAspectFlagBits imageAspect)
 {
-    vk::ImageMemoryBarrier2 barrier{};
+    vk::ImageMemoryBarrier2 barrier {};
     InitializeImageMemoryBarrier(barrier, image, format, oldLayout, newLayout, numLayers, mipLevel, mipCount, imageAspect);
 
-    vk::DependencyInfo dependencyInfo{};
+    vk::DependencyInfo dependencyInfo {};
     dependencyInfo.setImageMemoryBarrierCount(1)
         .setPImageMemoryBarriers(&barrier)
         .setImageMemoryBarriers(barrier);

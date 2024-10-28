@@ -5,7 +5,7 @@
 #include "glm/gtc/random.hpp"
 #include "glm/gtx/range.hpp"
 
- FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
     : queueType(queueType)
     , renderPass(renderPass)
 {
@@ -65,7 +65,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::ve
     return *this;
 }
 
- FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
     : queueType(queueType)
     , renderPass(renderPass)
 {
@@ -226,7 +226,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 void FrameGraph::CreateMemoryBarriers()
 {
     // Describes if an output has already been used as an input
-    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates{};
+    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates {};
 
     for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
     {
@@ -332,7 +332,7 @@ void FrameGraph::SortGraph()
         eAdded
     };
 
-    std::vector<FrameGraphNodeHandle> reverseSortedNodes{};
+    std::vector<FrameGraphNodeHandle> reverseSortedNodes {};
     reverseSortedNodes.reserve(_nodes.size());
 
     std::vector<NodeStatus> nodesStatus(_nodes.size(), NodeStatus::eNotProcessed);
