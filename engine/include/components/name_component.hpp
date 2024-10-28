@@ -7,7 +7,7 @@
 class NameComponent
 {
 public:
-    std::string _name;
+    std::string name;
 
     static std::string_view GetDisplayName(const entt::registry& registry, entt::entity entity);
 };
