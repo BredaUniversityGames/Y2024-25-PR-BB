@@ -4,6 +4,7 @@
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "timers.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace detail
@@ -58,9 +59,9 @@ ModelLoader::~ModelLoader()
     _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
-ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer,LoadMode loadMode)
+ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
 {
-    auto start = std::chrono::steady_clock::now();
+    Stopwatch stopwatch;
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
@@ -72,20 +73,18 @@ ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer,Lo
     auto loadedGltf = _parser.loadGltf(fileStream, directory,
         fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
-
     if (!loadedGltf)
         throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
 
     fastgltf::Asset& gltf = loadedGltf.get();
-    auto end = std::chrono::steady_clock::now();
-   
+
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
     bblog::info("Loaded model: {}", path);
-    bblog::info("fastgltf parsing took {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    bblog::info("fastgltf parsing took {} ms", stopwatch.GetElapsed().count());
 
-    return LoadModel(gltf, batchBuffer, name,loadMode);
+    return LoadModel(gltf, batchBuffer, name, loadMode);
 }
 
 StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
@@ -423,11 +422,11 @@ ModelHandle
 ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
 {
     SingleTimeCommands commandBuffer { _brain };
-    
+
     ModelHandle modelHandle {};
     // Load textures
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
-    
+
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
@@ -440,7 +439,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
         MaterialCreation materialCreation = ProcessMaterial(material, modelHandle.textures, gltf);
         modelHandle.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
-    
+
     // Load meshes
     for (auto& gltfMesh : gltf.meshes)
     {
@@ -458,8 +457,8 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
 
         modelHandle.meshes.emplace_back(handle);
     }
-    
-    if(loadMode == LoadMode::flat)
+
+    if (loadMode == LoadMode::eFlat)
     {
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
             RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f });
@@ -472,7 +471,7 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
             RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f }, &baseNode);
     }
-    
+
     commandBuffer.Submit();
 
     return modelHandle;
@@ -503,19 +502,18 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& 
     {
         node.mesh = ResourceHandle<Mesh>::Invalid();
     }
-    fastgltf::math::fmat4x4 transform =
-        parent != nullptr ? fastgltf::getTransformMatrix(gltfNode)
-        : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
+    fastgltf::math::fmat4x4 transform = parent != nullptr ? fastgltf::getTransformMatrix(gltfNode)
+                                                          : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
 
     matrix = detail::ToMat4(transform);
     node.transform = matrix;
     node.name = gltfNode.name;
-    
-    if(parent != nullptr)
+
+    if (parent != nullptr)
     {
         for (size_t i = 0; i < gltfNode.children.size(); ++i)
         {
-            RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix,&node);
+            RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix, &node);
         }
         parent->children.emplace_back(node);
     }
@@ -525,12 +523,11 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& 
         {
             RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix);
         }
-        
+
         if (gltfNode.meshIndex.has_value())
         {
             modelHandle.hierarchy.baseNodes.emplace_back(node);
         }
-            
     }
 }
 

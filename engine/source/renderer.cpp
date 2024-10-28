@@ -101,7 +101,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
 
     for (const auto& path : models)
     {
-        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer,ModelLoader::LoadMode::flat)));
+        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer,ModelLoader::LoadMode::eFlat)));
     }
 
     return loadedModels;

@@ -4,7 +4,6 @@
 #include <string>
 #include "lib/include_fastgltf.hpp"
 
-
 class SingleTimeCommands;
 class BatchBuffer;
 
@@ -16,15 +15,14 @@ public:
 
     enum class LoadMode : uint8_t
     {
-        flat,
-        hierarchical
+        eFlat,
+        eHierarchical
     };
-    
-    
+
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer,LoadMode loadMode);
+    ModelHandle Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode);
 
     ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
@@ -56,7 +54,7 @@ private:
         const std::vector<Material>& materials, BatchBuffer& batchBuffer, const fastgltf::Asset& gltf);
 
     void RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& hierarchy, const fastgltf::Asset& gltf,
-        glm::mat4 matrix,Hierarchy::Node* parent = nullptr);
+        glm::mat4 matrix, Hierarchy::Node* parent = nullptr);
 
     Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);

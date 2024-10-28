@@ -38,10 +38,12 @@ public:
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    SwapChain& GetSwapChain() const { return *_swapChain; }
+    GBuffers& GetGBuffers() const { return *_gBuffers; }
+    const VulkanBrain& GetBrain() const { return _brain; }
 
 private:
     friend class OldEngine;
-    friend class Editor;
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;

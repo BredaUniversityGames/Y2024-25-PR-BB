@@ -21,6 +21,8 @@
 #include "scene_loader.hpp"
 #include "serialization.hpp"
 #include "ECS.hpp"
+#include "model_loader.hpp"
+
 #include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -29,34 +31,35 @@
 
 #include <entt/entity/entity.hpp>
 
-Editor::Editor(ECS& ecs,Renderer& renderer)
-    : _ecs(ecs), _renderer(renderer)
+Editor::Editor(ECS& ecs, Renderer& renderer)
+    : _ecs(ecs)
+    , _renderer(renderer)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    
-    const vk::Format format = renderer._swapChain->GetFormat();
+
+    const vk::Format format = renderer.GetSwapChain().GetFormat();
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = renderer._gBuffers->DepthFormat();
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = renderer.GetGBuffers().DepthFormat();
 
     ImGui_ImplVulkan_InitInfo initInfoVulkan {};
     initInfoVulkan.UseDynamicRendering = true;
     initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = renderer._brain.physicalDevice;
-    initInfoVulkan.Device = renderer._brain.device; 
+    initInfoVulkan.PhysicalDevice = renderer.GetBrain().physicalDevice;
+    initInfoVulkan.Device = renderer.GetBrain().device;
     initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = renderer._brain.instance;
+    initInfoVulkan.Instance = renderer.GetBrain().instance;
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = renderer._brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = renderer._brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = renderer._brain.descriptorPool;
+    initInfoVulkan.Queue = renderer.GetBrain().graphicsQueue;
+    initInfoVulkan.QueueFamily = renderer.GetBrain().queueFamilyIndices.graphicsFamily.value();
+    initInfoVulkan.DescriptorPool = renderer.GetBrain().descriptorPool;
     initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = renderer._swapChain->GetImageCount();
+    initInfoVulkan.ImageCount = renderer.GetSwapChain().GetImageCount();
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(renderer._brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _basicSampler = util::CreateSampler(renderer.GetBrain(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
@@ -159,7 +162,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer._brain.GetImageResourceManager().Access(_renderer._gBuffers->Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetBrain().GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -225,7 +228,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         char* statsJson;
-        vmaBuildStatsString(_renderer._brain.vmaAllocator, &statsJson, true);
+        vmaBuildStatsString(_renderer.GetBrain().vmaAllocator, &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -241,16 +244,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_renderer._brain.vmaAllocator, statsJson);
+        vmaFreeStatsString(_renderer.GetBrain().vmaAllocator, statsJson);
     }
 
     ImGui::End();
 
     ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _renderer._brain.drawStats.drawCalls);
-    ImGui::LabelText("Triangles", "%i", _renderer._brain.drawStats.indexCount / 3);
-    ImGui::LabelText("Debug lines", "%i", _renderer._brain.drawStats.debugLines);
+    ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
+    ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
+    ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
 
     ImGui::End();
     {
@@ -264,12 +267,12 @@ void Editor::DrawMainMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
-            if(ImGui::MenuItem("Load Scene"))
+            if (ImGui::MenuItem("Load Scene"))
             {
                 auto start = std::chrono::steady_clock::now();
-                //todo: add file open dialog
-                SceneLoader::LoadModelIntoECSAsHierarchy(_renderer._brain,_ecs,
-                    _renderer._modelLoader->Load("assets/models/test2.gltf",* _renderer._batchBuffer,ModelLoader::LoadMode::hierarchical));
+                // todo: add file open dialog
+                SceneLoader::LoadModelIntoECSAsHierarchy(_renderer.GetBrain(), _ecs,
+                    _renderer.GetModelLoader().Load("assets/models/test.gltf", _renderer.GetBatchBuffer(), ModelLoader::LoadMode::eHierarchical));
                 auto end = std::chrono::steady_clock::now();
                 bblog::info("loading gltf scene took {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
             }
