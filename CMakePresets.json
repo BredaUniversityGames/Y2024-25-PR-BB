@@ -47,6 +47,17 @@
       }
     },
     {
+      "name": "CI-CD",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WARNINGS_AS_ERRORS": true,
+        "COMPILE_SHADERS": false,
+        "ENABLE_PCH": false,
+        "USE_UNITY_BUILD": true
+      }
+    },
+    {
       "name": "WSL-Debug",
       "inherits": "WSL",
       "cacheVariables": {
