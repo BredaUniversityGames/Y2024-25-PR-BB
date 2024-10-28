@@ -1,5 +1,8 @@
 #pragma once
-#include <entt/entity/entity.hpp>
+
+#include <string>
+#include <string_view>
+#include <entt/entity/registry.hpp>
 
 class NameComponent
 {

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include "vulkan_brain.hpp"
+
 struct QueueFamilyIndices;
 
 class SwapChain

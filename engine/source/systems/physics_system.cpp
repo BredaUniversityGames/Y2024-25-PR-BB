@@ -3,6 +3,7 @@
 #include "components/name_component.hpp"
 #include "modules/physics_module.hpp"
 #include "components/rigidbody_component.hpp"
+#include "imgui/imgui.h"
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)
@@ -24,7 +25,7 @@ void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
     _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
 }
 
-void PhysicsSystem::AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody)
+void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED RigidbodyComponent& rigidbody)
 {
 }
 void PhysicsSystem::CleanUp()
@@ -38,10 +39,10 @@ void PhysicsSystem::CleanUp()
     }
 }
 
-void PhysicsSystem::Update(ECS& ecs, float deltaTime)
+void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
 }
-void PhysicsSystem::Render(const ECS& ecs) const
+void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 {
 }
 void PhysicsSystem::Inspect()
@@ -50,7 +51,7 @@ void PhysicsSystem::Inspect()
     const auto view = _ecs._registry.view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;
-    ImGui::Text("Physics Entities: %lu", view.size());
+    ImGui::Text("Physics Entities: %lu", static_cast<unsigned int>(view.size()));
 
     ImGui::DragInt("Amout", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };

@@ -13,7 +13,6 @@
 
 #include <fstream>
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include "ECS.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -28,7 +27,6 @@
 #include "components/transform_helpers.hpp"
 
 #include <entt/entity/entity.hpp>
-#undef GLM_ENABLE_EXPERIMENTAL
 
 Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
     : _ecs(ecs)
