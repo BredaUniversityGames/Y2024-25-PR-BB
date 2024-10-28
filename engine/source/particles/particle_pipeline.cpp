@@ -40,9 +40,9 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_uniformLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ECS& ecs, float deltaTime)
 {
-   // UpdateEmitters(ecs);
+    // UpdateEmitters(ecs);
     UpdateBuffers();
 
     // Set up memory barrier to be used in between every shader stage
@@ -115,7 +115,6 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, ECS& ecs,
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, vk::DependencyFlags { 0 }, memoryBarrier, nullptr, nullptr);
 
     util::EndLabel(commandBuffer, _brain.dldi);
-
 
     // -- indirect draw call rendering --
 }
