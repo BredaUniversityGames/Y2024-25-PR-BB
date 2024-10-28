@@ -21,6 +21,7 @@
 #include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
+#include "implot/implot.h"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -93,7 +94,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
-
 }
 
 void OldEngine::Tick(Engine& engine)
@@ -200,7 +200,7 @@ void OldEngine::Tick(Engine& engine)
     FrameMark;
 }
 
-void OldEngine::Shutdown(Engine& engine)
+void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _renderer->_brain.device.waitIdle();
 

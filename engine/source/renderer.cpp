@@ -25,6 +25,8 @@
 #include "log.hpp"
 #include "profile_macros.hpp"
 
+#include "stb/stb_image.h"
+
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& ecs)
     : _brain(application.GetVulkanInfo())
     , _application(application)

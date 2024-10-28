@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cstddef>
 #include <entt/entity/entity.hpp>
 
 struct RelationshipComponent

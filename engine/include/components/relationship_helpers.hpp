@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace RelationshipHelpers
 {

@@ -1,10 +1,12 @@
 #pragma once
 #include "common.hpp"
-#include "model_loader.hpp"
+
+class Renderer;
+
+#include "vulkan/vulkan.hpp"
 
 #include <entt/entity/entity.hpp>
 
-class Renderer;
 class ECS;
 class PhysicsModule;
 class VulkanBrain;

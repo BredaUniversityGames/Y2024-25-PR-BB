@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "gpu_resources.hpp"
 
 class GPUScene;
 class VulkanBrain;

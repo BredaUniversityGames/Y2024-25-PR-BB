@@ -84,9 +84,9 @@ void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entit
     {
         WorldMatrixComponent* parentWorldMatrix = reg.try_get<WorldMatrixComponent>(relationship->parent);
 
-        glm::vec3 parentScale, skew, parentTranslation;
-        glm::quat parentOrientation;
-        glm::vec4 perspective;
+        glm::vec3 parentScale {}, skew {}, parentTranslation {};
+        glm::quat parentOrientation {};
+        glm::vec4 perspective {};
 
         glm::decompose(parentWorldMatrix->_worldMatrix, parentScale, parentOrientation, parentTranslation, skew, perspective);
 
