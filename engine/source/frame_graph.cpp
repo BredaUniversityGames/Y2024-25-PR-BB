@@ -98,12 +98,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
         util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _brain.dldi);
 
         // Place memory barriers
-        vk::DependencyInfo dependencyInfo{};
-        dependencyInfo.setImageMemoryBarrierCount(node.imageMemoryBarriers.size())
-            .setPImageMemoryBarriers(node.imageMemoryBarriers.data())
-            .setBufferMemoryBarrierCount(node.bufferMemoryBarriers.size())
-            .setPBufferMemoryBarriers(node.bufferMemoryBarriers.data());
-        commandBuffer.pipelineBarrier2(dependencyInfo);
+        commandBuffer.pipelineBarrier2(node.dependencyInfo);
 
         if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {
@@ -319,6 +314,12 @@ void FrameGraph::CreateMemoryBarriers()
                 }
             }
         }
+
+        // Compile all barriers into dependency info to run them in a batch
+        node.dependencyInfo.setImageMemoryBarrierCount(node.imageMemoryBarriers.size())
+            .setPImageMemoryBarriers(node.imageMemoryBarriers.data())
+            .setBufferMemoryBarrierCount(node.bufferMemoryBarriers.size())
+            .setPBufferMemoryBarriers(node.bufferMemoryBarriers.data());
     }
 }
 

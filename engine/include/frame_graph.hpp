@@ -132,6 +132,7 @@ struct FrameGraphNode
 
     std::vector<FrameGraphNodeHandle> edges {};
 
+    vk::DependencyInfo dependencyInfo {};
     std::vector<vk::ImageMemoryBarrier2> imageMemoryBarriers {};
     std::vector<vk::BufferMemoryBarrier2> bufferMemoryBarriers {};
 
