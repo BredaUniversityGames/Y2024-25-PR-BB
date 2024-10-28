@@ -279,10 +279,8 @@ void Editor::DrawMainMenuBar()
 }
 void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
-    if (_selectedEntity != entt::null && ecs._registry.valid(_selectedEntity))
-    {
-        _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
-    }
+    // TODO make custom editor and list
+    _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
 }
 
 Editor::~Editor()
