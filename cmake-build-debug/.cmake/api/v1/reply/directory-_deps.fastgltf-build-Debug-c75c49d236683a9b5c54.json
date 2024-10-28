@@ -1,0 +1,92 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"cmake-build-debug/_deps/fastgltf-src/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 142,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 147,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 156,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/fastgltf",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/base64.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/core.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/dxmath_element_traits.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/glm_element_traits.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/tools.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/types.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/util.hpp",
+				"cmake-build-debug/_deps/fastgltf-src/include/fastgltf/math.hpp"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"_deps/fastgltf-build/libfastgltf.a"
+			],
+			"targetId" : "fastgltf::@5a6bec4670e55059daa4",
+			"targetIndex" : 14,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/fastgltf",
+			"exportName" : "fastgltf-targets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "fastgltf::@5a6bec4670e55059daa4",
+					"index" : 14
+				}
+			],
+			"paths" : 
+			[
+				"_deps/fastgltf-build/CMakeFiles/Export/14b504216a8c2b5661a6a7c88f3023ae/fastgltfConfig.cmake"
+			],
+			"type" : "export"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "_deps/fastgltf-build",
+		"source" : "cmake-build-debug/_deps/fastgltf-src"
+	}
+}

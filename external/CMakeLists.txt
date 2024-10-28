@@ -200,6 +200,7 @@ elseif (LINUX)
 endif ()
 
 target_link_libraries(External
+        INTERFACE freetype
         INTERFACE ImGui
         INTERFACE SDL3::SDL3-static
         INTERFACE magic_enum::magic_enum
@@ -213,6 +214,7 @@ target_link_libraries(External
 )
 
 target_include_directories(External
+        INTERFACE freetype/include
         INTERFACE external/SDL/include
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include

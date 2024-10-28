@@ -7,6 +7,8 @@
 
 #include <memory>
 
+class MainMenuCanvas;
+class UserInterfaceRenderer;
 class ECS;
 class Renderer;
 class Editor;

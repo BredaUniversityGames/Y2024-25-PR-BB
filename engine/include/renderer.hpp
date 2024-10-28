@@ -58,6 +58,11 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
+    // temp
+    std::shared_ptr<UIElement> m_UIElementToRender;
+
+    std::unique_ptr<UserInterfaceRenderer> m_UIRenderContext;
+
     std::shared_ptr<SceneDescription> _scene;
     std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;

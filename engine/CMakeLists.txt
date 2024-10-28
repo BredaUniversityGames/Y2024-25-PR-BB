@@ -21,6 +21,7 @@ message(STATUS "### Linking Engine Modules:")
 target_add_module(Engine core Core)
 target_add_module(Engine utility Utility)
 target_add_module(Engine application Application)
+target_add_module(Engine user_interface UserInterface)
 
 target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)
 

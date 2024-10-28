@@ -12,16 +12,17 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "ui_mainMenu.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
-
 #include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
+#include "viewport.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -53,8 +54,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _renderer->_scene = _scene;
 
     std::vector<std::string> modelPaths = {
-        "assets/models/DamagedHelmet.glb",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+        //     "assets/models/DamagedHelmet.glb",
+        //   "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
     _scene->models = _renderer->FrontLoadModels(modelPaths);
@@ -62,10 +63,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
     {
-        glm::vec3 translate { i / 3, 0.0f, i % 3 };
-        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
+        // glm::vec3 translate { i / 3, 0.0f, i % 3 };
+        // glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
 
-        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+        // _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
 
     _renderer->UpdateBindless();
@@ -75,6 +76,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
     _scene->camera.farPlane = 100.0f;
+
+    auto font = _renderer->_brain.GetFontResourceManager().Create(LoadFromFile("assets/fonts/comic.ttf", 30, _renderer->_brain));
+    _viewport = std::make_unique<Viewport>(applicationModule.DisplaySize());
+
+    _viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _renderer->_brain, font));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -123,7 +129,8 @@ void OldEngine::Tick(Engine& engine)
 
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
-
+    _viewport->Update(input);
+    _viewport->Render(*_renderer->_uiPipeline);
     auto windowSize = applicationModule.DisplaySize();
     _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
@@ -179,10 +186,12 @@ void OldEngine::Tick(Engine& engine)
         spdlog::info("Spawned emitter!");
     }
 
-    _ecs->UpdateSystems(deltaTimeMS);
-    _ecs->GetSystem<PhysicsSystem>().CleanUp();
-    _ecs->RemovedDestroyed();
-    _ecs->RenderSystems();
+    //_ecs->UpdateSystems(deltaTimeMS);
+
+    // _ecs->GetSystem<PhysicsSystem>().CleanUp();
+    // _ecs->RemovedDestroyed();
+
+    //  _ecs->RenderSystems();
 
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);

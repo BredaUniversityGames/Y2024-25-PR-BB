@@ -1,5 +1,30 @@
 #include "gpu_resources.hpp"
 
+#include <stb_image.h>
+
+ImageCreation& ImageCreation::LoadFromFile(std::string_view file_path)
+{
+    int width;
+    int height;
+    int nrChannels; // dummy
+
+    initialData = reinterpret_cast<std::byte*>(stbi_load(std::string(file_path).c_str(), &width, &height, &nrChannels,
+        4));
+
+    if (initialData == nullptr)
+    {
+        throw std::runtime_error("Failed to load image!");
+    }
+    if (width > UINT_FAST16_MAX || height > UINT_FAST16_MAX)
+    {
+        throw std::runtime_error("Image size is too large!");
+    }
+
+    SetSize(width, height);
+
+    return *this;
+}
+
 ImageCreation& ImageCreation::SetData(std::byte* data)
 {
     initialData = data;

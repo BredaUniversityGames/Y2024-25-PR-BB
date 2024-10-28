@@ -37,6 +37,8 @@ struct ImageCreation
     ImageCreation& SetName(std::string_view name);
     ImageCreation& SetType(ImageType type);
     ImageCreation& SetSampler(vk::Sampler sampler);
+
+    ImageCreation& LoadFromFile(std::string_view file_path);
 };
 
 struct Image

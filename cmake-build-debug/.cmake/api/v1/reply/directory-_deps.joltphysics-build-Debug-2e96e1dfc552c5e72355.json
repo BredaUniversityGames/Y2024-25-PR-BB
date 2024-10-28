@@ -1,0 +1,4965 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"cmake-build-debug/_deps/joltphysics-src/Build/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 286,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 304,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"_deps/joltphysics-build/libJolt.a"
+			],
+			"targetId" : "Jolt::@964e89b4b52406ed572e",
+			"targetIndex" : 4,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/AABBTree",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/AABBTree/AABBTreeBuilder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/AABBTree",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/AABBTree/AABBTreeToBuffer.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/AABBTree/NodeCodec",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 5,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/AABBTree/TriangleCodec",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 6,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ConfigurationString.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 7,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/ARMNeon.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 8,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Array.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 9,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Atomics.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 10,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/ByteBuffer.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 11,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Color.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 12,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Core.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 13,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Factory.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 14,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/FixedSizeFreeList.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 15,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/FixedSizeFreeList.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 16,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/FPControlWord.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 17,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/FPException.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 18,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/FPFlushDenormals.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 19,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/HashCombine.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 20,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/InsertionSort.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 21,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/IssueReporting.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 22,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/JobSystem.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 23,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/JobSystem.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 24,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/JobSystemSingleThreaded.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 25,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/JobSystemThreadPool.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 26,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/JobSystemWithBarrier.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 27,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/LinearCurve.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 28,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/LockFreeHashMap.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 29,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/LockFreeHashMap.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 30,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Memory.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 31,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Mutex.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 32,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/MutexArray.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 33,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/NonCopyable.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 34,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Profiler.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 35,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Profiler.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 36,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/QuickSort.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 37,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Reference.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 38,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Result.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 39,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/RTTI.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 40,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/ScopeExit.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 41,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/Semaphore.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 42,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StaticArray.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 43,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/STLAlignedAllocator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 44,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/STLAllocator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 45,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/STLTempAllocator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 46,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StreamIn.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 47,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StreamOut.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 48,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StreamUtils.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 49,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StreamWrapper.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 50,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StridedPtr.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 51,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/StringTools.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 52,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/TempAllocator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 53,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/TickCounter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 54,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/UnorderedMap.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 55,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Core",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Core/UnorderedSet.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 56,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/AABox.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 57,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/AABox4.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 58,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/ClipPoly.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 59,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/ClosestPoint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 60,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/ConvexHullBuilder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 61,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/ConvexHullBuilder2D.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 62,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/ConvexSupport.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 63,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/Ellipse.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 64,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/EPAConvexHullBuilder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 65,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/EPAPenetrationDepth.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 66,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/GJKClosestPoint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 67,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/IndexedTriangle.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 68,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/Indexify.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 69,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/MortonCode.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 70,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/OrientedBox.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 71,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/Plane.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 72,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/RayAABox.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 73,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/RayCapsule.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 74,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/RayCylinder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 75,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/RaySphere.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 76,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/RayTriangle.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 77,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/Sphere.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 78,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Geometry",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Geometry/Triangle.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 79,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Jolt.cmake"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 80,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Jolt.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 81,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/DMat44.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 82,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/DMat44.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 83,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Double3.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 84,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/DVec3.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 85,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/DVec3.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 86,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/DynMatrix.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 87,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/EigenValueSymmetric.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 88,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/FindRoot.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 89,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Float2.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 90,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Float3.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 91,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Float4.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 92,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/GaussianElimination.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 93,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/HalfFloat.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 94,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Mat44.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 95,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Mat44.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 96,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Math.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 97,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/MathTypes.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 98,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Matrix.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 99,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Quat.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 100,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Quat.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 101,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Real.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 102,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Swizzle.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 103,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Trigonometry.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 104,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/UVec4.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 105,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/UVec4.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 106,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Vec3.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 107,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Vec3.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 108,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Vec4.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 109,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Vec4.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 110,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Math",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Math/Vector.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 111,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStream.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 112,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/SerializableAttribute.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 113,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/SerializableAttributeEnum.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 114,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/SerializableAttributeTyped.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 115,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/SerializableObject.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 116,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/TypeDeclarations.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 117,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/AllowedDOFs.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 118,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/Body.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 119,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/Body.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 120,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyAccess.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 121,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyActivationListener.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 122,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyCreationSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 123,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyFilter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 124,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyID.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 125,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyInterface.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 126,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyLock.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 127,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyLockInterface.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 128,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyLockMulti.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 129,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyManager.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 130,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyPair.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 131,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/BodyType.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 132,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/MassProperties.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 133,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/MotionProperties.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 134,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/MotionProperties.inl"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 135,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/MotionQuality.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 136,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Body",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Body/MotionType.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 137,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Character",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Character/Character.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 138,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Character",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Character/CharacterBase.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 139,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Character",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Character/CharacterVirtual.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 140,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/AABoxCast.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 141,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ActiveEdgeMode.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 142,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ActiveEdges.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 143,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BackFaceMode.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 144,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhase.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 145,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseBruteForce.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 146,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 147,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceMask.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 148,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceTable.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 149,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 150,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/BroadPhaseQuery.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 151,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 152,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterTable.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 153,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/BroadPhase",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/BroadPhase/QuadTree.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 154,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CastConvexVsTriangles.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 155,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CastResult.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 156,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CastSphereVsTriangles.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 157,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollectFacesMode.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 158,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollideConvexVsTriangles.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 159,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollidePointResult.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 160,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollideShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 161,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 162,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 163,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollideSphereVsTriangles.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 164,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollisionCollector.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 165,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollisionCollectorImpl.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 166,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollisionDispatch.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 167,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/CollisionGroup.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 168,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ContactListener.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 169,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/EstimateCollisionResponse.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 170,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/GroupFilter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 171,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/GroupFilterTable.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 172,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/InternalEdgeRemovingCollector.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 173,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 174,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/NarrowPhaseQuery.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 175,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/NarrowPhaseStats.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 176,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ObjectLayer.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 177,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ObjectLayerPairFilterMask.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 178,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ObjectLayerPairFilterTable.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 179,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/PhysicsMaterial.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 180,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/PhysicsMaterialSimple.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 181,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/RayCast.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 182,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/BoxShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 183,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/CapsuleShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 184,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/CompoundShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 185,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/CompoundShapeVisitors.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 186,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/ConvexHullShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 187,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/ConvexShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 188,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/CylinderShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 189,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/DecoratedShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 190,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/EmptyShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 191,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/GetTrianglesContext.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 192,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/HeightFieldShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 193,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/MeshShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 194,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/MutableCompoundShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 195,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 196,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/PlaneShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 197,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 198,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 199,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/ScaledShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 200,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/ScaleHelpers.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 201,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/Shape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 202,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/SphereShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 203,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/StaticCompoundShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 204,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/SubShapeID.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 205,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/SubShapeIDPair.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 206,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/TaperedCapsuleShape.gliffy"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 207,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 208,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/TaperedCylinderShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 209,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision/Shape",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/Shape/TriangleShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 210,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ShapeCast.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 211,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/ShapeFilter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 212,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/SortReverseAndStore.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 213,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Collision",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Collision/TransformedShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 214,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/CalculateSolverSteps.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 215,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConeConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 216,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/Constraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 217,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintManager.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 218,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 219,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 220,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 221,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/GearConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 222,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/HingeRotationConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 223,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/IndependentAxisConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 224,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 225,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/RackAndPinionConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 226,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 227,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/RotationQuatConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 228,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/SpringPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 229,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints/ConstraintPart",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 230,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/ContactConstraintManager.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 231,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/DistanceConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 232,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/FixedConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 233,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/GearConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 234,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/HingeConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 235,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/MotorSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 236,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/PathConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 237,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/PathConstraintPath.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 238,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/PathConstraintPathHermite.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 239,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/PointConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 240,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/PulleyConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 241,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/RackAndPinionConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 242,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/SixDOFConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 243,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/SliderConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 244,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/SpringSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 245,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/SwingTwistConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 246,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Constraints",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Constraints/TwoBodyConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 247,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/DeterminismLog.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 248,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/EActivation.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 249,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/EPhysicsUpdateError.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 250,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/IslandBuilder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 251,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/LargeIslandSplitter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 252,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsLock.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 253,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsScene.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 254,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 255,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsStepListener.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 256,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsSystem.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 257,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/PhysicsUpdateContext.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 258,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Ragdoll",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Ragdoll/Ragdoll.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 259,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyContactListener.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 260,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyCreationSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 261,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyManifold.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 262,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyMotionProperties.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 263,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyShape.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 264,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodySharedSettings.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 265,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyUpdateContext.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 266,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/SoftBody",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/SoftBody/SoftBodyVertex.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 267,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/StateRecorder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 268,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/StateRecorderImpl.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 269,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/MotorcycleController.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 270,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/TrackedVehicleController.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 271,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleAntiRollBar.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 272,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleCollisionTester.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 273,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleConstraint.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 274,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleController.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 275,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleDifferential.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 276,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleEngine.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 277,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleTrack.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 278,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/VehicleTransmission.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 279,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/Wheel.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 280,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Physics/Vehicle",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Physics/Vehicle/WheeledVehicleController.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 281,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/RegisterTypes.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 282,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Renderer",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Renderer/DebugRenderer.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 283,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Renderer",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Renderer/DebugRendererPlayback.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 284,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Renderer",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Renderer/DebugRendererRecorder.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 285,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Renderer",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Renderer/DebugRendererSimple.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 286,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Skeleton",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Skeleton/SkeletalAnimation.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 287,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Skeleton",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Skeleton/Skeleton.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 288,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Skeleton",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Skeleton/SkeletonMapper.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 289,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/Skeleton",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Skeleton/SkeletonPose.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 290,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleGrouper",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleGrouper/TriangleGrouper.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 291,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleGrouper",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleGrouper/TriangleGrouperClosestCentroid.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 292,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleGrouper",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleGrouper/TriangleGrouperMorton.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 293,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitter.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 294,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitterBinning.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 295,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitterFixedLeafSize.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 296,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitterLongestAxis.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 297,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitterMean.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 298,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/TriangleSplitter",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/TriangleSplitter/TriangleSplitterMorton.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 299,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/GetPrimitiveTypeOfType.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 300,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamBinaryIn.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 301,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamBinaryOut.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 302,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamIn.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 303,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamOut.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 304,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamTextIn.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 305,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamTextOut.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 306,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt/ObjectStream",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/ObjectStream/ObjectStreamTypes.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 307,
+			"component" : "Unspecified",
+			"destination" : "include/Jolt",
+			"paths" : 
+			[
+				"cmake-build-debug/_deps/joltphysics-src/Build/..//Jolt/Jolt.natvis"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 308,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/Jolt",
+			"exportName" : "JoltExport",
+			"exportTargets" : 
+			[
+				{
+					"id" : "Jolt::@964e89b4b52406ed572e",
+					"index" : 4
+				}
+			],
+			"paths" : 
+			[
+				"_deps/joltphysics-build/CMakeFiles/Export/cea1bc68d41896c5630c7e50fde4880c/JoltConfig.cmake"
+			],
+			"type" : "export"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "_deps/joltphysics-build",
+		"source" : "cmake-build-debug/_deps/joltphysics-src/Build"
+	}
+}
