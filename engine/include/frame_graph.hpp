@@ -1,42 +1,41 @@
 #pragma once
 
 #include "vulkan_brain.hpp"
+#include "swap_chain.hpp"
 #include "resource_manager.hpp"
 
 struct RenderSceneDescription;
 struct Image;
 struct Buffer;
 
-enum class FrameGraphResourceType : uint8_t
+enum class FrameGraphRenderPassType : uint8_t
 {
-    eNone = 0 << 0,
-
-    // Frame buffer that is being rendered to
-    eAttachment = 1 << 0,
-
-    // Image that is read during the render pass
-    eTexture = 1 << 0,
-
-    // Buffer of data that we can write to or read from
-    eBuffer = 1 << 1,
-
-    // Type exclusively used to ensure correct node ordering when the pass does not actually use the resource // TODO: Example for others?
-    eReference = 1 << 2,
+    eGraphics,
+    eCompute,
 };
 
-inline FrameGraphResourceType operator|(FrameGraphResourceType lhs, FrameGraphResourceType rhs)
+enum class FrameGraphResourceType : uint8_t
 {
-    return static_cast<FrameGraphResourceType>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
+    eNone = 1 << 0,
 
-inline FrameGraphResourceType operator&(FrameGraphResourceType lhs, FrameGraphResourceType rhs)
-{
-    return static_cast<FrameGraphResourceType>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
-}
+    // Frame buffer that is being rendered to
+    eAttachment = 1 << 1,
 
-inline bool HasFlags(FrameGraphResourceType lhs, FrameGraphResourceType rhs)
+    // Image that is read during the render pass
+    eTexture = 1 << 2,
+
+    // Buffer of data that we can write to or read from
+    eBuffer = 1 << 3,
+
+    // Type exclusively used to ensure correct node ordering when the pass does not actually use the resource
+    eReference = 1 << 4,
+};
+DEFINE_ENUM_FLAG_OPERATORS(FrameGraphResourceType)
+
+template<typename EnumerationType>
+bool HasAnyFlags(EnumerationType lhs, EnumerationType rhs)
 {
-    return (lhs & rhs) == rhs;
+    return static_cast<int>(lhs & rhs) != 0;
 }
 
 using FrameGraphNodeHandle = uint32_t;
@@ -80,7 +79,7 @@ class FrameGraphRenderPass
 {
 public:
     virtual ~FrameGraphRenderPass() = default;
-    virtual void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) const = 0;
+    virtual void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) = 0;
 };
 
 struct ImageMemoryBarrier
@@ -101,7 +100,8 @@ struct BufferMemoryBarrier
 
 struct FrameGraphNodeCreation
 {
-    const FrameGraphRenderPass* renderPass = nullptr;
+    FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics;
+    FrameGraphRenderPass& renderPass;
 
     std::vector<FrameGraphResourceCreation> inputs {};
     std::vector<FrameGraphResourceCreation> outputs {};
@@ -110,7 +110,7 @@ struct FrameGraphNodeCreation
     std::string name {};
     glm::vec3 debugLabelColor = glm::vec3(0.0f);
 
-    FrameGraphNodeCreation& SetRenderPass(const FrameGraphRenderPass* renderPass);
+    FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics);
 
     FrameGraphNodeCreation& AddInput(ResourceHandle<Image> image, FrameGraphResourceType type);
     FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
@@ -125,7 +125,8 @@ struct FrameGraphNodeCreation
 
 struct FrameGraphNode
 {
-    const FrameGraphRenderPass* renderPass = nullptr;
+    FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics;
+    FrameGraphRenderPass& renderPass;
 
     std::vector<FrameGraphResourceHandle> inputs {};
     std::vector<FrameGraphResourceHandle> outputs {};
@@ -141,12 +142,14 @@ struct FrameGraphNode
     bool isEnabled = true;
     std::string name {};
     glm::vec3 debugLabelColor = glm::vec3(0.0f);
+
+    FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType);
 };
 
 class FrameGraph
 {
 public:
-    FrameGraph(const VulkanBrain& brain);
+    FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain);
 
     // Builds the graph from the node inputs.
     void Build();
@@ -159,6 +162,7 @@ public:
 
 private:
     const VulkanBrain& _brain;
+    const SwapChain& _swapChain;
 
     std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};
 
