@@ -140,12 +140,12 @@ void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
     dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-    std::vector<std::byte> geomVertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
-    std::vector<std::byte> geomFragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
     ShaderReflector reflector { _brain };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, geomVertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, geomFragSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
     reflector.SetDepthStencilState(depthStencilStateCreateInfo);

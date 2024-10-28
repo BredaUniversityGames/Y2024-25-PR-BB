@@ -1,5 +1,6 @@
 #include "bloom_settings.hpp"
 #include "vulkan_helper.hpp"
+#include "shader_reflector.hpp"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
     : _brain(brain)
@@ -37,17 +38,15 @@ void BloomSettings::Update(uint32_t currentFrame)
 
 void BloomSettings::CreateDescriptorSetLayout()
 {
-    vk::DescriptorSetLayoutBinding descriptorSetBinding {};
-    descriptorSetBinding.binding = 0;
-    descriptorSetBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-    descriptorSetBinding.descriptorCount = 1;
-    descriptorSetBinding.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+    std::vector<vk::DescriptorSetLayoutBinding> bindings {};
+    bindings.emplace_back(vk::DescriptorSetLayoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
+    });
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
-    descriptorSetLayoutCreateInfo.bindingCount = 1;
-    descriptorSetLayoutCreateInfo.pBindings = &descriptorSetBinding;
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating bloom settings UBO descriptor set layout!");
+    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings);
 }
 
 void BloomSettings::CreateUniformBuffers()
