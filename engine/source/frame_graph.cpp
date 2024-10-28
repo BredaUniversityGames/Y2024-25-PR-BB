@@ -131,8 +131,8 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {
-            commandBuffer.setViewport(0, 1, &node.viewport);
-            commandBuffer.setScissor(0, 1, &node.scissor);
+            commandBuffer.setViewport(0, node.viewport);
+            commandBuffer.setScissor(0, node.scissor);
         }
 
         node.renderPass.RecordCommands(commandBuffer, currentFrame, scene);
