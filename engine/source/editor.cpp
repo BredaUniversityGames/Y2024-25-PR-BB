@@ -150,7 +150,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    DisplaySelectedEntityDetails(ecs);
+    DisplaySelectedEntityDetails();
 
     performanceTracker.Render();
     bloomSettings.Render();
@@ -277,7 +277,7 @@ void Editor::DrawMainMenuBar()
         ImGui::EndMainMenuBar();
     }
 }
-void Editor::DisplaySelectedEntityDetails(ECS& ecs)
+void Editor::DisplaySelectedEntityDetails()
 {
     // TODO make custom editor and list
     _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);

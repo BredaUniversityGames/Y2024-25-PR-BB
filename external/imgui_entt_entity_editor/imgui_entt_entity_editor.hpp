@@ -295,7 +295,7 @@ public:
 
             // TODO: add support for exclude
 
-            ImGui::Text("%llu Entities Matching:", view.size_hint());
+            ImGui::Text("%lu Entities Matching:", view.size_hint());
 
             if (ImGui::BeginChild("entity list"))
             {

@@ -37,5 +37,5 @@ private:
 
     MM::EntityEditor<entt::entity> _entityEditor {};
 
-    void DisplaySelectedEntityDetails(ECS& ecs);
+    void DisplaySelectedEntityDetails();
 };
