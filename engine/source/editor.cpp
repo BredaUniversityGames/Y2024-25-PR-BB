@@ -22,6 +22,7 @@
 #include "serialization.hpp"
 #include "ECS.hpp"
 #include "model_loader.hpp"
+#include "timers.hpp"
 
 #include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
@@ -269,12 +270,12 @@ void Editor::DrawMainMenuBar()
         {
             if (ImGui::MenuItem("Load Scene"))
             {
-                auto start = std::chrono::steady_clock::now();
+                Stopwatch stopwatch;
                 // todo: add file open dialog
                 SceneLoader::LoadModelIntoECSAsHierarchy(_renderer.GetBrain(), _ecs,
                     _renderer.GetModelLoader().Load("assets/models/test.gltf", _renderer.GetBatchBuffer(), ModelLoader::LoadMode::eHierarchical));
                 auto end = std::chrono::steady_clock::now();
-                bblog::info("loading gltf scene took {} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+                bblog::info("loading gltf scene took {} ms", stopwatch.GetElapsed().count());
             }
             if (ImGui::MenuItem("Save Scene"))
             {
