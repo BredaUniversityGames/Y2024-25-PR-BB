@@ -131,7 +131,7 @@ vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, 
 
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout)
 {
-    const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> sourceStateMap =
+    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> sourceStateMap =
     {
         {
             vk::ImageLayout::eUndefined,
@@ -189,7 +189,7 @@ util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::I
 
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionDestinationState(vk::ImageLayout destinationLayout)
 {
-    const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> destinationStateMap =
+    static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> destinationStateMap =
     {
         {
             vk::ImageLayout::eTransferDstOptimal,
