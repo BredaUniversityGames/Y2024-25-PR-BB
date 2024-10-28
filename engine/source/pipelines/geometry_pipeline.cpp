@@ -10,7 +10,7 @@ GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBu
     , _camera(camera)
     , _culler(_brain, gpuScene)
 {
-    CreatePipeline(gpuScene);
+    CreatePipeline();
 
     auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
     const auto* mainDrawBuffer = _brain.GetBufferResourceManager().Access(mainDrawBufferHandle);
@@ -104,7 +104,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
+void GeometryPipeline::CreatePipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
     for (auto& blendAttachmentState : colorBlendAttachmentStates)
