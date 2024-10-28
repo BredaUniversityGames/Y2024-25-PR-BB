@@ -274,7 +274,6 @@ void Editor::DrawMainMenuBar()
                 // todo: add file open dialog
                 SceneLoader::LoadModelIntoECSAsHierarchy(_renderer.GetBrain(), _ecs,
                     _renderer.GetModelLoader().Load("assets/models/test.gltf", _renderer.GetBatchBuffer(), ModelLoader::LoadMode::eHierarchical));
-                auto end = std::chrono::steady_clock::now();
                 bblog::info("loading gltf scene took {} ms", stopwatch.GetElapsed().count());
             }
             if (ImGui::MenuItem("Save Scene"))
