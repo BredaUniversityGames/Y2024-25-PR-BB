@@ -15,9 +15,10 @@ class UIPipeline;
 struct Canvas : public UIElement
 {
 public:
-    Canvas()
+    Canvas(const glm::vec2& size)
         : UIElement(std::numeric_limits<uint16_t>::max())
     {
+        this->scale = size;
     }
     void UpdateChildAbsoluteLocations() override;
     void SubmitDrawInfo(UIPipeline& pipeline) const override;

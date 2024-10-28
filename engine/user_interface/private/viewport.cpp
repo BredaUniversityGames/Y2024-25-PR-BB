@@ -18,9 +18,11 @@ void Viewport::Render(UIPipeline& pipeline) const
     }
 }
 
-void Viewport::AddElement(std::unique_ptr<UIElement> element)
+UIElement& Viewport::AddElement(std::unique_ptr<UIElement> element)
 {
     baseElements.emplace_back(std::move(element));
     std::ranges::sort(baseElements.begin(), baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
+
+    return *baseElements.back();
 }

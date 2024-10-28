@@ -11,6 +11,12 @@ class UIPipeline;
 class Viewport
 {
 public:
+    Viewport(const glm::vec2& extend, const glm::vec2& offset = glm::vec2(0))
+        : extend(extend)
+        , offset(offset)
+    {
+    }
+
     void Update(const InputManager& input) const;
 
     /**
@@ -18,12 +24,15 @@ public:
      */
     void Render(UIPipeline& pipeline) const;
 
-    void AddElement(std::unique_ptr<UIElement> element);
+    UIElement& AddElement(std::unique_ptr<UIElement> element);
 
     /**
      * \brief Base elements present in viewport.
      */
     std::vector<std::unique_ptr<UIElement>> baseElements;
+
+    glm::vec2 extend;
+    glm::vec2 offset;
 
 private:
 };

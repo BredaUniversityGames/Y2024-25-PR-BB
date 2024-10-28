@@ -10,7 +10,7 @@ void Canvas::UpdateChildAbsoluteLocations()
             switch (i->anchorPoint)
             {
             case AnchorPoint::eMiddle:
-                i->SetAbsoluteLocation(GetAbsouluteLocation() + relativeLocation);
+                i->SetAbsoluteLocation(GetAbsouluteLocation() + (scale / 2.0f) + relativeLocation);
                 break;
             case AnchorPoint::eTopLeft:
                 i->SetAbsoluteLocation(GetAbsouluteLocation() + relativeLocation);

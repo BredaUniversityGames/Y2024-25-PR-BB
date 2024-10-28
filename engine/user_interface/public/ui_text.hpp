@@ -1,39 +1,21 @@
-//
-// Created by luuk on 25-9-2024.
-//
 
 #pragma once
 #include "pch.hpp"
-#include "ui/ui_core.hpp"
+#include "ui_element.hpp"
 
-struct TextDrawInfo
-{
-    glm::vec2 position;
-    uint16_t m_FontSize;
-    uint16_t m_FontSpacing;
-    std::string_view text;
-};
-
+class UIPipeline;
 struct UITextElement : public UIElement
 {
-    UITextElement()
+    UITextElement(const ResourceManager<Font>& fontResourceManager)
         : UIElement(0)
+        , fontResourceManager(fontResourceManager)
     {
     }
     void UpdateChildAbsoluteLocations() override { }
-    void SubmitDrawInfo(UserInterfaceRenderer&) const override;
-    std::string m_Text;
-};
+    void SubmitDrawInfo(UIPipeline& pipeline) const override;
 
-class UITextRenderSystem : public UIRenderSystem<TextDrawInfo>
-{
-public:
-    UITextRenderSystem(std::shared_ptr<UIPipeLine>& pl)
-        : UIRenderSystem<TextDrawInfo>(pl)
-    {
-    }
-
-    void Render(const vk::CommandBuffer& commandBuffer, const glm::mat4& projection_matrix, const VulkanBrain&) override;
-
-    ~UITextRenderSystem() override = default;
+    const ResourceManager<Font>& fontResourceManager;
+    ResourceHandle<Font> font;
+    std::string text;
+    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 };

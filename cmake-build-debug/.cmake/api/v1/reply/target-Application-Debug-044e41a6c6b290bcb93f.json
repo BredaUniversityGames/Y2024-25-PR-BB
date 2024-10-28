@@ -47,16 +47,16 @@
 				"parent" : 2
 			},
 			{
-				"command" : 1,
-				"file" : 0,
-				"line" : 4,
-				"parent" : 0
-			},
-			{
 				"command" : 3,
 				"file" : 1,
 				"line" : 21,
 				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 4,
+				"parent" : 0
 			},
 			{
 				"command" : 1,
@@ -324,7 +324,7 @@
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/utility/public"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/core/public"
 				},
 				{
@@ -387,11 +387,11 @@
 		},
 		{
 			"backtrace" : 4,
-			"id" : "Core::@daec77c92998606c5111"
+			"id" : "Utility::@8cb0130eb290f003738e"
 		},
 		{
 			"backtrace" : 5,
-			"id" : "Utility::@8cb0130eb290f003738e"
+			"id" : "Core::@daec77c92998606c5111"
 		}
 	],
 	"id" : "Application::@484d7b09246f7b20346f",
@@ -503,17 +503,17 @@
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/engine.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/main_engine.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/module_interface.hpp",
 			"sourceGroupIndex" : 0
 		}

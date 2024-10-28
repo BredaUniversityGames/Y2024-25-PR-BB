@@ -1,24 +1,27 @@
 #pragma once
 
-#include <pch.hpp>
+#include "resource_manager.hpp"
+
 #include <map>
 
 struct Image;
 
-namespace Fonts
-{
+class VulkanBrain;
 
-struct Character
+struct Font
 {
-    ResourceHandle<Image> image;
-    glm::ivec2 Size;
-    glm::ivec2 Bearing;
-    uint16_t Advance;
+    struct Character
+    {
+        glm::ivec2 Size;
+        glm::ivec2 Bearing;
+        uint16_t Advance;
+
+        glm::vec2 uvp1;
+        glm::vec2 uvp2;
+    };
+
+    std::map<uint8_t, Character> characters;
+    ResourceHandle<Image> _fontAtlas;
 };
 
-// todo: this needs to be changed to return a created font resource
-void LoadFont(std::string_view filepath, int fontsize, const VulkanBrain& brain);
-// todo: convert this into font resource and make a single texture atlas
-static std::map<char, Character> Characters {};
-
-}
+NO_DISCARD Font LoadFromFile(const std::string& path, uint16_t characterHeight, const VulkanBrain& brain);

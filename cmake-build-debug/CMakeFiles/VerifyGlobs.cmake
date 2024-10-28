@@ -276,6 +276,7 @@ set(OLD_GLOB
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private/ui_core.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private/ui_mainMenu.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private/ui_pipelines.cpp"
+  "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private/ui_text.cpp"
   "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/user_interface/private/viewport.cpp"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")

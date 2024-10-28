@@ -77,7 +77,7 @@ public:
     }
 
     AnchorPoint anchorPoint
-        = AnchorPoint::eMiddle;
+        = AnchorPoint::eTopLeft;
 
     bool visible = true;
     uint16_t zLevel = 0;

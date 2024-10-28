@@ -116,6 +116,6 @@ void InputManager::GetMousePosition(int& x, int& y) const
 {
     float fx {}, fy {};
     SDL_GetMouseState(&fx, &fy);
-    x = static_cast<int>(_mouseX); // fx;
-    y = static_cast<int>(_mouseY); // fy;
+    x = static_cast<int>(fx); // fx;
+    y = static_cast<int>(fy); // fy;
 }

@@ -88,7 +88,10 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
     if (creation.initialData)
     {
-        vk::DeviceSize imageSize = imageResource.width * imageResource.height * imageResource.depth * 4;
+        vk::DeviceSize imageSize = imageResource.width * imageResource.height * imageResource.depth;
+        if (creation.format != vk::Format::eR8Unorm)
+            imageSize *= 4;
+
         if (imageResource.isHDR)
             imageSize *= sizeof(float);
 

@@ -6,7 +6,7 @@
 #include "ui_core.hpp"
 #include "resource_manager.hpp"
 struct Image;
-struct UIButton : public UIElement
+class UIButton : public UIElement
 {
 public:
     UIButton()
@@ -38,4 +38,6 @@ public:
 
     std::function<void()> onBeginHoverCallBack {};
     std::function<void()> onMouseDownCallBack {};
+
+private:
 };

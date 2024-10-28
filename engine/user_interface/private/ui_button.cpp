@@ -50,35 +50,42 @@ void UIButton::Update(const InputManager& input)
 void UIButton::SubmitDrawInfo(UIPipeline& pipeline) const
 {
 
-    ResourceHandle<Image> image;
-    switch (m_State)
+    if (visible)
     {
-    case ButtonState::eNormal:
-        image = style.normalImage;
-        break;
+        ResourceHandle<Image>
+            image;
+        switch (m_State)
+        {
+        case ButtonState::eNormal:
+            image = style.normalImage;
+            break;
 
-    case ButtonState::eHovered:
-        image = style.hoveredImage;
-        break;
+        case ButtonState::eHovered:
+            image = style.hoveredImage;
+            break;
 
-    case ButtonState::ePressed:
-        image = style.pressedImage;
-        break;
-    }
+        case ButtonState::ePressed:
+            image = style.pressedImage;
+            break;
+        }
 
-    pipeline._drawlist.emplace_back(QuadDrawInfo {
-        .projection = (glm::translate(glm::scale(glm::mat4(1), glm::vec3(scale, 1)), glm::vec3(GetAbsouluteLocation(), 0))),
-        .textureIndex = image.index,
-    });
+        QuadDrawInfo info {
+            .projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(scale, 0))),
+            .textureIndex = image.index,
+        };
 
-    for (auto& i : GetChildren())
-    {
-        i->SubmitDrawInfo(pipeline);
+        info.useRedAsAlpha = false;
+        pipeline._drawlist.emplace_back(info);
+
+        for (auto& i : GetChildren())
+        {
+            i->SubmitDrawInfo(pipeline);
+        }
     }
 }
 
 void UIButton::UpdateChildAbsoluteLocations()
 {
     for (auto& i : GetChildren())
-        i->SetAbsoluteLocation(this->GetAbsouluteLocation());
+        i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (scale / 2.f) + i->GetRelativeLocation());
 }

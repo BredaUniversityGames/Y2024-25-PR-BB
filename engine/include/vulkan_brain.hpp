@@ -6,6 +6,7 @@
 #include "lib/includes_vulkan.hpp"
 #include "gpu_resources.hpp"
 #include "application_module.hpp"
+#include "fonts.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -77,6 +78,11 @@ public:
         return _imageResourceManager;
     }
 
+    ResourceManager<Font>& GetFontResourceManager() const
+    {
+        return _fontResourceManager;
+    }
+
     MaterialResourceManager& GetMaterialResourceManager() const
     {
         return _materialResourceManager;
@@ -131,6 +137,7 @@ private:
     mutable BufferResourceManager _bufferResourceManager;
     mutable ImageResourceManager _imageResourceManager;
     mutable MaterialResourceManager _materialResourceManager;
+    mutable ResourceManager<Font> _fontResourceManager;
     mutable ResourceManager<Mesh> _meshResourceManager;
 
     void UpdateBindlessImages() const;

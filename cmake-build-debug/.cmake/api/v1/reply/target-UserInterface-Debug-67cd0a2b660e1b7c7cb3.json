@@ -47,16 +47,16 @@
 				"parent" : 2
 			},
 			{
-				"command" : 1,
-				"file" : 0,
-				"line" : 5,
-				"parent" : 0
-			},
-			{
 				"command" : 3,
 				"file" : 1,
 				"line" : 21,
 				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 5,
+				"parent" : 0
 			},
 			{
 				"command" : 1,
@@ -324,23 +324,23 @@
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/utility/public"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/core/public"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/application/public"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/public"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/include"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "C:/Users/luukk/Documents/github/Y2024-25-PR-BB/Y2024-25-PR-BB/engine/../external"
 				},
 				{
@@ -367,7 +367,8 @@
 				11,
 				12,
 				13,
-				14
+				14,
+				15
 			]
 		}
 	],
@@ -407,14 +408,14 @@
 		},
 		{
 			"backtrace" : 4,
+			"id" : "Utility::@8cb0130eb290f003738e"
+		},
+		{
+			"backtrace" : 5,
 			"id" : "Core::@daec77c92998606c5111"
 		},
 		{
 			"backtrace" : 5,
-			"id" : "Utility::@8cb0130eb290f003738e"
-		},
-		{
-			"backtrace" : 4,
 			"id" : "Application::@484d7b09246f7b20346f"
 		}
 	],
@@ -441,7 +442,6 @@
 				6,
 				7,
 				8,
-				16,
 				17,
 				18,
 				19,
@@ -507,7 +507,8 @@
 				79,
 				80,
 				81,
-				82
+				82,
+				83
 			]
 		},
 		{
@@ -519,14 +520,15 @@
 				11,
 				12,
 				13,
-				14
+				14,
+				15
 			]
 		},
 		{
 			"name" : "Precompile Header File",
 			"sourceIndexes" : 
 			[
-				15
+				16
 			]
 		}
 	],
@@ -610,6 +612,12 @@
 		{
 			"backtrace" : 8,
 			"compileGroupIndex" : 0,
+			"path" : "engine/user_interface/private/ui_text.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
 			"path" : "engine/user_interface/private/viewport.cpp",
 			"sourceGroupIndex" : 1
 		},
@@ -644,312 +652,312 @@
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/engine.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/main_engine.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/core/public/module_interface.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/application/public/application_module.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/application/public/input_codes/keys.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/application/public/input_codes/mousebuttons.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/application/public/input_manager.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/ECS.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/batch_buffer.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/bloom_settings.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/camera.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/name_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/relationship_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/relationship_helpers.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/rigidbody_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/test_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/transform_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/transform_helpers.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/components/world_matrix_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/constants.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/editor.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/entity_serializer.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/gbuffers.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/gpu_resources.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/gpu_scene.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/indirect_culler.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/lib/include_fastgltf.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/lib/includes_vulkan.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/mesh.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/mesh_primitives.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/model_loader.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/modules/physics_module.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/old_engine.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/particles/emitter_component.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/particles/particle_interface.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/particles/particle_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/particles/particle_util.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pch.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/performance_tracker.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/debug_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/gaussian_blur_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/geometry_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/ibl_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/lighting_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/shadow_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/skydome_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/pipelines/tonemapping_pipeline.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/renderer.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/resource_management/buffer_resource_manager.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/resource_management/image_resource_manager.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/resource_management/material_resource_manager.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/resource_manager.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/serialization.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/shaders/shader_loader.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/single_time_commands.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/swap_chain.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/systems/physics_system.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/systems/system.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/systems/test_system.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/vulkan_brain.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/vulkan_helper.hpp",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 4,
+			"backtrace" : 5,
 			"path" : "engine/include/vulkan_validation.hpp",
 			"sourceGroupIndex" : 0
 		}
