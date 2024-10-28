@@ -52,6 +52,6 @@ void main()
     particles[newParticleIndex] = particle;
 
     // add index to alive list
-    uint aliveCount = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
+    uint aliveCount = atomicAdd(particleCounters.aliveCount, 1);
     aliveBufferCURRENT[aliveCount] = newParticleIndex;
 }

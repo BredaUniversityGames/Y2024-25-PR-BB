@@ -5,6 +5,7 @@
 #include "particles/particle_util.hpp"
 #include "particles/emitter_component.hpp"
 #include "ECS.hpp"
+#include "gpu_scene.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
@@ -50,7 +51,7 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_instancesDescriptorSetLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime)
 {
     vk::MemoryBarrier memoryBarrier {};
     memoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryWrite;
@@ -105,7 +106,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
 
-    _simulatePushConstant.deltaTime = deltaTime;
+    _simulatePushConstant.deltaTime = deltaTime * 0.001f;
     commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &_simulatePushConstant);
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
@@ -136,14 +137,26 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
+    vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
+    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
+    depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+
+    vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
+    stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
     renderingInfo.layerCount = 1;
-    renderingInfo.pDepthAttachment = nullptr;
-    renderingInfo.pStencilAttachment = nullptr;
+    renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+    renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
     util::BeginLabel(commandBuffer, "Particle rendering pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
@@ -152,6 +165,14 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
+
+    auto camera = scene.sceneDescription.camera;
+    glm::mat4 cameraRotation = glm::mat4_cast(glm::quat(camera.eulerRotation));
+    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, camera.position);
+    auto cameraView = glm::inverse(cameraTranslation * cameraRotation);
+    _renderPushConstant.cameraRight = glm::vec3(cameraView[0][0], cameraView[1][0], cameraView[2][0]);
+    _renderPushConstant.cameraUp = glm::vec3(cameraView[0][1], cameraView[1][1], cameraView[2][1]);
+    commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], vk::ShaderStageFlagBits::eVertex, 0, sizeof(RenderPushConstant), &_renderPushConstant);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 0, _brain.bindlessSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
@@ -162,7 +183,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
-    commandBuffer.drawIndexed(6, culledData[0], 0, 0, 0);
+    commandBuffer.drawIndexed(6, culledData[0], 0, 0, 0, _brain.dldi);
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
@@ -320,7 +341,12 @@ void ParticlePipeline::CreatePipelines()
         pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
 
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+        vk::PushConstantRange pcRange {};
+        pcRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
+        pcRange.size = sizeof(RenderPushConstant);
+
+        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+        pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
 
         util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]),
             "Failed creating particle rendering pipeline layout!");
@@ -343,17 +369,8 @@ void ParticlePipeline::CreatePipelines()
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
-        // TODO: move elsewhere
-        vk::VertexInputBindingDescription bindingDesc;
-        bindingDesc.binding = 0;
-        bindingDesc.stride = sizeof(glm::vec3);
-        bindingDesc.inputRate = vk::VertexInputRate::eVertex;
-
-        std::array<vk::VertexInputAttributeDescription, 1> attributes {};
-        attributes[0].binding = 0;
-        attributes[0].location = 0;
-        attributes[0].format = vk::Format::eR32G32B32Sfloat;
-        attributes[0].offset = 0;
+        auto bindingDesc = Vertex::GetBindingDescription();
+        auto attributes = Vertex::GetAttributeDescriptions();
 
         vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
         vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
@@ -384,7 +401,7 @@ void ParticlePipeline::CreatePipelines()
         rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
         rasterizationStateCreateInfo.lineWidth = 1.0f;
         rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-        rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+        rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
         rasterizationStateCreateInfo.depthBiasEnable = vk::False;
         rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
         rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -408,8 +425,13 @@ void ParticlePipeline::CreatePipelines()
         colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
         vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-        depthStencilStateCreateInfo.depthTestEnable = false;
+        depthStencilStateCreateInfo.depthTestEnable = true;
         depthStencilStateCreateInfo.depthWriteEnable = false;
+        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilStateCreateInfo.depthBoundsTestEnable = false;
+        depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+        depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+        depthStencilStateCreateInfo.stencilTestEnable = false;
 
         vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
 
@@ -433,6 +455,7 @@ void ParticlePipeline::CreatePipelines()
         pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
         vk::Format format = _brain.GetImageResourceManager().Access(_hdrTarget)->format;
         pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
+        pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
         pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
@@ -716,7 +739,7 @@ void ParticlePipeline::CreateBuffers()
             }
 
             BufferCreation creation {};
-            creation.SetName("Index list SSB")
+            creation.SetName("Index " + std::to_string(i) + " list SSB")
                 .SetSize(bufferSize)
                 .SetIsMappable(false)
                 .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
@@ -769,13 +792,13 @@ void ParticlePipeline::CreateBuffers()
     }
 
     { // Billboard vertex buffer
-        std::vector<glm::vec3> billboardPositions = {
-            { -1.0f, -1.0f, 0.0f },       // 0
-            { 1.0f, -1.0f, 0.0f },	 // 1
-            { -1.0f, 1.0f, 0.0f },	 // 2
-            { 1.0f, 1.0f, 0.0f },	 // 4
+        std::vector<Vertex> billboardPositions = { // TODO: tangents..?
+            Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 0.0f)),   // 0
+            Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)),	 // 1
+            Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)),	 // 2
+            Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 0.0f)),	 // 4
             };
-        vk::DeviceSize bufferSize = sizeof(glm::vec3) * billboardPositions.size();
+        vk::DeviceSize bufferSize = sizeof(Vertex) * billboardPositions.size();
 
         BufferCreation creation {};
         creation.SetName("Billboard vertex buffer")
@@ -788,7 +811,7 @@ void ParticlePipeline::CreateBuffers()
     }
 
     { // Billboard index buffer
-        std::vector<uint32_t> billboardIndices = { 0, 1, 3, 1, 2, 3 };
+        std::vector<uint32_t> billboardIndices = { 0, 1, 3, 0, 3, 2 };
         vk::DeviceSize bufferSize = sizeof(uint32_t) * billboardIndices.size();
 
         BufferCreation creation {};

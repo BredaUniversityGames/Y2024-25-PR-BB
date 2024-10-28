@@ -6,6 +6,7 @@
 
 struct Emitter;
 class CameraResource;
+class RenderSceneDescription;
 class SwapChain;
 class ECS;
 
@@ -15,7 +16,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -47,6 +48,13 @@ private:
     {
         uint32_t bufferOffset;
     } _emitPushConstant;
+    struct RenderPushConstant
+    {
+        glm::vec3 cameraRight;
+        float _rightPadding;
+        glm::vec3 cameraUp;
+        float _upPadding;
+    } _renderPushConstant;
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
