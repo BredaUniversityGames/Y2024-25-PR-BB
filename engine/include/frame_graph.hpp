@@ -63,7 +63,7 @@ struct FrameGraphResourceInfo
         struct
         {
             ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Invalid();
-            vk::PipelineStageFlags stageUsage;
+            vk::PipelineStageFlags2 stageUsage;
         } buffer;
 
         struct
@@ -97,22 +97,6 @@ public:
     virtual void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) = 0;
 };
 
-struct ImageMemoryBarrier
-{
-    ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
-
-    vk::PipelineStageFlags srcStage{};
-    vk::PipelineStageFlags dstStage{};
-    vk::ImageMemoryBarrier barrier{};
-};
-
-struct BufferMemoryBarrier
-{
-    vk::PipelineStageFlags srcStage{};
-    vk::PipelineStageFlags dstStage{};
-    vk::BufferMemoryBarrier barrier{};
-};
-
 struct FrameGraphNodeCreation
 {
     FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics;
@@ -128,10 +112,10 @@ struct FrameGraphNodeCreation
     FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics);
 
     FrameGraphNodeCreation& AddInput(ResourceHandle<Image> image, FrameGraphResourceType type);
-    FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
+    FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
 
     FrameGraphNodeCreation& AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type);
-    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage);
+    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
 
     FrameGraphNodeCreation& SetIsEnabled(bool isEnabled);
     FrameGraphNodeCreation& SetName(std::string_view name);
@@ -148,8 +132,8 @@ struct FrameGraphNode
 
     std::vector<FrameGraphNodeHandle> edges {};
 
-    std::vector<ImageMemoryBarrier> imageMemoryBarriers {};
-    std::vector<BufferMemoryBarrier> bufferMemoryBarriers {};
+    std::vector<vk::ImageMemoryBarrier2> imageMemoryBarriers {};
+    std::vector<vk::BufferMemoryBarrier2> bufferMemoryBarriers {};
 
     vk::Viewport viewport{};
     vk::Rect2D scissor{};
