@@ -58,7 +58,8 @@ jobs:
             '
             -*,
             cppcoreguidelines-*,
-
+            
+            -cppcoreguidelines-avoid-magic-numbers,
             -cppcoreguidelines-non-private-member-variables-in-classes,
             -cppcoreguidelines-owning-memory,
             -cppcoreguidelines-macro-usage,

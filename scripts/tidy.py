@@ -13,10 +13,8 @@ EXTENSION = ['.c', '.cpp', '.cc', '.h', '.hpp']
 COMMAND = 'clang-tidy'
 PROFILE_ENABLE = "--enable-check-profile"
 COMPILE_DATABASE = 'build/x64-Release'
-OPTIONS = '--config-file=scripts/.clang-tidy'
+OPTIONS = '--config-file=.clang-tidy'
 
-
-# OPTIONS = '--checks=file'
 
 def glob_recursive_files(path, extensions):
     ret = []
