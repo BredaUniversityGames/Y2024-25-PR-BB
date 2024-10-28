@@ -5,20 +5,7 @@
 #include "glm/gtc/random.hpp"
 #include "glm/gtx/range.hpp"
 
-ImageMemoryBarrier::ImageMemoryBarrier(const Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageAspectFlagBits imageAspect)
-{
-    util::InitializeImageMemoryBarrier(barrier, image.image, image.format, oldLayout, newLayout, image.layers, 0, image.mips, imageAspect);
-
-    util::ImageLayoutTransitionState sourceState = util::GetImageLayoutTransitionSourceState(oldLayout);
-    util::ImageLayoutTransitionState destinationState = util::GetImageLayoutTransitionDestinationState(newLayout);
-
-    barrier.srcAccessMask = sourceState.accessFlags;
-    barrier.dstAccessMask = destinationState.accessFlags;
-    srcStage = sourceState.pipelineStage;
-    dstStage = destinationState.pipelineStage;
-}
-
- FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
     : queueType(queueType)
     , renderPass(renderPass)
 {
@@ -33,7 +20,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> i
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage)
 {
     FrameGraphResourceCreation& creation = inputs.emplace_back();
     creation.type = type;
@@ -51,7 +38,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> 
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags stageUsage)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage)
 {
     FrameGraphResourceCreation& creation = outputs.emplace_back();
     creation.type = type;
@@ -74,11 +61,11 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::SetName(std::string_view name)
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::SetDebugLabelColor(const glm::vec3& color)
 {
-    debugLabelColor = color;
+    this->debugLabelColor = color;
     return *this;
 }
 
- FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
+FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
     : queueType(queueType)
     , renderPass(renderPass)
 {
@@ -92,7 +79,7 @@ FrameGraph::FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain)
 
 void FrameGraph::Build()
 {
-    // First compute edges between nodes and create memory barriers
+    // First compute edges between nodes and their viewports and scissors
     ProcessNodes();
 
     // Sort the graph based on the node connections made
@@ -111,28 +98,12 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
         util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _brain.dldi);
 
         // Place memory barriers
-        for (const ImageMemoryBarrier& imageBarrier : node.imageMemoryBarriers)
-        {
-            commandBuffer.pipelineBarrier(imageBarrier.srcStage, imageBarrier.dstStage,
-                vk::DependencyFlags { 0 },
-                0, nullptr,
-                0, nullptr,
-                1, &imageBarrier.barrier);
-        }
-
-        for (const BufferMemoryBarrier& bufferBarrier : node.bufferMemoryBarriers)
-        {
-            commandBuffer.pipelineBarrier(bufferBarrier.srcStage, bufferBarrier.dstStage,
-                vk::DependencyFlags { 0 },
-                0, nullptr,
-                1, &bufferBarrier.barrier,
-                0, nullptr);
-        }
+        commandBuffer.pipelineBarrier2(node.dependencyInfo);
 
         if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {
-            commandBuffer.setViewport(0, 1, &node.viewport);
-            commandBuffer.setScissor(0, 1, &node.scissor);
+            commandBuffer.setViewport(0, node.viewport);
+            commandBuffer.setScissor(0, node.scissor);
         }
 
         node.renderPass.RecordCommands(commandBuffer, currentFrame, scene);
@@ -255,7 +226,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 void FrameGraph::CreateMemoryBarriers()
 {
     // Describes if an output has already been used as an input
-    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates{};
+    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates {};
 
     for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
     {
@@ -281,33 +252,35 @@ void FrameGraph::CreateMemoryBarriers()
             if (resource.type == FrameGraphResourceType::eTexture)
             {
                 const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+                vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
                 {
-                    node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                        vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageAspectFlagBits::eDepth);
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
                 }
                 else
                 {
-                    node.imageMemoryBarriers.emplace_back(*texture, vk::ImageLayout::eColorAttachmentOptimal,
-                                vk::ImageLayout::eShaderReadOnlyOptimal);
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
                 }
             }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
                 const Buffer* buffer = _brain.GetBufferResourceManager().Access(resource.info.buffer.handle);
-                BufferMemoryBarrier& bufferBarrier = node.bufferMemoryBarriers.emplace_back();
+                vk::BufferMemoryBarrier2& barrier = node.bufferMemoryBarriers.emplace_back();
 
                 // Get the buffer created before here and create barrier based on its stage usage
                 const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[resource.name];
                 const FrameGraphResource& outputResource = _resources[outputResourceHandle];
 
-                bufferBarrier.srcStage = outputResource.info.buffer.stageUsage;
-                bufferBarrier.dstStage = resource.info.buffer.stageUsage;
+                barrier.srcStageMask = outputResource.info.buffer.stageUsage;
+                barrier.dstStageMask = resource.info.buffer.stageUsage;
 
-                vk::BufferMemoryBarrier& barrier = bufferBarrier.barrier;
-                barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
-                barrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
+                barrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
+                barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
                 barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
                 barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
                 barrier.buffer = buffer->buffer;
@@ -325,19 +298,28 @@ void FrameGraph::CreateMemoryBarriers()
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
                 const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+                vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
                 {
-                    node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
-                        vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageAspectFlagBits::eDepth);
+                    util::InitializeImageMemoryBarrier(barrier, attachment->image, attachment->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                        attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eDepth);
                 }
                 else
                 {
-                    node.imageMemoryBarriers.emplace_back(*attachment, vk::ImageLayout::eUndefined,
-                        vk::ImageLayout::eColorAttachmentOptimal);
+                    util::InitializeImageMemoryBarrier(barrier, attachment->image, attachment->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+                        attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eColor);
                 }
             }
         }
+
+        // Compile all barriers into dependency info to run them in a batch
+        node.dependencyInfo.setImageMemoryBarrierCount(node.imageMemoryBarriers.size())
+            .setPImageMemoryBarriers(node.imageMemoryBarriers.data())
+            .setBufferMemoryBarrierCount(node.bufferMemoryBarriers.size())
+            .setPBufferMemoryBarriers(node.bufferMemoryBarriers.data());
     }
 }
 
@@ -350,7 +332,7 @@ void FrameGraph::SortGraph()
         eAdded
     };
 
-    std::vector<FrameGraphNodeHandle> reverseSortedNodes{};
+    std::vector<FrameGraphNodeHandle> reverseSortedNodes {};
     reverseSortedNodes.reserve(_nodes.size());
 
     std::vector<NodeStatus> nodesStatus(_nodes.size(), NodeStatus::eNotProcessed);
