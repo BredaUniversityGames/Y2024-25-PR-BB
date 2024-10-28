@@ -22,6 +22,9 @@ target_compile_features(ProjectSettings INTERFACE cxx_std_20)
 target_compile_options(ProjectSettings
         INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
 
+target_compile_options(ProjectSettings
+        INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
+
 if (WARNINGS_AS_ERRORS)
     message(STATUS "### Warnings are enabled as Errors")
     target_compile_options(ProjectSettings INTERFACE -Werror)

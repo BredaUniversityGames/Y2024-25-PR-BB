@@ -1,5 +1,7 @@
 name: PR-Checks
 
+# For more info on the checks enabled see: https://clang.llvm.org/extra/clang-tidy/checks/list.html
+
 on:
   workflow_dispatch:
   push:
