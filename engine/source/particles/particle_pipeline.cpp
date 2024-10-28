@@ -45,11 +45,10 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_emittersBufferDescriptorSetLayout);
     _brain.device.destroy(_instancesDescriptorSetLayout);
 }
-
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ECS& ecs, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime)
 {
     // UpdateEmitters(ecs);
-    UpdateBuffers();
+    UpdateBuffers(commandBuffer);
 
     // Set up memory barrier to be used in between every shader stage
     vk::MemoryBarrier memoryBarrier {};

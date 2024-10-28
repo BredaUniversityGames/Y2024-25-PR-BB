@@ -28,7 +28,7 @@ entt::entity SceneLoader::LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs, 
 {
     const entt::entity entity = ecs._registry.create();
 
-    ecs._registry.emplace<NameComponent>(entity)._name = currentNode.name;
+    ecs._registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs._registry.emplace<TransformComponent>(entity);
 
     TransformHelpers::SetLocalTransform(ecs._registry, entity, currentNode.transform);
