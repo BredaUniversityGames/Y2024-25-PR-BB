@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gbuffers.hpp"
 #include "common.hpp"
 #include "vulkan_brain.hpp"
 
@@ -11,7 +12,7 @@ class ECS;
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain);
+    ParticlePipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime);
@@ -48,6 +49,8 @@ private:
     } _emitPushConstant;
 
     const VulkanBrain& _brain;
+    const GBuffers& _gBuffers;
+    const ResourceHandle<Image> _hdrTarget;
     const CameraResource& _camera;
     const SwapChain& _swapChain;
 
@@ -72,6 +75,9 @@ private:
     // staging buffer
     vk::Buffer _stagingBuffer;
     VmaAllocation _stagingBufferAllocation;
+    // buffers for rendering
+    ResourceHandle<Buffer> _vertexBuffer;
+    ResourceHandle<Buffer> _indexBuffer;
 
     void UpdateEmitters(ECS& ecs);
 

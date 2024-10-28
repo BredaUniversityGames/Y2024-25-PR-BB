@@ -9,8 +9,10 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 
-ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain)
+ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
+    , _gBuffers(gBuffers)
+    , _hdrTarget(hdrTarget)
     , _camera(camera)
     , _swapChain(swapChain)
 {
@@ -39,6 +41,8 @@ ParticlePipeline::~ParticlePipeline()
     _brain.GetBufferResourceManager().Destroy(_particleInstancesBuffer);
     _brain.GetBufferResourceManager().Destroy(_culledIndicesBuffer);
     _brain.GetBufferResourceManager().Destroy(_emittersBuffer);
+    _brain.GetBufferResourceManager().Destroy(_vertexBuffer);
+    _brain.GetBufferResourceManager().Destroy(_indexBuffer);
     vmaDestroyBuffer(_brain.vmaAllocator, _stagingBuffer, _stagingBufferAllocation);
     // Descriptor stuff
     _brain.device.destroy(_particlesBuffersDescriptorSetLayout);
@@ -110,8 +114,42 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     util::EndLabel(commandBuffer, _brain.dldi);
 
+    auto culledIndicesBuffer = _brain.GetBufferResourceManager().Access(_culledIndicesBuffer);
+
+    // TODO: is this buffer memory barrier necessary?
+    vk::BufferMemoryBarrier barrier{};
+    barrier.buffer = culledIndicesBuffer->buffer;
+    barrier.size = sizeof(uint32_t) * (MAX_PARTICLES + 1);
+    barrier.offset = 0;
+    barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags{ 0 }, {}, barrier, {});
+    uint32_t* culledData = reinterpret_cast<uint32_t*>(culledIndicesBuffer->mappedPtr);
+
     // -- instanced rendering --
+    std::array<vk::RenderingAttachmentInfoKHR, 1> colorAttachmentInfos {};
+
+    // HDR color
+    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
+    colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
+    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
+    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
+
+    vk::RenderingInfoKHR renderingInfo {};
+    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
+    renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
+    renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
+    renderingInfo.pColorAttachments = colorAttachmentInfos.data();
+    renderingInfo.layerCount = 1;
+    renderingInfo.pDepthAttachment = nullptr;
+    renderingInfo.pStencilAttachment = nullptr;
+
     util::BeginLabel(commandBuffer, "Particle rendering pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
+    commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
+
+    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
+    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
 
@@ -119,8 +157,14 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
 
-    // TODO: read particle instance count from culledBuffer and drawIndexed
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(_vertexBuffer)->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(_indexBuffer)->buffer;
+    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
+    commandBuffer.drawIndexed(6, culledData[0], 0, 0, 0);
+
+    commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
@@ -299,7 +343,23 @@ void ParticlePipeline::CreatePipelines()
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
+        // TODO: move elsewhere
+        vk::VertexInputBindingDescription bindingDesc;
+        bindingDesc.binding = 0;
+        bindingDesc.stride = sizeof(glm::vec3);
+        bindingDesc.inputRate = vk::VertexInputRate::eVertex;
+
+        std::array<vk::VertexInputAttributeDescription, 1> attributes {};
+        attributes[0].binding = 0;
+        attributes[0].location = 0;
+        attributes[0].format = vk::Format::eR32G32B32Sfloat;
+        attributes[0].offset = 0;
+
         vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
+        vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+        vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
+        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributes.size();
+        vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
 
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
         inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
@@ -371,7 +431,7 @@ void ParticlePipeline::CreatePipelines()
 
         auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
         pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-        vk::Format format = _swapChain.GetFormat();
+        vk::Format format = _brain.GetImageResourceManager().Access(_hdrTarget)->format;
         pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
 
         pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
@@ -629,11 +689,11 @@ void ParticlePipeline::CreateBuffers()
 
     { // Particle SSB
         std::vector<Particle> particles(MAX_PARTICLES);
-        vk::DeviceSize particleBufferSize = sizeof(Particle) * MAX_PARTICLES;
+        vk::DeviceSize bufferSize = sizeof(Particle) * MAX_PARTICLES;
 
         BufferCreation creation {};
         creation.SetName("Particle SSB")
-            .SetSize(particleBufferSize)
+            .SetSize(bufferSize)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
@@ -642,7 +702,7 @@ void ParticlePipeline::CreateBuffers()
     }
 
     { // Alive and Dead SSBs
-        vk::DeviceSize indexBufferSize = sizeof(uint32_t) * MAX_PARTICLES;
+        vk::DeviceSize bufferSize = sizeof(uint32_t) * MAX_PARTICLES;
 
         for (size_t i = static_cast<size_t>(ParticleBufferUsage::eAliveNew); i <= static_cast<size_t>(ParticleBufferUsage::eDead); i++)
         {
@@ -657,7 +717,7 @@ void ParticlePipeline::CreateBuffers()
 
             BufferCreation creation {};
             creation.SetName("Index list SSB")
-                .SetSize(indexBufferSize)
+                .SetSize(bufferSize)
                 .SetIsMappable(false)
                 .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
                 .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
@@ -668,11 +728,11 @@ void ParticlePipeline::CreateBuffers()
 
     { // Counter SSB
         std::vector<ParticleCounters> particleCounters(1);
-        vk::DeviceSize counterBufferSize = sizeof(ParticleCounters);
+        vk::DeviceSize bufferSize = sizeof(ParticleCounters);
 
         BufferCreation creation {};
         creation.SetName("Counters SSB")
-            .SetSize(counterBufferSize)
+            .SetSize(bufferSize)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
@@ -682,11 +742,11 @@ void ParticlePipeline::CreateBuffers()
 
     { // Particle Instances SSB
         std::vector<ParticleInstance> particleInstances(MAX_PARTICLES);
-        vk::DeviceSize particleInstancesBufferSize = sizeof(ParticleInstance) * MAX_PARTICLES;
+        vk::DeviceSize bufferSize = sizeof(ParticleInstance) * MAX_PARTICLES;
 
         BufferCreation creation {};
         creation.SetName("Particle Instances SSB")
-            .SetSize(particleInstancesBufferSize)
+            .SetSize(bufferSize)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
@@ -696,16 +756,49 @@ void ParticlePipeline::CreateBuffers()
 
     { // Culled Instance SSB
         std::vector<uint32_t> culledInstance(MAX_PARTICLES + 1);
-        vk::DeviceSize culledInstanceBufferSize = sizeof(uint32_t) * (MAX_PARTICLES + 1);
+        vk::DeviceSize bufferSize = sizeof(uint32_t) * (MAX_PARTICLES + 1);
 
         BufferCreation creation {};
         creation.SetName("Culled Instance SSB")
-            .SetSize(culledInstanceBufferSize)
+            .SetSize(bufferSize)
             .SetIsMappable(true)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
         _culledIndicesBuffer = _brain.GetBufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(culledInstance, 0, _brain.GetBufferResourceManager().Access(_culledIndicesBuffer)->buffer);
+    }
+
+    { // Billboard vertex buffer
+        std::vector<glm::vec3> billboardPositions = {
+            { -1.0f, -1.0f, 0.0f },       // 0
+            { 1.0f, -1.0f, 0.0f },	 // 1
+            { -1.0f, 1.0f, 0.0f },	 // 2
+            { 1.0f, 1.0f, 0.0f },	 // 4
+            };
+        vk::DeviceSize bufferSize = sizeof(glm::vec3) * billboardPositions.size();
+
+        BufferCreation creation {};
+        creation.SetName("Billboard vertex buffer")
+            .SetSize(bufferSize)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
+            .SetIsMappable(false)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY);
+        _vertexBuffer = _brain.GetBufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(billboardPositions, 0, _brain.GetBufferResourceManager().Access(_vertexBuffer)->buffer);
+    }
+
+    { // Billboard index buffer
+        std::vector<uint32_t> billboardIndices = { 0, 1, 3, 1, 2, 3 };
+        vk::DeviceSize bufferSize = sizeof(uint32_t) * billboardIndices.size();
+
+        BufferCreation creation {};
+        creation.SetName("Billboard index buffer")
+            .SetSize(bufferSize)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer)
+            .SetIsMappable(false)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY);
+        _indexBuffer = _brain.GetBufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(billboardIndices, 0, _brain.GetBufferResourceManager().Access(_indexBuffer)->buffer);
     }
 
     cmdBuffer.Submit();

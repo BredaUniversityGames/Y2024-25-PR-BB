@@ -17,11 +17,21 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
+layout (location = 0) in vec3 inPosition;
+
 layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
+layout (location = 3) out uint materialIndex;
 
 void main()
 {
-    gl_Position = vec4(vec3(0.0), 1.0);
+    uint particleIndex = culledInstance.indices[gl_DrawID];
+    ParticleInstance instance = particleInstances[particleIndex];
+
+    materialIndex = instance.materialIndex;
+
+    position = inPosition + instance.position;
+
+    gl_Position = (camera.VP) * vec4(inPosition, 1.0);
 }
