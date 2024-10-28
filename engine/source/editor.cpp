@@ -296,6 +296,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
     if (!ecs._registry.valid(_selectedEntity))
     {
         ImGui::Text("Selected entity is not valid");
+        ImGui::Text("Selected entity is not valid");
         return;
     }
     const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
@@ -328,7 +329,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 
     if (nameComponent != nullptr)
     {
-        ImGui::InputText("Name", &nameComponent->_name);
+        ImGui::InputText("Name", &nameComponent->name);
     }
 
     ImGui::PopID();
