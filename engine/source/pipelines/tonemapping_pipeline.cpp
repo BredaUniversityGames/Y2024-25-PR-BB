@@ -70,10 +70,6 @@ void TonemappingPipeline::CreatePipeline()
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = false;
-    depthStencilStateCreateInfo.depthWriteEnable = false;
-
     std::array<vk::DynamicState, 2> dynamicStates = {
         vk::DynamicState::eViewport,
         vk::DynamicState::eScissor,
@@ -91,7 +87,6 @@ void TonemappingPipeline::CreatePipeline()
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
     reflector.SetColorAttachmentFormats({ _swapChain.GetFormat() });
     reflector.SetDepthAttachmentFormat(vk::Format::eUndefined);
     reflector.SetDynamicState(dynamicStateCreateInfo);

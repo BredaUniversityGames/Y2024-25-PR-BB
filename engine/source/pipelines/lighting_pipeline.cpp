@@ -99,10 +99,6 @@ void LightingPipeline::CreatePipeline()
     colorBlendStateCreateInfo.attachmentCount = blendAttachments.size();
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = false;
-    depthStencilStateCreateInfo.depthWriteEnable = false;
-
     std::vector<vk::Format> formats = {
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
@@ -116,7 +112,6 @@ void LightingPipeline::CreatePipeline()
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
     reflector.SetColorAttachmentFormats(formats);
     reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
     reflector.SetDynamicState(dynamicStateCreateInfo);

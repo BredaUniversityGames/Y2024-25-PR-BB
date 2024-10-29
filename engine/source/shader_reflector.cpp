@@ -30,6 +30,11 @@ ShaderReflector::ShaderReflector(const VulkanBrain& brain)
         .frontFace = vk::FrontFace::eCounterClockwise,
         .lineWidth = 1.0f,
     };
+
+    _depthStencilStateCreateInfo = {
+        .depthTestEnable = false,
+        .depthWriteEnable = false,
+    };
 }
 
 ShaderReflector::~ShaderReflector()

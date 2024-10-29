@@ -68,7 +68,7 @@ private:
     std::optional<vk::PipelineDynamicStateCreateInfo> _dynamicStateCreateInfo;
 
     std::vector<vk::Format> _colorAttachmentFormats;
-    vk::Format _depthFormat;
+    vk::Format _depthFormat { vk::Format::eUndefined };
 
     void ReflectShaders();
     void ReflectVertexInput(const ShaderStage& shaderStage);
