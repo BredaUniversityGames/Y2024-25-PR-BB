@@ -33,7 +33,7 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
 
     auto descriptorSet = &_sourceDescriptorSets[currentFrame];
 
-    const uint32_t blurPasses = 5; // TODO: Get from bloom settings
+    const uint32_t blurPasses = 5; // TODO: Get from bloom settings from ECS
     for (uint32_t i = 0; i < blurPasses * 2; ++i)
     {
         uint32_t isVerticalPass = i % 2;
