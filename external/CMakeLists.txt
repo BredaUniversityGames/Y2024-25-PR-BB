@@ -20,6 +20,7 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+
 FetchContent_MakeAvailable(SpdLog)
 
 # Vulkan
@@ -188,6 +189,11 @@ target_include_directories(ImGui
         PUBLIC implot
 )
 
+# Enable Unity for external libraries
+
+if (USE_UNITY_BUILD)
+    target_enable_unity(Jolt)
+endif()
 
 # Main External Library
 
