@@ -109,7 +109,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     FrameGraphNodeCreation skyDomePass{*_skydomePipeline};
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
-        // Does nothing in this situation, but the debug pass uses the depth buffer
+        // Does nothing internally in this situation, for clarity that it is used here
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         // Making sure the sky dome pass runs after the lighting pass with a reference
         .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
@@ -132,7 +132,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     FrameGraphNodeCreation debugPass{*_debugPipeline};
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        // Does nothing in this situation, but the debug pass uses the depth buffer
+        // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         // Reference to make sure it runs at the end
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
