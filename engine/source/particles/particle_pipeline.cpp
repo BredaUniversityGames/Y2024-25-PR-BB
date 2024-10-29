@@ -17,6 +17,8 @@ ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const GBuffers& gBu
     , _camera(camera)
     , _swapChain(swapChain)
 {
+    srand(time(0));
+
     CreateDescriptorSetLayouts();
     CreateBuffers();
     CreateDescriptorSets();
@@ -53,14 +55,32 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime)
 {
-    vk::MemoryBarrier memoryBarrier {};
-    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryWrite;
-    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryWrite | vk::AccessFlagBits::eMemoryRead;
-
     UpdateEmitters(ecs);
     UpdateBuffers(commandBuffer);
 
-    // -- kick-off shader pass --
+    vk::MemoryBarrier memoryBarrier {};
+    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead;
+    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead;
+
+    RecordKickOff(commandBuffer);
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
+
+    if(_emitters.size() > 0)
+    {
+        RecordEmit(commandBuffer);
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
+    }
+
+    RecordSimulate(commandBuffer, deltaTime);
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
+
+    RecordRenderIndexed(commandBuffer, currentFrame, scene);
+}
+
+void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
+{
     util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eKickOff)]);
@@ -70,11 +90,20 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.dispatch(1, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
-
     util::EndLabel(commandBuffer, _brain.dldi);
+}
 
-    // -- emit shader pass --
+void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
+{
+    // make sure the copy buffer command is done before dispatching
+    vk::BufferMemoryBarrier barrier{};
+    barrier.buffer = _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer;
+    barrier.size = _emitters.size() * sizeof(Emitter);
+    barrier.offset = 0;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 }, {}, barrier, {});
+
     util::BeginLabel(commandBuffer, "Emit particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eEmit)]);
@@ -87,18 +116,17 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     for (bufferOffset = 0; bufferOffset < _emitters.size(); bufferOffset++)
     {
         _emitPushConstant.bufferOffset = bufferOffset;
-        commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(uint32_t), &_emitPushConstant);
+        commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(EmitPushConstant), &_emitPushConstant);
         // +63 so we always dispatch at least once.
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
-
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
-
     _emitters.clear();
 
     util::EndLabel(commandBuffer, _brain.dldi);
+}
 
-    // -- simulate shader pass --
+void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime)
+{
     util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eSimulate)]);
@@ -107,27 +135,26 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
 
     _simulatePushConstant.deltaTime = deltaTime * 0.001f;
-    commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(float), &_simulatePushConstant);
+    commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(SimulatePushConstant), &_simulatePushConstant);
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
-
     util::EndLabel(commandBuffer, _brain.dldi);
+}
 
+void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+{
     auto culledIndicesBuffer = _brain.GetBufferResourceManager().Access(_culledIndicesBuffer);
 
-    // TODO: is this buffer memory barrier necessary?
-    vk::BufferMemoryBarrier barrier{};
-    barrier.buffer = culledIndicesBuffer->buffer;
-    barrier.size = sizeof(uint32_t) * (MAX_PARTICLES + 1);
-    barrier.offset = 0;
-    barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
-    barrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags{ 0 }, {}, barrier, {});
-    uint32_t* culledData = reinterpret_cast<uint32_t*>(culledIndicesBuffer->mappedPtr);
+    // make sure the compute is done before the host reads from it
+    vk::BufferMemoryBarrier culledIndicesBarrier{}; // TODO: is this buffer memory barrier necessary?
+    culledIndicesBarrier.buffer = culledIndicesBuffer->buffer;
+    culledIndicesBarrier.size = sizeof(uint32_t) * (MAX_PARTICLES + 1);
+    culledIndicesBarrier.offset = 0;
+    culledIndicesBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    culledIndicesBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags{ 0 }, {}, culledIndicesBarrier, {});
 
-    // -- instanced rendering --
     std::array<vk::RenderingAttachmentInfoKHR, 1> colorAttachmentInfos {};
 
     // HDR color
@@ -167,9 +194,9 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
 
     auto camera = scene.sceneDescription.camera;
-    glm::mat4 cameraRotation = glm::mat4_cast(glm::quat(camera.eulerRotation));
-    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, camera.position);
-    auto cameraView = glm::inverse(cameraTranslation * cameraRotation);
+    glm::mat4 cameraRotation = mat4_cast(glm::quat(camera.eulerRotation));
+    glm::mat4 cameraTranslation = translate(glm::mat4 { 1.0f }, camera.position);
+    auto cameraView = inverse(cameraTranslation * cameraRotation);
     _renderPushConstant.cameraRight = glm::vec3(cameraView[0][0], cameraView[1][0], cameraView[2][0]);
     _renderPushConstant.cameraUp = glm::vec3(cameraView[0][1], cameraView[1][1], cameraView[2][1]);
     commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], vk::ShaderStageFlagBits::eVertex, 0, sizeof(RenderPushConstant), &_renderPushConstant);
@@ -183,11 +210,13 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
+    uint32_t* culledData = reinterpret_cast<uint32_t*>(culledIndicesBuffer->mappedPtr);
     commandBuffer.drawIndexed(6, culledData[0], 0, 0, 0, _brain.dldi);
 
     commandBuffer.endRenderingKHR(_brain.dldi);
     util::EndLabel(commandBuffer, _brain.dldi);
 }
+
 
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
 {
@@ -198,7 +227,6 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs)
         if (component.timesToEmit != 0)
         {
             // TODO: do something with particle type later
-            srand(time(0));
             component.emitter.randomValue = rand();
             _emitters.emplace_back(component.emitter);
             spdlog::info("Emitter received!");
@@ -218,15 +246,6 @@ void ParticlePipeline::UpdateBuffers(vk::CommandBuffer commandBuffer)
 
         vmaCopyMemoryToAllocation(_brain.vmaAllocator, _emitters.data(), _stagingBufferAllocation, 0, bufferSize);
         util::CopyBuffer(commandBuffer, _stagingBuffer, _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
-
-        vk::BufferMemoryBarrier barrier{};
-        barrier.buffer = _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer;
-        barrier.size = bufferSize;
-        barrier.offset = 0;
-        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 }, {}, barrier, {});
     }
 }
 
