@@ -104,7 +104,7 @@ void main()
     const float MAX_REFLECTION_LOD = 2.0;
     vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(scene.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
     vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
-    vec3 specular = vec3(0.0);//prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
