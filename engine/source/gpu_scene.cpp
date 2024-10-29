@@ -1,7 +1,7 @@
 #include "gpu_scene.hpp"
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
@@ -133,7 +133,7 @@ void GPUScene::CreateSceneDescriptorSetLayout()
 
     std::vector<std::string_view> names { "SceneUBO" };
 
-    _sceneDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
+    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -150,7 +150,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<std::string_view> names { "InstanceData" };
 
-    _objectInstancesDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
+    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()

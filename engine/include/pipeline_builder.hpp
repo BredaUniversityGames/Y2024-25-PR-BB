@@ -3,30 +3,66 @@
 #include "common.hpp"
 #include <map>
 
-class ShaderReflector
+class PipelineBuilder
 {
 public:
-    ShaderReflector(const VulkanBrain& brain);
-    ~ShaderReflector();
+    PipelineBuilder(const VulkanBrain& brain);
+    ~PipelineBuilder();
 
-    NON_COPYABLE(ShaderReflector);
-    NON_MOVABLE(ShaderReflector);
+    NON_COPYABLE(PipelineBuilder);
+    NON_MOVABLE(PipelineBuilder);
 
-    void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
+    PipelineBuilder& AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
     static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
-    void SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo) { _inputAssemblyStateCreateInfo = createInfo; }
-    void SetViewportState(const vk::PipelineViewportStateCreateInfo& createInfo) { _viewportStateCreateInfo = createInfo; }
-    void SetRasterizationState(const vk::PipelineRasterizationStateCreateInfo& createInfo) { _rasterizationStateCreateInfo = createInfo; }
-    void SetMultisampleState(const vk::PipelineMultisampleStateCreateInfo& createInfo) { _multisampleStateCreateInfo = createInfo; }
-    void SetColorBlendState(const vk::PipelineColorBlendStateCreateInfo& createInfo) { _colorBlendStateCreateInfo = createInfo; }
-    void SetDepthStencilState(const vk::PipelineDepthStencilStateCreateInfo& createInfo) { _depthStencilStateCreateInfo = createInfo; }
-    void SetDynamicState(const vk::PipelineDynamicStateCreateInfo& createInfo) { _dynamicStateCreateInfo = createInfo; }
+    PipelineBuilder& SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo)
+    {
+        _inputAssemblyStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetViewportState(const vk::PipelineViewportStateCreateInfo& createInfo)
+    {
+        _viewportStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetRasterizationState(const vk::PipelineRasterizationStateCreateInfo& createInfo)
+    {
+        _rasterizationStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetMultisampleState(const vk::PipelineMultisampleStateCreateInfo& createInfo)
+    {
+        _multisampleStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetColorBlendState(const vk::PipelineColorBlendStateCreateInfo& createInfo)
+    {
+        _colorBlendStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetDepthStencilState(const vk::PipelineDepthStencilStateCreateInfo& createInfo)
+    {
+        _depthStencilStateCreateInfo = createInfo;
+        return *this;
+    }
+    PipelineBuilder& SetDynamicState(const vk::PipelineDynamicStateCreateInfo& createInfo)
+    {
+        _dynamicStateCreateInfo = createInfo;
+        return *this;
+    }
 
-    void SetColorAttachmentFormats(const std::vector<vk::Format>& formats) { _colorAttachmentFormats = formats; }
-    void SetDepthAttachmentFormat(vk::Format format) { _depthFormat = format; }
+    PipelineBuilder& SetColorAttachmentFormats(const std::vector<vk::Format>& formats)
+    {
+        _colorAttachmentFormats = formats;
+        return *this;
+    }
+    PipelineBuilder& SetDepthAttachmentFormat(vk::Format format)
+    {
+        _depthFormat = format;
+        return *this;
+    }
 
     const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const { return _descriptorSetLayouts; }
     const std::vector<vk::PushConstantRange>& GetPushConstantRanges() const { return _pushConstantRanges; }

@@ -5,7 +5,7 @@
 #include "log.hpp"
 #include <set>
 #include <map>
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 
 VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
     : _bufferResourceManager(*this)
@@ -466,7 +466,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
 
     std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
 
-    bindlessLayout = ShaderReflector::CacheDescriptorSetLayout(*this, bindings, names);
+    bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*this, bindings, names);
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = bindlessPool;

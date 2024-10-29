@@ -2,7 +2,7 @@
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "bloom_settings.hpp"
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 #include "gpu_scene.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
@@ -73,13 +73,12 @@ void TonemappingPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/tonemapping.frag.spv");
 
-    ShaderReflector reflector { _brain };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-
-    reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetColorAttachmentFormats({ _swapChain.GetFormat() });
-    reflector.SetDepthAttachmentFormat(vk::Format::eUndefined);
-
-    reflector.BuildPipeline(_pipeline, _pipelineLayout);
+    PipelineBuilder pipelineBuilder { _brain };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetColorAttachmentFormats({ _swapChain.GetFormat() })
+        .SetDepthAttachmentFormat(vk::Format::eUndefined)
+        .BuildPipeline(_pipeline, _pipelineLayout);
 }

@@ -2,6 +2,7 @@
 #include "shaders/shader_loader.hpp"
 #include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
+#include "pipeline_builder.hpp"
 
 LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)
@@ -98,7 +99,7 @@ void LightingPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
-    ShaderReflector reflector { _brain };
+    PipelineBuilder reflector { _brain };
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 

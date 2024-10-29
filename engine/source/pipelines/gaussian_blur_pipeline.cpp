@@ -1,6 +1,7 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
+#include "pipeline_builder.hpp"
 
 GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target)
     : _brain(brain)
@@ -102,21 +103,20 @@ void GaussianBlurPipeline::CreatePipeline()
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
+    std::vector<vk::Format> formats { _brain.GetImageResourceManager().Access(_source)->format };
+
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/gaussian_blur.frag.spv");
 
-    ShaderReflector reflector { _brain };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    PipelineBuilder pipelineBuilder { _brain };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetColorAttachmentFormats(formats)
+        .BuildPipeline(_pipeline, _pipelineLayout);
 
-    std::vector<vk::Format> formats { _brain.GetImageResourceManager().Access(_source)->format };
-
-    reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetColorAttachmentFormats(formats);
-
-    reflector.BuildPipeline(_pipeline, _pipelineLayout);
-
-    _descriptorSetLayout = reflector.GetDescriptorSetLayouts()[0];
+    _descriptorSetLayout = pipelineBuilder.GetDescriptorSetLayouts()[0];
 }
 
 void GaussianBlurPipeline::CreateDescriptorSetLayout()

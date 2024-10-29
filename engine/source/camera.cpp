@@ -1,6 +1,6 @@
 #include "camera.hpp"
 #include "vulkan_helper.hpp"
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 #include "vulkan_brain.hpp"
 #include <glm/gtc/quaternion.hpp>
 
@@ -45,7 +45,7 @@ void CameraResource::CreateDescriptorSetLayout(const VulkanBrain& brain)
     std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
     std::vector<std::string_view> names { "CameraUBO" };
 
-    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(brain, bindings, names);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(brain, bindings, names);
 }
 
 void CameraResource::CreateBuffers()

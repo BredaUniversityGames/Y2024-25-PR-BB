@@ -1,6 +1,6 @@
 #include "bloom_settings.hpp"
 #include "vulkan_helper.hpp"
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 #include "imgui/imgui.h"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
@@ -48,7 +48,7 @@ void BloomSettings::CreateDescriptorSetLayout()
     });
     std::vector<std::string_view> names { "BloomSettingsUBO" };
 
-    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
     util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _brain);
 }
 

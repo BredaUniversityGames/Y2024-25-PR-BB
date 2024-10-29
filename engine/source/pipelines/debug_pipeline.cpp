@@ -6,7 +6,7 @@
 #include "swap_chain.hpp"
 
 #include <imgui_impl_vulkan.h>
-#include <shader_reflector.hpp>
+#include "pipeline_builder.hpp"
 
 DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, MAYBE_UNUSED const GPUScene& gpuScene)
     : _brain(brain)
@@ -15,7 +15,7 @@ DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers,
     , _camera(camera)
 {
 
-    _linesData.reserve(2048); // pre allocate some memory
+    _linesData.reserve(2048);
     CreateVertexBuffer();
     CreatePipeline();
 }
@@ -29,7 +29,6 @@ DebugPipeline::~DebugPipeline()
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    // Update the lines data
     UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -103,17 +102,16 @@ void DebugPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/debug.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/debug.frag.spv");
 
-    ShaderReflector reflector { _brain };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-
-    reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
-    reflector.SetColorAttachmentFormats(formats);
-    reflector.SetInputAssemblyState(inputAssemblyStateCreateInfo);
-    reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
-
-    reflector.BuildPipeline(_pipeline, _pipelineLayout);
+    PipelineBuilder pipelineBuilder { _brain };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetColorAttachmentFormats(formats)
+        .SetInputAssemblyState(inputAssemblyStateCreateInfo)
+        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+        .BuildPipeline(_pipeline, _pipelineLayout);
 }
 
 void DebugPipeline::CreateVertexBuffer()

@@ -1,10 +1,10 @@
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 
 #include "vulkan_helper.hpp"
 
-std::unordered_map<size_t, vk::DescriptorSetLayout> ShaderReflector::_cacheDescriptorSetLayouts {};
+std::unordered_map<size_t, vk::DescriptorSetLayout> PipelineBuilder::_cacheDescriptorSetLayouts {};
 
-ShaderReflector::ShaderReflector(const VulkanBrain& brain)
+PipelineBuilder::PipelineBuilder(const VulkanBrain& brain)
     : _brain(brain)
 {
     _inputAssemblyStateCreateInfo = {
@@ -47,7 +47,7 @@ ShaderReflector::ShaderReflector(const VulkanBrain& brain)
     };
 }
 
-ShaderReflector::~ShaderReflector()
+PipelineBuilder::~PipelineBuilder()
 {
     for (auto& shaderStage : _shaderStages)
     {
@@ -56,7 +56,7 @@ ShaderReflector::~ShaderReflector()
     }
 }
 
-void ShaderReflector::AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint)
+PipelineBuilder& PipelineBuilder::AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint)
 {
     // TODO: Handle invalid shader stages; i.e. multiple bits
     SpvReflectShaderModule reflectModule;
@@ -72,16 +72,18 @@ void ShaderReflector::AddShaderStage(vk::ShaderStageFlagBits stage, const std::v
         .reflectModule = reflectModule,
         .shaderModule = shaderModule,
     });
+
+    return *this;
 }
 
-void ShaderReflector::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
+void PipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
 {
     ReflectShaders();
     CreatePipelineLayout(pipelineLayout);
     CreatePipeline(pipeline);
 }
 
-vk::DescriptorSetLayout ShaderReflector::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
     size_t hash = HashBindings(bindings, names);
 
@@ -100,7 +102,7 @@ vk::DescriptorSetLayout ShaderReflector::CacheDescriptorSetLayout(const VulkanBr
     return _cacheDescriptorSetLayouts[hash];
 }
 
-void ShaderReflector::ReflectShaders()
+void PipelineBuilder::ReflectShaders()
 {
     for (const auto& shaderStage : _shaderStages)
     {
@@ -120,7 +122,7 @@ void ShaderReflector::ReflectShaders()
     }
 }
 
-void ShaderReflector::ReflectVertexInput(const ShaderStage& shaderStage)
+void PipelineBuilder::ReflectVertexInput(const ShaderStage& shaderStage)
 {
     uint32_t inputCount { 0 };
 
@@ -162,7 +164,7 @@ void ShaderReflector::ReflectVertexInput(const ShaderStage& shaderStage)
     }
 }
 
-void ShaderReflector::ReflectPushConstants(const ShaderReflector::ShaderStage& shaderStage)
+void PipelineBuilder::ReflectPushConstants(const PipelineBuilder::ShaderStage& shaderStage)
 {
     uint32_t pushCount { 0 };
     spvReflectEnumeratePushConstantBlocks(&shaderStage.reflectModule, &pushCount, nullptr);
@@ -181,7 +183,7 @@ void ShaderReflector::ReflectPushConstants(const ShaderReflector::ShaderStage& s
     }
 }
 
-void ShaderReflector::ReflectDescriptorLayouts(const ShaderReflector::ShaderStage& shaderStage)
+void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStage& shaderStage)
 {
     uint32_t setCount { 0 };
     spvReflectEnumerateDescriptorSets(&shaderStage.reflectModule, &setCount, nullptr);
@@ -248,7 +250,7 @@ void ShaderReflector::ReflectDescriptorLayouts(const ShaderReflector::ShaderStag
     }
 }
 
-void ShaderReflector::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
+void PipelineBuilder::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
 {
     vk::PipelineLayoutCreateInfo createInfo {
         .setLayoutCount = static_cast<uint32_t>(_descriptorSetLayouts.size()),
@@ -260,7 +262,7 @@ void ShaderReflector::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
     pipelineLayout = _pipelineLayout = _brain.device.createPipelineLayout(createInfo, nullptr);
 }
 
-void ShaderReflector::CreatePipeline(vk::Pipeline& pipeline)
+void PipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
 {
     if (!_inputAssemblyStateCreateInfo.has_value() || !_viewportStateCreateInfo.has_value() || !_rasterizationStateCreateInfo.has_value() || !_multisampleStateCreateInfo.has_value() || !_depthStencilStateCreateInfo.has_value() || !_colorBlendStateCreateInfo.has_value() || !_dynamicStateCreateInfo.has_value())
     {
@@ -308,7 +310,7 @@ void ShaderReflector::CreatePipeline(vk::Pipeline& pipeline)
     pipeline = _pipeline = vkPipeline;
 }
 
-vk::ShaderModule ShaderReflector::CreateShaderModule(const std::vector<std::byte>& spirvBytes)
+vk::ShaderModule PipelineBuilder::CreateShaderModule(const std::vector<std::byte>& spirvBytes)
 {
     vk::ShaderModuleCreateInfo createInfo {
         .codeSize = spirvBytes.size(),
@@ -318,7 +320,7 @@ vk::ShaderModule ShaderReflector::CreateShaderModule(const std::vector<std::byte
     return _brain.device.createShaderModule(createInfo, nullptr);
 }
 
-size_t ShaderReflector::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+size_t PipelineBuilder::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
     size_t seed = bindings.size();
     for (const auto& binding : bindings)

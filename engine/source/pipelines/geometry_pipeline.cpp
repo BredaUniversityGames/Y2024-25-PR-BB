@@ -2,7 +2,7 @@
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
-#include "shader_reflector.hpp"
+#include "pipeline_builder.hpp"
 
 GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _brain(brain)
@@ -129,16 +129,15 @@ void GeometryPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
-    ShaderReflector reflector { _brain };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-
-    reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
-    reflector.SetColorAttachmentFormats(formats);
-    reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
-
-    reflector.BuildPipeline(_pipeline, _pipelineLayout);
+    PipelineBuilder pipelineBuilder { _brain };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetColorAttachmentFormats(formats)
+        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+        .BuildPipeline(_pipeline, _pipelineLayout);
 }
 
 void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
