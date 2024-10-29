@@ -81,7 +81,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     CreateCommandBuffers();
     CreateSyncObjects();
 
-    FrameGraphNodeCreation geometryPass{*_geometryPipeline};
+    FrameGraphNodeCreation geometryPass { *_geometryPipeline };
     geometryPass.SetName("Geometry pass")
         .SetDebugLabelColor(glm::vec3 { 6.0f, 214.0f, 160.0f } / 255.0f)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
@@ -90,12 +90,12 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
         .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation shadowPass{*_shadowPipeline};
+    FrameGraphNodeCreation shadowPass { *_shadowPipeline };
     shadowPass.SetName("Shadow pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation lightingPass{*_lightingPipeline};
+    FrameGraphNodeCreation lightingPass { *_lightingPipeline };
     lightingPass.SetName("Lighting pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f)
         .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
@@ -106,7 +106,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation skyDomePass{*_skydomePipeline};
+    FrameGraphNodeCreation skyDomePass { *_skydomePipeline };
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
         // Does nothing internally in this situation, for clarity that it is used here
@@ -117,19 +117,19 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
 
-    FrameGraphNodeCreation bloomBlurPass{*_bloomBlurPipeline};
+    FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f)
         .AddInput(_brightnessTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation toneMappingPass{*_tonemappingPipeline};
+    FrameGraphNodeCreation toneMappingPass { *_tonemappingPipeline };
     toneMappingPass.SetName("Tonemapping pass")
         .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
 
-    FrameGraphNodeCreation debugPass{*_debugPipeline};
+    FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
