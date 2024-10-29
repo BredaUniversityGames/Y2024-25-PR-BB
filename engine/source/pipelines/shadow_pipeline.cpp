@@ -3,6 +3,7 @@
 #include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "shader_reflector.hpp"
 
 ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _brain(brain)
@@ -42,25 +43,29 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera, _drawBuffer, _drawBufferDescriptorSet);
 
-    vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view;
-    depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+    vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
+        .imageView = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view,
+        .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .clearValue = {
+            .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
+    };
 
-    vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { 4096, 4096 }; // Shadow map size
-    renderingInfo.layerCount = 1;
-    renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+    vk::RenderingInfoKHR renderingInfo {
+        .renderArea = {
+            .extent = vk::Extent2D { 4096, 4096 } // TODO: Remove hard coded size
+        },
+        .layerCount = 1,
+        .pDepthAttachment = &depthAttachmentInfo,
+    };
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _shadowCamera.DescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
 
     vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
     vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
@@ -78,94 +83,25 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.endRenderingKHR(_brain.dldi);
 }
 
-void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)
+void ShadowPipeline::CreatePipeline(MAYBE_UNUSED const GPUScene& gpuScene)
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 3> layouts = { gpuScene.GetObjectInstancesDescriptorSetLayout(), CameraResource::DescriptorSetLayout(), gpuScene.GetSceneDescriptorSetLayout() };
-    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-        "Failed to create shadow pipeline layout!");
-
-    // Load shaders (simple vertex shader for depth only)
-    auto vertByteCode = shader::ReadFile("shaders/bin/shadow.vert.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo };
-
-    // Vertex input (same as GeometryPipeline)
-    auto bindingDesc = Vertex::GetBindingDescription();
-    auto attributes = Vertex::GetAttributeDescriptions();
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-    vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-    vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 1;
-    vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
     depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/shadow.vert.spv");
 
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 1;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _pipelineLayout;
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
 
-    // Use dynamic rendering
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format;
+    reflector.SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {});
+    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
+    reflector.SetColorAttachmentFormats({});
+    reflector.SetDepthAttachmentFormat(_brain.GetImageResourceManager().Access(_gBuffers.Shadow())->format);
 
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering
-
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed to create shadow pipeline!");
-    _pipeline = result.value;
-
-    _brain.device.destroy(vertModule);
+    reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }
 
 void ShadowPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
