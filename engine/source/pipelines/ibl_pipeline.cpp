@@ -12,8 +12,6 @@ IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environ
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
     CreateBRDFLUT();
-    CreateDescriptorSetLayout();
-    CreateDescriptorSet();
     CreateIrradiancePipeline();
     CreatePrefilterPipeline();
     CreateBRDFLUTPipeline();
@@ -37,7 +35,6 @@ IBLPipeline::~IBLPipeline()
     _brain.device.destroy(_irradiancePipelineLayout);
     _brain.device.destroy(_brdfLUTPipeline);
     _brain.device.destroy(_brdfLUTPipelineLayout);
-    _brain.device.destroy(_descriptorSetLayout);
 }
 
 void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
@@ -51,26 +48,35 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     for (size_t i = 0; i < 6; ++i)
     {
-        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-        finalColorAttachmentInfo.imageView = irradianceMap.views[i];
-        finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
-        finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+        vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
+            .imageView = irradianceMap.views[i],
+            .imageLayout = vk::ImageLayout::eAttachmentOptimal,
+            .loadOp = vk::AttachmentLoadOp::eDontCare,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+        };
 
-        vk::RenderingInfoKHR renderingInfo {};
-        renderingInfo.renderArea.extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
-        renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-        renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
-        renderingInfo.layerCount = 1;
-        renderingInfo.pDepthAttachment = nullptr;
-        renderingInfo.pStencilAttachment = nullptr;
+        vk::RenderingInfoKHR renderingInfo {
+            .renderArea = {
+                .offset = vk::Offset2D { 0, 0 },
+                .extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) },
+            },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &finalColorAttachmentInfo,
+            .pDepthAttachment = nullptr,
+            .pStencilAttachment = nullptr,
+        };
 
         commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
-        commandBuffer.pushConstants(_irradiancePipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(uint32_t), &i);
+        IrradiancePushConstant pc {
+            .index = static_cast<uint32_t>(i),
+            .hdriIndex = _environmentMap.index,
+        };
+
+        commandBuffer.pushConstants<IrradiancePushConstant>(_irradiancePipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, { pc });
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _irradiancePipeline);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _irradiancePipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _irradiancePipelineLayout, 0, { _brain.bindlessSet }, {});
 
         vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(irradianceMap.width), static_cast<float>(irradianceMap.height), 0.0f,
             1.0f };
@@ -78,7 +84,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
         vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
         vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
-        commandBuffer.setScissor(0, 1, &scissor);
+        commandBuffer.setScissor(0, { scissor });
 
         commandBuffer.draw(3, 1, 0, 0);
 
@@ -95,30 +101,37 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     {
         for (size_t j = 0; j < 6; ++j)
         {
-            vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-            finalColorAttachmentInfo.imageView = _prefilterMapViews[i][j];
-            finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
-            finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-            finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
-
+            vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
+                .imageView = _prefilterMapViews[i][j],
+                .imageLayout = vk::ImageLayout::eAttachmentOptimal,
+                .loadOp = vk::AttachmentLoadOp::eDontCare,
+                .storeOp = vk::AttachmentStoreOp::eStore,
+            };
             uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
 
-            vk::RenderingInfoKHR renderingInfo {};
-            renderingInfo.renderArea.extent = vk::Extent2D { size, size };
-            renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-            renderingInfo.colorAttachmentCount = 1;
-            renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
-            renderingInfo.layerCount = 1;
-            renderingInfo.pDepthAttachment = nullptr;
-            renderingInfo.pStencilAttachment = nullptr;
+            vk::RenderingInfoKHR renderingInfo {
+                .renderArea = {
+                    .offset = vk::Offset2D { 0, 0 },
+                    .extent = vk::Extent2D { size, size },
+                },
+                .layerCount = 1,
+                .colorAttachmentCount = 1,
+                .pColorAttachments = &finalColorAttachmentInfo,
+                .pDepthAttachment = nullptr,
+                .pStencilAttachment = nullptr,
+            };
 
             commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
-            PrefilterPushConstant pc { static_cast<uint32_t>(j), static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1) };
+            PrefilterPushConstant pc {
+                .faceIndex = static_cast<uint32_t>(j),
+                .roughness = static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1),
+                .hdriIndex = _environmentMap.index,
+            };
 
-            commandBuffer.pushConstants(_prefilterPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PrefilterPushConstant), &pc);
+            commandBuffer.pushConstants<PrefilterPushConstant>(_prefilterPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, { pc });
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _prefilterPipeline);
-            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _prefilterPipelineLayout, 0, 1, &_descriptorSet, 0, nullptr);
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _prefilterPipelineLayout, 0, { _brain.bindlessSet }, {});
 
             vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
                 1.0f };
@@ -126,7 +139,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(size), static_cast<uint32_t>(size) };
             vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
-            commandBuffer.setScissor(0, 1, &scissor);
+            commandBuffer.setScissor(0, { scissor });
 
             commandBuffer.draw(3, 1, 0, 0);
 
@@ -142,20 +155,24 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _brain.dldi);
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-    finalColorAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_brdfLUT)->views[0];
-    finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
-    finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
+        .imageView = _brain.GetImageResourceManager().Access(_brdfLUT)->views[0],
+        .imageLayout = vk::ImageLayout::eAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eDontCare,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+    };
 
-    vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { brdfLUT->width, brdfLUT->height };
-    renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-    renderingInfo.colorAttachmentCount = 1;
-    renderingInfo.pColorAttachments = &finalColorAttachmentInfo;
-    renderingInfo.layerCount = 1;
-    renderingInfo.pDepthAttachment = nullptr;
-    renderingInfo.pStencilAttachment = nullptr;
+    vk::RenderingInfoKHR renderingInfo {
+        .renderArea = {
+            .offset = vk::Offset2D { 0, 0 },
+            .extent = vk::Extent2D { brdfLUT->width, brdfLUT->height },
+        },
+        .layerCount = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &finalColorAttachmentInfo,
+        .pDepthAttachment = nullptr,
+        .pStencilAttachment = nullptr,
+    };
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -163,11 +180,9 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(brdfLUT->width), static_cast<float>(brdfLUT->height), 0.0f,
         1.0f };
-    commandBuffer.setViewport(0, 1, &viewport);
 
-    vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(brdfLUT->width), static_cast<uint32_t>(brdfLUT->height) };
-    vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
-    commandBuffer.setScissor(0, 1, &scissor);
+    commandBuffer.setViewport(0, { viewport });
+    commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
     commandBuffer.draw(3, 1, 0, 0);
 
@@ -181,12 +196,12 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 void IBLPipeline::CreateIrradiancePipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
     vk::PushConstantRange pushConstantRange {};
-    pushConstantRange.size = sizeof(uint32_t) * 6;
+    pushConstantRange.size = sizeof(IrradiancePushConstant) * 6;
     pushConstantRange.offset = 0;
     pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
@@ -308,7 +323,7 @@ void IBLPipeline::CreateIrradiancePipeline()
 void IBLPipeline::CreatePrefilterPipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -436,7 +451,7 @@ void IBLPipeline::CreatePrefilterPipeline()
 void IBLPipeline::CreateBRDFLUTPipeline()
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _descriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
@@ -551,51 +566,6 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
-}
-
-void IBLPipeline::CreateDescriptorSetLayout()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
-
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating IBL descriptor set layout!");
-}
-
-void IBLPipeline::CreateDescriptorSet()
-{
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
-    allocateInfo.descriptorSetCount = 1;
-    allocateInfo.pSetLayouts = &_descriptorSetLayout;
-
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_descriptorSet),
-        "Failed allocating descriptor sets!");
-
-    vk::DescriptorImageInfo imageInfo {};
-    imageInfo.sampler = _sampler;
-    imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    imageInfo.imageView = _brain.GetImageResourceManager().Access(_environmentMap)->view;
-
-    vk::WriteDescriptorSet descriptorWrite {};
-    descriptorWrite.dstSet = _descriptorSet;
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pImageInfo = &imageInfo;
-
-    _brain.device.updateDescriptorSets(1, &descriptorWrite, 0, nullptr);
 }
 
 void IBLPipeline::CreateIrradianceCubemap()

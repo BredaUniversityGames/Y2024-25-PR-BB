@@ -53,6 +53,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
 
+    // Makes sure previously created textures are available to be sampled in the IBL pipeline
+    UpdateBindless();
+
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();

@@ -474,6 +474,8 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     allocInfo.pSetLayouts = &bindlessLayout;
 
     util::VK_ASSERT(device.allocateDescriptorSets(&allocInfo, &bindlessSet), "Failed creating bindless descriptor set!");
+
+    util::NameObject(bindlessSet, "Bindless DS", *this);
 }
 
 void VulkanBrain::CreateBindlessMaterialBuffer()
