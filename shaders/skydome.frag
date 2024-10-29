@@ -21,7 +21,7 @@ layout (location = 1) out vec4 outBrightness;
 
 void main()
 {
-    outColor = vec4(texCoord, 0.0, 1.0);//texture(bindless_color_textures[nonuniformEXT(pc.index)], texCoord);
+    outColor = texture(bindless_color_textures[nonuniformEXT(pc.index)], texCoord);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);

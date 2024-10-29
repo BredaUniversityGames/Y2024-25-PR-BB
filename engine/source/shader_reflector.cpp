@@ -128,6 +128,10 @@ void ShaderReflector::ReflectVertexInput(const ShaderStage& shaderStage)
     std::vector<SpvReflectInterfaceVariable*> inputVariables { inputCount };
     spvReflectEnumerateInputVariables(&shaderStage.reflectModule, &inputCount, inputVariables.data());
 
+    // Makes sure the input variables are sorted by their location.
+    std::sort(inputVariables.begin(), inputVariables.end(), [](const auto a, const auto b)
+        { return a->location < b->location; });
+
     uint32_t binding { 0 };
     vk::VertexInputBindingDescription bindingDescription {
         .binding = binding,

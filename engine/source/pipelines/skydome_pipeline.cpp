@@ -1,3 +1,4 @@
+#include <shader_reflector.hpp>
 #include "pipelines/skydome_pipeline.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
@@ -68,7 +69,6 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
-    ;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
@@ -97,92 +97,10 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
 void SkydomePipeline::CreatePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-
-    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
-    pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
-    pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
-
-    vk::PushConstantRange pcRange {};
-    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    pcRange.size = sizeof(_pushConstants);
-    pcRange.offset = 0;
-
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-        "Failed creating geometry pipeline layout!");
-
-    auto vertByteCode = shader::ReadFile("shaders/bin/skydome.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/skydome.frag.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    // TODO: This shader stuff can be moved into a util function for brevity.
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    auto bindingDesc = Vertex::GetBindingDescription();
-    auto attributes = Vertex::GetAttributeDescriptions();
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-    vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-    vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributes.size();
-    vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.depthClampEnable = vk::False;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-    multisampleStateCreateInfo.alphaToOneEnable = vk::False;
-
     std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;
     blendAttachments[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    memcpy(&blendAttachments[1], &blendAttachments[0], sizeof(vk::PipelineColorBlendAttachmentState));
+    blendAttachments[1] = blendAttachments[0];
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
@@ -190,44 +108,27 @@ void SkydomePipeline::CreatePipeline()
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthTestEnable = vk::True;
+    depthStencilStateCreateInfo.depthWriteEnable = vk::True;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = vk::False;
 
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _pipelineLayout;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
-
-    std::array<vk::Format, 2> colorAttachmentFormats = {
+    std::vector<vk::Format> formats = {
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skydome.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/skydome.frag.spv");
 
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the skydome pipeline layout!");
-    _pipeline = result.value;
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetDepthStencilState(depthStencilStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
+    reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
+
+    reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }
