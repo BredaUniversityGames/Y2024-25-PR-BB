@@ -1,21 +1,22 @@
 #pragma once
 
+#include "vulkan_brain.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "indirect_culler.hpp"
+#include "frame_graph.hpp"
 
 class BatchBuffer;
 class GPUScene;
 class RenderSceneDescription;
 
-class GeometryPipeline
+class GeometryPipeline : public FrameGraphRenderPass
 {
 public:
     GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
+    ~GeometryPipeline() final;
 
-    ~GeometryPipeline();
-
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);

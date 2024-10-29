@@ -1,21 +1,30 @@
 ---
+
+# For more info on the checks enabled see: https://clang.llvm.org/extra/clang-tidy/checks/list.html
+
 Checks: '
 -*,
 
 modernize-*,
 -modernize-use-trailing-return-type,
+-modernize-use-auto,
 
 readability-*,
 -readability-identifier-length,
+-readability-uppercase-literal-suffix,
+-readability-use-anyofallof,
+-readability-else-after-return,
 -readability-redundant-member-init,
 
 performance-*,
 
 misc-*,
--misc-include-cleaner,
--misc-non-private-member-variables-in-classes
+-misc-non-private-member-variables-in-classes,
 
 bugprone-*
+
+cppcoreguidelines-*
+clang-analyzer-*
 '
 
 CheckOptions:
@@ -79,9 +88,9 @@ CheckOptions:
   # Naming convention for constexpr variables
   - key: readability-identifier-naming.ConstexprVariableCase
     value: UPPER_CASE
-  - key: readability-identifier-naming.ConstexprVariablPrefix
+  - key: readability-identifier-naming.ConstexprVariablePrefix
     value: ''
-  - key: readability-identifier-naming.ConstexprVariablSuffix
+  - key: readability-identifier-naming.ConstexprVariableSuffix
     value: ''
 
   # Naming convention for template parameters

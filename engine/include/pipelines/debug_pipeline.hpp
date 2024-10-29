@@ -3,15 +3,16 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "geometry_pipeline.hpp"
+#include "frame_graph.hpp"
 
 class SwapChain;
 class BatchBuffer;
 
-class DebugPipeline
+class DebugPipeline : public FrameGraphRenderPass
 {
 public:
     DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
-    ~DebugPipeline();
+    ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
     {
@@ -25,7 +26,7 @@ public:
     }
     void ClearLines() { _linesData.clear(); }
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);

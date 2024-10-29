@@ -1,13 +1,14 @@
 #pragma once
 
 #include "common.hpp"
+#include "gpu_resources.hpp"
 
 class GPUScene;
 class VulkanBrain;
 class CameraResource;
 struct RenderSceneDescription;
 
-class IndirectCuller
+class IndirectCuller // TODO: Convert this to FrameGraphRenderPass
 {
 public:
     IndirectCuller(const VulkanBrain& brain, const GPUScene& gpuScene);

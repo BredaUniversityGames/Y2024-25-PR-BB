@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "application_module.hpp"
 
-#include "vulkan/vulkan.hpp"
+#include "lib/includes_vulkan.hpp"
 #include "gpu_resources.hpp"
 #include "application_module.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
@@ -119,7 +119,6 @@ private:
         VK_KHR_MULTIVIEW_EXTENSION_NAME,
         VK_KHR_MAINTENANCE2_EXTENSION_NAME,
 #endif
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,

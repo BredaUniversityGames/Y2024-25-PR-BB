@@ -2,13 +2,14 @@
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
 #include "shader_reflector.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
-    : _brain(creation.brain)
-    , irradianceMap(creation.irradianceMap)
+    : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , directionalShadowMap(creation.directionalShadowMap)
+    , _brain(creation.brain)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();
@@ -51,7 +52,7 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
         sin(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x));
 
     const glm::mat4 lightView = glm::lookAt(light.camera.position, light.camera.position - direction, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho<float>(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
+    glm::mat4 depthProjectionMatrix = glm::ortho(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
     depthProjectionMatrix[1][1] *= -1;
 
     DirectionalLightData& directionalLightData = sceneData.directionalLight;

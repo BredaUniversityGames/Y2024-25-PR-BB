@@ -10,9 +10,9 @@
 DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
+    , _swapChain(swapChain)
     , _camera(camera)
     , _descriptorSetLayout(gpuScene.GetSceneDescriptorSetLayout())
-    , _swapChain(swapChain)
 
 {
 
@@ -28,13 +28,13 @@ DebugPipeline::~DebugPipeline()
     _brain.GetBufferResourceManager().Destroy(_vertexBuffer);
 }
 
-void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex)
+void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     // Update the lines data
     UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-    finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
+    finalColorAttachmentInfo.imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex);
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
@@ -61,14 +61,9 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
-    util::BeginLabel(commandBuffer, "Debug render pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
-
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
-
-    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
-    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     // Bind descriptor sets
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
@@ -85,8 +80,6 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, const uint32
     _brain.drawStats.debugLines = static_cast<uint32_t>(_linesData.size() / 2);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     commandBuffer.endRenderingKHR(_brain.dldi);
-
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void DebugPipeline::CreatePipeline()

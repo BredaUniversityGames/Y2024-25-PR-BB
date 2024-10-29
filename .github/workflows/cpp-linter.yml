@@ -1,0 +1,87 @@
+name: Code Linter
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths: [ '**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake' ]
+  push:
+    branches: [ main ]
+    paths: [ '**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake' ]
+
+jobs:
+  cpp-linter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    env:
+      EXTRA_ARGS: -DWARNINGS_AS_ERRORS=OFF -DCOMPILE_SHADERS=OFF -DENABLE_PCH=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: 'true'
+          lfs: 'true'
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+
+      - name: Setup Vulkan SDK
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        with:
+          vulkan-query-version: latest
+          vulkan-components: Vulkan-Headers, Vulkan-Loader
+          vulkan-use-cache: true
+
+      - name: Setup database
+        run: cmake --preset WSL-Release ${{ env.EXTRA_ARGS }}
+
+      - name: CPP-Linter
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+
+          version: 18
+          files-changed-only: true # Only processes files changed in PR
+          database: build/WSL-Release/compile_commands.json
+          verbosity: 'debug'
+          style: 'file'
+          ignore: 'external | build | VULKAN_SDK' # Also ignore Vulkan SDK folder
+          tidy-checks: # Reduced checks for performance
+            '
+            -*,
+            cppcoreguidelines-*,
+            
+            -cppcoreguidelines-avoid-magic-numbers,
+            -cppcoreguidelines-non-private-member-variables-in-classes,
+            -cppcoreguidelines-owning-memory,
+            -cppcoreguidelines-macro-usage,
+            -cppcoreguidelines-macro-to-enum,
+            -cppcoreguidelines-prefer-member-initializer,
+            -cppcoreguidelines-no-suspend-with-lock,
+
+            bugprone-*,
+            -bugprone-use-after-move,
+            -bugprone-stringview-nullptr,
+            -bugprone-standalone-empty,
+            -bugprone-reserved-identifier,
+            -bugprone-infinite-loop,
+            -bugprone-multiple-statement-macro,
+            -bugprone-inc-dec-in-conditions,
+            -bugprone-suspicious-string-compare,
+            -bugprone-suspicious-semicolon,
+            -bugprone-forward-declaration-namespace,
+            -bugprone-easily-swappable-parameters,
+            -bugprone-multiple-new-in-one-expression,
+
+            performance-*,
+            -performance-avoid-endl,
+            '
+          thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}

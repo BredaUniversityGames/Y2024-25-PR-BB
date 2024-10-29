@@ -1,6 +1,7 @@
 #include "bloom_settings.hpp"
 #include "vulkan_helper.hpp"
 #include "shader_reflector.hpp"
+#include "imgui/imgui.h"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
     : _brain(brain)
@@ -11,7 +12,8 @@ BloomSettings::BloomSettings(const VulkanBrain& brain)
 
 BloomSettings::~BloomSettings()
 {
-    _brain.device.destroy(_descriptorSetLayout);
+    // TODO: Investigate some ownership issues, this is getting deleted somewhere else already...
+    //_brain.device.destroy(_descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         _brain.GetBufferResourceManager().Destroy(_frameData.buffers[i]);
@@ -47,6 +49,7 @@ void BloomSettings::CreateDescriptorSetLayout()
     });
 
     _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings);
+    util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _brain);
 }
 
 void BloomSettings::CreateUniformBuffers()

@@ -3,6 +3,10 @@
 #include "input_manager.hpp"
 #include "engine.hpp"
 
+// SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
+// This definition fixes the issues and does not change the final build output
+#define SDL_DISABLE_ANALYZE_MACROS
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
@@ -64,7 +68,8 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
 
     return priority;
 }
-void ApplicationModule::Shutdown(Engine& engine)
+
+void ApplicationModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     SDL_DestroyWindow(_window);
     SDL_Quit();

@@ -1,11 +1,8 @@
 #include "main_engine.hpp"
 #include "application_module.hpp"
-
-// TODO: Remove the need to include the pch here
-#include "pch.hpp"
 #include "old_engine.hpp"
 
-int main(int argc, char* argv[])
+int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
 

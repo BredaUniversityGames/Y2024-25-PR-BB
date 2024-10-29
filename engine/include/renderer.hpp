@@ -24,6 +24,7 @@ class Engine;
 class BatchBuffer;
 class ECS;
 class GPUScene;
+class FrameGraph;
 
 class Renderer
 {
@@ -64,6 +65,7 @@ private:
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
 
+    std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
 

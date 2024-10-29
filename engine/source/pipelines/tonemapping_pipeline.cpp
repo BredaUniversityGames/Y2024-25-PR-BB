@@ -3,6 +3,7 @@
 #include "shaders/shader_loader.hpp"
 #include "bloom_settings.hpp"
 #include "shader_reflector.hpp"
+#include "gpu_scene.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _brain(brain)
@@ -23,10 +24,10 @@ TonemappingPipeline::~TonemappingPipeline()
     _brain.device.destroy(_pipelineLayout);
 }
 
-void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex)
+void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
-    finalColorAttachmentInfo.imageView = _swapChain.GetImageView(swapChainIndex);
+    finalColorAttachmentInfo.imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex);
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
@@ -41,7 +42,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    util::BeginLabel(commandBuffer, "Tonemapping pass", glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
@@ -57,7 +57,6 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void TonemappingPipeline::CreatePipeline()

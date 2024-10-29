@@ -1,5 +1,5 @@
 #include "mesh_primitives.hpp"
-#include <concepts>
+#include <glm/gtc/constants.hpp>
 
 void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangle)
 {

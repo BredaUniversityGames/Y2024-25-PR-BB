@@ -1,4 +1,5 @@
 #include "gbuffers.hpp"
+#include "vulkan_brain.hpp"
 
 GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
     : _brain(brain)
@@ -56,10 +57,6 @@ void GBuffers::CreateGBuffers()
 
     gBufferCreation.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Position");
     _attachments[3] = _brain.GetImageResourceManager().Create(gBufferCreation);
-
-    vk::CommandBuffer cb = util::BeginSingleTimeCommands(_brain);
-    TransitionLayout(cb, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::EndSingleTimeCommands(_brain, cb);
 }
 
 void GBuffers::CreateDepthResources()
@@ -67,13 +64,6 @@ void GBuffers::CreateDepthResources()
     ImageCreation depthCreation {};
     depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
     _depthImage = _brain.GetImageResourceManager().Create(depthCreation);
-
-    const Image* image = _brain.GetImageResourceManager().Access(_depthImage);
-
-    vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(commandBuffer, image->image, _depthFormat, vk::ImageLayout::eUndefined,
-        vk::ImageLayout::eDepthStencilAttachmentOptimal);
-    util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
 void GBuffers::CreateShadowMapResources()
@@ -107,12 +97,6 @@ void GBuffers::CreateShadowMapResources()
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
         .SetSampler(_shadowSampler);
     _shadowImage = _brain.GetImageResourceManager().Create(shadowCreation);
-
-    const Image* image = _brain.GetImageResourceManager().Access(_shadowImage);
-
-    vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
-    util::TransitionImageLayout(commandBuffer, image->image, _shadowFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-    util::EndSingleTimeCommands(_brain, commandBuffer);
 }
 
 void GBuffers::CleanUp()
