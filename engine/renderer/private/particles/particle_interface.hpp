@@ -2,14 +2,15 @@
 
 #include <cstdint>
 #include <vector>
+#include "particles/particle_util.hpp"
 
 class ECS;
-struct Emitter;
 
 class ParticleInterface
 {
 public:
-    ParticleInterface(ECS& ecs);
+    ParticleInterface(const std::shared_ptr<ECS> ecs);
+    ~ParticleInterface() = default;
 
     enum class EmitterPreset
     {
@@ -20,6 +21,6 @@ public:
     void SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit = 1);
 
 private:
-    ECS& _ecs;
+    const std::shared_ptr<ECS> _ecs;
     std::vector<Emitter> _emitterPresets;
 };

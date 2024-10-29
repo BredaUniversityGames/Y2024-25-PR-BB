@@ -1,8 +1,9 @@
 ﻿#include "pipelines/shadow_pipeline.hpp"
 
-#include "shaders/shader_loader.hpp"
+#include "shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "renderer_public.hpp"
 
 ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _brain(brain)

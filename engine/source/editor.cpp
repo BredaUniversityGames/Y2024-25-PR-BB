@@ -4,18 +4,17 @@
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
 #include "performance_tracker.hpp"
-#include "bloom_settings.hpp"
-#include "mesh.hpp"
 #include "modules/physics_module.hpp"
 #include "profile_macros.hpp"
 #include "log.hpp"
+#include "renderer_module.hpp"
+#include "renderer_public.hpp"
 
 #include <fstream>
 
 #include "ECS.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "gbuffers.hpp"
 #include "serialization.hpp"
 
 #include <imgui_impl_sdl3.h>
@@ -26,37 +25,22 @@
 
 #include <entt/entity/entity.hpp>
 
-Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
+Editor::Editor(ECS& ecs, RendererModule& renderer)
     : _ecs(ecs)
-    , _brain(brain)
-    , _gBuffers(gBuffers)
+    , _renderer(renderer)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &swapchainFormat;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = depthFormat;
-
+    vk::Format format {};
     ImGui_ImplVulkan_InitInfo initInfoVulkan {};
-    initInfoVulkan.UseDynamicRendering = true;
-    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
-    initInfoVulkan.Device = _brain.device;
-    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = _brain.instance;
-    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
-    initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = swapchainImages;
+    renderer.GetImguiInitInfo(initInfoVulkan, pipelineRenderingCreateInfoKhr, format);
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    //_basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
+void Editor::Draw(PerformanceTracker& performanceTracker, SceneDescription& scene, ECS& ecs)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -147,25 +131,25 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::End();
 
     performanceTracker.Render();
-    bloomSettings.Render();
+    // bloomSettings.Render();
 
     // Render systems inspect
     for (const auto& system : ecs._systems)
     {
         system->Inspect();
     }
-    DirectionalLight& light = scene.directionalLight;
-    // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    ImGui::Begin("Light Debug");
-    ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
-    ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
-    ImGui::DragFloat("Ortho Size", &light.camera.orthographicSize, 0.1f);
-    ImGui::DragFloat("Far Plane", &light.camera.farPlane, 0.1f);
-    ImGui::DragFloat("Near Plane", &light.camera.nearPlane, 0.1f);
-    ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
-    ImGui::Image(textureID, ImVec2(512, 512));
-    ImGui::End();
+    // DirectionalLight& light = scene.directionalLight;
+    //  for debug info
+    // static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // ImGui::Begin("Light Debug");
+    // ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
+    // ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
+    // ImGui::DragFloat("Ortho Size", &light.camera.orthographicSize, 0.1f);
+    // ImGui::DragFloat("Far Plane", &light.camera.farPlane, 0.1f);
+    // ImGui::DragFloat("Near Plane", &light.camera.nearPlane, 0.1f);
+    // ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
+    // ImGui::Image(textureID, ImVec2(512, 512));
+    //  ImGui::End();
     //
 
     ImGui::Begin("Scene");
@@ -219,37 +203,37 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::Begin("Dump VMA stats");
 
-    if (ImGui::Button("Dump json"))
-    {
-        char* statsJson;
-        vmaBuildStatsString(_brain.vmaAllocator, &statsJson, true);
+    // if (ImGui::Button("Dump json"))
+    // {
+    // char* statsJson;
+    // vmaBuildStatsString(_renderer.GetBrain().vmaAllocator, &statsJson, true);
 
-        const char* outputFilePath = "vma_stats.json";
+    // const char* outputFilePath = "vma_stats.json";
 
-        std::ofstream file { outputFilePath };
-        if (file.is_open())
-        {
-            file << statsJson;
+    // std::ofstream file { outputFilePath };
+    // if (file.is_open())
+    // {
+    //     file << statsJson;
 
-            file.close();
-        }
-        else
-        {
-            bblog::error("Failed writing VMA stats to file!");
-        }
+    //    file.close();
+    // }
+    // else
+    // {
+    //     bblog::error("Failed writing VMA stats to file!");
+    // }
 
-        vmaFreeStatsString(_brain.vmaAllocator, statsJson);
-    }
-
-    ImGui::End();
-
-    ImGui::Begin("Renderer Stats");
-
-    ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
-    ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
-    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
+    // vmaFreeStatsString(_renderer.GetBrain().vmaAllocator, statsJson);
+    // }
 
     ImGui::End();
+
+    // ImGui::Begin("Renderer Stats");
+
+    // ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
+    // ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
+    // ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
+
+    // ImGui::End();
 
     {
         ZoneNamedN(zone, "ImGui Render", true);

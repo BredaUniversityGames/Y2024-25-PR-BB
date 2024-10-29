@@ -2,6 +2,8 @@
 
 #include "mesh.hpp"
 #include <string>
+#include "vulkan_brain.hpp"
+#include "renderer_public.hpp"
 
 #include "lib/include_fastgltf.hpp"
 

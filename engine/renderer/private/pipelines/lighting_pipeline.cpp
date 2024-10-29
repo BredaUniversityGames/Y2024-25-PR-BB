@@ -1,5 +1,5 @@
 #include "pipelines/lighting_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
+#include "shader_loader.hpp"
 #include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
 

@@ -1,6 +1,6 @@
 ﻿#include "pipelines/debug_pipeline.hpp"
 
-#include "shaders/shader_loader.hpp"
+#include "shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 #include "swap_chain.hpp"

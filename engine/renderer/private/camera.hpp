@@ -5,30 +5,12 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
-#include <gpu_resources.hpp>
+#include "gpu_resources.hpp"
 #include <vulkan/vulkan.hpp>
 #include "constants.hpp"
+#include "camera_public.hpp"
 
 class VulkanBrain;
-
-struct Camera
-{
-    enum class Projection
-    {
-        ePerspective,
-        eOrthographic
-    } projection;
-
-    glm::vec3 position {};
-    glm::vec3 eulerRotation {};
-    float fov {};
-
-    float orthographicSize;
-
-    float nearPlane {};
-    float farPlane {};
-    float aspectRatio {};
-};
 
 class CameraResource
 {

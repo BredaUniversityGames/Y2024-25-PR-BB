@@ -1,6 +1,6 @@
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "vulkan_helper.hpp"
-#include "shaders/shader_loader.hpp"
+#include "shader_loader.hpp"
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
 

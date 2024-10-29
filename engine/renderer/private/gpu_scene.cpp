@@ -2,6 +2,7 @@
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "renderer_public.hpp"
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
