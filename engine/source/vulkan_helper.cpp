@@ -234,8 +234,7 @@ void util::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image imag
 
     vk::DependencyInfo dependencyInfo {};
     dependencyInfo.setImageMemoryBarrierCount(1)
-        .setPImageMemoryBarriers(&barrier)
-        .setImageMemoryBarriers(barrier);
+        .setPImageMemoryBarriers(&barrier);
 
     commandBuffer.pipelineBarrier2(dependencyInfo);
 }

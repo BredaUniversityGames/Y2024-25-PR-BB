@@ -32,10 +32,15 @@ struct alignas(16) Particle
 
 struct alignas(16) ParticleCounters
 {
-    uint32_t aliveCount;
-    uint32_t deadCount;
-    uint32_t aliveCountAfterSimulation;
-    uint32_t culledCount;
+    uint32_t aliveCount = 0;
+    uint32_t deadCount = MAX_PARTICLES;
+    uint32_t aliveCountAfterSimulation = 0;
+};
+
+struct alignas(16) ParticleInstance
+{
+    glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+    uint32_t materialIndex = 0;
 };
 
 enum class ParticleType

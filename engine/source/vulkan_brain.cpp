@@ -160,7 +160,7 @@ void VulkanBrain::CreateInstance(const ApplicationModule::VulkanInitInfo& initIn
     appInfo.pApplicationName = "";
     appInfo.applicationVersion = vk::makeApiVersion(0, 0, 0, 0);
     appInfo.engineVersion = vk::makeApiVersion(0, 1, 0, 0);
-    appInfo.apiVersion = vk::makeApiVersion(0, 1, 1, 0);
+    appInfo.apiVersion = vk::makeApiVersion(0, 1, 3, 0);
     appInfo.pEngineName = "No engine";
 
     vk::StructureChain<vk::InstanceCreateInfo, vk::DebugUtilsMessengerCreateInfoEXT> structureChain;
@@ -323,10 +323,7 @@ void VulkanBrain::CreateDevice()
     for (uint32_t familyQueueIndex : uniqueQueueFamilies)
         queueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo { .flags = vk::DeviceQueueCreateFlags {}, .queueFamilyIndex = familyQueueIndex, .queueCount = 1, .pQueuePriorities = &queuePriority });
 
-    vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceSynchronization2Features, vk::PhysicalDeviceTimelineSemaphoreFeatures> structureChain;
-
-    auto& timelineSemaphoreFeatures = structureChain.get<vk::PhysicalDeviceTimelineSemaphoreFeatures>();
-    timelineSemaphoreFeatures.timelineSemaphore = true;
+    vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceSynchronization2Features> structureChain;
 
     auto& synchronization2Features = structureChain.get<vk::PhysicalDeviceSynchronization2Features>();
     synchronization2Features.synchronization2 = true;
