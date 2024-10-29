@@ -27,6 +27,10 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, const uint32_t currentFrame, const uint32_t swapChainIndex);
 
+    // enable or disable drawing debug lines
+    void SetState(const bool newState) { _isEnabled = newState; }
+    bool GetState() const { return _isEnabled; }
+
     NON_MOVABLE(DebugPipeline);
     NON_COPYABLE(DebugPipeline);
 
@@ -41,6 +45,7 @@ private:
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
     const CameraResource& _camera;
+    bool _isEnabled = true;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

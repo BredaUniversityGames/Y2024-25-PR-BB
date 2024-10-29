@@ -12,7 +12,9 @@
 #include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
@@ -22,6 +24,7 @@
 #include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
+#include "glm/gtx/quaternion.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -41,6 +44,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
 
     _ecs = std::make_shared<ECS>();
+
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
     _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
 
@@ -64,9 +73,34 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     {
         glm::vec3 translate { i / 3, 0.0f, i % 3 };
         glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
-
         _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+
+        // add colliders
+        for (size_t x = 0; x < _scene->models[1]->hierarchy.allNodes.size(); x++)
+        {
+            glm::mat4 transformMatrix = _scene->models[1]->hierarchy.allNodes[x].transform;
+
+            glm::mat4 test = transform * transformMatrix;
+            glm::vec3 position = test[3];
+            entt::entity entity = _ecs->_registry.create();
+            JPH::BodyCreationSettings coliderSettings(new JPH::BoxShape(JPH::Vec3(0.5, 1.0, 0.5)), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+
+            RigidbodyComponent rb(*_physicsModule->bodyInterface, coliderSettings);
+            NameComponent node;
+            node._name = "Colider";
+            _ecs->_registry.emplace<NameComponent>(entity, node);
+            _ecs->_registry.emplace<RigidbodyComponent>(entity, rb);
+        }
     }
+
+    // add a plane
+    JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(18.0f, 0.1f, 18.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+    RigidbodyComponent newRigidBody(*_physicsModule->bodyInterface, plane_settings);
+    entt::entity entity = _ecs->_registry.create();
+    _ecs->_registry.emplace<RigidbodyComponent>(entity, newRigidBody);
+    NameComponent node;
+    node._name = "Plane";
+    _ecs->_registry.emplace<NameComponent>(entity, node);
 
     _renderer->UpdateBindless();
 
@@ -83,12 +117,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastMousePos = mousePos;
 
     _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
-
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -167,8 +195,55 @@ void OldEngine::Tick(Engine& engine)
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+
+        // shoot balls
+        if (ImGui::IsKeyPressed(ImGuiKey_Space))
+        {
+            // spawn model
+            glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, _scene->camera.position) * glm::scale(glm::mat4 { 1.0f }, glm::vec3(0.45));
+            _scene->gameObjects.emplace_back(transform, _scene->models[0]);
+
+            entt::entity entity = _ecs->_registry.create();
+            RigidbodyComponent rb(*_physicsModule->bodyInterface, eSPHERE);
+            NameComponent node;
+            node._name = "Ball";
+            _ecs->_registry.emplace<NameComponent>(entity, node);
+            _ecs->_registry.emplace<RigidbodyComponent>(entity, rb);
+            _physicsModule->bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(_scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z), JPH::EActivation::Activate);
+
+            glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
+            _physicsModule->bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 25.0f);
+
+            _projectiles[&_scene->gameObjects.back()] = rb;
+        }
     }
     _lastMousePos = { mouseX, mouseY };
+
+    // Update projectiles
+    {
+        for (auto& projectile : _projectiles)
+        {
+            // Retrieve position and rotation from the physics body
+            JPH::Vec3 position = _physicsModule->bodyInterface->GetPosition(projectile.second.bodyID);
+            JPH::Quat rotation = _physicsModule->bodyInterface->GetRotation(projectile.second.bodyID);
+
+            // Convert Jolt Physics types to glm types
+            glm::vec3 glmPosition(position.GetX(), position.GetY(), position.GetZ());
+            glm::quat glmRotation(rotation.GetW(), rotation.GetX(), rotation.GetY(), rotation.GetZ());
+
+            // Build the transformation matrix including both translation and rotation
+            glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glmPosition) * glm::scale(glm::mat4(1.0f), glm::vec3(0.45));
+            glm::mat4 rotationMatrix = glm::toMat4(glmRotation);
+
+            // Combine translation and rotation
+            projectile.first->transform = translationMatrix * rotationMatrix;
+        }
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF9))
+    {
+        _renderer->_debugPipeline->SetState(!(_renderer->_debugPipeline->GetState()));
+    }
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
