@@ -23,6 +23,7 @@ struct RenderSceneDescription
     const GPUScene& gpuScene;
     const SceneDescription& sceneDescription; // This will change to ecs
     const BatchBuffer& batchBuffer;
+    const uint32_t targetSwapChainImageIndex;
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;

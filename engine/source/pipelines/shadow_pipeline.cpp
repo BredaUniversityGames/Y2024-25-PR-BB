@@ -36,11 +36,8 @@ ShadowPipeline::~ShadowPipeline()
     _brain.GetBufferResourceManager().Destroy(_drawBuffer);
 }
 
-void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame,
-    const RenderSceneDescription& scene)
+void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    util::BeginLabel(commandBuffer, "Shadow pass", glm::vec3 { 0.0f, 1.0f, 1.0f }, _brain.dldi);
-
     _shadowCamera.Update(currentFrame, scene.sceneDescription.directionalLight.camera);
 
     _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera, _drawBuffer, _drawBufferDescriptorSet);
@@ -61,12 +58,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    // Set viewport and scissor for shadow map size
-    vk::Viewport viewport { 0.0f, 0.0f, 4096.0f, 4096.0f, 0.0f, 1.0f };
-    vk::Rect2D scissor { vk::Offset2D { 0, 0 }, vk::Extent2D { 4096, 4096 } };
-    commandBuffer.setViewport(0, 1, &viewport);
-    commandBuffer.setScissor(0, 1, &scissor);
-
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _shadowCamera.DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
@@ -83,8 +74,6 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
-
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 void ShadowPipeline::CreatePipeline(const GPUScene& gpuScene)

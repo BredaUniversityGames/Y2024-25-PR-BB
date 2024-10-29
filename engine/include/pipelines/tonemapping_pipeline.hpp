@@ -1,16 +1,17 @@
 #pragma once
 #include "swap_chain.hpp"
 #include "vulkan_brain.hpp"
+#include "frame_graph.hpp"
 
 class BloomSettings;
 
-class TonemappingPipeline
+class TonemappingPipeline : public FrameGraphRenderPass
 {
 public:
     TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
-    ~TonemappingPipeline();
+    ~TonemappingPipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, uint32_t swapChainIndex);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_COPYABLE(TonemappingPipeline);
     NON_MOVABLE(TonemappingPipeline);

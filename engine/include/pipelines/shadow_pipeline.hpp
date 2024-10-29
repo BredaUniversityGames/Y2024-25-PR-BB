@@ -2,19 +2,19 @@
 
 #include "gbuffers.hpp"
 #include "mesh.hpp"
-#include "geometry_pipeline.hpp"
 #include "indirect_culler.hpp"
+#include "frame_graph.hpp"
 
 class BatchBuffer;
 class RenderSceneDescription;
 
-class ShadowPipeline
+class ShadowPipeline : public FrameGraphRenderPass
 {
 public:
     ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene);
-    ~ShadowPipeline();
+    ~ShadowPipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_MOVABLE(ShadowPipeline);
     NON_COPYABLE(ShadowPipeline);
