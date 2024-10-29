@@ -12,8 +12,7 @@ BloomSettings::BloomSettings(const VulkanBrain& brain)
 
 BloomSettings::~BloomSettings()
 {
-    // TODO: Investigate some ownership issues, this is getting deleted somewhere else already...
-    //_brain.device.destroy(_descriptorSetLayout);
+    _brain.device.destroy(_descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         _brain.GetBufferResourceManager().Destroy(_frameData.buffers[i]);
@@ -47,8 +46,9 @@ void BloomSettings::CreateDescriptorSetLayout()
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
     });
+    std::vector<std::string_view> names { "BloomSettingsUBO" };
 
-    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings);
+    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
     util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _brain);
 }
 

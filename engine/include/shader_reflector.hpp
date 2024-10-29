@@ -15,7 +15,7 @@ public:
     void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
-    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
     void SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo) { _inputAssemblyStateCreateInfo = createInfo; }
     void SetViewportState(const vk::PipelineViewportStateCreateInfo& createInfo) { _viewportStateCreateInfo = createInfo; }
@@ -79,5 +79,5 @@ private:
 
     vk::ShaderModule CreateShaderModule(const std::vector<std::byte>& spirvBytes);
 
-    static size_t HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+    static size_t HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 };

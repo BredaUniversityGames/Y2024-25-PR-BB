@@ -122,7 +122,7 @@ void GPUScene::InitializeObjectInstancesBuffers()
 
 void GPUScene::CreateSceneDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
 
     vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
     descriptorSetLayoutBinding.binding = 0;
@@ -131,12 +131,9 @@ void GPUScene::CreateSceneDescriptorSetLayout()
     descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
     descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
+    std::vector<std::string_view> names { "SceneUBO" };
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_sceneDescriptorSetLayout),
-        "Failed creating scene descriptor set layout!");
+    _sceneDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -151,7 +148,9 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetLayoutBinding };
 
-    _objectInstancesDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings);
+    std::vector<std::string_view> names { "InstanceData" };
+
+    _objectInstancesDescriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()

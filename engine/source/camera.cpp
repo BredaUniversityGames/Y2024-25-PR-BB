@@ -43,8 +43,9 @@ void CameraResource::CreateDescriptorSetLayout(const VulkanBrain& brain)
     };
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
+    std::vector<std::string_view> names { "CameraUBO" };
 
-    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(brain, bindings);
+    _descriptorSetLayout = ShaderReflector::CacheDescriptorSetLayout(brain, bindings, names);
 }
 
 void CameraResource::CreateBuffers()

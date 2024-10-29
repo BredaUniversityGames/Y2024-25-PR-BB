@@ -464,7 +464,9 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
-    bindlessLayout = ShaderReflector::CacheDescriptorSetLayout(*this, bindings);
+    std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
+
+    bindlessLayout = ShaderReflector::CacheDescriptorSetLayout(*this, bindings, names);
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = bindlessPool;

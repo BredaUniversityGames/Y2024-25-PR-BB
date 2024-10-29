@@ -66,9 +66,9 @@ void ShaderReflector::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& 
     CreatePipeline(pipeline);
 }
 
-vk::DescriptorSetLayout ShaderReflector::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
+vk::DescriptorSetLayout ShaderReflector::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
-    size_t hash = HashBindings(bindings);
+    size_t hash = HashBindings(bindings, names);
 
     if (_cacheDescriptorSetLayouts.find(hash) == _cacheDescriptorSetLayouts.end())
     {
@@ -169,6 +169,7 @@ void ShaderReflector::ReflectDescriptorLayouts(const ShaderReflector::ShaderStag
     for (const auto& set : sets)
     {
         std::vector<vk::DescriptorSetLayoutBinding> bindings;
+        std::vector<std::string_view> names;
 
         for (size_t i = 0; i < set->binding_count; ++i)
         {
@@ -182,9 +183,21 @@ void ShaderReflector::ReflectDescriptorLayouts(const ShaderReflector::ShaderStag
             };
 
             bindings.emplace_back(binding);
+            if (reflectBinding->name != nullptr && reflectBinding->name[0] != '\0')
+            {
+                names.emplace_back(reflectBinding->name);
+            }
+            else if (reflectBinding->type_description->type_name != nullptr && reflectBinding->type_description->type_name[0] != '\0')
+            {
+                names.emplace_back(reflectBinding->type_description->type_name);
+            }
+            else
+            {
+                names.emplace_back("\0");
+            }
         }
 
-        size_t hash = HashBindings(bindings);
+        size_t hash = HashBindings(bindings, names);
 
         if (_descriptorSetLayouts.size() <= set->set)
         {
@@ -283,7 +296,7 @@ vk::ShaderModule ShaderReflector::CreateShaderModule(const std::vector<std::byte
     return _brain.device.createShaderModule(createInfo, nullptr);
 }
 
-size_t ShaderReflector::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
+size_t ShaderReflector::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
     size_t seed = bindings.size();
     for (const auto& binding : bindings)
@@ -292,6 +305,10 @@ size_t ShaderReflector::HashBindings(const std::vector<vk::DescriptorSetLayoutBi
         seed ^= std::hash<uint32_t> {}(static_cast<uint32_t>(binding.descriptorType)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         // seed ^= std::hash<uint32_t> {}(binding.descriptorCount) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         // seed ^= std::hash<uint32_t>{}(static_cast<uint32_t>(binding.stageFlags)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    for (const auto& name : names)
+    {
+        seed ^= std::hash<std::string_view> {}(name) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
 }
