@@ -7,6 +7,8 @@
 
 #include <memory>
 
+#include "viewport.hpp"
+
 class MainMenuCanvas;
 class UserInterfaceRenderer;
 class ECS;
@@ -38,6 +40,7 @@ private:
 
     std::shared_ptr<SceneDescription> _scene;
 
+    std::unique_ptr<Viewport> _viewport;
     glm::ivec2 _lastMousePos {};
 
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;

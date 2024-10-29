@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <vector>
-
 class InputManager;
+#include "ui_element.hpp"
 class UIElement;
 class UIPipeline;
 

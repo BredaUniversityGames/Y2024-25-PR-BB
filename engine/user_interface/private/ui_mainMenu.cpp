@@ -1,10 +1,10 @@
 #include "ui_mainMenu.hpp"
 #include "ui_core.hpp"
 #include "ui_text.hpp"
-#include "../../include/pch.hpp"
-#include "../../include/vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 
-MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, ResourceHandle<Font> font)
+
+MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, MAYBE_UNUSED ResourceHandle<Font> font)
     : Canvas(size)
 {
     // demo scene
@@ -35,26 +35,23 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, 
     std::unique_ptr<UIButton> subButton = std::make_unique<UIButton>();
     subButton->style = standardStyle;
     subButton->scale = { 300, 100 };
-    subButton->SetLocation({ 100, 100 });
+    subButton->SetLocation({ 100, 300 });
     subButton->onMouseDownCallBack = []() {};
-
+    subButton->onBeginHoverCallBack = [](){};
+    
     std::unique_ptr<UIButton> playButton = std::make_unique<UIButton>();
     playButton->style = standardStyle;
     playButton->scale = { 300, 100 };
     playButton->SetLocation({ 100, 100 });
     playButton->onMouseDownCallBack = [&]()
     {
-        subButton->visible = false;
+        subButton->visible = !subButton->visible;
     };
+    playButton->onBeginHoverCallBack = [](){};
 
-    std::unique_ptr<UITextElement> text = std::make_unique<UITextElement>(brain.GetFontResourceManager());
-    text->text = "Show Other buttons";
-    text->scale = { 1, 1 };
-    text->font = font;
-
-    playButton->AddChild(std::move(text));
 
     AddChild(std::move(playButton));
-
+    AddChild(std::move(subButton));
+    
     UpdateChildAbsoluteLocations();
 }

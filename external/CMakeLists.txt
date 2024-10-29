@@ -188,7 +188,7 @@ target_include_directories(ImGui
         PUBLIC implot
 )
 
-
+add_subdirectory(freetype)
 # Main External Library
 
 add_library(External INTERFACE)

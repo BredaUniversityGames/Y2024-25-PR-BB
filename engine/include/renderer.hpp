@@ -6,6 +6,7 @@
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 
+class UIPipeline;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
@@ -57,12 +58,8 @@ private:
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
-
+    std::unique_ptr<UIPipeline> _uiPipeline;
     // temp
-    std::shared_ptr<UIElement> m_UIElementToRender;
-
-    std::unique_ptr<UserInterfaceRenderer> m_UIRenderContext;
-
     std::shared_ptr<SceneDescription> _scene;
     std::unique_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;

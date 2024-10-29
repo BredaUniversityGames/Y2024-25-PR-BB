@@ -9,8 +9,8 @@
 
 void UIPipeline::CreatePipeLine()
 {
-    auto vertShaderCode = shader::ReadFile("shaders/ui-v.spv");
-    auto fragShaderCode = shader::ReadFile("shaders/ui-f.spv");
+    auto vertShaderCode = shader::ReadFile("shaders/bin/ui.vert.spv");
+    auto fragShaderCode = shader::ReadFile("shaders/bin/ui.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertShaderCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragShaderCode, _brain.device);

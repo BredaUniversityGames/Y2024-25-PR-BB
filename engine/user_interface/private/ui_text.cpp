@@ -14,7 +14,7 @@ void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
             auto character = FontResource->characters.at(i);
 
             QuadDrawInfo info;
-            info.projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset, 0), 0)), glm::vec3(scale * glm::vec2(character.Size), 0))),
+            info.projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset, 0), 0)), glm::vec3(scale , 0))),
             info.textureIndex = FontResource->_fontAtlas.index,
             info.useRedAsAlpha = true;
             info.uvp1 = character.uvp1;
@@ -26,7 +26,7 @@ void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
         else
         {
             // temp should be replaced by general font size
-            localOffset += scale.x * 30;
+            localOffset += scale.x;
         }
      
     }

@@ -23,7 +23,6 @@
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
 #include "viewport.hpp"
-
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -77,7 +76,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->camera.nearPlane = 0.01f;
     _scene->camera.farPlane = 100.0f;
 
-    auto font = _renderer->_brain.GetFontResourceManager().Create(LoadFromFile("assets/fonts/comic.ttf", 30, _renderer->_brain));
+    auto font = _renderer->_brain.GetFontResourceManager().Create(LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 50, _renderer->_brain));
     _viewport = std::make_unique<Viewport>(applicationModule.DisplaySize());
 
     _viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _renderer->_brain, font));
