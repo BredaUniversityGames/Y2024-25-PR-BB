@@ -8,6 +8,12 @@
 
 namespace util
 {
+struct ImageLayoutTransitionState
+{
+    vk::PipelineStageFlags2 pipelineStage {};
+    vk::AccessFlags2 accessFlags {};
+};
+
 void VK_ASSERT(vk::Result result, std::string_view message);
 void VK_ASSERT(VkResult result, std::string_view message);
 bool HasStencilComponent(vk::Format format);
@@ -19,6 +25,9 @@ vk::CommandBuffer BeginSingleTimeCommands(const VulkanBrain& brain);
 void EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer commandBuffer);
 void CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset = 0);
 vk::UniqueSampler CreateSampler(const VulkanBrain& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels);
+ImageLayoutTransitionState GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout);
+ImageLayoutTransitionState GetImageLayoutTransitionDestinationState(vk::ImageLayout destinationLayout);
+void InitializeImageMemoryBarrier(vk::ImageMemoryBarrier2& barrier, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 void TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 void CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
 void BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi);
