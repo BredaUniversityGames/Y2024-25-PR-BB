@@ -9,7 +9,7 @@ class GPUScene;
 class BloomSettings;
 struct RenderSceneDescription;
 
-class LightingPipeline : public FrameGraphRenderPass
+class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
     LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);

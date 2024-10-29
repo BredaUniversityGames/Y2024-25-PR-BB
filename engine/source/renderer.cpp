@@ -163,8 +163,6 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalIndexSize += indexSize;
     }
 
-    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
-
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 
     for (const auto& path : models)
