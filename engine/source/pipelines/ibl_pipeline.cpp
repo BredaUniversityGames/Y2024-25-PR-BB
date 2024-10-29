@@ -195,7 +195,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_irradiancePipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/bin/irradiance.vert.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     auto fragByteCode = shader::ReadFile("shaders/bin/irradiance.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
@@ -238,7 +238,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
     rasterizationStateCreateInfo.lineWidth = 1.0f;
     rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
     rasterizationStateCreateInfo.depthBiasEnable = vk::False;
     rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -323,7 +323,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_prefilterPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/bin/prefilter.vert.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     auto fragByteCode = shader::ReadFile("shaders/bin/prefilter.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
@@ -366,7 +366,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
     rasterizationStateCreateInfo.lineWidth = 1.0f;
     rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
     rasterizationStateCreateInfo.depthBiasEnable = vk::False;
     rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -445,7 +445,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_brdfLUTPipelineLayout),
         "Failed to create IBL pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/bin/brdf_integration.vert.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     auto fragByteCode = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
@@ -488,7 +488,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
     rasterizationStateCreateInfo.lineWidth = 1.0f;
     rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
     rasterizationStateCreateInfo.depthBiasEnable = vk::False;
     rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
