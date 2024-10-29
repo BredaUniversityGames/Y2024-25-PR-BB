@@ -104,7 +104,6 @@ void LightingPipeline::CreatePipeline()
 
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
     reflector.SetColorAttachmentFormats(formats);
-    reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

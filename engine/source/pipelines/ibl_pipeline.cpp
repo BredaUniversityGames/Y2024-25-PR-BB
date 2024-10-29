@@ -81,10 +81,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(irradianceMap.width), static_cast<float>(irradianceMap.height), 0.0f,
             1.0f };
         commandBuffer.setViewport(0, 1, &viewport);
-
-        vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
-        vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
-        commandBuffer.setScissor(0, { scissor });
+        commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
         commandBuffer.draw(3, 1, 0, 0);
 
@@ -136,10 +133,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, static_cast<float>(size), static_cast<float>(size), 0.0f,
                 1.0f };
             commandBuffer.setViewport(0, 1, &viewport);
-
-            vk::Extent2D extent = vk::Extent2D { static_cast<uint32_t>(size), static_cast<uint32_t>(size) };
-            vk::Rect2D scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, extent };
-            commandBuffer.setScissor(0, { scissor });
+            commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
             commandBuffer.draw(3, 1, 0, 0);
 
@@ -195,377 +189,86 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
 void IBLPipeline::CreateIrradiancePipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
-    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-
-    vk::PushConstantRange pushConstantRange {};
-    pushConstantRange.size = sizeof(IrradiancePushConstant) * 6;
-    pushConstantRange.offset = 0;
-    pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_irradiancePipelineLayout),
-        "Failed to create IBL pipeline layout!");
-
-    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/irradiance.frag.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
+        .blendEnable = vk::False,
+        .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
+        .logicOpEnable = vk::False,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachmentState,
+    };
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
+    std::vector<vk::Format> formats { _brain.GetImageResourceManager().Access(_irradianceMap)->format };
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.depthClampEnable = vk::False;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/irradiance.frag.spv");
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-    multisampleStateCreateInfo.alphaToOneEnable = vk::False;
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
-    {
-        blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    }
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
-    colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
-    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
-
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = true;
-    depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
-    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.stencilTestEnable = false;
-
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _irradiancePipelineLayout;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
-
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_irradianceMap)->format;
-
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
-
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the IBL pipeline!");
-    _irradiancePipeline = result.value;
-
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    reflector.BuildPipeline(_irradiancePipeline, _irradiancePipelineLayout);
 }
 
 void IBLPipeline::CreatePrefilterPipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
-    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-
-    vk::PushConstantRange pushConstantRange {};
-    pushConstantRange.size = sizeof(PrefilterPushConstant) * 6 * _brain.GetImageResourceManager().Access(_prefilterMap)->mips;
-    assert(pushConstantRange.size < 256);
-    pushConstantRange.offset = 0;
-    pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_prefilterPipelineLayout),
-        "Failed to create IBL pipeline layout!");
-
-    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/prefilter.frag.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
+        .blendEnable = vk::False,
+        .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
+        .logicOpEnable = vk::False,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachmentState,
+    };
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
+    std::vector<vk::Format> formats { _brain.GetImageResourceManager().Access(_prefilterMap)->format };
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.depthClampEnable = vk::False;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/prefilter.frag.spv");
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-    multisampleStateCreateInfo.alphaToOneEnable = vk::False;
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
-    {
-        blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    }
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
-    colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
-    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
-
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = true;
-    depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
-    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.stencilTestEnable = false;
-
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _prefilterPipelineLayout;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
-
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_prefilterMap)->format;
-
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
-
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the IBL pipeline!");
-    _prefilterPipeline = result.value;
-
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    reflector.BuildPipeline(_prefilterPipeline, _prefilterPipelineLayout);
 }
 
 void IBLPipeline::CreateBRDFLUTPipeline()
 {
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 1> layouts = { _brain.bindlessLayout };
-    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_brdfLUTPipelineLayout),
-        "Failed to create IBL pipeline layout!");
-
-    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
+        .blendEnable = vk::False,
+        .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
+        .logicOpEnable = vk::False,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachmentState,
+    };
 
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
+    std::vector<vk::Format> formats { _brain.GetImageResourceManager().Access(_brdfLUT)->format };
 
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.depthClampEnable = vk::False;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
 
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-    multisampleStateCreateInfo.alphaToOneEnable = vk::False;
+    ShaderReflector reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
-    std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachmentStates {};
-    for (auto& blendAttachmentState : colorBlendAttachmentStates)
-    {
-        blendAttachmentState.blendEnable = vk::False;
-        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    }
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
-    colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
-    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
-
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = true;
-    depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
-    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.stencilTestEnable = false;
-
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _brdfLUTPipelineLayout;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
-
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &_brain.GetImageResourceManager().Access(_brdfLUT)->format;
-
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the IBL pipeline!");
-    _brdfLUTPipeline = result.value;
-
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    reflector.BuildPipeline(_brdfLUTPipeline, _brdfLUTPipelineLayout);
 }
 
 void IBLPipeline::CreateIrradianceCubemap()

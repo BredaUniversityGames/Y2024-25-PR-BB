@@ -156,7 +156,10 @@ void ShaderReflector::ReflectVertexInput(const ShaderStage& shaderStage)
         _attributeDescriptions.emplace_back(attributeDescription);
     }
 
-    _bindingDescriptions.emplace_back(bindingDescription);
+    if (!_attributeDescriptions.empty())
+    {
+        _bindingDescriptions.emplace_back(bindingDescription);
+    }
 }
 
 void ShaderReflector::ReflectPushConstants(const ShaderReflector::ShaderStage& shaderStage)
