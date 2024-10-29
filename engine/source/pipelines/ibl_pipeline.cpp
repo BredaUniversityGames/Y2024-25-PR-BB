@@ -55,7 +55,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         finalColorAttachmentInfo.imageView = irradianceMap.views[i];
         finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
         finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+        finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
 
         vk::RenderingInfoKHR renderingInfo {};
         renderingInfo.renderArea.extent = vk::Extent2D { static_cast<uint32_t>(irradianceMap.width), static_cast<uint32_t>(irradianceMap.height) };
@@ -99,7 +99,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             finalColorAttachmentInfo.imageView = _prefilterMapViews[i][j];
             finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
             finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-            finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+            finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
 
             uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
 
@@ -146,7 +146,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     finalColorAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_brdfLUT)->views[0];
     finalColorAttachmentInfo.imageLayout = vk::ImageLayout::eAttachmentOptimal;
     finalColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+    finalColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
 
     vk::RenderingInfoKHR renderingInfo {};
     renderingInfo.renderArea.extent = vk::Extent2D { brdfLUT->width, brdfLUT->height };
