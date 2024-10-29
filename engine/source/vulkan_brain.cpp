@@ -323,10 +323,7 @@ void VulkanBrain::CreateDevice()
     for (uint32_t familyQueueIndex : uniqueQueueFamilies)
         queueCreateInfos.emplace_back(vk::DeviceQueueCreateInfo { .flags = vk::DeviceQueueCreateFlags {}, .queueFamilyIndex = familyQueueIndex, .queueCount = 1, .pQueuePriorities = &queuePriority });
 
-    vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceSynchronization2Features, vk::PhysicalDeviceTimelineSemaphoreFeatures> structureChain;
-
-    auto& timelineSemaphoreFeatures = structureChain.get<vk::PhysicalDeviceTimelineSemaphoreFeatures>();
-    timelineSemaphoreFeatures.timelineSemaphore = true;
+    vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDynamicRenderingFeaturesKHR, vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceSynchronization2Features> structureChain;
 
     auto& synchronization2Features = structureChain.get<vk::PhysicalDeviceSynchronization2Features>();
     synchronization2Features.synchronization2 = true;
