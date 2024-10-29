@@ -100,15 +100,6 @@ void DebugPipeline::CreatePipeline()
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
     inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eLineList;
 
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/debug.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/debug.frag.spv");
 
@@ -121,7 +112,6 @@ void DebugPipeline::CreatePipeline()
     reflector.SetColorAttachmentFormats(formats);
     reflector.SetInputAssemblyState(inputAssemblyStateCreateInfo);
     reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
-    reflector.SetDynamicState(dynamicStateCreateInfo);
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

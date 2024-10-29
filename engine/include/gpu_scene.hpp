@@ -49,6 +49,16 @@ public:
     uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
+    const std::vector<vk::DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
+    uint32_t DrawCommandIndexCount() const
+    {
+        uint32_t count { 0 };
+        for (const auto& command : _drawCommands)
+        {
+            count += command.indexCount;
+        }
+        return count;
+    }
 
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;

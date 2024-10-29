@@ -93,6 +93,8 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
     commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
+    _brain.drawStats.indirectDrawCommands += scene.gpuScene.DrawCount();
+    _brain.drawStats.indexCount += scene.gpuScene.DrawCommandIndexCount();
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 }
@@ -124,15 +126,6 @@ void GeometryPipeline::CreatePipeline()
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
         formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
 
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
@@ -144,7 +137,6 @@ void GeometryPipeline::CreatePipeline()
     reflector.SetDepthStencilState(depthStencilStateCreateInfo);
     reflector.SetColorAttachmentFormats(formats);
     reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
-    reflector.SetDynamicState(dynamicStateCreateInfo);
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

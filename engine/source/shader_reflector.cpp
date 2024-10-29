@@ -35,6 +35,16 @@ ShaderReflector::ShaderReflector(const VulkanBrain& brain)
         .depthTestEnable = false,
         .depthWriteEnable = false,
     };
+
+    static constexpr std::array<vk::DynamicState, 2> DYNAMIC_STATES = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
+    };
+
+    _dynamicStateCreateInfo = {
+        .dynamicStateCount = DYNAMIC_STATES.size(),
+        .pDynamicStates = DYNAMIC_STATES.data(),
+    };
 }
 
 ShaderReflector::~ShaderReflector()

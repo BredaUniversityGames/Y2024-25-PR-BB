@@ -10,7 +10,7 @@ class BatchBuffer;
 class GPUScene;
 class RenderSceneDescription;
 
-class GeometryPipeline : public FrameGraphRenderPass
+class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
     GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);

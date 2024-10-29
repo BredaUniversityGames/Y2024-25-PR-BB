@@ -8,7 +8,7 @@
 class BatchBuffer;
 class RenderSceneDescription;
 
-class ShadowPipeline : public FrameGraphRenderPass
+class ShadowPipeline final : public FrameGraphRenderPass
 {
 public:
     ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene);

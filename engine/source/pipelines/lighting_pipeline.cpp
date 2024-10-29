@@ -80,15 +80,6 @@ LightingPipeline::~LightingPipeline()
 
 void LightingPipeline::CreatePipeline()
 {
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;
     blendAttachments[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
@@ -114,7 +105,6 @@ void LightingPipeline::CreatePipeline()
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
     reflector.SetColorAttachmentFormats(formats);
     reflector.SetDepthAttachmentFormat(_gBuffers.DepthFormat());
-    reflector.SetDynamicState(dynamicStateCreateInfo);
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

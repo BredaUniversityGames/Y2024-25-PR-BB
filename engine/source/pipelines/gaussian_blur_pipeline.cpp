@@ -102,15 +102,6 @@ void GaussianBlurPipeline::CreatePipeline()
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/gaussian_blur.frag.spv");
 
@@ -122,7 +113,6 @@ void GaussianBlurPipeline::CreatePipeline()
 
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
     reflector.SetColorAttachmentFormats(formats);
-    reflector.SetDynamicState(dynamicStateCreateInfo);
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 

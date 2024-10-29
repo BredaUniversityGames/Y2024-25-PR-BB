@@ -70,15 +70,6 @@ void TonemappingPipeline::CreatePipeline()
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/tonemapping.frag.spv");
 
@@ -89,7 +80,6 @@ void TonemappingPipeline::CreatePipeline()
     reflector.SetColorBlendState(colorBlendStateCreateInfo);
     reflector.SetColorAttachmentFormats({ _swapChain.GetFormat() });
     reflector.SetDepthAttachmentFormat(vk::Format::eUndefined);
-    reflector.SetDynamicState(dynamicStateCreateInfo);
 
     reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

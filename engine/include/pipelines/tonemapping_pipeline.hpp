@@ -5,7 +5,7 @@
 
 class BloomSettings;
 
-class TonemappingPipeline : public FrameGraphRenderPass
+class TonemappingPipeline final : public FrameGraphRenderPass
 {
 public:
     TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
