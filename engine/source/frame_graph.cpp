@@ -117,6 +117,7 @@ FrameGraph& FrameGraph::AddNode(const FrameGraphNodeCreation& creation)
     const FrameGraphNodeHandle nodeHandle = _nodes.size();
     FrameGraphNode& node = _nodes.emplace_back(creation.renderPass, creation.queueType);
     node.name = creation.name;
+    node.debugLabelColor = creation.debugLabelColor;
     node.isEnabled = creation.isEnabled;
 
     for (const auto& resourceCreation : creation.outputs)
