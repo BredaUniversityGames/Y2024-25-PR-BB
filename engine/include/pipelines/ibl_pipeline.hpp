@@ -24,6 +24,13 @@ private:
     {
         uint32_t faceIndex;
         float roughness;
+        uint32_t hdriIndex;
+    };
+
+    struct IrradiancePushConstant
+    {
+        uint32_t index;
+        uint32_t hdriIndex;
     };
 
     const VulkanBrain& _brain;
@@ -35,8 +42,6 @@ private:
     vk::Pipeline _prefilterPipeline;
     vk::PipelineLayout _brdfLUTPipelineLayout;
     vk::Pipeline _brdfLUTPipeline;
-    vk::DescriptorSetLayout _descriptorSetLayout;
-    vk::DescriptorSet _descriptorSet;
 
     ResourceHandle<Image> _irradianceMap;
     ResourceHandle<Image> _prefilterMap;

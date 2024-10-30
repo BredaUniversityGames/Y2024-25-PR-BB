@@ -9,10 +9,10 @@ class GPUScene;
 class BloomSettings;
 struct RenderSceneDescription;
 
-class LightingPipeline : public FrameGraphRenderPass
+class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraResource& camera, const BloomSettings& bloomSettings);
+    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
     ~LightingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -29,7 +29,7 @@ private:
         uint32_t positionIndex;
     } _pushConstants;
 
-    void CreatePipeline(const GPUScene& gpuScene);
+    void CreatePipeline();
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;

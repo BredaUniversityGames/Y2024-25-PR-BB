@@ -20,7 +20,6 @@ def configure_cmake(cmake_args):
 
 
 def build_cmake(build_out, args):
-
     command = ["cmake", "--build", build_out]
 
     if args:
@@ -60,6 +59,7 @@ def main():
 
     print("")
     print("##########################")
+
 
 if __name__ == "__main__":
     main()

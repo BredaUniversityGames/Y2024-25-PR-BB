@@ -9,7 +9,7 @@
 class BloomSettings;
 class RenderSceneDescription;
 
-class SkydomePipeline : public FrameGraphRenderPass
+class SkydomePipeline final : public FrameGraphRenderPass
 {
 public:
     SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,

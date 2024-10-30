@@ -10,7 +10,7 @@ class BatchBuffer;
 class GPUScene;
 class RenderSceneDescription;
 
-class GeometryPipeline : public FrameGraphRenderPass
+class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
     GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
@@ -22,7 +22,7 @@ public:
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline(const GPUScene& gpuScene);
+    void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;

@@ -150,7 +150,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         ss << "[IMAGE] ";
         ss << creation.name;
         std::string imageStr = ss.str();
-        util::NameObject(imageResource.image, imageStr, _brain.device, _brain.dldi);
+        util::NameObject(imageResource.image, imageStr, _brain);
         ss.str("");
 
         for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
@@ -158,7 +158,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
             ss << "[VIEW " << i << "] ";
             ss << creation.name;
             std::string viewStr = ss.str();
-            util::NameObject(imageResource.views[i], viewStr, _brain.device, _brain.dldi);
+            util::NameObject(imageResource.views[i], viewStr, _brain);
             ss.str("");
         }
 

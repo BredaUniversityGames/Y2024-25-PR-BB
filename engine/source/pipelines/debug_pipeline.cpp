@@ -6,17 +6,15 @@
 #include "swap_chain.hpp"
 
 #include <imgui_impl_vulkan.h>
+#include "pipeline_builder.hpp"
 
-DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene)
+DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
     , _camera(camera)
-    , _descriptorSetLayout(gpuScene.GetSceneDescriptorSetLayout())
-
 {
-
-    _linesData.reserve(2048); // pre allocate some memory
+    _linesData.reserve(2048);
     CreateVertexBuffer();
     CreatePipeline();
 }
@@ -30,7 +28,6 @@ DebugPipeline::~DebugPipeline()
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    // Update the lines data
     UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
@@ -65,14 +62,11 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    // Bind descriptor sets
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _camera.DescriptorSet(currentFrame) }, {});
 
-    // to draw lines
-    // Bind the vertex buffer
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_vertexBuffer);
-    const vk::DeviceSize offsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets);
+    const std::array<vk::DeviceSize, 1> offsets = { 0 };
+    commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets.data());
 
     // Draw the lines
     commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
@@ -84,77 +78,9 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
 void DebugPipeline::CreatePipeline()
 {
-    // Pipeline layout with two descriptor sets: object data and light camera data
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 2> layouts = { _descriptorSetLayout, _camera.DescriptorSetLayout() };
-    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-        "Failed to create debug rendering pipeline layout!");
-
-    // Load shaders (simple vertex shader for depth only)
-    auto vertByteCode = shader::ReadFile("shaders/bin/debug.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/debug.frag.spv");
-
-    const vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    const vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    const vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    // Vertex input
-    auto bindingDesc = LineVertex::GetBindingDescription();
-    auto attributes = LineVertex::GetAttributeDescriptions();
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-    vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-    vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 1; // 1
-    vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eLineList;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
     colorBlendAttachmentState.blendEnable = vk::False;
     colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
-    colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = 1;
-    colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
@@ -162,35 +88,31 @@ void DebugPipeline::CreatePipeline()
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _pipelineLayout;
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    colorBlendStateCreateInfo.logicOpEnable = vk::False;
+    colorBlendStateCreateInfo.attachmentCount = 1;
+    colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-    // Use dynamic rendering
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo {};
-    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    const vk::Format format = _swapChain.GetFormat();
-    pipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfo.depthAttachmentFormat = _gBuffers.DepthFormat();
-    pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
+    std::vector<vk::Format> formats { _swapChain.GetFormat() };
 
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed to create debug render pipeline!");
-    _pipeline = result.value;
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eLineList;
 
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/debug.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/debug.frag.spv");
+
+    PipelineBuilder pipelineBuilder { _brain };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetColorAttachmentFormats(formats)
+        .SetInputAssemblyState(inputAssemblyStateCreateInfo)
+        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+        .BuildPipeline(_pipeline, _pipelineLayout);
 }
+
 void DebugPipeline::CreateVertexBuffer()
 {
     const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048;

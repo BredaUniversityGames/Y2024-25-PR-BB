@@ -34,7 +34,7 @@ function(module_default_init module)
 
     if (USE_UNITY_BUILD)
         target_enable_unity(${module})
-    endif()
+    endif ()
 
 endfunction()
 

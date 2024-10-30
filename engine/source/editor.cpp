@@ -18,7 +18,6 @@
 #include "gbuffers.hpp"
 #include "serialization.hpp"
 
-#include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
@@ -247,6 +246,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
     ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _brain.drawStats.indirectDrawCommands);
     ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();

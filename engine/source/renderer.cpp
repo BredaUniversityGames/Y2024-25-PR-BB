@@ -53,6 +53,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
 
+    // Makes sure previously created textures are available to be sampled in the IBL pipeline
+    UpdateBindless();
+
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
@@ -74,8 +77,8 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
+    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, _bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera, *_swapChain);
 
     CreateCommandBuffers();
@@ -162,8 +165,6 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalVertexSize += vertexSize;
         totalIndexSize += indexSize;
     }
-
-    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
 
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 
@@ -315,6 +316,7 @@ void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
+
 void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);

@@ -8,10 +8,10 @@
 class SwapChain;
 class BatchBuffer;
 
-class DebugPipeline : public FrameGraphRenderPass
+class DebugPipeline final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, const GPUScene& gpuScene);
+    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
     ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -45,7 +45,6 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
-    const vk::DescriptorSetLayout& _descriptorSetLayout;
 
     std::vector<glm::vec3> _linesData;
     ResourceHandle<Buffer> _vertexBuffer;

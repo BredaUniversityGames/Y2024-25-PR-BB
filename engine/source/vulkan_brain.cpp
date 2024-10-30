@@ -5,6 +5,7 @@
 #include "log.hpp"
 #include <set>
 #include <map>
+#include "pipeline_builder.hpp"
 
 VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
     : _bufferResourceManager(*this)
@@ -413,36 +414,36 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
 
-    std::array<vk::DescriptorSetLayoutBinding, 5> bindings;
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(5);
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
     combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eColor);
-    combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
     depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
-    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[2];
     cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
-    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
     shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
     shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
-    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutBinding& materialBinding = bindings[4];
     materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
     materialBinding.descriptorCount = 1;
     materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eMaterial);
-    materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::StructureChain<vk::DescriptorSetLayoutCreateInfo, vk::DescriptorSetLayoutBindingFlagsCreateInfo> structureChain;
 
@@ -451,7 +452,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    std::array<vk::DescriptorBindingFlagsEXT, bindings.size()> bindingFlags = {
+    std::array<vk::DescriptorBindingFlagsEXT, 5> bindingFlags = {
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
         vk::DescriptorBindingFlagBits::ePartiallyBound,
@@ -463,8 +464,9 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
-    util::VK_ASSERT(device.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &bindlessLayout),
-        "Failed creating bindless descriptor set layout.");
+    std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
+
+    bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*this, bindings, names);
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = bindlessPool;
@@ -472,6 +474,8 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     allocInfo.pSetLayouts = &bindlessLayout;
 
     util::VK_ASSERT(device.allocateDescriptorSets(&allocInfo, &bindlessSet), "Failed creating bindless descriptor set!");
+
+    util::NameObject(bindlessSet, "Bindless DS", *this);
 }
 
 void VulkanBrain::CreateBindlessMaterialBuffer()

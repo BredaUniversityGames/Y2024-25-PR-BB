@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "log.hpp"
 #include "mesh.hpp"
+#include "spirv_reflect.h"
 
 namespace util
 {
@@ -16,6 +17,7 @@ struct ImageLayoutTransitionState
 
 void VK_ASSERT(vk::Result result, std::string_view message);
 void VK_ASSERT(VkResult result, std::string_view message);
+void VK_ASSERT(SpvReflectResult result, std::string_view message);
 bool HasStencilComponent(vk::Format format);
 std::optional<vk::Format> FindSupportedFormat(const vk::PhysicalDevice physicalDevice, const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
     vk::FormatFeatureFlags features);
@@ -36,7 +38,7 @@ void BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, glm::ve
 void EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDynamic dldi);
 vk::ImageAspectFlags GetImageAspectFlags(vk::Format format);
 template <typename T>
-static void NameObject(T object, std::string_view label, vk::Device device, const vk::DispatchLoaderDynamic dldi)
+static void NameObject(T object, std::string_view label, const VulkanBrain& brain)
 {
 #if defined(NDEBUG)
     return;
@@ -47,8 +49,10 @@ static void NameObject(T object, std::string_view label, vk::Device device, cons
     nameInfo.objectType = object.objectType;
     nameInfo.objectHandle = reinterpret_cast<uint64_t>(static_cast<typename T::CType>(object));
 
-    vk::Result result = device.setDebugUtilsObjectNameEXT(&nameInfo, dldi);
+    vk::Result result = brain.device.setDebugUtilsObjectNameEXT(&nameInfo, brain.dldi);
     if (result != vk::Result::eSuccess)
         spdlog::warn("Failed debug naming object!");
 }
+
+uint32_t FormatSize(vk::Format format);
 }

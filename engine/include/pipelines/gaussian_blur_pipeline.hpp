@@ -5,7 +5,7 @@
 #include "constants.hpp"
 #include "frame_graph.hpp"
 
-class GaussianBlurPipeline : public FrameGraphRenderPass
+class GaussianBlurPipeline final : public FrameGraphRenderPass
 {
 public:
     GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target);
