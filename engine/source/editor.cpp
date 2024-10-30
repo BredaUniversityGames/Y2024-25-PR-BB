@@ -161,7 +161,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(),_renderer.GetBrain().GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -250,10 +250,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
-    ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _brain.drawStats.indirectDrawCommands);
-    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
+    ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
+    ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetBrain().drawStats.indirectDrawCommands);
+    ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
 
     ImGui::End();
     {
