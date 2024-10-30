@@ -75,7 +75,7 @@ private:
     {
         vk::ShaderStageFlagBits stage;
         std::string_view entryPoint;
-        std::vector<std::byte> spirvBytes; // TODO: Consider keeping this a reference to prevent copy.
+        const std::vector<std::byte>& spirvBytes;
         SpvReflectShaderModule reflectModule;
         vk::ShaderModule shaderModule;
     };

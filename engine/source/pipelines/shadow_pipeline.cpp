@@ -11,7 +11,7 @@ ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffer
     , _shadowCamera(_brain)
     , _culler(_brain, gpuScene)
 {
-    CreatePipeline(gpuScene);
+    CreatePipeline();
 
     auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
     const auto* mainDrawBuffer = _brain.GetBufferResourceManager().Access(mainDrawBufferHandle);
@@ -83,7 +83,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.endRenderingKHR(_brain.dldi);
 }
 
-void ShadowPipeline::CreatePipeline(MAYBE_UNUSED const GPUScene& gpuScene)
+void ShadowPipeline::CreatePipeline()
 {
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;

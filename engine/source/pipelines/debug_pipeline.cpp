@@ -8,13 +8,12 @@
 #include <imgui_impl_vulkan.h>
 #include "pipeline_builder.hpp"
 
-DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain, MAYBE_UNUSED const GPUScene& gpuScene)
+DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
     , _camera(camera)
 {
-
     _linesData.reserve(2048);
     CreateVertexBuffer();
     CreatePipeline();

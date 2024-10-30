@@ -202,7 +202,7 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
                 .binding = reflectBinding->binding,
                 .descriptorType = static_cast<vk::DescriptorType>(reflectBinding->descriptor_type),
                 .descriptorCount = reflectBinding->count,
-                .stageFlags = vk::ShaderStageFlagBits::eAll, // shaderStage.stage,
+                .stageFlags = vk::ShaderStageFlagBits::eAll,
                 .pImmutableSamplers = nullptr,
             };
 
