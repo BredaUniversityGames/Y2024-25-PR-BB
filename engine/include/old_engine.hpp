@@ -2,13 +2,11 @@
 
 #include "module_interface.hpp"
 #include "performance_tracker.hpp"
-#include "mesh.hpp"
-#include "particles/particle_interface.hpp"
+#include "renderer_public.hpp"
 
 #include <memory>
 
 class ECS;
-class Renderer;
 class Editor;
 class PhysicsModule;
 class OldEngine : public ModuleInterface
@@ -21,16 +19,16 @@ public:
     OldEngine();
     ~OldEngine() override;
 
+    std::shared_ptr<ECS> GetECS() { return _ecs; }
+    float DeltaTimeMS() const { return _deltaTimeMS; };
+
 private:
-    friend Renderer;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
+    float _deltaTimeMS;
+
     std::unique_ptr<Editor> _editor;
-
-    std::unique_ptr<Renderer> _renderer;
-
-    std::unique_ptr<ParticleInterface> _particleInterface;
 
     std::shared_ptr<ECS> _ecs;
 
@@ -42,7 +40,6 @@ private:
 
     PerformanceTracker _performanceTracker;
 
-    // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
     bool _shouldQuit = false;

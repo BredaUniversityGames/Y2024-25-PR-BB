@@ -2,24 +2,19 @@
 #include "application_module.hpp"
 #include "input_manager.hpp"
 #include "old_engine.hpp"
+#include "renderer_module.hpp"
+
+#include <filesystem>
 
 #include "ECS.hpp"
 #include <stb/stb_image.h>
-#include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
-#include "model_loader.hpp"
-#include "gbuffers.hpp"
-#include "renderer.hpp"
 #include "profile_macros.hpp"
 #include "editor.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
-#include "pipelines/debug_pipeline.hpp"
-
-#include "particles/particle_util.hpp"
-#include "particles/particle_interface.hpp"
 #include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
 
@@ -42,22 +37,21 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = std::make_shared<ECS>();
 
-    _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
-
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
     TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
 
     _scene = std::make_shared<SceneDescription>();
-    _renderer->_scene = _scene;
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
         "assets/models/DamagedHelmet.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    _scene->models = _renderer->FrontLoadModels(modelPaths);
+    _scene->models = rendererModule.FrontLoadModels(modelPaths);
 
     glm::vec3 scale { 10.0f };
     for (size_t i = 0; i < 10; ++i)
@@ -68,9 +62,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
 
-    _renderer->UpdateBindless();
-
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
+    _editor = std::make_unique<Editor>(*_ecs, rendererModule);
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -81,8 +73,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-
-    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
@@ -104,14 +94,16 @@ void OldEngine::Tick(Engine& engine)
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
     _lastFrameTime = currentFrameTime;
-    float deltaTimeMS = deltaTime.count();
+    _deltaTimeMS = deltaTime.count();
 
     // update physics
-    _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
+    _physicsModule->UpdatePhysicsEngine(_deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
-    _renderer->_debugPipeline->ClearLines();
-    _physicsModule->debugRenderer->ClearLines();
-    _renderer->_debugPipeline->AddLines(linesData);
+
+    // TODO: Properly expose debug API through renderer module.
+    //_renderer->_debugPipeline->ClearLines();
+    //_physicsModule->debugRenderer->ClearLines();
+    //_renderer->_debugPipeline->AddLines(linesData);
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -164,7 +156,7 @@ void OldEngine::Tick(Engine& engine)
             movementDir = glm::normalize(movementDir);
         }
 
-        _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
+        _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * _deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
     }
@@ -175,11 +167,11 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        //_particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
         spdlog::info("Spawned emitter!");
     }
 
-    _ecs->UpdateSystems(deltaTimeMS);
+    _ecs->UpdateSystems(_deltaTimeMS);
     _ecs->GetSystem<PhysicsSystem>().CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
@@ -187,9 +179,7 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
-
-    _renderer->Render(deltaTimeMS);
+    _editor->Draw(_performanceTracker, *_scene, *_ecs);
 
     _performanceTracker.Update();
 
@@ -200,8 +190,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _renderer->_brain.device.waitIdle();
-
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL3_Shutdown();
 
@@ -209,7 +197,6 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
     ImGui::DestroyContext();
 
     _editor.reset();
-    _renderer.reset();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
     RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);

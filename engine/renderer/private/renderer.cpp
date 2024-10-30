@@ -25,17 +25,19 @@
 #include "log.hpp"
 #include "profile_macros.hpp"
 #include "frame_graph.hpp"
+#include "bloom_settings.hpp"
+#include "camera.hpp"
 
 #include "stb/stb_image.h"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& ecs)
-    : _brain(application.GetVulkanInfo())
-    , _application(application)
+Renderer::Renderer(ApplicationModule& applicationModule, const std::shared_ptr<ECS> ecs)
+    : _brain(applicationModule.GetVulkanInfo())
+    , _application(applicationModule)
     , _ecs(ecs)
-    , _bloomSettings(_brain)
+    , _bloomSettings(std::make_unique<BloomSettings>(_brain))
 {
 
-    auto vulkanInfo = application.GetVulkanInfo();
+    auto vulkanInfo = _application.GetVulkanInfo();
     _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
 
     InitializeHDRTarget();
@@ -70,12 +72,12 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _camera = std::make_unique<CameraResource>(_brain);
 
     _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, _bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera, *_swapChain);
 
     CreateCommandBuffers();
@@ -325,7 +327,7 @@ void Renderer::Render(float deltaTime)
             "Failed waiting on in flight fence!");
     }
 
-    _bloomSettings.Update(_currentFrame);
+    _bloomSettings->Update(_currentFrame);
 
     // TODO: handle this more gracefully
     assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
@@ -405,4 +407,9 @@ void Renderer::Render(float deltaTime)
     }
 
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+vk::Format Renderer::GetDepthFormat() const
+{
+    return _gBuffers->DepthFormat();
 }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "swap_chain.hpp"
+#include "renderer_public.hpp"
 #include "application_module.hpp"
-#include "mesh.hpp"
-#include "camera.hpp"
-#include "bloom_settings.hpp"
+#include "camera_public.hpp"
+#include "constants.hpp"
+#include "vulkan_brain.hpp"
 
 class DebugPipeline;
 class Application;
@@ -18,24 +18,33 @@ class IBLPipeline;
 class ParticlePipeline;
 class SwapChain;
 class GBuffers;
-class VulkanBrain;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
 class ECS;
 class GPUScene;
 class FrameGraph;
+class CameraResource;
+class BloomSettings;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& applicationModule, const std::shared_ptr<ECS> ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
+    void Render(float deltaTime);
+
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
+
+    const VulkanBrain& GetBrain() const { return _brain; }
+    const SwapChain& GetSwapChain() const { return *_swapChain; }
+    vk::Format GetDepthFormat() const;
+
+    void SetScene(std::shared_ptr<SceneDescription> scene) { _scene = scene; }
 
 private:
     friend class OldEngine;
@@ -45,7 +54,7 @@ private:
     std::unique_ptr<ModelLoader> _modelLoader;
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
-    std::shared_ptr<ECS> _ecs;
+    const std::shared_ptr<ECS> _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
@@ -77,7 +86,7 @@ private:
 
     std::unique_ptr<CameraResource> _camera;
 
-    BloomSettings _bloomSettings;
+    std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<Image> _hdrTarget;
 
@@ -90,5 +99,4 @@ private:
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
     void UpdateBindless();
-    void Render(float deltaTime);
 };

@@ -5,9 +5,10 @@
 #include "mesh.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
+#include "renderer_public.hpp"
 
 class BloomSettings;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 
 class SkydomePipeline : public FrameGraphRenderPass
 {

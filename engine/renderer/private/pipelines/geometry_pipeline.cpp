@@ -1,37 +1,57 @@
-#include "pipelines/skydome_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
-#include "vulkan_helper.hpp"
-#include "bloom_settings.hpp"
+#include "pipelines/geometry_pipeline.hpp"
+#include "shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
-    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
+GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _brain(brain)
-    , _camera(camera)
-    , _hdrTarget(hdrTarget)
-    , _brightnessTarget(brightnessTarget)
-    , _environmentMap(environmentMap)
     , _gBuffers(gBuffers)
-    , _sphere(sphere)
-    , _bloomSettings(bloomSettings)
+    , _camera(camera)
+    , _culler(_brain, gpuScene)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-        vk::SamplerMipmapMode::eLinear, 0);
+    CreatePipeline(gpuScene);
 
-    CreatePipeline();
+    auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
+    const auto* mainDrawBuffer = _brain.GetBufferResourceManager().Access(mainDrawBufferHandle);
 
-    _pushConstants.hdriIndex = environmentMap.index;
+    BufferCreation creation {
+        .size = mainDrawBuffer->size,
+        .usage = mainDrawBuffer->usage,
+        .isMappable = false,
+        .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .name = "Geometry draw buffer",
+    };
+
+    _drawBuffer = _brain.GetBufferResourceManager().Create(creation);
+
+    CreateDrawBufferDescriptorSet(gpuScene);
 }
 
-SkydomePipeline::~SkydomePipeline()
+GeometryPipeline::~GeometryPipeline()
 {
-    _brain.device.destroy(_pipelineLayout);
     _brain.device.destroy(_pipeline);
+    _brain.device.destroy(_pipelineLayout);
+
+    _brain.GetBufferResourceManager().Destroy(_drawBuffer);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, _camera, _drawBuffer, _drawBufferDescriptorSet);
+
+    std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
+    for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
+    {
+        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos[i] };
+        info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        info.storeOp = vk::AttachmentStoreOp::eStore;
+        info.loadOp = vk::AttachmentLoadOp::eClear;
+        info.clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
+    }
+
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        colorAttachmentInfos[i].imageView = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->view;
+
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
@@ -44,78 +64,52 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
     stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
-    std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
-
-    // HDR color
-    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
-    colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
-    colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
-
-    // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
-    colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
-    colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
-    colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
-
     vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { _brain.GetImageResourceManager().Access(_hdrTarget)->width,
-        _brain.GetImageResourceManager().Access(_hdrTarget)->height };
+    glm::uvec2 displaySize = _gBuffers.Size();
+    renderingInfo.renderArea.extent = vk::Extent2D { displaySize.x, displaySize.y };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = colorAttachmentInfos.size();
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
-    ;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
-
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
 
     vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
     vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer indirectDrawBuffer = _brain.GetBufferResourceManager().Access(_drawBuffer)->buffer;
+    vk::Buffer indirectCountBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectCountBuffer(currentFrame))->buffer;
+    uint32_t indirectCountOffset = scene.gpuScene.IndirectCountOffset();
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
-
-    auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
-    auto primitive = sphere->primitives[0];
-    commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
-    _brain.drawStats.indexCount += primitive.count;
+    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene.DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _brain.dldi);
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
 }
 
-void SkydomePipeline::CreatePipeline()
+void GeometryPipeline::CreatePipeline(const GPUScene& gpuScene)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-
-    std::array<vk::DescriptorSetLayout, 3> descriptorSets = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
-    pipelineLayoutCreateInfo.setLayoutCount = descriptorSets.size();
-    pipelineLayoutCreateInfo.pSetLayouts = descriptorSets.data();
-
-    vk::PushConstantRange pcRange {};
-    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    pcRange.size = sizeof(_pushConstants);
-    pcRange.offset = 0;
-
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
+    std::array<vk::DescriptorSetLayout, 3> layouts = { _brain.bindlessLayout, gpuScene.GetObjectInstancesDescriptorSetLayout(), CameraResource::DescriptorSetLayout() };
+    pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
     util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
         "Failed creating geometry pipeline layout!");
 
-    auto vertByteCode = shader::ReadFile("shaders/bin/skydome.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/skydome.frag.spv");
+    auto vertByteCode = shader::ReadFile("shaders/bin/geom.vert.spv");
+    auto fragByteCode = shader::ReadFile("shaders/bin/geom.frag.spv");
 
     vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
     vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
@@ -130,7 +124,6 @@ void SkydomePipeline::CreatePipeline()
     fragShaderStageCreateInfo.module = fragModule;
     fragShaderStageCreateInfo.pName = "main";
 
-    // TODO: This shader stuff can be moved into a util function for brevity.
     vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
 
     auto bindingDesc = Vertex::GetBindingDescription();
@@ -179,21 +172,26 @@ void SkydomePipeline::CreatePipeline()
     multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
     multisampleStateCreateInfo.alphaToOneEnable = vk::False;
 
-    std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
-    blendAttachments[0].blendEnable = vk::False;
-    blendAttachments[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    memcpy(&blendAttachments[1], &blendAttachments[0], sizeof(vk::PipelineColorBlendAttachmentState));
+    std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
+    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    {
+        blendAttachmentState.blendEnable = vk::False;
+        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    }
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     colorBlendStateCreateInfo.logicOpEnable = vk::False;
-    colorBlendStateCreateInfo.attachmentCount = blendAttachments.size();
-    colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
+    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
+    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
 
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthTestEnable = true;
+    depthStencilStateCreateInfo.depthWriteEnable = true;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
+    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.stencilTestEnable = false;
 
     vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
 
@@ -213,21 +211,52 @@ void SkydomePipeline::CreatePipeline()
     pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 
-    std::array<vk::Format, 2> colorAttachmentFormats = {
-        _brain.GetImageResourceManager().Access(_hdrTarget)->format,
-        _brain.GetImageResourceManager().Access(_brightnessTarget)->format
-    };
     auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
+    std::array<vk::Format, DEFERRED_ATTACHMENT_COUNT> formats {};
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        formats[i] = _brain.GetImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
+
+    pipelineRenderingCreateInfoKhr.colorAttachmentCount = DEFERRED_ATTACHMENT_COUNT;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = formats.data();
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
     pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
 
     auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the skydome pipeline layout!");
+    util::VK_ASSERT(result.result, "Failed creating the geometry pipeline layout!");
     _pipeline = result.value;
 
     _brain.device.destroy(vertModule);
     _brain.device.destroy(fragModule);
+}
+
+void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
+{
+    vk::DescriptorSetLayout layout = gpuScene.DrawBufferLayout();
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _brain.descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layout,
+    };
+    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, &_drawBufferDescriptorSet),
+        "Failed allocating descriptor sets!");
+
+    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_drawBuffer);
+
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = _drawBufferDescriptorSet,
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
+
+    _brain.device.updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }
