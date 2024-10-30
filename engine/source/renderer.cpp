@@ -141,8 +141,8 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
-        .AddNode(lightingPass)
         .AddNode(skyDomePass)
+        .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
         .AddNode(debugPass)
