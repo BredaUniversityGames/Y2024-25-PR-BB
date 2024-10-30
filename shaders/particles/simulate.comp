@@ -1,22 +1,22 @@
 #version 460
 #include "particle_binds.glsl"
 
-layout(set = 2, binding = 0) buffer ParticleInstancesSSB
+layout (set = 2, binding = 0) buffer ParticleInstancesSSB
 {
     ParticleInstance particleInstances[MAX_PARTICLES];
 };
 
-layout(set = 2, binding = 1) buffer CulledInstanceSSB
+layout (set = 2, binding = 1) buffer CulledInstanceSSB
 {
     CulledInstance culledInstance;
 };
 
-layout(push_constant) uniform DeltaTime
+layout (push_constant) uniform DeltaTime
 {
     float deltaTime;
 };
 
-layout ( local_size_x = 256, local_size_y = 1, local_size_z = 1 ) in;
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
@@ -31,7 +31,7 @@ void main()
     uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
 
-    if(particle.life > 0)
+    if (particle.life > 0)
     {
         // simulate particles
         vec3 velocity = particle.velocity;

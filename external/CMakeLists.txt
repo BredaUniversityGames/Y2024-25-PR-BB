@@ -20,6 +20,7 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+
 FetchContent_MakeAvailable(SpdLog)
 
 # Vulkan
@@ -157,6 +158,40 @@ if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
 
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+# Set compiler options for Jolt
+target_compile_options(Jolt PRIVATE
+        -w          # Suppress all warnings
+        -Wno-error  # Do not treat warnings as errors
+)
+
+# GoogleTest
+
+FetchContent_Declare(
+        GoogleTest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.15.2
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+override_option(gtest_force_shared_crt ON)
+FetchContent_MakeAvailable(GoogleTest)
+
+# SPIRV-Reflect
+
+FetchContent_Declare(
+        SPIRV-Reflect
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
+        GIT_TAG vulkan-sdk-1.3.296.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+override_option(SPIRV_REFLECT_STATIC_LIB ON)
+FetchContent_MakeAvailable(SPIRV-Reflect)
+
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -188,6 +223,11 @@ target_include_directories(ImGui
         PUBLIC implot
 )
 
+# Enable Unity for external libraries
+
+if (USE_UNITY_BUILD)
+    target_enable_unity(Jolt)
+endif ()
 
 # Main External Library
 
@@ -208,6 +248,7 @@ target_link_libraries(External
         INTERFACE EnTT::EnTT
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
+        INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
 )

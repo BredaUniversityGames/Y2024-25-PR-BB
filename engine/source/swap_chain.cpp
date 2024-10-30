@@ -62,8 +62,7 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 
     util::VK_ASSERT(_brain.device.createSwapchainKHR(&createInfo, nullptr, &_swapChain), "Failed creating swap chain!");
 
-    vk::DispatchLoaderDynamic dldi = vk::DispatchLoaderDynamic { _brain.instance, vkGetInstanceProcAddr, _brain.device, vkGetDeviceProcAddr };
-    util::NameObject(_swapChain, "Main Swapchain", _brain.device, dldi);
+    util::NameObject(_swapChain, "Main Swapchain", _brain);
 
     _images = _brain.device.getSwapchainImagesKHR(_swapChain);
     _format = surfaceFormat.format;
@@ -102,9 +101,8 @@ void SwapChain::CreateSwapChainImageViews()
         };
         util::VK_ASSERT(_brain.device.createImageView(&createInfo, nullptr, &_imageViews[i]), "Failed creating image view for swap chain!");
 
-        vk::DispatchLoaderDynamic dldi = vk::DispatchLoaderDynamic { _brain.instance, vkGetInstanceProcAddr, _brain.device, vkGetDeviceProcAddr };
-        util::NameObject(_imageViews[i], "Swapchain Image View", _brain.device, dldi);
-        util::NameObject(_images[i], "Swapchain Image", _brain.device, dldi);
+        util::NameObject(_imageViews[i], "Swapchain Image View", _brain);
+        util::NameObject(_images[i], "Swapchain Image", _brain);
     }
 }
 

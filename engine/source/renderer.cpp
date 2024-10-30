@@ -24,6 +24,7 @@
 #include "gpu_scene.hpp"
 #include "log.hpp"
 #include "profile_macros.hpp"
+#include "frame_graph.hpp"
 
 #include "stb/stb_image.h"
 
@@ -52,6 +53,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
     _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
 
+    // Makes sure previously created textures are available to be sampled in the IBL pipeline
+    UpdateBindless();
+
     SingleTimeCommands commandBufferIBL { _brain };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
@@ -69,16 +73,83 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     _camera = std::make_unique<CameraResource>(_brain);
 
     _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, _bloomSettings);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, _bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain, *_gpuScene);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_gpuScene, *_camera, _bloomSettings);
+    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, _bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera, *_swapChain);
 
     CreateCommandBuffers();
     CreateSyncObjects();
+
+    FrameGraphNodeCreation geometryPass { *_geometryPipeline };
+    geometryPass.SetName("Geometry pass")
+        .SetDebugLabelColor(glm::vec3 { 6.0f, 214.0f, 160.0f } / 255.0f)
+        .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation shadowPass { *_shadowPipeline };
+    shadowPass.SetName("Shadow pass")
+        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation lightingPass { *_lightingPipeline };
+    lightingPass.SetName("Lighting pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f)
+        .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Shadow(), FrameGraphResourceType::eTexture)
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation skyDomePass { *_skydomePipeline };
+    skyDomePass.SetName("Sky dome pass")
+        .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
+        // Does nothing internally in this situation, for clarity that it is used here
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        // Making sure the sky dome pass runs after the lighting pass with a reference
+        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        // Not needed references, just for clarity this pass also contributes to those targets
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+
+    FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
+    bloomBlurPass.SetName("Bloom gaussian blur pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f)
+        .AddInput(_brightnessTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation toneMappingPass { *_tonemappingPipeline };
+    toneMappingPass.SetName("Tonemapping pass")
+        .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
+        .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
+
+    FrameGraphNodeCreation debugPass { *_debugPipeline };
+    debugPass.SetName("Debug pass")
+        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        // Reference to make sure it runs at the end
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+
+    _frameGraph = std::make_unique<FrameGraph>(_brain, *_swapChain);
+    FrameGraph& frameGraph = *_frameGraph;
+    frameGraph.AddNode(geometryPass)
+        .AddNode(shadowPass)
+        .AddNode(skyDomePass)
+        .AddNode(lightingPass)
+        .AddNode(bloomBlurPass)
+        .AddNode(toneMappingPass)
+        .AddNode(debugPass)
+        .Build();
 }
 
 std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
@@ -94,8 +165,6 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
         totalVertexSize += vertexSize;
         totalIndexSize += indexSize;
     }
-
-    bblog::info("vertex size: {}\nindex size: {}", totalVertexSize, totalIndexSize);
 
     std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
 
@@ -160,54 +229,27 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     const RenderSceneDescription sceneDescription {
         .gpuScene = *_gpuScene,
         .sceneDescription = *_scene,
-        .batchBuffer = *_batchBuffer
+        .batchBuffer = *_batchBuffer,
+        .targetSwapChainImageIndex = swapChainImageIndex
     };
 
     _brain.drawStats = {};
 
-    const Image* hdrImage = _brain.GetImageResourceManager().Access(_hdrTarget);
-    const Image* hdrBloomImage = _brain.GetImageResourceManager().Access(_brightnessTarget);
-    const Image* hdrBlurredBloomImage = _brain.GetImageResourceManager().Access(_bloomTarget);
-    const Image* shadowMap = _brain.GetImageResourceManager().Access(_gBuffers->Shadow());
-
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
+    // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eUndefined,
-        vk::ImageLayout::eColorAttachmentOptimal);
-    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    
-    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined,
-        vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    _geometryPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
-    _shadowPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
-    _gBuffers->TransitionLayout(commandBuffer, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-    util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
+    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, *_ecs, deltaTime); // TODO: Add to frame graph after ECS is integrated into renderer
 
-    _skydomePipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
-    _lightingPipeline->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
+    _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
-    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, *_ecs, deltaTime);
-
-    util::TransitionImageLayout(commandBuffer, shadowMap->image, shadowMap->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-    util::TransitionImageLayout(commandBuffer, hdrBloomImage->image, hdrBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-    util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-    _bloomBlurPipeline->RecordCommands(commandBuffer, _currentFrame, 5);
-
-    util::TransitionImageLayout(commandBuffer, hdrImage->image, hdrImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-    util::TransitionImageLayout(commandBuffer, hdrBlurredBloomImage->image, hdrBlurredBloomImage->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-    _tonemappingPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
-
-    _debugPipeline->RecordCommands(commandBuffer, _currentFrame, swapChainImageIndex);
-
+    // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+
     commandBuffer.end();
 }
 
@@ -274,6 +316,7 @@ void Renderer::UpdateBindless()
 {
     _brain.UpdateBindlessSet();
 }
+
 void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);

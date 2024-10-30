@@ -4,25 +4,25 @@
 #include "gbuffers.hpp"
 #include "mesh.hpp"
 #include "indirect_culler.hpp"
+#include "frame_graph.hpp"
 
 class BatchBuffer;
 class GPUScene;
 class RenderSceneDescription;
 
-class GeometryPipeline
+class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
     GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
+    ~GeometryPipeline() final;
 
-    ~GeometryPipeline();
-
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_MOVABLE(GeometryPipeline);
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline(const GPUScene& gpuScene);
+    void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
     const VulkanBrain& _brain;
