@@ -8,7 +8,7 @@ class VulkanBrain;
 class CameraResource;
 struct RenderSceneDescription;
 
-class IndirectCuller
+class IndirectCuller // TODO: Convert this to FrameGraphRenderPass
 {
 public:
     IndirectCuller(const VulkanBrain& brain, const GPUScene& gpuScene);

@@ -3,18 +3,19 @@
 #include "gbuffers.hpp"
 #include "vulkan_brain.hpp"
 #include "mesh.hpp"
+#include "frame_graph.hpp"
 
 class GPUScene;
 class BloomSettings;
 struct RenderSceneDescription;
 
-class LightingPipeline
+class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraResource& camera, const BloomSettings& bloomSettings);
-    ~LightingPipeline();
+    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
+    ~LightingPipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_MOVABLE(LightingPipeline);
     NON_COPYABLE(LightingPipeline);
@@ -28,7 +29,7 @@ private:
         uint32_t positionIndex;
     } _pushConstants;
 
-    void CreatePipeline(const GPUScene& gpuScene);
+    void CreatePipeline();
 
     const VulkanBrain& _brain;
     const GBuffers& _gBuffers;
