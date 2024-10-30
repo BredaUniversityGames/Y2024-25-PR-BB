@@ -37,7 +37,6 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
-    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
     vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
     stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
