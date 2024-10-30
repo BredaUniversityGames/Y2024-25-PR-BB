@@ -36,8 +36,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
-    depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+    depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
     stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
@@ -190,10 +189,13 @@ void SkydomePipeline::CreatePipeline()
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthTestEnable = vk::True;
+    depthStencilStateCreateInfo.depthWriteEnable = vk::False;
     depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = vk::True;
+    depthStencilStateCreateInfo.minDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.stencilTestEnable = vk::False;
 
     vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
 
