@@ -14,7 +14,6 @@
 #include "ECS.hpp"
 
 #include <glm/gtx/matrix_decompose.hpp>
-#undef GLM_ENABLE_EXPERIMENTAL
 
 #include "gbuffers.hpp"
 #include "renderer.hpp"
