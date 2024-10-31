@@ -66,7 +66,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
-    if(_emitters.size() > 0)
+    if (!_emitters.empty())
     {
         RecordEmit(commandBuffer);
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
@@ -96,13 +96,13 @@ void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
 void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
 {
     // make sure the copy buffer command is done before dispatching
-    vk::BufferMemoryBarrier barrier{};
+    vk::BufferMemoryBarrier barrier {};
     barrier.buffer = _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer;
     barrier.size = _emitters.size() * sizeof(Emitter);
     barrier.offset = 0;
     barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
     barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 }, {}, barrier, {});
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
 
     util::BeginLabel(commandBuffer, "Emit particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, _brain.dldi);
 
@@ -147,13 +147,13 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     auto culledIndicesBuffer = _brain.GetBufferResourceManager().Access(_culledIndicesBuffer);
 
     // make sure the compute is done before the host reads from it
-    vk::BufferMemoryBarrier culledIndicesBarrier{}; // TODO: is this buffer memory barrier necessary?
+    vk::BufferMemoryBarrier culledIndicesBarrier {}; // TODO: is this buffer memory barrier necessary?
     culledIndicesBarrier.buffer = culledIndicesBuffer->buffer;
     culledIndicesBarrier.size = sizeof(uint32_t) * (MAX_PARTICLES + 1);
     culledIndicesBarrier.offset = 0;
     culledIndicesBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
     culledIndicesBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags{ 0 }, {}, culledIndicesBarrier, {});
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags { 0 }, {}, culledIndicesBarrier, {});
 
     std::array<vk::RenderingAttachmentInfoKHR, 1> colorAttachmentInfos {};
 
@@ -217,7 +217,6 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
 {
     auto view = ecs._registry.view<EmitterComponent>();
@@ -227,7 +226,7 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs)
         if (component.timesToEmit != 0)
         {
             // TODO: do something with particle type later
-            component.emitter.randomValue = rand();
+            component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             _emitters.emplace_back(component.emitter);
             spdlog::info("Emitter received!");
             component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
@@ -240,7 +239,7 @@ void ParticlePipeline::UpdateBuffers(vk::CommandBuffer commandBuffer)
     // TODO: check if this swapping works
     std::swap(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveNew)], _particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveCurrent)]);
 
-    if (_emitters.size() > 0)
+    if (!_emitters.empty())
     {
         vk::DeviceSize bufferSize = _emitters.size() * sizeof(Emitter);
 
@@ -813,12 +812,13 @@ void ParticlePipeline::CreateBuffers()
     }
 
     { // Billboard vertex buffer
-        std::vector<Vertex> billboardPositions = { // TODO: tangents..?
-            Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 0.0f)),   // 0
-            Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)),	 // 1
-            Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)),	 // 2
-            Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 0.0f)),	 // 4
-            };
+        std::vector<Vertex> billboardPositions = {
+            // TODO: tangents..?
+            Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 0.0f)), // 0
+            Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)), // 1
+            Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)), // 2
+            Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 0.0f)), // 4
+        };
         vk::DeviceSize bufferSize = sizeof(Vertex) * billboardPositions.size();
 
         BufferCreation creation {};
