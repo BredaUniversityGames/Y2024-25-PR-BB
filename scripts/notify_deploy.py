@@ -14,17 +14,17 @@ def check_ret(result):
     return
 
 
-def run_wsl_subprocess(args):
-    return subprocess.run(["wsl"] + args).returncode
-
-
-def configure_and_build(config):
-    cmake_configure = ["cmake", "--preset", config]
-    cmake_build = ["cmake", "--build", "--preset", config]
-
-    check_ret(run_wsl_subprocess(cmake_configure))
-    check_ret(run_wsl_subprocess(cmake_build))
-    return
+# def run_wsl_subprocess(args):
+#     return subprocess.run(["wsl"] + args).returncode
+#
+#
+# def configure_and_build(config):
+#     cmake_configure = ["cmake", "--preset", config]
+#     cmake_build = ["cmake", "--build", "--preset", config]
+#
+#     check_ret(run_wsl_subprocess(cmake_configure))
+#     check_ret(run_wsl_subprocess(cmake_build))
+#     return
 
 
 def package(config):
@@ -62,13 +62,12 @@ def main():
     parser = argparse.ArgumentParser(
         description='Build, package and deploy a CMakePreset to a connected Steam Deck')
 
-    parser.add_argument('-p', '--preset', help="Compilation preset", type=str, required=True)
+    # parser.add_argument('-p', '--preset', help="Compilation preset", type=str, required=True)
     parser.add_argument('-n', '--name', help="Name in Steam Deck client", type=str, required=True)
 
     args = parser.parse_args()
 
-    configure_and_build(args.preset)
-    package(args.preset)
+    # package(args.preset)
     notify_steam_devkit(args.name)
 
 
