@@ -25,7 +25,7 @@ void main()
     Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
 
     vec4 albedoSample = pow(material.albedoFactor, vec4(2.2));
-    vec4 mrSample = vec4(material.metallicFactor, material.metallicFactor, 1.0, 1.0);
+    vec4 mrSample = vec4(1.0, material.roughnessFactor, material.metallicFactor, 1.0);
     vec4 occlusionSample = vec4(material.occlusionStrength);
     vec4 emissiveSample = pow(vec4(material.emissiveFactor, 0.0), vec4(2.2));
 
