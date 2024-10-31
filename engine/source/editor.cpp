@@ -3,6 +3,7 @@
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
+#include "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -22,6 +23,7 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -52,7 +54,15 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    _entityEditor.registerComponent<TransformComponent>("Transform");
+    _entityEditor.registerComponent<NameComponent>("Name");
+    _entityEditor.registerComponent<RelationshipComponent>("Relationship");
+    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+
+    _basicSampler
+        = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
@@ -139,11 +149,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    if (ImGui::Begin("Entity Details"))
-    {
-        DisplaySelectedEntityDetails(ecs);
-    }
-    ImGui::End();
+    DisplaySelectedEntityDetails();
 
     performanceTracker.Render();
     bloomSettings.Render();
@@ -271,54 +277,10 @@ void Editor::DrawMainMenuBar()
         ImGui::EndMainMenuBar();
     }
 }
-void Editor::DisplaySelectedEntityDetails(ECS& ecs)
+void Editor::DisplaySelectedEntityDetails()
 {
-    if (_selectedEntity == entt::null)
-    {
-        ImGui::Text("No entity selected");
-        return;
-    }
-
-    if (!ecs._registry.valid(_selectedEntity))
-    {
-        ImGui::Text("Selected entity is not valid");
-        return;
-    }
-    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
-    ImGui::LabelText("##EntityDetails", "%s", name.c_str());
-
-    if (ImGui::Button("Delete"))
-    {
-        ecs.DestroyEntity(_selectedEntity);
-        _selectedEntity = entt::null;
-        return;
-    }
-    ImGui::PushID(static_cast<int>(_selectedEntity));
-
-    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
-    if (transform != nullptr)
-    {
-        bool changed = false;
-        // Inspect Transform component
-        // TODO use euler angles instead of quaternion
-        changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
-        changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
-
-        if (changed)
-        {
-            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
-        }
-    }
-
-    if (nameComponent != nullptr)
-    {
-        ImGui::InputText("Name", &nameComponent->_name);
-    }
-
-    ImGui::PopID();
-    // inspect other components
+    // TODO make custom editor and list
+    _entityEditor.renderSimpleCombo(_ecs._registry, _selectedEntity);
 }
 
 Editor::~Editor()

@@ -1,5 +1,6 @@
 #pragma once
 #include "common.hpp"
+#include "imgui_entt_entity_editor.hpp"
 
 #include "vulkan/vulkan.hpp"
 
@@ -34,5 +35,7 @@ private:
 
     entt::entity _selectedEntity = entt::null;
 
-    void DisplaySelectedEntityDetails(ECS& ecs);
+    EnttEditor::EntityEditor<entt::entity> _entityEditor {};
+
+    void DisplaySelectedEntityDetails();
 };
