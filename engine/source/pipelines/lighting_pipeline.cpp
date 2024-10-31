@@ -2,8 +2,9 @@
 #include "shaders/shader_loader.hpp"
 #include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
+#include "pipeline_builder.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const GPUScene& gpuScene, const CameraResource& camera, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
@@ -19,11 +20,11 @@ LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBu
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
 
     _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
-    // shaodw sampler
+
     vk::PhysicalDeviceProperties properties {};
     _brain.physicalDevice.getProperties(&properties);
 
-    CreatePipeline(gpuScene);
+    CreatePipeline();
 }
 
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -53,17 +54,13 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    util::BeginLabel(commandBuffer, "Lighting pass", glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f, _brain.dldi);
     commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
-
-    commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
-    commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, 1, &_brain.bindlessSet, 0, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
@@ -74,7 +71,6 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     _brain.drawStats.drawCalls++;
 
     commandBuffer.endRenderingKHR(_brain.dldi);
-    util::EndLabel(commandBuffer, _brain.dldi);
 }
 
 LightingPipeline::~LightingPipeline()
@@ -83,81 +79,8 @@ LightingPipeline::~LightingPipeline()
     _brain.device.destroy(_pipelineLayout);
 }
 
-void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
+void LightingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 4> descriptorLayouts = { _brain.bindlessLayout, CameraResource::DescriptorSetLayout(), gpuScene.GetSceneDescriptorSetLayout(), _bloomSettings.GetDescriptorSetLayout() };
-
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
-
-    vk::PushConstantRange pcRange {};
-    pcRange.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    pcRange.size = sizeof(PushConstants);
-
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
-
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_pipelineLayout),
-        "Failed creating geometry pipeline layout!");
-
-    auto vertByteCode = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
-    auto fragByteCode = shader::ReadFile("shaders/bin/lighting.frag.spv");
-
-    vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, _brain.device);
-    vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, _brain.device);
-
-    vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-    vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageCreateInfo.module = vertModule;
-    vertShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-    fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageCreateInfo.module = fragModule;
-    fragShaderStageCreateInfo.pName = "main";
-
-    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-    inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-    dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-    rasterizationStateCreateInfo.depthClampEnable = vk::False;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-    multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-    multisampleStateCreateInfo.alphaToOneEnable = vk::False;
-
     std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;
     blendAttachments[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
@@ -168,42 +91,20 @@ void LightingPipeline::CreatePipeline(const GPUScene& gpuScene)
     colorBlendStateCreateInfo.attachmentCount = blendAttachments.size();
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
-    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-    depthStencilStateCreateInfo.depthTestEnable = false;
-    depthStencilStateCreateInfo.depthWriteEnable = false;
-
-    vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-    auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-    pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    pipelineCreateInfo.layout = _pipelineLayout;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
-
-    std::array<vk::Format, 2> colorAttachmentFormats = {
+    std::vector<vk::Format> formats = {
         _brain.GetImageResourceManager().Access(_hdrTarget)->format,
         _brain.GetImageResourceManager().Access(_brightnessTarget)->format
     };
-    auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = colorAttachmentFormats.size();
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = colorAttachmentFormats.data();
 
-    pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
-    auto result = _brain.device.createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-    util::VK_ASSERT(result.result, "Failed creating the geometry pipeline layout!");
-    _pipeline = result.value;
+    PipelineBuilder reflector { _brain };
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 
-    _brain.device.destroy(vertModule);
-    _brain.device.destroy(fragModule);
+    reflector.SetColorBlendState(colorBlendStateCreateInfo);
+    reflector.SetColorAttachmentFormats(formats);
+
+    reflector.BuildPipeline(_pipeline, _pipelineLayout);
 }

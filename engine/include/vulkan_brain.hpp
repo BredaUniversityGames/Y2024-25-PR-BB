@@ -91,6 +91,7 @@ public:
     {
         uint32_t indexCount;
         uint32_t drawCalls;
+        uint32_t indirectDrawCommands;
         uint32_t debugLines;
     } mutable drawStats;
 
@@ -119,7 +120,6 @@ private:
         VK_KHR_MULTIVIEW_EXTENSION_NAME,
         VK_KHR_MAINTENANCE2_EXTENSION_NAME,
 #endif
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
         VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,

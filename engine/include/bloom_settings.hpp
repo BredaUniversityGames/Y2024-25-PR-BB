@@ -7,19 +7,22 @@
 class BloomSettings
 {
 public:
-    struct SettingsData
+    struct alignas(16) SettingsData
     {
-        /// Overall strength of the final output.
+        // How much brightness is extracted from each color channel.
+        glm::vec3 colorWeights = glm::vec3(0.2126f, 0.7152f, 0.0722f);
+
+        // Overall strength of the final output.
         float strength = 0.8f;
 
-        /// How strong the brightness difference should be between dark and bright spots. The higher this is the stronger specular reflections will be.
+        // How strong the brightness difference should be between dark and bright spots. The higher this is the stronger specular reflections will be.
         float gradientStrength = 0.2f;
 
-        /// The maximum amount of brightness that can be extracted per pixel.
+        // The maximum amount of brightness that can be extracted per pixel.
         float maxBrightnessExtraction = 5.0f;
 
-        /// How much brightness is extracted from each color channel.
-        glm::vec3 colorWeights = glm::vec3(0.2126f, 0.7152f, 0.0722f);
+    private:
+        glm::vec2 _padding;
     };
 
     struct FrameData

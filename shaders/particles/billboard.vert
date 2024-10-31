@@ -2,12 +2,12 @@
 #include "particle_vars.glsl"
 #include "../scene.glsl"
 
-layout(set = 1, binding = 0) buffer ParticleInstancesSSB
+layout (set = 1, binding = 0) buffer ParticleInstancesSSB
 {
     ParticleInstance particleInstances[MAX_PARTICLES];
 };
 
-layout(set = 1, binding = 1) buffer CulledInstanceSSB
+layout (set = 1, binding = 1) buffer CulledInstanceSSB
 {
     CulledInstance culledInstance;
 };

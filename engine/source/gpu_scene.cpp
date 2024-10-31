@@ -1,6 +1,7 @@
 #include "gpu_scene.hpp"
 #include "batch_buffer.hpp"
 #include "vulkan_helper.hpp"
+#include "pipeline_builder.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
@@ -121,7 +122,7 @@ void GPUScene::InitializeObjectInstancesBuffers()
 
 void GPUScene::CreateSceneDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
 
     vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
     descriptorSetLayoutBinding.binding = 0;
@@ -130,12 +131,9 @@ void GPUScene::CreateSceneDescriptorSetLayout()
     descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
     descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
+    std::vector<std::string_view> names { "SceneUBO" };
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_sceneDescriptorSetLayout),
-        "Failed creating scene descriptor set layout!");
+    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -148,12 +146,11 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
         .pImmutableSamplers = nullptr,
     };
 
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = 1;
-    createInfo.pBindings = &descriptorSetLayoutBinding;
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetLayoutBinding };
 
-    util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_objectInstancesDescriptorSetLayout),
-        "Failed creating object instance descriptor set layout!");
+    std::vector<std::string_view> names { "InstanceData" };
+
+    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
