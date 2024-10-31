@@ -9,17 +9,17 @@
 #include <entt/entt.hpp>
 #include <imgui.h>
 
-#ifndef MM_IEEE_ASSERT
-#define MM_IEEE_ASSERT(x) assert(x)
+#ifndef ENTTEDITOR_IEEE_ASSERT
+#define ENTTEDITOR_IEEE_ASSERT(x) assert(x)
 #endif
 
-#define MM_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY "MM_IEEE_ENTITY"
+#define ENTTEDITOR_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY "ENTTEDITOR_IEEE_ENTITY"
 
-#ifndef MM_IEEE_ENTITY_WIDGET
-#define MM_IEEE_ENTITY_WIDGET ::MM::EntityWidget
+#ifndef ENTTEDITOR_IEEE_ENTITY_WIDGET
+#define ENTTEDITOR_IEEE_ENTITY_WIDGET ::EnttEditor::EntityWidget
 #endif
 
-namespace MM
+namespace EnttEditor
 {
 
 template <class EntityType>
@@ -40,7 +40,7 @@ inline void EntityWidget(EntityType& e, entt::basic_registry<EntityType>& reg, b
     {
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
         {
-            ImGui::SetDragDropPayload(MM_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY, &e, sizeof(e));
+            ImGui::SetDragDropPayload(ENTTEDITOR_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY, &e, sizeof(e));
             ImGui::Text("ID: %d", entt::to_integral(e));
             ImGui::EndDragDropSource();
         }
@@ -48,7 +48,7 @@ inline void EntityWidget(EntityType& e, entt::basic_registry<EntityType>& reg, b
 
     if (dropTarget && ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(MM_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ENTTEDITOR_IEEE_IMGUI_PAYLOAD_TYPE_ENTITY))
         {
             e = *(EntityType*)payload->Data;
         }
@@ -105,7 +105,7 @@ public:
     {
         auto index = entt::type_hash<Component>::value();
         auto insert_info = component_infos.insert_or_assign(index, component_info);
-        MM_IEEE_ASSERT(insert_info.second);
+        ENTTEDITOR_IEEE_ASSERT(insert_info.second);
         return std::get<ComponentInfo>(*insert_info.first);
     }
 
@@ -131,7 +131,7 @@ public:
         ImGui::TextUnformatted("Editing:");
         ImGui::SameLine();
 
-        MM_IEEE_ENTITY_WIDGET(e, registry, true);
+        ENTTEDITOR_IEEE_ENTITY_WIDGET(e, registry, true);
 
         if (ImGui::Button("New"))
         {
@@ -277,7 +277,7 @@ public:
             {
                 if (registry.orphan(e))
                 {
-                    MM_IEEE_ENTITY_WIDGET(e, registry, false);
+                    ENTTEDITOR_IEEE_ENTITY_WIDGET(e, registry, false);
                 }
             }
         }
@@ -301,7 +301,7 @@ public:
             {
                 for (auto e : view)
                 {
-                    MM_IEEE_ENTITY_WIDGET(e, registry, false);
+                    ENTTEDITOR_IEEE_ENTITY_WIDGET(e, registry, false);
                 }
             }
             ImGui::EndChild();

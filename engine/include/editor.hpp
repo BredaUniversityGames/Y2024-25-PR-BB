@@ -35,7 +35,7 @@ private:
 
     entt::entity _selectedEntity = entt::null;
 
-    MM::EntityEditor<entt::entity> _entityEditor {};
+    EnttEditor::EntityEditor<entt::entity> _entityEditor {};
 
     void DisplaySelectedEntityDetails();
 };

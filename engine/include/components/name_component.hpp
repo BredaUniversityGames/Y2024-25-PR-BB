@@ -13,7 +13,7 @@ public:
     static std::string_view GetDisplayName(const entt::registry& registry, entt::entity entity);
 };
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<NameComponent>(entt::registry& reg, entt::registry::entity_type e);

@@ -1,6 +1,6 @@
 #include "components/relationship_component.hpp"
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<RelationshipComponent>(entt::registry& reg, entt::registry::entity_type e)

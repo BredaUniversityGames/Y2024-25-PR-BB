@@ -12,7 +12,7 @@ std::string_view NameComponent::GetDisplayName(const entt::registry& registry, e
 
     return std::string_view { "Unnamed Entity" };
 }
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<NameComponent>(entt::registry& reg, entt::registry::entity_type e)

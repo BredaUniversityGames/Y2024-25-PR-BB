@@ -14,7 +14,7 @@ struct RelationshipComponent
     entt::entity parent = entt::null;
 };
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<RelationshipComponent>(entt::registry& reg, entt::registry::entity_type e);

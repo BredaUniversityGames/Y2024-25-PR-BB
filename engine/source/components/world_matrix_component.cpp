@@ -8,7 +8,7 @@ void WorldMatrixComponent::Inspect()
     ImGui::DragFloat4("col 4##WorldMatrix", &_worldMatrix[3].x, 0.1f);
 }
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<WorldMatrixComponent>(entt::registry& reg, entt::registry::entity_type e)

@@ -2,7 +2,7 @@
 
 #include "components/transform_helpers.hpp"
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<TransformComponent>(entt::registry& reg, entt::registry::entity_type e)

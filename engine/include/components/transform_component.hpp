@@ -18,7 +18,7 @@ public:
     void Inspect(entt::registry& reg, entt::entity entity);
 };
 
-namespace MM
+namespace EnttEditor
 {
 template <>
 void ComponentEditorWidget<TransformComponent>(entt::registry& reg, entt::registry::entity_type e);
