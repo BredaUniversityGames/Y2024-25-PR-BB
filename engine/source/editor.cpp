@@ -12,12 +12,17 @@
 #include "log.hpp"
 
 #include <fstream>
-
 #include "ECS.hpp"
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "gbuffers.hpp"
+#include "renderer.hpp"
+#include "scene_loader.hpp"
 #include "serialization.hpp"
+#include "ECS.hpp"
+#include "model_loader.hpp"
+#include "timers.hpp"
 
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -27,29 +32,30 @@
 
 #include <entt/entity/entity.hpp>
 
-Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
+Editor::Editor(ECS& ecs, Renderer& renderer)
     : _ecs(ecs)
-    , _brain(brain)
-    , _gBuffers(gBuffers)
+    , _renderer(renderer)
 {
     vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
     pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &swapchainFormat;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = depthFormat;
+
+    const vk::Format format = renderer.GetSwapChain().GetFormat();
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = renderer.GetGBuffers().DepthFormat();
 
     ImGui_ImplVulkan_InitInfo initInfoVulkan {};
     initInfoVulkan.UseDynamicRendering = true;
     initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
-    initInfoVulkan.Device = _brain.device;
+    initInfoVulkan.PhysicalDevice = renderer.GetBrain().physicalDevice;
+    initInfoVulkan.Device = renderer.GetBrain().device;
     initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = _brain.instance;
+    initInfoVulkan.Instance = renderer.GetBrain().instance;
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = _brain.graphicsQueue;
-    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
+    initInfoVulkan.Queue = renderer.GetBrain().graphicsQueue;
+    initInfoVulkan.QueueFamily = renderer.GetBrain().queueFamilyIndices.graphicsFamily.value();
+    initInfoVulkan.DescriptorPool = renderer.GetBrain().descriptorPool;
     initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = swapchainImages;
+    initInfoVulkan.ImageCount = renderer.GetSwapChain().GetImageCount();
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
@@ -65,7 +71,7 @@ Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format 
         = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -76,8 +82,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
-        RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, entity));
+        RelationshipComponent* relationship = _ecs._registry.try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(_ecs._registry, entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
@@ -99,10 +105,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
                 entt::entity current = relationship->first;
                 for (size_t i {}; i < relationship->childrenCount; ++i)
                 {
-                    if (ecs._registry.valid(current))
+                    if (_ecs._registry.valid(current))
                     {
                         self(self, current);
-                        current = ecs._registry.get<RelationshipComponent>(current).next;
+                        current = _ecs._registry.get<RelationshipComponent>(current).next;
                     }
                 }
 
@@ -128,16 +134,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         if (ImGui::Button("+ Add entity"))
         {
-            entt::entity entity = ecs._registry.create();
+            entt::entity entity = _ecs._registry.create();
 
-            ecs._registry.emplace<TransformComponent>(entity);
+            _ecs._registry.emplace<TransformComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
-            for (const auto [entity] : ecs._registry.storage<entt::entity>().each())
+            for (const auto [entity] : _ecs._registry.storage<entt::entity>().each())
             {
-                RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
+                RelationshipComponent* relationship = _ecs._registry.try_get<RelationshipComponent>(entity);
 
                 if (relationship == nullptr || relationship->parent == entt::null)
                 {
@@ -149,19 +155,20 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
+
     DisplaySelectedEntityDetails();
 
     performanceTracker.Render();
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : ecs._systems)
+    for (const auto& system : _ecs._systems)
     {
         system->Inspect();
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(),_renderer.GetBrain().GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -227,7 +234,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         char* statsJson;
-        vmaBuildStatsString(_brain.vmaAllocator, &statsJson, true);
+        vmaBuildStatsString(_renderer.GetBrain().vmaAllocator, &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -243,20 +250,19 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_brain.vmaAllocator, statsJson);
+        vmaFreeStatsString(_renderer.GetBrain().vmaAllocator, statsJson);
     }
 
     ImGui::End();
 
     ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
-    ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _brain.drawStats.indirectDrawCommands);
-    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
+    ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
+    ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetBrain().drawStats.indirectDrawCommands);
+    ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
 
     ImGui::End();
-
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();
@@ -268,6 +274,14 @@ void Editor::DrawMainMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
+            if (ImGui::MenuItem("Load Scene"))
+            {
+                Stopwatch stopwatch;
+                // todo: add file open dialog
+                SceneLoader::LoadModelIntoECSAsHierarchy(_renderer.GetBrain(), _ecs,
+                    _renderer.GetModelLoader().Load("assets/models/test.gltf", _renderer.GetBatchBuffer(), ModelLoader::LoadMode::eHierarchical));
+                bblog::info("loading gltf scene took {} ms", stopwatch.GetElapsed().count());
+            }
             if (ImGui::MenuItem("Save Scene"))
             {
                 Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);

@@ -4,6 +4,7 @@
 #include "vulkan_helper.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
+#include "timers.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace detail
@@ -58,8 +59,9 @@ ModelLoader::~ModelLoader()
     _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
-ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
+ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
 {
+    Stopwatch stopwatch;
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
@@ -80,8 +82,9 @@ ModelHandle ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
     bblog::info("Loaded model: {}", path);
+    bblog::info("fastgltf parsing took {} ms", stopwatch.GetElapsed().count());
 
-    return LoadModel(gltf, batchBuffer, name);
+    return LoadModel(gltf, batchBuffer, name, loadMode);
 }
 
 StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
@@ -416,12 +419,11 @@ ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec
 }
 
 ModelHandle
-ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name)
+ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
 {
     SingleTimeCommands commandBuffer { _brain };
 
     ModelHandle modelHandle {};
-
     // Load textures
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
 
@@ -456,8 +458,19 @@ ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, co
         modelHandle.meshes.emplace_back(handle);
     }
 
-    for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
-        RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f });
+    if (loadMode == LoadMode::eFlat)
+    {
+        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
+            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f });
+    }
+    else
+    {
+        modelHandle.hierarchy.baseNodes.emplace_back(Hierarchy::Node());
+        Hierarchy::Node& baseNode = modelHandle.hierarchy.baseNodes.back();
+        baseNode.name = gltf.scenes[0].name;
+        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
+            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelHandle, gltf, glm::mat4 { 1.0f }, &baseNode);
+    }
 
     commandBuffer.Submit();
 
@@ -479,23 +492,42 @@ ModelLoader::LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, Singl
 }
 
 void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelHandle& modelHandle, const fastgltf::Asset& gltf,
-    glm::mat4 matrix)
+    glm::mat4 matrix, Hierarchy::Node* parent)
 {
     Hierarchy::Node node {};
 
     if (gltfNode.meshIndex.has_value())
         node.mesh = modelHandle.meshes[gltfNode.meshIndex.value()];
+    else
+    {
+        node.mesh = ResourceHandle<Mesh>::Invalid();
+    }
+    fastgltf::math::fmat4x4 transform = parent != nullptr ? fastgltf::getTransformMatrix(gltfNode)
+                                                          : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
 
-    fastgltf::math::fmat4x4 transform = fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
     matrix = detail::ToMat4(transform);
     node.transform = matrix;
+    node.name = gltfNode.name;
 
-    if (gltfNode.meshIndex.has_value())
-        modelHandle.hierarchy.allNodes.emplace_back(node);
-
-    for (size_t i = 0; i < gltfNode.children.size(); ++i)
+    if (parent != nullptr)
     {
-        RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix);
+        for (size_t i = 0; i < gltfNode.children.size(); ++i)
+        {
+            RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix, &node);
+        }
+        parent->children.emplace_back(node);
+    }
+    else
+    {
+        for (size_t i = 0; i < gltfNode.children.size(); ++i)
+        {
+            RecurseHierarchy(gltf.nodes[gltfNode.children[i]], modelHandle, gltf, matrix);
+        }
+
+        if (gltfNode.meshIndex.has_value())
+        {
+            modelHandle.hierarchy.baseNodes.emplace_back(node);
+        }
     }
 }
 

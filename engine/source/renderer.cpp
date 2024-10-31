@@ -170,7 +170,7 @@ std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::v
 
     for (const auto& path : models)
     {
-        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer)));
+        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer,ModelLoader::LoadMode::eFlat)));
     }
 
     return loadedModels;
@@ -320,7 +320,6 @@ void Renderer::UpdateBindless()
 void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
-
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),

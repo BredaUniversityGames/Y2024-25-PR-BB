@@ -45,9 +45,12 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_emittersBufferDescriptorSetLayout);
     _brain.device.destroy(_instancesDescriptorSetLayout);
 }
-
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime)
 {
+    // UpdateEmitters(ecs);
+    UpdateBuffers(commandBuffer);
+
+    // Set up memory barrier to be used in between every shader stage
     vk::MemoryBarrier memoryBarrier {};
     memoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryWrite;
     memoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryWrite | vk::AccessFlagBits::eMemoryRead;

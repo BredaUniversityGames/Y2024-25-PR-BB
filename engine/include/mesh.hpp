@@ -77,11 +77,13 @@ struct Hierarchy
 {
     struct Node
     {
+        std::string name;
         glm::mat4 transform;
         ResourceHandle<Mesh> mesh;
+        std::vector<Node> children;
     };
-
-    std::vector<Node> allNodes;
+    
+    std::vector<Node> baseNodes;
 };
 
 struct ModelHandle
@@ -89,8 +91,13 @@ struct ModelHandle
     std::vector<ResourceHandle<Mesh>> meshes;
     std::vector<ResourceHandle<Material>> materials;
     std::vector<ResourceHandle<Image>> textures;
-
+    
     Hierarchy hierarchy;
+};
+
+struct StaticMeshComponent
+{
+    ResourceHandle<Mesh> mesh;
 };
 
 struct GameObject

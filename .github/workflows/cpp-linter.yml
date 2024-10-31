@@ -66,6 +66,7 @@ jobs:
             -cppcoreguidelines-macro-to-enum,
             -cppcoreguidelines-prefer-member-initializer,
             -cppcoreguidelines-no-suspend-with-lock,
+            -cppcoreguidelines-pro-type-union-access,
 
             bugprone-*,
             -bugprone-use-after-move,

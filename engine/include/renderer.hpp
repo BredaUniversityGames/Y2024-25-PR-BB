@@ -37,9 +37,14 @@ public:
 
     std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
 
+    ModelLoader& GetModelLoader() const { return *_modelLoader; }
+    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    SwapChain& GetSwapChain() const { return *_swapChain; }
+    GBuffers& GetGBuffers() const { return *_gBuffers; }
+    const VulkanBrain& GetBrain() const { return _brain; }
+
 private:
     friend class OldEngine;
-
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;

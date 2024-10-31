@@ -7,6 +7,7 @@
 template <typename T>
 class ResourceManager;
 
+
 template <typename T>
 struct ResourceHandle
 {
@@ -18,7 +19,7 @@ struct ResourceHandle
     static ResourceHandle<T> Invalid() { return ResourceHandle<T> {}; }
 
     uint32_t index : 24 { 0 };
-
+    
 private:
     friend class VulkanBrain;
     friend ResourceManager<T>;
