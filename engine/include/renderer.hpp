@@ -3,6 +3,7 @@
 #include "swap_chain.hpp"
 #include "application_module.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "camera.hpp"
 #include "bloom_settings.hpp"
 #include "entt/entity/entity.hpp"
@@ -36,7 +37,7 @@ public:
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
-    std::vector<entt::entity> FrontLoadModels(const std::vector<std::string>& models);
+    std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
@@ -66,7 +67,7 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
-    std::vector<std::shared_ptr<ModelResources>> _models;
+    std::vector<std::shared_ptr<ModelResources>> _modelResources;
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;

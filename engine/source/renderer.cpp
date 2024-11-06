@@ -153,7 +153,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ec
         .Build();
 }
 
-std::vector<entt::entity> Renderer::FrontLoadModels(const std::vector<std::string>& models)
+std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -168,17 +168,16 @@ std::vector<entt::entity> Renderer::FrontLoadModels(const std::vector<std::strin
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<entt::entity> entities {};
+    std::vector<Model> models {};
 
-    for (const auto& path : models)
+    for (const auto& path : modelPaths)
     {
-        ModelResources resources {};
-        _modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical, resources, entities);
+        models.emplace_back(_modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical));
 
-        _models.emplace_back(std::make_shared<ModelResources>(resources));
+        _modelResources.emplace_back(std::make_shared<ModelResources>(models.back().resources));
     }
 
-    return entities;
+    return models;
 }
 
 Renderer::~Renderer()
@@ -198,7 +197,7 @@ Renderer::~Renderer()
         _brain.device.destroy(_imageAvailableSemaphores[i]);
     }
 
-    for (auto& model : _models)
+    for (auto& model : _modelResources)
     {
         for (auto& texture : model->textures)
         {

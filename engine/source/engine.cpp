@@ -17,6 +17,7 @@
 #include "systems/physics_system.hpp"
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
+#include "scene_loader.hpp"
 
 #include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
@@ -57,7 +58,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    std::vector<entt::entity> entities = _renderer->FrontLoadModels(modelPaths);
+    std::vector<Model> models = _renderer->FrontLoadModels(modelPaths);
+    std::vector<entt::entity> entities;
+    SceneLoader sceneLoader {};
+    for (const auto& model : models)
+    {
+        sceneLoader.LoadModelIntoECSAsHierarchy(_renderer->GetBrain(), *_ecs, model, entities);
+    }
 
     TransformHelpers::SetLocalScale(_ecs->_registry, entities[1], glm::vec3 { 10.0f });
 

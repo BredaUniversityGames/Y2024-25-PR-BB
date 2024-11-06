@@ -66,7 +66,7 @@ ModelLoader::~ModelLoader()
     _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
-void ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode, ModelResources& modelResources, std::vector<entt::entity>& entities)
+Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
 {
     Stopwatch stopwatch;
     fastgltf::GltfFileStream fileStream { path };
@@ -90,7 +90,7 @@ void ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode
 
     bblog::info("Loaded model: {} in {} ms", path, stopwatch.GetElapsed().count());
 
-    LoadModel(gltf, batchBuffer, name, loadMode, modelResources, entities);
+    return LoadModel(gltf, batchBuffer, name, loadMode);
 }
 
 StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
@@ -424,8 +424,10 @@ glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2
     return glm::vec4 { tangent.x, tangent.y, tangent.z, w };
 }
 
-void ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode, ModelResources& modelResources, std::vector<entt::entity>& entities)
+Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
 {
+    Model model {};
+
     SingleTimeCommands commandBuffer { _brain };
 
     // Load textures
@@ -434,14 +436,14 @@ void ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffe
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        modelResources.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
+        model.resources.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
     for (auto& material : gltf.materials)
     {
-        MaterialCreation materialCreation = ProcessMaterial(material, modelResources.textures, gltf);
-        modelResources.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
+        MaterialCreation materialCreation = ProcessMaterial(material, model.resources.textures, gltf);
+        model.resources.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
@@ -453,13 +455,13 @@ void ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffe
         {
             StagingMesh::Primitive stagingPrimitive = ProcessPrimitive(gltfPrimitive, gltf);
             Mesh::Primitive primitive = LoadPrimitive(stagingPrimitive, commandBuffer, batchBuffer,
-                gltfPrimitive.materialIndex.has_value() ? modelResources.materials[gltfPrimitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
+                gltfPrimitive.materialIndex.has_value() ? model.resources.materials[gltfPrimitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
             mesh.primitives.emplace_back(primitive);
         }
 
         auto handle = _brain.GetMeshResourceManager().Create(mesh);
 
-        modelResources.meshes.emplace_back(handle);
+        model.resources.meshes.emplace_back(handle);
     }
 
     switch (loadMode)
@@ -467,24 +469,23 @@ void ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffe
     case LoadMode::eFlat:
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
         {
-            entt::entity entity = RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelResources, gltf, glm::mat4 { 1.0f });
-            entities.emplace_back(entity);
+            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], model, gltf, glm::mat4 { 1.0f });
         }
         break;
     case LoadMode::eHierarchical:
-        entt::entity entity = entities.emplace_back(_ecs->_registry.create());
-        _ecs->_registry.emplace<NameComponent>(entity).name = gltf.scenes[0].name;
-        _ecs->_registry.emplace<TransformComponent>(entity);
-        _ecs->_registry.emplace<RelationshipComponent>(entity);
+        Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node());
+        baseNode.name = gltf.scenes[0].name;
 
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
         {
-            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], modelResources, gltf, glm::mat4 { 1.0f }, entity);
+            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], model, gltf, glm::mat4 { 1.0f }, &baseNode);
         }
         break;
     }
 
     commandBuffer.Submit();
+
+    return model;
 }
 
 Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
@@ -500,38 +501,41 @@ Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& staging
     return primitive;
 }
 
-entt::entity ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, ModelResources& modelResources, const fastgltf::Asset& gltf,
-    glm::mat4 matrix, entt::entity parent)
+void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf,
+    glm::mat4 parentTransform, Hierarchy::Node* parent)
 {
-    const entt::entity entity = _ecs->_registry.create();
-
-    auto& nameComponent = _ecs->_registry.emplace<NameComponent>(entity);
-    nameComponent.name = gltfNode.name;
-
-    _ecs->_registry.emplace<TransformComponent>(entity);
-    fastgltf::math::fmat4x4 transform = parent != entt::null ? fastgltf::getTransformMatrix(gltfNode)
-                                                             : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(matrix));
-
-    matrix = detail::ToMat4(transform);
-    TransformHelpers::SetLocalTransform(_ecs->_registry, entity, matrix);
-    _ecs->_registry.emplace<RelationshipComponent>(entity);
+    Hierarchy::Node node {};
 
     if (gltfNode.meshIndex.has_value())
     {
-        _ecs->_registry.emplace<StaticMeshComponent>(entity).mesh = modelResources.meshes[gltfNode.meshIndex.value()];
+        node.mesh = model.resources.meshes[gltfNode.meshIndex.value()];
     }
+    else
+    {
+        node.mesh = ResourceHandle<Mesh>::Invalid();
+    }
+
+    fastgltf::math::fmat4x4 gltfTransform = parent != nullptr ? fastgltf::getTransformMatrix(gltfNode)
+                                                              : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(parentTransform));
+    node.transform = detail::ToMat4(gltfTransform);
+    node.name = gltfNode.name;
 
     for (size_t i : gltfNode.children)
     {
-        RecurseHierarchy(gltf.nodes[i], modelResources, gltf, matrix, parent != entt::null ? entity : entt::null);
+        RecurseHierarchy(gltf.nodes[i], model, gltf, node.transform, parent != nullptr ? &node : nullptr);
     }
 
-    if (parent != entt::null)
+    if (parent != nullptr)
     {
-        RelationshipHelpers::AttachChild(_ecs->_registry, parent, entity);
+        parent->children.emplace_back(node);
     }
-
-    return entity;
+    else
+    {
+        if (gltfNode.meshIndex.has_value())
+        {
+            model.hierarchy.baseNodes.emplace_back(node);
+        }
+    }
 }
 
 void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)

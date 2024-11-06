@@ -73,13 +73,6 @@ struct StagingMesh
     std::vector<StagingMesh::Primitive> primitives;
 };
 
-struct ModelResources
-{
-    std::vector<ResourceHandle<Mesh>> meshes;
-    std::vector<ResourceHandle<Material>> materials;
-    std::vector<ResourceHandle<Image>> textures;
-};
-
 struct StaticMeshComponent
 {
     ResourceHandle<Mesh> mesh;
