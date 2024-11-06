@@ -3,6 +3,7 @@
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
+#include "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -24,11 +25,11 @@
 #include "model_loader.hpp"
 #include "timers.hpp"
 
-#include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -61,6 +62,12 @@ Editor::Editor(ECS& ecs, Renderer& renderer)
     ImGui_ImplVulkan_CreateFontsTexture();
 
     _basicSampler = util::CreateSampler(renderer.GetBrain(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    _entityEditor.registerComponent<TransformComponent>("Transform");
+    _entityEditor.registerComponent<NameComponent>("Name");
+    _entityEditor.registerComponent<RelationshipComponent>("Relationship");
+    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
@@ -149,7 +156,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Begin("Entity Details"))
     {
-        DisplaySelectedEntityDetails(_ecs);
+        DisplaySelectedEntityDetails();
     }
     ImGui::End();
 
@@ -254,6 +261,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
     ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetBrain().drawStats.indirectDrawCommands);
     ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
 
     ImGui::End();
@@ -285,7 +293,8 @@ void Editor::DrawMainMenuBar()
         ImGui::EndMainMenuBar();
     }
 }
-void Editor::DisplaySelectedEntityDetails(ECS& ecs)
+
+void Editor::DisplaySelectedEntityDetails()
 {
     if (_selectedEntity == entt::null)
     {
@@ -293,25 +302,24 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
         return;
     }
 
-    if (!ecs._registry.valid(_selectedEntity))
+    if (!_ecs._registry.valid(_selectedEntity))
     {
-        ImGui::Text("Selected entity is not valid");
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
+    const std::string name = std::string(NameComponent::GetDisplayName(_ecs._registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
     {
-        ecs.DestroyEntity(_selectedEntity);
+        _ecs.DestroyEntity(_selectedEntity);
         _selectedEntity = entt::null;
         return;
     }
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
-    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
+    TransformComponent* transform = _ecs._registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = _ecs._registry.try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -323,7 +331,7 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 
         if (changed)
         {
-            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
+            TransformHelpers::UpdateWorldMatrix(_ecs._registry, _selectedEntity);
         }
     }
 
@@ -336,6 +344,4 @@ void Editor::DisplaySelectedEntityDetails(ECS& ecs)
     // inspect other components
 }
 
-Editor::~Editor()
-{
-}
+Editor::~Editor() = default;

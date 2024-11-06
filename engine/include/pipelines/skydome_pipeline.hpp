@@ -1,22 +1,22 @@
 #pragma once
 
 #include "bloom_settings.hpp"
-#include "swap_chain.hpp"
 #include "vulkan_brain.hpp"
 #include "mesh.hpp"
+#include "frame_graph.hpp"
+#include "gbuffers.hpp"
 
 class BloomSettings;
 class RenderSceneDescription;
 
-class SkydomePipeline
+class SkydomePipeline final : public FrameGraphRenderPass
 {
 public:
     SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const BloomSettings& bloomSettings);
+        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
+    ~SkydomePipeline() final;
 
-    ~SkydomePipeline();
-
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_COPYABLE(SkydomePipeline);
     NON_MOVABLE(SkydomePipeline);
@@ -32,6 +32,7 @@ private:
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _environmentMap;
+    const GBuffers& _gBuffers;
 
     ResourceHandle<Mesh> _sphere;
     vk::UniqueSampler _sampler;

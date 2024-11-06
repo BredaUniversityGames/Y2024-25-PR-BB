@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <entt/entity/entity.hpp>
+#include "imgui_entt_entity_editor.hpp"
 
 struct RelationshipComponent
 {
@@ -12,3 +13,9 @@ struct RelationshipComponent
     entt::entity next = entt::null; // Next sibling
     entt::entity parent = entt::null;
 };
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<RelationshipComponent>(entt::registry& reg, entt::registry::entity_type e);
+}

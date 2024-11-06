@@ -1,5 +1,6 @@
 #include "camera.hpp"
 #include "vulkan_helper.hpp"
+#include "pipeline_builder.hpp"
 #include "vulkan_brain.hpp"
 #include <glm/gtc/quaternion.hpp>
 
@@ -31,23 +32,20 @@ void CameraResource::CreateDescriptorSetLayout(const VulkanBrain& brain)
 {
     if (_descriptorSetLayout)
     {
-        brain.device.destroy(_descriptorSetLayout);
+        return;
     }
 
     vk::DescriptorSetLayoutBinding descriptorSetBinding {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
     };
 
-    vk::DescriptorSetLayoutCreateInfo cameraUBOCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &descriptorSetBinding,
-    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
+    std::vector<std::string_view> names { "CameraUBO" };
 
-    util::VK_ASSERT(brain.device.createDescriptorSetLayout(&cameraUBOCreateInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating camera descriptor set layout!");
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(brain, bindings, names);
 }
 
 void CameraResource::CreateBuffers()

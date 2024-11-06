@@ -155,14 +155,14 @@ void ParticlePipeline::UpdateBuffers(vk::CommandBuffer commandBuffer)
         vmaCopyMemoryToAllocation(_brain.vmaAllocator, _emitters.data(), _stagingBufferAllocation, 0, bufferSize);
         util::CopyBuffer(commandBuffer, _stagingBuffer, _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
 
-        vk::BufferMemoryBarrier barrier{};
+        vk::BufferMemoryBarrier barrier {};
         barrier.buffer = _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer;
         barrier.size = bufferSize;
         barrier.offset = 0;
         barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
         barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags{ 0 }, {}, barrier, {});
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
     }
 }
 

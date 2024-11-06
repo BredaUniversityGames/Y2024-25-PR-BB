@@ -1,13 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="Run-Tests" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test"
-                   REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false"
-                   WORKING_DIR="file://$ContentRoot$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project"
-                   TARGET_NAME="UnitTests" CONFIG_NAME="x64-Debug" RUN_TARGET_PROJECT_NAME="Project"
-                   RUN_TARGET_NAME="UnitTests" TEST_MODE="SUITE_TEST">
-        <method v="2">
-            <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask"
-                    enabled="true"/>
-            <option name="BeforeTestRunTask" enabled="true"/>
-        </method>
-    </configuration>
+  <configuration default="false" name="Run-Tests" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" PROGRAM_PARAMS="-T" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$ContentRoot$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="Engine" CONFIG_NAME="WSL-Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="Engine" TEST_MODE="SUITE_TEST">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      <option name="BeforeTestRunTask" enabled="true" />
+    </method>
+  </configuration>
 </component>

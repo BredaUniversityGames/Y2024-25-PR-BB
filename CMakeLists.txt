@@ -6,7 +6,7 @@ project(Project)
 ### HELPERS AND INCLUDES
 
 include(FetchContent)
-include(scripts/functions.cmake)
+include(scripts/cmake/functions.cmake)
 
 ### COMPILATION SETTINGS ###
 
@@ -14,10 +14,13 @@ option(ENABLE_TESTS "Compile with Unit Tests" ON)
 option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
+option(USE_UNITY_BUILD "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
-target_compile_options(ProjectSettings INTERFACE "-Wall")
+
+target_compile_options(ProjectSettings
+        INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
 
 target_compile_options(ProjectSettings
         INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
@@ -25,6 +28,14 @@ target_compile_options(ProjectSettings
 if (WARNINGS_AS_ERRORS)
     message(STATUS "### Warnings are enabled as Errors")
     target_compile_options(ProjectSettings INTERFACE -Werror)
+endif ()
+
+if (ENABLE_PCH)
+    message(STATUS "### Compiling with Precompiled Headers")
+endif ()
+
+if (USE_UNITY_BUILD)
+    message(STATUS "### Compiling with Unity (Jumbo) builds")
 endif ()
 
 # Add external dependencies

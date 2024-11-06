@@ -22,6 +22,7 @@ ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creat
 
     bufferResource.size = creation.size;
     bufferResource.usage = creation.usage;
+    bufferResource.name = creation.name;
 
     if (creation.isMappable)
     {

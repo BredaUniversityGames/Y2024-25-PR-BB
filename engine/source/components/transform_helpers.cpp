@@ -151,7 +151,7 @@ void TransformHelpers::OnConstructTransform(entt::registry& reg, entt::entity en
 }
 void TransformHelpers::OnDestroyTransform(entt::registry& reg, entt::entity entity)
 {
-    reg.erase<WorldMatrixComponent>(entity);
+    reg.remove<WorldMatrixComponent>(entity);
 }
 void TransformHelpers::SubscribeToEvents(entt::registry& reg)
 {

@@ -142,6 +142,7 @@ struct Buffer
     void* mappedPtr = nullptr;
     vk::DeviceSize size {};
     vk::BufferUsageFlags usage {};
+    std::string name {};
 };
 
 struct Mesh
