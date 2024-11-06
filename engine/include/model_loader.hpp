@@ -55,8 +55,7 @@ private:
     Model LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
         const std::vector<Material>& materials, BatchBuffer& batchBuffer, const fastgltf::Asset& gltf);
 
-    void RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf,
-        glm::mat4 transform, Hierarchy::Node* parent = nullptr);
+    void RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf, Hierarchy::Node& parent);
 
     Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);

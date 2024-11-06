@@ -15,13 +15,13 @@ struct Hierarchy
 {
     struct Node
     {
-        std::string name;
-        glm::mat4 transform;
-        ResourceHandle<Mesh> mesh;
-        std::vector<Node> children;
+        std::string name {};
+        glm::mat4 transform { 1.0f };
+        ResourceHandle<Mesh> mesh {};
+        std::vector<Node> children {};
     };
 
-    std::vector<Node> baseNodes;
+    std::vector<Node> baseNodes {};
 };
 
 struct Model

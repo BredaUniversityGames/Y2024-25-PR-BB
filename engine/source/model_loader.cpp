@@ -469,16 +469,21 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
     case LoadMode::eFlat:
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
         {
-            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], model, gltf, glm::mat4 { 1.0f });
+            const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
+            Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node {});
+            baseNode.name = gltfNode.name;
+
+            RecurseHierarchy(gltfNode, model, gltf, baseNode);
         }
         break;
     case LoadMode::eHierarchical:
-        Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node());
+        Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node {});
         baseNode.name = gltf.scenes[0].name;
 
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
         {
-            RecurseHierarchy(gltf.nodes[gltf.scenes[0].nodeIndices[i]], model, gltf, glm::mat4 { 1.0f }, &baseNode);
+            const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
+            RecurseHierarchy(gltfNode, model, gltf, baseNode);
         }
         break;
     }
@@ -501,10 +506,9 @@ Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& staging
     return primitive;
 }
 
-void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf,
-    glm::mat4 parentTransform, Hierarchy::Node* parent)
+void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf, Hierarchy::Node& parent)
 {
-    Hierarchy::Node node {};
+    Hierarchy::Node& node { parent.children.emplace_back() };
 
     if (gltfNode.meshIndex.has_value())
     {
@@ -515,26 +519,13 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model,
         node.mesh = ResourceHandle<Mesh>::Invalid();
     }
 
-    fastgltf::math::fmat4x4 gltfTransform = parent != nullptr ? fastgltf::getTransformMatrix(gltfNode)
-                                                              : fastgltf::getTransformMatrix(gltfNode, detail::ToFastGLTFMat4(parentTransform));
+    fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
     node.transform = detail::ToMat4(gltfTransform);
     node.name = gltfNode.name;
 
     for (size_t i : gltfNode.children)
     {
-        RecurseHierarchy(gltf.nodes[i], model, gltf, node.transform, parent != nullptr ? &node : nullptr);
-    }
-
-    if (parent != nullptr)
-    {
-        parent->children.emplace_back(node);
-    }
-    else
-    {
-        if (gltfNode.meshIndex.has_value())
-        {
-            model.hierarchy.baseNodes.emplace_back(node);
-        }
+        RecurseHierarchy(gltf.nodes[i], model, gltf, node);
     }
 }
 
