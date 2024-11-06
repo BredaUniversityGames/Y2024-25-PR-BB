@@ -5,6 +5,7 @@
 #include "mesh.hpp"
 #include "camera.hpp"
 #include "bloom_settings.hpp"
+#include "entt/entity/entity.hpp"
 
 class DebugPipeline;
 class Application;
@@ -29,13 +30,13 @@ class FrameGraph;
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS> ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
-    std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
+    std::vector<entt::entity> FrontLoadModels(const std::vector<std::string>& models);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
@@ -65,7 +66,8 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
-    std::unique_ptr<GPUScene> _gpuScene;
+    std::vector<std::shared_ptr<ModelResources>> _models;
+    std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
@@ -78,7 +80,7 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::unique_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _batchBuffer;
 
     std::unique_ptr<CameraResource> _camera;
 

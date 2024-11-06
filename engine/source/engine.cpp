@@ -57,22 +57,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    _scene->models = _renderer->FrontLoadModels(modelPaths);
+    std::vector<entt::entity> entities = _renderer->FrontLoadModels(modelPaths);
 
-
-    glm::vec3 scale { 10.0f };
-    for (size_t i = 0; i < 10; ++i)
-    {
-        glm::vec3 translate { i / 3, 0.0f, i % 3 };
-        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
-
-        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
-    }
+    TransformHelpers::SetLocalScale(_ecs->_registry, entities[1], glm::vec3 { 10.0f });
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(*_ecs,*_renderer);
-    
+    _editor = std::make_unique<Editor>(*_ecs, *_renderer);
+
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;

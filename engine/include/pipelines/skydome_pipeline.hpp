@@ -7,7 +7,7 @@
 #include "gbuffers.hpp"
 
 class BloomSettings;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 
 class SkydomePipeline final : public FrameGraphRenderPass
 {

@@ -79,11 +79,11 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
-    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer->VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer->IndexBuffer())->buffer;
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
 
     auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
     auto primitive = sphere->primitives[0];

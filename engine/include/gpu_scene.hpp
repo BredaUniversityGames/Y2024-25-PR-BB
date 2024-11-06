@@ -6,10 +6,12 @@
 struct SceneDescription;
 class GPUScene;
 class BatchBuffer;
+class ECS;
 
 struct GPUSceneCreation
 {
     const VulkanBrain& brain;
+    const std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
     ResourceHandle<Image> irradianceMap;
@@ -20,9 +22,10 @@ struct GPUSceneCreation
 
 struct RenderSceneDescription
 {
-    const GPUScene& gpuScene;
-    const SceneDescription& sceneDescription; // This will change to ecs
-    const BatchBuffer& batchBuffer;
+    const std::shared_ptr<GPUScene> gpuScene;
+    const std::shared_ptr<SceneDescription> sceneDescription; // This will change to ecs
+    const std::shared_ptr<ECS> ecs;
+    const std::shared_ptr<BatchBuffer> batchBuffer;
     const uint32_t targetSwapChainImageIndex;
 };
 
@@ -99,6 +102,7 @@ private:
     };
 
     const VulkanBrain& _brain;
+    const std::shared_ptr<ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
@@ -110,7 +114,7 @@ private:
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
     void UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex);
-    void UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex);
+    void UpdateObjectInstancesData(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializeObjectInstancesBuffers();

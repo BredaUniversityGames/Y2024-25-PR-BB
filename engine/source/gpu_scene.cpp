@@ -10,6 +10,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     , brdfLUTMap(creation.brdfLUTMap)
     , directionalShadowMap(creation.directionalShadowMap)
     , _brain(creation.brain)
+    , _ecs(creation.ecs)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();
@@ -35,7 +36,7 @@ GPUScene::~GPUScene()
 void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
 {
     UpdateSceneData(scene, frameIndex);
-    UpdateObjectInstancesData(scene, frameIndex);
+    UpdateObjectInstancesData(frameIndex);
     WriteDraws(frameIndex);
 }
 
@@ -69,24 +70,24 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
 }
 
-void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex)
+void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 {
     std::array<InstanceData, MAX_MESHES> instances {};
     uint32_t count = 0;
 
     _drawCommands.clear();
 
-    for (auto& gameObject : scene.gameObjects)
-    {
-        for (auto& node : gameObject.model->hierarchy.baseNodes)
+    auto meshView = _ecs->_registry.view<StaticMeshComponent, WorldMatrixComponent>();
+
+    meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
         {
-            auto mesh = _brain.GetMeshResourceManager().Access(node.mesh);
+            auto mesh = _brain.GetMeshResourceManager().Access(meshComponent.mesh);
             for (const auto& primitive : mesh->primitives)
             {
                 assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
                 assert(_brain.GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
 
-                instances[count].model = gameObject.transform * node.transform;
+                instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
                 instances[count].materialIndex = primitive.material.index;
                 instances[count].boundingRadius = primitive.boundingRadius;
 
@@ -98,9 +99,7 @@ void GPUScene::UpdateObjectInstancesData(const SceneDescription& scene, uint32_t
                     .firstInstance = 0 });
 
                 count++;
-            }
-        }
-    }
+            } });
 
     const Buffer* buffer = _brain.GetBufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));

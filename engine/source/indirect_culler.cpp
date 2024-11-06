@@ -21,13 +21,13 @@ void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 {
     const uint32_t localSize = 64;
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { scene.gpuScene.DrawBufferDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { targetDescriptorSet }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { scene.gpuScene.GetObjectInstancesDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { camera.DescriptorSet(currentFrame) }, {});
-    commandBuffer.dispatch((scene.gpuScene.DrawCount() + localSize - 1) / localSize, 1, 1);
+    commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
-    vk::Buffer inDrawBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene.IndirectDrawBuffer(currentFrame))->buffer;
+    vk::Buffer inDrawBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
     vk::Buffer outDrawBuffer = _brain.GetBufferResourceManager().Access(targetBuffer)->buffer;
 
     std::array<vk::BufferMemoryBarrier, 2> barriers;
