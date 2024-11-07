@@ -23,7 +23,6 @@ class ApplicationModule : public ModuleInterface
 
 public:
     ApplicationModule();
-    ~ApplicationModule() override;
 
     // TODO: Maybe move to a GPU/Vulkan Context module
     struct VulkanInitInfo

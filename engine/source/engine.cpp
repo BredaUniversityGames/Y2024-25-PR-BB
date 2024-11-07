@@ -143,23 +143,33 @@ void OldEngine::Tick(Engine& engine)
 
         constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-        // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        _scene->camera.eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
-        _scene->camera.eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+        glm::vec3& rotation = _scene->camera.eulerRotation;
+        rotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+        rotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+
+        rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
         glm::vec3 movementDir {};
         if (input.IsKeyHeld(KeyboardCode::eW))
+        {
             movementDir -= FORWARD;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eS))
+        {
             movementDir += FORWARD;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eD))
+        {
             movementDir += RIGHT;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eA))
+        {
             movementDir -= RIGHT;
+        }
 
         if (glm::length(movementDir) != 0.0f)
         {
