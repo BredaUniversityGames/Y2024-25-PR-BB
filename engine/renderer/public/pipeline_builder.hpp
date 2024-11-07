@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include <map>
+#include <spirv_reflect.h>
 
 class PipelineBuilder
 {

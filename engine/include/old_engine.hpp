@@ -21,24 +21,17 @@ public:
     OldEngine();
     ~OldEngine() override;
 
+    std::shared_ptr<ECS> GetECS() const { return _ecs; }
+
 private:
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
     std::unique_ptr<Editor> _editor;
-
-    std::unique_ptr<Renderer> _renderer;
-
-    std::unique_ptr<ParticleInterface> _particleInterface;
-
     std::shared_ptr<ECS> _ecs;
-
     std::shared_ptr<SceneDescription> _scene;
-
     glm::ivec2 _lastMousePos {};
-
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
-
     PerformanceTracker _performanceTracker;
 
     // modules

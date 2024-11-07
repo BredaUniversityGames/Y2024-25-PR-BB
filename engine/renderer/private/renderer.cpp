@@ -247,7 +247,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, *_ecs, deltaTime); // TODO: Add to frame graph after ECS is integrated into renderer
+    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, _ecs, deltaTime); // TODO: Add to frame graph after ECS is integrated into renderer
 
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 

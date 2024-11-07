@@ -45,7 +45,7 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_emittersBufferDescriptorSetLayout);
     _brain.device.destroy(_instancesDescriptorSetLayout);
 }
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, std::shared_ptr<ECS> ecs, float deltaTime)
 {
     // UpdateEmitters(ecs);
     UpdateBuffers(commandBuffer);
@@ -127,9 +127,9 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void ParticlePipeline::UpdateEmitters(ECS& ecs)
+void ParticlePipeline::UpdateEmitters(std::shared_ptr<ECS> ecs)
 {
-    auto view = ecs.registry.view<EmitterComponent>();
+    auto view = ecs->registry.view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);

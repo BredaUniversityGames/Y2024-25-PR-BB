@@ -1,28 +1,30 @@
 #include "engine.hpp"
-#include "application_module.hpp"
-#include "input_manager.hpp"
-#include "old_engine.hpp"
 
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_vulkan.h>
+#include <implot/implot.h>
+#include <stb/stb_image.h>
+
+#include "application_module.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
-#include "imgui_impl_vulkan.h"
+#include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "modules/physics_module.hpp"
+#include "old_engine.hpp"
+#include "particles/emitter_component.hpp"
+#include "particles/particle_interface.hpp"
+#include "particles/particle_util.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "vulkan_helper.hpp"
-#include <stb/stb_image.h>
-
-#include "implot/implot.h"
-#include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
-#include <imgui_impl_sdl3.h>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -39,11 +41,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     spdlog::info("Starting engine...");
 
-    auto& applicationModule = engine.GetModule<ApplicationModule>();
-
     _ecs = std::make_shared<ECS>();
 
-    _renderer = std::make_unique<Renderer>(applicationModule, _ecs);
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& rendererModule = engine.GetModule<RendererModule>();
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
@@ -51,27 +52,25 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
 
     _scene = std::make_shared<SceneDescription>();
-    _renderer->_scene = _scene;
+    rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
         "assets/models/DamagedHelmet.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    std::vector<Model> models = _renderer->FrontLoadModels(modelPaths);
+    std::vector<Model> models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(_renderer->GetBrain(), *_ecs, model);
+        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer().GetBrain(), *_ecs, model);
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
     TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
-    _renderer->UpdateBindless();
-
-    _editor = std::make_unique<Editor>(*_ecs, *_renderer);
+    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer());
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -83,8 +82,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-
-    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
@@ -100,6 +97,7 @@ void OldEngine::Tick(Engine& engine)
 {
     // update input
     auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
 
     ZoneNamed(zone, "");
@@ -111,9 +109,9 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
-    _renderer->_debugPipeline->ClearLines();
+    rendererModule.GetRenderer().GetDebugPipeline().ClearLines();
     _physicsModule->debugRenderer->ClearLines();
-    _renderer->_debugPipeline->AddLines(linesData);
+    rendererModule.GetRenderer().GetDebugPipeline().AddLines(linesData);
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -187,7 +185,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
         spdlog::info("Spawned emitter!");
     }
 
@@ -199,9 +197,9 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
+    _editor->Draw(_performanceTracker, rendererModule.GetRenderer().GetBloomSettings(), *_scene);
 
-    _renderer->Render(deltaTimeMS);
+    rendererModule.GetRenderer().Render(deltaTimeMS);
 
     _performanceTracker.Update();
 
@@ -212,7 +210,8 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _renderer->_brain.device.waitIdle();
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    rendererModule.GetRenderer().GetBrain().device.waitIdle();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL3_Shutdown();
@@ -221,7 +220,6 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
     ImGui::DestroyContext();
 
     _editor.reset();
-    _renderer.reset();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::UnsubscribeToEvents(_ecs->registry);

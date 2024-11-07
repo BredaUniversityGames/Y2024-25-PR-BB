@@ -11,7 +11,7 @@ class ECS;
 struct GPUSceneCreation
 {
     const VulkanBrain& brain;
-    std::shared_ptr<const ECS> ecs;
+    std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
     ResourceHandle<Image> irradianceMap;
@@ -23,8 +23,8 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
-    std::shared_ptr<SceneDescription> sceneDescription; // This will change to ecs
-    std::shared_ptr<ECS> ecs;
+    std::shared_ptr<const SceneDescription> sceneDescription; // This will change to ecs
+    std::shared_ptr<const ECS> ecs;
     std::shared_ptr<BatchBuffer> batchBuffer;
     uint32_t targetSwapChainImageIndex;
 };

@@ -37,6 +37,8 @@ public:
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
+    void Render(float deltaTime);
+
     std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
@@ -44,9 +46,11 @@ public:
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     const VulkanBrain& GetBrain() const { return _brain; }
+    DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
+    BloomSettings& GetBloomSettings() { return _bloomSettings; }
 
 private:
-    friend class OldEngine;
+    friend class RendererModule;
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
@@ -66,7 +70,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
-    std::shared_ptr<SceneDescription> _scene;
+    std::shared_ptr<const SceneDescription> _scene;
     std::vector<std::shared_ptr<ModelResources>> _modelResources;
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
@@ -98,5 +102,4 @@ private:
     void InitializeBloomTargets();
     void LoadEnvironmentMap();
     void UpdateBindless();
-    void Render(float deltaTime);
 };

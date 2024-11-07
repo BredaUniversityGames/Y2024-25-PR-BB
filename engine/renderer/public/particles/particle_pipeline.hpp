@@ -14,7 +14,7 @@ public:
     ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, std::shared_ptr<ECS> ecs, float deltaTime);
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -73,7 +73,7 @@ private:
     vk::Buffer _stagingBuffer;
     VmaAllocation _stagingBufferAllocation;
 
-    void UpdateEmitters(ECS& ecs);
+    void UpdateEmitters(std::shared_ptr<ECS> ecs);
 
     void CreatePipelines();
     void CreateDescriptorSetLayouts();
