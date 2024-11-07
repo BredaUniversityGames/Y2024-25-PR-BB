@@ -22,7 +22,6 @@ public:
     ~OldEngine() override;
 
 private:
-    friend Renderer;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
