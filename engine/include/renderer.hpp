@@ -1,10 +1,12 @@
 #pragma once
 
-#include "swap_chain.hpp"
 #include "application_module.hpp"
-#include "mesh.hpp"
-#include "camera.hpp"
 #include "bloom_settings.hpp"
+#include "camera.hpp"
+#include "entt/entity/entity.hpp"
+#include "mesh.hpp"
+#include "model.hpp"
+#include "swap_chain.hpp"
 
 class DebugPipeline;
 class Application;
@@ -29,17 +31,22 @@ class FrameGraph;
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS> ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
     NON_MOVABLE(Renderer);
 
-    std::vector<std::shared_ptr<ModelHandle>> FrontLoadModels(const std::vector<std::string>& models);
+    std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
+
+    ModelLoader& GetModelLoader() const { return *_modelLoader; }
+    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    SwapChain& GetSwapChain() const { return *_swapChain; }
+    GBuffers& GetGBuffers() const { return *_gBuffers; }
+    const VulkanBrain& GetBrain() const { return _brain; }
 
 private:
     friend class OldEngine;
-
     const VulkanBrain _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
@@ -60,7 +67,8 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<SceneDescription> _scene;
-    std::unique_ptr<GPUScene> _gpuScene;
+    std::vector<std::shared_ptr<ModelResources>> _modelResources;
+    std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
     ResourceHandle<Image> _bloomTarget;
@@ -73,7 +81,7 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::unique_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _batchBuffer;
 
     std::unique_ptr<CameraResource> _camera;
 

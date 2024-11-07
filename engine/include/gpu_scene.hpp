@@ -1,15 +1,17 @@
 #pragma once
 
-#include "vulkan_brain.hpp"
 #include "constants.hpp"
+#include "vulkan_brain.hpp"
 
 struct SceneDescription;
 class GPUScene;
 class BatchBuffer;
+class ECS;
 
 struct GPUSceneCreation
 {
     const VulkanBrain& brain;
+    std::shared_ptr<const ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
     ResourceHandle<Image> irradianceMap;
@@ -20,10 +22,11 @@ struct GPUSceneCreation
 
 struct RenderSceneDescription
 {
-    const GPUScene& gpuScene;
-    const SceneDescription& sceneDescription; // This will change to ecs
-    const BatchBuffer& batchBuffer;
-    const uint32_t targetSwapChainImageIndex;
+    std::shared_ptr<GPUScene> gpuScene;
+    std::shared_ptr<SceneDescription> sceneDescription; // This will change to ecs
+    std::shared_ptr<ECS> ecs;
+    std::shared_ptr<BatchBuffer> batchBuffer;
+    uint32_t targetSwapChainImageIndex;
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;
@@ -34,10 +37,13 @@ public:
     GPUScene(const GPUSceneCreation& creation);
     ~GPUScene();
 
+    NON_COPYABLE(GPUScene);
+    NON_MOVABLE(GPUScene);
+
     void Update(const SceneDescription& scene, uint32_t frameIndex);
 
-    const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData[frameIndex].descriptorSet; }
-    const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData[frameIndex].descriptorSet; }
+    const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
 
@@ -99,6 +105,7 @@ private:
     };
 
     const VulkanBrain& _brain;
+    std::shared_ptr<const ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
@@ -110,7 +117,7 @@ private:
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
     void UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex);
-    void UpdateObjectInstancesData(const SceneDescription& scene, uint32_t frameIndex);
+    void UpdateObjectInstancesData(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializeObjectInstancesBuffers();

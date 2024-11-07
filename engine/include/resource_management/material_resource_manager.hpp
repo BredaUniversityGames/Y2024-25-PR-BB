@@ -1,7 +1,7 @@
 #pragma once
 
-#include "resource_manager.hpp"
 #include "gpu_resources.hpp"
+#include "resource_manager.hpp"
 
 class VulkanBrain;
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "module_interface.hpp"
-#include <memory>
 #include <functional>
 #include <glm/vec2.hpp>
+#include <memory>
 
 #include <vulkan/vulkan.hpp>
 
@@ -23,7 +23,6 @@ class ApplicationModule : public ModuleInterface
 
 public:
     ApplicationModule();
-    ~ApplicationModule() override;
 
     // TODO: Maybe move to a GPU/Vulkan Context module
     struct VulkanInitInfo

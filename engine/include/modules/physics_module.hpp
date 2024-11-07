@@ -10,24 +10,24 @@ JPH_SUPPRESS_WARNING_PUSH
 
 JPH_SUPPRESS_WARNINGS
 
-#include <Jolt/RegisterTypes.h>
+#include "Jolt/Renderer/DebugRendererSimple.h"
 #include <Jolt/Core/Factory.h>
-#include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
-#include <Jolt/Physics/PhysicsSettings.h>
-#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Physics/Body/BodyActivationListener.h>
-#include "Jolt/Renderer/DebugRendererSimple.h"
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/RegisterTypes.h>
 
 JPH_SUPPRESS_WARNING_POP
 
 // TODO: should be using Log.hpp
 #include "common.hpp"
-#include <iostream>
 #include <glm/glm.hpp>
+#include <iostream>
 
 namespace JPH
 {

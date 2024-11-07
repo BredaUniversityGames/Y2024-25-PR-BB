@@ -1,10 +1,10 @@
 #include "components/transform_helpers.hpp"
 
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-#include "components/transform_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
 #include <entt/entity/registry.hpp>
 
@@ -58,6 +58,16 @@ void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entit
     transform->_localScale = scale;
 
     UpdateWorldMatrix(reg, entity);
+}
+void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entity, const glm::mat4& transform)
+{
+    glm::vec3 scale, skew, translation;
+    glm::quat orientation;
+    glm::vec4 perspective;
+
+    glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+    SetLocalTransform(reg, entity, translation, orientation, scale);
 }
 void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entity, const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {
@@ -123,6 +133,10 @@ const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::ent
     const WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
 
     return worldMatrix._worldMatrix;
+}
+const glm::mat4& TransformHelpers::GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent)
+{
+    return worldMatrixComponent._worldMatrix;
 }
 glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {

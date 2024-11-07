@@ -1,12 +1,12 @@
 ﻿#pragma once
 
-#include "gbuffers.hpp"
-#include "mesh.hpp"
-#include "indirect_culler.hpp"
 #include "frame_graph.hpp"
+#include "gbuffers.hpp"
+#include "indirect_culler.hpp"
+#include "mesh.hpp"
 
 class BatchBuffer;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 
 class ShadowPipeline final : public FrameGraphRenderPass
 {

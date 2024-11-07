@@ -1,7 +1,7 @@
 #include "resource_management/image_resource_manager.hpp"
+#include "log.hpp"
 #include "vulkan_brain.hpp"
 #include "vulkan_helper.hpp"
-#include "log.hpp"
 
 ImageResourceManager::ImageResourceManager(const VulkanBrain& brain)
     : _brain(brain)

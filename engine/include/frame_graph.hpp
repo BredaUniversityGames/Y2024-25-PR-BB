@@ -1,9 +1,9 @@
 #pragma once
 
-#include "vulkan_brain.hpp"
-#include "swap_chain.hpp"
-#include "resource_manager.hpp"
 #include "enum_utils.hpp"
+#include "resource_manager.hpp"
+#include "swap_chain.hpp"
+#include "vulkan_brain.hpp"
 
 struct RenderSceneDescription;
 struct Image;

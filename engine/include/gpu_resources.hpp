@@ -1,7 +1,7 @@
 #pragma once
-#include "vk_mem_alloc.h"
 #include "lib/includes_vulkan.hpp"
 #include "resource_manager.hpp"
+#include "vk_mem_alloc.h"
 #include <glm/glm.hpp>
 
 enum class ImageType

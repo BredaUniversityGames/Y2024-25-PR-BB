@@ -1,8 +1,8 @@
 #pragma once
 
+#include "camera.hpp"
 #include <array>
 #include <memory>
-#include "camera.hpp"
 
 struct LineVertex
 {
@@ -73,40 +73,9 @@ struct StagingMesh
     std::vector<StagingMesh::Primitive> primitives;
 };
 
-struct Hierarchy
+struct StaticMeshComponent
 {
-    struct Node
-    {
-        glm::mat4 transform;
-        ResourceHandle<Mesh> mesh;
-    };
-
-    std::vector<Node> allNodes;
-};
-
-struct ModelHandle
-{
-    std::vector<ResourceHandle<Mesh>> meshes;
-    std::vector<ResourceHandle<Material>> materials;
-    std::vector<ResourceHandle<Image>> textures;
-
-    Hierarchy hierarchy;
-};
-
-struct GameObject
-{
-    glm::mat4 transform;
-    std::shared_ptr<ModelHandle> model;
-
-    GameObject()
-    {
-    }
-
-    GameObject(const glm::mat4& transform, std::shared_ptr<ModelHandle> model)
-        : transform(transform)
-        , model(model)
-    {
-    }
+    ResourceHandle<Mesh> mesh;
 };
 
 struct DirectionalLight
@@ -134,7 +103,5 @@ struct DirectionalLight
 struct SceneDescription
 {
     Camera camera;
-    std::vector<std::shared_ptr<ModelHandle>> models;
-    std::vector<GameObject> gameObjects;
     DirectionalLight directionalLight;
 };

@@ -3,25 +3,26 @@
 #include "input_manager.hpp"
 #include "old_engine.hpp"
 
-#include "ECS.hpp"
-#include <stb/stb_image.h>
-#include "vulkan_helper.hpp"
-#include "imgui_impl_vulkan.h"
-#include "model_loader.hpp"
-#include "gbuffers.hpp"
-#include "renderer.hpp"
-#include "profile_macros.hpp"
-#include "editor.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
-#include "systems/physics_system.hpp"
+#include "ecs.hpp"
+#include "editor.hpp"
+#include "gbuffers.hpp"
+#include "imgui_impl_vulkan.h"
+#include "model_loader.hpp"
 #include "modules/physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
+#include "profile_macros.hpp"
+#include "renderer.hpp"
+#include "scene_loader.hpp"
+#include "systems/physics_system.hpp"
+#include "vulkan_helper.hpp"
+#include <stb/stb_image.h>
 
-#include "particles/particle_util.hpp"
-#include "particles/particle_interface.hpp"
-#include <imgui_impl_sdl3.h>
 #include "implot/implot.h"
+#include "particles/particle_interface.hpp"
+#include "particles/particle_util.hpp"
+#include <imgui_impl_sdl3.h>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -46,8 +47,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
-    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
+    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -57,20 +58,21 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    _scene->models = _renderer->FrontLoadModels(modelPaths);
-
-    glm::vec3 scale { 10.0f };
-    for (size_t i = 0; i < 10; ++i)
+    std::vector<Model> models = _renderer->FrontLoadModels(modelPaths);
+    std::vector<entt::entity> entities;
+    SceneLoader sceneLoader {};
+    for (const auto& model : models)
     {
-        glm::vec3 translate { i / 3, 0.0f, i % 3 };
-        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, translate * 7.0f) * glm::scale(glm::mat4 { 1.0f }, scale);
-
-        _scene->gameObjects.emplace_back(transform, _scene->models[1]);
+        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(_renderer->GetBrain(), *_ecs, model);
+        entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
+
+    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
     _renderer->UpdateBindless();
 
-    _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
+    _editor = std::make_unique<Editor>(*_ecs, *_renderer);
+
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
@@ -141,23 +143,33 @@ void OldEngine::Tick(Engine& engine)
 
         constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
         constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-        // constexpr glm::vec3 UP = { 0.0f, -1.0f, 0.0f };
 
-        _scene->camera.eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
-        _scene->camera.eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+        glm::vec3& rotation = _scene->camera.eulerRotation;
+        rotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+        rotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+
+        rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
         glm::vec3 movementDir {};
         if (input.IsKeyHeld(KeyboardCode::eW))
+        {
             movementDir -= FORWARD;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eS))
+        {
             movementDir += FORWARD;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eD))
+        {
             movementDir += RIGHT;
+        }
 
         if (input.IsKeyHeld(KeyboardCode::eA))
+        {
             movementDir -= RIGHT;
+        }
 
         if (glm::length(movementDir) != 0.0f)
         {
@@ -187,7 +199,7 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene, *_ecs);
+    _editor->Draw(_performanceTracker, _renderer->_bloomSettings, *_scene);
 
     _renderer->Render(deltaTimeMS);
 
@@ -211,8 +223,8 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
     _editor.reset();
     _renderer.reset();
 
-    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
-    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
+    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->registry);
     _ecs.reset();
 }
 

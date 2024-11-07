@@ -1,8 +1,8 @@
 #include "pipelines/lighting_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
-#include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
+#include "gpu_scene.hpp"
 #include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
 
 LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)
@@ -62,7 +62,7 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene.GetSceneDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
     // Fullscreen triangle.

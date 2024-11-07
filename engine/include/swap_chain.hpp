@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "vulkan_brain.hpp"
+#include <vector>
 
 struct QueueFamilyIndices;
 

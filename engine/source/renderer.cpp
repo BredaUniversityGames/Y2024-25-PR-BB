@@ -2,33 +2,33 @@
 
 #include <utility>
 
-#include "vulkan_helper.hpp"
+#include "application_module.hpp"
+#include "batch_buffer.hpp"
+#include "ecs.hpp"
+#include "frame_graph.hpp"
+#include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "imgui_impl_vulkan.h"
-#include "model_loader.hpp"
+#include "log.hpp"
 #include "mesh_primitives.hpp"
-#include "pipelines/geometry_pipeline.hpp"
-#include "pipelines/lighting_pipeline.hpp"
-#include "pipelines/skydome_pipeline.hpp"
-#include "pipelines/tonemapping_pipeline.hpp"
-#include "pipelines/gaussian_blur_pipeline.hpp"
-#include "pipelines/ibl_pipeline.hpp"
-#include "pipelines/shadow_pipeline.hpp"
+#include "model_loader.hpp"
+#include "old_engine.hpp"
 #include "particles/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
-#include "gbuffers.hpp"
-#include "application_module.hpp"
-#include "old_engine.hpp"
-#include "single_time_commands.hpp"
-#include "batch_buffer.hpp"
-#include "ECS.hpp"
-#include "gpu_scene.hpp"
-#include "log.hpp"
+#include "pipelines/gaussian_blur_pipeline.hpp"
+#include "pipelines/geometry_pipeline.hpp"
+#include "pipelines/ibl_pipeline.hpp"
+#include "pipelines/lighting_pipeline.hpp"
+#include "pipelines/shadow_pipeline.hpp"
+#include "pipelines/skydome_pipeline.hpp"
+#include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
-#include "frame_graph.hpp"
+#include "single_time_commands.hpp"
+#include "vulkan_helper.hpp"
 
 #include "stb/stb_image.h"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ecs)
     : _brain(application.GetVulkanInfo())
     , _application(application)
     , _ecs(ecs)
@@ -42,9 +42,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_brain);
+    _modelLoader = std::make_unique<ModelLoader>(_brain, _ecs);
 
-    _batchBuffer = std::make_unique<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    _batchBuffer = std::make_shared<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _brain };
     ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
@@ -62,13 +62,14 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
 
     GPUSceneCreation gpuSceneCreation {
         _brain,
+        _ecs,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
         _iblPipeline->BRDFLUTMap(),
         _gBuffers->Shadow()
     };
 
-    _gpuScene = std::make_unique<GPUScene>(gpuSceneCreation);
+    _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
     _camera = std::make_unique<CameraResource>(_brain);
 
@@ -152,28 +153,31 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS>& e
         .Build();
 }
 
-std::vector<std::shared_ptr<ModelHandle>> Renderer::FrontLoadModels(const std::vector<std::string>& models)
+std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
-    uint32_t totalVertexSize {};
-    uint32_t totalIndexSize {};
-    for (const auto& path : models)
-    {
-        uint32_t vertexSize;
-        uint32_t indexSize;
+    // TODO: Use this later to determine batch buffer size.
+    // uint32_t totalVertexSize {};
+    // uint32_t totalIndexSize {};
+    // for (const auto& path : models)
+    // {
+    //     uint32_t vertexSize;
+    //     uint32_t indexSize;
 
-        _modelLoader->ReadGeometrySize(path, vertexSize, indexSize);
-        totalVertexSize += vertexSize;
-        totalIndexSize += indexSize;
+    //     _modelLoader->ReadGeometrySize(path, vertexSize, indexSize);
+    //     totalVertexSize += vertexSize;
+    //     totalIndexSize += indexSize;
+    //}
+
+    std::vector<Model> models {};
+
+    for (const auto& path : modelPaths)
+    {
+        models.emplace_back(_modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical));
+
+        _modelResources.emplace_back(std::make_shared<ModelResources>(models.back().resources));
     }
 
-    std::vector<std::shared_ptr<ModelHandle>> loadedModels {};
-
-    for (const auto& path : models)
-    {
-        loadedModels.emplace_back(std::make_shared<ModelHandle>(_modelLoader->Load(path, *_batchBuffer)));
-    }
-
-    return loadedModels;
+    return models;
 }
 
 Renderer::~Renderer()
@@ -193,7 +197,7 @@ Renderer::~Renderer()
         _brain.device.destroy(_imageAvailableSemaphores[i]);
     }
 
-    for (auto& model : _scene->models)
+    for (auto& model : _modelResources)
     {
         for (auto& texture : model->textures)
         {
@@ -227,9 +231,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     _gpuScene->Update(*_scene, _currentFrame);
 
     const RenderSceneDescription sceneDescription {
-        .gpuScene = *_gpuScene,
-        .sceneDescription = *_scene,
-        .batchBuffer = *_batchBuffer,
+        .gpuScene = _gpuScene,
+        .sceneDescription = _scene,
+        .ecs = _ecs,
+        .batchBuffer = _batchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex
     };
 
@@ -320,7 +325,6 @@ void Renderer::UpdateBindless()
 void Renderer::Render(float deltaTime)
 {
     ZoneNamedN(zz, "Renderer::Render()", true);
-
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),

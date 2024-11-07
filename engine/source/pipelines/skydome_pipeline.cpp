@@ -1,10 +1,10 @@
 #include "pipelines/skydome_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
-#include "vulkan_helper.hpp"
-#include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
+#include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
 #include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
+#include "vulkan_helper.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
@@ -79,11 +79,11 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
-    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer.IndexBuffer())->buffer;
+    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer->VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(scene.batchBuffer->IndexBuffer())->buffer;
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer.IndexType());
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
 
     auto sphere = _brain.GetMeshResourceManager().Access(_sphere);
     auto primitive = sphere->primitives[0];

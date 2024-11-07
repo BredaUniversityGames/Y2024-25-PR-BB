@@ -1,7 +1,7 @@
 #include "application_module.hpp"
-#include "log.hpp"
-#include "input_manager.hpp"
 #include "engine.hpp"
+#include "input_manager.hpp"
+#include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
 // This definition fixes the issues and does not change the final build output
@@ -22,7 +22,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
         return priority;
     }
 
-    int32_t displayCount;
+    int32_t displayCount {};
     SDL_DisplayID* displayIds = SDL_GetDisplays(&displayCount);
     const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(*displayIds);
 
@@ -55,7 +55,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     _vulkanInitInfo.height = dm->h;
     _vulkanInitInfo.retrieveSurface = [this](vk::Instance instance)
     {
-        VkSurfaceKHR surface;
+        VkSurfaceKHR surface {};
         if (!SDL_Vulkan_CreateSurface(_window, instance, nullptr, &surface))
         {
             bblog::error("Failed creating SDL vk::Surface: {}", SDL_GetError());
@@ -94,7 +94,6 @@ void ApplicationModule::Tick(Engine& engine)
 }
 
 ApplicationModule::ApplicationModule() = default;
-ApplicationModule::~ApplicationModule() = default;
 
 void ApplicationModule::SetMouseHidden(bool val)
 {
@@ -111,7 +110,7 @@ void ApplicationModule::SetMouseHidden(bool val)
 
 glm::uvec2 ApplicationModule::DisplaySize() const
 {
-    int32_t w, h;
+    int32_t w {}, h {};
     SDL_GetWindowSize(_window, &w, &h);
     return glm::uvec2 { w, h };
 }

@@ -1,13 +1,13 @@
 #include "particles/particle_pipeline.hpp"
 
 #include "camera.hpp"
-#include "swap_chain.hpp"
-#include "particles/particle_util.hpp"
+#include "ecs.hpp"
 #include "particles/emitter_component.hpp"
-#include "ECS.hpp"
-#include "vulkan_helper.hpp"
+#include "particles/particle_util.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
+#include "swap_chain.hpp"
+#include "vulkan_helper.hpp"
 
 ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
@@ -45,9 +45,12 @@ ParticlePipeline::~ParticlePipeline()
     _brain.device.destroy(_emittersBufferDescriptorSetLayout);
     _brain.device.destroy(_instancesDescriptorSetLayout);
 }
-
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, ECS& ecs, float deltaTime)
 {
+    // UpdateEmitters(ecs);
+    UpdateBuffers(commandBuffer);
+
+    // Set up memory barrier to be used in between every shader stage
     vk::MemoryBarrier memoryBarrier {};
     memoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryWrite;
     memoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryWrite | vk::AccessFlagBits::eMemoryRead;
@@ -126,7 +129,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
 {
-    auto view = ecs._registry.view<EmitterComponent>();
+    auto view = ecs.registry.view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);

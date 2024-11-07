@@ -1,8 +1,8 @@
 #pragma once
 
+#include "imgui_entt_entity_editor.hpp"
 #include <cstddef>
 #include <entt/entity/entity.hpp>
-#include "imgui_entt_entity_editor.hpp"
 
 struct RelationshipComponent
 {

@@ -1,7 +1,7 @@
 #include "swap_chain.hpp"
-#include "vulkan_helper.hpp"
-#include "vulkan/vulkan.h"
 #include "old_engine.hpp"
+#include "vulkan/vulkan.h"
+#include "vulkan_helper.hpp"
 
 SwapChain::SwapChain(const VulkanBrain& brain, const glm::uvec2& screenSize)
     : _brain(brain)

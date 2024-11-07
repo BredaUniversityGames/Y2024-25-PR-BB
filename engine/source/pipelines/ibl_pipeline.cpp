@@ -1,7 +1,8 @@
 #include "pipelines/ibl_pipeline.hpp"
-#include "vulkan_helper.hpp"
+#include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
+#include "vulkan_helper.hpp"
 
 IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap)
     : _brain(brain)
