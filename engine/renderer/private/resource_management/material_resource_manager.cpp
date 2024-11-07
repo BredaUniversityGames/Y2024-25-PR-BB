@@ -1,7 +1,7 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "vulkan_helper.hpp"
 
-MaterialResourceManager::MaterialResourceManager(const VulkanBrain& brain)
+MaterialResourceManager::MaterialResourceManager(const VulkanContext& brain)
     : _brain(brain)
 {
 }

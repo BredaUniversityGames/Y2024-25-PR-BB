@@ -3,7 +3,7 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 class GPUScene;
 class BloomSettings;
@@ -12,7 +12,7 @@ struct RenderSceneDescription;
 class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
+    LightingPipeline(const VulkanContext& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
     ~LightingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -31,7 +31,7 @@ private:
 
     void CreatePipeline();
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const GBuffers& _gBuffers;
     const ResourceHandle<Image> _hdrTarget;
     const ResourceHandle<Image> _brightnessTarget;

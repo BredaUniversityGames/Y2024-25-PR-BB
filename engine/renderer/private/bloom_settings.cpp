@@ -3,7 +3,7 @@
 #include "pipeline_builder.hpp"
 #include "vulkan_helper.hpp"
 
-BloomSettings::BloomSettings(const VulkanBrain& brain)
+BloomSettings::BloomSettings(const VulkanContext& brain)
     : _brain(brain)
 {
     CreateDescriptorSetLayout();

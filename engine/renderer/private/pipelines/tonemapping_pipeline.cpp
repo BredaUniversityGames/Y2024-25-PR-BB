@@ -5,7 +5,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPipeline::TonemappingPipeline(const VulkanContext& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)

@@ -1,14 +1,14 @@
 #pragma once
 #include "frame_graph.hpp"
 #include "swap_chain.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 class BloomSettings;
 
 class TonemappingPipeline final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
+    TonemappingPipeline(const VulkanContext& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
     ~TonemappingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -23,7 +23,7 @@ private:
         uint32_t bloomTargetIndex;
     } _pushConstants;
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const SwapChain& _swapChain;
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _bloomTarget;

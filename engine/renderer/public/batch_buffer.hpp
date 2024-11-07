@@ -3,14 +3,14 @@
 #include "mesh.hpp"
 
 class SingleTimeCommands;
-class VulkanBrain;
+class VulkanContext;
 
 constexpr uint32_t MAX_MESHES = 2048;
 
 class BatchBuffer
 {
 public:
-    BatchBuffer(const VulkanBrain& brain, uint32_t vertexBufferSize, uint32_t indexBufferSize);
+    BatchBuffer(const VulkanContext& brain, uint32_t vertexBufferSize, uint32_t indexBufferSize);
     ~BatchBuffer();
     NON_MOVABLE(BatchBuffer);
     NON_COPYABLE(BatchBuffer);
@@ -29,7 +29,7 @@ public:
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
 
     uint32_t _vertexBufferSize;
     uint32_t _indexBufferSize;

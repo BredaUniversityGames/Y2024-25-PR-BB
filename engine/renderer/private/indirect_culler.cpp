@@ -1,11 +1,11 @@
 #include "indirect_culler.hpp"
 #include "gpu_resources.hpp"
 #include "gpu_scene.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 #include <shaders/shader_loader.hpp>
 
-IndirectCuller::IndirectCuller(const VulkanBrain& brain, const GPUScene& gpuScene)
+IndirectCuller::IndirectCuller(const VulkanContext& brain, const GPUScene& gpuScene)
     : _brain(brain)
 {
     CreateCullingPipeline(gpuScene);

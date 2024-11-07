@@ -1,4 +1,5 @@
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
+
 #include "log.hpp"
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
@@ -7,7 +8,7 @@
 #include <map>
 #include <set>
 
-VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
+VulkanContext::VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo)
     : _bufferResourceManager(*this)
     , _imageResourceManager(*this)
     , _materialResourceManager(*this)
@@ -51,7 +52,7 @@ VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
     _fallbackImage = _imageResourceManager.Create(creation);
 }
 
-VulkanBrain::~VulkanBrain()
+VulkanContext::~VulkanContext()
 {
     if (ENABLE_VALIDATION_LAYERS)
         instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, dldi);
@@ -75,13 +76,13 @@ VulkanBrain::~VulkanBrain()
     instance.destroy();
 }
 
-void VulkanBrain::UpdateBindlessSet() const
+void VulkanContext::UpdateBindlessSet() const
 {
     UpdateBindlessImages();
     UpdateBindlessMaterials();
 }
 
-void VulkanBrain::UpdateBindlessImages() const
+void VulkanContext::UpdateBindlessImages() const
 {
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
@@ -122,7 +123,7 @@ void VulkanBrain::UpdateBindlessImages() const
     device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
 }
 
-void VulkanBrain::UpdateBindlessMaterials() const
+void VulkanContext::UpdateBindlessMaterials() const
 {
     assert(_materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
 
@@ -151,7 +152,7 @@ void VulkanBrain::UpdateBindlessMaterials() const
     device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
 }
 
-void VulkanBrain::CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo)
+void VulkanContext::CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo)
 {
     CheckValidationLayerSupport();
     if (ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
@@ -195,7 +196,7 @@ void VulkanBrain::CreateInstance(const ApplicationModule::VulkanInitInfo& initIn
     util::VK_ASSERT(vk::createInstance(&createInfo, nullptr, &instance), "Failed to create vk instance!");
 }
 
-void VulkanBrain::PickPhysicalDevice()
+void VulkanContext::PickPhysicalDevice()
 {
     std::vector<vk::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
     if (devices.empty())
@@ -215,7 +216,7 @@ void VulkanBrain::PickPhysicalDevice()
     physicalDevice = candidates.rbegin()->second;
 }
 
-uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
+uint32_t VulkanContext::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
 {
     vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceDescriptorIndexingFeatures> structureChain;
 
@@ -265,7 +266,7 @@ uint32_t VulkanBrain::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRa
     return score;
 }
 
-bool VulkanBrain::ExtensionsSupported(const vk::PhysicalDevice& deviceToCheckSupport)
+bool VulkanContext::ExtensionsSupported(const vk::PhysicalDevice& deviceToCheckSupport)
 {
     std::vector<vk::ExtensionProperties> availableExtensions = deviceToCheckSupport.enumerateDeviceExtensionProperties();
     std::set<std::string> requiredExtensions { _deviceExtensions.begin(), _deviceExtensions.end() };
@@ -275,7 +276,7 @@ bool VulkanBrain::ExtensionsSupported(const vk::PhysicalDevice& deviceToCheckSup
     return requiredExtensions.empty();
 }
 
-bool VulkanBrain::CheckValidationLayerSupport()
+bool VulkanContext::CheckValidationLayerSupport()
 {
     std::vector<vk::LayerProperties> availableLayers = vk::enumerateInstanceLayerProperties();
     bool result = std::all_of(_validationLayers.begin(), _validationLayers.end(), [&availableLayers](const auto& layerName)
@@ -288,7 +289,7 @@ bool VulkanBrain::CheckValidationLayerSupport()
     return result;
 }
 
-std::vector<const char*> VulkanBrain::GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo)
+std::vector<const char*> VulkanContext::GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo)
 {
     std::vector<const char*> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
     if (ENABLE_VALIDATION_LAYERS)
@@ -301,7 +302,7 @@ std::vector<const char*> VulkanBrain::GetRequiredExtensions(const ApplicationMod
     return extensions;
 }
 
-void VulkanBrain::SetupDebugMessenger()
+void VulkanContext::SetupDebugMessenger()
 {
     if (!ENABLE_VALIDATION_LAYERS)
         return;
@@ -314,7 +315,7 @@ void VulkanBrain::SetupDebugMessenger()
         "Failed to create debug messenger!");
 }
 
-void VulkanBrain::CreateDevice()
+void VulkanContext::CreateDevice()
 {
     queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(physicalDevice, surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos {};
@@ -364,7 +365,7 @@ void VulkanBrain::CreateDevice()
     device.getQueue(queueFamilyIndices.presentFamily.value(), 0, &presentQueue);
 }
 
-void VulkanBrain::CreateCommandPool()
+void VulkanContext::CreateCommandPool()
 {
     vk::CommandPoolCreateInfo commandPoolCreateInfo {};
     commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -373,7 +374,7 @@ void VulkanBrain::CreateCommandPool()
     util::VK_ASSERT(device.createCommandPool(&commandPoolCreateInfo, nullptr, &commandPool), "Failed creating command pool!");
 }
 
-void VulkanBrain::CreateDescriptorPool()
+void VulkanContext::CreateDescriptorPool()
 {
     std::vector<vk::DescriptorPoolSize> poolSizes = {
         { vk::DescriptorType::eSampler, 1000 },
@@ -397,7 +398,7 @@ void VulkanBrain::CreateDescriptorPool()
     util::VK_ASSERT(device.createDescriptorPool(&createInfo, nullptr, &descriptorPool), "Failed creating descriptor pool!");
 }
 
-void VulkanBrain::CreateBindlessDescriptorSet()
+void VulkanContext::CreateBindlessDescriptorSet()
 {
     std::array<vk::DescriptorPoolSize, 5> poolSizes = {
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
@@ -478,7 +479,7 @@ void VulkanBrain::CreateBindlessDescriptorSet()
     util::NameObject(bindlessSet, "Bindless DS", *this);
 }
 
-void VulkanBrain::CreateBindlessMaterialBuffer()
+void VulkanContext::CreateBindlessMaterialBuffer()
 {
     BufferCreation creation {};
     creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))

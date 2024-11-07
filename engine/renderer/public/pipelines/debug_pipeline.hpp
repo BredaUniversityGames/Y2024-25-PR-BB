@@ -11,7 +11,7 @@ class BatchBuffer;
 class DebugPipeline final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
+    DebugPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
     ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -38,7 +38,7 @@ private:
 
     void UpdateVertexData();
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
     const CameraResource& _camera;

@@ -57,7 +57,7 @@ std::optional<vk::Format> util::FindSupportedFormat(const vk::PhysicalDevice phy
     return std::nullopt;
 }
 
-void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
+void util::CreateBuffer(const VulkanContext& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
 {
     vk::BufferCreateInfo bufferInfo {};
     bufferInfo.size = size;
@@ -76,7 +76,7 @@ void util::CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::Buffe
     util::NameObject(buffer, name, brain);
 }
 
-vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanBrain& brain)
+vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanContext& brain)
 {
     vk::CommandBufferAllocateInfo allocateInfo {};
     allocateInfo.level = vk::CommandBufferLevel::ePrimary;
@@ -94,7 +94,7 @@ vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanBrain& brain)
     return commandBuffer;
 }
 
-void util::EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer commandBuffer)
+void util::EndSingleTimeCommands(const VulkanContext& brain, vk::CommandBuffer commandBuffer)
 {
     commandBuffer.end();
 
@@ -117,7 +117,7 @@ void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk:
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-vk::UniqueSampler util::CreateSampler(const VulkanBrain& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
+vk::UniqueSampler util::CreateSampler(const VulkanContext& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
 {
     vk::PhysicalDeviceProperties properties {};
     brain.physicalDevice.getProperties(&properties);

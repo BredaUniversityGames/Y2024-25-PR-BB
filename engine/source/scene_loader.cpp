@@ -10,9 +10,9 @@
 #include "ecs.hpp"
 #include "mesh.hpp"
 #include "timers.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const Model& model)
+std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const VulkanContext& brain, ECS& ecs, const Model& model)
 {
     Stopwatch stopwatch;
 
@@ -27,7 +27,7 @@ std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const VulkanB
     return entities;
 }
 
-entt::entity SceneLoader::LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs, const Hierarchy::Node& currentNode)
+entt::entity SceneLoader::LoadNodeRecursive(const VulkanContext& brain, ECS& ecs, const Hierarchy::Node& currentNode)
 {
     const entt::entity entity = ecs.registry.create();
 

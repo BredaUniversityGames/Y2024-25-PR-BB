@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include <vector>
 
 struct QueueFamilyIndices;
@@ -15,7 +15,7 @@ public:
         std::vector<vk::PresentModeKHR> presentModes;
     };
 
-    SwapChain(const VulkanBrain& brain, const glm::uvec2& screenSize);
+    SwapChain(const VulkanContext& brain, const glm::uvec2& screenSize);
     ~SwapChain();
     NON_MOVABLE(SwapChain);
     NON_COPYABLE(SwapChain);
@@ -32,7 +32,7 @@ public:
     static SupportDetails QuerySupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     glm::uvec2 _imageSize;
 
     vk::SwapchainKHR _swapChain;

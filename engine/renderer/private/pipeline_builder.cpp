@@ -4,7 +4,7 @@
 
 std::unordered_map<size_t, vk::DescriptorSetLayout> PipelineBuilder::_cacheDescriptorSetLayouts {};
 
-PipelineBuilder::PipelineBuilder(const VulkanBrain& brain)
+PipelineBuilder::PipelineBuilder(const VulkanContext& brain)
     : _brain(brain)
 {
     _inputAssemblyStateCreateInfo = {
@@ -83,7 +83,7 @@ void PipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& 
     CreatePipeline(pipeline);
 }
 
-vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
     size_t hash = HashBindings(bindings, names);
 

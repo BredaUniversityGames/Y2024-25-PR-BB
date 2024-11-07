@@ -40,7 +40,7 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 
 }
 
-ModelLoader::ModelLoader(const VulkanBrain& brain, std::shared_ptr<const ECS> ecs)
+ModelLoader::ModelLoader(const VulkanContext& brain, std::shared_ptr<const ECS> ecs)
     : _brain(brain)
     , _ecs(ecs)
 {

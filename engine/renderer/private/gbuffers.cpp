@@ -1,7 +1,7 @@
 #include "gbuffers.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
-GBuffers::GBuffers(const VulkanBrain& brain, glm::uvec2 size)
+GBuffers::GBuffers(const VulkanContext& brain, glm::uvec2 size)
     : _brain(brain)
     , _size(size)
 {

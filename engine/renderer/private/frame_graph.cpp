@@ -2,7 +2,7 @@
 #include "glm/gtc/random.hpp"
 #include "glm/gtx/range.hpp"
 #include "gpu_resources.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
 FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)
@@ -71,7 +71,7 @@ FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRende
 {
 }
 
-FrameGraph::FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain)
+FrameGraph::FrameGraph(const VulkanContext& brain, const SwapChain& swapChain)
     : _brain(brain)
     , _swapChain(swapChain)
 {

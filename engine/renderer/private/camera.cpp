@@ -1,12 +1,12 @@
 #include "camera.hpp"
 #include "pipeline_builder.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 #include <glm/gtc/quaternion.hpp>
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;
 
-CameraResource::CameraResource(const VulkanBrain& brain)
+CameraResource::CameraResource(const VulkanContext& brain)
     : _brain(brain)
 {
     CreateDescriptorSetLayout(brain);
@@ -28,7 +28,7 @@ CameraResource::~CameraResource()
     }
 }
 
-void CameraResource::CreateDescriptorSetLayout(const VulkanBrain& brain)
+void CameraResource::CreateDescriptorSetLayout(const VulkanContext& brain)
 {
     if (_descriptorSetLayout)
     {

@@ -3,12 +3,12 @@
 #include "constants.hpp"
 #include "frame_graph.hpp"
 #include <resource_manager.hpp>
-#include <vulkan_brain.hpp>
+#include <vulkan_context.hpp>
 
 class GaussianBlurPipeline final : public FrameGraphRenderPass
 {
 public:
-    GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target);
+    GaussianBlurPipeline(const VulkanContext& brain, ResourceHandle<Image> source, ResourceHandle<Image> target);
     ~GaussianBlurPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
@@ -17,7 +17,7 @@ public:
     NON_MOVABLE(GaussianBlurPipeline);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
 
     ResourceHandle<Image> _source;
     std::array<ResourceHandle<Image>, 2> _targets;

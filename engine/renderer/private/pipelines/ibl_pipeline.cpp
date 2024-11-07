@@ -4,7 +4,7 @@
 #include "single_time_commands.hpp"
 #include "vulkan_helper.hpp"
 
-IBLPipeline::IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap)
+IBLPipeline::IBLPipeline(const VulkanContext& brain, ResourceHandle<Image> environmentMap)
     : _brain(brain)
     , _environmentMap(environmentMap)
 {

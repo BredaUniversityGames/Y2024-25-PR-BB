@@ -7,7 +7,7 @@
 class PipelineBuilder
 {
 public:
-    PipelineBuilder(const VulkanBrain& brain);
+    PipelineBuilder(const VulkanContext& brain);
     ~PipelineBuilder();
 
     NON_COPYABLE(PipelineBuilder);
@@ -16,7 +16,7 @@ public:
     PipelineBuilder& AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
-    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanBrain& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
     PipelineBuilder& SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo)
     {
@@ -81,7 +81,7 @@ private:
         vk::ShaderModule shaderModule;
     };
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     std::vector<vk::PipelineShaderStageCreateInfo> _pipelineShaderStages;
     std::vector<ShaderStage> _shaderStages;
 

@@ -3,16 +3,16 @@
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
 
-class VulkanBrain;
+class VulkanContext;
 
 class BufferResourceManager : public ResourceManager<Buffer>
 {
 public:
-    explicit BufferResourceManager(const VulkanBrain& brain);
+    explicit BufferResourceManager(const VulkanContext& brain);
     ResourceHandle<Buffer> Create(const BufferCreation& creation);
     ResourceHandle<Buffer> Create(const Buffer& buffer) override { return ResourceManager<Buffer>::Create(buffer); }
     void Destroy(ResourceHandle<Buffer> handle) override;
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
 };

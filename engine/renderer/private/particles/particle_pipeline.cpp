@@ -9,7 +9,7 @@
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
 
-ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain)
+ParticlePipeline::ParticlePipeline(const VulkanContext& brain, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
     , _camera(camera)
     , _swapChain(swapChain)

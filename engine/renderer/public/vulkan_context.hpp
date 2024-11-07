@@ -41,14 +41,14 @@ enum class BindlessBinding
     eNone,
 };
 
-class VulkanBrain
+class VulkanContext
 {
 public:
-    explicit VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo);
+    explicit VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo);
 
-    ~VulkanBrain();
-    NON_COPYABLE(VulkanBrain);
-    NON_MOVABLE(VulkanBrain);
+    ~VulkanContext();
+    NON_COPYABLE(VulkanContext);
+    NON_MOVABLE(VulkanContext);
 
     vk::Instance instance;
     vk::PhysicalDevice physicalDevice;

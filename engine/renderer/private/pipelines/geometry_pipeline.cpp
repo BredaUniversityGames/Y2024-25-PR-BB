@@ -4,7 +4,7 @@
 #include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 
-GeometryPipeline::GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
+GeometryPipeline::GeometryPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _camera(camera)

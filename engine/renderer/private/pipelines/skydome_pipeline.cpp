@@ -6,7 +6,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 
-SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
+SkydomePipeline::SkydomePipeline(const VulkanContext& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _brain(brain)
     , _camera(camera)

@@ -1,19 +1,19 @@
 #pragma once
 
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-class VulkanBrain;
+class VulkanContext;
 struct Texture;
 struct TextureHandle;
 
 class SingleTimeCommands
 {
 public:
-    SingleTimeCommands(const VulkanBrain& brain);
+    SingleTimeCommands(const VulkanContext& brain);
     ~SingleTimeCommands();
 
     void Submit();
@@ -38,7 +38,7 @@ public:
     NON_COPYABLE(SingleTimeCommands);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     vk::CommandBuffer _commandBuffer;
     vk::Fence _fence;
     bool _submitted { false };

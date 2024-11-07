@@ -20,7 +20,7 @@ struct ResourceHandle
     uint32_t index : 24 { 0 };
 
 private:
-    friend class VulkanBrain;
+    friend class VulkanContext;
     friend ResourceManager<T>;
     uint32_t version : 8 { 0 };
 };

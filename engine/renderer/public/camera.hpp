@@ -9,7 +9,7 @@
 #include <gpu_resources.hpp>
 #include <vulkan/vulkan.hpp>
 
-class VulkanBrain;
+class VulkanContext;
 
 struct Camera
 {
@@ -33,7 +33,7 @@ struct Camera
 class CameraResource
 {
 public:
-    CameraResource(const VulkanBrain& brain);
+    CameraResource(const VulkanContext& brain);
     ~CameraResource();
 
     void Update(uint32_t currentFrame, const Camera& camera);
@@ -47,13 +47,13 @@ public:
     NON_MOVABLE(CameraResource);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
 
     static vk::DescriptorSetLayout _descriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _descriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _buffers;
 
-    static void CreateDescriptorSetLayout(const VulkanBrain& brain);
+    static void CreateDescriptorSetLayout(const VulkanContext& brain);
     void CreateBuffers();
     void CreateDescriptorSets();
 };

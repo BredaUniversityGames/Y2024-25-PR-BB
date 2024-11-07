@@ -3,7 +3,7 @@
 #include "vulkan/vulkan.h"
 #include "vulkan_helper.hpp"
 
-SwapChain::SwapChain(const VulkanBrain& brain, const glm::uvec2& screenSize)
+SwapChain::SwapChain(const VulkanContext& brain, const glm::uvec2& screenSize)
     : _brain(brain)
 {
     CreateSwapChain(screenSize);

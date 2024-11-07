@@ -4,7 +4,7 @@
 #include "gbuffers.hpp"
 #include "indirect_culler.hpp"
 #include "mesh.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 class BatchBuffer;
 class GPUScene;
@@ -13,7 +13,7 @@ struct RenderSceneDescription;
 class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
-    GeometryPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
+    GeometryPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
     ~GeometryPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -25,7 +25,7 @@ private:
     void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const GBuffers& _gBuffers;
     const CameraResource& _camera;
 

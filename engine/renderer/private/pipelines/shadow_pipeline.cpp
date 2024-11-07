@@ -5,7 +5,7 @@
 #include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 
-ShadowPipeline::ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene)
+ShadowPipeline::ShadowPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _shadowCamera(_brain)

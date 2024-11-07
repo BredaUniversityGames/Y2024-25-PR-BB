@@ -20,7 +20,7 @@ class IBLPipeline;
 class ParticlePipeline;
 class SwapChain;
 class GBuffers;
-class VulkanBrain;
+class VulkanContext;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
@@ -45,13 +45,13 @@ public:
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
-    const VulkanBrain& GetBrain() const { return _brain; }
+    const VulkanContext& GetBrain() const { return _brain; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return _bloomSettings; }
 
 private:
     friend class RendererModule;
-    const VulkanBrain _brain;
+    const VulkanContext _brain;
 
     std::unique_ptr<ModelLoader> _modelLoader;
     // TODO: Unavoidable currently, this needs to become a module

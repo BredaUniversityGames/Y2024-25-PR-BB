@@ -6,7 +6,7 @@
 class GBuffers
 {
 public:
-    GBuffers(const VulkanBrain& brain, glm::uvec2 size);
+    GBuffers(const VulkanContext& brain, glm::uvec2 size);
 
     ~GBuffers();
 
@@ -53,7 +53,7 @@ public:
     void TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     glm::uvec2 _size;
 
     std::array<ResourceHandle<Image>, DEFERRED_ATTACHMENT_COUNT> _attachments;

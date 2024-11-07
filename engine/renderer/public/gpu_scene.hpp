@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 struct SceneDescription;
 class GPUScene;
@@ -10,7 +10,7 @@ class ECS;
 
 struct GPUSceneCreation
 {
-    const VulkanBrain& brain;
+    const VulkanContext& brain;
     std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
@@ -104,7 +104,7 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     std::shared_ptr<const ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;

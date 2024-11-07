@@ -1,14 +1,14 @@
 #pragma once
 #include "mesh.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
-class VulkanBrain;
+class VulkanContext;
 struct TextureHandle;
 
 class IBLPipeline
 {
 public:
-    IBLPipeline(const VulkanBrain& brain, ResourceHandle<Image> environmentMap);
+    IBLPipeline(const VulkanContext& brain, ResourceHandle<Image> environmentMap);
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
@@ -33,7 +33,7 @@ private:
         uint32_t hdriIndex;
     };
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const ResourceHandle<Image> _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;

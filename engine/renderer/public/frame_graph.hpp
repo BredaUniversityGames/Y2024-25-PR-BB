@@ -3,7 +3,7 @@
 #include "enum_utils.hpp"
 #include "resource_manager.hpp"
 #include "swap_chain.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 struct RenderSceneDescription;
 struct Image;
@@ -129,7 +129,7 @@ struct FrameGraphNode
 class FrameGraph
 {
 public:
-    FrameGraph(const VulkanBrain& brain, const SwapChain& swapChain);
+    FrameGraph(const VulkanContext& brain, const SwapChain& swapChain);
 
     // Builds the graph from the node inputs.
     void Build();
@@ -141,7 +141,7 @@ public:
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const SwapChain& _swapChain;
 
     std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};

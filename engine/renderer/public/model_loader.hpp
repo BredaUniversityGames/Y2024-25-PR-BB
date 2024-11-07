@@ -12,7 +12,7 @@ class ECS;
 class ModelLoader
 {
 public:
-    ModelLoader(const VulkanBrain& brain, std::shared_ptr<const ECS> ecs);
+    ModelLoader(const VulkanContext& brain, std::shared_ptr<const ECS> ecs);
     ~ModelLoader();
 
     enum class LoadMode : uint8_t
@@ -32,7 +32,7 @@ public:
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
 private:
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     std::shared_ptr<const ECS> _ecs;
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;

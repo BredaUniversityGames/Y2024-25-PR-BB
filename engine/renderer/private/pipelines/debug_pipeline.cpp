@@ -8,7 +8,7 @@
 #include "pipeline_builder.hpp"
 #include <imgui_impl_vulkan.h>
 
-DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)

@@ -3,7 +3,7 @@
 #include "log.hpp"
 #include "mesh.hpp"
 #include "spirv_reflect.h"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include <glm/glm.hpp>
 #include <magic_enum.hpp>
 
@@ -22,11 +22,11 @@ bool HasStencilComponent(vk::Format format);
 std::optional<vk::Format> FindSupportedFormat(const vk::PhysicalDevice physicalDevice, const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
     vk::FormatFeatureFlags features);
 uint32_t FindMemoryType(vk::PhysicalDevice physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
-void CreateBuffer(const VulkanBrain& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name);
-vk::CommandBuffer BeginSingleTimeCommands(const VulkanBrain& brain);
-void EndSingleTimeCommands(const VulkanBrain& brain, vk::CommandBuffer commandBuffer);
+void CreateBuffer(const VulkanContext& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name);
+vk::CommandBuffer BeginSingleTimeCommands(const VulkanContext& brain);
+void EndSingleTimeCommands(const VulkanContext& brain, vk::CommandBuffer commandBuffer);
 void CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset = 0);
-vk::UniqueSampler CreateSampler(const VulkanBrain& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels);
+vk::UniqueSampler CreateSampler(const VulkanContext& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels);
 ImageLayoutTransitionState GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout);
 ImageLayoutTransitionState GetImageLayoutTransitionDestinationState(vk::ImageLayout destinationLayout);
 void InitializeImageMemoryBarrier(vk::ImageMemoryBarrier2& barrier, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
@@ -38,7 +38,7 @@ void BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, glm::ve
 void EndLabel(vk::CommandBuffer commandBuffer, const vk::DispatchLoaderDynamic dldi);
 vk::ImageAspectFlags GetImageAspectFlags(vk::Format format);
 template <typename T>
-static void NameObject(T object, std::string_view label, const VulkanBrain& brain)
+static void NameObject(T object, std::string_view label, const VulkanContext& brain)
 {
 #if defined(NDEBUG)
     return;

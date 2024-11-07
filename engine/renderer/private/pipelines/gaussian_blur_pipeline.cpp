@@ -3,7 +3,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 
-GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target)
+GaussianBlurPipeline::GaussianBlurPipeline(const VulkanContext& brain, ResourceHandle<Image> source, ResourceHandle<Image> target)
     : _brain(brain)
     , _source(source)
 {

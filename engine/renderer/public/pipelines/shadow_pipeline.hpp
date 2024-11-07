@@ -11,7 +11,7 @@ struct RenderSceneDescription;
 class ShadowPipeline final : public FrameGraphRenderPass
 {
 public:
-    ShadowPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const GPUScene& gpuScene);
+    ShadowPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const GPUScene& gpuScene);
     ~ShadowPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -23,7 +23,7 @@ private:
     void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const GBuffers& _gBuffers;
 
     CameraResource _shadowCamera;

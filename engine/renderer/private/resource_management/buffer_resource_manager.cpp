@@ -1,8 +1,8 @@
 #include "resource_management/buffer_resource_manager.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-BufferResourceManager::BufferResourceManager(const VulkanBrain& brain)
+BufferResourceManager::BufferResourceManager(const VulkanContext& brain)
     : _brain(brain)
 {
 }

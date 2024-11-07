@@ -1,7 +1,7 @@
 #include "single_time_commands.hpp"
 #include "vulkan_helper.hpp"
 
-SingleTimeCommands::SingleTimeCommands(const VulkanBrain& brain)
+SingleTimeCommands::SingleTimeCommands(const VulkanContext& brain)
     : _brain(brain)
 {
     vk::CommandBufferAllocateInfo allocateInfo {};

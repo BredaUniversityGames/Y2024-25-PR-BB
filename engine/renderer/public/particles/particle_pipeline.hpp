@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "vulkan_brain.hpp"
+#include "vulkan_context.hpp"
 
 struct Emitter;
 class CameraResource;
@@ -11,7 +11,7 @@ class ECS;
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain);
+    ParticlePipeline(const VulkanContext& brain, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, std::shared_ptr<ECS> ecs, float deltaTime);
@@ -47,7 +47,7 @@ private:
         uint32_t bufferOffset;
     } _emitPushConstant;
 
-    const VulkanBrain& _brain;
+    const VulkanContext& _brain;
     const CameraResource& _camera;
     const SwapChain& _swapChain;
 
