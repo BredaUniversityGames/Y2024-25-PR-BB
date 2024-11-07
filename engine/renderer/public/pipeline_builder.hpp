@@ -1,13 +1,19 @@
 #pragma once
 
 #include "common.hpp"
-#include <map>
+
+#include <cstddef>
 #include <spirv_reflect.h>
+#include <string_view>
+#include <vector>
+#include <vulkan/vulkan.hpp>
+
+class VulkanContext;
 
 class PipelineBuilder
 {
 public:
-    PipelineBuilder(const VulkanContext& brain);
+    PipelineBuilder(std::shared_ptr<VulkanContext> context);
     ~PipelineBuilder();
 
     NON_COPYABLE(PipelineBuilder);
@@ -16,7 +22,7 @@ public:
     PipelineBuilder& AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
-    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& brain, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(std::shared_ptr<VulkanContext> context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
     PipelineBuilder& SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo)
     {
@@ -81,7 +87,7 @@ private:
         vk::ShaderModule shaderModule;
     };
 
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     std::vector<vk::PipelineShaderStageCreateInfo> _pipelineShaderStages;
     std::vector<ShaderStage> _shaderStages;
 

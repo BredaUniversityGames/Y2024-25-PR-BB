@@ -1,12 +1,13 @@
 #pragma once
 
 #include "common.hpp"
+#include "constants.hpp"
+
 #include <array>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
-
-#include "constants.hpp"
 #include <gpu_resources.hpp>
+#include <memory>
 #include <vulkan/vulkan.hpp>
 
 class VulkanContext;
@@ -33,7 +34,7 @@ struct Camera
 class CameraResource
 {
 public:
-    CameraResource(const VulkanContext& brain);
+    CameraResource(const std::shared_ptr<VulkanContext>& context);
     ~CameraResource();
 
     void Update(uint32_t currentFrame, const Camera& camera);
@@ -47,13 +48,13 @@ public:
     NON_MOVABLE(CameraResource);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
 
     static vk::DescriptorSetLayout _descriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _descriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _buffers;
 
-    static void CreateDescriptorSetLayout(const VulkanContext& brain);
+    static void CreateDescriptorSetLayout(std::shared_ptr<VulkanContext> context);
     void CreateBuffers();
     void CreateDescriptorSets();
 };

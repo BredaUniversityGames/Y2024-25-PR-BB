@@ -5,13 +5,18 @@
 #include "indirect_culler.hpp"
 #include "mesh.hpp"
 
+#include <cstddef>
+#include <memory>
+
 class BatchBuffer;
+class VulkanContext;
+
 struct RenderSceneDescription;
 
 class ShadowPipeline final : public FrameGraphRenderPass
 {
 public:
-    ShadowPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const GPUScene& gpuScene);
+    ShadowPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
     ~ShadowPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -23,7 +28,7 @@ private:
     void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     const GBuffers& _gBuffers;
 
     CameraResource _shadowCamera;

@@ -4,25 +4,25 @@
 #include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 
-LightingPipeline::LightingPipeline(const VulkanContext& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
-    : _brain(brain)
+LightingPipeline::LightingPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
+    : _context(context)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _camera(camera)
     , _bloomSettings(bloomSettings)
 {
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
+    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].index;
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].index;
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].index;
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
 
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 
     vk::PhysicalDeviceProperties properties {};
-    _brain.physicalDevice.getProperties(&properties);
+    _context->PhysicalDevice().getProperties(&properties);
 
     CreatePipeline();
 }
@@ -32,14 +32,14 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = _context->GetImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _brain.GetImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageView = _context->GetImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
@@ -54,29 +54,30 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
+    commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants), &_pushConstants);
+    commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, _pushConstants);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _brain.bindlessSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
-    // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
-    _brain.drawStats.indexCount += 3;
-    _brain.drawStats.drawCalls++;
 
-    commandBuffer.endRenderingKHR(_brain.dldi);
+    // TODO: Fix this.
+    // _context->drawStats.indexCount += 3;
+    // _context->drawStats.drawCalls++;
+
+    commandBuffer.endRenderingKHR(_context->Dldi());
 }
 
 LightingPipeline::~LightingPipeline()
 {
-    _brain.device.destroy(_pipeline);
-    _brain.device.destroy(_pipelineLayout);
+    _context->Device().destroy(_pipeline);
+    _context->Device().destroy(_pipelineLayout);
 }
 
 void LightingPipeline::CreatePipeline()
@@ -92,14 +93,14 @@ void LightingPipeline::CreatePipeline()
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
     std::vector<vk::Format> formats = {
-        _brain.GetImageResourceManager().Access(_hdrTarget)->format,
-        _brain.GetImageResourceManager().Access(_brightnessTarget)->format
+        _context->GetImageResourceManager().Access(_hdrTarget)->format,
+        _context->GetImageResourceManager().Access(_brightnessTarget)->format
     };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
-    PipelineBuilder reflector { _brain };
+    PipelineBuilder reflector { _context };
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
 

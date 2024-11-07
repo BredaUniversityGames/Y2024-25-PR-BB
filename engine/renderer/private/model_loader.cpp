@@ -1,17 +1,14 @@
 #include "model_loader.hpp"
+
 #include "batch_buffer.hpp"
-#include "components/name_component.hpp"
-#include "components/relationship_component.hpp"
-#include "components/relationship_helpers.hpp"
-#include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
 #include "ecs.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "log.hpp"
 #include "single_time_commands.hpp"
-#include "stb_image.h"
 #include "timers.hpp"
 #include "vulkan_helper.hpp"
+
+#include <glm/gtc/type_ptr.hpp>
+#include <stb_image.h>
 
 namespace detail
 {
@@ -40,30 +37,30 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 
 }
 
-ModelLoader::ModelLoader(const VulkanContext& brain, std::shared_ptr<const ECS> ecs)
-    : _brain(brain)
+ModelLoader::ModelLoader(const std::shared_ptr<VulkanContext>& context, std::shared_ptr<const ECS> ecs)
+    : _context(context)
     , _ecs(ecs)
 {
 
-    _sampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
+    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
     auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    ResourceHandle<Image> defaultImage = _brain.GetImageResourceManager().Create(defaultImageCreation);
+    ResourceHandle<Image> defaultImage = _context->GetImageResourceManager().Create(defaultImageCreation);
 
     MaterialCreation defaultMaterialCreationInfo {};
     defaultMaterialCreationInfo.albedoMap = defaultImage;
-    _defaultMaterial = _brain.GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
+    _defaultMaterial = _context->GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
 ModelLoader::~ModelLoader()
 {
-    const Material* defaultMaterial = _brain.GetMaterialResourceManager().Access(_defaultMaterial);
-    _brain.GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
-    _brain.GetMaterialResourceManager().Destroy(_defaultMaterial);
+    const Material* defaultMaterial = _context->GetMaterialResourceManager().Access(_defaultMaterial);
+    _context->GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
+    _context->GetMaterialResourceManager().Destroy(_defaultMaterial);
 }
 
 Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
@@ -428,7 +425,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
 {
     Model model {};
 
-    SingleTimeCommands commandBuffer { _brain };
+    SingleTimeCommands commandBuffer { _context };
 
     // Load textures
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -436,14 +433,14 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.resources.textures.emplace_back(_brain.GetImageResourceManager().Create(imageCreation));
+        model.resources.textures.emplace_back(_context->GetImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
     for (auto& material : gltf.materials)
     {
         MaterialCreation materialCreation = ProcessMaterial(material, model.resources.textures, gltf);
-        model.resources.materials.emplace_back(_brain.GetMaterialResourceManager().Create(materialCreation));
+        model.resources.materials.emplace_back(_context->GetMaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
@@ -459,7 +456,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
             mesh.primitives.emplace_back(primitive);
         }
 
-        auto handle = _brain.GetMeshResourceManager().Create(mesh);
+        auto handle = _context->GetMeshResourceManager().Create(mesh);
 
         model.resources.meshes.emplace_back(handle);
     }
@@ -497,7 +494,7 @@ Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& staging
     ResourceHandle<Material> material)
 {
     Mesh::Primitive primitive {};
-    primitive.material = _brain.GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
+    primitive.material = _context->GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitive.count = stagingPrimitive.indices.size();
     primitive.vertexOffset = batchBuffer.AppendVertices(stagingPrimitive.vertices, commandBuffer);
     primitive.indexOffset = batchBuffer.AppendIndices(stagingPrimitive.indices, commandBuffer);
@@ -574,5 +571,5 @@ ResourceHandle<Mesh> ModelLoader::LoadMesh(const StagingMesh::Primitive& staging
     Mesh mesh;
     mesh.primitives.emplace_back(primitive);
 
-    return _brain.GetMeshResourceManager().Create(mesh);
+    return _context->GetMeshResourceManager().Create(mesh);
 }

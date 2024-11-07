@@ -1,20 +1,21 @@
 #include "indirect_culler.hpp"
+
 #include "gpu_resources.hpp"
 #include "gpu_scene.hpp"
+#include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-#include <shaders/shader_loader.hpp>
 
-IndirectCuller::IndirectCuller(const VulkanContext& brain, const GPUScene& gpuScene)
-    : _brain(brain)
+IndirectCuller::IndirectCuller(const std::shared_ptr<VulkanContext>& context, const GPUScene& gpuScene)
+    : _context(context)
 {
     CreateCullingPipeline(gpuScene);
 }
 
 IndirectCuller::~IndirectCuller()
 {
-    _brain.device.destroy(_cullingPipeline);
-    _brain.device.destroy(_cullingPipelineLayout);
+    _context->Device().destroy(_cullingPipeline);
+    _context->Device().destroy(_cullingPipelineLayout);
 }
 
 void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet)
@@ -27,8 +28,8 @@ void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { camera.DescriptorSet(currentFrame) }, {});
     commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
-    vk::Buffer inDrawBuffer = _brain.GetBufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
-    vk::Buffer outDrawBuffer = _brain.GetBufferResourceManager().Access(targetBuffer)->buffer;
+    vk::Buffer inDrawBuffer = _context->GetBufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
+    vk::Buffer outDrawBuffer = _context->GetBufferResourceManager().Access(targetBuffer)->buffer;
 
     std::array<vk::BufferMemoryBarrier, 2> barriers;
 
@@ -61,9 +62,9 @@ void IndirectCuller::CreateCullingPipeline(const GPUScene& gpuScene)
         .pSetLayouts = layouts.data(),
     };
 
-    util::VK_ASSERT(_brain.device.createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout), "Failed creating culling pipeline layout!");
+    util::VK_ASSERT(_context->Device().createPipelineLayout(&pipelineLayoutCreateInfo, nullptr, &_cullingPipelineLayout), "Failed creating culling pipeline layout!");
 
-    vk::ShaderModule computeModule = shader::CreateShaderModule(shader::ReadFile("shaders/bin/culling.comp.spv"), _brain.device);
+    vk::ShaderModule computeModule = shader::CreateShaderModule(shader::ReadFile("shaders/bin/culling.comp.spv"), _context->Device());
 
     vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
     shaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eCompute;
@@ -74,9 +75,9 @@ void IndirectCuller::CreateCullingPipeline(const GPUScene& gpuScene)
     computePipelineCreateInfo.layout = _cullingPipelineLayout;
     computePipelineCreateInfo.stage = shaderStageCreateInfo;
 
-    auto result = _brain.device.createComputePipeline(nullptr, computePipelineCreateInfo, nullptr);
+    auto result = _context->Device().createComputePipeline(nullptr, computePipelineCreateInfo, nullptr);
 
     _cullingPipeline = result.value;
 
-    _brain.device.destroy(computeModule);
+    _context->Device().destroy(computeModule);
 }

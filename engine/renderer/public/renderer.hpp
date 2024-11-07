@@ -45,13 +45,13 @@ public:
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
-    const VulkanContext& GetBrain() const { return _brain; }
+    std::shared_ptr<VulkanContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
-    BloomSettings& GetBloomSettings() { return _bloomSettings; }
+    BloomSettings& GetBloomSettings() { return *_bloomSettings; }
 
 private:
     friend class RendererModule;
-    const VulkanContext _brain;
+    std::shared_ptr<VulkanContext> _context;
 
     std::unique_ptr<ModelLoader> _modelLoader;
     // TODO: Unavoidable currently, this needs to become a module
@@ -89,7 +89,7 @@ private:
 
     std::unique_ptr<CameraResource> _camera;
 
-    BloomSettings _bloomSettings;
+    std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<Image> _hdrTarget;
 

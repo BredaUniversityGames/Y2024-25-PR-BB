@@ -3,8 +3,8 @@
 #include "pipeline_builder.hpp"
 #include "vulkan_helper.hpp"
 
-BloomSettings::BloomSettings(const VulkanContext& brain)
-    : _brain(brain)
+BloomSettings::BloomSettings(const std::shared_ptr<VulkanContext>& context)
+    : _context(context)
 {
     CreateDescriptorSetLayout();
     CreateUniformBuffers();
@@ -12,10 +12,10 @@ BloomSettings::BloomSettings(const VulkanContext& brain)
 
 BloomSettings::~BloomSettings()
 {
-    _brain.device.destroy(_descriptorSetLayout);
+    _context->Device().destroy(_descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _brain.GetBufferResourceManager().Destroy(_frameData.buffers[i]);
+        _context->GetBufferResourceManager().Destroy(_frameData.buffers[i]);
     }
 }
 
@@ -33,7 +33,7 @@ void BloomSettings::Render()
 
 void BloomSettings::Update(uint32_t currentFrame)
 {
-    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    const Buffer* buffer = _context->GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
     memcpy(buffer->mappedPtr, &_data, sizeof(SettingsData));
 }
 
@@ -48,8 +48,8 @@ void BloomSettings::CreateDescriptorSetLayout()
     });
     std::vector<std::string_view> names { "BloomSettingsUBO" };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_brain, bindings, names);
-    util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _brain);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context, bindings, names);
+    util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _context);
 }
 
 void BloomSettings::CreateUniformBuffers()
@@ -66,18 +66,18 @@ void BloomSettings::CreateUniformBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);
 
-        _frameData.buffers[i] = _brain.GetBufferResourceManager().Create(creation);
+        _frameData.buffers[i] = _context->GetBufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _descriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
+    allocateInfo.descriptorPool = _context->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _frameData.descriptorSets.data()),
+    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, _frameData.descriptorSets.data()),
         "Failed allocating descriptor sets!");
 
     for (size_t i = 0; i < _frameData.descriptorSets.size(); ++i)
@@ -88,7 +88,7 @@ void BloomSettings::CreateUniformBuffers()
 
 void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
 {
-    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    const Buffer* buffer = _context->GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
 
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.buffer = buffer->buffer;
@@ -105,5 +105,5 @@ void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
     bufferWrite.descriptorCount = 1;
     bufferWrite.pBufferInfo = &bufferInfo;
 
-    _brain.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    _context->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

@@ -1,22 +1,30 @@
 #include "vulkan_context.hpp"
 
+#include <map>
+#include <set>
+#include <vulkan/vulkan.hpp>
+
 #include "log.hpp"
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
 #include "vulkan_validation.hpp"
-#include <map>
-#include <set>
 
 VulkanContext::VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo)
-    : _bufferResourceManager(*this)
-    , _imageResourceManager(*this)
-    , _materialResourceManager(*this)
 {
     CreateInstance(initInfo);
-    dldi = vk::DispatchLoaderDynamic { instance, vkGetInstanceProcAddr, device, vkGetDeviceProcAddr };
+    _dldi = vk::DispatchLoaderDynamic { _instance, vkGetInstanceProcAddr, _device, vkGetDeviceProcAddr };
     SetupDebugMessenger();
-    surface = initInfo.retrieveSurface(instance);
+    _surface = initInfo.retrieveSurface(_instance);
+}
+
+void VulkanContext::Init()
+{
+    _imageResourceManager = std::make_unique<ImageResourceManager>(shared_from_this());
+    _bufferResourceManager = std::make_unique<BufferResourceManager>(shared_from_this());
+    _materialResourceManager = std::make_unique<MaterialResourceManager>(shared_from_this());
+    _meshResourceManager = std::make_unique<ResourceManager<Mesh>>();
+
     PickPhysicalDevice();
     CreateDevice();
 
@@ -28,19 +36,16 @@ VulkanContext::VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo)
     vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
     VmaAllocatorCreateInfo vmaAllocatorCreateInfo {};
-    vmaAllocatorCreateInfo.physicalDevice = physicalDevice;
-    vmaAllocatorCreateInfo.device = device;
-    vmaAllocatorCreateInfo.instance = instance;
-    vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    vmaAllocatorCreateInfo.physicalDevice = _physicalDevice;
+    vmaAllocatorCreateInfo.device = _device;
+    vmaAllocatorCreateInfo.instance = _instance;
+    vmaAllocatorCreateInfo.vulkanApiVersion = vk::makeApiVersion(0, 1, 3, 0);
     vmaAllocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
-    vmaCreateAllocator(&vmaAllocatorCreateInfo, &vmaAllocator);
+    vmaCreateAllocator(&vmaAllocatorCreateInfo, &_vmaAllocator);
 
     vk::PhysicalDeviceProperties properties;
-    physicalDevice.getProperties(&properties);
-    minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
-
-    _sampler = util::CreateSampler(*this, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-        vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
+    _physicalDevice.getProperties(&properties);
+    _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
 
     CreateBindlessMaterialBuffer();
     CreateBindlessDescriptorSet();
@@ -49,50 +54,50 @@ VulkanContext::VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo)
     ImageCreation creation {};
     creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
 
-    _fallbackImage = _imageResourceManager.Create(creation);
+    _fallbackImage = _imageResourceManager->Create(creation);
 }
 
 VulkanContext::~VulkanContext()
 {
     if (ENABLE_VALIDATION_LAYERS)
-        instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, dldi);
+        _instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, _dldi);
 
-    _imageResourceManager.Destroy(_fallbackImage);
+    _imageResourceManager->Destroy(_fallbackImage);
 
-    device.destroy(descriptorPool);
-    device.destroy(commandPool);
+    _device.destroy(_descriptorPool);
+    _device.destroy(_commandPool);
 
-    device.destroy(bindlessLayout);
-    device.destroy(bindlessPool);
+    _device.destroy(_bindlessLayout);
+    _device.destroy(_bindlessPool);
 
-    _bufferResourceManager.Destroy(_bindlessMaterialBuffer);
+    _bufferResourceManager->Destroy(_bindlessMaterialBuffer);
 
     _sampler.reset();
 
-    vmaDestroyAllocator(vmaAllocator);
+    vmaDestroyAllocator(_vmaAllocator);
 
-    instance.destroy(surface);
-    device.destroy();
-    instance.destroy();
+    _instance.destroy(_surface);
+    _device.destroy();
+    _instance.destroy();
 }
 
-void VulkanContext::UpdateBindlessSet() const
+void VulkanContext::UpdateBindlessSet()
 {
     UpdateBindlessImages();
     UpdateBindlessMaterials();
 }
 
-void VulkanContext::UpdateBindlessImages() const
+void VulkanContext::UpdateBindlessImages()
 {
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image* image = i < _imageResourceManager.Resources().size()
-            ? &_imageResourceManager.Resources()[i].resource.value()
-            : _imageResourceManager.Access(_fallbackImage);
+        const Image* image = i < _imageResourceManager->Resources().size()
+            ? &_imageResourceManager->Resources()[i].resource.value()
+            : _imageResourceManager->Access(_fallbackImage);
 
         // If it can't be sampled, use the fallback.
         if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
-            image = _imageResourceManager.Access(_fallbackImage);
+            image = _imageResourceManager->Access(_fallbackImage);
 
         BindlessBinding dstBinding = BindlessBinding::eNone;
 
@@ -108,11 +113,17 @@ void VulkanContext::UpdateBindlessImages() const
         if (image->type == ImageType::eShadowMap)
             dstBinding = BindlessBinding::eShadowmap;
 
+        if (!_sampler)
+        {
+            _sampler = util::CreateSampler(shared_from_this(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
+                vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
+        }
+
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
         _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
 
-        _bindlessImageWrites[i].dstSet = bindlessSet;
+        _bindlessImageWrites[i].dstSet = _bindlessSet;
         _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
         _bindlessImageWrites[i].dstArrayElement = i;
         _bindlessImageWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
@@ -120,36 +131,36 @@ void VulkanContext::UpdateBindlessImages() const
         _bindlessImageWrites[i].pImageInfo = &_bindlessImageInfos[i];
     }
 
-    device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
+    _device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
 }
 
-void VulkanContext::UpdateBindlessMaterials() const
+void VulkanContext::UpdateBindlessMaterials()
 {
-    assert(_materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
+    assert(_materialResourceManager->Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
 
     std::array<Material::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
 
-    for (uint32_t i = 0; i < _materialResourceManager.Resources().size(); ++i)
+    for (uint32_t i = 0; i < _materialResourceManager->Resources().size(); ++i)
     {
-        const Material* material = &_materialResourceManager.Resources()[i].resource.value();
+        const Material* material = &_materialResourceManager->Resources()[i].resource.value();
         materialGPUData[i] = material->gpuInfo;
     }
 
-    const Buffer* buffer = _bufferResourceManager.Access(_bindlessMaterialBuffer);
-    std::memcpy(buffer->mappedPtr, materialGPUData.data(), _materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
+    const Buffer* buffer = _bufferResourceManager->Access(_bindlessMaterialBuffer);
+    std::memcpy(buffer->mappedPtr, materialGPUData.data(), _materialResourceManager->Resources().size() * sizeof(Material::GPUInfo));
 
     _bindlessMaterialInfo.buffer = buffer->buffer;
     _bindlessMaterialInfo.offset = 0;
-    _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager.Resources().size();
+    _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager->Resources().size();
 
-    _bindlessMaterialWrite.dstSet = bindlessSet;
+    _bindlessMaterialWrite.dstSet = _bindlessSet;
     _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eMaterial);
     _bindlessMaterialWrite.dstArrayElement = 0;
     _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
     _bindlessMaterialWrite.descriptorCount = 1;
     _bindlessMaterialWrite.pBufferInfo = &_bindlessMaterialInfo;
 
-    device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
+    _device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
 }
 
 void VulkanContext::CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo)
@@ -193,12 +204,12 @@ void VulkanContext::CreateInstance(const ApplicationModule::VulkanInitInfo& init
         createInfo.enabledLayerCount = 0;
     }
 
-    util::VK_ASSERT(vk::createInstance(&createInfo, nullptr, &instance), "Failed to create vk instance!");
+    util::VK_ASSERT(vk::createInstance(&createInfo, nullptr, &_instance), "Failed to create vk instance!");
 }
 
 void VulkanContext::PickPhysicalDevice()
 {
-    std::vector<vk::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
+    std::vector<vk::PhysicalDevice> devices = _instance.enumeratePhysicalDevices();
     if (devices.empty())
         throw std::runtime_error("No GPU's with Vulkan support available!");
 
@@ -213,7 +224,7 @@ void VulkanContext::PickPhysicalDevice()
     if (candidates.empty())
         throw std::runtime_error("Failed finding suitable device!");
 
-    physicalDevice = candidates.rbegin()->second;
+    _physicalDevice = candidates.rbegin()->second;
 }
 
 uint32_t VulkanContext::RateDeviceSuitability(const vk::PhysicalDevice& deviceToRate)
@@ -227,7 +238,7 @@ uint32_t VulkanContext::RateDeviceSuitability(const vk::PhysicalDevice& deviceTo
     deviceToRate.getProperties(&deviceProperties);
     deviceToRate.getFeatures2(&deviceFeatures);
 
-    QueueFamilyIndices familyIndices = QueueFamilyIndices::FindQueueFamilies(deviceToRate, surface);
+    QueueFamilyIndices familyIndices = QueueFamilyIndices::FindQueueFamilies(deviceToRate, _surface);
 
     uint32_t score { 0 };
 
@@ -248,7 +259,7 @@ uint32_t VulkanContext::RateDeviceSuitability(const vk::PhysicalDevice& deviceTo
         return 0;
 
     // Check support for swap chain.
-    SwapChain::SupportDetails swapChainSupportDetails = SwapChain::QuerySupport(deviceToRate, surface);
+    SwapChain::SupportDetails swapChainSupportDetails = SwapChain::QuerySupport(deviceToRate, _surface);
     bool swapChainUnsupported = swapChainSupportDetails.formats.empty() || swapChainSupportDetails.presentModes.empty();
     if (swapChainUnsupported)
         return 0;
@@ -311,15 +322,15 @@ void VulkanContext::SetupDebugMessenger()
     util::PopulateDebugMessengerCreateInfo(createInfo);
     createInfo.pUserData = nullptr;
 
-    util::VK_ASSERT(instance.createDebugUtilsMessengerEXT(&createInfo, nullptr, &_debugMessenger, dldi),
+    util::VK_ASSERT(_instance.createDebugUtilsMessengerEXT(&createInfo, nullptr, &_debugMessenger, _dldi),
         "Failed to create debug messenger!");
 }
 
 void VulkanContext::CreateDevice()
 {
-    queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(physicalDevice, surface);
+    _queueFamilyIndices = QueueFamilyIndices::FindQueueFamilies(_physicalDevice, _surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos {};
-    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
+    std::set<uint32_t> uniqueQueueFamilies = { _queueFamilyIndices.graphicsFamily.value(), _queueFamilyIndices.presentFamily.value() };
     float queuePriority { 1.0f };
 
     for (uint32_t familyQueueIndex : uniqueQueueFamilies)
@@ -338,7 +349,7 @@ void VulkanContext::CreateDevice()
     dynamicRenderingFeaturesKhr.dynamicRendering = true;
 
     auto& deviceFeatures = structureChain.get<vk::PhysicalDeviceFeatures2>();
-    physicalDevice.getFeatures2(&deviceFeatures);
+    _physicalDevice.getFeatures2(&deviceFeatures);
 
     auto& createInfo = structureChain.get<vk::DeviceCreateInfo>();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -359,19 +370,19 @@ void VulkanContext::CreateDevice()
         createInfo.enabledLayerCount = 0;
     }
 
-    util::VK_ASSERT(physicalDevice.createDevice(&createInfo, nullptr, &device), "Failed creating a logical device!");
+    util::VK_ASSERT(_physicalDevice.createDevice(&createInfo, nullptr, &_device), "Failed creating a logical device!");
 
-    device.getQueue(queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
-    device.getQueue(queueFamilyIndices.presentFamily.value(), 0, &presentQueue);
+    _device.getQueue(_queueFamilyIndices.graphicsFamily.value(), 0, &_graphicsQueue);
+    _device.getQueue(_queueFamilyIndices.presentFamily.value(), 0, &_presentQueue);
 }
 
 void VulkanContext::CreateCommandPool()
 {
     vk::CommandPoolCreateInfo commandPoolCreateInfo {};
     commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    commandPoolCreateInfo.queueFamilyIndex = _queueFamilyIndices.graphicsFamily.value();
 
-    util::VK_ASSERT(device.createCommandPool(&commandPoolCreateInfo, nullptr, &commandPool), "Failed creating command pool!");
+    util::VK_ASSERT(_device.createCommandPool(&commandPoolCreateInfo, nullptr, &_commandPool), "Failed creating command pool!");
 }
 
 void VulkanContext::CreateDescriptorPool()
@@ -395,7 +406,7 @@ void VulkanContext::CreateDescriptorPool()
     createInfo.pPoolSizes = poolSizes.data();
     createInfo.maxSets = 200;
     createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    util::VK_ASSERT(device.createDescriptorPool(&createInfo, nullptr, &descriptorPool), "Failed creating descriptor pool!");
+    util::VK_ASSERT(_device.createDescriptorPool(&createInfo, nullptr, &_descriptorPool), "Failed creating descriptor pool!");
 }
 
 void VulkanContext::CreateBindlessDescriptorSet()
@@ -413,7 +424,7 @@ void VulkanContext::CreateBindlessDescriptorSet()
     poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * poolSizes.size();
     poolCreateInfo.poolSizeCount = poolSizes.size();
     poolCreateInfo.pPoolSizes = poolSizes.data();
-    util::VK_ASSERT(device.createDescriptorPool(&poolCreateInfo, nullptr, &bindlessPool), "Failed creating bindless pool!");
+    util::VK_ASSERT(_device.createDescriptorPool(&poolCreateInfo, nullptr, &_bindlessPool), "Failed creating bindless pool!");
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings(5);
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
@@ -467,16 +478,16 @@ void VulkanContext::CreateBindlessDescriptorSet()
 
     std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
 
-    bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*this, bindings, names);
+    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(shared_from_this(), bindings, names);
 
     vk::DescriptorSetAllocateInfo allocInfo {};
-    allocInfo.descriptorPool = bindlessPool;
+    allocInfo.descriptorPool = _bindlessPool;
     allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &bindlessLayout;
+    allocInfo.pSetLayouts = &_bindlessLayout;
 
-    util::VK_ASSERT(device.allocateDescriptorSets(&allocInfo, &bindlessSet), "Failed creating bindless descriptor set!");
+    util::VK_ASSERT(_device.allocateDescriptorSets(&allocInfo, &_bindlessSet), "Failed creating bindless descriptor set!");
 
-    util::NameObject(bindlessSet, "Bindless DS", *this);
+    util::NameObject(_bindlessSet, "Bindless DS", shared_from_this());
 }
 
 void VulkanContext::CreateBindlessMaterialBuffer()
@@ -486,7 +497,7 @@ void VulkanContext::CreateBindlessMaterialBuffer()
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
         .SetName("Bindless material uniform buffer");
 
-    _bindlessMaterialBuffer = _bufferResourceManager.Create(creation);
+    _bindlessMaterialBuffer = _bufferResourceManager->Create(creation);
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)

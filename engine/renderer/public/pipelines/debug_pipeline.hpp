@@ -5,13 +5,16 @@
 #include "geometry_pipeline.hpp"
 #include "mesh.hpp"
 
+#include <memory>
+
 class SwapChain;
 class BatchBuffer;
+class VulkanContext;
 
 class DebugPipeline final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const VulkanContext& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
+    DebugPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
     ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -32,13 +35,7 @@ public:
     NON_COPYABLE(DebugPipeline);
 
 private:
-    void CreatePipeline();
-
-    void CreateVertexBuffer();
-
-    void UpdateVertexData();
-
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
     const CameraResource& _camera;
@@ -48,4 +45,8 @@ private:
 
     std::vector<glm::vec3> _linesData;
     ResourceHandle<Buffer> _vertexBuffer;
+
+    void CreatePipeline();
+    void CreateVertexBuffer();
+    void UpdateVertexData();
 };

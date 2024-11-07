@@ -29,39 +29,41 @@
 #include "stb/stb_image.h"
 
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ecs)
-    : _brain(application.GetVulkanInfo())
+    : _context(std::make_shared<VulkanContext>(application.GetVulkanInfo()))
     , _application(application)
     , _ecs(ecs)
-    , _bloomSettings(_brain)
 {
+    _context->Init();
+
+    _bloomSettings = std::make_unique<BloomSettings>(_context);
 
     auto vulkanInfo = application.GetVulkanInfo();
-    _swapChain = std::make_unique<SwapChain>(_brain, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
 
     InitializeHDRTarget();
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_brain, _ecs);
+    _modelLoader = std::make_unique<ModelLoader>(_context, _ecs);
 
-    _batchBuffer = std::make_shared<BatchBuffer>(_brain, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
-    SingleTimeCommands commandBufferPrimitive { _brain };
+    SingleTimeCommands commandBufferPrimitive { _context };
     ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
     commandBufferPrimitive.Submit();
 
-    _gBuffers = std::make_unique<GBuffers>(_brain, _swapChain->GetImageSize());
-    _iblPipeline = std::make_unique<IBLPipeline>(_brain, _environmentMap);
+    _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
+    _iblPipeline = std::make_unique<IBLPipeline>(_context, _environmentMap);
 
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _brain };
+    SingleTimeCommands commandBufferIBL { _context };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
     GPUSceneCreation gpuSceneCreation {
-        _brain,
+        _context,
         _ecs,
         _iblPipeline->IrradianceMap(),
         _iblPipeline->PrefilterMap(),
@@ -71,16 +73,16 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ec
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    _camera = std::make_unique<CameraResource>(_brain);
+    _camera = std::make_unique<CameraResource>(_context);
 
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_brain, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_brain, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, _bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_brain, _hdrTarget, _bloomTarget, *_swapChain, _bloomSettings);
-    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_brain, _brightnessTarget, _bloomTarget);
-    _shadowPipeline = std::make_unique<ShadowPipeline>(_brain, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_brain, *_gBuffers, *_camera, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_brain, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, _bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_brain, *_camera, *_swapChain);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
+    _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
+    _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, *_swapChain);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, *_bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, *_camera, *_swapChain);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -141,7 +143,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ec
         // Reference to make sure it runs at the end
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
-    _frameGraph = std::make_unique<FrameGraph>(_brain, *_swapChain);
+    _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
@@ -184,28 +186,28 @@ Renderer::~Renderer()
 {
     _modelLoader.reset();
 
-    _brain.GetImageResourceManager().Destroy(_environmentMap);
-    _brain.GetImageResourceManager().Destroy(_hdrTarget);
+    _context->GetImageResourceManager().Destroy(_environmentMap);
+    _context->GetImageResourceManager().Destroy(_hdrTarget);
 
-    _brain.GetImageResourceManager().Destroy(_brightnessTarget);
-    _brain.GetImageResourceManager().Destroy(_bloomTarget);
+    _context->GetImageResourceManager().Destroy(_brightnessTarget);
+    _context->GetImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _brain.device.destroy(_inFlightFences[i]);
-        _brain.device.destroy(_renderFinishedSemaphores[i]);
-        _brain.device.destroy(_imageAvailableSemaphores[i]);
+        _context->Device().destroy(_inFlightFences[i]);
+        _context->Device().destroy(_renderFinishedSemaphores[i]);
+        _context->Device().destroy(_imageAvailableSemaphores[i]);
     }
 
     for (auto& model : _modelResources)
     {
         for (auto& texture : model->textures)
         {
-            _brain.GetImageResourceManager().Destroy(texture);
+            _context->GetImageResourceManager().Destroy(texture);
         }
         for (auto& material : model->materials)
         {
-            _brain.GetMaterialResourceManager().Destroy(material);
+            _context->GetMaterialResourceManager().Destroy(material);
         }
     }
 
@@ -215,11 +217,11 @@ Renderer::~Renderer()
 void Renderer::CreateCommandBuffers()
 {
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo {};
-    commandBufferAllocateInfo.commandPool = _brain.commandPool;
+    commandBufferAllocateInfo.commandPool = _context->CommandPool();
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = _commandBuffers.size();
 
-    util::VK_ASSERT(_brain.device.allocateCommandBuffers(&commandBufferAllocateInfo, _commandBuffers.data()),
+    util::VK_ASSERT(_context->Device().allocateCommandBuffers(&commandBufferAllocateInfo, _commandBuffers.data()),
         "Failed allocating command buffer!");
 }
 
@@ -238,7 +240,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .targetSwapChainImageIndex = swapChainImageIndex
     };
 
-    _brain.drawStats = {};
+    // TODO: Expose improved API for draw stats
+    //_context.drawStats = {};
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
@@ -267,9 +270,9 @@ void Renderer::CreateSyncObjects()
     std::string errorMsg { "Failed creating sync object!" };
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::VK_ASSERT(_brain.device.createSemaphore(&semaphoreCreateInfo, nullptr, &_imageAvailableSemaphores[i]), errorMsg);
-        util::VK_ASSERT(_brain.device.createSemaphore(&semaphoreCreateInfo, nullptr, &_renderFinishedSemaphores[i]), errorMsg);
-        util::VK_ASSERT(_brain.device.createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
+        util::VK_ASSERT(_context->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_imageAvailableSemaphores[i]), errorMsg);
+        util::VK_ASSERT(_context->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_renderFinishedSemaphores[i]), errorMsg);
+        util::VK_ASSERT(_context->Device().createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
     }
 }
 
@@ -280,7 +283,7 @@ void Renderer::InitializeHDRTarget()
     ImageCreation hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _brain.GetImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _context->GetImageResourceManager().Create(hdrCreation);
 }
 
 void Renderer::InitializeBloomTargets()
@@ -293,8 +296,8 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _brightnessTarget = _brain.GetImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _brain.GetImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _context->GetImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _context->GetImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Renderer::LoadEnvironmentMap()
@@ -314,12 +317,12 @@ void Renderer::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _brain.GetImageResourceManager().Create(envMapCreation);
+    _environmentMap = _context->GetImageResourceManager().Create(envMapCreation);
 }
 
 void Renderer::UpdateBindless()
 {
-    _brain.UpdateBindlessSet();
+    _context->UpdateBindlessSet();
 }
 
 void Renderer::Render(float deltaTime)
@@ -327,11 +330,11 @@ void Renderer::Render(float deltaTime)
     ZoneNamedN(zz, "Renderer::Render()", true);
     {
         ZoneNamedN(zz, "Wait On Fence", true);
-        util::VK_ASSERT(_brain.device.waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
+        util::VK_ASSERT(_context->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
 
-    _bloomSettings.Update(_currentFrame);
+    _bloomSettings->Update(_currentFrame);
 
     // TODO: handle this more gracefully
     assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
@@ -343,7 +346,7 @@ void Renderer::Render(float deltaTime)
     {
         ZoneNamedN(zz, "Acquire Next Image", true);
 
-        result = _brain.device.acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
+        result = _context->Device().acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
             _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
@@ -357,7 +360,7 @@ void Renderer::Render(float deltaTime)
             util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    util::VK_ASSERT(_brain.device.resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    util::VK_ASSERT(_context->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
     {
         ZoneNamedN(zz, "ImGui Render", true);
@@ -383,7 +386,7 @@ void Renderer::Render(float deltaTime)
 
     {
         ZoneNamedN(zz, "Submit Commands", true);
-        util::VK_ASSERT(_brain.graphicsQueue.submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+        util::VK_ASSERT(_context->GraphicsQueue().submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
     }
 
     vk::PresentInfoKHR presentInfo {};
@@ -397,7 +400,7 @@ void Renderer::Render(float deltaTime)
 
     {
         ZoneNamedN(zz, "Present Image", true);
-        result = _brain.presentQueue.presentKHR(&presentInfo);
+        result = _context->PresentQueue().presentKHR(&presentInfo);
     }
 
     if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application.DisplaySize())

@@ -10,7 +10,7 @@ class ECS;
 
 struct GPUSceneCreation
 {
-    const VulkanContext& brain;
+    std::shared_ptr<VulkanContext> context;
     std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
@@ -104,7 +104,7 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     std::shared_ptr<const ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;

@@ -57,34 +57,34 @@ std::optional<vk::Format> util::FindSupportedFormat(const vk::PhysicalDevice phy
     return std::nullopt;
 }
 
-void util::CreateBuffer(const VulkanContext& brain, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
+void util::CreateBuffer(std::shared_ptr<VulkanContext> context, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Buffer& buffer, bool mappable, VmaAllocation& allocation, VmaMemoryUsage memoryUsage, std::string_view name)
 {
     vk::BufferCreateInfo bufferInfo {};
     bufferInfo.size = size;
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = vk::SharingMode::eExclusive;
     bufferInfo.queueFamilyIndexCount = 1;
-    bufferInfo.pQueueFamilyIndices = &brain.queueFamilyIndices.graphicsFamily.value();
+    bufferInfo.pQueueFamilyIndices = &context->QueueFamilies().graphicsFamily.value();
 
     VmaAllocationCreateInfo allocationInfo {};
     allocationInfo.usage = memoryUsage;
     if (mappable)
         allocationInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
-    util::VK_ASSERT(vmaCreateBuffer(brain.vmaAllocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
-    vmaSetAllocationName(brain.vmaAllocator, allocation, name.data());
-    util::NameObject(buffer, name, brain);
+    util::VK_ASSERT(vmaCreateBuffer(context->MemoryAllocator(), reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
+    vmaSetAllocationName(context->MemoryAllocator(), allocation, name.data());
+    util::NameObject(buffer, name, context);
 }
 
-vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanContext& brain)
+vk::CommandBuffer util::BeginSingleTimeCommands(std::shared_ptr<VulkanContext> context)
 {
     vk::CommandBufferAllocateInfo allocateInfo {};
     allocateInfo.level = vk::CommandBufferLevel::ePrimary;
-    allocateInfo.commandPool = brain.commandPool;
+    allocateInfo.commandPool = context->CommandPool();
     allocateInfo.commandBufferCount = 1;
 
     vk::CommandBuffer commandBuffer;
-    util::VK_ASSERT(brain.device.allocateCommandBuffers(&allocateInfo, &commandBuffer), "Failed allocating one time command buffer!");
+    util::VK_ASSERT(context->Device().allocateCommandBuffers(&allocateInfo, &commandBuffer), "Failed allocating one time command buffer!");
 
     vk::CommandBufferBeginInfo beginInfo {};
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -94,7 +94,7 @@ vk::CommandBuffer util::BeginSingleTimeCommands(const VulkanContext& brain)
     return commandBuffer;
 }
 
-void util::EndSingleTimeCommands(const VulkanContext& brain, vk::CommandBuffer commandBuffer)
+void util::EndSingleTimeCommands(std::shared_ptr<VulkanContext> context, vk::CommandBuffer commandBuffer)
 {
     commandBuffer.end();
 
@@ -102,10 +102,10 @@ void util::EndSingleTimeCommands(const VulkanContext& brain, vk::CommandBuffer c
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    util::VK_ASSERT(brain.graphicsQueue.submit(1, &submitInfo, nullptr), "Failed submitting one time buffer to queue!");
-    brain.graphicsQueue.waitIdle();
+    util::VK_ASSERT(context->GraphicsQueue().submit(1, &submitInfo, nullptr), "Failed submitting one time buffer to queue!");
+    context->GraphicsQueue().waitIdle();
 
-    brain.device.free(brain.commandPool, commandBuffer);
+    context->Device().free(context->CommandPool(), commandBuffer);
 }
 
 void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset)
@@ -117,10 +117,10 @@ void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk:
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-vk::UniqueSampler util::CreateSampler(const VulkanContext& brain, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
+vk::UniqueSampler util::CreateSampler(std::shared_ptr<VulkanContext> context, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
 {
     vk::PhysicalDeviceProperties properties {};
-    brain.physicalDevice.getProperties(&properties);
+    context->PhysicalDevice().getProperties(&properties);
 
     vk::SamplerCreateInfo createInfo {};
     createInfo.magFilter = mag;
@@ -141,7 +141,7 @@ vk::UniqueSampler util::CreateSampler(const VulkanContext& brain, vk::Filter min
     // createInfo.compareEnable = VK_TRUE; // Enable depth comparison
     // createInfo.compareOp = vk::CompareOp::eLessOrEqual;
 
-    return brain.device.createSamplerUnique(createInfo);
+    return context->Device().createSamplerUnique(createInfo);
 }
 
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout)

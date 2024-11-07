@@ -2,7 +2,9 @@
 
 #include "constants.hpp"
 #include "vulkan_context.hpp"
+
 #include <array>
+#include <memory>
 
 class BloomSettings
 {
@@ -31,7 +33,7 @@ public:
         std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
     };
 
-    BloomSettings(const VulkanContext& brain);
+    BloomSettings(const std::shared_ptr<VulkanContext>& context);
     ~BloomSettings();
     void Render();
     void Update(uint32_t currentFrame);
@@ -41,7 +43,7 @@ public:
     SettingsData _data;
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     vk::DescriptorSetLayout _descriptorSetLayout;
     FrameData _frameData;
 

@@ -1,10 +1,11 @@
 #include "resource_management/image_resource_manager.hpp"
+
 #include "log.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ImageResourceManager::ImageResourceManager(const VulkanContext& brain)
-    : _brain(brain)
+ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context)
+    : _context(context)
 {
 }
 
@@ -48,9 +49,9 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     VmaAllocationCreateInfo allocCreateInfo {};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(_brain.vmaAllocator, (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&imageResource.image), &imageResource.allocation, nullptr);
+    vmaCreateImage(_context->MemoryAllocator(), (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&imageResource.image), &imageResource.allocation, nullptr);
     std::string allocName = creation.name + " texture allocation";
-    vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, allocName.c_str());
+    vmaSetAllocationName(_context->MemoryAllocator(), imageResource.allocation, allocName.c_str());
 
     vk::ImageViewCreateInfo viewCreateInfo {};
     viewCreateInfo.image = imageResource.image;
@@ -66,7 +67,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
     {
         viewCreateInfo.subresourceRange.baseArrayLayer = i;
         vk::ImageView imageView;
-        util::VK_ASSERT(_brain.device.createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
+        util::VK_ASSERT(_context->Device().createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
         imageResource.views.emplace_back(imageView);
     }
     imageResource.view = *imageResource.views.begin();
@@ -83,7 +84,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         cubeViewCreateInfo.subresourceRange.baseArrayLayer = 0;
         cubeViewCreateInfo.subresourceRange.layerCount = 6;
 
-        util::VK_ASSERT(_brain.device.createImageView(&cubeViewCreateInfo, nullptr, &imageResource.view), "Failed creating image view!");
+        util::VK_ASSERT(_context->Device().createImageView(&cubeViewCreateInfo, nullptr, &imageResource.view), "Failed creating image view!");
     }
 
     if (creation.initialData)
@@ -95,13 +96,13 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         vk::Buffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
 
-        util::CreateBuffer(_brain, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
+        util::CreateBuffer(_context, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
 
-        vmaCopyMemoryToAllocation(_brain.vmaAllocator, creation.initialData, stagingBufferAllocation, 0, imageSize);
+        vmaCopyMemoryToAllocation(_context->MemoryAllocator(), creation.initialData, stagingBufferAllocation, 0, imageSize);
 
         vk::ImageLayout oldLayout = vk::ImageLayout::eTransferDstOptimal;
 
-        vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_brain);
+        vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_context);
 
         util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, vk::ImageLayout::eUndefined, oldLayout);
 
@@ -139,9 +140,9 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
 
         util::TransitionImageLayout(commandBuffer, imageResource.image, imageResource.format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, imageResource.mips);
 
-        util::EndSingleTimeCommands(_brain, commandBuffer);
+        util::EndSingleTimeCommands(_context, commandBuffer);
 
-        vmaDestroyBuffer(_brain.vmaAllocator, stagingBuffer, stagingBufferAllocation);
+        vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     if (!creation.name.empty())
@@ -150,7 +151,7 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
         ss << "[IMAGE] ";
         ss << creation.name;
         std::string imageStr = ss.str();
-        util::NameObject(imageResource.image, imageStr, _brain);
+        util::NameObject(imageResource.image, imageStr, _context);
         ss.str("");
 
         for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
@@ -158,14 +159,14 @@ ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation
             ss << "[VIEW " << i << "] ";
             ss << creation.name;
             std::string viewStr = ss.str();
-            util::NameObject(imageResource.views[i], viewStr, _brain);
+            util::NameObject(imageResource.views[i], viewStr, _context);
             ss.str("");
         }
 
         ss << "[ALLOCATION] ";
         ss << creation.name;
         std::string str = ss.str();
-        vmaSetAllocationName(_brain.vmaAllocator, imageResource.allocation, str.c_str());
+        vmaSetAllocationName(_context->MemoryAllocator(), imageResource.allocation, str.c_str());
     }
     else
     {
@@ -180,11 +181,11 @@ void ImageResourceManager::Destroy(ResourceHandle<Image> handle)
     if (IsValid(handle))
     {
         const Image* image = Access(handle);
-        vmaDestroyImage(_brain.vmaAllocator, image->image, image->allocation);
+        vmaDestroyImage(_context->MemoryAllocator(), image->image, image->allocation);
         for (auto& view : image->views)
-            _brain.device.destroy(view);
+            _context->Device().destroy(view);
         if (image->type == ImageType::eCubeMap)
-            _brain.device.destroy(image->view);
+            _context->Device().destroy(image->view);
 
         ResourceManager::Destroy(handle);
     }

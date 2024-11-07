@@ -5,6 +5,8 @@
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
 
+#include <memory>
+
 struct RenderSceneDescription;
 struct Image;
 struct Buffer;
@@ -129,7 +131,7 @@ struct FrameGraphNode
 class FrameGraph
 {
 public:
-    FrameGraph(const VulkanContext& brain, const SwapChain& swapChain);
+    FrameGraph(const std::shared_ptr<VulkanContext>& context, const SwapChain& swapChain);
 
     // Builds the graph from the node inputs.
     void Build();
@@ -141,7 +143,7 @@ public:
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     const SwapChain& _swapChain;
 
     std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};

@@ -1,6 +1,11 @@
 #pragma once
+
 #include "common.hpp"
 #include "mesh.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <vector>
 
 class SingleTimeCommands;
 class VulkanContext;
@@ -10,7 +15,7 @@ constexpr uint32_t MAX_MESHES = 2048;
 class BatchBuffer
 {
 public:
-    BatchBuffer(const VulkanContext& brain, uint32_t vertexBufferSize, uint32_t indexBufferSize);
+    BatchBuffer(const std::shared_ptr<VulkanContext>& context, uint32_t vertexBufferSize, uint32_t indexBufferSize);
     ~BatchBuffer();
     NON_MOVABLE(BatchBuffer);
     NON_COPYABLE(BatchBuffer);
@@ -29,7 +34,7 @@ public:
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
 
     uint32_t _vertexBufferSize;
     uint32_t _indexBufferSize;

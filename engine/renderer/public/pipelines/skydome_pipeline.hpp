@@ -4,15 +4,18 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "mesh.hpp"
-#include "vulkan_context.hpp"
+
+#include <cstddef>
+#include <memory>
 
 class BloomSettings;
+class VulkanContext;
 struct RenderSceneDescription;
 
 class SkydomePipeline final : public FrameGraphRenderPass
 {
 public:
-    SkydomePipeline(const VulkanContext& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
+    SkydomePipeline(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
         ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
     ~SkydomePipeline() final;
 
@@ -27,7 +30,7 @@ private:
         uint32_t hdriIndex;
     } _pushConstants;
 
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     const CameraResource& _camera;
     ResourceHandle<Image> _hdrTarget;
     ResourceHandle<Image> _brightnessTarget;

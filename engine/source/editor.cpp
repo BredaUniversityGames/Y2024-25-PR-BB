@@ -40,21 +40,21 @@ Editor::Editor(ECS& ecs, Renderer& renderer)
     ImGui_ImplVulkan_InitInfo initInfoVulkan {};
     initInfoVulkan.UseDynamicRendering = true;
     initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = renderer.GetBrain().physicalDevice;
-    initInfoVulkan.Device = renderer.GetBrain().device;
+    initInfoVulkan.PhysicalDevice = renderer.GetContext()->PhysicalDevice();
+    initInfoVulkan.Device = renderer.GetContext()->Device();
     initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = renderer.GetBrain().instance;
+    initInfoVulkan.Instance = renderer.GetContext()->Instance();
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = renderer.GetBrain().graphicsQueue;
-    initInfoVulkan.QueueFamily = renderer.GetBrain().queueFamilyIndices.graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = renderer.GetBrain().descriptorPool;
+    initInfoVulkan.Queue = renderer.GetContext()->GraphicsQueue();
+    initInfoVulkan.QueueFamily = renderer.GetContext()->QueueFamilies().graphicsFamily.value();
+    initInfoVulkan.DescriptorPool = renderer.GetContext()->DescriptorPool();
     initInfoVulkan.MinImageCount = 2;
     initInfoVulkan.ImageCount = renderer.GetSwapChain().GetImageCount();
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(renderer.GetBrain(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _basicSampler = util::CreateSampler(renderer.GetContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     _entityEditor.registerComponent<TransformComponent>("Transform");
@@ -163,7 +163,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetBrain().GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetContext()->GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -180,7 +180,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         char* statsJson;
-        vmaBuildStatsString(_renderer.GetBrain().vmaAllocator, &statsJson, true);
+        vmaBuildStatsString(_renderer.GetContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -196,19 +196,20 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_renderer.GetBrain().vmaAllocator, statsJson);
+        vmaFreeStatsString(_renderer.GetContext()->MemoryAllocator(), statsJson);
     }
 
     ImGui::End();
 
-    ImGui::Begin("Renderer Stats");
+    // TODO: Fix this.
+    // ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _renderer.GetBrain().drawStats.drawCalls);
-    ImGui::LabelText("Triangles", "%i", _renderer.GetBrain().drawStats.indexCount / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetBrain().drawStats.indirectDrawCommands);
-    ImGui::LabelText("Debug lines", "%i", _renderer.GetBrain().drawStats.debugLines);
+    // ImGui::LabelText("Draw calls", "%i", _renderer.GetContext()->drawStats.drawCalls);
+    // ImGui::LabelText("Triangles", "%i", _renderer.GetContext()->drawStats.indexCount / 3);
+    // ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetContext()->drawStats.indirectDrawCommands);
+    // ImGui::LabelText("Debug lines", "%i", _renderer.GetContext()->drawStats.debugLines);
 
-    ImGui::End();
+    // ImGui::End();
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();

@@ -1,9 +1,10 @@
 #include "resource_management/buffer_resource_manager.hpp"
+
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-BufferResourceManager::BufferResourceManager(const VulkanContext& brain)
-    : _brain(brain)
+BufferResourceManager::BufferResourceManager(const std::shared_ptr<VulkanContext>& context)
+    : _context(context)
 {
 }
 
@@ -11,7 +12,7 @@ ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creat
 {
     Buffer bufferResource {};
 
-    util::CreateBuffer(_brain,
+    util::CreateBuffer(_context,
         creation.size,
         creation.usage,
         bufferResource.buffer,
@@ -26,7 +27,7 @@ ResourceHandle<Buffer> BufferResourceManager::Create(const BufferCreation& creat
 
     if (creation.isMappable)
     {
-        util::VK_ASSERT(vmaMapMemory(_brain.vmaAllocator, bufferResource.allocation, &bufferResource.mappedPtr),
+        util::VK_ASSERT(vmaMapMemory(_context->MemoryAllocator(), bufferResource.allocation, &bufferResource.mappedPtr),
             "Failed mapping memory for buffer: " + creation.name);
     }
 
@@ -41,10 +42,10 @@ void BufferResourceManager::Destroy(ResourceHandle<Buffer> handle)
 
         if (buffer->mappedPtr)
         {
-            vmaUnmapMemory(_brain.vmaAllocator, buffer->allocation);
+            vmaUnmapMemory(_context->MemoryAllocator(), buffer->allocation);
         }
 
-        vmaDestroyBuffer(_brain.vmaAllocator, buffer->buffer, buffer->allocation);
+        vmaDestroyBuffer(_context->MemoryAllocator(), buffer->buffer, buffer->allocation);
 
         ResourceManager::Destroy(handle);
     }

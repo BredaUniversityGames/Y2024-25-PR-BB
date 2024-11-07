@@ -71,8 +71,8 @@ FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRende
 {
 }
 
-FrameGraph::FrameGraph(const VulkanContext& brain, const SwapChain& swapChain)
-    : _brain(brain)
+FrameGraph::FrameGraph(const std::shared_ptr<VulkanContext>& context, const SwapChain& swapChain)
+    : _context(context)
     , _swapChain(swapChain)
 {
 }
@@ -95,7 +95,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
     {
         const FrameGraphNode& node = _nodes[nodeHandle];
 
-        util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _brain.dldi);
+        util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _context->Dldi());
 
         // Place memory barriers
         commandBuffer.pipelineBarrier2(node.dependencyInfo);
@@ -108,7 +108,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         node.renderPass.RecordCommands(commandBuffer, currentFrame, scene);
 
-        util::EndLabel(commandBuffer, _brain.dldi);
+        util::EndLabel(commandBuffer, _context->Dldi());
     }
 }
 
@@ -196,7 +196,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 
         if (HasAnyFlags(resource.type, FrameGraphResourceType::eAttachment))
         {
-            const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -211,7 +211,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
         // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
-            const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -252,7 +252,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eTexture)
             {
-                const Image* texture = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+                const Image* texture = _context->GetImageResourceManager().Access(resource.info.image.handle);
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -270,7 +270,7 @@ void FrameGraph::CreateMemoryBarriers()
             }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
-                const Buffer* buffer = _brain.GetBufferResourceManager().Access(resource.info.buffer.handle);
+                const Buffer* buffer = _context->GetBufferResourceManager().Access(resource.info.buffer.handle);
                 vk::BufferMemoryBarrier2& barrier = node.bufferMemoryBarriers.emplace_back();
 
                 // Get the buffer created before here and create barrier based on its stage usage
@@ -298,7 +298,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
-                const Image* attachment = _brain.GetImageResourceManager().Access(resource.info.image.handle);
+                const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -441,13 +441,13 @@ std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creati
 {
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
-        const Image* image = _brain.GetImageResourceManager().Access(creation.info.image.handle);
+        const Image* image = _context->GetImageResourceManager().Access(creation.info.image.handle);
         return image->name;
     }
 
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eBuffer))
     {
-        const Buffer* buffer = _brain.GetBufferResourceManager().Access(creation.info.buffer.handle);
+        const Buffer* buffer = _context->GetBufferResourceManager().Access(creation.info.buffer.handle);
         return buffer->name;
     }
 

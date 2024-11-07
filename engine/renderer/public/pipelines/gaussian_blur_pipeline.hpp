@@ -2,13 +2,17 @@
 
 #include "constants.hpp"
 #include "frame_graph.hpp"
-#include <resource_manager.hpp>
-#include <vulkan_context.hpp>
+#include "resource_manager.hpp"
+
+#include <cstddef>
+#include <memory>
+
+class VulkanContext;
 
 class GaussianBlurPipeline final : public FrameGraphRenderPass
 {
 public:
-    GaussianBlurPipeline(const VulkanContext& brain, ResourceHandle<Image> source, ResourceHandle<Image> target);
+    GaussianBlurPipeline(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Image> source, ResourceHandle<Image> target);
     ~GaussianBlurPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
@@ -17,7 +21,7 @@ public:
     NON_MOVABLE(GaussianBlurPipeline);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
 
     ResourceHandle<Image> _source;
     std::array<ResourceHandle<Image>, 2> _targets;

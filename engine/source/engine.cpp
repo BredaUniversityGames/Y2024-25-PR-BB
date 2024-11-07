@@ -64,7 +64,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer().GetBrain(), *_ecs, model);
+        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer().GetContext(), *_ecs, model);
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
@@ -211,7 +211,7 @@ void OldEngine::Tick(Engine& engine)
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     auto& rendererModule = engine.GetModule<RendererModule>();
-    rendererModule.GetRenderer().GetBrain().device.waitIdle();
+    rendererModule.GetRenderer().GetContext()->Device().waitIdle();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL3_Shutdown();

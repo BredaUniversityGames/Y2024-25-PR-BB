@@ -1,10 +1,9 @@
 #include "swap_chain.hpp"
-#include "old_engine.hpp"
 #include "vulkan/vulkan.h"
 #include "vulkan_helper.hpp"
 
-SwapChain::SwapChain(const VulkanContext& brain, const glm::uvec2& screenSize)
-    : _brain(brain)
+SwapChain::SwapChain(const std::shared_ptr<VulkanContext>& context, const glm::uvec2& screenSize)
+    : _context(context)
 {
     CreateSwapChain(screenSize);
 }
@@ -17,7 +16,7 @@ SwapChain::~SwapChain()
 void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 {
     _imageSize = screenSize;
-    SupportDetails swapChainSupport = QuerySupport(_brain.physicalDevice, _brain.surface);
+    SupportDetails swapChainSupport = QuerySupport(_context->PhysicalDevice(), _context->Surface());
 
     auto surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
     auto presentMode = ChoosePresentMode(swapChainSupport.presentModes);
@@ -28,7 +27,7 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
         imageCount = swapChainSupport.capabilities.maxImageCount;
 
     vk::SwapchainCreateInfoKHR createInfo {};
-    createInfo.surface = _brain.surface;
+    createInfo.surface = _context->Surface();
     createInfo.minImageCount = imageCount + 1;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -40,8 +39,8 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
     if (swapChainSupport.capabilities.supportedUsageFlags & vk::ImageUsageFlagBits::eTransferDst)
         createInfo.imageUsage |= vk::ImageUsageFlagBits::eTransferDst;
 
-    uint32_t queueFamilyIndices[] = { _brain.queueFamilyIndices.graphicsFamily.value(), _brain.queueFamilyIndices.presentFamily.value() };
-    if (_brain.queueFamilyIndices.graphicsFamily != _brain.queueFamilyIndices.presentFamily)
+    uint32_t queueFamilyIndices[] = { _context->QueueFamilies().graphicsFamily.value(), _context->QueueFamilies().presentFamily.value() };
+    if (_context->QueueFamilies().graphicsFamily != _context->QueueFamilies().presentFamily)
     {
         createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
         createInfo.queueFamilyIndexCount = 2;
@@ -60,11 +59,11 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
     createInfo.clipped = vk::True;
     createInfo.oldSwapchain = nullptr;
 
-    util::VK_ASSERT(_brain.device.createSwapchainKHR(&createInfo, nullptr, &_swapChain), "Failed creating swap chain!");
+    util::VK_ASSERT(_context->Device().createSwapchainKHR(&createInfo, nullptr, &_swapChain), "Failed creating swap chain!");
 
-    util::NameObject(_swapChain, "Main Swapchain", _brain);
+    util::NameObject(_swapChain, "Main Swapchain", _context);
 
-    _images = _brain.device.getSwapchainImagesKHR(_swapChain);
+    _images = _context->Device().getSwapchainImagesKHR(_swapChain);
     _format = surfaceFormat.format;
     _extent = extent;
 
@@ -73,7 +72,7 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 
 void SwapChain::Resize(const glm::uvec2& screenSize)
 {
-    _brain.device.waitIdle();
+    _context->Device().waitIdle();
 
     CleanUpSwapChain();
 
@@ -99,10 +98,10 @@ void SwapChain::CreateSwapChainImageViews()
                 1 // layer count
             }
         };
-        util::VK_ASSERT(_brain.device.createImageView(&createInfo, nullptr, &_imageViews[i]), "Failed creating image view for swap chain!");
+        util::VK_ASSERT(_context->Device().createImageView(&createInfo, nullptr, &_imageViews[i]), "Failed creating image view for swap chain!");
 
-        util::NameObject(_imageViews[i], "Swapchain Image View", _brain);
-        util::NameObject(_images[i], "Swapchain Image", _brain);
+        util::NameObject(_imageViews[i], "Swapchain Image View", _context);
+        util::NameObject(_images[i], "Swapchain Image", _context);
     }
 }
 
@@ -161,7 +160,7 @@ vk::Extent2D SwapChain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capab
 void SwapChain::CleanUpSwapChain()
 {
     for (auto imageView : _imageViews)
-        _brain.device.destroy(imageView);
+        _context->Device().destroy(imageView);
 
-    _brain.device.destroy(_swapChain);
+    _context->Device().destroy(_swapChain);
 }

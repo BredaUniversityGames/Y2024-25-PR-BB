@@ -2,8 +2,10 @@
 
 #include "mesh.hpp"
 #include "model.hpp"
+
 #include <lib/include_fastgltf.hpp>
-#include <string>
+#include <memory>
+#include <vector>
 
 class SingleTimeCommands;
 class BatchBuffer;
@@ -12,7 +14,7 @@ class ECS;
 class ModelLoader
 {
 public:
-    ModelLoader(const VulkanContext& brain, std::shared_ptr<const ECS> ecs);
+    ModelLoader(const std::shared_ptr<VulkanContext>& context, std::shared_ptr<const ECS> ecs);
     ~ModelLoader();
 
     enum class LoadMode : uint8_t
@@ -32,7 +34,7 @@ public:
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     std::shared_ptr<const ECS> _ecs;
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;

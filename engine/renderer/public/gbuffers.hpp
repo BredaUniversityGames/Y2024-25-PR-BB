@@ -3,10 +3,14 @@
 #include "common.hpp"
 #include "vulkan_helper.hpp"
 
+#include <array>
+#include <glm/vec2.hpp>
+#include <memory>
+
 class GBuffers
 {
 public:
-    GBuffers(const VulkanContext& brain, glm::uvec2 size);
+    GBuffers(const std::shared_ptr<VulkanContext>& context, glm::uvec2 size);
 
     ~GBuffers();
 
@@ -15,45 +19,18 @@ public:
 
     void Resize(glm::uvec2 size);
 
-    const auto& Attachments() const
-    {
-        return _attachments;
-    }
-
-    ResourceHandle<Image> Depth() const
-    {
-        return _depthImage;
-    }
-
-    vk::Format DepthFormat() const
-    {
-        return _depthFormat;
-    }
-
-    ResourceHandle<Image> Shadow() const
-    {
-        return _shadowImage;
-    }
-
-    glm::uvec2 Size() const
-    {
-        return _size;
-    }
-
-    const vk::Rect2D& Scissor() const
-    {
-        return _scissor;
-    }
-
-    const vk::Viewport& Viewport() const
-    {
-        return _viewport;
-    }
+    const auto& Attachments() const { return _attachments; }
+    ResourceHandle<Image> Depth() const { return _depthImage; }
+    vk::Format DepthFormat() const { return _depthFormat; }
+    ResourceHandle<Image> Shadow() const { return _shadowImage; }
+    glm::uvec2 Size() const { return _size; }
+    const vk::Rect2D& Scissor() const { return _scissor; }
+    const vk::Viewport& Viewport() const { return _viewport; }
 
     void TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 private:
-    const VulkanContext& _brain;
+    std::shared_ptr<VulkanContext> _context;
     glm::uvec2 _size;
 
     std::array<ResourceHandle<Image>, DEFERRED_ATTACHMENT_COUNT> _attachments;
@@ -70,12 +47,8 @@ private:
     vk::Rect2D _scissor;
 
     void CreateGBuffers();
-
     void CreateDepthResources();
-
     void CreateShadowMapResources();
-
     void CreateViewportAndScissor();
-
     void CleanUp();
 };

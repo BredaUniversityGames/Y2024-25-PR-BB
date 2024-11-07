@@ -1,15 +1,17 @@
 #include "camera.hpp"
+
 #include "pipeline_builder.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
+
 #include <glm/gtc/quaternion.hpp>
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;
 
-CameraResource::CameraResource(const VulkanContext& brain)
-    : _brain(brain)
+CameraResource::CameraResource(const std::shared_ptr<VulkanContext>& context)
+    : _context(context)
 {
-    CreateDescriptorSetLayout(brain);
+    CreateDescriptorSetLayout(context);
     CreateBuffers();
     CreateDescriptorSets();
 }
@@ -18,17 +20,17 @@ CameraResource::~CameraResource()
 {
     if (_descriptorSetLayout)
     {
-        _brain.device.destroy(_descriptorSetLayout);
+        _context->Device().destroy(_descriptorSetLayout);
         _descriptorSetLayout = nullptr;
     }
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _brain.GetBufferResourceManager().Destroy(_buffers[i]);
+        _context->GetBufferResourceManager().Destroy(_buffers[i]);
     }
 }
 
-void CameraResource::CreateDescriptorSetLayout(const VulkanContext& brain)
+void CameraResource::CreateDescriptorSetLayout(std::shared_ptr<VulkanContext> context)
 {
     if (_descriptorSetLayout)
     {
@@ -45,7 +47,7 @@ void CameraResource::CreateDescriptorSetLayout(const VulkanContext& brain)
     std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
     std::vector<std::string_view> names { "CameraUBO" };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(brain, bindings, names);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(context, bindings, names);
 }
 
 void CameraResource::CreateBuffers()
@@ -66,26 +68,26 @@ void CameraResource::CreateBuffers()
             .SetIsMappable(true)
             .SetName(name);
 
-        _buffers[i] = _brain.GetBufferResourceManager().Create(creation);
+        _buffers[i] = _context->GetBufferResourceManager().Create(creation);
     }
 }
 
 void CameraResource::CreateDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+    std::for_each(layouts.begin(), layouts.end(), [](auto& l)
         { l = _descriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _brain.descriptorPool;
+    allocateInfo.descriptorPool = _context->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    util::VK_ASSERT(_brain.device.allocateDescriptorSets(&allocateInfo, _descriptorSets.data()),
+    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, _descriptorSets.data()),
         "Failed allocating descriptor sets!");
 
     for (size_t i = 0; i < _descriptorSets.size(); ++i)
     {
-        const Buffer* buffer = _brain.GetBufferResourceManager().Access(_buffers[i]);
+        const Buffer* buffer = _context->GetBufferResourceManager().Access(_buffers[i]);
 
         vk::DescriptorBufferInfo bufferInfo {
             .buffer = buffer->buffer,
@@ -101,7 +103,7 @@ void CameraResource::CreateDescriptorSets()
             .descriptorType = vk::DescriptorType::eUniformBuffer,
             .pBufferInfo = &bufferInfo,
         };
-        _brain.device.updateDescriptorSets({ bufferWrite }, {});
+        _context->Device().updateDescriptorSets({ bufferWrite }, {});
     }
 }
 
@@ -169,7 +171,7 @@ void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
     cameraBuffer.distanceCullingEnabled = true;
     cameraBuffer.cullingEnabled = true;
 
-    const Buffer* buffer = _brain.GetBufferResourceManager().Access(_buffers[currentFrame]);
+    const Buffer* buffer = _context->GetBufferResourceManager().Access(_buffers[currentFrame]);
     std::memcpy(buffer->mappedPtr, &cameraBuffer, sizeof(cameraBuffer));
 }
 
