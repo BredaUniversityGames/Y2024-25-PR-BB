@@ -1,25 +1,22 @@
 #pragma once
+
 #include "common.hpp"
 #include "imgui_entt_entity_editor.hpp"
-
-class Renderer;
-
 #include "vulkan/vulkan.hpp"
 
 #include <entt/entity/entity.hpp>
 
 class ECS;
-class PhysicsModule;
-class VulkanBrain;
 class PerformanceTracker;
 class BloomSettings;
+class Renderer;
+
 struct SceneDescription;
-class GBuffers;
-class ECS;
+
 class Editor
 {
 public:
-    Editor(ECS& ecs,Renderer& renderer);
+    Editor(ECS& ecs, Renderer& renderer);
 
     ~Editor();
 
@@ -29,13 +26,11 @@ public:
     void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
 
 private:
-
     void DrawMainMenuBar();
 
     ECS& _ecs;
     Renderer& _renderer;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
-
 
     entt::entity _selectedEntity = entt::null;
 

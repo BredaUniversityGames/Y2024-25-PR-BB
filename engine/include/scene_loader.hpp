@@ -10,8 +10,8 @@ class ECS;
 class SceneLoader
 {
 public:
-    static void LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const Model& model, std::vector<entt::entity>& entities);
+    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const Model& model);
 
 private:
-    static entt::entity LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs, const Hierarchy::Node& node);
+    entt::entity LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs, const Hierarchy::Node& node);
 };

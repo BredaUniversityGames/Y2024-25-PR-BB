@@ -3,7 +3,6 @@
 #include "gpu_resources.hpp"
 #include "vulkan_helper.hpp"
 #include "glm/gtc/random.hpp"
-#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/range.hpp"
 
 FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType)

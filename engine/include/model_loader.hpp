@@ -7,11 +7,12 @@
 
 class SingleTimeCommands;
 class BatchBuffer;
+class ECS;
 
 class ModelLoader
 {
 public:
-    ModelLoader(const VulkanBrain& brain, const std::shared_ptr<ECS> ecs);
+    ModelLoader(const VulkanBrain& brain, std::shared_ptr<const ECS> ecs);
     ~ModelLoader();
 
     enum class LoadMode : uint8_t
@@ -32,7 +33,7 @@ public:
 
 private:
     const VulkanBrain& _brain;
-    const std::shared_ptr<ECS> _ecs;
+    std::shared_ptr<const ECS> _ecs;
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;
     ResourceHandle<Material> _defaultMaterial;

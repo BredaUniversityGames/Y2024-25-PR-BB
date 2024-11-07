@@ -20,7 +20,7 @@
 #include "old_engine.hpp"
 #include "single_time_commands.hpp"
 #include "batch_buffer.hpp"
-#include "ECS.hpp"
+#include "ecs.hpp"
 #include "gpu_scene.hpp"
 #include "log.hpp"
 #include "profile_macros.hpp"

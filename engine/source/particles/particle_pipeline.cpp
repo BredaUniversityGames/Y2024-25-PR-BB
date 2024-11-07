@@ -4,7 +4,7 @@
 #include "swap_chain.hpp"
 #include "particles/particle_util.hpp"
 #include "particles/emitter_component.hpp"
-#include "ECS.hpp"
+#include "ecs.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
@@ -129,7 +129,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
 void ParticlePipeline::UpdateEmitters(ECS& ecs)
 {
-    auto view = ecs._registry.view<EmitterComponent>();
+    auto view = ecs.registry.view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);

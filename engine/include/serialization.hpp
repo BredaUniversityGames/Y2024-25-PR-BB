@@ -15,22 +15,18 @@ namespace Serialization
  * @param path File to write to.
  * @param object Object to serialize.
  */
-template <typename Object>
-void SerialiseToJSON(const std::filesystem::path& path, const Object& object)
+template <typename T>
+void SerialiseToJSON(const std::filesystem::path& path, const T& object)
 {
-    std::ofstream os;
-	os.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-	try
-	{
-		os.open(path);
-	}
-	catch (std::ofstream::failure& e)
-	{
-		bblog::error("failure to write to file in Serialization::SerialiseToJson with filepath {}",path.string());
-		throw e;
-	}
-	
-    cereal::JSONOutputArchive ar(os);
-    ar(cereal::make_nvp(typeid(Object).name(), object));
+    std::ofstream stream { path };
+    if (stream)
+    {
+        cereal::JSONOutputArchive archive { stream };
+        archive(cereal::make_nvp(typeid(T).name(), object));
+    }
+    else
+    {
+        bblog::error("Failed to write to file in Serialization::SerialiseToJson with filepath {}", path.string());
+    }
 }
 }

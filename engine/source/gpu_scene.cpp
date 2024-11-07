@@ -3,6 +3,9 @@
 #include "vulkan_helper.hpp"
 #include "pipeline_builder.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "ecs.hpp"
+#include "components/world_matrix_component.hpp"
+#include "components/transform_helpers.hpp"
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
@@ -77,7 +80,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _drawCommands.clear();
 
-    auto meshView = _ecs->_registry.view<StaticMeshComponent, WorldMatrixComponent>();
+    auto meshView = _ecs->registry.view<StaticMeshComponent, WorldMatrixComponent>();
 
     meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
         {

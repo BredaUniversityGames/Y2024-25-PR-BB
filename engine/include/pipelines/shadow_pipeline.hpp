@@ -6,7 +6,7 @@
 #include "frame_graph.hpp"
 
 class BatchBuffer;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 
 class ShadowPipeline final : public FrameGraphRenderPass
 {

@@ -6,7 +6,7 @@
 #include "batch_buffer.hpp"
 #include "timers.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "ECS.hpp"
+#include "ecs.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -40,7 +40,7 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 
 }
 
-ModelLoader::ModelLoader(const VulkanBrain& brain, const std::shared_ptr<ECS> ecs)
+ModelLoader::ModelLoader(const VulkanBrain& brain, std::shared_ptr<const ECS> ecs)
     : _brain(brain)
     , _ecs(ecs)
 {

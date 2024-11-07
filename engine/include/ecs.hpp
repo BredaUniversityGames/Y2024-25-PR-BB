@@ -5,6 +5,7 @@
 #include "entt/entity/registry.hpp"
 #include "systems/system.hpp"
 #include "log.hpp"
+#include <assert.h>
 
 class System;
 
@@ -24,16 +25,13 @@ public:
     T& GetSystem();
 
     void UpdateSystems(float dt);
-
     void RenderSystems() const;
-
     void RemovedDestroyed();
-
     void DestroyEntity(entt::entity entity);
 
-    entt::registry _registry {};
+    entt::registry registry {};
 
-    std::vector<std::unique_ptr<System>> _systems {};
+    std::vector<std::unique_ptr<System>> systems {};
 
     class ToDestroy
     {
@@ -46,7 +44,7 @@ void ECS::AddSystem(Args&&... args)
     static_assert(std::is_base_of<System, T>::value, "Tried to add incorrect class as system");
     T* system = new T(std::forward<Args>(args)...);
 
-    _systems.emplace_back(std::unique_ptr<System>(system));
+    systems.emplace_back(std::unique_ptr<System>(system));
 
     spdlog::info("{}, created", typeid(*system).name());
 }
@@ -55,20 +53,22 @@ CEREAL_CLASS_VERSION(ECS, 0);
 template <class Archive>
 void save(Archive& archive, ECS const& ecs, MAYBE_UNUSED uint32_t version)
 {
-    auto entityView = ecs._registry.view<entt::entity>();
+    auto entityView = ecs.registry.view<entt::entity>();
     for (auto entity : entityView)
     {
-        archive(EntitySerializer(ecs._registry, entity));
+        archive(EntitySerializer(ecs.registry, entity));
     }
 }
 template <typename T>
 T& ECS::GetSystem()
 {
-    for (auto& s : _systems)
+    for (auto& s : systems)
     {
         T* found = dynamic_cast<T*>(s.get());
         if (found)
+        {
             return *found;
+        }
     }
     assert(false && "Could not find system");
     return *static_cast<T*>(nullptr); // This line will always fail

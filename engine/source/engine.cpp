@@ -3,7 +3,7 @@
 #include "input_manager.hpp"
 #include "old_engine.hpp"
 
-#include "ECS.hpp"
+#include "ecs.hpp"
 #include <stb/stb_image.h>
 #include "vulkan_helper.hpp"
 #include "imgui_impl_vulkan.h"
@@ -47,8 +47,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
-    RelationshipHelpers::SubscribeToEvents(_ecs->_registry);
+    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
+    RelationshipHelpers::SubscribeToEvents(_ecs->registry);
 
     _scene = std::make_shared<SceneDescription>();
     _renderer->_scene = _scene;
@@ -63,10 +63,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        sceneLoader.LoadModelIntoECSAsHierarchy(_renderer->GetBrain(), *_ecs, model, entities);
+        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(_renderer->GetBrain(), *_ecs, model);
+        entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
-    TransformHelpers::SetLocalScale(_ecs->_registry, entities[1], glm::vec3 { 10.0f });
+    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
     _renderer->UpdateBindless();
 
@@ -212,8 +213,8 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
     _editor.reset();
     _renderer.reset();
 
-    TransformHelpers::UnsubscribeToEvents(_ecs->_registry);
-    RelationshipHelpers::UnsubscribeToEvents(_ecs->_registry);
+    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
+    RelationshipHelpers::UnsubscribeToEvents(_ecs->registry);
     _ecs.reset();
 }
 

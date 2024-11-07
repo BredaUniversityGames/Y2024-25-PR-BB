@@ -3,7 +3,6 @@
 
 #include "imgui_impl_vulkan.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
-#include "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp"
 #include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
 #include "mesh.hpp"
@@ -12,17 +11,12 @@
 #include "log.hpp"
 
 #include <fstream>
-#include "ECS.hpp"
-
-#include <glm/gtx/matrix_decompose.hpp>
-#undef GLM_ENABLE_EXPERIMENTAL
+#include "ecs.hpp"
 
 #include "gbuffers.hpp"
 #include "renderer.hpp"
 #include "serialization.hpp"
-#include "ECS.hpp"
 #include "model_loader.hpp"
-#include "timers.hpp"
 
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -80,8 +74,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
-        RelationshipComponent* relationship = _ecs._registry.try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs._registry, entity));
+        RelationshipComponent* relationship = _ecs.registry.try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(_ecs.registry, entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
@@ -103,10 +97,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
                 entt::entity current = relationship->first;
                 for (size_t i {}; i < relationship->childrenCount; ++i)
                 {
-                    if (_ecs._registry.valid(current))
+                    if (_ecs.registry.valid(current))
                     {
                         self(self, current);
-                        current = _ecs._registry.get<RelationshipComponent>(current).next;
+                        current = _ecs.registry.get<RelationshipComponent>(current).next;
                     }
                 }
 
@@ -132,16 +126,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         if (ImGui::Button("+ Add entity"))
         {
-            entt::entity entity = _ecs._registry.create();
+            entt::entity entity = _ecs.registry.create();
 
-            _ecs._registry.emplace<TransformComponent>(entity);
+            _ecs.registry.emplace<TransformComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
-            for (const auto [entity] : _ecs._registry.storage<entt::entity>().each())
+            for (const auto [entity] : _ecs.registry.storage<entt::entity>().each())
             {
-                RelationshipComponent* relationship = _ecs._registry.try_get<RelationshipComponent>(entity);
+                RelationshipComponent* relationship = _ecs.registry.try_get<RelationshipComponent>(entity);
 
                 if (relationship == nullptr || relationship->parent == entt::null)
                 {
@@ -163,7 +157,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs._systems)
+    for (const auto& system : _ecs.systems)
     {
         system->Inspect();
     }
@@ -248,12 +242,12 @@ void Editor::DisplaySelectedEntityDetails()
         return;
     }
 
-    if (!_ecs._registry.valid(_selectedEntity))
+    if (!_ecs.registry.valid(_selectedEntity))
     {
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = std::string(NameComponent::GetDisplayName(_ecs._registry, _selectedEntity));
+    const std::string name = std::string(NameComponent::GetDisplayName(_ecs.registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
@@ -264,8 +258,8 @@ void Editor::DisplaySelectedEntityDetails()
     }
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
-    TransformComponent* transform = _ecs._registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = _ecs._registry.try_get<NameComponent>(_selectedEntity);
+    TransformComponent* transform = _ecs.registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = _ecs.registry.try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -277,7 +271,7 @@ void Editor::DisplaySelectedEntityDetails()
 
         if (changed)
         {
-            TransformHelpers::UpdateWorldMatrix(_ecs._registry, _selectedEntity);
+            TransformHelpers::UpdateWorldMatrix(_ecs.registry, _selectedEntity);
         }
     }
 

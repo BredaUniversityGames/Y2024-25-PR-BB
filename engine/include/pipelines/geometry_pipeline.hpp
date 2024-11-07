@@ -8,7 +8,7 @@
 
 class BatchBuffer;
 class GPUScene;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 
 class GeometryPipeline final : public FrameGraphRenderPass
 {
