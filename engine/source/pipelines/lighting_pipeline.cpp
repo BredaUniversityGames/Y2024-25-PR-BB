@@ -1,8 +1,8 @@
 #include "pipelines/lighting_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
-#include "gpu_scene.hpp"
 #include "bloom_settings.hpp"
+#include "gpu_scene.hpp"
 #include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
 
 LightingPipeline::LightingPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _brain(brain)

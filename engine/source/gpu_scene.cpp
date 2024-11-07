@@ -1,11 +1,11 @@
 #include "gpu_scene.hpp"
 #include "batch_buffer.hpp"
-#include "vulkan_helper.hpp"
-#include "pipeline_builder.hpp"
-#include <glm/gtc/matrix_transform.hpp>
-#include "ecs.hpp"
-#include "components/world_matrix_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
+#include "ecs.hpp"
+#include "pipeline_builder.hpp"
+#include "vulkan_helper.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)

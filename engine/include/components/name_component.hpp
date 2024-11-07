@@ -1,9 +1,9 @@
 #pragma once
 
+#include "imgui_entt_entity_editor.hpp"
+#include <entt/entity/registry.hpp>
 #include <string>
 #include <string_view>
-#include <entt/entity/registry.hpp>
-#include "imgui_entt_entity_editor.hpp"
 
 class NameComponent
 {

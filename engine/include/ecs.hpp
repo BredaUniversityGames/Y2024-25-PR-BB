@@ -3,8 +3,8 @@
 #include "common.hpp"
 #include "entity_serializer.hpp"
 #include "entt/entity/registry.hpp"
-#include "systems/system.hpp"
 #include "log.hpp"
+#include "systems/system.hpp"
 #include <assert.h>
 
 class System;

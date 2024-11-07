@@ -1,8 +1,8 @@
 ﻿#include "systems/physics_system.hpp"
-#include "ecs.hpp"
-#include "modules/physics_module.hpp"
 #include "components/rigidbody_component.hpp"
+#include "ecs.hpp"
 #include "imgui/imgui.h"
+#include "modules/physics_module.hpp"
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)

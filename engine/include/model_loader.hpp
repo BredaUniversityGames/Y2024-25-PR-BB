@@ -1,9 +1,9 @@
 #pragma once
 
-#include <lib/include_fastgltf.hpp>
-#include <string>
 #include "mesh.hpp"
 #include "model.hpp"
+#include <lib/include_fastgltf.hpp>
+#include <string>
 
 class SingleTimeCommands;
 class BatchBuffer;

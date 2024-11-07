@@ -1,11 +1,11 @@
 #pragma once
 
+#include "application_module.hpp"
 #include "common.hpp"
-#include "application_module.hpp"
 
-#include "lib/includes_vulkan.hpp"
-#include "gpu_resources.hpp"
 #include "application_module.hpp"
+#include "gpu_resources.hpp"
+#include "lib/includes_vulkan.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"

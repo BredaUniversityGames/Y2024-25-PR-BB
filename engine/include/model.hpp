@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <glm/mat4x4.hpp>
 #include "mesh.hpp"
+#include <glm/mat4x4.hpp>
+#include <vector>
 
 struct ModelResources
 {

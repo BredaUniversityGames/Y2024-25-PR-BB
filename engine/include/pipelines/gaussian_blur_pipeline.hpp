@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vulkan_brain.hpp>
-#include <resource_manager.hpp>
 #include "constants.hpp"
 #include "frame_graph.hpp"
+#include <resource_manager.hpp>
+#include <vulkan_brain.hpp>
 
 class GaussianBlurPipeline final : public FrameGraphRenderPass
 {

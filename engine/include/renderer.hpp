@@ -1,12 +1,12 @@
 #pragma once
 
-#include "swap_chain.hpp"
 #include "application_module.hpp"
+#include "bloom_settings.hpp"
+#include "camera.hpp"
+#include "entt/entity/entity.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
-#include "camera.hpp"
-#include "bloom_settings.hpp"
-#include "entt/entity/entity.hpp"
+#include "swap_chain.hpp"
 
 class DebugPipeline;
 class Application;

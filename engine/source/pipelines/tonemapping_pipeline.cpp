@@ -1,9 +1,9 @@
 #include "pipelines/tonemapping_pipeline.hpp"
-#include "vulkan_helper.hpp"
-#include "shaders/shader_loader.hpp"
 #include "bloom_settings.hpp"
-#include "pipeline_builder.hpp"
 #include "gpu_scene.hpp"
+#include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
+#include "vulkan_helper.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const VulkanBrain& brain, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _brain(brain)

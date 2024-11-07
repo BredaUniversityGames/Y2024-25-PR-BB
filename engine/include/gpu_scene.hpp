@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vulkan_brain.hpp"
 #include "constants.hpp"
+#include "vulkan_brain.hpp"
 
 struct SceneDescription;
 class GPUScene;

@@ -1,7 +1,7 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
-#include "vulkan_helper.hpp"
-#include "shaders/shader_loader.hpp"
 #include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
+#include "vulkan_helper.hpp"
 
 GaussianBlurPipeline::GaussianBlurPipeline(const VulkanBrain& brain, ResourceHandle<Image> source, ResourceHandle<Image> target)
     : _brain(brain)

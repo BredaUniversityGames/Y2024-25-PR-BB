@@ -1,10 +1,10 @@
 #include "pipelines/skydome_pipeline.hpp"
-#include "shaders/shader_loader.hpp"
-#include "vulkan_helper.hpp"
-#include "bloom_settings.hpp"
 #include "batch_buffer.hpp"
+#include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
 #include "pipeline_builder.hpp"
+#include "shaders/shader_loader.hpp"
+#include "vulkan_helper.hpp"
 
 SkydomePipeline::SkydomePipeline(const VulkanBrain& brain, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)

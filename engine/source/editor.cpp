@@ -1,22 +1,22 @@
-#include <imgui_impl_sdl3.h>
 #include "editor.hpp"
+#include <imgui_impl_sdl3.h>
 
-#include "imgui_impl_vulkan.h"
-#include "imgui/misc/cpp/imgui_stdlib.h"
-#include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
+#include "imgui/misc/cpp/imgui_stdlib.h"
+#include "imgui_impl_vulkan.h"
+#include "log.hpp"
 #include "mesh.hpp"
 #include "modules/physics_module.hpp"
+#include "performance_tracker.hpp"
 #include "profile_macros.hpp"
-#include "log.hpp"
 
-#include <fstream>
 #include "ecs.hpp"
+#include <fstream>
 
 #include "gbuffers.hpp"
+#include "model_loader.hpp"
 #include "renderer.hpp"
 #include "serialization.hpp"
-#include "model_loader.hpp"
 
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"

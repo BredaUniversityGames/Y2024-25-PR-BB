@@ -1,7 +1,7 @@
 #include "camera.hpp"
-#include "vulkan_helper.hpp"
 #include "pipeline_builder.hpp"
 #include "vulkan_brain.hpp"
+#include "vulkan_helper.hpp"
 #include <glm/gtc/quaternion.hpp>
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;

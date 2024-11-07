@@ -1,11 +1,11 @@
 #include "vulkan_brain.hpp"
-#include "vulkan_helper.hpp"
-#include "swap_chain.hpp"
-#include "vulkan_validation.hpp"
 #include "log.hpp"
-#include <set>
-#include <map>
 #include "pipeline_builder.hpp"
+#include "swap_chain.hpp"
+#include "vulkan_helper.hpp"
+#include "vulkan_validation.hpp"
+#include <map>
+#include <set>
 
 VulkanBrain::VulkanBrain(const ApplicationModule::VulkanInitInfo& initInfo)
     : _bufferResourceManager(*this)

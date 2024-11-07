@@ -1,8 +1,8 @@
 #pragma once
 
+#include "camera.hpp"
 #include <array>
 #include <memory>
-#include "camera.hpp"
 
 struct LineVertex
 {

@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "cereal/cereal.hpp"
 #include "cereal/archives/json.hpp"
+#include "cereal/cereal.hpp"
 #include "log.hpp"
 
 namespace Serialization

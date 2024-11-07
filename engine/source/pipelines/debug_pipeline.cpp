@@ -1,12 +1,12 @@
 ﻿#include "pipelines/debug_pipeline.hpp"
 
-#include "shaders/shader_loader.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 
-#include <imgui_impl_vulkan.h>
 #include "pipeline_builder.hpp"
+#include <imgui_impl_vulkan.h>
 
 DebugPipeline::DebugPipeline(const VulkanBrain& brain, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)

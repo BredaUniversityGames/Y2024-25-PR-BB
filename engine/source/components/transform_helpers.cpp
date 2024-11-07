@@ -1,10 +1,10 @@
 #include "components/transform_helpers.hpp"
 
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-#include "components/transform_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
 #include <entt/entity/registry.hpp>
 

@@ -2,15 +2,15 @@
 
 #include <entt/entity/entity.hpp>
 
-#include "ecs.hpp"
-#include "mesh.hpp"
-#include "timers.hpp"
-#include "vulkan_brain.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "ecs.hpp"
+#include "mesh.hpp"
+#include "timers.hpp"
+#include "vulkan_brain.hpp"
 
 std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const Model& model)
 {

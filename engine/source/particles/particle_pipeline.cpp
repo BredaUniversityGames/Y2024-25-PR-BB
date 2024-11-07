@@ -1,13 +1,13 @@
 #include "particles/particle_pipeline.hpp"
 
 #include "camera.hpp"
-#include "swap_chain.hpp"
-#include "particles/particle_util.hpp"
-#include "particles/emitter_component.hpp"
 #include "ecs.hpp"
-#include "vulkan_helper.hpp"
+#include "particles/emitter_component.hpp"
+#include "particles/particle_util.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
+#include "swap_chain.hpp"
+#include "vulkan_helper.hpp"
 
 ParticlePipeline::ParticlePipeline(const VulkanBrain& brain, const CameraResource& camera, const SwapChain& swapChain)
     : _brain(brain)

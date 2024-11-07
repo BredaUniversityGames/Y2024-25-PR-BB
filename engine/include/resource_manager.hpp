@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optional>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 template <typename T>

@@ -1,26 +1,26 @@
 #pragma once
 
-#include <iostream>
-#include <cstdint>
-#include <vector>
 #include <algorithm>
+#include <cereal/cereal.hpp>
+#include <chrono>
+#include <cstdint>
 #include <cstring>
-#include <set>
-#include <thread>
+#include <filesystem>
+#include <functional>
+#include <iostream>
 #include <memory>
 #include <optional>
-#include <functional>
-#include <chrono>
-#include <cereal/cereal.hpp>
-#include <filesystem>
+#include <set>
+#include <thread>
+#include <vector>
 
 #include <vulkan/vulkan.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <stb_image.h>
 #include <spirv_reflect.h>
+#include <stb_image.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
@@ -30,7 +30,7 @@
 #pragma GCC diagnostic pop
 
 #include "common.hpp"
-#include "vulkan_brain.hpp"
 #include "imgui.h"
-#include <implot.h>
 #include "tracy/Tracy.hpp"
+#include "vulkan_brain.hpp"
+#include <implot.h>

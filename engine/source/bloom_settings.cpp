@@ -1,7 +1,7 @@
 #include "bloom_settings.hpp"
-#include "vulkan_helper.hpp"
-#include "pipeline_builder.hpp"
 #include "imgui/imgui.h"
+#include "pipeline_builder.hpp"
+#include "vulkan_helper.hpp"
 
 BloomSettings::BloomSettings(const VulkanBrain& brain)
     : _brain(brain)

@@ -1,8 +1,8 @@
 #pragma once
 #include "module_interface.hpp"
-#include <memory>
 #include <functional>
 #include <glm/vec2.hpp>
+#include <memory>
 
 #include <vulkan/vulkan.hpp>
 

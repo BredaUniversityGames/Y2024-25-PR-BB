@@ -1,7 +1,7 @@
 #include "application_module.hpp"
-#include "log.hpp"
-#include "input_manager.hpp"
 #include "engine.hpp"
+#include "input_manager.hpp"
+#include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
 // This definition fixes the issues and does not change the final build output

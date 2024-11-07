@@ -2,12 +2,12 @@
 
 #include "common.hpp"
 #include <array>
-#include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
+#include "constants.hpp"
 #include <gpu_resources.hpp>
 #include <vulkan/vulkan.hpp>
-#include "constants.hpp"
 
 class VulkanBrain;
 

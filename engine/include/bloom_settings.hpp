@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
-#include "vulkan_brain.hpp"
 #include "constants.hpp"
+#include "vulkan_brain.hpp"
+#include <array>
 
 class BloomSettings
 {

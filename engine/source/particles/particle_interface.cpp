@@ -1,8 +1,8 @@
-#include "particles/particle_util.hpp"
 #include "particles/particle_interface.hpp"
+#include "particles/particle_util.hpp"
 
-#include "ecs.hpp"
 #include "components/name_component.hpp"
+#include "ecs.hpp"
 #include "particles/emitter_component.hpp"
 
 ParticleInterface::ParticleInterface(ECS& ecs)
