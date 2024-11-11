@@ -80,10 +80,8 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     uint32_t indirectCountOffset = scene.gpuScene->IndirectCountOffset();
     commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene->DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _context->Dldi());
-    // TODO: Fix this.
-    // _context->drawStats.drawCalls++;
-    // _context->drawStats.indirectDrawCommands += scene.gpuScene->DrawCount();
-    // _context->drawStats.indexCount += scene.gpuScene->DrawCommandIndexCount();
+
+    _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
 
     commandBuffer.endRenderingKHR(_context->Dldi());
 }

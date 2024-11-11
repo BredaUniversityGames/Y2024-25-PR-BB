@@ -7,6 +7,7 @@
 
 #include "application_module.hpp"
 #include "common.hpp"
+#include "draw_stats.hpp"
 #include "gpu_resources.hpp"
 #include "lib/includes_vulkan.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
@@ -45,7 +46,7 @@ enum class BindlessBinding : std::uint8_t
     eNone,
 };
 
-class VulkanContext : public std::enable_shared_from_this<VulkanContext> // TODO: Remove `shared_from_this` since technically not required.
+class VulkanContext : public std::enable_shared_from_this<VulkanContext> // TODO: Remove `shared_from_this` since technically not required. (After resource management is removed)
 {
 public:
     explicit VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo);
@@ -67,6 +68,8 @@ public:
     const QueueFamilyIndices& QueueFamilies() const { return _queueFamilyIndices; }
     vk::DescriptorSetLayout BindlessLayout() const { return _bindlessLayout; }
     vk::DescriptorSet BindlessSet() const { return _bindlessSet; }
+
+    DrawStats& GetDrawStats() { return _drawStats; }
 
     BufferResourceManager& GetBufferResourceManager() { return *_bufferResourceManager; }
     ImageResourceManager& GetImageResourceManager() { return *_imageResourceManager; }
@@ -107,13 +110,7 @@ private:
     vk::DescriptorBufferInfo _bindlessMaterialInfo;
     vk::WriteDescriptorSet _bindlessMaterialWrite;
 
-    struct DrawStats
-    {
-        uint32_t indexCount;
-        uint32_t drawCalls;
-        uint32_t indirectDrawCommands;
-        uint32_t debugLines;
-    } _drawStats;
+    DrawStats _drawStats;
 
     const std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"

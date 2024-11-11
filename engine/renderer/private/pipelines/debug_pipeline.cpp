@@ -78,9 +78,10 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     const std::array<vk::DeviceSize, 1> offsets = { 0 };
     commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets.data());
 
-    commandBuffer.draw(static_cast<uint32_t>(_linesData.size()), 1, 0, 0);
-    //_context->drawStats.drawCalls++;
-    //_context->drawStats.debugLines = static_cast<uint32_t>(_linesData.size() / 2);
+    uint32_t vertexCount = static_cast<uint32_t>(_linesData.size());
+    commandBuffer.draw(vertexCount, 1, 0, 0);
+
+    _context->GetDrawStats().Draw(vertexCount);
 
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 

@@ -201,15 +201,14 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     ImGui::End();
 
-    // TODO: Fix this.
-    // ImGui::Begin("Renderer Stats");
+    ImGui::Begin("Renderer Stats");
 
-    // ImGui::LabelText("Draw calls", "%i", _renderer.GetContext()->drawStats.drawCalls);
-    // ImGui::LabelText("Triangles", "%i", _renderer.GetContext()->drawStats.indexCount / 3);
-    // ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetContext()->drawStats.indirectDrawCommands);
-    // ImGui::LabelText("Debug lines", "%i", _renderer.GetContext()->drawStats.debugLines);
+    ImGui::LabelText("Draw calls", "%i", _renderer.GetContext()->GetDrawStats().DrawCalls());
+    ImGui::LabelText("Triangles", "%i", _renderer.GetContext()->GetDrawStats().IndexCount() / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetContext()->GetDrawStats().IndirectDrawCommands());
 
-    // ImGui::End();
+    ImGui::End();
+
     {
         ZoneNamedN(zone, "ImGui Render", true);
         ImGui::Render();

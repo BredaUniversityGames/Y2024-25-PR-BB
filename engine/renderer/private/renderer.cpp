@@ -240,8 +240,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .targetSwapChainImageIndex = swapChainImageIndex
     };
 
-    // TODO: Expose improved API for draw stats
-    //_context.drawStats = {};
+    _context->GetDrawStats().Clear();
 
     vk::CommandBufferBeginInfo commandBufferBeginInfo {};
     util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");

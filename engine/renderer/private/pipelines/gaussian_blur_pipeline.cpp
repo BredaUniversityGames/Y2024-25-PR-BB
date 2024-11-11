@@ -91,9 +91,8 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
 
         // Fullscreen triangle
         commandBuffer.draw(3, 1, 0, 0);
-        // TODO: Fix this
-        //_context->drawStats.indexCount += 3;
-        //_context->drawStats.drawCalls++;
+
+        _context->GetDrawStats().Draw(3);
 
         commandBuffer.endRenderingKHR(_context->Dldi());
     }

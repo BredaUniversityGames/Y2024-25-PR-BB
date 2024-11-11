@@ -91,9 +91,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     auto primitive = sphere->primitives[0];
     commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
 
-    // TODO: Fix this
-    //_context->drawStats.indexCount += primitive.count;
-    //_context->drawStats.drawCalls++;
+    _context->GetDrawStats().Draw(primitive.count);
 
     commandBuffer.endRenderingKHR(_context->Dldi());
 }

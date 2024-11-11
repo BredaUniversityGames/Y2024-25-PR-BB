@@ -86,6 +86,8 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
         commandBuffer.draw(3, 1, 0, 0);
 
+        _context->GetDrawStats().Draw(3);
+
         commandBuffer.endRenderingKHR(_context->Dldi());
     }
 
@@ -138,6 +140,8 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             commandBuffer.draw(3, 1, 0, 0);
 
+            _context->GetDrawStats().Draw(3);
+
             commandBuffer.endRenderingKHR(_context->Dldi());
         }
     }
@@ -180,6 +184,8 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
     commandBuffer.draw(3, 1, 0, 0);
+
+    _context->GetDrawStats().Draw(3);
 
     commandBuffer.endRenderingKHR(_context->Dldi());
 
