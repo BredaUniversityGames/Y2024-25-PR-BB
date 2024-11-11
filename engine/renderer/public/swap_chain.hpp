@@ -1,10 +1,11 @@
 #pragma once
 
-#include "vulkan_context.hpp"
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 struct QueueFamilyIndices;
+class GraphicsContext;
 
 class SwapChain
 {
@@ -16,7 +17,7 @@ public:
         std::vector<vk::PresentModeKHR> presentModes;
     };
 
-    SwapChain(const std::shared_ptr<VulkanContext>& context, const glm::uvec2& screenSize);
+    SwapChain(const std::shared_ptr<GraphicsContext>& context, const glm::uvec2& screenSize);
     ~SwapChain();
     NON_MOVABLE(SwapChain);
     NON_COPYABLE(SwapChain);
@@ -33,7 +34,7 @@ public:
     static SupportDetails QuerySupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     glm::uvec2 _imageSize;
 
     vk::SwapchainKHR _swapChain;

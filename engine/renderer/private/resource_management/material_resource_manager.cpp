@@ -1,9 +1,9 @@
 #include "resource_management/material_resource_manager.hpp"
 
-#include "vulkan_context.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
-MaterialResourceManager::MaterialResourceManager(const std::shared_ptr<VulkanContext>& context)
-    : _context(context)
+MaterialResourceManager::MaterialResourceManager(const std::shared_ptr<ImageResourceManager>& imageResourceManager)
+    : _imageResourceManager(imageResourceManager)
 {
 }
 
@@ -18,11 +18,11 @@ ResourceHandle<Material> MaterialResourceManager::Create(const MaterialCreation&
     materialResource.emissiveMap = creation.emissiveMap;
 
     Material::GPUInfo& gpuInfo = materialResource.gpuInfo;
-    gpuInfo.useAlbedoMap = _context->GetImageResourceManager().IsValid(materialResource.albedoMap);
-    gpuInfo.useMRMap = _context->GetImageResourceManager().IsValid(materialResource.mrMap);
-    gpuInfo.useNormalMap = _context->GetImageResourceManager().IsValid(materialResource.normalMap);
-    gpuInfo.useOcclusionMap = _context->GetImageResourceManager().IsValid(materialResource.occlusionMap);
-    gpuInfo.useEmissiveMap = _context->GetImageResourceManager().IsValid(materialResource.emissiveMap);
+    gpuInfo.useAlbedoMap = _imageResourceManager->IsValid(materialResource.albedoMap);
+    gpuInfo.useMRMap = _imageResourceManager->IsValid(materialResource.mrMap);
+    gpuInfo.useNormalMap = _imageResourceManager->IsValid(materialResource.normalMap);
+    gpuInfo.useOcclusionMap = _imageResourceManager->IsValid(materialResource.occlusionMap);
+    gpuInfo.useEmissiveMap = _imageResourceManager->IsValid(materialResource.emissiveMap);
 
     gpuInfo.albedoMapIndex = materialResource.albedoMap.index;
     gpuInfo.mrMapIndex = materialResource.mrMap.index;

@@ -1,9 +1,14 @@
 #include "bloom_settings.hpp"
-#include "imgui/imgui.h"
+
+#include <imgui/imgui.h>
+
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "vulkan_helper.hpp"
 
-BloomSettings::BloomSettings(const std::shared_ptr<VulkanContext>& context)
+BloomSettings::BloomSettings(const std::shared_ptr<GraphicsContext>& context)
     : _context(context)
 {
     CreateDescriptorSetLayout();
@@ -12,10 +17,13 @@ BloomSettings::BloomSettings(const std::shared_ptr<VulkanContext>& context)
 
 BloomSettings::~BloomSettings()
 {
-    _context->Device().destroy(_descriptorSetLayout);
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    vkContext->Device().destroy(_descriptorSetLayout);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _context->GetBufferResourceManager().Destroy(_frameData.buffers[i]);
+        resources->BufferResourceManager().Destroy(_frameData.buffers[i]);
     }
 }
 
@@ -33,12 +41,16 @@ void BloomSettings::Render()
 
 void BloomSettings::Update(uint32_t currentFrame)
 {
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    auto resources { _context->Resources() };
+
+    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers[currentFrame]);
     memcpy(buffer->mappedPtr, &_data, sizeof(SettingsData));
 }
 
 void BloomSettings::CreateDescriptorSetLayout()
 {
+    auto vkContext { _context->VulkanContext() };
+
     std::vector<vk::DescriptorSetLayoutBinding> bindings {};
     bindings.emplace_back(vk::DescriptorSetLayoutBinding {
         .binding = 0,
@@ -48,12 +60,15 @@ void BloomSettings::CreateDescriptorSetLayout()
     });
     std::vector<std::string_view> names { "BloomSettingsUBO" };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context, bindings, names);
-    util::NameObject(_descriptorSetLayout, "Bloom settings DSL", _context);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    util::NameObject(_descriptorSetLayout, "Bloom settings DSL", vkContext);
 }
 
 void BloomSettings::CreateUniformBuffers()
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         std::string name = "[] Bloom settings UBO";
@@ -66,18 +81,18 @@ void BloomSettings::CreateUniformBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);
 
-        _frameData.buffers[i] = _context->GetBufferResourceManager().Create(creation);
+        _frameData.buffers[i] = resources->BufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _descriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _context->DescriptorPool();
+    allocateInfo.descriptorPool = vkContext->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, _frameData.descriptorSets.data()),
+    util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, _frameData.descriptorSets.data()),
         "Failed allocating descriptor sets!");
 
     for (size_t i = 0; i < _frameData.descriptorSets.size(); ++i)
@@ -88,7 +103,10 @@ void BloomSettings::CreateUniformBuffers()
 
 void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
 {
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers[currentFrame]);
 
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.buffer = buffer->buffer;
@@ -105,5 +123,5 @@ void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
     bufferWrite.descriptorCount = 1;
     bufferWrite.pBufferInfo = &bufferInfo;
 
-    _context->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "constants.hpp"
-#include "vulkan_context.hpp"
 
 struct SceneDescription;
 class GPUScene;
 class BatchBuffer;
 class ECS;
+class GraphicsContext;
 
 struct GPUSceneCreation
 {
-    std::shared_ptr<VulkanContext> context;
+    std::shared_ptr<GraphicsContext> context;
     std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
@@ -104,7 +104,7 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     std::shared_ptr<const ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;

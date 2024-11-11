@@ -210,15 +210,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    auto& rendererModule = engine.GetModule<RendererModule>();
-    rendererModule.GetRenderer().GetContext()->Device().waitIdle();
-
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
-
     _editor.reset();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);

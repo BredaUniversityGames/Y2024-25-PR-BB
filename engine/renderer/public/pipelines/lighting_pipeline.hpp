@@ -8,14 +8,14 @@
 
 class GPUScene;
 class BloomSettings;
-class VulkanContext;
+class GraphicsContext;
 
 struct RenderSceneDescription;
 
 class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
+    LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings);
     ~LightingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -34,7 +34,7 @@ private:
 
     void CreatePipeline();
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
     const ResourceHandle<Image> _hdrTarget;
     const ResourceHandle<Image> _brightnessTarget;

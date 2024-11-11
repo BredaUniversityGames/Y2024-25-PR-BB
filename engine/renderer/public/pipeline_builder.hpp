@@ -8,12 +8,13 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+class GraphicsContext;
 class VulkanContext;
 
 class PipelineBuilder
 {
 public:
-    PipelineBuilder(std::shared_ptr<VulkanContext> context);
+    PipelineBuilder(std::shared_ptr<GraphicsContext> context);
     ~PipelineBuilder();
 
     NON_COPYABLE(PipelineBuilder);
@@ -22,7 +23,7 @@ public:
     PipelineBuilder& AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout);
 
-    static vk::DescriptorSetLayout CacheDescriptorSetLayout(std::shared_ptr<VulkanContext> context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
     PipelineBuilder& SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo)
     {
@@ -87,7 +88,7 @@ private:
         vk::ShaderModule shaderModule;
     };
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     std::vector<vk::PipelineShaderStageCreateInfo> _pipelineShaderStages;
     std::vector<ShaderStage> _shaderStages;
 

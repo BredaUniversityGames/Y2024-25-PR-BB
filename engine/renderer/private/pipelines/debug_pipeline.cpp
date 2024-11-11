@@ -2,7 +2,11 @@
 
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
@@ -11,7 +15,7 @@
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
     : _context(context)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
@@ -24,9 +28,9 @@ DebugPipeline::DebugPipeline(const std::shared_ptr<VulkanContext>& context, cons
 
 DebugPipeline::~DebugPipeline()
 {
-    _context->Device().destroy(_pipeline);
-    _context->Device().destroy(_pipelineLayout);
-    _context->GetBufferResourceManager().Destroy(_vertexBuffer);
+    _context->VulkanContext()->Device().destroy(_pipeline);
+    _context->VulkanContext()->Device().destroy(_pipelineLayout);
+    _context->Resources()->BufferResourceManager().Destroy(_vertexBuffer);
 }
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -43,7 +47,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     };
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
-        .imageView = _context->GetImageResourceManager().Access(_gBuffers.Depth())->view,
+        .imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view,
         .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eDontCare,
@@ -68,13 +72,13 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
         .pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr,
     };
 
-    commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+    commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _camera.DescriptorSet(currentFrame) }, {});
 
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_vertexBuffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_vertexBuffer);
     const std::array<vk::DeviceSize, 1> offsets = { 0 };
     commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets.data());
 
@@ -85,7 +89,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
-    commandBuffer.endRenderingKHR(_context->Dldi());
+    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
 void DebugPipeline::CreatePipeline()
@@ -139,11 +143,11 @@ void DebugPipeline::CreateVertexBuffer()
         .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_HOST)
         .SetName("Debug vertex buffer");
 
-    _vertexBuffer = _context->GetBufferResourceManager().Create(vertexBufferCreation);
+    _vertexBuffer = _context->Resources()->BufferResourceManager().Create(vertexBufferCreation);
 }
 
 void DebugPipeline::UpdateVertexData()
 {
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_vertexBuffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_vertexBuffer);
     std::memcpy(buffer->mappedPtr, _linesData.data(), _linesData.size() * sizeof(glm::vec3));
 }

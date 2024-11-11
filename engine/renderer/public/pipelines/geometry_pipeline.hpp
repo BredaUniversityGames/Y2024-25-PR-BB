@@ -8,14 +8,14 @@
 
 class BatchBuffer;
 class GPUScene;
-class VulkanContext;
+class GraphicsContext;
 
 struct RenderSceneDescription;
 
 class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
-    GeometryPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
+    GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
     ~GeometryPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -24,10 +24,7 @@ public:
     NON_COPYABLE(GeometryPipeline);
 
 private:
-    void CreatePipeline();
-    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
-
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
     const CameraResource& _camera;
 
@@ -38,4 +35,7 @@ private:
 
     ResourceHandle<Buffer> _drawBuffer;
     vk::DescriptorSet _drawBufferDescriptorSet;
+
+    void CreatePipeline();
+    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 };

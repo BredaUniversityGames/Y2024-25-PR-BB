@@ -10,6 +10,7 @@
 struct RenderSceneDescription;
 struct Image;
 struct Buffer;
+class GraphicsContext;
 
 enum class FrameGraphRenderPassType : uint8_t
 {
@@ -131,7 +132,7 @@ struct FrameGraphNode
 class FrameGraph
 {
 public:
-    FrameGraph(const std::shared_ptr<VulkanContext>& context, const SwapChain& swapChain);
+    FrameGraph(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain);
 
     // Builds the graph from the node inputs.
     void Build();
@@ -143,7 +144,7 @@ public:
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const SwapChain& _swapChain;
 
     std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};

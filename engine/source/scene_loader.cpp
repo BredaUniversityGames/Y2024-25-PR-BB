@@ -6,13 +6,14 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "mesh.hpp"
 #include "timers.hpp"
-#include "vulkan_context.hpp"
 
 #include <entt/entity/entity.hpp>
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<VulkanContext>& context, ECS& ecs, const Model& model)
+std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model)
 {
     Stopwatch stopwatch;
 
@@ -27,7 +28,7 @@ std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::sh
     return entities;
 }
 
-entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<VulkanContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
+entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -37,7 +38,7 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<VulkanContext>
     TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
 
-    if (context->GetMeshResourceManager().IsValid(currentNode.mesh))
+    if (context->Resources()->MeshResourceManager().IsValid(currentNode.mesh))
     {
         ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
     }

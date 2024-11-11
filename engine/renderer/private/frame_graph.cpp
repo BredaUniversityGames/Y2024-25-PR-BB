@@ -1,7 +1,13 @@
 #include "frame_graph.hpp"
-#include "glm/gtc/random.hpp"
-#include "glm/gtx/range.hpp"
+
+#include <glm/gtc/random.hpp>
+#include <glm/gtx/range.hpp>
+
 #include "gpu_resources.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -71,7 +77,7 @@ FrameGraphNode::FrameGraphNode(FrameGraphRenderPass& renderPass, FrameGraphRende
 {
 }
 
-FrameGraph::FrameGraph(const std::shared_ptr<VulkanContext>& context, const SwapChain& swapChain)
+FrameGraph::FrameGraph(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain)
     : _context(context)
     , _swapChain(swapChain)
 {
@@ -91,11 +97,13 @@ void FrameGraph::Build()
 
 void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    auto vkContext { _context->VulkanContext() };
+
     for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
     {
         const FrameGraphNode& node = _nodes[nodeHandle];
 
-        util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, _context->Dldi());
+        util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, vkContext->Dldi());
 
         // Place memory barriers
         commandBuffer.pipelineBarrier2(node.dependencyInfo);
@@ -108,7 +116,7 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         node.renderPass.RecordCommands(commandBuffer, currentFrame, scene);
 
-        util::EndLabel(commandBuffer, _context->Dldi());
+        util::EndLabel(commandBuffer, vkContext->Dldi());
     }
 }
 
@@ -180,6 +188,8 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
 
 void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 {
+    auto resources { _context->Resources() };
+
     FrameGraphNode& node = _nodes[nodeHandle];
 
     // Only graphics queue render passes need a viewport and scissor
@@ -196,7 +206,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 
         if (HasAnyFlags(resource.type, FrameGraphResourceType::eAttachment))
         {
-            const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -211,7 +221,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
         // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
-            const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -226,6 +236,8 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 
 void FrameGraph::CreateMemoryBarriers()
 {
+    auto resources { _context->Resources() };
+
     // Describes if an output has already been used as an input
     std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates {};
 
@@ -252,7 +264,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eTexture)
             {
-                const Image* texture = _context->GetImageResourceManager().Access(resource.info.image.handle);
+                const Image* texture = resources->ImageResourceManager().Access(resource.info.image.handle);
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -270,7 +282,7 @@ void FrameGraph::CreateMemoryBarriers()
             }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
-                const Buffer* buffer = _context->GetBufferResourceManager().Access(resource.info.buffer.handle);
+                const Buffer* buffer = resources->BufferResourceManager().Access(resource.info.buffer.handle);
                 vk::BufferMemoryBarrier2& barrier = node.bufferMemoryBarriers.emplace_back();
 
                 // Get the buffer created before here and create barrier based on its stage usage
@@ -298,7 +310,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
-                const Image* attachment = _context->GetImageResourceManager().Access(resource.info.image.handle);
+                const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -439,15 +451,17 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
 
 std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creation)
 {
+    auto resources { _context->Resources() };
+
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
-        const Image* image = _context->GetImageResourceManager().Access(creation.info.image.handle);
+        const Image* image = resources->ImageResourceManager().Access(creation.info.image.handle);
         return image->name;
     }
 
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eBuffer))
     {
-        const Buffer* buffer = _context->GetBufferResourceManager().Access(creation.info.buffer.handle);
+        const Buffer* buffer = resources->BufferResourceManager().Access(creation.info.buffer.handle);
         return buffer->name;
     }
 

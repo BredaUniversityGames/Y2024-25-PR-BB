@@ -1,10 +1,15 @@
 #include "pipelines/lighting_pipeline.hpp"
+
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
+#include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _context(context)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
@@ -12,17 +17,17 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<VulkanContext>& context
     , _camera(camera)
     , _bloomSettings(bloomSettings)
 {
-    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
+    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].index;
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].index;
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].index;
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
 
-    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 
     vk::PhysicalDeviceProperties properties {};
-    _context->PhysicalDevice().getProperties(&properties);
+    _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
 
     CreatePipeline();
 }
@@ -32,14 +37,14 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = _context->GetImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = _context->Resources()->ImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _context->GetImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
@@ -54,7 +59,7 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+    commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
@@ -69,13 +74,13 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     _context->GetDrawStats().Draw(3);
 
-    commandBuffer.endRenderingKHR(_context->Dldi());
+    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
 LightingPipeline::~LightingPipeline()
 {
-    _context->Device().destroy(_pipeline);
-    _context->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_pipeline);
+    _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
 void LightingPipeline::CreatePipeline()
@@ -91,8 +96,8 @@ void LightingPipeline::CreatePipeline()
     colorBlendStateCreateInfo.pAttachments = blendAttachments.data();
 
     std::vector<vk::Format> formats = {
-        _context->GetImageResourceManager().Access(_hdrTarget)->format,
-        _context->GetImageResourceManager().Access(_brightnessTarget)->format
+        _context->Resources()->ImageResourceManager().Access(_hdrTarget)->format,
+        _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->format
     };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");

@@ -1,10 +1,14 @@
 #pragma once
 
 #include "constants.hpp"
-#include "vulkan_context.hpp"
+#include "resource_manager.hpp"
 
 #include <array>
 #include <memory>
+#include <vulkan/vulkan.hpp>
+
+class GraphicsContext;
+struct Buffer;
 
 class BloomSettings
 {
@@ -33,7 +37,7 @@ public:
         std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
     };
 
-    BloomSettings(const std::shared_ptr<VulkanContext>& context);
+    BloomSettings(const std::shared_ptr<GraphicsContext>& context);
     ~BloomSettings();
     void Render();
     void Update(uint32_t currentFrame);
@@ -43,7 +47,7 @@ public:
     SettingsData _data;
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     vk::DescriptorSetLayout _descriptorSetLayout;
     FrameData _frameData;
 

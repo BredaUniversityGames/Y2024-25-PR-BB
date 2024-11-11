@@ -4,26 +4,19 @@
 #include <set>
 #include <vulkan/vulkan.hpp>
 
+#include "application_module.hpp"
 #include "log.hpp"
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
 #include "vulkan_validation.hpp"
 
-VulkanContext::VulkanContext(const ApplicationModule::VulkanInitInfo& initInfo)
+VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
 {
     CreateInstance(initInfo);
     _dldi = vk::DispatchLoaderDynamic { _instance, vkGetInstanceProcAddr, _device, vkGetDeviceProcAddr };
     SetupDebugMessenger();
     _surface = initInfo.retrieveSurface(_instance);
-}
-
-void VulkanContext::Init()
-{
-    _imageResourceManager = std::make_unique<ImageResourceManager>(shared_from_this());
-    _bufferResourceManager = std::make_unique<BufferResourceManager>(shared_from_this());
-    _materialResourceManager = std::make_unique<MaterialResourceManager>(shared_from_this());
-    _meshResourceManager = std::make_unique<ResourceManager<Mesh>>();
 
     PickPhysicalDevice();
     CreateDevice();
@@ -46,33 +39,16 @@ void VulkanContext::Init()
     vk::PhysicalDeviceProperties properties;
     _physicalDevice.getProperties(&properties);
     _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
-
-    CreateBindlessMaterialBuffer();
-    CreateBindlessDescriptorSet();
-
-    std::vector<std::byte> data(2 * 2 * 4 * sizeof(std::byte));
-    ImageCreation creation {};
-    creation.SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm).SetData(data.data()).SetName("Fallback texture");
-
-    _fallbackImage = _imageResourceManager->Create(creation);
 }
 
 VulkanContext::~VulkanContext()
 {
     if (ENABLE_VALIDATION_LAYERS)
         _instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, _dldi);
-
-    _imageResourceManager->Destroy(_fallbackImage);
+    ;
 
     _device.destroy(_descriptorPool);
     _device.destroy(_commandPool);
-
-    _device.destroy(_bindlessLayout);
-    _device.destroy(_bindlessPool);
-
-    _bufferResourceManager->Destroy(_bindlessMaterialBuffer);
-
-    _sampler.reset();
 
     vmaDestroyAllocator(_vmaAllocator);
 
@@ -81,89 +57,7 @@ VulkanContext::~VulkanContext()
     _instance.destroy();
 }
 
-void VulkanContext::UpdateBindlessSet()
-{
-    UpdateBindlessImages();
-    UpdateBindlessMaterials();
-}
-
-void VulkanContext::UpdateBindlessImages()
-{
-    for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
-    {
-        const Image* image = i < _imageResourceManager->Resources().size()
-            ? &_imageResourceManager->Resources()[i].resource.value()
-            : _imageResourceManager->Access(_fallbackImage);
-
-        // If it can't be sampled, use the fallback.
-        if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
-            image = _imageResourceManager->Access(_fallbackImage);
-
-        BindlessBinding dstBinding = BindlessBinding::eNone;
-
-        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eColor)
-            dstBinding = BindlessBinding::eColor;
-
-        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eDepth)
-            dstBinding = BindlessBinding::eDepth;
-
-        if (image->type == ImageType::eCubeMap)
-            dstBinding = BindlessBinding::eCubemap;
-
-        if (image->type == ImageType::eShadowMap)
-            dstBinding = BindlessBinding::eShadowmap;
-
-        if (!_sampler)
-        {
-            _sampler = util::CreateSampler(shared_from_this(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-                vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
-        }
-
-        _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        _bindlessImageInfos[i].imageView = image->view;
-        _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
-
-        _bindlessImageWrites[i].dstSet = _bindlessSet;
-        _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
-        _bindlessImageWrites[i].dstArrayElement = i;
-        _bindlessImageWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        _bindlessImageWrites[i].descriptorCount = 1;
-        _bindlessImageWrites[i].pImageInfo = &_bindlessImageInfos[i];
-    }
-
-    _device.updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
-}
-
-void VulkanContext::UpdateBindlessMaterials()
-{
-    assert(_materialResourceManager->Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
-
-    std::array<Material::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
-
-    for (uint32_t i = 0; i < _materialResourceManager->Resources().size(); ++i)
-    {
-        const Material* material = &_materialResourceManager->Resources()[i].resource.value();
-        materialGPUData[i] = material->gpuInfo;
-    }
-
-    const Buffer* buffer = _bufferResourceManager->Access(_bindlessMaterialBuffer);
-    std::memcpy(buffer->mappedPtr, materialGPUData.data(), _materialResourceManager->Resources().size() * sizeof(Material::GPUInfo));
-
-    _bindlessMaterialInfo.buffer = buffer->buffer;
-    _bindlessMaterialInfo.offset = 0;
-    _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * _materialResourceManager->Resources().size();
-
-    _bindlessMaterialWrite.dstSet = _bindlessSet;
-    _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eMaterial);
-    _bindlessMaterialWrite.dstArrayElement = 0;
-    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-    _bindlessMaterialWrite.descriptorCount = 1;
-    _bindlessMaterialWrite.pBufferInfo = &_bindlessMaterialInfo;
-
-    _device.updateDescriptorSets(1, &_bindlessMaterialWrite, 0, nullptr);
-}
-
-void VulkanContext::CreateInstance(const ApplicationModule::VulkanInitInfo& initInfo)
+void VulkanContext::CreateInstance(const VulkanInitInfo& initInfo)
 {
     CheckValidationLayerSupport();
     if (ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
@@ -300,7 +194,7 @@ bool VulkanContext::CheckValidationLayerSupport()
     return result;
 }
 
-std::vector<const char*> VulkanContext::GetRequiredExtensions(const ApplicationModule::VulkanInitInfo& initInfo)
+std::vector<const char*> VulkanContext::GetRequiredExtensions(const VulkanInitInfo& initInfo)
 {
     std::vector<const char*> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
     if (ENABLE_VALIDATION_LAYERS)
@@ -407,97 +301,6 @@ void VulkanContext::CreateDescriptorPool()
     createInfo.maxSets = 200;
     createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     util::VK_ASSERT(_device.createDescriptorPool(&createInfo, nullptr, &_descriptorPool), "Failed creating descriptor pool!");
-}
-
-void VulkanContext::CreateBindlessDescriptorSet()
-{
-    std::array<vk::DescriptorPoolSize, 5> poolSizes = {
-        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
-        vk::DescriptorPoolSize { vk::DescriptorType::eStorageBuffer, 1 },
-    };
-
-    vk::DescriptorPoolCreateInfo poolCreateInfo {};
-    poolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
-    poolCreateInfo.maxSets = MAX_BINDLESS_RESOURCES * poolSizes.size();
-    poolCreateInfo.poolSizeCount = poolSizes.size();
-    poolCreateInfo.pPoolSizes = poolSizes.data();
-    util::VK_ASSERT(_device.createDescriptorPool(&poolCreateInfo, nullptr, &_bindlessPool), "Failed creating bindless pool!");
-
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(5);
-    vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
-    combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
-    combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eColor);
-    combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
-    depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
-    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[2];
-    cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
-    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
-    shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
-    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& materialBinding = bindings[4];
-    materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-    materialBinding.descriptorCount = 1;
-    materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eMaterial);
-    materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::StructureChain<vk::DescriptorSetLayoutCreateInfo, vk::DescriptorSetLayoutBindingFlagsCreateInfo> structureChain;
-
-    auto& layoutCreateInfo = structureChain.get<vk::DescriptorSetLayoutCreateInfo>();
-    layoutCreateInfo.bindingCount = bindings.size();
-    layoutCreateInfo.pBindings = bindings.data();
-    layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
-
-    std::array<vk::DescriptorBindingFlagsEXT, 5> bindingFlags = {
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound
-    };
-
-    auto& extInfo = structureChain.get<vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT>();
-    extInfo.bindingCount = bindings.size();
-    extInfo.pBindingFlags = bindingFlags.data();
-
-    std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
-
-    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(shared_from_this(), bindings, names);
-
-    vk::DescriptorSetAllocateInfo allocInfo {};
-    allocInfo.descriptorPool = _bindlessPool;
-    allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &_bindlessLayout;
-
-    util::VK_ASSERT(_device.allocateDescriptorSets(&allocInfo, &_bindlessSet), "Failed creating bindless descriptor set!");
-
-    util::NameObject(_bindlessSet, "Bindless DS", shared_from_this());
-}
-
-void VulkanContext::CreateBindlessMaterialBuffer()
-{
-    BufferCreation creation {};
-    creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))
-        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
-        .SetName("Bindless material uniform buffer");
-
-    _bindlessMaterialBuffer = _bufferResourceManager->Create(creation);
 }
 
 QueueFamilyIndices QueueFamilyIndices::FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)

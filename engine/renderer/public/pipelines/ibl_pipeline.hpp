@@ -1,16 +1,15 @@
 #pragma once
 
 #include "mesh.hpp"
-#include "vulkan_context.hpp"
 
 #include <memory>
 
-class VulkanContext;
+class GraphicsContext;
 
 class IBLPipeline
 {
 public:
-    IBLPipeline(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Image> environmentMap);
+    IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> environmentMap);
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
@@ -35,7 +34,7 @@ private:
         uint32_t hdriIndex;
     };
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const ResourceHandle<Image> _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;

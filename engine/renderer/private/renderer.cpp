@@ -1,5 +1,9 @@
 #include "renderer.hpp"
 
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_vulkan.h>
+#include <memory>
+#include <stb/stb_image.h>
 #include <utility>
 
 #include "application_module.hpp"
@@ -8,7 +12,8 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "gpu_scene.hpp"
-#include "imgui_impl_vulkan.h"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "log.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
@@ -23,17 +28,18 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
 #include "single_time_commands.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-#include "stb/stb_image.h"
-
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ecs)
-    : _context(std::make_shared<VulkanContext>(application.GetVulkanInfo()))
+    : _context(std::make_shared<GraphicsContext>(application.GetVulkanInfo()))
     , _application(application)
     , _ecs(ecs)
 {
-    _context->Init();
 
     _bloomSettings = std::make_unique<BloomSettings>(_context);
 
@@ -184,44 +190,50 @@ std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& mod
 
 Renderer::~Renderer()
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
     _modelLoader.reset();
 
-    _context->GetImageResourceManager().Destroy(_environmentMap);
-    _context->GetImageResourceManager().Destroy(_hdrTarget);
+    resources->ImageResourceManager().Destroy(_environmentMap);
+    resources->ImageResourceManager().Destroy(_hdrTarget);
 
-    _context->GetImageResourceManager().Destroy(_brightnessTarget);
-    _context->GetImageResourceManager().Destroy(_bloomTarget);
+    resources->ImageResourceManager().Destroy(_brightnessTarget);
+    resources->ImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _context->Device().destroy(_inFlightFences[i]);
-        _context->Device().destroy(_renderFinishedSemaphores[i]);
-        _context->Device().destroy(_imageAvailableSemaphores[i]);
+        vkContext->Device().destroy(_inFlightFences[i]);
+        vkContext->Device().destroy(_renderFinishedSemaphores[i]);
+        vkContext->Device().destroy(_imageAvailableSemaphores[i]);
     }
 
     for (auto& model : _modelResources)
     {
         for (auto& texture : model->textures)
         {
-            _context->GetImageResourceManager().Destroy(texture);
+            resources->ImageResourceManager().Destroy(texture);
         }
         for (auto& material : model->materials)
         {
-            _context->GetMaterialResourceManager().Destroy(material);
+            resources->MaterialResourceManager().Destroy(material);
         }
     }
 
     _swapChain.reset();
+
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
 }
 
 void Renderer::CreateCommandBuffers()
 {
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo {};
-    commandBufferAllocateInfo.commandPool = _context->CommandPool();
+    commandBufferAllocateInfo.commandPool = _context->VulkanContext()->CommandPool();
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = _commandBuffers.size();
 
-    util::VK_ASSERT(_context->Device().allocateCommandBuffers(&commandBufferAllocateInfo, _commandBuffers.data()),
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateCommandBuffers(&commandBufferAllocateInfo, _commandBuffers.data()),
         "Failed allocating command buffer!");
 }
 
@@ -262,6 +274,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
 void Renderer::CreateSyncObjects()
 {
+    auto vkContext { _context->VulkanContext() };
+
     vk::SemaphoreCreateInfo semaphoreCreateInfo {};
     vk::FenceCreateInfo fenceCreateInfo {};
     fenceCreateInfo.flags = vk::FenceCreateFlagBits::eSignaled;
@@ -269,9 +283,9 @@ void Renderer::CreateSyncObjects()
     std::string errorMsg { "Failed creating sync object!" };
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        util::VK_ASSERT(_context->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_imageAvailableSemaphores[i]), errorMsg);
-        util::VK_ASSERT(_context->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_renderFinishedSemaphores[i]), errorMsg);
-        util::VK_ASSERT(_context->Device().createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
+        util::VK_ASSERT(vkContext->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_imageAvailableSemaphores[i]), errorMsg);
+        util::VK_ASSERT(vkContext->Device().createSemaphore(&semaphoreCreateInfo, nullptr, &_renderFinishedSemaphores[i]), errorMsg);
+        util::VK_ASSERT(vkContext->Device().createFence(&fenceCreateInfo, nullptr, &_inFlightFences[i]), errorMsg);
     }
 }
 
@@ -282,7 +296,7 @@ void Renderer::InitializeHDRTarget()
     ImageCreation hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _context->GetImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrCreation);
 }
 
 void Renderer::InitializeBloomTargets()
@@ -295,8 +309,8 @@ void Renderer::InitializeBloomTargets()
     ImageCreation hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _brightnessTarget = _context->GetImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _context->GetImageResourceManager().Create(hdrBlurredBloomCreation);
+    _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
+    _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
 }
 
 void Renderer::LoadEnvironmentMap()
@@ -316,7 +330,7 @@ void Renderer::LoadEnvironmentMap()
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
-    _environmentMap = _context->GetImageResourceManager().Create(envMapCreation);
+    _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);
 }
 
 void Renderer::UpdateBindless()
@@ -329,7 +343,7 @@ void Renderer::Render(float deltaTime)
     ZoneNamedN(zz, "Renderer::Render()", true);
     {
         ZoneNamedN(zz, "Wait On Fence", true);
-        util::VK_ASSERT(_context->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
+        util::VK_ASSERT(_context->VulkanContext()->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
             "Failed waiting on in flight fence!");
     }
 
@@ -345,7 +359,7 @@ void Renderer::Render(float deltaTime)
     {
         ZoneNamedN(zz, "Acquire Next Image", true);
 
-        result = _context->Device().acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
+        result = _context->VulkanContext()->Device().acquireNextImageKHR(_swapChain->GetSwapChain(), std::numeric_limits<uint64_t>::max(),
             _imageAvailableSemaphores[_currentFrame], nullptr, &imageIndex);
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
@@ -359,7 +373,7 @@ void Renderer::Render(float deltaTime)
             util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    util::VK_ASSERT(_context->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
     {
         ZoneNamedN(zz, "ImGui Render", true);
@@ -385,7 +399,7 @@ void Renderer::Render(float deltaTime)
 
     {
         ZoneNamedN(zz, "Submit Commands", true);
-        util::VK_ASSERT(_context->GraphicsQueue().submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
+        util::VK_ASSERT(_context->VulkanContext()->GraphicsQueue().submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
     }
 
     vk::PresentInfoKHR presentInfo {};
@@ -399,7 +413,7 @@ void Renderer::Render(float deltaTime)
 
     {
         ZoneNamedN(zz, "Present Image", true);
-        result = _context->PresentQueue().presentKHR(&presentInfo);
+        result = _context->VulkanContext()->PresentQueue().presentKHR(&presentInfo);
     }
 
     if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || _swapChain->GetImageSize() != _application.DisplaySize())

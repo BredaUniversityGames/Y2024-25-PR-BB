@@ -10,7 +10,7 @@
 #include <memory>
 #include <vulkan/vulkan.hpp>
 
-class VulkanContext;
+class GraphicsContext;
 
 struct Camera
 {
@@ -34,7 +34,7 @@ struct Camera
 class CameraResource
 {
 public:
-    CameraResource(const std::shared_ptr<VulkanContext>& context);
+    CameraResource(const std::shared_ptr<GraphicsContext>& context);
     ~CameraResource();
 
     void Update(uint32_t currentFrame, const Camera& camera);
@@ -48,13 +48,13 @@ public:
     NON_MOVABLE(CameraResource);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
 
     static vk::DescriptorSetLayout _descriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _descriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _buffers;
 
-    static void CreateDescriptorSetLayout(std::shared_ptr<VulkanContext> context);
+    static void CreateDescriptorSetLayout(std::shared_ptr<GraphicsContext> context);
     void CreateBuffers();
     void CreateDescriptorSets();
 };

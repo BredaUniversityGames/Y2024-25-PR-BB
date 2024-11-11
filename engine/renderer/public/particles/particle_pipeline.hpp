@@ -1,9 +1,11 @@
 #pragma once
 
 #include "common.hpp"
+#include "resource_manager.hpp"
 
 #include <cstddef>
 #include <memory>
+#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
 struct Emitter;
@@ -11,12 +13,13 @@ struct Emitter;
 class CameraResource;
 class SwapChain;
 class ECS;
-class VulkanContext;
+class GraphicsContext;
+struct Buffer;
 
 class ParticlePipeline
 {
 public:
-    ParticlePipeline(const std::shared_ptr<VulkanContext>& context, const CameraResource& camera, const SwapChain& swapChain);
+    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, const SwapChain& swapChain);
     ~ParticlePipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, std::shared_ptr<ECS> ecs, float deltaTime);
@@ -52,7 +55,7 @@ private:
         uint32_t bufferOffset;
     } _emitPushConstant;
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const CameraResource& _camera;
     const SwapChain& _swapChain;
 

@@ -8,14 +8,14 @@
 #include <vector>
 
 class SingleTimeCommands;
-class VulkanContext;
+class GraphicsContext;
 
 constexpr uint32_t MAX_MESHES = 2048;
 
 class BatchBuffer
 {
 public:
-    BatchBuffer(const std::shared_ptr<VulkanContext>& context, uint32_t vertexBufferSize, uint32_t indexBufferSize);
+    BatchBuffer(const std::shared_ptr<GraphicsContext>& context, uint32_t vertexBufferSize, uint32_t indexBufferSize);
     ~BatchBuffer();
     NON_MOVABLE(BatchBuffer);
     NON_COPYABLE(BatchBuffer);
@@ -34,7 +34,7 @@ public:
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
 
     uint32_t _vertexBufferSize;
     uint32_t _indexBufferSize;

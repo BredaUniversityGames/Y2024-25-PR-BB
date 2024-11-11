@@ -1,14 +1,19 @@
 #include "pipelines/ibl_pipeline.hpp"
+
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-IBLPipeline::IBLPipeline(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Image> environmentMap)
+IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> environmentMap)
     : _context(context)
     , _environmentMap(environmentMap)
 {
-    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0).release();
+    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0).release();
 
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
@@ -20,30 +25,33 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<VulkanContext>& context, Resource
 
 IBLPipeline::~IBLPipeline()
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
     for (const auto& mips : _prefilterMapViews)
         for (const auto& view : mips)
-            _context->Device().destroy(view);
+            vkContext->Device().destroy(view);
 
-    _context->GetImageResourceManager().Destroy(_irradianceMap);
-    _context->GetImageResourceManager().Destroy(_brdfLUT);
-    _context->GetImageResourceManager().Destroy(_prefilterMap);
+    resources->ImageResourceManager().Destroy(_irradianceMap);
+    resources->ImageResourceManager().Destroy(_brdfLUT);
+    resources->ImageResourceManager().Destroy(_prefilterMap);
 
-    _context->Device().destroy(_sampler);
+    vkContext->Device().destroy(_sampler);
 
-    _context->Device().destroy(_prefilterPipeline);
-    _context->Device().destroy(_prefilterPipelineLayout);
-    _context->Device().destroy(_irradiancePipeline);
-    _context->Device().destroy(_irradiancePipelineLayout);
-    _context->Device().destroy(_brdfLUTPipeline);
-    _context->Device().destroy(_brdfLUTPipelineLayout);
+    vkContext->Device().destroy(_prefilterPipeline);
+    vkContext->Device().destroy(_prefilterPipelineLayout);
+    vkContext->Device().destroy(_irradiancePipeline);
+    vkContext->Device().destroy(_irradiancePipelineLayout);
+    vkContext->Device().destroy(_brdfLUTPipeline);
+    vkContext->Device().destroy(_brdfLUTPipelineLayout);
 }
 
 void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 {
-    const Image& irradianceMap = *_context->GetImageResourceManager().Access(_irradianceMap);
-    const Image& prefilterMap = *_context->GetImageResourceManager().Access(_prefilterMap);
+    const Image& irradianceMap = *_context->Resources()->ImageResourceManager().Access(_irradianceMap);
+    const Image& prefilterMap = *_context->Resources()->ImageResourceManager().Access(_prefilterMap);
 
-    util::BeginLabel(commandBuffer, "Irradiance pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->Dldi());
+    util::BeginLabel(commandBuffer, "Irradiance pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->VulkanContext()->Dldi());
 
     util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, 1);
 
@@ -68,7 +76,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             .pStencilAttachment = nullptr,
         };
 
-        commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+        commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
         IrradiancePushConstant pc {
             .index = static_cast<uint32_t>(i),
@@ -88,13 +96,13 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
         _context->GetDrawStats().Draw(3);
 
-        commandBuffer.endRenderingKHR(_context->Dldi());
+        commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
     }
 
     util::TransitionImageLayout(commandBuffer, irradianceMap.image, irradianceMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, 1);
-    util::EndLabel(commandBuffer, _context->Dldi());
+    util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 
-    util::BeginLabel(commandBuffer, "Prefilter pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->Dldi());
+    util::BeginLabel(commandBuffer, "Prefilter pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->VulkanContext()->Dldi());
     util::TransitionImageLayout(commandBuffer, prefilterMap.image, prefilterMap.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, 6, 0, prefilterMap.mips);
 
     for (size_t i = 0; i < prefilterMap.mips; ++i)
@@ -121,7 +129,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
                 .pStencilAttachment = nullptr,
             };
 
-            commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+            commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
             PrefilterPushConstant pc {
                 .faceIndex = static_cast<uint32_t>(j),
@@ -142,20 +150,20 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
             _context->GetDrawStats().Draw(3);
 
-            commandBuffer.endRenderingKHR(_context->Dldi());
+            commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
         }
     }
 
     util::TransitionImageLayout(commandBuffer, prefilterMap.image, prefilterMap.format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 6, 0, prefilterMap.mips);
 
-    util::EndLabel(commandBuffer, _context->Dldi());
+    util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 
-    const Image* brdfLUT = _context->GetImageResourceManager().Access(_brdfLUT);
-    util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->Dldi());
+    const Image* brdfLUT = _context->Resources()->ImageResourceManager().Access(_brdfLUT);
+    util::BeginLabel(commandBuffer, "BRDF Integration pass", glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f, _context->VulkanContext()->Dldi());
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->GetImageResourceManager().Access(_brdfLUT)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_brdfLUT)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eDontCare,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -173,7 +181,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         .pStencilAttachment = nullptr,
     };
 
-    commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+    commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _brdfLUTPipeline);
 
@@ -187,11 +195,11 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
     _context->GetDrawStats().Draw(3);
 
-    commandBuffer.endRenderingKHR(_context->Dldi());
+    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-    util::EndLabel(commandBuffer, _context->Dldi());
+    util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
 void IBLPipeline::CreateIrradiancePipeline()
@@ -207,7 +215,7 @@ void IBLPipeline::CreateIrradiancePipeline()
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    std::vector<vk::Format> formats { _context->GetImageResourceManager().Access(_irradianceMap)->format };
+    std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_irradianceMap)->format };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/irradiance.frag.spv");
@@ -234,7 +242,7 @@ void IBLPipeline::CreatePrefilterPipeline()
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    std::vector<vk::Format> formats { _context->GetImageResourceManager().Access(_prefilterMap)->format };
+    std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_prefilterMap)->format };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/prefilter.frag.spv");
@@ -261,7 +269,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    std::vector<vk::Format> formats { _context->GetImageResourceManager().Access(_brdfLUT)->format };
+    std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_brdfLUT)->format };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
@@ -285,7 +293,7 @@ void IBLPipeline::CreateIrradianceCubemap()
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _irradianceMap = _context->GetImageResourceManager().Create(creation);
+    _irradianceMap = _context->Resources()->ImageResourceManager().Create(creation);
 }
 
 void IBLPipeline::CreatePrefilterCubemap()
@@ -300,7 +308,7 @@ void IBLPipeline::CreatePrefilterCubemap()
         .SetSampler(_sampler)
         .SetMips(fmin(floor(log2(creation.width)), 3.0));
 
-    _prefilterMap = _context->GetImageResourceManager().Create(creation);
+    _prefilterMap = _context->Resources()->ImageResourceManager().Create(creation);
 
     _prefilterMapViews.resize(creation.mips);
     for (size_t i = 0; i < _prefilterMapViews.size(); ++i)
@@ -308,7 +316,7 @@ void IBLPipeline::CreatePrefilterCubemap()
         for (size_t j = 0; j < 6; ++j)
         {
             vk::ImageViewCreateInfo imageViewCreateInfo {};
-            imageViewCreateInfo.image = _context->GetImageResourceManager().Access(_prefilterMap)->image;
+            imageViewCreateInfo.image = _context->Resources()->ImageResourceManager().Access(_prefilterMap)->image;
             imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
             imageViewCreateInfo.format = creation.format;
             imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -317,7 +325,7 @@ void IBLPipeline::CreatePrefilterCubemap()
             imageViewCreateInfo.subresourceRange.baseArrayLayer = j;
             imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-            util::VK_ASSERT(_context->Device().createImageView(&imageViewCreateInfo, nullptr, &_prefilterMapViews[i][j]), "Failed creating irradiance map image view!");
+            util::VK_ASSERT(_context->VulkanContext()->Device().createImageView(&imageViewCreateInfo, nullptr, &_prefilterMapViews[i][j]), "Failed creating irradiance map image view!");
         }
     }
 }
@@ -330,5 +338,5 @@ void IBLPipeline::CreateBRDFLUT()
         .SetSize(512, 512)
         .SetFormat(vk::Format::eR16G16Sfloat)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-    _brdfLUT = _context->GetImageResourceManager().Create(creation);
+    _brdfLUT = _context->Resources()->ImageResourceManager().Create(creation);
 }

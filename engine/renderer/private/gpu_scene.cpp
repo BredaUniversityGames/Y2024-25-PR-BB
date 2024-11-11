@@ -1,10 +1,17 @@
 #include "gpu_scene.hpp"
+
 #include "batch_buffer.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
@@ -24,16 +31,19 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 
 GPUScene::~GPUScene()
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _context->GetBufferResourceManager().Destroy(_sceneFrameData[i].buffer);
-        _context->GetBufferResourceManager().Destroy(_objectInstancesFrameData[i].buffer);
-        _context->GetBufferResourceManager().Destroy(_indirectDrawFrameData[i].buffer);
+        resources->BufferResourceManager().Destroy(_sceneFrameData[i].buffer);
+        resources->BufferResourceManager().Destroy(_objectInstancesFrameData[i].buffer);
+        resources->BufferResourceManager().Destroy(_indirectDrawFrameData[i].buffer);
     }
 
-    _context->Device().destroy(_drawBufferDescriptorSetLayout);
-    _context->Device().destroy(_sceneDescriptorSetLayout);
-    _context->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
+    vkContext->Device().destroy(_sceneDescriptorSetLayout);
+    vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
 }
 
 void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
@@ -69,7 +79,7 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
     sceneData.brdfLUTIndex = brdfLUTMap.index;
     sceneData.shadowMapIndex = directionalShadowMap.index;
 
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
 }
 
@@ -84,11 +94,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
         {
-            auto mesh = _context->GetMeshResourceManager().Access(meshComponent.mesh);
+            auto resources{ _context->Resources() };
+
+            auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
             for (const auto& primitive : mesh->primitives)
             {
                 assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
-                assert(_context->GetMaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
+                assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
 
                 instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
                 instances[count].materialIndex = primitive.material.index;
@@ -104,7 +116,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 count++;
             } });
 
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
 }
 
@@ -135,7 +147,7 @@ void GPUScene::CreateSceneDescriptorSetLayout()
 
     std::vector<std::string_view> names { "SceneUBO" };
 
-    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context, bindings, names);
+    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -152,7 +164,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<std::string_view> names { "InstanceData" };
 
-    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context, bindings, names);
+    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -161,13 +173,13 @@ void GPUScene::CreateSceneDescriptorSets()
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _sceneDescriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _context->DescriptorPool();
+    allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
 
-    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
         "Failed allocating object instance descriptor sets!");
     for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
@@ -182,13 +194,13 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _objectInstancesDescriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _context->DescriptorPool();
+    allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
 
-    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
         "Failed allocating object instance descriptor sets!");
     for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
@@ -199,7 +211,7 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
 
 void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
 {
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
 
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.buffer = buffer->buffer;
@@ -216,12 +228,12 @@ void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
     bufferWrite.descriptorCount = 1;
     bufferWrite.pBufferInfo = &bufferInfo;
 
-    _context->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
 
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.buffer = buffer->buffer;
@@ -238,7 +250,7 @@ void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
     bufferWrite.descriptorCount = 1;
     bufferWrite.pBufferInfo = &bufferInfo;
 
-    _context->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
 void GPUScene::CreateSceneBuffers()
@@ -255,7 +267,7 @@ void GPUScene::CreateSceneBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);
 
-        _sceneFrameData[i].buffer = _context->GetBufferResourceManager().Create(creation);
+        _sceneFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
@@ -275,7 +287,7 @@ void GPUScene::CreateObjectInstancesBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
             .SetName(name);
 
-        _objectInstancesFrameData[i].buffer = _context->GetBufferResourceManager().Create(creation);
+        _objectInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
@@ -290,12 +302,14 @@ void GPUScene::InitializeIndirectDrawBuffer()
             .SetIsMappable(true)
             .SetName("Indirect draw buffer");
 
-        _indirectDrawFrameData[i].buffer = _context->GetBufferResourceManager().Create(creation);
+        _indirectDrawFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
 void GPUScene::InitializeIndirectDrawDescriptor()
 {
+    auto vkContext { _context->VulkanContext() };
+
     vk::DescriptorSetLayoutBinding layoutBinding {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
@@ -308,25 +322,25 @@ void GPUScene::InitializeIndirectDrawDescriptor()
         .pBindings = &layoutBinding,
     };
 
-    util::VK_ASSERT(_context->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+    util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _drawBufferDescriptorSetLayout; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = _context->DescriptorPool();
+    allocateInfo.descriptorPool = vkContext->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    util::VK_ASSERT(_context->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+    util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
         "Failed allocating descriptor sets!");
 
     for (size_t i = 0; i < descriptorSets.size(); ++i)
     {
         _indirectDrawFrameData[i].descriptorSet = descriptorSets[i];
 
-        const Buffer* buffer = _context->GetBufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
+        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
 
         vk::DescriptorBufferInfo bufferInfo {};
         bufferInfo.buffer = buffer->buffer;
@@ -341,7 +355,7 @@ void GPUScene::InitializeIndirectDrawDescriptor()
         bufferWrite.descriptorCount = 1;
         bufferWrite.pBufferInfo = &bufferInfo;
 
-        _context->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+        vkContext->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
     }
 }
 
@@ -349,7 +363,7 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
 {
     assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
 
-    const Buffer* buffer = _context->GetBufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
 
     std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 

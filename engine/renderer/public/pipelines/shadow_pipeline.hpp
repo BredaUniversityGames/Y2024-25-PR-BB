@@ -9,14 +9,14 @@
 #include <memory>
 
 class BatchBuffer;
-class VulkanContext;
+class GraphicsContext;
 
 struct RenderSceneDescription;
 
 class ShadowPipeline final : public FrameGraphRenderPass
 {
 public:
-    ShadowPipeline(const std::shared_ptr<VulkanContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
+    ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
     ~ShadowPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -28,7 +28,7 @@ private:
     void CreatePipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
 
     CameraResource _shadowCamera;

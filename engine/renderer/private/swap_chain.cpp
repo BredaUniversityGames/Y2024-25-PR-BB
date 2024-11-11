@@ -1,8 +1,10 @@
 #include "swap_chain.hpp"
-#include "vulkan/vulkan.h"
+
+#include "graphics_context.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-SwapChain::SwapChain(const std::shared_ptr<VulkanContext>& context, const glm::uvec2& screenSize)
+SwapChain::SwapChain(const std::shared_ptr<GraphicsContext>& context, const glm::uvec2& screenSize)
     : _context(context)
 {
     CreateSwapChain(screenSize);
@@ -15,8 +17,10 @@ SwapChain::~SwapChain()
 
 void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 {
+    auto vkContext { _context->VulkanContext() };
+
     _imageSize = screenSize;
-    SupportDetails swapChainSupport = QuerySupport(_context->PhysicalDevice(), _context->Surface());
+    SupportDetails swapChainSupport = QuerySupport(vkContext->PhysicalDevice(), vkContext->Surface());
 
     auto surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
     auto presentMode = ChoosePresentMode(swapChainSupport.presentModes);
@@ -27,7 +31,7 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
         imageCount = swapChainSupport.capabilities.maxImageCount;
 
     vk::SwapchainCreateInfoKHR createInfo {};
-    createInfo.surface = _context->Surface();
+    createInfo.surface = vkContext->Surface();
     createInfo.minImageCount = imageCount + 1;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -39,8 +43,8 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
     if (swapChainSupport.capabilities.supportedUsageFlags & vk::ImageUsageFlagBits::eTransferDst)
         createInfo.imageUsage |= vk::ImageUsageFlagBits::eTransferDst;
 
-    uint32_t queueFamilyIndices[] = { _context->QueueFamilies().graphicsFamily.value(), _context->QueueFamilies().presentFamily.value() };
-    if (_context->QueueFamilies().graphicsFamily != _context->QueueFamilies().presentFamily)
+    uint32_t queueFamilyIndices[] = { vkContext->QueueFamilies().graphicsFamily.value(), vkContext->QueueFamilies().presentFamily.value() };
+    if (vkContext->QueueFamilies().graphicsFamily != vkContext->QueueFamilies().presentFamily)
     {
         createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
         createInfo.queueFamilyIndexCount = 2;
@@ -59,11 +63,11 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
     createInfo.clipped = vk::True;
     createInfo.oldSwapchain = nullptr;
 
-    util::VK_ASSERT(_context->Device().createSwapchainKHR(&createInfo, nullptr, &_swapChain), "Failed creating swap chain!");
+    util::VK_ASSERT(vkContext->Device().createSwapchainKHR(&createInfo, nullptr, &_swapChain), "Failed creating swap chain!");
 
-    util::NameObject(_swapChain, "Main Swapchain", _context);
+    util::NameObject(_swapChain, "Main Swapchain", vkContext);
 
-    _images = _context->Device().getSwapchainImagesKHR(_swapChain);
+    _images = vkContext->Device().getSwapchainImagesKHR(_swapChain);
     _format = surfaceFormat.format;
     _extent = extent;
 
@@ -72,7 +76,9 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 
 void SwapChain::Resize(const glm::uvec2& screenSize)
 {
-    _context->Device().waitIdle();
+    auto vkContext { _context->VulkanContext() };
+
+    vkContext->Device().waitIdle();
 
     CleanUpSwapChain();
 
@@ -81,6 +87,8 @@ void SwapChain::Resize(const glm::uvec2& screenSize)
 
 void SwapChain::CreateSwapChainImageViews()
 {
+    auto vkContext { _context->VulkanContext() };
+
     _imageViews.resize(_images.size());
     for (size_t i = 0; i < _imageViews.size(); ++i)
     {
@@ -98,10 +106,10 @@ void SwapChain::CreateSwapChainImageViews()
                 1 // layer count
             }
         };
-        util::VK_ASSERT(_context->Device().createImageView(&createInfo, nullptr, &_imageViews[i]), "Failed creating image view for swap chain!");
+        util::VK_ASSERT(vkContext->Device().createImageView(&createInfo, nullptr, &_imageViews[i]), "Failed creating image view for swap chain!");
 
-        util::NameObject(_imageViews[i], "Swapchain Image View", _context);
-        util::NameObject(_images[i], "Swapchain Image", _context);
+        util::NameObject(_imageViews[i], "Swapchain Image View", vkContext);
+        util::NameObject(_images[i], "Swapchain Image", vkContext);
     }
 }
 
@@ -159,8 +167,12 @@ vk::Extent2D SwapChain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capab
 
 void SwapChain::CleanUpSwapChain()
 {
-    for (auto imageView : _imageViews)
-        _context->Device().destroy(imageView);
+    auto vkContext { _context->VulkanContext() };
 
-    _context->Device().destroy(_swapChain);
+    for (auto imageView : _imageViews)
+    {
+        vkContext->Device().destroy(imageView);
+    }
+
+    vkContext->Device().destroy(_swapChain);
 }

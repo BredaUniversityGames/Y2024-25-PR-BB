@@ -7,10 +7,12 @@
 #include <glm/vec2.hpp>
 #include <memory>
 
+class GraphicsContext;
+
 class GBuffers
 {
 public:
-    GBuffers(const std::shared_ptr<VulkanContext>& context, glm::uvec2 size);
+    GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 size);
 
     ~GBuffers();
 
@@ -30,7 +32,7 @@ public:
     void TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     glm::uvec2 _size;
 
     std::array<ResourceHandle<Image>, DEFERRED_ATTACHMENT_COUNT> _attachments;

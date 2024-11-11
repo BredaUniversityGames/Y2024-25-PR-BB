@@ -5,15 +5,17 @@
 
 #include <memory>
 
-class VulkanContext;
+class ImageResourceManager;
 
-class MaterialResourceManager : public ResourceManager<Material>
+class MaterialResourceManager final : public ResourceManager<Material>
 {
 public:
-    explicit MaterialResourceManager(const std::shared_ptr<VulkanContext>& context);
+    explicit MaterialResourceManager(const std::shared_ptr<ImageResourceManager>& ImageResourceManager);
+    ~MaterialResourceManager() final = default;
+
     ResourceHandle<Material> Create(const MaterialCreation& creation);
-    ResourceHandle<Material> Create(const Material& material) override { return ResourceManager<Material>::Create(material); }
+    ResourceHandle<Material> Create(const Material& material) final { return ResourceManager<Material>::Create(material); }
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<ImageResourceManager> _imageResourceManager;
 };

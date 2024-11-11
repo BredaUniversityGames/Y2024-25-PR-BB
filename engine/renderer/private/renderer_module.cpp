@@ -2,8 +2,13 @@
 
 #include "application_module.hpp"
 #include "engine.hpp"
+#include "graphics_context.hpp"
 #include "old_engine.hpp"
 #include "renderer.hpp"
+#include "vulkan_context.hpp"
+
+#include <imgui.h>
+#include <implot.h>
 #include <memory>
 
 RendererModule::RendererModule()
@@ -21,6 +26,13 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
 
 void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+    _renderer->GetContext()->VulkanContext()->Device().waitIdle();
+
+    _particleInterface.reset();
+    _renderer.reset();
+
+    ImPlot::DestroyContext();
+    ImGui::DestroyContext();
 }
 
 void RendererModule::Tick(MAYBE_UNUSED Engine& engine)

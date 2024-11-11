@@ -20,7 +20,7 @@ class IBLPipeline;
 class ParticlePipeline;
 class SwapChain;
 class GBuffers;
-class VulkanContext;
+class GraphicsContext;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
@@ -45,13 +45,13 @@ public:
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
-    std::shared_ptr<VulkanContext> GetContext() const { return _context; }
+    std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
 
 private:
     friend class RendererModule;
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
 
     std::unique_ptr<ModelLoader> _modelLoader;
     // TODO: Unavoidable currently, this needs to become a module

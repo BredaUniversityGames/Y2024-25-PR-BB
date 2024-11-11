@@ -1,30 +1,31 @@
 #include "editor.hpp"
-#include <imgui_impl_sdl3.h>
 
 #include "bloom_settings.hpp"
-#include "imgui/misc/cpp/imgui_stdlib.h"
-#include "imgui_impl_vulkan.h"
-#include "log.hpp"
-#include "mesh.hpp"
-#include "modules/physics_module.hpp"
-#include "performance_tracker.hpp"
-#include "profile_macros.hpp"
-
-#include "ecs.hpp"
-#include <fstream>
-
-#include "gbuffers.hpp"
-#include "model_loader.hpp"
-#include "renderer.hpp"
-#include "serialization.hpp"
-
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
+#include "ecs.hpp"
+#include "gbuffers.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "log.hpp"
+#include "mesh.hpp"
+#include "model_loader.hpp"
+#include "modules/physics_module.hpp"
+#include "performance_tracker.hpp"
+#include "profile_macros.hpp"
+#include "renderer.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "serialization.hpp"
+#include "vulkan_context.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <fstream>
+#include <imgui/misc/cpp/imgui_stdlib.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_vulkan.h>
 
 Editor::Editor(ECS& ecs, Renderer& renderer)
     : _ecs(ecs)
@@ -37,24 +38,26 @@ Editor::Editor(ECS& ecs, Renderer& renderer)
     pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
     pipelineRenderingCreateInfoKhr.depthAttachmentFormat = renderer.GetGBuffers().DepthFormat();
 
+    auto vkContext { renderer.GetContext()->VulkanContext() };
+
     ImGui_ImplVulkan_InitInfo initInfoVulkan {};
     initInfoVulkan.UseDynamicRendering = true;
     initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = renderer.GetContext()->PhysicalDevice();
-    initInfoVulkan.Device = renderer.GetContext()->Device();
+    initInfoVulkan.PhysicalDevice = vkContext->PhysicalDevice();
+    initInfoVulkan.Device = vkContext->Device();
     initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = renderer.GetContext()->Instance();
+    initInfoVulkan.Instance = vkContext->Instance();
     initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = renderer.GetContext()->GraphicsQueue();
-    initInfoVulkan.QueueFamily = renderer.GetContext()->QueueFamilies().graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = renderer.GetContext()->DescriptorPool();
+    initInfoVulkan.Queue = vkContext->GraphicsQueue();
+    initInfoVulkan.QueueFamily = vkContext->QueueFamilies().graphicsFamily.value();
+    initInfoVulkan.DescriptorPool = vkContext->DescriptorPool();
     initInfoVulkan.MinImageCount = 2;
     initInfoVulkan.ImageCount = renderer.GetSwapChain().GetImageCount();
     ImGui_ImplVulkan_Init(&initInfoVulkan);
 
     ImGui_ImplVulkan_CreateFontsTexture();
 
-    _basicSampler = util::CreateSampler(renderer.GetContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _basicSampler = util::CreateSampler(vkContext, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     _entityEditor.registerComponent<TransformComponent>("Transform");
@@ -163,7 +166,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     DirectionalLight& light = scene.directionalLight;
     // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetContext()->GetImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetContext()->Resources()->ImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -180,7 +183,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         char* statsJson;
-        vmaBuildStatsString(_renderer.GetContext()->MemoryAllocator(), &statsJson, true);
+        vmaBuildStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -196,7 +199,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_renderer.GetContext()->MemoryAllocator(), statsJson);
+        vmaFreeStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
     }
 
     ImGui::End();

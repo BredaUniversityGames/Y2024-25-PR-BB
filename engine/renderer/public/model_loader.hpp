@@ -10,11 +10,12 @@
 class SingleTimeCommands;
 class BatchBuffer;
 class ECS;
+class GraphicsContext;
 
 class ModelLoader
 {
 public:
-    ModelLoader(const std::shared_ptr<VulkanContext>& context, std::shared_ptr<const ECS> ecs);
+    ModelLoader(const std::shared_ptr<GraphicsContext>& context, std::shared_ptr<const ECS> ecs);
     ~ModelLoader();
 
     enum class LoadMode : uint8_t
@@ -34,7 +35,7 @@ public:
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
 private:
-    std::shared_ptr<VulkanContext> _context;
+    std::shared_ptr<GraphicsContext> _context;
     std::shared_ptr<const ECS> _ecs;
     fastgltf::Parser _parser;
     vk::UniqueSampler _sampler;

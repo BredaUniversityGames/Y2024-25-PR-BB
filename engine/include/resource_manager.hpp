@@ -36,6 +36,8 @@ template <typename T>
 class ResourceManager
 {
 public:
+    virtual ~ResourceManager() = default;
+
     virtual ResourceHandle<T> Create(const T& resource)
     {
         uint32_t index {};

@@ -1,10 +1,11 @@
 #include "pipeline_builder.hpp"
 
+#include "graphics_context.hpp"
 #include "vulkan_helper.hpp"
 
 std::unordered_map<size_t, vk::DescriptorSetLayout> PipelineBuilder::_cacheDescriptorSetLayouts {};
 
-PipelineBuilder::PipelineBuilder(std::shared_ptr<VulkanContext> context)
+PipelineBuilder::PipelineBuilder(std::shared_ptr<GraphicsContext> context)
     : _context(context)
 {
     _inputAssemblyStateCreateInfo = {
@@ -52,7 +53,7 @@ PipelineBuilder::~PipelineBuilder()
     for (auto& shaderStage : _shaderStages)
     {
         spvReflectDestroyShaderModule(&shaderStage.reflectModule);
-        _context->Device().destroy(shaderStage.shaderModule);
+        _context->VulkanContext()->Device().destroy(shaderStage.shaderModule);
     }
 }
 
@@ -83,7 +84,7 @@ void PipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& 
     CreatePipeline(pipeline);
 }
 
-vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(std::shared_ptr<VulkanContext> context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
 {
     size_t hash = HashBindings(bindings, names);
 
@@ -94,7 +95,7 @@ vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(std::shared_pt
             .pBindings = bindings.data(),
         };
 
-        vk::DescriptorSetLayout layout { context->Device().createDescriptorSetLayout(layoutInfo, nullptr) };
+        vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(layoutInfo, nullptr) };
 
         _cacheDescriptorSetLayouts[hash] = layout;
     }
@@ -242,7 +243,7 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
                 .pBindings = bindings.data(),
             };
 
-            vk::DescriptorSetLayout layout { _context->Device().createDescriptorSetLayout(layoutInfo, nullptr) };
+            vk::DescriptorSetLayout layout { _context->VulkanContext()->Device().createDescriptorSetLayout(layoutInfo, nullptr) };
 
             _descriptorSetLayouts[set->set] = layout;
             _cacheDescriptorSetLayouts[hash] = _descriptorSetLayouts.back();
@@ -259,7 +260,7 @@ void PipelineBuilder::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
         .pPushConstantRanges = _pushConstantRanges.data(),
     };
 
-    pipelineLayout = _pipelineLayout = _context->Device().createPipelineLayout(createInfo, nullptr);
+    pipelineLayout = _pipelineLayout = _context->VulkanContext()->Device().createPipelineLayout(createInfo, nullptr);
 }
 
 void PipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
@@ -303,7 +304,7 @@ void PipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
     structureChain.assign(graphicsPipelineCreateInfo);
     structureChain.assign(renderingCreateInfo);
 
-    auto [result, vkPipeline] = _context->Device().createGraphicsPipeline(nullptr, structureChain.get(), nullptr);
+    auto [result, vkPipeline] = _context->VulkanContext()->Device().createGraphicsPipeline(nullptr, structureChain.get(), nullptr);
 
     util::VK_ASSERT(result, "Failed creating graphics pipeline!");
 
@@ -317,7 +318,7 @@ vk::ShaderModule PipelineBuilder::CreateShaderModule(const std::vector<std::byte
         .pCode = reinterpret_cast<const uint32_t*>(spirvBytes.data()),
     };
 
-    return _context->Device().createShaderModule(createInfo, nullptr);
+    return _context->VulkanContext()->Device().createShaderModule(createInfo, nullptr);
 }
 
 size_t PipelineBuilder::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)

@@ -2,12 +2,13 @@
 
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
+#include "graphics_context.hpp"
 #include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)
@@ -22,8 +23,8 @@ TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<VulkanContext>& c
 
 TonemappingPipeline::~TonemappingPipeline()
 {
-    _context->Device().destroy(_pipeline);
-    _context->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_pipeline);
+    _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
 void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -49,7 +50,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
         .pStencilAttachment = nullptr,
     };
 
-    commandBuffer.beginRenderingKHR(&renderingInfo, _context->Dldi());
+    commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
@@ -63,7 +64,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     _context->GetDrawStats().Draw(3);
 
-    commandBuffer.endRenderingKHR(_context->Dldi());
+    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
 void TonemappingPipeline::CreatePipeline()

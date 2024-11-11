@@ -2,9 +2,15 @@
 
 #include "batch_buffer.hpp"
 #include "ecs.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "log.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "resource_management/material_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "timers.hpp"
+#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -37,30 +43,30 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 
 }
 
-ModelLoader::ModelLoader(const std::shared_ptr<VulkanContext>& context, std::shared_ptr<const ECS> ecs)
+ModelLoader::ModelLoader(const std::shared_ptr<GraphicsContext>& context, std::shared_ptr<const ECS> ecs)
     : _context(context)
     , _ecs(ecs)
 {
 
-    _sampler = util::CreateSampler(_context, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
+    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
         vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
 
     auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
-    ResourceHandle<Image> defaultImage = _context->GetImageResourceManager().Create(defaultImageCreation);
+    ResourceHandle<Image> defaultImage = _context->Resources()->ImageResourceManager().Create(defaultImageCreation);
 
     MaterialCreation defaultMaterialCreationInfo {};
     defaultMaterialCreationInfo.albedoMap = defaultImage;
-    _defaultMaterial = _context->GetMaterialResourceManager().Create(defaultMaterialCreationInfo);
+    _defaultMaterial = _context->Resources()->MaterialResourceManager().Create(defaultMaterialCreationInfo);
 }
 
 ModelLoader::~ModelLoader()
 {
-    const Material* defaultMaterial = _context->GetMaterialResourceManager().Access(_defaultMaterial);
-    _context->GetImageResourceManager().Destroy(defaultMaterial->albedoMap);
-    _context->GetMaterialResourceManager().Destroy(_defaultMaterial);
+    const Material* defaultMaterial = _context->Resources()->MaterialResourceManager().Access(_defaultMaterial);
+    _context->Resources()->ImageResourceManager().Destroy(defaultMaterial->albedoMap);
+    _context->Resources()->MaterialResourceManager().Destroy(_defaultMaterial);
 }
 
 Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
@@ -433,14 +439,14 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.resources.textures.emplace_back(_context->GetImageResourceManager().Create(imageCreation));
+        model.resources.textures.emplace_back(_context->Resources()->ImageResourceManager().Create(imageCreation));
     }
 
     // Load materials
     for (auto& material : gltf.materials)
     {
         MaterialCreation materialCreation = ProcessMaterial(material, model.resources.textures, gltf);
-        model.resources.materials.emplace_back(_context->GetMaterialResourceManager().Create(materialCreation));
+        model.resources.materials.emplace_back(_context->Resources()->MaterialResourceManager().Create(materialCreation));
     }
 
     // Load meshes
@@ -456,7 +462,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
             mesh.primitives.emplace_back(primitive);
         }
 
-        auto handle = _context->GetMeshResourceManager().Create(mesh);
+        auto handle = _context->Resources()->MeshResourceManager().Create(mesh);
 
         model.resources.meshes.emplace_back(handle);
     }
@@ -494,7 +500,7 @@ Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& staging
     ResourceHandle<Material> material)
 {
     Mesh::Primitive primitive {};
-    primitive.material = _context->GetMaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
+    primitive.material = _context->Resources()->MaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
     primitive.count = stagingPrimitive.indices.size();
     primitive.vertexOffset = batchBuffer.AppendVertices(stagingPrimitive.vertices, commandBuffer);
     primitive.indexOffset = batchBuffer.AppendIndices(stagingPrimitive.indices, commandBuffer);
@@ -571,5 +577,5 @@ ResourceHandle<Mesh> ModelLoader::LoadMesh(const StagingMesh::Primitive& staging
     Mesh mesh;
     mesh.primitives.emplace_back(primitive);
 
-    return _context->GetMeshResourceManager().Create(mesh);
+    return _context->Resources()->MeshResourceManager().Create(mesh);
 }

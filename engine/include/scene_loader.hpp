@@ -6,13 +6,13 @@
 #include <memory>
 
 class ECS;
-class VulkanContext;
+class GraphicsContext;
 
 class SceneLoader
 {
 public:
-    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const std::shared_ptr<VulkanContext>& context, ECS& ecs, const Model& model);
+    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model);
 
 private:
-    entt::entity LoadNodeRecursive(const std::shared_ptr<VulkanContext>& context, ECS& ecs, const Hierarchy::Node& node);
+    entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& node);
 };
