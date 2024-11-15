@@ -1,7 +1,6 @@
 #include "renderer.hpp"
 
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_vulkan.h>
+#include <imgui.h>
 #include <memory>
 #include <stb/stb_image.h>
 #include <utility>
@@ -221,9 +220,6 @@ Renderer::~Renderer()
     }
 
     _swapChain.reset();
-
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
 }
 
 void Renderer::CreateCommandBuffers()

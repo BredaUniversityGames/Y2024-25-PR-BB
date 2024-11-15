@@ -10,6 +10,7 @@
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
+#include "imgui_backend.hpp"
 #include "log.hpp"
 #include "mesh.hpp"
 #include "model_loader.hpp"
@@ -19,45 +20,16 @@
 #include "renderer.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "serialization.hpp"
-#include "vulkan_context.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_vulkan.h>
 
-Editor::Editor(ECS& ecs, Renderer& renderer)
+Editor::Editor(ECS& ecs, Renderer& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
     : _ecs(ecs)
     , _renderer(renderer)
+    , _imguiBackend(imguiBackend)
 {
-    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
-    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-
-    const vk::Format format = renderer.GetSwapChain().GetFormat();
-    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = renderer.GetGBuffers().DepthFormat();
-
-    auto vkContext { renderer.GetContext()->VulkanContext() };
-
-    ImGui_ImplVulkan_InitInfo initInfoVulkan {};
-    initInfoVulkan.UseDynamicRendering = true;
-    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
-    initInfoVulkan.PhysicalDevice = vkContext->PhysicalDevice();
-    initInfoVulkan.Device = vkContext->Device();
-    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
-    initInfoVulkan.Instance = vkContext->Instance();
-    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    initInfoVulkan.Queue = vkContext->GraphicsQueue();
-    initInfoVulkan.QueueFamily = vkContext->QueueFamilies().graphicsFamily.value();
-    initInfoVulkan.DescriptorPool = vkContext->DescriptorPool();
-    initInfoVulkan.MinImageCount = 2;
-    initInfoVulkan.ImageCount = renderer.GetSwapChain().GetImageCount();
-    ImGui_ImplVulkan_Init(&initInfoVulkan);
-
-    ImGui_ImplVulkan_CreateFontsTexture();
-
-    _basicSampler = util::CreateSampler(vkContext, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     _entityEditor.registerComponent<TransformComponent>("Transform");
@@ -68,9 +40,7 @@ Editor::Editor(ECS& ecs, Renderer& renderer)
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
 {
-    ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-
+    _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
     DrawMainMenuBar();
@@ -165,8 +135,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         system->Inspect();
     }
     DirectionalLight& light = scene.directionalLight;
-    // for debug info
-    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _renderer.GetContext()->Resources()->ImageResourceManager().Access(_renderer.GetGBuffers().Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+
+    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer.GetGBuffers().Shadow());
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -176,21 +146,20 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
-    //
 
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))
     {
-        char* statsJson;
-        vmaBuildStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
+        // char* statsJson;
+        //  vmaBuildStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
         std::ofstream file { outputFilePath };
         if (file.is_open())
         {
-            file << statsJson;
+            // file << statsJson;
 
             file.close();
         }
@@ -199,7 +168,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
+        // vmaFreeStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
     }
 
     ImGui::End();

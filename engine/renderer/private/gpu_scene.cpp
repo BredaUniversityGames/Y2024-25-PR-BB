@@ -74,10 +74,10 @@ void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameInde
     directionalLightData.depthBiasMVP = DirectionalLight::BIAS_MATRIX * directionalLightData.lightVP;
     directionalLightData.direction = glm::vec4(direction, light.shadowBias);
 
-    sceneData.irradianceIndex = irradianceMap.index;
-    sceneData.prefilterIndex = prefilterMap.index;
-    sceneData.brdfLUTIndex = brdfLUTMap.index;
-    sceneData.shadowMapIndex = directionalShadowMap.index;
+    sceneData.irradianceIndex = irradianceMap.Index();
+    sceneData.prefilterIndex = prefilterMap.Index();
+    sceneData.brdfLUTIndex = brdfLUTMap.Index();
+    sceneData.shadowMapIndex = directionalShadowMap.Index();
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
@@ -103,7 +103,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
 
                 instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-                instances[count].materialIndex = primitive.material.index;
+                instances[count].materialIndex = primitive.material.Index();
                 instances[count].boundingRadius = primitive.boundingRadius;
 
                 _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {

@@ -17,8 +17,8 @@ TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>&
 {
     CreatePipeline();
 
-    _pushConstants.hdrTargetIndex = hdrTarget.index;
-    _pushConstants.bloomTargetIndex = bloomTarget.index;
+    _pushConstants.hdrTargetIndex = hdrTarget.Index();
+    _pushConstants.bloomTargetIndex = bloomTarget.Index();
 }
 
 TonemappingPipeline::~TonemappingPipeline()

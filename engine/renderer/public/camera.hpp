@@ -37,15 +37,15 @@ public:
     CameraResource(const std::shared_ptr<GraphicsContext>& context);
     ~CameraResource();
 
+    NON_COPYABLE(CameraResource);
+    NON_MOVABLE(CameraResource);
+
     void Update(uint32_t currentFrame, const Camera& camera);
 
     vk::DescriptorSet DescriptorSet(uint32_t frameIndex) const { return _descriptorSets[frameIndex]; }
     ResourceHandle<Buffer> BufferResource(uint32_t frameIndex) const { return _buffers[frameIndex]; }
 
     static vk::DescriptorSetLayout DescriptorSetLayout();
-
-    NON_COPYABLE(CameraResource);
-    NON_MOVABLE(CameraResource);
 
 private:
     std::shared_ptr<GraphicsContext> _context;

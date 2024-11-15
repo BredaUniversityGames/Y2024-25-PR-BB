@@ -1,13 +1,16 @@
 #pragma once
 
 #include "common.hpp"
-#include "vulkan_helper.hpp"
+#include "constants.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
 #include <memory>
+#include <resource_handle.hpp>
+#include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
+struct Image;
 
 class GBuffers
 {

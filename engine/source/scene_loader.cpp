@@ -9,14 +9,12 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh.hpp"
-#include "timers.hpp"
+#include "resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
 
 std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model)
 {
-    Stopwatch stopwatch;
-
     std::vector<entt::entity> entities {};
     entities.reserve(model.hierarchy.baseNodes.size());
 

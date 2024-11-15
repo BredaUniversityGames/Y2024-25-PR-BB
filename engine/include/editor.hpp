@@ -10,13 +10,14 @@ class ECS;
 class PerformanceTracker;
 class BloomSettings;
 class Renderer;
+class ImGuiBackend;
 
 struct SceneDescription;
 
 class Editor
 {
 public:
-    Editor(ECS& ecs, Renderer& renderer);
+    Editor(ECS& ecs, Renderer& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend);
 
     ~Editor();
 
@@ -30,6 +31,7 @@ private:
 
     ECS& _ecs;
     Renderer& _renderer;
+    std::shared_ptr<ImGuiBackend> _imguiBackend;
     vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
 
     entt::entity _selectedEntity = entt::null;

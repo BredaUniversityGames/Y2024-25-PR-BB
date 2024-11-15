@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
-#include "resource_manager.hpp"
+#include "resource_handle.hpp"
 
 #include <array>
 #include <memory>

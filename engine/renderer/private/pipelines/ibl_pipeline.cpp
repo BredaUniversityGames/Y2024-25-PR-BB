@@ -80,7 +80,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
 
         IrradiancePushConstant pc {
             .index = static_cast<uint32_t>(i),
-            .hdriIndex = _environmentMap.index,
+            .hdriIndex = _environmentMap.Index(),
         };
 
         commandBuffer.pushConstants<IrradiancePushConstant>(_irradiancePipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, { pc });
@@ -134,7 +134,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             PrefilterPushConstant pc {
                 .faceIndex = static_cast<uint32_t>(j),
                 .roughness = static_cast<float>(i) / static_cast<float>(prefilterMap.mips - 1),
-                .hdriIndex = _environmentMap.index,
+                .hdriIndex = _environmentMap.Index(),
             };
 
             commandBuffer.pushConstants<PrefilterPushConstant>(_prefilterPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, { pc });

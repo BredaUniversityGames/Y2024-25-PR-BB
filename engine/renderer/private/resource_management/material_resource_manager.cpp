@@ -24,11 +24,11 @@ ResourceHandle<Material> MaterialResourceManager::Create(const MaterialCreation&
     gpuInfo.useOcclusionMap = _imageResourceManager->IsValid(materialResource.occlusionMap);
     gpuInfo.useEmissiveMap = _imageResourceManager->IsValid(materialResource.emissiveMap);
 
-    gpuInfo.albedoMapIndex = materialResource.albedoMap.index;
-    gpuInfo.mrMapIndex = materialResource.mrMap.index;
-    gpuInfo.normalMapIndex = materialResource.normalMap.index;
-    gpuInfo.occlusionMapIndex = materialResource.occlusionMap.index;
-    gpuInfo.emissiveMapIndex = materialResource.emissiveMap.index;
+    gpuInfo.albedoMapIndex = materialResource.albedoMap.Index();
+    gpuInfo.mrMapIndex = materialResource.mrMap.Index();
+    gpuInfo.normalMapIndex = materialResource.normalMap.Index();
+    gpuInfo.occlusionMapIndex = materialResource.occlusionMap.Index();
+    gpuInfo.emissiveMapIndex = materialResource.emissiveMap.Index();
 
     gpuInfo.albedoFactor = creation.albedoFactor;
     gpuInfo.metallicFactor = creation.metallicFactor;

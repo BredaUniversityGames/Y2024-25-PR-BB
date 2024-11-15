@@ -28,7 +28,7 @@ SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context
 
     CreatePipeline();
 
-    _pushConstants.hdriIndex = environmentMap.index;
+    _pushConstants.hdriIndex = environmentMap.Index();
 }
 
 SkydomePipeline::~SkydomePipeline()

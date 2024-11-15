@@ -1,6 +1,7 @@
 #include "pipelines/lighting_pipeline.hpp"
 
 #include "bloom_settings.hpp"
+#include "camera.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -8,6 +9,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _context(context)
@@ -19,10 +21,10 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
 {
     _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 0);
 
-    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].index;
-    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].index;
-    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].index;
-    _pushConstants.positionIndex = _gBuffers.Attachments()[3].index;
+    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
+    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
+    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
+    _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
 
     _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 

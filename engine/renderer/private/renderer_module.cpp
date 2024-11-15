@@ -3,6 +3,7 @@
 #include "application_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
+#include "imgui_backend.hpp"
 #include "old_engine.hpp"
 #include "renderer.hpp"
 #include "vulkan_context.hpp"
@@ -20,6 +21,7 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
     auto ecs = engine.GetModule<OldEngine>().GetECS();
     _renderer = std::make_unique<Renderer>(engine.GetModule<ApplicationModule>(), ecs);
     _particleInterface = std::make_unique<ParticleInterface>(ecs);
+    _imguiBackend = std::make_shared<ImGuiBackend>(_renderer->GetContext(), engine.GetModule<ApplicationModule>(), _renderer->GetSwapChain(), _renderer->GetGBuffers());
 
     return ModuleTickOrder::eRender;
 }
@@ -30,6 +32,8 @@ void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
     _particleInterface.reset();
     _renderer.reset();
+
+    _imguiBackend.reset();
 
     ImPlot::DestroyContext();
     ImGui::DestroyContext();

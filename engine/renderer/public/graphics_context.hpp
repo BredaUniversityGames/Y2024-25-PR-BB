@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "resource_manager.hpp"
+#include "resource_handle.hpp"
 
 #include <memory>
 #include <vulkan/vulkan.hpp>
@@ -10,8 +10,8 @@
 
 class VulkanContext;
 class GraphicsResources;
-class Image;
-class Buffer;
+struct Image;
+struct Buffer;
 struct VulkanInitInfo;
 
 constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;

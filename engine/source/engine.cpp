@@ -1,7 +1,5 @@
 #include "engine.hpp"
 
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_vulkan.h>
 #include <implot/implot.h>
 #include <stb/stb_image.h>
 
@@ -24,7 +22,6 @@
 #include "renderer_module.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
-#include "vulkan_helper.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -45,8 +42,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-
-    ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
@@ -70,7 +65,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer());
+    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);

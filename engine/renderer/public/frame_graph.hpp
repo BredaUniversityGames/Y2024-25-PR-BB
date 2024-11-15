@@ -1,11 +1,11 @@
 #pragma once
 
 #include "enum_utils.hpp"
-#include "resource_manager.hpp"
+#include "resource_handle.hpp"
 #include "swap_chain.hpp"
-#include "vulkan_context.hpp"
 
 #include <memory>
+#include <vulkan/vulkan.hpp>
 
 struct RenderSceneDescription;
 struct Image;
