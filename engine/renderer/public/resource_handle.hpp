@@ -9,13 +9,14 @@ template <typename T>
 struct ResourceHandle
 {
     ResourceHandle()
-        : index(0xFFFFFF)
+        : index(0xFFFF)
         , version(0)
     {
     }
-    static ResourceHandle<T> Invalid() { return ResourceHandle<T> {}; }
+    static ResourceHandle<T> Null() { return ResourceHandle<T> {}; }
 
     uint32_t Index() const { return index; }
+    bool IsNull() const { return index == 0xFFFF; }
 
 private:
     friend class VulkanContext;

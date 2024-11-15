@@ -1,19 +1,26 @@
 #include "pipelines/ibl_pipeline.hpp"
 
+#include "../vulkan_context.hpp"
+#include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
-#include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> environmentMap)
     : _context(context)
     , _environmentMap(environmentMap)
 {
-    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge, vk::SamplerMipmapMode::eLinear, 0).release();
+    SamplerCreateInfo createInfo {
+        .name = "IBL sampler",
+        .maxLod = 0.0f,
+    };
+    createInfo.setGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+
+    _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
 
     CreateIrradianceCubemap();
     CreatePrefilterCubemap();
@@ -36,7 +43,7 @@ IBLPipeline::~IBLPipeline()
     resources->ImageResourceManager().Destroy(_brdfLUT);
     resources->ImageResourceManager().Destroy(_prefilterMap);
 
-    vkContext->Device().destroy(_sampler);
+    _context->Resources()->SamplerResourceManager().Destroy(_sampler);
 
     vkContext->Device().destroy(_prefilterPipeline);
     vkContext->Device().destroy(_prefilterPipelineLayout);

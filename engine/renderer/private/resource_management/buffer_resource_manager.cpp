@@ -1,7 +1,7 @@
 #include "resource_management/buffer_resource_manager.hpp"
 
-#include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
+#include "../vulkan_context.hpp"
+#include "../vulkan_helper.hpp"
 
 BufferResourceManager::BufferResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)

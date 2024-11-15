@@ -3,7 +3,9 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 GBuffers::GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 size)
     : _context(context)
@@ -74,25 +76,11 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
-    vk::SamplerCreateInfo shadowSamplerInfo {};
-    shadowSamplerInfo.magFilter = vk::Filter::eLinear;
-    shadowSamplerInfo.minFilter = vk::Filter::eLinear;
-    shadowSamplerInfo.addressModeU = vk::SamplerAddressMode::eClampToBorder;
-    shadowSamplerInfo.addressModeV = vk::SamplerAddressMode::eClampToBorder;
-    shadowSamplerInfo.addressModeW = vk::SamplerAddressMode::eClampToBorder;
-    shadowSamplerInfo.anisotropyEnable = 1;
-    shadowSamplerInfo.maxAnisotropy = 16;
-    shadowSamplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-    shadowSamplerInfo.unnormalizedCoordinates = 0;
-    shadowSamplerInfo.compareEnable = 0;
-    shadowSamplerInfo.compareOp = vk::CompareOp::eAlways;
-    shadowSamplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-    shadowSamplerInfo.mipLodBias = 0.0f;
-    shadowSamplerInfo.minLod = 0.0f;
-    shadowSamplerInfo.maxLod = static_cast<float>(1);
-    shadowSamplerInfo.compareEnable = vk::True;
-    shadowSamplerInfo.compareOp = vk::CompareOp::eLessOrEqual;
-    _shadowSampler = _context->VulkanContext()->Device().createSampler(shadowSamplerInfo);
+    SamplerCreateInfo shadowSamplerInfo {
+        .compareOp = vk::CompareOp::eLessOrEqual,
+    };
+    shadowSamplerInfo.setGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
     ImageCreation shadowCreation {};
     shadowCreation
@@ -115,7 +103,7 @@ void GBuffers::CleanUp()
     }
     resources->ImageResourceManager().Destroy(_depthImage);
     resources->ImageResourceManager().Destroy(_shadowImage);
-    _context->VulkanContext()->Device().destroy(_shadowSampler);
+    _context->Resources()->SamplerResourceManager().Destroy(_shadowSampler);
 }
 
 void GBuffers::CreateViewportAndScissor()

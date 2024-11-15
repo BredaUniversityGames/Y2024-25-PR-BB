@@ -2,15 +2,16 @@
 
 #include "common.hpp"
 #include "constants.hpp"
+#include "resource_handle.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
 #include <memory>
-#include <resource_handle.hpp>
 #include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
 struct Image;
+struct Sampler;
 
 class GBuffers
 {
@@ -44,7 +45,7 @@ private:
 
     vk::Format _depthFormat;
     ResourceHandle<Image> _shadowImage;
-    vk::Sampler _shadowSampler;
+    ResourceHandle<Sampler> _shadowSampler;
 
     vk::Format _shadowFormat;
 

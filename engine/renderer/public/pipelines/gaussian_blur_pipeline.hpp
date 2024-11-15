@@ -8,6 +8,7 @@
 #include <memory>
 
 class GraphicsContext;
+struct Sampler;
 
 class GaussianBlurPipeline final : public FrameGraphRenderPass
 {
@@ -32,7 +33,7 @@ private:
 
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _sourceDescriptorSets;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _targetDescriptorSets[2];
-    vk::UniqueSampler _sampler;
+    ResourceHandle<Sampler> _sampler;
 
     void CreatePipeline();
     void CreateDescriptorSetLayout();

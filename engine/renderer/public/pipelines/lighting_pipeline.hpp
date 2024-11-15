@@ -3,7 +3,7 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 class GPUScene;
@@ -43,9 +43,6 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
-
-    vk::UniqueSampler _sampler;
-    vk::UniqueSampler _shadowSampler;
 
     const BloomSettings& _bloomSettings;
 };

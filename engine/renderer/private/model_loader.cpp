@@ -8,6 +8,7 @@
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "timers.hpp"
 #include "vulkan_context.hpp"
@@ -47,10 +48,6 @@ ModelLoader::ModelLoader(const std::shared_ptr<GraphicsContext>& context, std::s
     : _context(context)
     , _ecs(ecs)
 {
-
-    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-        vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
-
     auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
     ImageCreation defaultImageCreation {};
     defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
@@ -458,7 +455,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
         {
             StagingMesh::Primitive stagingPrimitive = ProcessPrimitive(gltfPrimitive, gltf);
             Mesh::Primitive primitive = LoadPrimitive(stagingPrimitive, commandBuffer, batchBuffer,
-                gltfPrimitive.materialIndex.has_value() ? model.resources.materials[gltfPrimitive.materialIndex.value()] : ResourceHandle<Material>::Invalid());
+                gltfPrimitive.materialIndex.has_value() ? model.resources.materials[gltfPrimitive.materialIndex.value()] : ResourceHandle<Material>::Null());
             mesh.primitives.emplace_back(primitive);
         }
 
@@ -519,7 +516,7 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model,
     }
     else
     {
-        node.mesh = ResourceHandle<Mesh>::Invalid();
+        node.mesh = ResourceHandle<Mesh>::Null();
     }
 
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);

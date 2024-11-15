@@ -9,6 +9,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
@@ -44,11 +45,13 @@ ImGuiBackend::ImGuiBackend(const std::shared_ptr<GraphicsContext>& context, cons
 
     ImGui_ImplSDL3_InitForVulkan(applicationModule.GetWindowHandle());
 
-    _basicSampler = util::CreateSampler(vkContext, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    _basicSampler = _context->Resources()->SamplerResourceManager().Create(SamplerCreateInfo { .name = "ImGui sampler" });
 }
 
 ImGuiBackend::~ImGuiBackend()
 {
+    _context->Resources()->SamplerResourceManager().Destroy(_basicSampler);
+
     for (const auto imageID : _imageIDs)
     {
         ImGui_ImplVulkan_RemoveTexture(static_cast<VkDescriptorSet>(imageID));
@@ -78,11 +81,11 @@ ImTextureID ImGuiBackend::GetTexture(ResourceHandle<Image> image)
         layout = vk::ImageLayout::eShaderReadOnlyOptimal;
         break;
     case ImageType::eShadowMap:
-        layout = vk::ImageLayout::eShaderReadOnlyOptimal; // vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal;
+        layout = vk::ImageLayout::eShaderReadOnlyOptimal; // vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal; // TODO: I dont know why this works :l
         break;
     }
 
-    _imageIDs.emplace_back(ImGui_ImplVulkan_AddTexture(_basicSampler.get(), resource->view, static_cast<VkImageLayout>(layout)));
+    _imageIDs.emplace_back(ImGui_ImplVulkan_AddTexture(*_context->Resources()->SamplerResourceManager().Access(_basicSampler), resource->view, static_cast<VkImageLayout>(layout)));
 
     return _imageIDs.back();
 }

@@ -26,7 +26,6 @@ void CreateBuffer(std::shared_ptr<VulkanContext> context, vk::DeviceSize size, v
 vk::CommandBuffer BeginSingleTimeCommands(std::shared_ptr<VulkanContext> context);
 void EndSingleTimeCommands(std::shared_ptr<VulkanContext> context, vk::CommandBuffer commandBuffer);
 void CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size, uint32_t offset = 0);
-vk::UniqueSampler CreateSampler(std::shared_ptr<VulkanContext> context, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels);
 ImageLayoutTransitionState GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout);
 ImageLayoutTransitionState GetImageLayoutTransitionDestinationState(vk::ImageLayout destinationLayout);
 void InitializeImageMemoryBarrier(vk::ImageMemoryBarrier2& barrier, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);

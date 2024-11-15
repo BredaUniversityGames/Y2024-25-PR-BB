@@ -13,6 +13,7 @@ class GraphicsResources;
 struct Image;
 struct Buffer;
 struct VulkanInitInfo;
+struct Sampler;
 
 constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
 
@@ -43,7 +44,7 @@ private:
     vk::DescriptorSetLayout _bindlessLayout;
     vk::DescriptorSet _bindlessSet;
 
-    vk::UniqueSampler _sampler;
+    ResourceHandle<Sampler> _sampler;
 
     ResourceHandle<Image> _fallbackImage;
 

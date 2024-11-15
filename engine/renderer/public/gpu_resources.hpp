@@ -15,6 +15,10 @@ enum class ImageType
     eShadowMap
 };
 
+struct Sampler : public vk::Sampler
+{
+};
+
 struct ImageCreation
 {
     std::byte* initialData { nullptr };
@@ -28,7 +32,7 @@ struct ImageCreation
 
     vk::Format format { vk::Format::eUndefined };
     ImageType type { ImageType::e2D };
-    vk::Sampler sampler { nullptr };
+    ResourceHandle<Sampler> sampler {};
 
     std::string name;
 
@@ -39,7 +43,7 @@ struct ImageCreation
     ImageCreation& SetFormat(vk::Format format);
     ImageCreation& SetName(std::string_view name);
     ImageCreation& SetType(ImageType type);
-    ImageCreation& SetSampler(vk::Sampler sampler);
+    ImageCreation& SetSampler(ResourceHandle<Sampler> sampler);
 };
 
 struct Image
@@ -48,7 +52,7 @@ struct Image
     std::vector<vk::ImageView> views {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     VmaAllocation allocation {};
-    vk::Sampler sampler { nullptr };
+    ResourceHandle<Sampler> sampler {};
 
     uint16_t width { 1 };
     uint16_t height { 1 };
@@ -67,24 +71,24 @@ struct Image
 
 struct MaterialCreation
 {
-    ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Invalid();
+    ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Null();
     glm::vec4 albedoFactor { 0.0f };
     uint32_t albedoUVChannel;
 
-    ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Invalid();
+    ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Null();
     float metallicFactor { 0.0f };
     float roughnessFactor { 0.0f };
     std::optional<uint32_t> metallicRoughnessUVChannel;
 
-    ResourceHandle<Image> normalMap = ResourceHandle<Image>::Invalid();
+    ResourceHandle<Image> normalMap = ResourceHandle<Image>::Null();
     float normalScale { 0.0f };
     uint32_t normalUVChannel;
 
-    ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Invalid();
+    ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Null();
     float occlusionStrength { 0.0f };
     uint32_t occlusionUVChannel;
 
-    ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Invalid();
+    ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Null();
     glm::vec3 emissiveFactor { 0.0f };
     uint32_t emissiveUVChannel;
 };

@@ -1,12 +1,13 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 
+#include "../vulkan_context.hpp"
+#include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
-#include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 #include <string>
 #include <vector>
@@ -19,7 +20,11 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
     _targets[1] = target;
     CreateVerticalTarget();
 
-    _sampler = util::CreateSampler(_context->VulkanContext(), vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
+    SamplerCreateInfo createInfo {
+        .name = "Gaussian blur sampler",
+        .maxLod = 1.0f
+    };
+    _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
     CreatePipeline();
     CreateDescriptorSets();
 }
@@ -31,6 +36,8 @@ GaussianBlurPipeline::~GaussianBlurPipeline()
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
     _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
+
+    _context->Resources()->SamplerResourceManager().Destroy(_sampler);
 }
 
 void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
@@ -166,7 +173,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         vk::DescriptorImageInfo imageInfo {
-            .sampler = *_sampler,
+            .sampler = *_context->Resources()->SamplerResourceManager().Access(_sampler),
             .imageView = _context->Resources()->ImageResourceManager().Access(_source)->views[0],
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
@@ -190,7 +197,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
         for (size_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
         {
             vk::DescriptorImageInfo imageInfo {
-                .sampler = *_sampler,
+                .sampler = *_context->Resources()->SamplerResourceManager().Access(_sampler),
                 .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->views[0],
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             };

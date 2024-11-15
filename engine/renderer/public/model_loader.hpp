@@ -38,7 +38,6 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     std::shared_ptr<const ECS> _ecs;
     fastgltf::Parser _parser;
-    vk::UniqueSampler _sampler;
     ResourceHandle<Material> _defaultMaterial;
 
     StagingMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& primitive, const fastgltf::Asset& gltf);

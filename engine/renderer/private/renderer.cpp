@@ -54,7 +54,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ec
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _context };
-    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Invalid());
+    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Null());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -380,32 +380,33 @@ void Renderer::Render(float deltaTime)
 
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
 
-    vk::SubmitInfo submitInfo {};
-    vk::Semaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
-    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &_commandBuffers[_currentFrame];
+    vk::Semaphore waitSemaphore = _imageAvailableSemaphores[_currentFrame];
+    vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    vk::Semaphore signalSemaphore = _renderFinishedSemaphores[_currentFrame];
 
-    vk::Semaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    vk::SubmitInfo submitInfo {
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &waitSemaphore,
+        .pWaitDstStageMask = &waitStage,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &_commandBuffers[_currentFrame],
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &signalSemaphore,
+    };
 
     {
         ZoneNamedN(zz, "Submit Commands", true);
         util::VK_ASSERT(_context->VulkanContext()->GraphicsQueue().submit(1, &submitInfo, _inFlightFences[_currentFrame]), "Failed submitting to graphics queue!");
     }
 
-    vk::PresentInfoKHR presentInfo {};
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    vk::SwapchainKHR swapchains[] = { _swapChain->GetSwapChain() };
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapchains;
-    presentInfo.pImageIndices = &imageIndex;
+    vk::SwapchainKHR swapchain = _swapChain->GetSwapChain();
+    vk::PresentInfoKHR presentInfo {
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &signalSemaphore,
+        .swapchainCount = 1,
+        .pSwapchains = &swapchain,
+        .pImageIndices = &imageIndex,
+    };
 
     {
         ZoneNamedN(zz, "Present Image", true);

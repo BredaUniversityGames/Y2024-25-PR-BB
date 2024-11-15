@@ -48,13 +48,13 @@ struct FrameGraphResourceInfo
     {
         struct
         {
-            ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Invalid();
+            ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Null();
             vk::PipelineStageFlags2 stageUsage;
         } buffer;
 
         struct
         {
-            ResourceHandle<Image> handle = ResourceHandle<Image>::Invalid();
+            ResourceHandle<Image> handle = ResourceHandle<Image>::Null();
         } image;
     };
 };

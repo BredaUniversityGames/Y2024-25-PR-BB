@@ -5,6 +5,7 @@
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -31,7 +32,7 @@ GraphicsContext::~GraphicsContext()
     _vulkanContext->Device().destroy(_bindlessLayout);
     _vulkanContext->Device().destroy(_bindlessPool);
 
-    _sampler.reset();
+    _graphicsResources->SamplerResourceManager().Destroy(_sampler);
 }
 
 void GraphicsContext::CreateBindlessDescriptorSet()
@@ -159,15 +160,21 @@ void GraphicsContext::UpdateBindlessImages()
         if (image->type == ImageType::eShadowMap)
             dstBinding = BindlessBinding::eShadowmap;
 
-        if (!_sampler)
+        if (_sampler.IsNull())
         {
-            _sampler = util::CreateSampler(_vulkanContext, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat,
-                vk::SamplerMipmapMode::eLinear, static_cast<uint32_t>(floor(log2(2048))));
+            SamplerCreateInfo createInfo {
+                .name = "Graphics context sampler",
+                .maxLod = std::floor(std::log2(2048.0f)),
+            };
+
+            _sampler = _graphicsResources->SamplerResourceManager().Create(createInfo);
+            bblog::info("Created sampler");
         }
 
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
-        _bindlessImageInfos[i].sampler = image->sampler ? image->sampler : *_sampler;
+        ResourceHandle<Sampler> samplerHandle = _graphicsResources->SamplerResourceManager().IsValid(image->sampler) ? image->sampler : _sampler;
+        _bindlessImageInfos[i].sampler = *_graphicsResources->SamplerResourceManager().Access(samplerHandle);
 
         _bindlessImageWrites[i].dstSet = _bindlessSet;
         _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);

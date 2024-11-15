@@ -117,33 +117,6 @@ void util::CopyBuffer(vk::CommandBuffer commandBuffer, vk::Buffer srcBuffer, vk:
     commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-vk::UniqueSampler util::CreateSampler(std::shared_ptr<VulkanContext> context, vk::Filter min, vk::Filter mag, vk::SamplerAddressMode addressingMode, vk::SamplerMipmapMode mipmapMode, uint32_t mipLevels)
-{
-    vk::PhysicalDeviceProperties properties {};
-    context->PhysicalDevice().getProperties(&properties);
-
-    vk::SamplerCreateInfo createInfo {};
-    createInfo.magFilter = mag;
-    createInfo.minFilter = min;
-    createInfo.addressModeU = addressingMode;
-    createInfo.addressModeV = addressingMode;
-    createInfo.addressModeW = addressingMode;
-    createInfo.anisotropyEnable = 1;
-    createInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-    createInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-    createInfo.unnormalizedCoordinates = 0;
-    createInfo.compareEnable = 0;
-    createInfo.compareOp = vk::CompareOp::eAlways;
-    createInfo.mipmapMode = mipmapMode;
-    createInfo.mipLodBias = 0.0f;
-    createInfo.minLod = 0.0f;
-    createInfo.maxLod = static_cast<float>(mipLevels);
-    // createInfo.compareEnable = VK_TRUE; // Enable depth comparison
-    // createInfo.compareOp = vk::CompareOp::eLessOrEqual;
-
-    return context->Device().createSamplerUnique(createInfo);
-}
-
 util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::ImageLayout sourceLayout)
 {
     static const std::unordered_map<vk::ImageLayout, ImageLayoutTransitionState> sourceStateMap = {

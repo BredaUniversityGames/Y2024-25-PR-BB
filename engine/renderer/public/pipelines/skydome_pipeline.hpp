@@ -38,7 +38,6 @@ private:
     const GBuffers& _gBuffers;
 
     ResourceHandle<Mesh> _sphere;
-    vk::UniqueSampler _sampler;
     const BloomSettings& _bloomSettings;
 
     vk::PipelineLayout _pipelineLayout;

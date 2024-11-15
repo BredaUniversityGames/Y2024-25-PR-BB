@@ -5,6 +5,7 @@
 #include <memory>
 
 class GraphicsContext;
+struct Sampler;
 
 class IBLPipeline
 {
@@ -35,7 +36,7 @@ private:
     };
 
     std::shared_ptr<GraphicsContext> _context;
-    const ResourceHandle<Image> _environmentMap;
+    ResourceHandle<Image> _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;
     vk::Pipeline _irradiancePipeline;
@@ -48,7 +49,7 @@ private:
     ResourceHandle<Image> _prefilterMap;
     ResourceHandle<Image> _brdfLUT;
 
-    vk::Sampler _sampler;
+    ResourceHandle<Sampler> _sampler;
 
     std::vector<std::array<vk::ImageView, 6>> _prefilterMapViews;
 

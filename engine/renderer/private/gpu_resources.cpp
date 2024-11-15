@@ -44,7 +44,7 @@ ImageCreation& ImageCreation::SetType(ImageType type)
     return *this;
 }
 
-ImageCreation& ImageCreation::SetSampler(vk::Sampler sampler)
+ImageCreation& ImageCreation::SetSampler(ResourceHandle<Sampler> sampler)
 {
     this->sampler = sampler;
     return *this;
