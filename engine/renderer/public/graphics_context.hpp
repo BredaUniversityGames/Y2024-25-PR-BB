@@ -25,7 +25,7 @@ public:
     NON_COPYABLE(GraphicsContext);
     NON_MOVABLE(GraphicsContext);
 
-    std::shared_ptr<VulkanContext> VulkanContext() const { return _vulkanContext; }
+    std::shared_ptr<class VulkanContext> VulkanContext() const { return _vulkanContext; }
     std::shared_ptr<GraphicsResources> Resources() const { return _graphicsResources; }
     vk::DescriptorSetLayout BindlessLayout() const { return _bindlessLayout; }
     vk::DescriptorSet BindlessSet() const { return _bindlessSet; }

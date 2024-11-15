@@ -1,10 +1,13 @@
 #pragma once
 
+#include "common.hpp"
 #include "enum_utils.hpp"
 #include "resource_handle.hpp"
 #include "swap_chain.hpp"
 
+#include <glm/vec3.hpp>
 #include <memory>
+#include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
 struct RenderSceneDescription;

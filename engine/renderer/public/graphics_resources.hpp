@@ -21,9 +21,9 @@ public:
     NON_COPYABLE(GraphicsResources);
     NON_MOVABLE(GraphicsResources);
 
-    BufferResourceManager& BufferResourceManager() { return *_bufferResourceManager; }
-    ImageResourceManager& ImageResourceManager() { return *_imageResourceManager; }
-    MaterialResourceManager& MaterialResourceManager() { return *_materialResourceManager; }
+    class BufferResourceManager& BufferResourceManager() { return *_bufferResourceManager; }
+    class ImageResourceManager& ImageResourceManager() { return *_imageResourceManager; }
+    class MaterialResourceManager& MaterialResourceManager() { return *_materialResourceManager; }
     ResourceManager<Mesh>& MeshResourceManager() { return *_meshResourceManager; }
 
 private:

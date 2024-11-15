@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <spirv_reflect.h>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
