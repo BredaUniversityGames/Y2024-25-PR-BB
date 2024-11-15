@@ -9,6 +9,7 @@
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
+#include "resource_management/mesh_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 

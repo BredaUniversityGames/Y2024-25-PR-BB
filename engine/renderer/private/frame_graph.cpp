@@ -19,37 +19,33 @@ FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass,
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> image, FrameGraphResourceType type)
 {
-    FrameGraphResourceCreation& creation = inputs.emplace_back();
+    FrameGraphResourceCreation& creation = inputs.emplace_back(image);
     creation.type = type;
-    creation.info.image.handle = image;
 
     return *this;
 }
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage)
 {
-    FrameGraphResourceCreation& creation = inputs.emplace_back();
+    FrameGraphResourceCreation& creation = inputs.emplace_back(FrameGraphResourceInfo::StageBuffer { .handle = buffer, .stageUsage = stageUsage });
     creation.type = type;
-    creation.info.buffer.handle = buffer;
-    creation.info.buffer.stageUsage = stageUsage;
+
     return *this;
 }
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type)
 {
-    FrameGraphResourceCreation& creation = outputs.emplace_back();
+    FrameGraphResourceCreation& creation = outputs.emplace_back(image);
     creation.type = type;
-    creation.info.image.handle = image;
 
     return *this;
 }
 
 FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage)
 {
-    FrameGraphResourceCreation& creation = outputs.emplace_back();
+    FrameGraphResourceCreation& creation = outputs.emplace_back(FrameGraphResourceInfo::StageBuffer { .handle = buffer, .stageUsage = stageUsage });
     creation.type = type;
-    creation.info.buffer.handle = buffer;
-    creation.info.buffer.stageUsage = stageUsage;
+
     return *this;
 }
 
@@ -206,7 +202,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 
         if (HasAnyFlags(resource.type, FrameGraphResourceType::eAttachment))
         {
-            const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -221,7 +217,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
         // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
-            const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
+            const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -264,7 +260,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eTexture)
             {
-                const Image* texture = resources->ImageResourceManager().Access(resource.info.image.handle);
+                const Image* texture = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -282,15 +278,16 @@ void FrameGraph::CreateMemoryBarriers()
             }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
-                const Buffer* buffer = resources->BufferResourceManager().Access(resource.info.buffer.handle);
+                auto stageBuffer = std::get<FrameGraphResourceInfo::StageBuffer>(resource.info.resource);
+                const Buffer* buffer = resources->BufferResourceManager().Access(stageBuffer.handle);
                 vk::BufferMemoryBarrier2& barrier = node.bufferMemoryBarriers.emplace_back();
 
                 // Get the buffer created before here and create barrier based on its stage usage
                 const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[resource.name];
                 const FrameGraphResource& outputResource = _resources[outputResourceHandle];
 
-                barrier.srcStageMask = outputResource.info.buffer.stageUsage;
-                barrier.dstStageMask = resource.info.buffer.stageUsage;
+                barrier.srcStageMask = std::get<FrameGraphResourceInfo::StageBuffer>(outputResource.info.resource).stageUsage;
+                barrier.dstStageMask = stageBuffer.stageUsage;
 
                 barrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
                 barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
@@ -310,7 +307,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
-                const Image* attachment = resources->ImageResourceManager().Access(resource.info.image.handle);
+                const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -419,7 +416,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
-    FrameGraphResource& resource = _resources.emplace_back();
+    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>> {});
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
@@ -442,7 +439,7 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
-    FrameGraphResource& resource = _resources.emplace_back();
+    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>> {});
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
@@ -455,13 +452,13 @@ std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creati
 
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
-        const Image* image = resources->ImageResourceManager().Access(creation.info.image.handle);
+        const Image* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(creation.info.resource));
         return image->name;
     }
 
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eBuffer))
     {
-        const Buffer* buffer = resources->BufferResourceManager().Access(creation.info.buffer.handle);
+        const Buffer* buffer = resources->BufferResourceManager().Access(std::get<FrameGraphResourceInfo::StageBuffer>(creation.info.resource).handle);
         return buffer->name;
     }
 

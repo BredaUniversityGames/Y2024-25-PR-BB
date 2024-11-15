@@ -4,6 +4,9 @@
 #include "../vulkan_helper.hpp"
 #include "gpu_resources.hpp"
 
+template <>
+std::weak_ptr<ResourceManager<Sampler>> ResourceHandle<Sampler>::manager = {};
+
 SamplerCreateInfo& SamplerCreateInfo::setGlobalAddressMode(vk::SamplerAddressMode addressMode_)
 {
     addressModeU = addressMode_;

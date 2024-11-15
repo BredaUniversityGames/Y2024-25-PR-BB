@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "resource_handle.hpp"
+#include "resource_manager.hpp"
 
 #include <memory>
 #include <vulkan/vulkan.hpp>

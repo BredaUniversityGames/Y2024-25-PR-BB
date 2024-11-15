@@ -77,6 +77,8 @@ void GBuffers::CreateDepthResources()
 void GBuffers::CreateShadowMapResources()
 {
     SamplerCreateInfo shadowSamplerInfo {
+        .name = "Shadow sampler",
+        .compareEnable = true,
         .compareOp = vk::CompareOp::eLessOrEqual,
     };
     shadowSamplerInfo.setGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);

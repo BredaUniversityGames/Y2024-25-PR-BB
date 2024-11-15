@@ -9,7 +9,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh.hpp"
-#include "resource_manager.hpp"
+#include "resource_management/mesh_resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
 

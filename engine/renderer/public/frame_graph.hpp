@@ -2,12 +2,13 @@
 
 #include "common.hpp"
 #include "enum_utils.hpp"
-#include "resource_handle.hpp"
+#include "resource_manager.hpp"
 #include "swap_chain.hpp"
 
 #include <glm/vec3.hpp>
 #include <memory>
 #include <unordered_map>
+#include <variant>
 #include <vulkan/vulkan.hpp>
 
 struct RenderSceneDescription;
@@ -44,31 +45,40 @@ using FrameGraphResourceHandle = uint32_t;
 
 struct FrameGraphResourceInfo
 {
-    union
+    struct StageBuffer
     {
-        struct
-        {
-            ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Null();
-            vk::PipelineStageFlags2 stageUsage;
-        } buffer;
-
-        struct
-        {
-            ResourceHandle<Image> handle = ResourceHandle<Image>::Null();
-        } image;
+        ResourceHandle<Buffer> handle = ResourceHandle<Buffer>::Null();
+        vk::PipelineStageFlags2 stageUsage;
     };
+
+    FrameGraphResourceInfo(const std::variant<std::monostate, StageBuffer, ResourceHandle<Image>>& resource)
+        : resource(resource)
+    {
+    }
+
+    std::variant<std::monostate, StageBuffer, ResourceHandle<Image>> resource;
 };
 
 struct FrameGraphResourceCreation
 {
+    FrameGraphResourceCreation(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>>& resource)
+        : info(resource)
+    {
+    }
+
     FrameGraphResourceType type = FrameGraphResourceType::eNone;
-    FrameGraphResourceInfo info {};
+    FrameGraphResourceInfo info;
 };
 
 struct FrameGraphResource
 {
+    FrameGraphResource(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>>& resource)
+        : info(resource)
+    {
+    }
+
     FrameGraphResourceType type = FrameGraphResourceType::eNone;
-    FrameGraphResourceInfo info {};
+    FrameGraphResourceInfo info;
 
     FrameGraphNodeHandle producer = 0;
     FrameGraphResourceHandle output = 0;

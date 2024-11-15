@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "constants.hpp"
-#include "resource_handle.hpp"
+#include "resource_manager.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>

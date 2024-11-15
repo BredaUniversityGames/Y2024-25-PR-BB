@@ -9,6 +9,7 @@ class BufferResourceManager;
 class ImageResourceManager;
 class MaterialResourceManager;
 class SamplerResourceManager;
+class MeshResourceManager;
 template <typename T>
 class ResourceManager;
 class VulkanContext;
@@ -26,7 +27,7 @@ public:
     class ImageResourceManager& ImageResourceManager() { return *_imageResourceManager; }
     class MaterialResourceManager& MaterialResourceManager() { return *_materialResourceManager; }
     class SamplerResourceManager& SamplerResourceManager() { return *_samplerResourceManager; }
-    ResourceManager<Mesh>& MeshResourceManager() { return *_meshResourceManager; }
+    class MeshResourceManager& MeshResourceManager() { return *_meshResourceManager; }
 
 private:
     std::shared_ptr<VulkanContext> _vulkanContext;
@@ -35,5 +36,5 @@ private:
     std::shared_ptr<class ImageResourceManager> _imageResourceManager;
     std::shared_ptr<class MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<class SamplerResourceManager> _samplerResourceManager;
-    std::shared_ptr<ResourceManager<Mesh>> _meshResourceManager;
+    std::shared_ptr<class MeshResourceManager> _meshResourceManager;
 };

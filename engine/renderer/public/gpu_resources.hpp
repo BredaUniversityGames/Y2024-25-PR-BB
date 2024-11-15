@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lib/includes_vulkan.hpp"
-#include "resource_handle.hpp"
+#include "resource_manager.hpp"
 
 #include <glm/glm.hpp>
 #include <optional>

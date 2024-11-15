@@ -4,7 +4,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "resource_handle.hpp"
+#include "resource_manager.hpp"
 
 class GraphicsContext;
 class SwapChain;

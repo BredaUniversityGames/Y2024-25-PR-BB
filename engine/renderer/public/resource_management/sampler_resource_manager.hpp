@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include "common.hpp"
-#include "resource_handle.hpp"
 #include "resource_manager.hpp"
 
 class VulkanContext;
@@ -24,9 +23,9 @@ struct SamplerCreateInfo
     bool anisotropyEnable { true };
     vk::BorderColor borderColor { vk::BorderColor::eIntOpaqueBlack };
     bool unnormalizedCoordinates { false };
-    bool compareEnable { 0 };
+    bool compareEnable { false };
     vk::CompareOp compareOp { vk::CompareOp::eAlways };
-    vk::SamplerMipmapMode mipmapMode { mipmapMode };
+    vk::SamplerMipmapMode mipmapMode { vk::SamplerMipmapMode::eLinear };
     float mipLodBias { 0.0f };
     float minLod { 0.0f };
     float maxLod { 1.0f };

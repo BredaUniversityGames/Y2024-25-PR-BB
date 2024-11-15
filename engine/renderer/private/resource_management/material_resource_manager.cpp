@@ -2,6 +2,9 @@
 
 #include "resource_management/image_resource_manager.hpp"
 
+template <>
+std::weak_ptr<ResourceManager<Material>> ResourceHandle<Material>::manager = {};
+
 MaterialResourceManager::MaterialResourceManager(const std::shared_ptr<ImageResourceManager>& imageResourceManager)
     : _imageResourceManager(imageResourceManager)
 {

@@ -4,6 +4,9 @@
 #include "../vulkan_helper.hpp"
 #include "log.hpp"
 
+template <>
+std::weak_ptr<ResourceManager<Image>> ResourceHandle<Image>::manager = {};
+
 ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
