@@ -43,6 +43,11 @@ Sampler::Sampler(const SamplerCreation& creation, const std::shared_ptr<VulkanCo
 
 Sampler::~Sampler()
 {
+    if (!_context)
+    {
+        return;
+    }
+
     _context->Device().destroy(sampler);
 }
 
@@ -51,6 +56,7 @@ Sampler::Sampler(Sampler&& other) noexcept
     , _context(other._context)
 {
     other.sampler = nullptr;
+    other._context = nullptr;
 }
 
 Sampler& Sampler::operator=(Sampler&& other) noexcept
@@ -64,6 +70,7 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     _context = other._context;
 
     other.sampler = nullptr;
+    other._context = nullptr;
 
     return *this;
 }
@@ -314,6 +321,11 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
 
 Image::~Image()
 {
+    if (!_context)
+    {
+        return;
+    }
+
     vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
     for (auto& aView : views)
         _context->Device().destroy(aView);
@@ -343,6 +355,7 @@ Image::Image(Image&& other) noexcept
     other.image = nullptr;
     other.view = nullptr;
     other.allocation = nullptr;
+    other._context = nullptr;
 }
 
 Image& Image::operator=(Image&& other) noexcept
@@ -373,6 +386,7 @@ Image& Image::operator=(Image&& other) noexcept
     other.image = nullptr;
     other.view = nullptr;
     other.allocation = nullptr;
+    other._context = nullptr;
 
     return *this;
 }
@@ -465,6 +479,11 @@ Buffer::Buffer(const BufferCreation& creation, const std::shared_ptr<VulkanConte
 
 Buffer::~Buffer()
 {
+    if (!_context)
+    {
+        return;
+    }
+
     if (mappedPtr)
     {
         vmaUnmapMemory(_context->MemoryAllocator(), allocation);
@@ -485,6 +504,7 @@ Buffer::Buffer(Buffer&& other) noexcept
     other.buffer = nullptr;
     other.allocation = nullptr;
     other.mappedPtr = nullptr;
+    other._context = nullptr;
 }
 
 Buffer& Buffer::operator=(Buffer&& other) noexcept
@@ -505,6 +525,7 @@ Buffer& Buffer::operator=(Buffer&& other) noexcept
     other.buffer = nullptr;
     other.allocation = nullptr;
     other.mappedPtr = nullptr;
+    other._context = nullptr;
 
     return *this;
 }

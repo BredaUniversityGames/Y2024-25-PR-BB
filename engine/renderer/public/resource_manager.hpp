@@ -105,8 +105,6 @@ public:
         uint32_t index = handle.index;
         if (IsValid(handle))
         {
-            Destroy(Access(handle));
-
             _freeList.emplace_back(index);
             _resources[index].resource = std::nullopt;
             _resources[index].version++;
@@ -121,6 +119,11 @@ public:
 
     virtual void Clean()
     {
+        for (const auto& handle : _bin)
+        {
+            Destroy(handle);
+        }
+
         _bin.clear();
     }
 

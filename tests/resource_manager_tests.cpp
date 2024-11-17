@@ -7,39 +7,42 @@ TEST(ResourceManagerTests, Creating)
 {
     // Arrange
     ResourceManager<std::string> rm;
-    std::string resource = "my_resource";
+    std::string original = "my_resource";
+    std::string resource = original;
 
     // Act
-    rm.Create(resource);
+    rm.Create(std::move(resource));
 
     // Assert
     EXPECT_GT(rm.Resources().size(), 0);
-    EXPECT_EQ(rm.Resources().begin()->resource, resource);
+    EXPECT_EQ(rm.Resources().begin()->resource, original);
 }
 
 TEST(ResourceManagerTests, Accessing)
 {
     // Arrange
     ResourceManager<std::string> rm;
-    std::string resource = "my_resource";
+    std::string original = "my_resource";
+    std::string resource = original;
 
     // Act
-    auto handle = rm.Create(resource);
+    auto handle = rm.Create(std::move(resource));
     auto accessedResource = rm.Access(handle);
 
     // Assert
     EXPECT_FALSE(accessedResource == nullptr);
-    EXPECT_EQ(*accessedResource, resource);
+    EXPECT_EQ(*accessedResource, original);
 }
 
 TEST(ResourceManagerTests, Destroying)
 {
     // Arrange
     ResourceManager<std::string> rm;
-    std::string resource = "my_resource";
+    std::string original = "my_resource";
+    std::string resource = original;
 
     // Act
-    auto handle = rm.Create(resource);
+    auto handle = rm.Create(std::move(resource));
     rm.Destroy(handle);
 
     // Assert
@@ -50,17 +53,19 @@ TEST(ResourceManagerTests, Versioning)
 {
     // Arrange
     ResourceManager<std::string> rm;
-    std::string resource1 = "my_resource1";
-    std::string resource2 = "my_resource2";
+    std::string original1 = "my_resource1";
+    std::string resource1 = original1;
+    std::string original2 = "my_resource2";
+    std::string resource2 = original2;
 
     // Act
-    auto handle1 = rm.Create(resource1);
+    auto handle1 = rm.Create(std::move(resource1));
     rm.Destroy(handle1);
 
-    auto handle2 = rm.Create(resource2);
+    auto handle2 = rm.Create(std::move(resource2));
 
     // Assert
     EXPECT_EQ(rm.Access(handle1), nullptr);
-    EXPECT_EQ(*rm.Access(handle2), resource2);
+    EXPECT_EQ(*rm.Access(handle2), original2);
     EXPECT_EQ(rm.Resources().size(), 1);
 }
