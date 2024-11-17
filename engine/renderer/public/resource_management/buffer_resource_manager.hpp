@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
 
@@ -14,8 +15,6 @@ public:
     ~BufferResourceManager() final = default;
 
     ResourceHandle<Buffer> Create(const BufferCreation& creation);
-    ResourceHandle<Buffer> Create(const Buffer& buffer) final { return ResourceManager<Buffer>::Create(buffer); }
-    void Destroy(ResourceHandle<Buffer> handle) final;
 
 private:
     std::shared_ptr<VulkanContext> _context;

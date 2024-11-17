@@ -38,9 +38,6 @@ BatchBuffer::BatchBuffer(const std::shared_ptr<GraphicsContext>& context, uint32
 BatchBuffer::~BatchBuffer()
 {
     auto resources { _context->Resources() };
-
-    resources->BufferResourceManager().Destroy(_vertexBuffer);
-    resources->BufferResourceManager().Destroy(_indexBuffer);
 }
 
 uint32_t BatchBuffer::AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer)

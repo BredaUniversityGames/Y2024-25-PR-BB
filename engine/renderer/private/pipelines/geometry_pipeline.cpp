@@ -38,8 +38,6 @@ GeometryPipeline::~GeometryPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
-
-    _context->Resources()->BufferResourceManager().Destroy(_drawBuffer);
 }
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)

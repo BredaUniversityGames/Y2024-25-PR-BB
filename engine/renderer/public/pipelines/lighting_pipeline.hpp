@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <memory>
 
-class GPUScene;
 class BloomSettings;
 class GraphicsContext;
 class CameraResource;

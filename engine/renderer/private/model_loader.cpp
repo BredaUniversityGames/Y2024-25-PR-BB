@@ -61,9 +61,6 @@ ModelLoader::ModelLoader(const std::shared_ptr<GraphicsContext>& context, std::s
 
 ModelLoader::~ModelLoader()
 {
-    const Material* defaultMaterial = _context->Resources()->MaterialResourceManager().Access(_defaultMaterial);
-    _context->Resources()->ImageResourceManager().Destroy(defaultMaterial->albedoMap);
-    _context->Resources()->MaterialResourceManager().Destroy(_defaultMaterial);
 }
 
 Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
@@ -459,7 +456,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
             mesh.primitives.emplace_back(primitive);
         }
 
-        auto handle = _context->Resources()->MeshResourceManager().Create(mesh);
+        auto handle = _context->Resources()->MeshResourceManager().Create(std::move(mesh));
 
         model.resources.meshes.emplace_back(handle);
     }
@@ -574,5 +571,5 @@ ResourceHandle<Mesh> ModelLoader::LoadMesh(const StagingMesh::Primitive& staging
     Mesh mesh;
     mesh.primitives.emplace_back(primitive);
 
-    return _context->Resources()->MeshResourceManager().Create(mesh);
+    return _context->Resources()->MeshResourceManager().Create(std::move(mesh));
 }

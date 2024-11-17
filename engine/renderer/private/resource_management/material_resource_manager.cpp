@@ -12,33 +12,5 @@ MaterialResourceManager::MaterialResourceManager(const std::shared_ptr<ImageReso
 
 ResourceHandle<Material> MaterialResourceManager::Create(const MaterialCreation& creation)
 {
-    Material materialResource {};
-
-    materialResource.albedoMap = creation.albedoMap;
-    materialResource.mrMap = creation.metallicRoughnessMap;
-    materialResource.normalMap = creation.normalMap;
-    materialResource.occlusionMap = creation.occlusionMap;
-    materialResource.emissiveMap = creation.emissiveMap;
-
-    Material::GPUInfo& gpuInfo = materialResource.gpuInfo;
-    gpuInfo.useAlbedoMap = _imageResourceManager->IsValid(materialResource.albedoMap);
-    gpuInfo.useMRMap = _imageResourceManager->IsValid(materialResource.mrMap);
-    gpuInfo.useNormalMap = _imageResourceManager->IsValid(materialResource.normalMap);
-    gpuInfo.useOcclusionMap = _imageResourceManager->IsValid(materialResource.occlusionMap);
-    gpuInfo.useEmissiveMap = _imageResourceManager->IsValid(materialResource.emissiveMap);
-
-    gpuInfo.albedoMapIndex = materialResource.albedoMap.Index();
-    gpuInfo.mrMapIndex = materialResource.mrMap.Index();
-    gpuInfo.normalMapIndex = materialResource.normalMap.Index();
-    gpuInfo.occlusionMapIndex = materialResource.occlusionMap.Index();
-    gpuInfo.emissiveMapIndex = materialResource.emissiveMap.Index();
-
-    gpuInfo.albedoFactor = creation.albedoFactor;
-    gpuInfo.metallicFactor = creation.metallicFactor;
-    gpuInfo.roughnessFactor = creation.roughnessFactor;
-    gpuInfo.normalScale = creation.normalScale;
-    gpuInfo.occlusionStrength = creation.occlusionStrength;
-    gpuInfo.emissiveFactor = creation.emissiveFactor;
-
-    return ResourceManager::Create(materialResource);
+    return ResourceManager::Create(Material { creation, _imageResourceManager });
 }

@@ -9,6 +9,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 #include <vector>
 
@@ -40,8 +41,6 @@ ShadowPipeline::~ShadowPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
-
-    _context->Resources()->BufferResourceManager().Destroy(_drawBuffer);
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)

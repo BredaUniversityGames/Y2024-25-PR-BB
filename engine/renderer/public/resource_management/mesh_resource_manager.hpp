@@ -13,9 +13,6 @@ class MeshResourceManager final : public ResourceManager<Mesh>
 {
 public:
     MeshResourceManager();
-    ~MeshResourceManager();
-    NON_COPYABLE(MeshResourceManager);
-    NON_MOVABLE(MeshResourceManager);
 
 private:
 };

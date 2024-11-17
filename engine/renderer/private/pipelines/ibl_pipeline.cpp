@@ -14,11 +14,11 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, Resour
     : _context(context)
     , _environmentMap(environmentMap)
 {
-    SamplerCreateInfo createInfo {
+    SamplerCreation createInfo {
         .name = "IBL sampler",
         .maxLod = 0.0f,
     };
-    createInfo.setGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+    createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
 
@@ -33,17 +33,10 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, Resour
 IBLPipeline::~IBLPipeline()
 {
     auto vkContext { _context->VulkanContext() };
-    auto resources { _context->Resources() };
 
     for (const auto& mips : _prefilterMapViews)
         for (const auto& view : mips)
             vkContext->Device().destroy(view);
-
-    resources->ImageResourceManager().Destroy(_irradianceMap);
-    resources->ImageResourceManager().Destroy(_brdfLUT);
-    resources->ImageResourceManager().Destroy(_prefilterMap);
-
-    _context->Resources()->SamplerResourceManager().Destroy(_sampler);
 
     vkContext->Device().destroy(_prefilterPipeline);
     vkContext->Device().destroy(_prefilterPipelineLayout);

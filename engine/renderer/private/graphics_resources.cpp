@@ -8,11 +8,27 @@
 GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulkanContext)
     : _vulkanContext(vulkanContext)
 {
-    _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext);
-    _bufferResourceManager = std::make_shared<class BufferResourceManager>(_vulkanContext);
-    _materialResourceManager = std::make_shared<class MaterialResourceManager>(_imageResourceManager);
     _samplerResourceManager = std::make_shared<class SamplerResourceManager>(_vulkanContext);
+    _bufferResourceManager = std::make_shared<class BufferResourceManager>(_vulkanContext);
+    _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext);
+    _materialResourceManager = std::make_shared<class MaterialResourceManager>(_imageResourceManager);
     _meshResourceManager = std::make_shared<class MeshResourceManager>();
 }
 
-GraphicsResources::~GraphicsResources() = default;
+void GraphicsResources::Clean()
+{
+    _meshResourceManager->Clean();
+    _materialResourceManager->Clean();
+    _imageResourceManager->Clean();
+    _bufferResourceManager->Clean();
+    _samplerResourceManager->Clean();
+}
+
+GraphicsResources::~GraphicsResources()
+{
+    _meshResourceManager.reset();
+    _materialResourceManager.reset();
+    _imageResourceManager.reset();
+    _bufferResourceManager.reset();
+    _samplerResourceManager.reset();
+}

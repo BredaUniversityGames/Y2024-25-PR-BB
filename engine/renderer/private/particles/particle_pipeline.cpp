@@ -27,7 +27,6 @@ ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& conte
 ParticlePipeline::~ParticlePipeline()
 {
     auto vkContext { _context->VulkanContext() };
-    auto resources { _context->Resources() };
 
     // Pipeline stuff
     for (auto& pipeline : _pipelines)
@@ -39,13 +38,6 @@ ParticlePipeline::~ParticlePipeline()
         _context->VulkanContext()->Device().destroy(layout);
     }
     // Buffer stuff
-    for (auto& storageBuffer : _particlesBuffers)
-    {
-        _context->Resources()->BufferResourceManager().Destroy(storageBuffer);
-    }
-    resources->BufferResourceManager().Destroy(_particleInstancesBuffer);
-    resources->BufferResourceManager().Destroy(_culledIndicesBuffer);
-    resources->BufferResourceManager().Destroy(_emittersBuffer);
     vmaDestroyBuffer(_context->VulkanContext()->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
 
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);

@@ -76,12 +76,12 @@ void GBuffers::CreateDepthResources()
 
 void GBuffers::CreateShadowMapResources()
 {
-    SamplerCreateInfo shadowSamplerInfo {
+    SamplerCreation shadowSamplerInfo {
         .name = "Shadow sampler",
         .compareEnable = true,
         .compareOp = vk::CompareOp::eLessOrEqual,
     };
-    shadowSamplerInfo.setGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
     ImageCreation shadowCreation {};
@@ -97,15 +97,6 @@ void GBuffers::CreateShadowMapResources()
 
 void GBuffers::CleanUp()
 {
-    auto resources { _context->Resources() };
-
-    for (const auto& attachment : _attachments)
-    {
-        resources->ImageResourceManager().Destroy(attachment);
-    }
-    resources->ImageResourceManager().Destroy(_depthImage);
-    resources->ImageResourceManager().Destroy(_shadowImage);
-    _context->Resources()->SamplerResourceManager().Destroy(_shadowSampler);
 }
 
 void GBuffers::CreateViewportAndScissor()

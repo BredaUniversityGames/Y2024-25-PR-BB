@@ -26,11 +26,6 @@ CameraResource::~CameraResource()
         _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
         _descriptorSetLayout = nullptr;
     }
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        _context->Resources()->BufferResourceManager().Destroy(_buffers[i]);
-    }
 }
 
 void CameraResource::CreateDescriptorSetLayout(std::shared_ptr<GraphicsContext> context)

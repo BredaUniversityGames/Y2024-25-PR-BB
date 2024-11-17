@@ -6,5 +6,3 @@ template <>
 std::weak_ptr<ResourceManager<Mesh>> ResourceHandle<Mesh>::manager = {};
 
 MeshResourceManager::MeshResourceManager() = default;
-
-MeshResourceManager::~MeshResourceManager() = default;

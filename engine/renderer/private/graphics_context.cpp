@@ -26,13 +26,11 @@ GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
 
 GraphicsContext::~GraphicsContext()
 {
-    _graphicsResources->ImageResourceManager().Destroy(_fallbackImage);
-    _graphicsResources->BufferResourceManager().Destroy(_bindlessMaterialBuffer);
-
     _vulkanContext->Device().destroy(_bindlessLayout);
     _vulkanContext->Device().destroy(_bindlessPool);
 
-    _graphicsResources->SamplerResourceManager().Destroy(_sampler);
+    _graphicsResources.reset();
+    _vulkanContext.reset();
 }
 
 void GraphicsContext::CreateBindlessDescriptorSet()
@@ -162,19 +160,18 @@ void GraphicsContext::UpdateBindlessImages()
 
         if (_sampler.IsNull())
         {
-            SamplerCreateInfo createInfo {
+            SamplerCreation createInfo {
                 .name = "Graphics context sampler",
                 .maxLod = std::floor(std::log2(2048.0f)),
             };
 
             _sampler = _graphicsResources->SamplerResourceManager().Create(createInfo);
-            bblog::info("Created sampler");
         }
 
         _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         _bindlessImageInfos[i].imageView = image->view;
         ResourceHandle<Sampler> samplerHandle = _graphicsResources->SamplerResourceManager().IsValid(image->sampler) ? image->sampler : _sampler;
-        _bindlessImageInfos[i].sampler = *_graphicsResources->SamplerResourceManager().Access(samplerHandle);
+        _bindlessImageInfos[i].sampler = _graphicsResources->SamplerResourceManager().Access(samplerHandle)->sampler;
 
         _bindlessImageWrites[i].dstSet = _bindlessSet;
         _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);

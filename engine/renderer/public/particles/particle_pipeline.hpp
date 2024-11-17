@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "resource_manager.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>

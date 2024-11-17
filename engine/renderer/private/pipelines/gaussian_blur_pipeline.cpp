@@ -20,7 +20,7 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
     _targets[1] = target;
     CreateVerticalTarget();
 
-    SamplerCreateInfo createInfo {
+    SamplerCreation createInfo {
         .name = "Gaussian blur sampler",
         .maxLod = 1.0f
     };
@@ -31,13 +31,9 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
 
 GaussianBlurPipeline::~GaussianBlurPipeline()
 {
-    _context->Resources()->ImageResourceManager().Destroy(_targets[0]);
-
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
     _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
-
-    _context->Resources()->SamplerResourceManager().Destroy(_sampler);
 }
 
 void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
@@ -173,7 +169,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         vk::DescriptorImageInfo imageInfo {
-            .sampler = *_context->Resources()->SamplerResourceManager().Access(_sampler),
+            .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
             .imageView = _context->Resources()->ImageResourceManager().Access(_source)->views[0],
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
@@ -197,7 +193,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
         for (size_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
         {
             vk::DescriptorImageInfo imageInfo {
-                .sampler = *_context->Resources()->SamplerResourceManager().Access(_sampler),
+                .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
                 .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->views[0],
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             };

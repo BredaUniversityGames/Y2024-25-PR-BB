@@ -21,10 +21,6 @@ BloomSettings::~BloomSettings()
     auto resources { _context->Resources() };
 
     vkContext->Device().destroy(_descriptorSetLayout);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        resources->BufferResourceManager().Destroy(_frameData.buffers[i]);
-    }
 }
 
 void BloomSettings::Render()

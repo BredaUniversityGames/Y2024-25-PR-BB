@@ -31,7 +31,7 @@ class FrameGraph;
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<ECS> ecs);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -71,7 +71,6 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
     std::shared_ptr<const SceneDescription> _scene;
-    std::vector<std::shared_ptr<ModelResources>> _modelResources;
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;

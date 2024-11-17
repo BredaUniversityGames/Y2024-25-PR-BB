@@ -26,6 +26,7 @@ public:
     std::shared_ptr<ImGuiBackend> GetImGuiBackend() { return _imguiBackend; }
 
 private:
+    std::shared_ptr<GraphicsContext> _context;
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<ParticleInterface> _particleInterface;
     std::shared_ptr<ImGuiBackend> _imguiBackend;

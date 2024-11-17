@@ -34,8 +34,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<ECS> ecs)
-    : _context(std::make_shared<GraphicsContext>(application.GetVulkanInfo()))
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+    : _context(context)
     , _application(application)
     , _ecs(ecs)
 {
@@ -180,8 +180,6 @@ std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& mod
     for (const auto& path : modelPaths)
     {
         models.emplace_back(_modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical));
-
-        _modelResources.emplace_back(std::make_shared<ModelResources>(models.back().resources));
     }
 
     return models;
@@ -190,33 +188,14 @@ std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& mod
 Renderer::~Renderer()
 {
     auto vkContext { _context->VulkanContext() };
-    auto resources { _context->Resources() };
 
     _modelLoader.reset();
-
-    resources->ImageResourceManager().Destroy(_environmentMap);
-    resources->ImageResourceManager().Destroy(_hdrTarget);
-
-    resources->ImageResourceManager().Destroy(_brightnessTarget);
-    resources->ImageResourceManager().Destroy(_bloomTarget);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         vkContext->Device().destroy(_inFlightFences[i]);
         vkContext->Device().destroy(_renderFinishedSemaphores[i]);
         vkContext->Device().destroy(_imageAvailableSemaphores[i]);
-    }
-
-    for (auto& model : _modelResources)
-    {
-        for (auto& texture : model->textures)
-        {
-            resources->ImageResourceManager().Destroy(texture);
-        }
-        for (auto& material : model->materials)
-        {
-            resources->MaterialResourceManager().Destroy(material);
-        }
     }
 
     _swapChain.reset();
@@ -422,6 +401,8 @@ void Renderer::Render(float deltaTime)
     {
         util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
+
+    _context->Resources()->Clean();
 
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
