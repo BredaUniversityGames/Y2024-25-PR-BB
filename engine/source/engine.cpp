@@ -59,13 +59,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer().GetContext(), *_ecs, model);
+        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
     TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
+    _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
@@ -104,9 +104,9 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
-    rendererModule.GetRenderer().GetDebugPipeline().ClearLines();
+    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
     _physicsModule->debugRenderer->ClearLines();
-    rendererModule.GetRenderer().GetDebugPipeline().AddLines(linesData);
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -192,9 +192,9 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer().GetBloomSettings(), *_scene);
+    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings(), *_scene);
 
-    rendererModule.GetRenderer().Render(deltaTimeMS);
+    rendererModule.GetRenderer()->Render(deltaTimeMS);
 
     _performanceTracker.Update();
 

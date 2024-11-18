@@ -4,6 +4,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 
 GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulkanContext)
     : _vulkanContext(vulkanContext)

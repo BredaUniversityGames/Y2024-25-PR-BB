@@ -32,5 +32,4 @@
 #include "common.hpp"
 #include "imgui.h"
 #include "tracy/Tracy.hpp"
-#include "vulkan_context.hpp"
 #include <implot.h>

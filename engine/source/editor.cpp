@@ -25,7 +25,7 @@
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
-Editor::Editor(ECS& ecs, Renderer& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
+Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
     : _ecs(ecs)
     , _renderer(renderer)
     , _imguiBackend(imguiBackend)
@@ -47,8 +47,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
-        RelationshipComponent* relationship = _ecs.registry.try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs.registry, entity));
+        RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
@@ -70,10 +70,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
                 entt::entity current = relationship->first;
                 for (size_t i {}; i < relationship->childrenCount; ++i)
                 {
-                    if (_ecs.registry.valid(current))
+                    if (_ecs->registry.valid(current))
                     {
                         self(self, current);
-                        current = _ecs.registry.get<RelationshipComponent>(current).next;
+                        current = _ecs->registry.get<RelationshipComponent>(current).next;
                     }
                 }
 
@@ -99,16 +99,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         if (ImGui::Button("+ Add entity"))
         {
-            entt::entity entity = _ecs.registry.create();
+            entt::entity entity = _ecs->registry.create();
 
-            _ecs.registry.emplace<TransformComponent>(entity);
+            _ecs->registry.emplace<TransformComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
-            for (const auto [entity] : _ecs.registry.storage<entt::entity>().each())
+            for (const auto [entity] : _ecs->registry.storage<entt::entity>().each())
             {
-                RelationshipComponent* relationship = _ecs.registry.try_get<RelationshipComponent>(entity);
+                RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
 
                 if (relationship == nullptr || relationship->parent == entt::null)
                 {
@@ -130,13 +130,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs.systems)
+    for (const auto& system : _ecs->systems)
     {
         system->Inspect();
     }
     DirectionalLight& light = scene.directionalLight;
 
-    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer.GetGBuffers().Shadow());
+    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
     ImGui::Begin("Light Debug");
     ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
     ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
@@ -152,7 +152,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         // char* statsJson;
-        //  vmaBuildStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
+        //  vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -168,16 +168,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        // vmaFreeStatsString(_renderer.GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
+        // vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
     }
 
     ImGui::End();
 
     ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _renderer.GetContext()->GetDrawStats().DrawCalls());
-    ImGui::LabelText("Triangles", "%i", _renderer.GetContext()->GetDrawStats().IndexCount() / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _renderer.GetContext()->GetDrawStats().IndirectDrawCommands());
+    ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
+    ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
+    ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
 
     ImGui::End();
 
@@ -198,7 +198,7 @@ void Editor::DrawMainMenuBar()
             }
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", *_ecs);
             }
             ImGui::EndMenu();
         }
@@ -214,24 +214,24 @@ void Editor::DisplaySelectedEntityDetails()
         return;
     }
 
-    if (!_ecs.registry.valid(_selectedEntity))
+    if (!_ecs->registry.valid(_selectedEntity))
     {
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = std::string(NameComponent::GetDisplayName(_ecs.registry, _selectedEntity));
+    const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
     {
-        _ecs.DestroyEntity(_selectedEntity);
+        _ecs->DestroyEntity(_selectedEntity);
         _selectedEntity = entt::null;
         return;
     }
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
-    TransformComponent* transform = _ecs.registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = _ecs.registry.try_get<NameComponent>(_selectedEntity);
+    TransformComponent* transform = _ecs->registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = _ecs->registry.try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -243,7 +243,7 @@ void Editor::DisplaySelectedEntityDetails()
 
         if (changed)
         {
-            TransformHelpers::UpdateWorldMatrix(_ecs.registry, _selectedEntity);
+            TransformHelpers::UpdateWorldMatrix(_ecs->registry, _selectedEntity);
         }
     }
 

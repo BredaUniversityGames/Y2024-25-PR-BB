@@ -63,14 +63,16 @@ void VulkanContext::CreateInstance(const VulkanInitInfo& initInfo)
     if (ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
         throw std::runtime_error("Validation layers requested, but not supported!");
 
-    vk::ApplicationInfo appInfo {};
-    appInfo.pApplicationName = "";
-    appInfo.applicationVersion = vk::makeApiVersion(0, 0, 0, 0);
-    appInfo.engineVersion = vk::makeApiVersion(0, 1, 0, 0);
-    appInfo.apiVersion = vk::makeApiVersion(0, 1, 3, 0);
-    appInfo.pEngineName = "No engine";
+    vk::ApplicationInfo appInfo {
+        .pApplicationName = "Sample Application Name",
+        .applicationVersion = vk::makeApiVersion(0, 0, 0, 0),
+        .pEngineName = "BB Engine",
+        .engineVersion = vk::makeApiVersion(0, 1, 0, 0),
+        .apiVersion = vk::makeApiVersion(0, 1, 3, 0),
+    };
 
-    vk::StructureChain<vk::InstanceCreateInfo, vk::DebugUtilsMessengerCreateInfoEXT> structureChain;
+    vk::StructureChain<vk::InstanceCreateInfo, vk::DebugUtilsMessengerCreateInfoEXT>
+        structureChain;
 
     auto extensions = GetRequiredExtensions(initInfo);
     structureChain.assign({
@@ -282,23 +284,23 @@ void VulkanContext::CreateCommandPool()
 void VulkanContext::CreateDescriptorPool()
 {
     std::vector<vk::DescriptorPoolSize> poolSizes = {
-        { vk::DescriptorType::eSampler, 1000 },
-        { vk::DescriptorType::eCombinedImageSampler, 1000 },
-        { vk::DescriptorType::eSampledImage, 1000 },
-        { vk::DescriptorType::eStorageImage, 1000 },
-        { vk::DescriptorType::eUniformTexelBuffer, 1000 },
-        { vk::DescriptorType::eStorageTexelBuffer, 1000 },
-        { vk::DescriptorType::eUniformBuffer, 1000 },
-        { vk::DescriptorType::eStorageBuffer, 1000 },
-        { vk::DescriptorType::eUniformBufferDynamic, 1000 },
-        { vk::DescriptorType::eStorageBufferDynamic, 1000 },
-        { vk::DescriptorType::eInputAttachment, 1000 }
+        { vk::DescriptorType::eSampler, 1024 },
+        { vk::DescriptorType::eCombinedImageSampler, 1024 },
+        { vk::DescriptorType::eSampledImage, 1024 },
+        { vk::DescriptorType::eStorageImage, 1024 },
+        { vk::DescriptorType::eUniformTexelBuffer, 1024 },
+        { vk::DescriptorType::eStorageTexelBuffer, 1024 },
+        { vk::DescriptorType::eUniformBuffer, 1024 },
+        { vk::DescriptorType::eStorageBuffer, 1024 },
+        { vk::DescriptorType::eUniformBufferDynamic, 1024 },
+        { vk::DescriptorType::eStorageBufferDynamic, 1024 },
+        { vk::DescriptorType::eInputAttachment, 1024 }
     };
 
     vk::DescriptorPoolCreateInfo createInfo {};
     createInfo.poolSizeCount = poolSizes.size();
     createInfo.pPoolSizes = poolSizes.data();
-    createInfo.maxSets = 200;
+    createInfo.maxSets = 256;
     createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     util::VK_ASSERT(_device.createDescriptorPool(&createInfo, nullptr, &_descriptorPool), "Failed creating descriptor pool!");
 }
