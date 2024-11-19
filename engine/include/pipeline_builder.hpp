@@ -3,6 +3,9 @@
 #include "common.hpp"
 #include <map>
 
+#include <spirv_reflect.h>
+#include <vulkan_brain.hpp>
+
 class PipelineBuilder
 {
 public:

@@ -77,14 +77,6 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
-    },
-    {
-      "name": "GenClangCompileCommands",
-      "inherits": "x64-Debug",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_C_COMPILER": "clang"
-      }
     }
   ]
 }

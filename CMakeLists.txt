@@ -6,7 +6,7 @@ project(Project)
 ### HELPERS AND INCLUDES
 
 include(FetchContent)
-include(scripts/cmake/functions.cmake)
+include(scripts/cmake/code-modules.cmake)
 
 ### COMPILATION SETTINGS ###
 

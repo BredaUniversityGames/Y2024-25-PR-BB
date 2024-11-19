@@ -8,7 +8,7 @@ endfunction()
 # ENABLES UNITY BUILDS ON TARGETS
 function(target_enable_unity target)
     set_target_properties(${target} PROPERTIES UNITY_BUILD ON)
-    set_target_properties(${target} PROPERTIES UNITY_BUILD_BATCH_SIZE 8)
+    set_target_properties(${target} PROPERTIES UNITY_BUILD_BATCH_SIZE 4)
 endfunction()
 
 # DISABLES UNITY BUILD ON A SPECIFIC FILE
@@ -19,20 +19,33 @@ endfunction()
 # FUNCTION THAT DECLARES ALL THE DEFAULTS OF A MODULE
 function(module_default_init module)
 
-    target_link_libraries(${module} PRIVATE ProjectSettings)
+    file(GLOB_RECURSE public_headers CONFIGURE_DEPENDS "public/*.hpp")
+    file(GLOB_RECURSE private_sources CONFIGURE_DEPENDS "private/*.cpp")
+    file(GLOB_RECURSE private_headers CONFIGURE_DEPENDS "private/*.hpp")
 
-    file(GLOB_RECURSE public_files CONFIGURE_DEPENDS "public/*.hpp")
-    file(GLOB_RECURSE private_files CONFIGURE_DEPENDS "private/*.hpp" "private/*.cpp")
-
-    target_sources(${module} PUBLIC ${public_files} PRIVATE ${private_files})
+    target_sources(${module} PUBLIC ${public_files} PRIVATE ${private_headers} PRIVATE ${private_sources})
     target_include_directories(${module} PUBLIC "public" PRIVATE "private")
+
+    target_link_libraries(${module} PRIVATE ProjectSettings)
 
     if (ENABLE_PCH)
         target_link_libraries(${module} PRIVATE PCH)
         target_precompile_headers(${module} REUSE_FROM PCH)
     endif ()
 
-    if (USE_UNITY_BUILD)
+    if (ENABLE_TESTS)
+
+        file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS "tests/*.cpp")
+
+        if (test_sources)
+            target_sources(UnitTests PRIVATE ${test_sources})
+            target_link_libraries(UnitTests PRIVATE ${module})
+            target_include_directories(UnitTests PRIVATE "private")
+        endif ()
+
+    endif ()
+
+    if (ENABLE_UNITY)
         target_enable_unity(${module})
     endif ()
 
