@@ -1,6 +1,5 @@
 #include "pipelines/lighting_pipeline.hpp"
 
-#include "../vulkan_context.hpp"
 #include "../vulkan_helper.hpp"
 #include "bloom_settings.hpp"
 #include "camera.hpp"
@@ -10,6 +9,7 @@
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
+#include "vulkan_context.hpp"
 
 LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _context(context)

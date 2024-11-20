@@ -1,6 +1,5 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 
-#include "../vulkan_context.hpp"
 #include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -8,6 +7,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
+#include "vulkan_context.hpp"
 
 #include <string>
 #include <vector>

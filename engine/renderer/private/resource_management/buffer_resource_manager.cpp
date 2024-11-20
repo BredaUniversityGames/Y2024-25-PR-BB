@@ -1,6 +1,6 @@
 #include "resource_management/buffer_resource_manager.hpp"
 
-#include "../vulkan_context.hpp"
+#include "vulkan_context.hpp"
 
 template <>
 std::weak_ptr<ResourceManager<Buffer>> ResourceHandle<Buffer>::manager = {};

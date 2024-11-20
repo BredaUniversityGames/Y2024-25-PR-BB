@@ -25,6 +25,10 @@
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
+// TODO: Editor shouldnt depend on this.
+#include "vulkan_context.hpp"
+#include <vk_mem_alloc.h>
+
 Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
     : _ecs(ecs)
     , _renderer(renderer)
@@ -151,15 +155,15 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Button("Dump json"))
     {
-        // char* statsJson;
-        //  vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
+        char* statsJson;
+        vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
         std::ofstream file { outputFilePath };
         if (file.is_open())
         {
-            // file << statsJson;
+            file << statsJson;
 
             file.close();
         }
@@ -168,7 +172,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        // vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
+        vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
     }
 
     ImGui::End();

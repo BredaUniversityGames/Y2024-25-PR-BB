@@ -1,6 +1,5 @@
 #include "pipelines/ibl_pipeline.hpp"
 
-#include "../vulkan_context.hpp"
 #include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -9,6 +8,7 @@
 #include "resource_management/sampler_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
+#include "vulkan_context.hpp"
 
 IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> environmentMap)
     : _context(context)

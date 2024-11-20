@@ -1,6 +1,5 @@
 #include "pipelines/skydome_pipeline.hpp"
 
-#include "../vulkan_context.hpp"
 #include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "bloom_settings.hpp"
@@ -12,6 +11,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
+#include "vulkan_context.hpp"
 
 SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Mesh> sphere, const CameraResource& camera,
     ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
