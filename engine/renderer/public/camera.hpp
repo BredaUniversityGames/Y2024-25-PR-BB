@@ -54,7 +54,7 @@ private:
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _descriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _buffers;
 
-    static void CreateDescriptorSetLayout(std::shared_ptr<GraphicsContext> context);
+    static void CreateDescriptorSetLayout(const std::shared_ptr<GraphicsContext>& context);
     void CreateBuffers();
     void CreateDescriptorSets();
 };

@@ -5,7 +5,7 @@
 #include "ecs.hpp"
 #include "particles/emitter_component.hpp"
 
-ParticleInterface::ParticleInterface(std::shared_ptr<ECS> ecs)
+ParticleInterface::ParticleInterface(const std::shared_ptr<ECS>& ecs)
     : _ecs(ecs)
 {
     // TODO: later, serialize emitter presets and load from file here

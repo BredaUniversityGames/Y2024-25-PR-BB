@@ -10,7 +10,7 @@ class ECS;
 class ParticleInterface
 {
 public:
-    ParticleInterface(std::shared_ptr<ECS> ecs);
+    ParticleInterface(const std::shared_ptr<ECS>& ecs);
 
     enum class EmitterPreset
     {

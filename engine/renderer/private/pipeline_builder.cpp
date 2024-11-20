@@ -3,9 +3,11 @@
 #include "graphics_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include "graphics_context.hpp"
+
 std::unordered_map<size_t, vk::DescriptorSetLayout> PipelineBuilder::_cacheDescriptorSetLayouts {};
 
-PipelineBuilder::PipelineBuilder(std::shared_ptr<GraphicsContext> context)
+PipelineBuilder::PipelineBuilder(const std::shared_ptr<GraphicsContext>& context)
     : _context(context)
 {
     _inputAssemblyStateCreateInfo = {

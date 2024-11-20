@@ -39,7 +39,7 @@ void BloomSettings::Update(uint32_t currentFrame)
 {
     auto resources { _context->Resources() };
 
-    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers.at(currentFrame));
     memcpy(buffer->mappedPtr, &_data, sizeof(SettingsData));
 }
 
@@ -77,7 +77,7 @@ void BloomSettings::CreateUniformBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
             .SetName(name);
 
-        _frameData.buffers[i] = resources->BufferResourceManager().Create(creation);
+        _frameData.buffers.at(i) = resources->BufferResourceManager().Create(creation);
     }
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
@@ -102,7 +102,7 @@ void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers[currentFrame]);
+    const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers.at(currentFrame));
 
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.buffer = buffer->buffer;
@@ -112,7 +112,7 @@ void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
     std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
 
     vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
-    bufferWrite.dstSet = _frameData.descriptorSets[currentFrame];
+    bufferWrite.dstSet = _frameData.descriptorSets.at(currentFrame);
     bufferWrite.dstBinding = 0;
     bufferWrite.dstArrayElement = 0;
     bufferWrite.descriptorType = vk::DescriptorType::eUniformBuffer;

@@ -13,9 +13,9 @@ class Editor;
 class PhysicsModule;
 class OldEngine : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(Engine& engine) override;
-    virtual void Tick(Engine& engine) override;
-    virtual void Shutdown(Engine& engine) override;
+    ModuleTickOrder Init(Engine& engine) override;
+    void Tick(Engine& engine) override;
+    void Shutdown(Engine& engine) override;
 
 public:
     OldEngine();

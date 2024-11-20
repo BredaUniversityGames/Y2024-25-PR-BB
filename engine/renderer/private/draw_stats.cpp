@@ -1,5 +1,7 @@
 #include "draw_stats.hpp"
 
+#include <cstdint>
+
 void DrawStats::IndirectDraw(uint32_t drawCommandSize, uint32_t indexCount)
 {
     _drawCalls++;

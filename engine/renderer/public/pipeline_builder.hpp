@@ -16,7 +16,7 @@ class VulkanContext;
 class PipelineBuilder
 {
 public:
-    PipelineBuilder(std::shared_ptr<GraphicsContext> context);
+    PipelineBuilder(const std::shared_ptr<GraphicsContext>& context);
     ~PipelineBuilder();
 
     NON_COPYABLE(PipelineBuilder);

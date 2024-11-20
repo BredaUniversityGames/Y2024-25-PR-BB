@@ -28,7 +28,7 @@ CameraResource::~CameraResource()
     }
 }
 
-void CameraResource::CreateDescriptorSetLayout(std::shared_ptr<GraphicsContext> context)
+void CameraResource::CreateDescriptorSetLayout(const std::shared_ptr<GraphicsContext>& context)
 {
     if (_descriptorSetLayout)
     {
@@ -66,7 +66,7 @@ void CameraResource::CreateBuffers()
             .SetIsMappable(true)
             .SetName(name);
 
-        _buffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+        _buffers.at(i) = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
