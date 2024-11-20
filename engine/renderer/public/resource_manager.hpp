@@ -60,6 +60,7 @@ template <typename T>
 class ResourceManager : public std::enable_shared_from_this<ResourceManager<T>>
 {
 public:
+    ResourceManager() = default;
     virtual ~ResourceManager();
 
     ResourceHandle<T> Create(T&& resource)
@@ -89,10 +90,20 @@ public:
         return handle;
     }
 
-    virtual const T* Access(const ResourceHandle<T>& handle) const
+    const T* Access(const ResourceHandle<T>& handle) const
     {
         uint32_t index = handle.index;
         if (!IsValid(handle))
+        {
+            return nullptr;
+        }
+
+        return &_resources[index].resource.value();
+    }
+
+    const T* Access(uint32_t index) const
+    {
+        if (!IsValid(index))
         {
             return nullptr;
         }
@@ -111,13 +122,18 @@ public:
         }
     }
 
-    virtual bool IsValid(const ResourceHandle<T>& handle) const
+    bool IsValid(const ResourceHandle<T>& handle) const
     {
         uint32_t index = handle.index;
         return index < _resources.size() && _resources[index].version == handle.version && _resources[index].resource.has_value();
     }
 
-    virtual void Clean()
+    bool IsValid(uint32_t index) const
+    {
+        return index < _resources.size() && _resources[index].resource.has_value();
+    }
+
+    void Clean()
     {
         for (const auto& handle : _bin)
         {

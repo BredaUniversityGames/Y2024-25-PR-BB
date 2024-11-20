@@ -13,6 +13,4 @@ class MeshResourceManager final : public ResourceManager<Mesh>
 {
 public:
     MeshResourceManager();
-
-private:
 };

@@ -12,11 +12,7 @@ class VulkanContext;
 class SamplerResourceManager final : public ResourceManager<Sampler>
 {
 public:
-    SamplerResourceManager(const std::shared_ptr<VulkanContext> context);
-
-    NON_COPYABLE(SamplerResourceManager);
-    NON_MOVABLE(SamplerResourceManager);
-
+    explicit SamplerResourceManager(const std::shared_ptr<VulkanContext> context);
     ResourceHandle<Sampler> Create(const SamplerCreation& creation);
 
 private:

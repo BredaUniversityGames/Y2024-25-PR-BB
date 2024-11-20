@@ -11,7 +11,6 @@ class MaterialResourceManager final : public ResourceManager<Material>
 {
 public:
     explicit MaterialResourceManager(const std::shared_ptr<ImageResourceManager>& ImageResourceManager);
-
     ResourceHandle<Material> Create(const MaterialCreation& creation);
 
 private:
