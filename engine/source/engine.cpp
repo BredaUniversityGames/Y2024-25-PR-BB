@@ -137,9 +137,11 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
+    auto persistentLinesData = _physicsModule->debugRenderer->GetPersistentLinesData();
     _renderer->_debugPipeline->ClearLines();
     _physicsModule->debugRenderer->ClearLines();
     _renderer->_debugPipeline->AddLines(linesData);
+    _renderer->_debugPipeline->AddLines(persistentLinesData);
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -196,25 +198,11 @@ void OldEngine::Tick(Engine& engine)
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
 
-        // shoot balls
+        // shoot rays
         if (ImGui::IsKeyPressed(ImGuiKey_Space))
         {
-            // spawn model
-            glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, _scene->camera.position) * glm::scale(glm::mat4 { 1.0f }, glm::vec3(0.45));
-            _scene->gameObjects.emplace_back(transform, _scene->models[0]);
-
-            entt::entity entity = _ecs->_registry.create();
-            RigidbodyComponent rb(*_physicsModule->bodyInterface, eSPHERE);
-            NameComponent node;
-            node._name = "Ball";
-            _ecs->_registry.emplace<NameComponent>(entity, node);
-            _ecs->_registry.emplace<RigidbodyComponent>(entity, rb);
-            _physicsModule->bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(_scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z), JPH::EActivation::Activate);
-
             glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
-            _physicsModule->bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 25.0f);
-
-            _projectiles[&_scene->gameObjects.back()] = rb;
+            _ecs->GetSystem<PhysicsSystem>().ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
         }
     }
     _lastMousePos = { mouseX, mouseY };

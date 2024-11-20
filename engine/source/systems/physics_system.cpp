@@ -28,6 +28,20 @@ void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
 void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED RigidbodyComponent& rigidbody)
 {
 }
+void PhysicsSystem::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance)
+{
+    JPH::Vec3 start(origin.x, origin.y, origin.z);
+    JPH::Vec3 dir(direction.x, direction.y, direction.z);
+
+    dir = dir.Normalized();
+    JPH::RayCast ray(start, dir * distance);
+    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
+    _physicsModule.physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
+    int num_hits = (int)collector.mHits.size();
+    JPH::BroadPhaseCastResult* results = collector.mHits.data();
+
+    _physicsModule.debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+}
 void PhysicsSystem::CleanUp()
 {
     const auto toDestroy = _ecs._registry.view<ECS::ToDestroy, RigidbodyComponent>();
@@ -91,6 +105,11 @@ void PhysicsSystem::Inspect()
 
         RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings);
         CreatePhysicsEntity(newRigidBody);
+    }
+
+    if (ImGui::Button("Test ray cast"))
+    {
+        ShootRay(glm::vec3(0), glm::vec3(0, 1, 0), 100);
     }
 
     if (ImGui::Button("Clear Physics Entities"))

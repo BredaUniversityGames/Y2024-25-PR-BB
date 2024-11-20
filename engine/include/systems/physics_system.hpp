@@ -13,6 +13,7 @@ public:
     entt::entity CreatePhysicsEntity();
     void CreatePhysicsEntity(RigidbodyComponent& rb);
     void AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody);
+    void ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance);
     void CleanUp();
 
     void Update([[maybe_unused]] ECS& ecs, [[maybe_unused]] float deltaTime) override;

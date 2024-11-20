@@ -5,6 +5,9 @@
 #pragma once
 
 #include "Jolt/Jolt.h"
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 
 JPH_SUPPRESS_WARNING_PUSH
 
@@ -211,6 +214,15 @@ public:
         linePositions.push_back(toPos);
     }
 
+    void AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
+    {
+        glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
+        glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
+
+        persistentLinePositions.push_back(fromPos);
+        persistentLinePositions.push_back(toPos);
+    }
+
     void DrawText3D(
         MAYBE_UNUSED JPH::RVec3Arg inPosition,
         MAYBE_UNUSED const std::string_view& inString,
@@ -225,6 +237,11 @@ public:
         return linePositions;
     }
 
+    [[nodiscard]] const std::vector<glm::vec3>& GetPersistentLinesData() const
+    {
+        return persistentLinePositions;
+    }
+
     void ClearLines()
     {
         linePositions.clear();
@@ -232,6 +249,7 @@ public:
 
 private:
     std::vector<glm::vec3> linePositions;
+    std::vector<glm::vec3> persistentLinePositions;
 };
 
 class PhysicsModule
