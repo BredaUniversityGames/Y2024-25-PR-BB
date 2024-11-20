@@ -12,8 +12,8 @@ public:
     // These default values are the same as specified in wren.h
     struct VMMemoryConfig
     {
-        size_t initialHeapSize = 1024 * 1024 * 10; // 10 MiB
-        size_t minHeapSize = 1024 * 1024; // 1 MiB
+        size_t initialHeapSize = 1024ull * 1024ull * 10ull; // 10 MiB
+        size_t minHeapSize = 1024ull * 1024ull; // 1 MiB
         uint32_t heapGrowthPercent = 50;
     };
 

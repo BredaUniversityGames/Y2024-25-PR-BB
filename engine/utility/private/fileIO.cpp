@@ -1,3 +1,4 @@
+#include <bit>
 #include <fileIO.hpp>
 #include <filesystem>
 

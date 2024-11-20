@@ -1,3 +1,4 @@
+#include <bit>
 #include <fileIO.hpp>
 #include <filesystem>
 #include <log.hpp>
@@ -90,10 +91,10 @@ struct WrenCallbacks
         {
             // Unfortunately, we need to allocate and pass ownership of paths to wren
             size_t allocation_size = sizeof(char) * (str.size() + 1);
-            char* ret_val = std::bit_cast<char*>(std::malloc(allocation_size));
+            char* ret_val = std::bit_cast<char*>(std::malloc(allocation_size)); // NOLINT
 
+            std::memset(ret_val, 0, allocation_size);
             std::memcpy(ret_val, str.data(), allocation_size - 1);
-            ret_val[str.size()] = '\0';
 
             return ret_val;
         };
@@ -171,11 +172,7 @@ std::optional<std::string> ScriptingContext::LoadModuleSource(const std::string&
     if (auto stream = fileIO::OpenReadStream(modulePath, fileIO::TEXT_READ_FLAGS))
     {
         auto file_data = fileIO::DumpFullStream(stream.value());
-
-        auto* start = std::bit_cast<const char*>(file_data.data());
-        auto* end = start + file_data.size();
-
-        return std::string { start, end };
+        return std::string { std::bit_cast<const char*>(file_data.data()), file_data.size() };
     }
 
     return std::nullopt;

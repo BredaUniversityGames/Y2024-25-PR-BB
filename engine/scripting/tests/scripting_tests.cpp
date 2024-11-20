@@ -5,7 +5,7 @@
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 constexpr ScriptingContext::VMMemoryConfig memory_config {
-    256 * 4, 256, 50
+    256ull * 4ull, 256ull, 50
 };
 
 TEST(ScriptingContextTests, PrintHelloWorld)
