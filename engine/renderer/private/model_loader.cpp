@@ -64,17 +64,21 @@ ModelLoader::~ModelLoader()
 {
 }
 
-Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
+
+
+ModelData ModelLoader::ExtractModelFromFile(std::string_view path, LoadMode loadMode)
 {
-    Stopwatch stopwatch;
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
         throw std::runtime_error("Path not found!");
 
+  
     std::string_view directory = path.substr(0, path.find_last_of('/'));
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
+    
+    
     auto loadedGltf = _parser.loadGltf(fileStream, directory,
         fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
@@ -86,9 +90,7 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    bblog::info("Loaded model: {} in {} ms", path, stopwatch.GetElapsed().count());
-
-    return LoadModel(gltf, batchBuffer, name, loadMode);
+    return
 }
 
 StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
@@ -422,11 +424,9 @@ glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2
     return glm::vec4 { tangent.x, tangent.y, tangent.z, w };
 }
 
-Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
+Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, const std::string_view name, LoadMode loadMode)
 {
-    Model model {};
-
-    SingleTimeCommands commandBuffer { _context };
+    Modeldata model {};
 
     // Load textures
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -434,7 +434,7 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
         ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.resources.textures.emplace_back(_context->Resources()->ImageResourceManager().Create(imageCreation));
+        model.
     }
 
     // Load materials

@@ -72,7 +72,7 @@ struct StagingMesh
 
     std::vector<StagingMesh::Primitive> primitives;
 };
-
+  
 struct StaticMeshComponent
 {
     ResourceHandle<Mesh> mesh;

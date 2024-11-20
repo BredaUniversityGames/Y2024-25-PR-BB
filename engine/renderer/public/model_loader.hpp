@@ -27,7 +27,8 @@ public:
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    Model Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode);
+   
+    ModelData ExtractModelFromFile(std::string_view path, LoadMode loadMode);
 
     ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
