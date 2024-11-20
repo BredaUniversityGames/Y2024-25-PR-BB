@@ -1,0 +1,52 @@
+#pragma once
+#include <common.hpp>
+#include <iostream>
+#include <string>
+
+struct WrenVM;
+
+class ScriptingContext
+{
+public:
+    // These default values are the same as specified in wren.h
+    struct VMMemoryConfig
+    {
+        size_t initialHeapSize = 1024 * 1024 * 10; // 10 MiB
+        size_t minHeapSize = 1024 * 1024; // 1 MiB
+        uint32_t heapGrowthPercent = 50;
+    };
+
+    ScriptingContext(const VMMemoryConfig& memory_config);
+    ~ScriptingContext();
+
+    bool InterpretWrenModule(const std::string& path);
+
+    // Sets the output stream for system log calls
+    void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
+
+    // Adds an include path to wren scripts
+    void AddWrenIncludePath(const std::string& path) { _includePaths.emplace_back(path); }
+
+    NON_COPYABLE(ScriptingContext);
+    NON_MOVABLE(ScriptingContext);
+
+private:
+    WrenVM* _vm;
+    std::ostream* _wrenOutStream = &std::cout;
+
+    // Contains Wren callbacks, used by the VM
+    // Needs friend access to work with the internals of the scripting context
+    friend struct WrenCallbacks;
+
+    // Used by the compiler while it is compiling files and to resolve import paths
+    // Source text is cleared after the compiler finalizes
+    struct ModuleSourceData
+    {
+        std::vector<std::byte> source_text {};
+    };
+
+    const char* LoadModuleSource(const std::string& modulePath);
+
+    std::vector<std::string> _includePaths {};
+    std::unordered_map<std::string, ModuleSourceData> _moduleSources;
+};

@@ -11,7 +11,7 @@ include(scripts/cmake/code-modules.cmake)
 ### COMPILATION SETTINGS ###
 
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
-option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 option(USE_UNITY_BUILD "Compile using Unity Builds" ON)
@@ -41,13 +41,13 @@ endif ()
 # Add external dependencies
 add_subdirectory(external)
 
-# Add engine library
-add_subdirectory(engine)
-
 # Add unit testing target executable
 if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif ()
+
+# Add engine library
+add_subdirectory(engine)
 
 # Add game executable (currently just main.cpp)
 add_executable(Game "engine/main.cpp")

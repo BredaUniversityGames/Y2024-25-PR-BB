@@ -16,6 +16,11 @@ function(source_exclude_unity file)
     set_source_files_properties(${file} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 endfunction()
 
+# DISABLES PRECOMPILED HEADER ON SOURCE FILES
+function(source_disable_pch files)
+    set_source_files_properties(${file} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+endfunction()
+
 # FUNCTION THAT DECLARES ALL THE DEFAULTS OF A MODULE
 function(module_default_init module)
 
