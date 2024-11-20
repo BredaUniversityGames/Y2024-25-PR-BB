@@ -54,7 +54,7 @@
         "WARNINGS_AS_ERRORS": true,
         "COMPILE_SHADERS": false,
         "ENABLE_PCH": false,
-        "USE_UNITY_BUILD": true
+        "ENABLE_UNITY": false
       }
     },
     {
