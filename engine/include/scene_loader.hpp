@@ -1,17 +1,18 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
-
 #include "model.hpp"
-#include "vulkan_brain.hpp"
+
+#include <entt/entity/entity.hpp>
+#include <memory>
 
 class ECS;
+class GraphicsContext;
 
 class SceneLoader
 {
 public:
-    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const VulkanBrain& brain, ECS& ecs, const Model& model);
+    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model);
 
 private:
-    entt::entity LoadNodeRecursive(const VulkanBrain& brain, ECS& ecs, const Hierarchy::Node& node);
+    entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& node);
 };
