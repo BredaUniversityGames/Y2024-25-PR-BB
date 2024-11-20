@@ -1,6 +1,7 @@
 #pragma once
 #include <common.hpp>
 #include <iostream>
+#include <optional>
 #include <string>
 
 struct WrenVM;
@@ -38,15 +39,6 @@ private:
     // Needs friend access to work with the internals of the scripting context
     friend struct WrenCallbacks;
 
-    // Used by the compiler while it is compiling files and to resolve import paths
-    // Source text is cleared after the compiler finalizes
-    struct ModuleSourceData
-    {
-        std::vector<std::byte> source_text {};
-    };
-
-    const char* LoadModuleSource(const std::string& modulePath);
-
+    std::optional<std::string> LoadModuleSource(const std::string& modulePath);
     std::vector<std::string> _includePaths {};
-    std::unordered_map<std::string, ModuleSourceData> _moduleSources;
 };

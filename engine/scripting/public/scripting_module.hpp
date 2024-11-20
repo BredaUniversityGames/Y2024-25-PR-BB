@@ -5,14 +5,14 @@
 
 class ScriptingModule : public ModuleInterface
 {
-    ModuleTickOrder Init(Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         ScriptingContext::VMMemoryConfig memory_config {};
         context = std::make_unique<ScriptingContext>(memory_config);
         return ModuleTickOrder::ePreTick;
     };
-    void Tick(Engine& engine) override {};
-    void Shutdown(Engine& engine) override {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 
 public:
     ~ScriptingModule() override = default;

@@ -13,8 +13,8 @@
 class GraphicsContext;
 class VulkanContext;
 
+#include <graphics_context.hpp>
 #include <spirv_reflect.h>
-#include <vulkan_brain.hpp>
 
 class PipelineBuilder
 {

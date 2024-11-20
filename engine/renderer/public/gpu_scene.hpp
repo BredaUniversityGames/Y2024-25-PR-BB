@@ -1,6 +1,9 @@
 #pragma once
 
 #include "constants.hpp"
+#include <gpu_resources.hpp>
+#include <memory>
+#include <resource_manager.hpp>
 
 struct SceneDescription;
 class GPUScene;

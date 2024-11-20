@@ -17,7 +17,7 @@ struct WrenCallbacks
     }
 
     static void ErrorHandler(
-        WrenVM* _vm,
+        MAYBE_UNUSED WrenVM* _vm,
         WrenErrorType errorType,
         const char* module,
         const int line,
@@ -44,19 +44,19 @@ struct WrenCallbacks
     }
 
     static WrenForeignClassMethods BindForeignClass(
-        WrenVM* _vm,
-        const char* module,
-        const char* class_name)
+        MAYBE_UNUSED WrenVM* _vm,
+        MAYBE_UNUSED const char* module,
+        MAYBE_UNUSED const char* class_name)
     {
         return { nullptr, nullptr };
     }
 
     static WrenForeignMethodFn BindForeignMethod(
-        WrenVM* _vm,
-        const char* module,
-        const char* class_name,
-        bool is_static,
-        const char* signature)
+        MAYBE_UNUSED WrenVM* _vm,
+        MAYBE_UNUSED const char* module,
+        MAYBE_UNUSED const char* class_name,
+        MAYBE_UNUSED bool is_static,
+        MAYBE_UNUSED const char* signature)
     {
         return nullptr;
     }
@@ -66,19 +66,22 @@ struct WrenCallbacks
         auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
         WrenLoadModuleResult result {};
 
-        if (const char* source = context->LoadModuleSource(name))
+        if (std::optional<std::string> source = context->LoadModuleSource(name))
         {
-            result.source = source;
+            std::string* heap_string = new std::string(std::move(source.value()));
+
+            result.source = heap_string->c_str();
             result.onComplete = &FreeModuleSource;
+            result.userData = heap_string;
         }
 
         return result;
     }
 
-    static void FreeModuleSource(WrenVM* _vm, const char* name, struct WrenLoadModuleResult result)
+    static void FreeModuleSource(MAYBE_UNUSED WrenVM* _vm, MAYBE_UNUSED const char* name, WrenLoadModuleResult result)
     {
-        auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
-        context->_moduleSources.erase(std::string(name));
+        auto* source_str = static_cast<std::string*>(result.userData);
+        delete source_str;
     }
 
     static const char* ImportHandler(WrenVM* _vm, const char* importer, const char* imported)
@@ -153,9 +156,9 @@ ScriptingContext::~ScriptingContext()
 
 bool ScriptingContext::InterpretWrenModule(const std::string& path)
 {
-    if (const auto* source = LoadModuleSource(path))
+    if (auto source = LoadModuleSource(path))
     {
-        auto result = wrenInterpret(_vm, path.c_str(), source);
+        auto result = wrenInterpret(_vm, path.c_str(), source->c_str());
         return result == WREN_RESULT_SUCCESS;
     }
 
@@ -163,19 +166,17 @@ bool ScriptingContext::InterpretWrenModule(const std::string& path)
     return false;
 }
 
-const char* ScriptingContext::LoadModuleSource(const std::string& modulePath)
+std::optional<std::string> ScriptingContext::LoadModuleSource(const std::string& modulePath)
 {
     if (auto stream = fileIO::OpenReadStream(modulePath, fileIO::TEXT_READ_FLAGS))
     {
         auto file_data = fileIO::DumpFullStream(stream.value());
-        file_data.emplace_back(std::byte { 0 }); // null terminator
 
-        ModuleSourceData sourceInfo {};
-        sourceInfo.source_text = std::move(file_data);
+        auto* start = std::bit_cast<const char*>(file_data.data());
+        auto* end = start + file_data.size();
 
-        auto [it, success] = _moduleSources.emplace(modulePath, std::move(sourceInfo));
-        return std::bit_cast<const char*>(it->second.source_text.data());
+        return std::string { start, end };
     }
 
-    return nullptr;
+    return std::nullopt;
 }
