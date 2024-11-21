@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 
+#include "graphics_context.hpp"
 #include <cstddef>
 #include <optional>
 #include <spirv_reflect.h>
@@ -12,9 +13,6 @@
 
 class GraphicsContext;
 class VulkanContext;
-
-#include <graphics_context.hpp>
-#include <spirv_reflect.h>
 
 class PipelineBuilder
 {

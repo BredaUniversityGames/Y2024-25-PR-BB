@@ -40,7 +40,7 @@ std::vector<std::byte> DumpFullStream(std::istream& stream);
 bool Exists(const std::string& path);
 
 /// <summary>
-/// Check if a file exists.
+/// Creates a directory at the specified path, returns false if this failed
 /// </summary>
 bool MakeDirectory(const std::string& path);
 

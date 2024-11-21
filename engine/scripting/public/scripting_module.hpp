@@ -1,14 +1,14 @@
 #pragma once
+#include "scripting_context.hpp"
 #include <engine.hpp>
 #include <memory>
-#include <scripting_context.hpp>
 
 class ScriptingModule : public ModuleInterface
 {
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         ScriptingContext::VMMemoryConfig memory_config {};
-        context = std::make_unique<ScriptingContext>(memory_config);
+        _context = std::make_unique<ScriptingContext>(memory_config);
         return ModuleTickOrder::ePreTick;
     };
 
@@ -22,5 +22,5 @@ public:
     ~ScriptingModule() override = default;
 
 private:
-    std::unique_ptr<ScriptingContext> context {};
+    std::unique_ptr<ScriptingContext> _context {};
 };
