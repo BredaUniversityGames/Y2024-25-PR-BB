@@ -21,13 +21,16 @@ public:
     ScriptingContext(const VMMemoryConfig& memory_config);
     ~ScriptingContext();
 
+    size_t GetModuleCount() const { return _loadedModulePaths.size(); }
+
     bool InterpretWrenModule(const std::string& path);
 
     // Sets the output stream for system log calls
     void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
 
     // Adds an include path to wren scripts
-    void AddWrenIncludePath(const std::string& path) { _includePaths.emplace_back(path); }
+    // Will not add another entry if it maps to the same directory
+    void AddWrenIncludePath(const std::string& path);
 
     NON_COPYABLE(ScriptingContext);
     NON_MOVABLE(ScriptingContext);
@@ -41,5 +44,7 @@ private:
     friend struct WrenCallbacks;
 
     std::optional<std::string> LoadModuleSource(const std::string& modulePath);
+
+    std::vector<std::string> _loadedModulePaths {};
     std::vector<std::string> _includePaths {};
 };

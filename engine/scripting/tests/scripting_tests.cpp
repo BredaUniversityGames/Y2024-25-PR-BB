@@ -33,6 +33,7 @@ TEST(ScriptingContextTests, ImportDirectories)
     ScriptingContext context { MEMORY_CONFIG };
     context.AddWrenIncludePath("game/");
 
-    auto result = context.InterpretWrenModule("game/tests/import_from_base.wren");
+    auto result = context.InterpretWrenModule("game/tests/import_same.wren");
     EXPECT_TRUE(result);
+    EXPECT_EQ(context.GetModuleCount(), 3);
 }

@@ -28,7 +28,7 @@ struct WrenCallbacks
         {
         case WREN_ERROR_COMPILE:
         {
-            bblog::error("Wren Interpreter: {}", module, line, msg);
+            bblog::error("Wren Interpreter: in module {}, line {}: {}", module, line, msg);
             break;
         }
         case WREN_ERROR_STACK_TRACE:
@@ -69,6 +69,7 @@ struct WrenCallbacks
 
         if (std::optional<std::string> source = context->LoadModuleSource(name))
         {
+            context->_loadedModulePaths.emplace_back(std::string(name));
             std::string* heap_string = new std::string(std::move(source.value()));
 
             result.source = heap_string->c_str();
@@ -87,6 +88,8 @@ struct WrenCallbacks
 
     static const char* ImportHandler(WrenVM* _vm, const char* importer, const char* imported)
     {
+        using FilePath = std::filesystem::path;
+
         auto MakeCString = [](const std::string& str)
         {
             // Unfortunately, we need to allocate and pass ownership of paths to wren
@@ -102,10 +105,10 @@ struct WrenCallbacks
         auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
 
         // First check if the file exists relative to current directory
-        std::filesystem::path sourcePath = std::string(importer);
-        std::filesystem::path importPath = std::string(imported);
+        FilePath sourcePath = FilePath(importer).make_preferred();
+        FilePath importPath = FilePath(imported).make_preferred();
 
-        std::filesystem::path relativeImportPath = sourcePath.parent_path() / importPath;
+        FilePath relativeImportPath = sourcePath.parent_path() / importPath;
 
         auto relativePath = relativeImportPath.string();
         if (fileIO::Exists(relativePath))
@@ -115,7 +118,7 @@ struct WrenCallbacks
 
         for (auto& include_path : context->_includePaths)
         {
-            std::filesystem::path tryPath = std::filesystem::path(include_path) / importPath;
+            FilePath tryPath = FilePath(include_path) / importPath;
 
             std::string path = tryPath.string();
             if (fileIO::Exists(path))
@@ -125,7 +128,7 @@ struct WrenCallbacks
         }
 
         // Otherwise, just return the import path unmodified
-        return imported;
+        return MakeCString(importPath.string());
     }
 };
 
@@ -159,12 +162,38 @@ bool ScriptingContext::InterpretWrenModule(const std::string& path)
 {
     if (auto source = LoadModuleSource(path))
     {
-        auto result = wrenInterpret(_vm, path.c_str(), source->c_str());
-        return result == WREN_RESULT_SUCCESS;
+        // Paths that map to the same file need to map to the same string as well
+        using FilePath = std::filesystem::path;
+        std::string preferred_path = FilePath(path).make_preferred().string();
+
+        auto result = wrenInterpret(_vm, preferred_path.c_str(), source->c_str()) == WREN_RESULT_SUCCESS;
+
+        if (result)
+        {
+            _loadedModulePaths.emplace_back(preferred_path);
+        }
+
+        return result;
     }
 
     bblog::error("Wren compilation: could not interpret {}", path);
     return false;
+}
+
+void ScriptingContext::AddWrenIncludePath(const std::string& path)
+{
+    using FilePath = std::filesystem::path;
+
+    std::string preferred_path = FilePath(path).make_preferred().string();
+    auto equals = [&preferred_path](const auto& rhs)
+    { return preferred_path == rhs; };
+
+    auto it = std::find_if(_includePaths.begin(), _includePaths.end(), equals);
+
+    if (it == _includePaths.end())
+    {
+        _includePaths.emplace_back(preferred_path);
+    }
 }
 
 std::optional<std::string> ScriptingContext::LoadModuleSource(const std::string& modulePath)
