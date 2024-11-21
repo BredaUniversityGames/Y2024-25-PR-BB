@@ -4,10 +4,10 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
-#include "components/relationship_helpers.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/transform_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/relationship_helpers.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"

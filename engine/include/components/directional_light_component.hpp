@@ -6,7 +6,7 @@
 
 struct DirectionalLightComponent
 {
-    glm::vec3 color{ 1.0f };
+    glm::vec3 color { 1.0f };
 
     float shadowBias = 0.002f;
     float orthographicSize = 17.0f;

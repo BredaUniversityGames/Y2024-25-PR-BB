@@ -1,10 +1,10 @@
 #include "gpu_scene.hpp"
 
 #include "batch_buffer.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/transform_component.hpp"
-#include "components/world_matrix_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 #include "ecs.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -57,7 +57,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
 
     for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
     {
-        if(directionalLightIsSet)
+        if (directionalLightIsSet)
         {
             spdlog::warn("Only 1 directional light is supported, the first one available will be used.");
             return;

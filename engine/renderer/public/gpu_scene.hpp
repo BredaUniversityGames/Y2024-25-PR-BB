@@ -123,7 +123,7 @@ private:
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
     // TODO: Change GPUScene to support all cameras in the scene
-    Camera _directionalLightShadowCamera{};
+    Camera _directionalLightShadowCamera {};
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
