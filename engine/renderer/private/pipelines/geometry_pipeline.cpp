@@ -49,7 +49,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
-        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos[i] };
+        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos.at(i) };
         info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         info.storeOp = vk::AttachmentStoreOp::eStore;
         info.loadOp = vk::AttachmentLoadOp::eClear;
@@ -57,7 +57,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     }
 
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        colorAttachmentInfos[i].imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[i])->view;
+        colorAttachmentInfos.at(i).imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->view;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
@@ -129,7 +129,7 @@ void GeometryPipeline::CreatePipeline()
 
     std::vector<vk::Format> formats(DEFERRED_ATTACHMENT_COUNT);
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        formats[i] = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
+        formats.at(i) = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->format;
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
