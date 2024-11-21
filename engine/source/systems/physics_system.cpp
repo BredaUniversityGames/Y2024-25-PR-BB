@@ -1,9 +1,9 @@
 ﻿#include "systems/physics_system.hpp"
-#include "ECS.hpp"
 #include "components/name_component.hpp"
-#include "physics_module.hpp"
 #include "components/rigidbody_component.hpp"
+#include "ecs.hpp"
 #include "imgui/imgui.h"
+#include "physics_module.hpp"
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)
@@ -44,7 +44,7 @@ RayHitInfo PhysicsSystem::ShootRay(const glm::vec3& origin, const glm::vec3& dir
 }
 void PhysicsSystem::CleanUp()
 {
-    const auto toDestroy = _ecs._registry.view<ECS::ToDestroy, RigidbodyComponent>();
+    const auto toDestroy = _ecs.registry.view<ECS::ToDestroy, RigidbodyComponent>();
     for (const entt::entity entity : toDestroy)
     {
         RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
@@ -62,7 +62,7 @@ void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 void PhysicsSystem::Inspect()
 {
     ImGui::Begin("Physics System");
-    const auto view = _ecs._registry.view<RigidbodyComponent>();
+    const auto view = _ecs.registry.view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
@@ -89,12 +89,12 @@ void PhysicsSystem::Inspect()
     {
         for (int i = 0; i < amount; i++)
         {
-            entt::entity entity = _ecs._registry.create();
+            entt::entity entity = _ecs.registry.create();
             RigidbodyComponent rb(*_physicsModule.bodyInterface, currentShape, entity);
             NameComponent node;
-            node._name = "Physics Entity";
-            _ecs._registry.emplace<NameComponent>(entity, node);
-            _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+            node.name = "Physics Entity";
+            _ecs.registry.emplace<NameComponent>(entity, node);
+            _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
             _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
         }
     }
@@ -103,17 +103,17 @@ void PhysicsSystem::Inspect()
     {
         JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
-        entt::entity entity = _ecs._registry.create();
+        entt::entity entity = _ecs.registry.create();
         RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings, entity);
         NameComponent node;
-        node._name = "Plane Entity";
-        _ecs._registry.emplace<RigidbodyComponent>(entity, newRigidBody);
-        _ecs._registry.emplace<NameComponent>(entity, node);
+        node.name = "Plane Entity";
+        _ecs.registry.emplace<RigidbodyComponent>(entity, newRigidBody);
+        _ecs.registry.emplace<NameComponent>(entity, node);
     }
 
     if (ImGui::Button("Clear Physics Entities"))
     {
-        _ecs._registry.view<RigidbodyComponent>().each([&](auto entity, auto&)
+        _ecs.registry.view<RigidbodyComponent>().each([&](auto entity, auto&)
             { _ecs.DestroyEntity(entity); });
     }
     ImGui::End();

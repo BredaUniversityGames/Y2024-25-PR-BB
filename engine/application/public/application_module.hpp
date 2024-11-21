@@ -1,8 +1,8 @@
 #pragma once
 #include "module_interface.hpp"
-#include <memory>
 #include <functional>
 #include <glm/vec2.hpp>
+#include <memory>
 
 #include <vulkan/vulkan.hpp>
 
@@ -15,6 +15,16 @@
 class InputManager;
 struct SDL_Window;
 
+// TODO: Maybe move to a GPU/Vulkan Context module
+struct VulkanInitInfo
+{
+    uint32_t extensionCount { 0 };
+    const char* const* extensions { nullptr };
+    uint32_t width {}, height {};
+
+    std::function<vk::SurfaceKHR(vk::Instance)> retrieveSurface;
+};
+
 class ApplicationModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
@@ -23,17 +33,6 @@ class ApplicationModule : public ModuleInterface
 
 public:
     ApplicationModule();
-    ~ApplicationModule() override;
-
-    // TODO: Maybe move to a GPU/Vulkan Context module
-    struct VulkanInitInfo
-    {
-        uint32_t extensionCount { 0 };
-        const char* const* extensions { nullptr };
-        uint32_t width {}, height {};
-
-        std::function<vk::SurfaceKHR(vk::Instance)> retrieveSurface;
-    };
 
     [[nodiscard]] SDL_Window* GetWindowHandle() const { return _window; }
     [[nodiscard]] VulkanInitInfo GetVulkanInfo() const { return _vulkanInitInfo; }

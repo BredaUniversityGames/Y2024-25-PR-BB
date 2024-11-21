@@ -1,38 +1,40 @@
 #pragma once
-#include "common.hpp"
 
-#include "vulkan/vulkan.hpp"
+#include "common.hpp"
+#include "imgui_entt_entity_editor.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <memory>
 
 class ECS;
-class PhysicsModule;
-class VulkanBrain;
 class PerformanceTracker;
 class BloomSettings;
+class Renderer;
+class ImGuiBackend;
 struct SceneDescription;
-class GBuffers;
-class ECS;
+
 class Editor
 {
 public:
-    Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs);
+    Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend);
+
     ~Editor();
 
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
 
 private:
     void DrawMainMenuBar();
 
-    ECS& _ecs;
-    const VulkanBrain& _brain;
-    vk::UniqueSampler _basicSampler; // Sampler for basic textures/ImGUI images, etc
-    GBuffers& _gBuffers;
+    std::shared_ptr<ECS> _ecs;
+    std::shared_ptr<Renderer> _renderer;
+    std::shared_ptr<ImGuiBackend> _imguiBackend;
 
     entt::entity _selectedEntity = entt::null;
 
-    void DisplaySelectedEntityDetails(ECS& ecs);
+    EnttEditor::EntityEditor<entt::entity> _entityEditor {};
+
+    void DisplaySelectedEntityDetails();
 };

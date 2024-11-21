@@ -11,14 +11,14 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/toolchain.cmake"
+      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake"
     },
     {
       "name": "WSL",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/toolchain.cmake",
+      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake",
       "vendor": {
         "jetbrains.com/clion": {
           "toolchain": "WSL"
@@ -47,6 +47,17 @@
       }
     },
     {
+      "name": "CI-CD",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WARNINGS_AS_ERRORS": true,
+        "COMPILE_SHADERS": false,
+        "ENABLE_PCH": false,
+        "ENABLE_UNITY": false
+      }
+    },
+    {
       "name": "WSL-Debug",
       "inherits": "WSL",
       "cacheVariables": {
@@ -65,14 +76,6 @@
       "inherits": "WSL",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "GenClangCompileCommands",
-      "inherits": "x64-Debug",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_C_COMPILER": "clang"
       }
     }
   ]

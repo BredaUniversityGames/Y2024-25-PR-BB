@@ -19,6 +19,6 @@ if not exist "%outDir%" (
 
 scp deck@%steamDeckIP%:%remoteFilePath% %localFilePath%
 
-python ../external/VulkanMemoryAllocator/tools/GpuMemDumpVis/GpuMemDumpVis.py -o %outputMemVisPath% %localFilePath%
+python ../build/x64-Debug/_deps/vma-src/tools/GpuMemDumpVis/GpuMemDumpVis.py -o %outputMemVisPath% %localFilePath%
 
 pause
