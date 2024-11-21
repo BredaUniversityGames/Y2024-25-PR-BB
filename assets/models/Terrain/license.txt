@@ -1,0 +1,11 @@
+Model Information:
+* title:	Terrain
+* source:	https://sketchfab.com/3d-models/terrain-ccc6b8db791544319c4f40e1575cd715
+* author:	densel (https://sketchfab.com/densel)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Terrain" (https://sketchfab.com/3d-models/terrain-ccc6b8db791544319c4f40e1575cd715) by densel (https://sketchfab.com/densel) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

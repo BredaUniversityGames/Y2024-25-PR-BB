@@ -1,5 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 
+#include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
@@ -47,7 +48,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
     {
-        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos[i] };
+        vk::RenderingAttachmentInfoKHR& info { colorAttachmentInfos.at(i) };
         info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         info.storeOp = vk::AttachmentStoreOp::eStore;
         info.loadOp = vk::AttachmentLoadOp::eClear;
@@ -55,12 +56,12 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     }
 
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        colorAttachmentInfos[i].imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[i])->view;
+        colorAttachmentInfos.at(i).imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->view;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
     depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
@@ -127,7 +128,7 @@ void GeometryPipeline::CreatePipeline()
 
     std::vector<vk::Format> formats(DEFERRED_ATTACHMENT_COUNT);
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
-        formats[i] = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[i])->format;
+        formats.at(i) = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->format;
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");

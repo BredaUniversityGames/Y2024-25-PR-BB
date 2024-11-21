@@ -1,6 +1,8 @@
 #include "gpu_scene.hpp"
 
 #include "batch_buffer.hpp"
+#include "components/directional_light_component.hpp"
+#include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs.hpp"
@@ -39,33 +41,59 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
 }
 
-void GPUScene::Update(const SceneDescription& scene, uint32_t frameIndex)
+void GPUScene::Update(uint32_t frameIndex)
 {
-    UpdateSceneData(scene, frameIndex);
+    UpdateSceneData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
     WriteDraws(frameIndex);
 }
 
-void GPUScene::UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex)
+void GPUScene::UpdateSceneData(uint32_t frameIndex)
 {
     SceneData sceneData {};
 
-    const DirectionalLight& light = scene.directionalLight;
+    auto directionalLightView = _ecs->registry.view<DirectionalLightComponent, TransformComponent>();
+    bool directionalLightIsSet = false;
 
-    // Calculate light direction from Euler rotation
-    glm::vec3 direction = glm::vec3(
-        cos(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x),
-        sin(light.camera.eulerRotation.x),
-        sin(light.camera.eulerRotation.y) * cos(light.camera.eulerRotation.x));
+    for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
+    {
+        if (directionalLightIsSet)
+        {
+            spdlog::warn("Only 1 directional light is supported, the first one available will be used.");
+            return;
+        }
 
-    const glm::mat4 lightView = glm::lookAt(light.camera.position, light.camera.position - direction, glm::vec3(0, 1, 0));
-    glm::mat4 depthProjectionMatrix = glm::ortho(-light.camera.orthographicSize, light.camera.orthographicSize, -light.camera.orthographicSize, light.camera.orthographicSize, light.camera.nearPlane, light.camera.farPlane);
-    depthProjectionMatrix[1][1] *= -1;
+        glm::vec3 eulerRotation = glm::eulerAngles(TransformHelpers::GetLocalRotation(transformComponent));
+        glm::vec3 direction = glm::vec3(
+            cos(eulerRotation.y) * cos(eulerRotation.x),
+            sin(eulerRotation.x),
+            sin(eulerRotation.y) * cos(eulerRotation.x));
 
-    DirectionalLightData& directionalLightData = sceneData.directionalLight;
-    directionalLightData.lightVP = depthProjectionMatrix * lightView;
-    directionalLightData.depthBiasMVP = DirectionalLight::BIAS_MATRIX * directionalLightData.lightVP;
-    directionalLightData.direction = glm::vec4(direction, light.shadowBias);
+        float orthographicsSize = directionalLightComponent.orthographicSize;
+        glm::mat4 depthProjectionMatrix = glm::ortho(-orthographicsSize, orthographicsSize, -orthographicsSize, orthographicsSize, directionalLightComponent.nearPlane, directionalLightComponent.farPlane);
+        depthProjectionMatrix[1][1] *= -1;
+
+        glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
+        const glm::mat4 lightView = glm::lookAt(position, position - direction, glm::vec3(0, 1, 0));
+
+        DirectionalLightData& directionalLightData = sceneData.directionalLight;
+        directionalLightData.lightVP = depthProjectionMatrix * lightView;
+        directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
+        directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
+        directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
+
+        _directionalLightShadowCamera = Camera {
+            .projection = Camera::Projection::eOrthographic,
+            .position = position,
+            .eulerRotation = eulerRotation,
+            .orthographicSize = directionalLightComponent.orthographicSize,
+            .nearPlane = directionalLightComponent.nearPlane,
+            .farPlane = directionalLightComponent.farPlane,
+            .aspectRatio = directionalLightComponent.aspectRatio,
+        };
+
+        directionalLightIsSet = true;
+    }
 
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();

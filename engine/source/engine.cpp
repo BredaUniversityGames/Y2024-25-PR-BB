@@ -4,7 +4,9 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
@@ -51,7 +53,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
+        "assets/models/CathedralGLB_GLTF.glb",
+        "assets/models/Terrain/scene.gltf",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        "assets/models/MetalRoughSpheres.glb"
+
     };
 
     std::vector<CPUResources::ModelData> models = rendererModule.FrontLoadModels(modelPaths);
@@ -62,12 +68,28 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
+    TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
+    TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
+
+    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 4.0f });
+    TransformHelpers::SetLocalPosition(_ecs->registry, entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+
+    TransformHelpers::SetLocalPosition(_ecs->registry, entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
     _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
     _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
-    _scene->camera.farPlane = 100.0f;
+    _scene->camera.farPlane = 600.0f;
+
+    // TODO: Once level saving is done, this should be deleted
+    entt::entity lightEntity = _ecs->registry.create();
+    _ecs->registry.emplace<NameComponent>(lightEntity, "Directional Light");
+    _ecs->registry.emplace<TransformComponent>(lightEntity);
+    _ecs->registry.emplace<DirectionalLightComponent>(lightEntity, glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f);
+
+    TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -189,7 +211,7 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings(), *_scene);
+    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
 
     rendererModule.GetRenderer()->Render(deltaTimeMS);
 

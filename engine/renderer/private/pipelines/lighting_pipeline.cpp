@@ -11,8 +11,9 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
-    : _context(context)
+LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<Image>& hdrTarget, const ResourceHandle<Image>& brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
+    : _pushConstants()
+    , _context(context)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
@@ -38,14 +39,14 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     colorAttachmentInfos[0].imageView = _context->Resources()->ImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
+    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eClear;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->views[0];
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
+    colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eClear;
     colorAttachmentInfos[1].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingInfoKHR renderingInfo {};

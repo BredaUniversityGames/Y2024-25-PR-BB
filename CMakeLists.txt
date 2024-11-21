@@ -6,15 +6,15 @@ project(Project)
 ### HELPERS AND INCLUDES
 
 include(FetchContent)
-include(scripts/cmake/functions.cmake)
+include(scripts/cmake/code-modules.cmake)
 
 ### COMPILATION SETTINGS ###
 
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
-option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
-option(USE_UNITY_BUILD "Compile using Unity Builds" ON)
+option(ENABLE_UNITY "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
@@ -34,20 +34,20 @@ if (ENABLE_PCH)
     message(STATUS "### Compiling with Precompiled Headers")
 endif ()
 
-if (USE_UNITY_BUILD)
+if (ENABLE_UNITY)
     message(STATUS "### Compiling with Unity (Jumbo) builds")
 endif ()
 
 # Add external dependencies
 add_subdirectory(external)
 
-# Add engine library
-add_subdirectory(engine)
-
 # Add unit testing target executable
 if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif ()
+
+# Add engine library
+add_subdirectory(engine)
 
 # Add game executable (currently just main.cpp)
 add_executable(Game "engine/main.cpp")
