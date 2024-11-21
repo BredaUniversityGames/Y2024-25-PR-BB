@@ -8,11 +8,7 @@
 class ECS;
 class GraphicsContext;
 
-class SceneLoader
+namespace SceneLoading
 {
-public:
     std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUModelData& model);
-
-private:
-    entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& node);
 };

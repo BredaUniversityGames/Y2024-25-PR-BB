@@ -13,20 +13,8 @@
 
 #include <entt/entity/entity.hpp>
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUModelData& model)
-{
-    std::vector<entt::entity> entities {};
-    entities.reserve(model.hierarchy.baseNodes.size());
 
-    for (const auto& i : model.hierarchy.baseNodes)
-    {
-        entities.emplace_back(LoadNodeRecursive(context, ecs, i));
-    }
-
-    return entities;
-}
-
-entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
+entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -48,4 +36,17 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
     }
 
     return entity;
+}
+
+std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUModelData& model)
+{
+    std::vector<entt::entity> entities {};
+    entities.reserve(model.hierarchy.baseNodes.size());
+
+    for (const auto& i : model.hierarchy.baseNodes)
+    {
+        entities.emplace_back(LoadNodeRecursive(context, ecs, i));
+    }
+
+    return entities;
 }
