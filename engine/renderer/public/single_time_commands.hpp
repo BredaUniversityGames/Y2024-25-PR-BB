@@ -1,9 +1,12 @@
 #pragma once
 
+#include <common.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <vk_mem_alloc.h>
+#include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
 struct Texture;
