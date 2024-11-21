@@ -47,7 +47,7 @@ struct WrenCallbacks
     static WrenForeignClassMethods BindForeignClass(
         MAYBE_UNUSED WrenVM* _vm,
         MAYBE_UNUSED const char* module,
-        MAYBE_UNUSED const char* class_name)
+        MAYBE_UNUSED const char* className)
     {
         return { nullptr, nullptr };
     }
@@ -55,8 +55,8 @@ struct WrenCallbacks
     static WrenForeignMethodFn BindForeignMethod(
         MAYBE_UNUSED WrenVM* _vm,
         MAYBE_UNUSED const char* module,
-        MAYBE_UNUSED const char* class_name,
-        MAYBE_UNUSED bool is_static,
+        MAYBE_UNUSED const char* className,
+        MAYBE_UNUSED bool isStatic,
         MAYBE_UNUSED const char* signature)
     {
         return nullptr;
@@ -70,11 +70,11 @@ struct WrenCallbacks
         if (std::optional<std::string> source = context->LoadModuleSource(name))
         {
             context->_loadedModulePaths.emplace_back(std::string(name));
-            std::string* heap_string = new std::string(std::move(source.value()));
+            std::string* heapString = new std::string(std::move(source.value()));
 
-            result.source = heap_string->c_str();
+            result.source = heapString->c_str();
             result.onComplete = &FreeModuleSource;
-            result.userData = heap_string;
+            result.userData = heapString;
         }
 
         return result;
@@ -82,8 +82,8 @@ struct WrenCallbacks
 
     static void FreeModuleSource(MAYBE_UNUSED WrenVM* _vm, MAYBE_UNUSED const char* name, WrenLoadModuleResult result)
     {
-        auto* source_str = static_cast<std::string*>(result.userData);
-        delete source_str;
+        auto* sourceStr = static_cast<std::string*>(result.userData);
+        delete sourceStr;
     }
 
     static const char* ImportHandler(WrenVM* _vm, const char* importer, const char* imported)
@@ -93,11 +93,11 @@ struct WrenCallbacks
         auto MakeCString = [](const std::string& str)
         {
             // Unfortunately, we need to allocate and pass ownership of paths to wren
-            size_t allocation_size = sizeof(char) * (str.size() + 1);
-            char* ret_val = std::bit_cast<char*>(std::malloc(allocation_size)); // NOLINT
+            size_t allocationSize = sizeof(char) * (str.size() + 1);
+            char* ret_val = std::bit_cast<char*>(std::malloc(allocationSize)); // NOLINT
 
-            std::memset(ret_val, 0, allocation_size);
-            std::memcpy(ret_val, str.data(), allocation_size - 1);
+            std::memset(ret_val, 0, allocationSize);
+            std::memcpy(ret_val, str.data(), allocationSize - 1);
 
             return ret_val;
         };
@@ -116,11 +116,11 @@ struct WrenCallbacks
             return MakeCString(relativePath);
         }
 
-        for (auto& include_path : context->_includePaths)
+        for (auto& includePath : context->_includePaths)
         {
-            FilePath tryPath = FilePath(include_path) / importPath;
-
+            FilePath tryPath = FilePath(includePath) / importPath;
             std::string path = tryPath.string();
+
             if (fileIO::Exists(path))
             {
                 return MakeCString(path);
@@ -164,13 +164,13 @@ bool ScriptingContext::InterpretWrenModule(const std::string& path)
     {
         // Paths that map to the same file need to map to the same string as well
         using FilePath = std::filesystem::path;
-        std::string preferred_path = FilePath(path).make_preferred().string();
+        std::string preferredPath = FilePath(path).make_preferred().string();
 
-        auto result = wrenInterpret(_vm, preferred_path.c_str(), source->c_str()) == WREN_RESULT_SUCCESS;
+        auto result = wrenInterpret(_vm, preferredPath.c_str(), source->c_str()) == WREN_RESULT_SUCCESS;
 
         if (result)
         {
-            _loadedModulePaths.emplace_back(preferred_path);
+            _loadedModulePaths.emplace_back(preferredPath);
         }
 
         return result;
@@ -184,15 +184,15 @@ void ScriptingContext::AddWrenIncludePath(const std::string& path)
 {
     using FilePath = std::filesystem::path;
 
-    std::string preferred_path = FilePath(path).make_preferred().string();
-    auto equals = [&preferred_path](const auto& rhs)
-    { return preferred_path == rhs; };
+    std::string preferredPath = FilePath(path).make_preferred().string();
+    auto equals = [&preferredPath](const auto& rhs)
+    { return preferredPath == rhs; };
 
     auto it = std::find_if(_includePaths.begin(), _includePaths.end(), equals);
 
     if (it == _includePaths.end())
     {
-        _includePaths.emplace_back(preferred_path);
+        _includePaths.emplace_back(preferredPath);
     }
 }
 
@@ -200,8 +200,8 @@ std::optional<std::string> ScriptingContext::LoadModuleSource(const std::string&
 {
     if (auto stream = fileIO::OpenReadStream(modulePath, fileIO::TEXT_READ_FLAGS))
     {
-        auto file_data = fileIO::DumpFullStream(stream.value());
-        return std::string { std::bit_cast<const char*>(file_data.data()), file_data.size() };
+        auto fileData = fileIO::DumpFullStream(stream.value());
+        return std::string { std::bit_cast<const char*>(fileData.data()), fileData.size() };
     }
 
     return std::nullopt;
