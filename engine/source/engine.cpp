@@ -78,7 +78,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     entt::entity lightEntity = _ecs->registry.create();
     _ecs->registry.emplace<NameComponent>(lightEntity, "Directional Light");
     _ecs->registry.emplace<TransformComponent>(lightEntity);
-    _ecs->registry.emplace<DirectionalLightComponent>(lightEntity);
+    _ecs->registry.emplace<DirectionalLightComponent>(lightEntity, glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f);
 
     TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
     TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));

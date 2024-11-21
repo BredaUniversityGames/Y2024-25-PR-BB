@@ -80,6 +80,7 @@ private:
         glm::mat4 depthBiasMVP;
 
         glm::vec4 direction;
+        glm::vec4 color;
     };
 
     struct alignas(16) SceneData

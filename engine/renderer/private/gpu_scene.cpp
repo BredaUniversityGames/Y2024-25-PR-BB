@@ -80,6 +80,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
             directionalLightData.lightVP = depthProjectionMatrix * lightView;
             directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
             directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
+            directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
 
             _directionalLightShadowCamera = Camera {
                 .projection = Camera::Projection::eOrthographic,
