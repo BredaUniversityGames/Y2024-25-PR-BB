@@ -4,6 +4,8 @@ message(STATUS "### Unit Tests are enabled")
 add_executable(UnitTests)
 target_output_dir(UnitTests ${CMAKE_BINARY_DIR})
 
+# Tests should be placed under a module "tests" folder,
+# but it might be useful to have global tests here
 file(GLOB_RECURSE root_tests CONFIGURE_DEPENDS "*.cpp")
 target_sources(UnitTests PRIVATE ${root_tests})
 
