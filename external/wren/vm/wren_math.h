@@ -7,9 +7,9 @@
 // A union to let us reinterpret a double as raw bits and back.
 typedef union
 {
-  uint64_t bits64;
-  uint32_t bits32[2];
-  double num;
+    uint64_t bits64;
+    uint32_t bits32[2];
+    double num;
 } WrenDoubleBits;
 
 #define WREN_DOUBLE_QNAN_POS_MIN_BITS (UINT64_C(0x7FF8000000000000))
@@ -19,16 +19,16 @@ typedef union
 
 static inline double wrenDoubleFromBits(uint64_t bits)
 {
-  WrenDoubleBits data;
-  data.bits64 = bits;
-  return data.num;
+    WrenDoubleBits data;
+    data.bits64 = bits;
+    return data.num;
 }
 
 static inline uint64_t wrenDoubleToBits(double num)
 {
-  WrenDoubleBits data;
-  data.num = num;
-  return data.bits64;
+    WrenDoubleBits data;
+    data.num = num;
+    return data.bits64;
 }
 
 #endif

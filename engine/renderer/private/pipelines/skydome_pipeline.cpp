@@ -40,12 +40,12 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eNone;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
-    stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
-    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eNone;
+    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
     stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};

@@ -1,9 +1,9 @@
 // for the license, see the end of the file
 #pragma once
 
+#include <functional>
 #include <map>
 #include <set>
-#include <functional>
 #include <string>
 
 #include <entt/entt.hpp>
