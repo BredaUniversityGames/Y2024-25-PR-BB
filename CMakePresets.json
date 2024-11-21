@@ -54,7 +54,7 @@
         "WARNINGS_AS_ERRORS": true,
         "COMPILE_SHADERS": false,
         "ENABLE_PCH": false,
-        "USE_UNITY_BUILD": true
+        "ENABLE_UNITY": false
       }
     },
     {
@@ -76,14 +76,6 @@
       "inherits": "WSL",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "GenClangCompileCommands",
-      "inherits": "x64-Debug",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_C_COMPILER": "clang"
       }
     }
   ]
