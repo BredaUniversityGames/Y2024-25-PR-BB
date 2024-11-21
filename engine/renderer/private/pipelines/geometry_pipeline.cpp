@@ -1,5 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 
+#include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
@@ -60,7 +61,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
     depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
