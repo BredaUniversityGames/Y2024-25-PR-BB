@@ -217,7 +217,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     ZoneScoped;
 
     // Since there is only one scene, we can reuse the same gpu buffers
-    _gpuScene->Update(*_scene, _currentFrame);
+    _gpuScene->Update(_currentFrame);
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
