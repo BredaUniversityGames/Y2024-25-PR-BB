@@ -27,14 +27,7 @@ public:
         eHierarchical
     };
 
-    NON_COPYABLE(ModelLoader);
-    NON_MOVABLE(ModelLoader);
-
-   
-    ModelData ExtractModelFromFile(std::string_view path, LoadMode loadMode);
-
-    ResourceHandle<Mesh> LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
-        ResourceHandle<Material> material);
+    CPUModelData ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 
