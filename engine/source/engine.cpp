@@ -17,7 +17,7 @@
 #include "components/rigidbody_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "systems/physics_system.hpp"
-#include "modules/physics_module.hpp"
+#include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 
 #include "particles/particle_util.hpp"

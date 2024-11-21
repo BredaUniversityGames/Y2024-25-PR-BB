@@ -1,7 +1,7 @@
 ﻿#include "systems/physics_system.hpp"
 #include "ECS.hpp"
 #include "components/name_component.hpp"
-#include "modules/physics_module.hpp"
+#include "physics_module.hpp"
 #include "components/rigidbody_component.hpp"
 #include "imgui/imgui.h"
 
@@ -67,7 +67,7 @@ void PhysicsSystem::Inspect()
     static PhysicsShapes currentShape = eSPHERE;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
 
-    ImGui::DragInt("Amout", &amount, 1, 1, 100);
+    ImGui::DragInt("Amount", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
     const char* currentItem = shapeNames[currentShape];
 
@@ -121,8 +121,6 @@ void PhysicsSystem::Inspect()
 
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
-    ImGui::Text("Body ID: %u", rb.bodyID);
-
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };
     if (ImGui::DragFloat3("Position", pos, 0.1f))

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "modules/physics_module.hpp"
+#include "physics_module.hpp"
 
 struct RigidbodyComponent
 {
@@ -18,7 +18,7 @@ struct RigidbodyComponent
             bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
         }
 
-        // set the owner entity so we can querry it later from physics ohbejcts if needed
+        // set the owner entity so we can query it later from physics objects if needed
         bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
     }
 

@@ -1,4 +1,4 @@
-﻿#include "modules/physics_module.hpp"
+﻿#include "physics_module.hpp"
 
 PhysicsModule::PhysicsModule()
 {
