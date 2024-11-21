@@ -1,4 +1,3 @@
-
 #if defined TRACY_ENABLE
 
 #include "profile_macros.hpp"

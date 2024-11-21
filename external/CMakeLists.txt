@@ -45,15 +45,7 @@ FetchContent_MakeAvailable(VMA)
 
 # FastGLTF
 
-FetchContent_Declare(
-        FastGLTF
-        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG v0.8.0
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-FetchContent_MakeAvailable(FastGLTF)
+add_subdirectory(fastgltf)
 
 # Cereal
 
@@ -93,6 +85,7 @@ else ()
     override_option(TRACY_ENABLE ON)
 endif ()
 
+override_option(TRACY_ON_DEMAND ON)
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
@@ -234,7 +227,7 @@ target_include_directories(ImGui
 
 # Enable Unity for external libraries
 
-if (USE_UNITY_BUILD)
+if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 
