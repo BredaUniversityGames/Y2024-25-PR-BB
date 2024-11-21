@@ -10,6 +10,7 @@
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
+#include <vulkan_helper.hpp>
 
 #include <array>
 #include <imgui_impl_vulkan.h>

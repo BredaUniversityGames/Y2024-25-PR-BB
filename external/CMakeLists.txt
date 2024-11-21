@@ -65,6 +65,12 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# Wren Language
+
+add_subdirectory(wren)
+
+# Cereal
+
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_SANDBOX "Build sandbox examples" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
