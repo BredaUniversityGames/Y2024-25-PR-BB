@@ -121,6 +121,22 @@ glm::vec3 TransformHelpers::GetLocalScale(const entt::registry& reg, entt::entit
     const TransformComponent* transform = reg.try_get<TransformComponent>(entity);
     return transform == nullptr ? glm::vec3 { 1.0f, 1.0f, 1.0f } : transform->_localScale;
 }
+
+glm::vec3 TransformHelpers::GetLocalPosition(const TransformComponent& transformComponent)
+{
+    return transformComponent._localPosition;
+}
+
+glm::quat TransformHelpers::GetLocalRotation(const TransformComponent& transformComponent)
+{
+    return transformComponent._localRotation;
+}
+
+glm::vec3 TransformHelpers::GetLocalScale(const TransformComponent& transformComponent)
+{
+    return transformComponent._localScale;
+}
+
 glm::mat4 TransformHelpers::GetLocalMatrix(const entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
