@@ -23,9 +23,10 @@ source_exclude_unity("source/lib/stbi_impl.cpp")
 # ENGINE MODULES
 
 message(STATUS "### Linking Engine Modules:")
+
 target_add_module(Engine core Core)
 target_add_module(Engine utility Utility)
 target_add_module(Engine application Application)
 target_add_module(Engine renderer Renderer)
 
-target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)
+#target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)

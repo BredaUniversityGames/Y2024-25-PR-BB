@@ -17,10 +17,6 @@ option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 option(USE_UNITY_BUILD "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
-target_compile_features(ProjectSettings INTERFACE cxx_std_20)
-
-target_compile_options(ProjectSettings
-        INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
 
 target_compile_options(ProjectSettings
         INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)

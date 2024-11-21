@@ -1,4 +1,7 @@
-#include "common.hpp"
+
+// WARNING: THIS HEADER IS ONLY MEANT TO BE INCLUDED ONCE IN main.cpp
+// DEFINES OVERRIDES FOR TRACY MEMORY ALLOCATION TRACKING
+
 #include "profile_macros.hpp"
 
 void* operator new(size_t size)

@@ -1,7 +1,14 @@
 #include "main_engine.hpp"
+#include <log.hpp>
 
 int MainEngine::Run()
 {
+    if (_tickOrder.empty())
+    {
+        bblog::warn("No modules registered, Engine will return immediately");
+        return 0;
+    }
+
     while (!_exitRequested)
     {
         MainLoopOnce();
