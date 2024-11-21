@@ -50,7 +50,7 @@ private:
     VulkanInitInfo _vulkanInitInfo;
 
     std::string _windowName = "BB-Prototype";
-    bool _isFullscreen = true;
+    bool _isFullscreen = false;
     bool _mouseHidden = true;
     uint32_t _width {}, _height {};
 };

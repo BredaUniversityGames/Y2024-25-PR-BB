@@ -39,7 +39,7 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<CPUResources::ModelData> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }

@@ -460,20 +460,19 @@ CPUResources::ModelData ProcessModel(const fastgltf::Asset& gltf, const std::str
     {
     case ModelLoader::LoadMode::eFlat:
     {
-        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
-        {
-            const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
-            RecurseHierarchy(gltfNode, model, gltf);
-        }
-        break;
+        assert(false);
     }
     case ModelLoader::LoadMode::eHierarchical:
     {
+        Hierarchy::Node baseNode;
+        baseNode.name = name;
+
         for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
         {
             const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
-            model.hierarchy.baseNodes.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
+            baseNode.children.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
         }
+        model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
         break;
     }
     }

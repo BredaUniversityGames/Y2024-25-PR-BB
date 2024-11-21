@@ -17,7 +17,7 @@ struct Hierarchy
     {
         std::string name {};
         glm::mat4 transform { 1.0f };
-        std::optional<uint32_t> meshIndex;
+        std::optional<uint32_t> meshIndex = std::nullopt;
         std::vector<Node> children {};
     };
 

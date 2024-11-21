@@ -35,6 +35,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <resource_management/mesh_resource_manager.hpp>
+
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
     : _context(context)
     , _application(application)
@@ -162,7 +164,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<CPUResources::ModelData> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -177,13 +179,14 @@ std::vector<CPUResources::ModelData> Renderer::FrontLoadModels(const std::vector
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<CPUResources::ModelData> models {};
-
+    std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> models;
     SingleTimeCommands commands { _context };
     for (const auto& path : modelPaths)
     {
-        models.emplace_back(_modelLoader->ExtractModelFromGltfFile(path, ModelLoader::LoadMode::eHierarchical));
-        _context->Resources()->ModelResourceManager().Create(models.back(), commands);
+
+        auto cpu = _modelLoader->ExtractModelFromGltfFile(path, ModelLoader::LoadMode::eHierarchical);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, commands);
+        models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
     return models;

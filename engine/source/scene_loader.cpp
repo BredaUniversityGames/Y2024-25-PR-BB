@@ -12,39 +12,41 @@
 #include "resource_management/mesh_resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUResources::Model& model)
 {
     const entt::entity entity = ecs.registry.create();
 
+    std::cout << "sdfadw" << std::endl;
     ecs.registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs.registry.emplace<TransformComponent>(entity);
 
     TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
 
-    //  if (context->Resources()->MeshResourceManager().IsValid(currentNode.meshIndex))
-    // {
-    //   ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
-    //}
+    if (currentNode.meshIndex.has_value())
+    {
+        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value());
+    }
 
     for (const auto& node : currentNode.children)
     {
-        const entt::entity childEntity = LoadNodeRecursive(context, ecs, node);
+        const entt::entity childEntity = LoadNodeRecursive(ecs, node, model);
         RelationshipHelpers::AttachChild(ecs.registry, entity, childEntity);
     }
 
     return entity;
 }
 
-std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUResources::ModelData& model)
+std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUResources::Model& model)
 {
     std::vector<entt::entity> entities {};
-    entities.reserve(model.hierarchy.baseNodes.size());
+    std::cout << "  dfrster 8" << std::endl;
 
     for (const auto& i : model.hierarchy.baseNodes)
     {
-        entities.emplace_back(LoadNodeRecursive(context, ecs, i));
+        entities.emplace_back(LoadNodeRecursive(ecs, i, model));
     }
 
     return entities;

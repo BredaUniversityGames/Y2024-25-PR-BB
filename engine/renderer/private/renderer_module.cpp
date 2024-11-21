@@ -51,7 +51,7 @@ void RendererModule::SetScene(std::shared_ptr<const SceneDescription> scene)
     _renderer->_scene = scene;
 }
 
-std::vector<CPUResources::ModelData> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
 
     auto result = _renderer->FrontLoadModels(modelPaths);

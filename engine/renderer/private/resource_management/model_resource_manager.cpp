@@ -54,8 +54,8 @@ ModelResourceManager::Create(const CPUResources::ModelData& data, SingleTimeComm
 
     for (const auto& i : data.meshes)
     {
-        _meshResourceManager->Create(commandBuffer, i, model.materials);
+        model.meshes.emplace_back(_meshResourceManager->Create(commandBuffer, i, model.materials));
     }
-
+    model.hierarchy = data.hierarchy;
     return ResourceManager::Create(std::move(model));
 }
