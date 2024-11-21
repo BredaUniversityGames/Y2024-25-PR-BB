@@ -10,7 +10,6 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _context(context)
@@ -97,7 +96,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
-    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene->DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _context->VulkanContext()->Dldi());
+    commandBuffer.drawIndexedIndirect(indirectDrawBuffer, 0, scene.gpuScene->DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), _context->VulkanContext()->Dldi());
 
     _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
 

@@ -54,8 +54,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     colorAttachmentInfos[0].imageView = _context->Resources()->ImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad; // eClear;
-    colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
+    colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
 
     // HDR brightness for bloom
     colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->views[0];
