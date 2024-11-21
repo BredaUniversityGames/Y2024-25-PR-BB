@@ -30,6 +30,7 @@
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
@@ -52,9 +53,10 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _modelLoader = std::make_unique<ModelLoader>();
 
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    context->Resources()->MeshResourceManager().SetBatchBuffer(_batchBuffer);
 
     SingleTimeCommands commandBufferPrimitive { _context };
-    ResourceHandle<Mesh> uvSphere; //_modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Null());
+    ResourceHandle<Mesh> uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<Material>::Null());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -160,7 +162,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<CPUModelData> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<CPUResources::ModelData> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -175,11 +177,13 @@ std::vector<CPUModelData> Renderer::FrontLoadModels(const std::vector<std::strin
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<CPUModelData> models {};
+    std::vector<CPUResources::ModelData> models {};
 
+    SingleTimeCommands commands { _context };
     for (const auto& path : modelPaths)
     {
         models.emplace_back(_modelLoader->ExtractModelFromGltfFile(path, ModelLoader::LoadMode::eHierarchical));
+        _context->Resources()->ModelResourceManager().Create(models.back(), commands);
     }
 
     return models;
@@ -302,7 +306,7 @@ void Renderer::LoadEnvironmentMap()
     stbi_image_free(stbiData);
 
     ImageCreation envMapCreation {};
-    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
     _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);

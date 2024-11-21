@@ -9,6 +9,7 @@
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
+#include "graphics_context.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "modules/physics_module.hpp"
@@ -50,20 +51,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/DamagedHelmet.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    std::vector<CPUModelData> models = rendererModule.FrontLoadModels(modelPaths);
+    std::vector<CPUResources::ModelData> models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
-    SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
+        auto loadedEntities = SceneLoading::LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
-
-    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 10.0f });
 
     _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 

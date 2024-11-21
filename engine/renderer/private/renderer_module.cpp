@@ -51,10 +51,8 @@ void RendererModule::SetScene(std::shared_ptr<const SceneDescription> scene)
     _renderer->_scene = scene;
 }
 
-std::vector<CPUModelData> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<CPUResources::ModelData> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
-
-    bblog::error("NOT IMPLEMENTED!!, RendererModule::FrontLoadModels");
 
     auto result = _renderer->FrontLoadModels(modelPaths);
 

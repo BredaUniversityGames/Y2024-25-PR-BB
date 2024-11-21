@@ -4,11 +4,7 @@
 
 #include <memory>
 
-class BufferResourceManager;
-class ImageResourceManager;
-class MaterialResourceManager;
-class SamplerResourceManager;
-class MeshResourceManager;
+class BatchBuffer;
 class VulkanContext;
 
 class GraphicsResources
@@ -25,12 +21,14 @@ public:
     class ImageResourceManager& ImageResourceManager() { return *_imageResourceManager; }
     class BufferResourceManager& BufferResourceManager() { return *_bufferResourceManager; }
     class SamplerResourceManager& SamplerResourceManager() { return *_samplerResourceManager; }
+    class ModelResourceManager& ModelResourceManager() { return *_modelResourceManager; }
 
     void Clean();
 
 private:
     std::shared_ptr<VulkanContext> _vulkanContext;
 
+    std::shared_ptr<class ModelResourceManager> _modelResourceManager;
     std::shared_ptr<class MeshResourceManager> _meshResourceManager;
     std::shared_ptr<class MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<class ImageResourceManager> _imageResourceManager;

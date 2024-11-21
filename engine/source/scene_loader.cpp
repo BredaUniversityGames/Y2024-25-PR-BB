@@ -13,7 +13,6 @@
 
 #include <entt/entity/entity.hpp>
 
-
 entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
 {
     const entt::entity entity = ecs.registry.create();
@@ -38,7 +37,7 @@ entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, 
     return entity;
 }
 
-std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUModelData& model)
+std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUResources::ModelData& model)
 {
     std::vector<entt::entity> entities {};
     entities.reserve(model.hierarchy.baseNodes.size());

@@ -3,6 +3,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <iostream>
+
 SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode addressMode)
 {
     addressModeU = addressMode;
@@ -75,9 +77,9 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
-ImageCreation& ImageCreation::SetData(std::byte* data)
+ImageCreation& ImageCreation::SetData(std::vector<std::byte> data)
 {
-    initialData = data;
+    initialData = std::move(data);
     return *this;
 }
 
@@ -155,6 +157,19 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     }
 }
 
+Image::~Image()
+{
+    if (!_context)
+    {
+        return;
+    }
+
+    vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
+    for (auto& aView : views)
+        _context->Device().destroy(aView);
+    if (type == ImageType::eCubeMap)
+        _context->Device().destroy(view);
+}
 Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
@@ -183,9 +198,12 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
     imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
     imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
+    std::cout << "Creating image with dimensions: "
+              << imageCreateInfo.extent.width << "x"
+              << imageCreateInfo.extent.height << std::endl;
     imageCreateInfo.usage = creation.flags;
 
-    if (creation.initialData)
+    if (creation.initialData.data())
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
 
     if (creation.type == ImageType::eCubeMap)
@@ -232,7 +250,7 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
         util::VK_ASSERT(_context->Device().createImageView(&cubeViewCreateInfo, nullptr, &view), "Failed creating image view!");
     }
 
-    if (creation.initialData)
+    if (creation.initialData.data())
     {
         vk::DeviceSize imageSize = width * height * depth * 4;
         if (isHDR)
@@ -243,7 +261,7 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
 
         util::CreateBuffer(_context, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
 
-        vmaCopyMemoryToAllocation(_context->MemoryAllocator(), creation.initialData, stagingBufferAllocation, 0, imageSize);
+        vmaCopyMemoryToAllocation(_context->MemoryAllocator(), creation.initialData.data(), stagingBufferAllocation, 0, imageSize);
 
         vk::ImageLayout oldLayout = vk::ImageLayout::eTransferDstOptimal;
 
@@ -317,20 +335,6 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
     {
         bblog::warn("Creating an unnamed image!");
     }
-}
-
-Image::~Image()
-{
-    if (!_context)
-    {
-        return;
-    }
-
-    vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
-    for (auto& aView : views)
-        _context->Device().destroy(aView);
-    if (type == ImageType::eCubeMap)
-        _context->Device().destroy(view);
 }
 
 Image::Image(Image&& other) noexcept

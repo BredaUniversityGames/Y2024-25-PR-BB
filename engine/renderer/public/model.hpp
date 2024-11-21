@@ -24,37 +24,72 @@ struct Hierarchy
     std::vector<Node> baseNodes {};
 };
 
-struct CPUModelData
+namespace CPUResources
 {
-    struct CPUMaterialData
-    {
-        using TextureDataIndex = uint32_t;
 
-        std::optional<TextureDataIndex> albedoMap;
+struct Mesh
+{
+    struct Primitive
+    {
+        std::vector<uint32_t> indices;
+        std::vector<Vertex> vertices;
+
+        Vec3Range boundingBox;
+
+        std::optional<uint32_t> materialIndex;
+    };
+
+    std::vector<Primitive> primitives;
+};
+
+struct ModelData
+{
+    struct Image
+    {
+    };
+
+    struct Material
+    {
+        using TextureIndex = uint32_t;
+        std::optional<TextureIndex> albedoMap;
         glm::vec4 albedoFactor { 0.0f };
         uint32_t albedoUVChannel;
 
-        std::optional<TextureDataIndex> metallicRoughnessMap;
+        std::optional<TextureIndex> metallicRoughnessMap;
         float metallicFactor { 0.0f };
         float roughnessFactor { 0.0f };
-        std::optional<uint32_t> metallicRoughnessUVChannel;
+        std::optional<TextureIndex> metallicRoughnessUVChannel;
 
-        std::optional<TextureDataIndex> normalMap;
+        std::optional<TextureIndex> normalMap;
         float normalScale { 0.0f };
         uint32_t normalUVChannel;
 
-        std::optional<TextureDataIndex> occlusionMap;
+        std::optional<TextureIndex> occlusionMap;
         float occlusionStrength { 0.0f };
         uint32_t occlusionUVChannel;
 
-        std::optional<TextureDataIndex> emissiveMap;
+        std::optional<TextureIndex> emissiveMap;
         glm::vec3 emissiveFactor { 0.0f };
         uint32_t emissiveUVChannel;
     };
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh> meshes;
-    std::vector<CPUMaterialData> materials;
+    std::vector<Mesh> meshes;
+    std::vector<Material> materials;
     std::vector<ImageCreation> textures;
 };
+};
+
+namespace GPUResources
+{
+struct Model
+{
+
+    Hierarchy hierarchy {};
+
+    std::vector<ResourceHandle<Mesh>> meshes;
+    std::vector<ResourceHandle<Material>> materials;
+    std::vector<ResourceHandle<Image>> textures;
+};
+}

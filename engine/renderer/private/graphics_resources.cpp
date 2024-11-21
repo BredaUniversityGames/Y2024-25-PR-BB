@@ -4,6 +4,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 
 GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulkanContext)
@@ -14,6 +15,7 @@ GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulka
     _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext);
     _materialResourceManager = std::make_shared<class MaterialResourceManager>(_imageResourceManager);
     _meshResourceManager = std::make_shared<class MeshResourceManager>();
+    _modelResourceManager = std::make_shared<class ModelResourceManager>(_imageResourceManager, _materialResourceManager, _meshResourceManager);
 }
 
 void GraphicsResources::Clean()

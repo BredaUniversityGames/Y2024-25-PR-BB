@@ -58,7 +58,7 @@ enum class ImageType
 
 struct ImageCreation
 {
-    std::byte* initialData { nullptr };
+    std::vector<std::byte> initialData;
     uint16_t width { 1 };
     uint16_t height { 1 };
     uint16_t depth { 1 };
@@ -73,7 +73,7 @@ struct ImageCreation
 
     std::string name;
 
-    ImageCreation& SetData(std::byte* data);
+    ImageCreation& SetData(std::vector<std::byte> data);
     ImageCreation& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
     ImageCreation& SetMips(uint8_t mips);
     ImageCreation& SetFlags(vk::ImageUsageFlags flags);
@@ -119,6 +119,7 @@ private:
 
 struct MaterialCreation
 {
+
     ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Null();
     glm::vec4 albedoFactor { 0.0f };
     uint32_t albedoUVChannel;
@@ -142,6 +143,7 @@ struct MaterialCreation
 };
 struct Material
 {
+    Material() = default;
     Material(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<Image>>& imageResourceManager);
     ~Material();
 

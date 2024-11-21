@@ -18,14 +18,14 @@ GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
     CreateBindlessDescriptorSet();
 
     const uint32_t size { 2 };
-    std::vector<uint32_t> data;
-    data.assign(size * size, 0xFF00FFFF);
+    std::vector<std::byte> data;
+    data.assign(size * size * 4, std::byte(0));
     ImageCreation creation {};
     creation
         .SetSize(size, size)
         .SetFlags(vk::ImageUsageFlagBits::eSampled)
         .SetFormat(vk::Format::eR8G8B8A8Unorm)
-        .SetData(reinterpret_cast<std::byte*>(data.data()))
+        .SetData(data)
         .SetName("Fallback texture");
 
     _fallbackImage = _graphicsResources->ImageResourceManager().Create(creation);

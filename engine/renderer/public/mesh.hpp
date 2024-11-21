@@ -61,21 +61,6 @@ struct Vertex
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
-struct CPUMesh
-{
-    struct Primitive
-    {
-        std::vector<uint32_t> indices;
-        std::vector<Vertex> vertices;
-
-        Vec3Range boundingBox;
-
-        std::optional<uint32_t> materialIndex;
-    };
-
-    std::vector<Primitive> primitives;
-};
-
 struct StaticMeshComponent
 {
     ResourceHandle<Mesh> mesh;

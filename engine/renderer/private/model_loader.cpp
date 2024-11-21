@@ -44,9 +44,9 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode);
+CPUResources::ModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode);
 
-CPUModelData ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode)
+CPUResources::ModelData ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -124,7 +124,7 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
     }
 }
 
-void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
+void CalculateTangents(CPUResources::Mesh::Primitive& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -170,9 +170,9 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
     }
 }
 
-CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+CPUResources::Mesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUMesh::Primitive primitive {};
+    CPUResources::Mesh::Primitive primitive {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
@@ -296,7 +296,7 @@ ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Ass
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       imageCreation.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                        stbi_image_free(stbiData);
                    },
@@ -310,7 +310,7 @@ ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Ass
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       imageCreation.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                        stbi_image_free(stbiData);
                    },
@@ -334,7 +334,7 @@ ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Ass
                                    data = std::vector<std::byte>(width * height * 4);
                                    std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                                   imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                                   imageCreation.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
 
                                    stbi_image_free(stbiData);
                                } },
@@ -346,14 +346,14 @@ ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Ass
     return imageCreation;
 }
 
-CPUModelData::CPUMaterialData ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUResources::ModelData::Material ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto mapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUModelData::CPUMaterialData material {};
+    CPUResources::ModelData::Material material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -397,7 +397,7 @@ CPUModelData::CPUMaterialData ProcessMaterial(const fastgltf::Material& gltfMate
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUModelData& model, const fastgltf::Asset& gltf)
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUResources::ModelData& model, const fastgltf::Asset& gltf)
 {
     Hierarchy::Node node {};
 
@@ -422,9 +422,9 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUModelData& m
     return node;
 }
 
-CPUModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode)
+CPUResources::ModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode)
 {
-    CPUModelData model {};
+    CPUResources::ModelData model {};
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -438,18 +438,18 @@ CPUModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view na
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModelData::CPUMaterialData material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUResources::ModelData::Material material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
     // Extract mesh data
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUMesh mesh {};
+        CPUResources::Mesh mesh {};
 
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            CPUMesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
+            CPUResources::Mesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
             mesh.primitives.emplace_back(primitive);
         }
 
@@ -473,8 +473,8 @@ CPUModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view na
         {
             const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
             model.hierarchy.baseNodes.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
-            break;
         }
+        break;
     }
     }
 
