@@ -81,8 +81,12 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(TRACY_ENABLE ON)
-override_option(TRACY_ON_DEMAND ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    override_option(TRACY_ENABLE OFF)
+else ()
+    override_option(TRACY_ENABLE ON)
+endif ()
+
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
@@ -127,7 +131,6 @@ FetchContent_MakeAvailable(GLM)
 target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
 # Jolt
-
 
 FetchContent_Declare(
         JoltPhysics
@@ -181,15 +184,15 @@ FetchContent_MakeAvailable(GoogleTest)
 
 # SPIRV-Reflect
 
-#FetchContent_Declare(
-#        SPIRV-Reflect
-#        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
-#        GIT_TAG vulkan-sdk-1.3.296.0
-#        GIT_SHALLOW TRUE
-#        GIT_PROGRESS TRUE
-#)
-#override_option(SPIRV_REFLECT_STATIC_LIB ON)
-#FetchContent_MakeAvailable(SPIRV-Reflect)
+FetchContent_Declare(
+        SPIRV-Reflect
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
+        GIT_TAG vulkan-sdk-1.3.296.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+override_option(SPIRV_REFLECT_STATIC_LIB ON)
+FetchContent_MakeAvailable(SPIRV-Reflect)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
@@ -243,12 +246,12 @@ target_link_libraries(External
         INTERFACE ImGui
         INTERFACE SDL3::SDL3-static
         INTERFACE magic_enum::magic_enum
-        # INTERFACE spdlog::spdlog
+        INTERFACE spdlog::spdlog
         INTERFACE glm::glm
-        # INTERFACE EnTT::EnTT
-        # INTERFACE VulkanMemoryAllocator
+        INTERFACE EnTT::EnTT
+        INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
-        # INTERFACE spirv-reflect-static
+        INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
 )
