@@ -6,6 +6,8 @@
 #include "application_module.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/transform_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
@@ -71,6 +73,15 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _scene->camera.fov = glm::radians(45.0f);
     _scene->camera.nearPlane = 0.01f;
     _scene->camera.farPlane = 100.0f;
+
+    // TODO: Once level saving is done, this should be deleted
+    entt::entity lightEntity = _ecs->registry.create();
+    _ecs->registry.emplace<NameComponent>(lightEntity, "Directional Light");
+    _ecs->registry.emplace<TransformComponent>(lightEntity);
+    _ecs->registry.emplace<DirectionalLightComponent>(lightEntity);
+
+    TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -192,7 +203,7 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings(), *_scene);
+    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
 
     rendererModule.GetRenderer()->Render(deltaTimeMS);
 

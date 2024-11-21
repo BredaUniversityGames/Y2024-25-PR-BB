@@ -78,30 +78,7 @@ struct StaticMeshComponent
     ResourceHandle<Mesh> mesh;
 };
 
-struct DirectionalLight
-{
-    Camera camera {
-        .projection = Camera::Projection::eOrthographic,
-        .position = glm::vec3 { 7.3f, 1.25f, 4.75f },
-        .eulerRotation = glm::vec3 { 0.4f, 3.75f, 0.0f },
-        .orthographicSize = 17.0f,
-        .nearPlane = -16.0f,
-        .farPlane = 32.0f,
-        .aspectRatio = 1.0f,
-    };
-
-    float shadowBias = 0.002f;
-
-    constexpr static glm::mat4 BIAS_MATRIX {
-        0.5, 0.0, 0.0, 0.0,
-        0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0
-    };
-};
-
 struct SceneDescription
 {
     Camera camera;
-    DirectionalLight directionalLight;
 };

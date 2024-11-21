@@ -40,7 +40,7 @@ public:
     NON_COPYABLE(GPUScene);
     NON_MOVABLE(GPUScene);
 
-    void Update(const SceneDescription& scene, uint32_t frameIndex);
+    void Update(uint32_t frameIndex);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
@@ -65,6 +65,8 @@ public:
         }
         return count;
     }
+
+    const Camera& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
 
     ResourceHandle<Image> irradianceMap;
     ResourceHandle<Image> prefilterMap;
@@ -116,7 +118,10 @@ private:
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
-    void UpdateSceneData(const SceneDescription& scene, uint32_t frameIndex);
+    // TODO: Change GPUScene to support all cameras in the scene
+    Camera _directionalLightShadowCamera{};
+
+    void UpdateSceneData(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
