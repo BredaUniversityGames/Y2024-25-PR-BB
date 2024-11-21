@@ -85,7 +85,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
 
     uint32_t indirectCountOffset = scene.gpuScene->IndirectCountOffset();
-    commandBuffer.drawIndexedIndirect(indirectDrawBuffer, 0, scene.gpuScene->DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), vkContext->Dldi());
+    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, 0, indirectCountBuffer, indirectCountOffset, scene.gpuScene->DrawCount(), sizeof(vk::DrawIndexedIndirectCommand), vkContext->Dldi());
 
     _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
 
