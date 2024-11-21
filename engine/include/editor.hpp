@@ -11,7 +11,6 @@ class PerformanceTracker;
 class BloomSettings;
 class Renderer;
 class ImGuiBackend;
-struct SceneDescription;
 
 class Editor
 {
@@ -23,7 +22,7 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene);
+    void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings);
 
 private:
     void DrawMainMenuBar();

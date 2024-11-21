@@ -67,7 +67,6 @@ void main()
 
     vec3 L = lightDir;
     vec3 H = normalize(V + L);
-    vec3 radiance = vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0; // Light color.
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
@@ -88,7 +87,7 @@ void main()
 
         float NoL = max(dot(N, L), 0.0);
 
-        Lo += (kD * albedo / PI + specular) * radiance * NoL;
+        Lo += (kD * albedo / PI + specular) * scene.directionalLight.color.rgb * NoL;
     }
 
     vec3 R = reflect(V, N);

@@ -48,7 +48,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    _shadowCamera.Update(currentFrame, scene.sceneDescription->directionalLight.camera);
+    _shadowCamera.Update(currentFrame, scene.gpuScene->DirectionalLightShadowCamera());
 
     _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera, _drawBuffer, _drawBufferDescriptorSet);
 

@@ -5,6 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 struct WorldMatrixComponent;
+struct TransformComponent;
 
 class TransformHelpers
 {
@@ -22,6 +23,10 @@ public:
     static glm::vec3 GetLocalPosition(const entt::registry& reg, entt::entity entity);
     static glm::quat GetLocalRotation(const entt::registry& reg, entt::entity entity);
     static glm::vec3 GetLocalScale(const entt::registry& reg, entt::entity entity);
+
+    static glm::vec3 GetLocalPosition(const TransformComponent& transformComponent);
+    static glm::quat GetLocalRotation(const TransformComponent& transformComponent);
+    static glm::vec3 GetLocalScale(const TransformComponent& transformComponent);
 
     static glm::mat4 GetLocalMatrix(const entt::registry& reg, entt::entity entity);
     static const glm::mat4& GetWorldMatrix(entt::registry& reg, entt::entity entity);
