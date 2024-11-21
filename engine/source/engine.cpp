@@ -12,11 +12,11 @@
 #include "gbuffers.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
-#include "physics_module.hpp"
 #include "old_engine.hpp"
 #include "particles/emitter_component.hpp"
 #include "particles/particle_interface.hpp"
 #include "particles/particle_util.hpp"
+#include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
@@ -52,8 +52,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // systems
     _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
-
-
     _scene = std::make_shared<SceneDescription>();
     rendererModule.SetScene(_scene);
 
@@ -85,12 +83,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
