@@ -1,8 +1,8 @@
 ﻿#include "systems/physics_system.hpp"
-#include "ECS.hpp"
-#include "modules/physics_module.hpp"
 #include "components/rigidbody_component.hpp"
+#include "ecs.hpp"
 #include "imgui/imgui.h"
+#include "modules/physics_module.hpp"
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)
@@ -12,16 +12,16 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 
 entt::entity PhysicsSystem::CreatePhysicsEntity()
 {
-    entt::entity entity = _ecs._registry.create();
+    entt::entity entity = _ecs.registry.create();
     RigidbodyComponent rb(*_physicsModule.bodyInterface);
-    _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+    _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
     return entity;
 }
 
 void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
 {
-    entt::entity entity = _ecs._registry.create();
-    _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
+    entt::entity entity = _ecs.registry.create();
+    _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
 }
 
 void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED RigidbodyComponent& rigidbody)
@@ -29,7 +29,7 @@ void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED 
 }
 void PhysicsSystem::CleanUp()
 {
-    const auto toDestroy = _ecs._registry.view<ECS::ToDestroy, RigidbodyComponent>();
+    const auto toDestroy = _ecs.registry.view<ECS::ToDestroy, RigidbodyComponent>();
     for (const entt::entity entity : toDestroy)
     {
         RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
@@ -47,7 +47,7 @@ void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 void PhysicsSystem::Inspect()
 {
     ImGui::Begin("Physics System");
-    const auto view = _ecs._registry.view<RigidbodyComponent>();
+    const auto view = _ecs.registry.view<RigidbodyComponent>();
     static int amount = 1;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
 
@@ -57,7 +57,7 @@ void PhysicsSystem::Inspect()
         for (int i = 0; i < amount; i++)
         {
             entt::entity newEntity = CreatePhysicsEntity();
-            RigidbodyComponent& rb = _ecs._registry.get<RigidbodyComponent>(newEntity);
+            RigidbodyComponent& rb = _ecs.registry.get<RigidbodyComponent>(newEntity);
             _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
         }
     }
@@ -72,7 +72,7 @@ void PhysicsSystem::Inspect()
 
     if (ImGui::Button("Clear Physics Entities"))
     {
-        _ecs._registry.view<RigidbodyComponent>().each([&](auto entity, auto&)
+        _ecs.registry.view<RigidbodyComponent>().each([&](auto entity, auto&)
             { _ecs.DestroyEntity(entity); });
     }
     ImGui::End();

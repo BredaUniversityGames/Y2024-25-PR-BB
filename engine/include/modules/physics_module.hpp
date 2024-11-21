@@ -10,24 +10,24 @@ JPH_SUPPRESS_WARNING_PUSH
 
 JPH_SUPPRESS_WARNINGS
 
-#include <Jolt/RegisterTypes.h>
+#include "Jolt/Renderer/DebugRendererSimple.h"
 #include <Jolt/Core/Factory.h>
-#include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
-#include <Jolt/Physics/PhysicsSettings.h>
-#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Physics/Body/BodyActivationListener.h>
-#include "Jolt/Renderer/DebugRendererSimple.h"
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/RegisterTypes.h>
 
 JPH_SUPPRESS_WARNING_POP
 
 // TODO: should be using Log.hpp
 #include "common.hpp"
-#include <iostream>
 #include <glm/glm.hpp>
+#include <iostream>
 
 namespace JPH
 {
@@ -147,8 +147,6 @@ public:
         MAYBE_UNUSED JPH::RVec3Arg inBaseOffset,
         MAYBE_UNUSED const JPH::CollideShapeResult& inCollisionResult) override
     {
-        // std::cout << "Contact validate callback" << std::endl;
-
         // Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
@@ -159,7 +157,6 @@ public:
         MAYBE_UNUSED const JPH::ContactManifold& inManifold,
         MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
     {
-        // std::cout << "A contact was added" << std::endl;
     }
 
     virtual void OnContactPersisted(
@@ -168,12 +165,10 @@ public:
         MAYBE_UNUSED const JPH::ContactManifold& inManifold,
         MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
     {
-        // std::cout << "A contact was persisted" << std::endl;
     }
 
     virtual void OnContactRemoved(MAYBE_UNUSED const JPH::SubShapeIDPair& inSubShapePair) override
     {
-        // std::cout << "A contact was removed" << std::endl;
     }
 };
 
@@ -183,12 +178,10 @@ class MyBodyActivationListener : public JPH::BodyActivationListener
 public:
     virtual void OnBodyActivated(MAYBE_UNUSED const JPH::BodyID& inBodyID, MAYBE_UNUSED JPH::uint64 inBodyUserData) override
     {
-        std::cout << "A body got activated" << std::endl;
     }
 
     virtual void OnBodyDeactivated(MAYBE_UNUSED const JPH::BodyID& inBodyID, MAYBE_UNUSED JPH::uint64 inBodyUserData) override
     {
-        std::cout << "A body went to sleep" << std::endl;
     }
 };
 
