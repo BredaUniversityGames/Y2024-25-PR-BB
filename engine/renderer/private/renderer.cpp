@@ -49,12 +49,12 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_context, _ecs);
+    _modelLoader = std::make_unique<ModelLoader>();
 
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
     SingleTimeCommands commandBufferPrimitive { _context };
-    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Null());
+    ResourceHandle<Mesh> uvSphere; //_modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Null());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -160,7 +160,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<CPUModelData> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -175,11 +175,11 @@ std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& mod
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<Model> models {};
+    std::vector<CPUModelData> models {};
 
     for (const auto& path : modelPaths)
     {
-        models.emplace_back(_modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical));
+        models.emplace_back(_modelLoader->ExtractModelFromGltfFile(path, ModelLoader::LoadMode::eHierarchical));
     }
 
     return models;

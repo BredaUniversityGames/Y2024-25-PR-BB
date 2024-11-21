@@ -51,8 +51,11 @@ void RendererModule::SetScene(std::shared_ptr<const SceneDescription> scene)
     _renderer->_scene = scene;
 }
 
-std::vector<Model> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<CPUModelData> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
+
+    bblog::error("NOT IMPLEMENTED!!, RendererModule::FrontLoadModels");
+
     auto result = _renderer->FrontLoadModels(modelPaths);
 
     _renderer->UpdateBindless();

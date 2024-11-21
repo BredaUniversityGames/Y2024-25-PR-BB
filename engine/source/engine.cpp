@@ -54,7 +54,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
     };
 
-    std::vector<Model> models = rendererModule.FrontLoadModels(modelPaths);
+    std::vector<CPUModelData> models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
     SceneLoader sceneLoader {};
     for (const auto& model : models)

@@ -140,7 +140,6 @@ struct MaterialCreation
     glm::vec3 emissiveFactor { 0.0f };
     uint32_t emissiveUVChannel;
 };
-
 struct Material
 {
     Material(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<Image>>& imageResourceManager);

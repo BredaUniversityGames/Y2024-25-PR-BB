@@ -13,7 +13,7 @@
 
 #include <entt/entity/entity.hpp>
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model)
+std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const CPUModelData& model)
 {
     std::vector<entt::entity> entities {};
     entities.reserve(model.hierarchy.baseNodes.size());
@@ -36,10 +36,10 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
     TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
 
-    if (context->Resources()->MeshResourceManager().IsValid(currentNode.mesh))
-    {
-        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
-    }
+    //  if (context->Resources()->MeshResourceManager().IsValid(currentNode.meshIndex))
+    // {
+    //   ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
+    //}
 
     for (const auto& node : currentNode.children)
     {
