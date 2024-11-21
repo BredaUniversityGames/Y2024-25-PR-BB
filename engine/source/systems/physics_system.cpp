@@ -11,36 +11,36 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 {
 }
 
-entt::entity PhysicsSystem::CreatePhysicsEntity()
-{
-    entt::entity entity = _ecs._registry.create();
-    RigidbodyComponent rb(*_physicsModule.bodyInterface);
-    _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
-    return entity;
-}
-
-void PhysicsSystem::CreatePhysicsEntity(RigidbodyComponent& rb)
-{
-    entt::entity entity = _ecs._registry.create();
-    _ecs._registry.emplace<RigidbodyComponent>(entity, rb);
-}
-
 void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED RigidbodyComponent& rigidbody)
 {
 }
-void PhysicsSystem::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance)
+RayHitInfo PhysicsSystem::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
 {
-    JPH::Vec3 start(origin.x, origin.y, origin.z);
-    JPH::Vec3 dir(direction.x, direction.y, direction.z);
+    RayHitInfo hitInfo;
 
+    const JPH::Vec3 start(origin.x, origin.y, origin.z);
+    JPH::Vec3 dir(direction.x, direction.y, direction.z);
     dir = dir.Normalized();
-    JPH::RayCast ray(start, dir * distance);
+    const JPH::RayCast ray(start, dir * distance);
+    _physicsModule.debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+
     JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
     _physicsModule.physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
-    int num_hits = (int)collector.mHits.size();
-    JPH::BroadPhaseCastResult* results = collector.mHits.data();
+    const int numHits = static_cast<int>(collector.mHits.size());
+    if (numHits < 1)
+    {
+        return hitInfo;
+    }
 
-    _physicsModule.debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+    const auto firstHit = collector.mHits[numHits - 1];
+    const entt::entity hitEntity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(firstHit.mBodyID));
+    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
+
+    hitInfo.entity = hitEntity;
+    hitInfo.position = hitPosition;
+    hitInfo.hitFraction = firstHit.mFraction;
+    hitInfo.hasHit = true;
+    return hitInfo;
 }
 void PhysicsSystem::CleanUp()
 {
@@ -65,7 +65,7 @@ void PhysicsSystem::Inspect()
     const auto view = _ecs._registry.view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;
-    ImGui::Text("Physics Entities: %lu", static_cast<unsigned int>(view.size()));
+    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
 
     ImGui::DragInt("Amout", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
@@ -90,7 +90,7 @@ void PhysicsSystem::Inspect()
         for (int i = 0; i < amount; i++)
         {
             entt::entity entity = _ecs._registry.create();
-            RigidbodyComponent rb(*_physicsModule.bodyInterface, currentShape);
+            RigidbodyComponent rb(*_physicsModule.bodyInterface, currentShape, entity);
             NameComponent node;
             node._name = "Physics Entity";
             _ecs._registry.emplace<NameComponent>(entity, node);
@@ -103,13 +103,12 @@ void PhysicsSystem::Inspect()
     {
         JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
-        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings);
-        CreatePhysicsEntity(newRigidBody);
-    }
-
-    if (ImGui::Button("Test ray cast"))
-    {
-        ShootRay(glm::vec3(0), glm::vec3(0, 1, 0), 100);
+        entt::entity entity = _ecs._registry.create();
+        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings, entity);
+        NameComponent node;
+        node._name = "Plane Entity";
+        _ecs._registry.emplace<RigidbodyComponent>(entity, newRigidBody);
+        _ecs._registry.emplace<NameComponent>(entity, node);
     }
 
     if (ImGui::Button("Clear Physics Entities"))
@@ -122,7 +121,7 @@ void PhysicsSystem::Inspect()
 
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
-    ImGui::Text("Body ID: %lu", rb.bodyID);
+    ImGui::Text("Body ID: %u", rb.bodyID);
 
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };

@@ -85,7 +85,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
             entt::entity entity = _ecs->_registry.create();
             JPH::BodyCreationSettings coliderSettings(new JPH::BoxShape(JPH::Vec3(0.5, 1.0, 0.5)), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
-            RigidbodyComponent rb(*_physicsModule->bodyInterface, coliderSettings);
+            RigidbodyComponent rb(*_physicsModule->bodyInterface, coliderSettings, entity);
             NameComponent node;
             node._name = "Colider";
             _ecs->_registry.emplace<NameComponent>(entity, node);
@@ -94,9 +94,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     }
 
     // add a plane
-    JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(18.0f, 0.1f, 18.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
-    RigidbodyComponent newRigidBody(*_physicsModule->bodyInterface, plane_settings);
     entt::entity entity = _ecs->_registry.create();
+    JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(18.0f, 0.1f, 18.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+    RigidbodyComponent newRigidBody(*_physicsModule->bodyInterface, plane_settings, entity);
+
     _ecs->_registry.emplace<RigidbodyComponent>(entity, newRigidBody);
     NameComponent node;
     node._name = "Plane";
@@ -201,8 +202,13 @@ void OldEngine::Tick(Engine& engine)
         // shoot rays
         if (ImGui::IsKeyPressed(ImGuiKey_Space))
         {
-            glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
-            _ecs->GetSystem<PhysicsSystem>().ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+            const glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
+            const RayHitInfo hitInfo = _ecs->GetSystem<PhysicsSystem>().ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+
+            std::cout << "Hit: " << hitInfo.hasHit << std::endl
+                      << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
+                      << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
+                      << "Fraction: " << hitInfo.hitFraction << std::endl;
         }
     }
     _lastMousePos = { mouseX, mouseY };
