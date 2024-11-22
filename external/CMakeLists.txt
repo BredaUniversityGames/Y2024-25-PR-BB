@@ -88,12 +88,12 @@ FetchContent_Declare(
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    override_option(TRACY_ENABLE OFF)
+    set(TRACY_ENABLE OFF)
 else ()
-    override_option(TRACY_ENABLE ON)
+    set(TRACY_ENABLE ON)
 endif ()
 
-override_option(TRACY_ON_DEMAND ON)
+set(TRACY_ON_DEMAND OFF)
 
 FetchContent_MakeAvailable(Tracy)
 
@@ -153,15 +153,15 @@ set(CPP_RTTI_ENABLED ON)
 set(ENABLE_ALL_WARNINGS OFF)
 
 # TODO: These options enable vectorization optimizations
-set(USE_SSE4_1 ON)
-set(USE_SSE4_2 ON)
-set(USE_AVX ON)
-set(USE_AVX2 ON)
+set(USE_SSE4_1 OFF)
+set(USE_SSE4_2 OFF)
+set(USE_AVX OFF)
+set(USE_AVX2 OFF)
 set(USE_AVX512 OFF)
-set(USE_LZCNT ON)
-set(USE_TZCNT ON)
-set(USE_F16C ON)
-set(USE_FMADD ON)
+set(USE_LZCNT OFF)
+set(USE_TZCNT OFF)
+set(USE_F16C OFF)
+set(USE_FMADD OFF)
 
 FetchContent_MakeAvailable(JoltPhysics)
 
@@ -223,7 +223,7 @@ target_include_directories(ImGui
 
 # Enable Unity for external libraries
 
-if (USE_UNITY_BUILD)
+if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 
