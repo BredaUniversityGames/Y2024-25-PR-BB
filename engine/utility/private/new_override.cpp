@@ -1,4 +1,4 @@
-#include "common.hpp"
+#if defined TRACY_ENABLE
 #include "profile_macros.hpp"
 
 void* operator new(size_t size)
@@ -44,3 +44,4 @@ void operator delete[](void* ptr, size_t) noexcept
     TracyFree(ptr);
     std::free(ptr);
 }
+#endif

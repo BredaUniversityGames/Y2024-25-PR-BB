@@ -47,8 +47,8 @@ FetchContent_MakeAvailable(VMA)
 
 FetchContent_Declare(
         FastGLTF
-        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG v0.8.0
+        GIT_REPOSITORY https://github.com/santiberna/fastgltf-smallfix.git
+        GIT_TAG main
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -87,8 +87,14 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(TRACY_ENABLE ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    override_option(TRACY_ENABLE OFF)
+else ()
+    override_option(TRACY_ENABLE ON)
+endif ()
+
 override_option(TRACY_ON_DEMAND ON)
+
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
@@ -170,20 +176,6 @@ target_compile_options(Jolt PRIVATE
         -w          # Suppress all warnings
         -Wno-error  # Do not treat warnings as errors
 )
-
-# GoogleTest
-
-FetchContent_Declare(
-        GoogleTest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.15.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-override_option(gtest_force_shared_crt ON)
-FetchContent_MakeAvailable(GoogleTest)
 
 # SPIRV-Reflect
 
