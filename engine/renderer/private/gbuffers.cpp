@@ -15,10 +15,15 @@ GBuffers::GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 s
         vk::ImageTiling::eOptimal,
         vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
-    assert(supportedDepthFormat.has_value() && "No supported depth format!");
-
-    _depthFormat = supportedDepthFormat.value();
-    _shadowFormat = supportedDepthFormat.value();
+    if (supportedDepthFormat.has_value())
+    {
+        _depthFormat = supportedDepthFormat.value();
+        _shadowFormat = supportedDepthFormat.value();
+    }
+    else
+    {
+        assert(false && "No supported depth format!");
+    }
 
     CreateGBuffers();
     CreateDepthResources();
@@ -81,7 +86,7 @@ void GBuffers::CreateShadowMapResources()
         .compareEnable = true,
         .compareOp = vk::CompareOp::eLessOrEqual,
     };
-    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
     ImageCreation shadowCreation {};
@@ -110,7 +115,7 @@ void GBuffers::CreateViewportAndScissor()
 
 void GBuffers::TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-    for (auto attachment : _attachments)
+    for (const auto& attachment : _attachments)
     {
         const Image* image = _context->Resources()->ImageResourceManager().Access(attachment);
 

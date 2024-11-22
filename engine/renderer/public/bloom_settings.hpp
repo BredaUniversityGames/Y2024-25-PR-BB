@@ -4,6 +4,8 @@
 #include "resource_manager.hpp"
 
 #include <array>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>
 

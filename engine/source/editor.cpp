@@ -42,7 +42,7 @@ Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>&
     _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
@@ -138,16 +138,9 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         system->Inspect();
     }
-    DirectionalLight& light = scene.directionalLight;
 
     static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
-    ImGui::Begin("Light Debug");
-    ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
-    ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
-    ImGui::DragFloat("Ortho Size", &light.camera.orthographicSize, 0.1f);
-    ImGui::DragFloat("Far Plane", &light.camera.farPlane, 0.1f);
-    ImGui::DragFloat("Near Plane", &light.camera.nearPlane, 0.1f);
-    ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
+    ImGui::Begin("Directional Light Shadow Map View");
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
 
