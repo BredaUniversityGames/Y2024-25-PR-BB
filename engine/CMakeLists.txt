@@ -27,5 +27,6 @@ target_add_module(Engine core Core)
 target_add_module(Engine utility Utility)
 target_add_module(Engine application Application)
 target_add_module(Engine renderer Renderer)
+target_add_module(Engine audio Audio)
 
 target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)

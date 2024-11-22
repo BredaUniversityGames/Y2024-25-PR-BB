@@ -223,6 +223,11 @@ target_include_directories(ImGui
         PUBLIC imgui_entt_entity_editor
 )
 
+# FMOD (no git to fetch content)
+
+#install fmod dlls
+add_subdirectory(fmod)
+
 # Enable Unity for external libraries
 
 if (USE_UNITY_BUILD)
@@ -251,10 +256,12 @@ target_link_libraries(External
         INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
+        INTERFACE FMOD
 )
 
 target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
+        INTERFACE fmod/include
 )
