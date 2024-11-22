@@ -65,6 +65,11 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# FMOD (no git to fetch content)
+
+#install fmod dlls
+add_subdirectory(fmod)
+
 # Wren Language
 
 add_subdirectory(wren)
@@ -228,11 +233,6 @@ target_include_directories(ImGui
         PUBLIC implot
         PUBLIC imgui_entt_entity_editor
 )
-
-# FMOD (no git to fetch content)
-
-#install fmod dlls
-add_subdirectory(fmod)
 
 # Enable Unity for external libraries
 

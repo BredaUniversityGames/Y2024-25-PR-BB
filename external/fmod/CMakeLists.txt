@@ -1,23 +1,28 @@
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-auto-import")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 set(FMOD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(FMOD_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 set(BUILD_CONFIG_POSTFIX $<$<CONFIG:Debug>:L>
         $<$<CONFIG:RelWithDebInfo>:L>
 )
 
+add_library(FMOD)
+
 file(GLOB fmod_sources CONFIGURE_DEPENDS "include/*.cpp")
 file(GLOB fmod_headers CONFIGURE_DEPENDS "include/*.h")
 
-if (WIN32)
-    set(FMOD_LIBRARIES
-            "${FMOD_LIB_DIR}/x64/fmod_vc.lib"
-            "${FMOD_LIB_DIR}/x64/fmodL_vc.lib")
-endif ()
-
-add_library(FMOD ${fmod_sources} "include/fmod.hpp" ${fmod_headers})
+target_sources(FMOD PRIVATE ${fmod_sources})
 
 target_include_directories(FMOD PUBLIC ${FMOD_INCLUDE_DIR})
 
-target_link_libraries(FMOD PUBLIC ${FMOD_LIBRARIES})
+if (WIN32)
+    set(FMOD_LIBRARIES
+            "${FMOD_LIB_DIR}/x64/fmod.dll")
+
+endif ()
+
+target_link_libraries(FMOD PRIVATE ${FMOD_LIBRARIES})
 
 
 #set(PLATFORM $<$<BOOL:${WIN32}>:x64>)

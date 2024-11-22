@@ -2,8 +2,9 @@
 
 #include "module_interface.hpp"
 
-#include "fmod.hpp"
 #include <memory>
+
+class FMOD_SYSTEM;
 
 class AudioModule final : public ModuleInterface
 {
@@ -18,5 +19,5 @@ public:
     // Do fun audio stuff
 
 private:
-    std::unique_ptr<FMOD::System> system;
+    std::unique_ptr<FMOD_SYSTEM> system;
 };
