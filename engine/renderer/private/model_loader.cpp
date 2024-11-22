@@ -83,6 +83,58 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
 
     fastgltf::Asset& gltf = loadedGltf.get();
 
+    // TODO: TESTING CODE REMOVE LATER
+    for (const auto& channel : gltf.animations[0].channels)
+    {
+        bblog::info("path: {}, node index: {}, sampler index: {}", magic_enum::enum_name(channel.path), channel.nodeIndex.value(), channel.samplerIndex);
+
+        const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
+
+        bblog::info("input: {}, output: {}, interpolation: {}", sampler.inputAccessor, sampler.outputAccessor, magic_enum::enum_name(sampler.interpolation));
+        {
+            const auto& accessor = gltf.accessors[sampler.inputAccessor];
+            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+            std::span<const float> input { reinterpret_cast<const float*>(data), bufferView.byteLength / sizeof(float) };
+
+            for (const auto& f : input)
+            {
+                bblog::info("input: {}", f);
+            }
+        }
+        {
+            const auto& accessor = gltf.accessors[sampler.outputAccessor];
+            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+            if (channel.path == fastgltf::AnimationPath::Translation)
+            {
+                std::span<const glm::vec3> output { reinterpret_cast<const glm::vec3*>(data), bufferView.byteLength / sizeof(glm::vec3) };
+
+                for (const auto& f : output)
+                {
+                    bblog::info("output: {}, {}, {}", f.x, f.y, f.z);
+                }
+            }
+            else if (channel.path == fastgltf::AnimationPath::Rotation)
+            {
+                std::span<const glm::vec4> output { reinterpret_cast<const glm::vec4*>(data), bufferView.byteLength / sizeof(glm::vec4) };
+
+                for (const auto& f : output)
+                {
+                    bblog::info("output: {}, {}, {}, {}", f.x, f.y, f.z, f.w);
+                }
+            }
+        }
+    }
+
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 

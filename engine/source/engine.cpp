@@ -52,10 +52,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/CathedralGLB_GLTF.glb",
-        "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
+        "assets/models/BoxAnimated.glb",
+        // "assets/models/CathedralGLB_GLTF.glb",
+        // "assets/models/Terrain/scene.gltf",
+        // "assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        // "assets/models/MetalRoughSpheres.glb"
     };
 
     std::vector<Model> models = rendererModule.FrontLoadModels(modelPaths);
@@ -68,13 +69,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
     }
 
-    TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
+    // TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
+    // TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
 
-    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+    // TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 4.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->registry, entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->registry, entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
