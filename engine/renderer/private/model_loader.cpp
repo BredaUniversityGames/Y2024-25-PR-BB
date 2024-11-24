@@ -1,5 +1,6 @@
 #include "model_loader.hpp"
 
+#include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs.hpp"
 #include "graphics_context.hpp"
@@ -86,6 +87,8 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
     // TODO: TESTING CODE REMOVE LATER
     for (const auto& channel : gltf.animations[0].channels)
     {
+        AnimationSpline<glm::vec3> spline;
+
         bblog::info("path: {}, node index: {}, sampler index: {}", magic_enum::enum_name(channel.path), channel.nodeIndex.value(), channel.samplerIndex);
 
         const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
@@ -100,6 +103,8 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
 
             const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
             std::span<const float> input { reinterpret_cast<const float*>(data), bufferView.byteLength / sizeof(float) };
+
+            spline.timestamps = std::vector<float> { input.begin(), input.end() };
 
             for (const auto& f : input)
             {
@@ -118,9 +123,18 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
             {
                 std::span<const glm::vec3> output { reinterpret_cast<const glm::vec3*>(data), bufferView.byteLength / sizeof(glm::vec3) };
 
+                spline.values = std::vector<glm::vec3> { output.begin(), output.end() };
                 for (const auto& f : output)
                 {
                     bblog::info("output: {}, {}, {}", f.x, f.y, f.z);
+                }
+
+                float time = 0.0f;
+                while (time < 10.0f)
+                {
+                    time += 0.01f;
+                    glm::vec3 sample = spline.Sample(time);
+                    bblog::info("sample: {}, {}, {}", sample.x, sample.y, sample.z);
                 }
             }
             else if (channel.path == fastgltf::AnimationPath::Rotation)
