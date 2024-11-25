@@ -16,10 +16,10 @@ if (WIN32)
 elseif (UNIX)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         set(FMOD_LIBRARIES
-                "${FMOD_LIB_DIR}/Linux/Debug/libfmodL.so.13.23")
+                "${FMOD_LIB_DIR}/Linux/Debug/libfmodL.so.14.4")
     else ()
         set(FMOD_LIBRARIES
-                "${FMOD_LIB_DIR}/Linux/Release/libfmod.so.13.23")
+                "${FMOD_LIB_DIR}/Linux/Release/libfmod.so.14.4")
     endif ()
 endif ()
 
