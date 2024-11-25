@@ -173,11 +173,16 @@ void OldEngine::Tick(Engine& engine)
             constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
             constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
 
-            glm::vec3 eulerRotation = glm::eulerAngles(TransformHelpers::GetLocalRotation(transformComponent));
+            glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
+            glm::vec3 eulerRotation = glm::eulerAngles(rotation);
             eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
-            eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
-            eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
-            glm::quat rotation = glm::quat(eulerRotation);
+            // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
+
+            glm::vec3 forward = glm::normalize(rotation * FORWARD);
+            if (forward.z > 0.0f) eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+            else eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+
+            rotation = glm::quat(eulerRotation);
             TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
 
             glm::vec3 movementDir {};
