@@ -3,8 +3,12 @@
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
-
 #include "Jolt/Jolt.h"
+#include "common.hpp"
+#include "entt/entity/entity.hpp"
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 
 JPH_SUPPRESS_WARNING_PUSH
 
@@ -42,6 +46,13 @@ namespace PhysicsLayers
 static constexpr JPH::ObjectLayer NON_MOVING = 0;
 static constexpr JPH::ObjectLayer MOVING = 1;
 static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
+};
+
+enum PhysicsShapes
+{
+    eSPHERE,
+    eBOX,
+    eCUSTOM,
 };
 
 /// Class that determines if two object layers can collide
@@ -197,6 +208,15 @@ public:
         linePositions.push_back(toPos);
     }
 
+    void AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
+    {
+        glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
+        glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
+
+        persistentLinePositions.push_back(fromPos);
+        persistentLinePositions.push_back(toPos);
+    }
+
     void DrawText3D(
         MAYBE_UNUSED JPH::RVec3Arg inPosition,
         MAYBE_UNUSED const std::string_view& inString,
@@ -206,9 +226,14 @@ public:
         // Not implemented
     }
 
-    [[nodiscard]] const std::vector<glm::vec3>& GetLinesData() const
+    NO_DISCARD const std::vector<glm::vec3>& GetLinesData() const
     {
         return linePositions;
+    }
+
+    NO_DISCARD const std::vector<glm::vec3>& GetPersistentLinesData() const
+    {
+        return persistentLinePositions;
     }
 
     void ClearLines()
@@ -218,6 +243,15 @@ public:
 
 private:
     std::vector<glm::vec3> linePositions;
+    std::vector<glm::vec3> persistentLinePositions;
+};
+
+struct RayHitInfo
+{
+    entt::entity entity = entt::null; // Entity that was hit
+    glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f); // Position where the ray hits; HitPoint = Start + mFraction * (End - Start)
+    float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
+    bool hasHit = false;
 };
 
 class PhysicsModule
@@ -226,6 +260,9 @@ public:
     PhysicsModule();
     ~PhysicsModule();
     void UpdatePhysicsEngine(float deltaTime);
+
+    NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
+
     JPH::BodyInterface* bodyInterface = nullptr;
     DebugRendererSimpleImpl* debugRenderer = nullptr;
     JPH::PhysicsSystem* physicsSystem = nullptr;
