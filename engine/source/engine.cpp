@@ -1,5 +1,6 @@
 #include "engine.hpp"
 
+#include <glm/glm.hpp>
 #include <implot/implot.h>
 #include <stb/stb_image.h>
 
@@ -59,7 +60,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/BoxAnimated.glb",
+        "assets/models/BrainStem.glb",
         // "assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         // "assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -72,14 +73,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        for (size_t i = 0; i < 30; i++)
+        for (size_t i = 0; i < 1; i++)
         {
-            for (size_t j = 0; j < 30; j++)
+            for (size_t j = 0; j < 1; j++)
             {
                 auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
                 entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
 
-                TransformHelpers::SetLocalPosition(_ecs->registry, loadedEntities[0], glm::vec3(i, 0.0f, j));
+                TransformHelpers::SetLocalPosition(_ecs->registry, loadedEntities[0], glm::vec3(i, 0.0f, j) * 2.0f);
             }
         }
     }
@@ -159,12 +160,30 @@ void OldEngine::Tick(Engine& engine)
         }
     }
 
+    const auto debugView = _ecs->registry.view<JointComponent, RelationshipComponent, WorldMatrixComponent>();
+    std::vector<glm::vec3> lines {};
+    for (auto entity : debugView)
+    {
+        auto& relationship = debugView.get<RelationshipComponent>(entity);
+        auto& transform = debugView.get<WorldMatrixComponent>(entity);
+
+        glm::mat4 matrix = TransformHelpers::GetWorldMatrix(transform);
+        glm::mat4 parentMatrix = TransformHelpers::GetWorldMatrix(_ecs->registry, relationship.parent);
+
+        glm::vec3 position { matrix[3][0], matrix[3][1], matrix[3][2] };
+        glm::vec3 parentPosition { parentMatrix[3][0], parentMatrix[3][1], parentMatrix[3][2] };
+
+        lines.emplace_back(position);
+        lines.emplace_back(parentPosition);
+    }
+
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
     auto persistentLinesData = _physicsModule->debugRenderer->GetPersistentLinesData();
     rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
     _physicsModule->debugRenderer->ClearLines();
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(lines);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
 

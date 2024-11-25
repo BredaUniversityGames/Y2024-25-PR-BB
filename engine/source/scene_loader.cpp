@@ -54,6 +54,16 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
         animationChannel.animation = animation;
     }
 
+    if (currentNode.joint.has_value())
+    {
+        ecs.registry.emplace<JointComponent>(entity).inverseBindMatrix = currentNode.joint.value().inverseBind;
+
+        if (currentNode.joint.value().isSkeletonRoot)
+        {
+            ecs.registry.emplace<SkeletonComponent>(entity);
+        }
+    }
+
     for (const auto& node : currentNode.children)
     {
         const entt::entity childEntity = LoadNodeRecursive(context, ecs, node, animation);

@@ -14,6 +14,12 @@ struct ModelResources
 
 struct Hierarchy
 {
+    struct Joint
+    {
+        bool isSkeletonRoot;
+        glm::mat4 inverseBind;
+    };
+
     struct Node
     {
         std::string name {};
@@ -21,6 +27,8 @@ struct Hierarchy
         ResourceHandle<Mesh> mesh {};
         std::vector<Node> children {};
         std::optional<AnimationChannel> animationChannel {};
+
+        std::optional<Joint> joint;
     };
 
     std::vector<Node> baseNodes {};

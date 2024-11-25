@@ -78,6 +78,14 @@ struct StaticMeshComponent
     ResourceHandle<Mesh> mesh;
 };
 
+struct SkeletonComponent
+{
+};
+struct JointComponent
+{
+    glm::mat4 inverseBindMatrix {};
+};
+
 struct SceneDescription
 {
     Camera camera;

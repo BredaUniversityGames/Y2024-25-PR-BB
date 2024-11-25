@@ -466,6 +466,8 @@ Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuff
     auto animations = LoadAnimations(gltf);
     model.animation = animations.animation;
 
+    assert(gltf.skins.size() <= 1 && "Only support for one skin!");
+
     switch (loadMode)
     {
     case LoadMode::eFlat:
@@ -523,8 +525,19 @@ StagingAnimationChannels ModelLoader::LoadAnimations(const fastgltf::Asset& gltf
         {
             continue;
         }
-        stagingAnimationChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
-        auto& spline = stagingAnimationChannels.animationChannels.emplace_back();
+
+        AnimationChannel* spline { nullptr };
+        const auto it = std::find(stagingAnimationChannels.nodeIndices.begin(), stagingAnimationChannels.nodeIndices.end(), channel.nodeIndex.value());
+
+        if (it == stagingAnimationChannels.nodeIndices.end())
+        {
+            stagingAnimationChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
+            spline = &stagingAnimationChannels.animationChannels.emplace_back();
+        }
+        else
+        {
+            spline = &stagingAnimationChannels.animationChannels[std::distance(stagingAnimationChannels.nodeIndices.begin(), it)];
+        }
 
         const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
 
@@ -557,21 +570,30 @@ StagingAnimationChannels ModelLoader::LoadAnimations(const fastgltf::Asset& gltf
             const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
             if (channel.path == fastgltf::AnimationPath::Translation)
             {
-                spline.translation = AnimationSpline<Translation> {};
+                spline->translation = AnimationSpline<Translation> {};
 
                 std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
 
-                spline.translation.value().values = std::vector<Translation> { output.begin(), output.end() };
-                spline.translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
+                spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
             }
             else if (channel.path == fastgltf::AnimationPath::Rotation)
             {
-                spline.rotation = AnimationSpline<Rotation> {};
+                spline->rotation = AnimationSpline<Rotation> {};
 
                 std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
 
-                spline.rotation.value().values = std::vector<glm::quat> { output.begin(), output.end() };
-                spline.rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
+                spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+            }
+            else if (channel.path == fastgltf::AnimationPath::Scale)
+            {
+                spline->scaling = AnimationSpline<Scale> {};
+
+                std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+
+                spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
+                spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
             }
         }
     }
@@ -602,6 +624,16 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltf
         {
             node.animationChannel = animationChannels.animationChannels[i];
             break;
+        }
+    }
+
+    if (gltf.skins.size() > 0)
+    {
+        const auto& skin = gltf.skins[0];
+        if (std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex) != skin.joints.end())
+        {
+            fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], gltfNodeIndex);
+            node.joint = Hierarchy::Joint { gltfNodeIndex == skin.skeleton.value(), *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix) };
         }
     }
 
