@@ -153,15 +153,15 @@ set(CPP_RTTI_ENABLED ON)
 set(ENABLE_ALL_WARNINGS OFF)
 
 # TODO: These options enable vectorization optimizations
-set(USE_SSE4_1 OFF)
-set(USE_SSE4_2 OFF)
-set(USE_AVX OFF)
-set(USE_AVX2 OFF)
+set(USE_SSE4_1 ON)
+set(USE_SSE4_2 ON)
+set(USE_AVX ON)
+set(USE_AVX2 ON)
 set(USE_AVX512 OFF)
-set(USE_LZCNT OFF)
-set(USE_TZCNT OFF)
-set(USE_F16C OFF)
-set(USE_FMADD OFF)
+set(USE_LZCNT ON)
+set(USE_TZCNT ON)
+set(USE_F16C ON)
+set(USE_FMADD ON)
 
 FetchContent_MakeAvailable(JoltPhysics)
 
