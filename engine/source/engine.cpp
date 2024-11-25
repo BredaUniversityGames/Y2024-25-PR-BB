@@ -180,12 +180,12 @@ void OldEngine::Tick(Engine& engine)
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
             eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
 
-            // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 as well when using clamp here
+            // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
             glm::vec3 forward = glm::normalize(rotation * FORWARD);
-            if (forward.z > 0.0f) eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
-            else eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+            if (forward.z > 0.0f) eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+            else eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
             rotation = glm::quat(eulerRotation);
             TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
@@ -221,20 +221,20 @@ void OldEngine::Tick(Engine& engine)
             TransformHelpers::SetLocalPosition(_ecs->registry, entity, position);
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
-            _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+            physicsModule.debugRenderer->SetCameraPos(cameraPos);
 			
-			// shoot rays
-			if (ImGui::IsKeyPressed(ImGuiKey_Space))
-			{
-				const glm::vec3 cameraDir = (rotation * -FORWARD);
-				const RayHitInfo hitInfo = physicsModule.ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+	    // shoot rays
+	    if (ImGui::IsKeyPressed(ImGuiKey_Space))
+	    {
+		const glm::vec3 cameraDir = (rotation * -FORWARD);
+		const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
 
-				std::cout << "Hit: " << hitInfo.hasHit << std::endl
-						  << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
-						  << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
-						  << "Fraction: " << hitInfo.hitFraction << std::endl;
-			}
-		}
+		std::cout << "Hit: " << hitInfo.hasHit << std::endl
+		      << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
+		      << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
+		      << "Fraction: " << hitInfo.hitFraction << std::endl;
+	    }
+	}
     }
 
     _lastMousePos = { mouseX, mouseY };
