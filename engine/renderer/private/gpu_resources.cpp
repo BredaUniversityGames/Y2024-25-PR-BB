@@ -177,9 +177,6 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
     imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
-    std::cout << "Creating image with dimensions: "
-              << imageCreateInfo.extent.width << "x"
-              << imageCreateInfo.extent.height << std::endl;
     imageCreateInfo.usage = creation.flags;
 
     if (creation.initialData.data())
