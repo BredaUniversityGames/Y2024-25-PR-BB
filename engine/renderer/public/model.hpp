@@ -26,6 +26,7 @@ struct CPUMesh
         uint32_t materialIndex { 0 };
 
         Vec3Range boundingBox;
+        float boundingRadius;
     };
 
     std::vector<Primitive> primitives;
@@ -70,8 +71,6 @@ struct CPUModel
 
 struct GPUModel
 {
-    Hierarchy hierarchy {};
-
     std::vector<ResourceHandle<GPUMesh>> meshes;
     std::vector<ResourceHandle<GPUMaterial>> materials;
     std::vector<ResourceHandle<GPUImage>> textures;

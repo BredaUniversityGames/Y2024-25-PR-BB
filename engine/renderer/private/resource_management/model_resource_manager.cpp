@@ -19,7 +19,7 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 }
 
 ResourceHandle<GPUModel>
-ModelResourceManager::Create(const CPUModel& data)
+ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
 {
     GPUModel model;
 
@@ -57,9 +57,8 @@ ModelResourceManager::Create(const CPUModel& data)
 
     for (const auto& i : data.meshes)
     {
-        model.meshes.emplace_back(_meshResourceManager->Create(i, model.materials));
+        model.meshes.emplace_back(_meshResourceManager->Create(i, model.materials, batchBuffer));
     }
-    model.hierarchy = data.hierarchy;
 
     return ResourceManager::Create(std::move(model));
 }

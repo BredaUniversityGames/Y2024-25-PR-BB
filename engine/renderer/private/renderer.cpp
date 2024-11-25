@@ -13,7 +13,6 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "log.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
@@ -27,15 +26,12 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
-#include "resource_management/material_resource_manager.hpp"
+#include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-
-#include <resource_management/mesh_resource_manager.hpp>
 
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
     : _context(context)
@@ -55,10 +51,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _modelLoader = std::make_unique<ModelLoader>();
 
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
-    context->Resources()->MeshResourceManager().SetBatchBuffer(_batchBuffer);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null());
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -185,7 +180,7 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     {
 
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
         models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
