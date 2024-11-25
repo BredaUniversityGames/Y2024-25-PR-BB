@@ -259,8 +259,8 @@ struct RayHitInfo
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
-        void Shutdown(Engine& engine) final;
-        void Tick(Engine& engine) final;
+    void Shutdown(Engine& engine) final;
+    void Tick(Engine& engine) final;
 
 public:
     PhysicsModule() = default;
