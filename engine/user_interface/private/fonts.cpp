@@ -7,6 +7,9 @@
 #include "gpu_resources.hpp"
 #include "vulkan_helper.hpp"
 
+#define STB_RECT_PACK_IMPLEMENTATION
+#include "stb_rect_pack.h"
+
 // chatgpt
 void appendBitmapToAtlas(
     const unsigned char* bitmapBuffer,
@@ -46,73 +49,79 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, const Vulka
     FT_Init_FreeType(&library);
 
     FT_Face fontFace;
+    FT_New_Face(library, path.c_str(), 0, &fontFace);
 
-    if (FT_New_Face(library, path.c_str(), 0, &fontFace))
-    {
-        throw std::runtime_error("Failed to load font");
-    }
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
 
     Font font;
-    std::vector<std::byte> atlasData;
 
-#define CHARACTERMIN 0
-#define CHARACTERMAX 130
-
-    characterHeight = characterHeight * 1.5;
-
-    constexpr uint8_t characterAmount = CHARACTERMAX - CHARACTERMIN;
-
-    for (unsigned char c = CHARACTERMIN; c < CHARACTERMAX; c++)
+    const int maxGlyphs = 128;
+    std::array<stbrp_rect, maxGlyphs> rects;
+    for (unsigned char c = 0; c < maxGlyphs; ++c)
     {
-
-        // load character glyph
-        if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER))
+        if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER) != 0)
         {
+            rects[c].id = c;
+            rects[c].w = rects[c].h = 0;
             continue;
         }
 
-        if (c > 120)
+        rects[c].id = c;
+        rects[c].w = fontFace->glyph->bitmap.width + 1;
+        rects[c].h = fontFace->glyph->bitmap.rows + 1;
+    }
+
+    const int atlasWidth = 512;
+    const int atlasHeight = 512;
+    stbrp_context context;
+    std::vector<stbrp_node> nodes(atlasWidth);
+
+    stbrp_init_target(&context, atlasWidth, atlasHeight, nodes.data(), atlasWidth);
+    if (stbrp_pack_rects(&context, rects.data(), maxGlyphs) == 0)
+    {
+        throw std::runtime_error("Failed to pack font glyphs into the atlas.");
+    }
+
+    std::vector<uint8_t> atlasData(atlasWidth * atlasHeight, 0);
+
+    for (unsigned char c = 0; c < maxGlyphs; ++c)
+    {
+        if (rects[c].was_packed != 0)
         {
-            bblog::info("sda");
+            if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER) != 0)
+            {
+                continue;
+            }
+
+            const auto& bitmap = fontFace->glyph->bitmap;
+            for (unsigned int y = 0; y < bitmap.rows; ++y)
+            {
+                for (unsigned int x = 0; x < bitmap.width; ++x)
+                {
+                    atlasData[((rects[c].y + y) * atlasWidth) + (rects[c].x + x)] = bitmap.buffer[y * bitmap.width + x];
+                }
+            }
+
+            // Store Character and GlyphRegion
+            font.characters[c] = {
+                .Size = glm::ivec2(bitmap.width, bitmap.rows),
+                .Bearing = glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
+                .Advance = static_cast<uint16_t>(fontFace->glyph->advance.x),
+                .uvp1 = glm::vec2(static_cast<float>(rects[c].x) / atlasWidth, static_cast<float>(rects[c].y) / atlasHeight),
+                .uvp2 = glm::vec2(static_cast<float>(rects[c].x + bitmap.width) / atlasWidth,
+                    static_cast<float>(rects[c].y + bitmap.rows) / atlasHeight)
+            };
         }
-        if (fontFace->glyph->bitmap.buffer == nullptr || fontFace->glyph->bitmap.width == 0 || fontFace->glyph->bitmap.rows == 0)
-        {
-            atlasData.insert(atlasData.end(), characterHeight * characterHeight, std::byte { 0 });
-            continue;
-        }
-
-        uint8_t index = c - CHARACTERMIN;
-
-        Font::Character character {
-            glm::ivec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),
-            glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
-            uint16_t(fontFace->glyph->advance.x),
-            glm::vec2(0, (static_cast<float>(index)) / characterAmount),
-            glm::vec2(float(fontFace->glyph->bitmap.width) / (characterHeight),
-                (static_cast<float>(index + 1)) / characterAmount)
-        };
-
-        appendBitmapToAtlas(fontFace->glyph->bitmap.buffer, fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, characterHeight, characterHeight, atlasData);
-
-        font.characters.insert(std::pair(c, character));
     }
 
     ImageCreation image;
-    image.name = path + "font atlas";
-    image.width = characterHeight;
-    image.height = characterAmount * characterHeight;
-    image.SetData(atlasData.data());
+    image.name = path + " font atlas";
+    image.width = atlasWidth;
+    image.height = atlasHeight;
+    image.SetData(reinterpret_cast<std::byte*>(atlasData.data()));
     image.SetFormat(vk::Format::eR8Unorm);
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
-
-    size_t expectedDataSize
-        = static_cast<size_t>(image.width) * static_cast<size_t>(image.height);
-    if (atlasData.size() != expectedDataSize)
-    {
-        throw std::runtime_error("Mismatch in data size: atlasData.size()");
-    }
 
     font._fontAtlas = brain.GetImageResourceManager().Create(image);
     brain.UpdateBindlessSet();

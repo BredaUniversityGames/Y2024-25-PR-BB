@@ -3,7 +3,6 @@
 #include "ui_text.hpp"
 #include "vulkan_helper.hpp"
 
-
 MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, MAYBE_UNUSED ResourceHandle<Font> font)
     : Canvas(size)
 {
@@ -36,9 +35,9 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, 
     subButton->style = standardStyle;
     subButton->scale = { 300, 100 };
     subButton->SetLocation({ 100, 300 });
-    subButton->onMouseDownCallBack = []() {};
-    subButton->onBeginHoverCallBack = [](){};
-    
+    subButton->onMouseDownCallBack = []() { };
+    subButton->onBeginHoverCallBack = []() { };
+
     std::unique_ptr<UIButton> playButton = std::make_unique<UIButton>();
     playButton->style = standardStyle;
     playButton->scale = { 300, 100 };
@@ -47,11 +46,19 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, 
     {
         subButton->visible = !subButton->visible;
     };
-    playButton->onBeginHoverCallBack = [](){};
+    playButton->onBeginHoverCallBack = []() { };
 
+    std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(brain.GetFontResourceManager());
+    playText->font = font;
+    playText->text = "Play";
+    playText->scale = { 5, 5 };
+    playText->SetLocation({ 810, 640 });
+    playText->color = { 0, 1, 0, 1 };
+
+    AddChild(std::move(playText));
 
     AddChild(std::move(playButton));
     AddChild(std::move(subButton));
-    
+
     UpdateChildAbsoluteLocations();
 }

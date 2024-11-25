@@ -4,30 +4,42 @@
 #include "ui_pipelines.hpp"
 void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
 {
-    auto FontResource = fontResourceManager.Access(font);
+    const auto* fontResource = fontResourceManager.Access(font);
+
+    if (fontResource == nullptr)
+    {
+        return;
+    }
 
     int localOffset = 0;
-    for (auto i : text)
+
+    for (const auto& i : text)
     {
         if (i != ' ')
         {
-            auto character = FontResource->characters.at(i);
+            // Check if the character exists in the font's character map
+            if (fontResource->characters.find(i) == fontResource->characters.end())
+            {
+                continue;
+            }
+
+            const auto& character = fontResource->characters.at(i);
 
             QuadDrawInfo info;
-            info.projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset, 0), 0)), glm::vec3(scale , 0))),
-            info.textureIndex = FontResource->_fontAtlas.index,
+            info.projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + character.Bearing.x, -character.Bearing.y), 0)), glm::vec3(character.Size, 1.0) * glm::vec3(scale, 0)));
+            info.textureIndex = fontResource->_fontAtlas.index;
             info.useRedAsAlpha = true;
             info.uvp1 = character.uvp1;
             info.uvp2 = character.uvp2;
+
             pipeline._drawlist.emplace_back(info);
 
-            localOffset += character.Size.x;
+            localOffset += (character.Advance >> 6) * scale.x; // Convert advance from 1/64th pixels
         }
         else
         {
-            // temp should be replaced by general font size
-            localOffset += scale.x;
+
+            localOffset += static_cast<int>(scale.x); // TODO: Add * CharacterHeight
         }
-     
     }
 }
