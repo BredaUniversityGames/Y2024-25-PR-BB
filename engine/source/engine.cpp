@@ -174,7 +174,7 @@ void OldEngine::Tick(Engine& engine)
             constexpr float CAM_SPEED = 0.003f;
 
             constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
+            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
 
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
@@ -193,12 +193,12 @@ void OldEngine::Tick(Engine& engine)
             glm::vec3 movementDir {};
             if (input.IsKeyHeld(KeyboardCode::eW))
             {
-                movementDir -= FORWARD;
+                movementDir += FORWARD;
             }
 
             if (input.IsKeyHeld(KeyboardCode::eS))
             {
-                movementDir += FORWARD;
+                movementDir -= FORWARD;
             }
 
             if (input.IsKeyHeld(KeyboardCode::eD))
@@ -226,7 +226,7 @@ void OldEngine::Tick(Engine& engine)
 	    // shoot rays
 	    if (ImGui::IsKeyPressed(ImGuiKey_Space))
 	    {
-		const glm::vec3 cameraDir = (rotation * -FORWARD);
+		const glm::vec3 cameraDir = (rotation * FORWARD);
 		const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
 
 		std::cout << "Hit: " << hitInfo.hasHit << std::endl
