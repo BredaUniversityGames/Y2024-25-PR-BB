@@ -18,17 +18,17 @@ GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
     CreateBindlessDescriptorSet();
 
     const uint32_t size { 2 };
-    std::vector<uint32_t> data;
-    data.assign(size * size, 0xFF00FFFF);
-    ImageCreation creation {};
-    creation
+    std::vector<std::byte> data;
+    data.assign(size * size * 4, std::byte(0));
+    CPUImage imageData {};
+    imageData
         .SetSize(size, size)
         .SetFlags(vk::ImageUsageFlagBits::eSampled)
         .SetFormat(vk::Format::eR8G8B8A8Unorm)
-        .SetData(reinterpret_cast<std::byte*>(data.data()))
+        .SetData(data)
         .SetName("Fallback texture");
 
-    _fallbackImage = _graphicsResources->ImageResourceManager().Create(creation);
+    _fallbackImage = _graphicsResources->ImageResourceManager().Create(imageData);
 }
 
 GraphicsContext::~GraphicsContext()
@@ -124,7 +124,7 @@ void GraphicsContext::CreateBindlessDescriptorSet()
 void GraphicsContext::CreateBindlessMaterialBuffer()
 {
     BufferCreation creation {};
-    creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(Material::GPUInfo))
+    creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(GPUMaterial::GPUInfo))
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
         .SetName("Bindless material uniform buffer");
 
@@ -143,7 +143,7 @@ void GraphicsContext::UpdateBindlessImages()
 
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const Image* image = i < imageResourceManager.Resources().size()
+        const GPUImage* image = i < imageResourceManager.Resources().size()
             ? &imageResourceManager.Resources()[i].resource.value()
             : imageResourceManager.Access(_fallbackImage);
 
@@ -198,20 +198,20 @@ void GraphicsContext::UpdateBindlessMaterials()
 
     assert(materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
 
-    std::array<Material::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
+    std::array<GPUMaterial::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
 
     for (uint32_t i = 0; i < materialResourceManager.Resources().size(); ++i)
     {
-        const Material* material = &materialResourceManager.Resources()[i].resource.value();
+        const GPUMaterial* material = &materialResourceManager.Resources()[i].resource.value();
         materialGPUData[i] = material->gpuInfo;
     }
 
     const Buffer* buffer = bufferResourceManager.Access(_bindlessMaterialBuffer);
-    std::memcpy(buffer->mappedPtr, materialGPUData.data(), materialResourceManager.Resources().size() * sizeof(Material::GPUInfo));
+    std::memcpy(buffer->mappedPtr, materialGPUData.data(), materialResourceManager.Resources().size() * sizeof(GPUMaterial::GPUInfo));
 
     _bindlessMaterialInfo.buffer = buffer->buffer;
     _bindlessMaterialInfo.offset = 0;
-    _bindlessMaterialInfo.range = sizeof(Material::GPUInfo) * materialResourceManager.Resources().size();
+    _bindlessMaterialInfo.range = sizeof(GPUMaterial::GPUInfo) * materialResourceManager.Resources().size();
 
     _bindlessMaterialWrite.dstSet = _bindlessSet;
     _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eMaterial);

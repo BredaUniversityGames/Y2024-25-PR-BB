@@ -18,10 +18,10 @@ struct GPUSceneCreation
     std::shared_ptr<ECS> ecs;
 
     // TODO: When we switch to ECS, fetch this data from a component in the world
-    ResourceHandle<Image> irradianceMap;
-    ResourceHandle<Image> prefilterMap;
-    ResourceHandle<Image> brdfLUTMap;
-    ResourceHandle<Image> directionalShadowMap;
+    ResourceHandle<GPUImage> irradianceMap;
+    ResourceHandle<GPUImage> prefilterMap;
+    ResourceHandle<GPUImage> brdfLUTMap;
+    ResourceHandle<GPUImage> directionalShadowMap;
 };
 
 struct RenderSceneDescription
@@ -72,10 +72,10 @@ public:
 
     const Camera& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
 
-    ResourceHandle<Image> irradianceMap;
-    ResourceHandle<Image> prefilterMap;
-    ResourceHandle<Image> brdfLUTMap;
-    ResourceHandle<Image> directionalShadowMap;
+    ResourceHandle<GPUImage> irradianceMap;
+    ResourceHandle<GPUImage> prefilterMap;
+    ResourceHandle<GPUImage> brdfLUTMap;
+    ResourceHandle<GPUImage> directionalShadowMap;
 
 private:
     struct alignas(16) DirectionalLightData

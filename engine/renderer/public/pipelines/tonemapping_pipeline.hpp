@@ -12,7 +12,7 @@ class GraphicsContext;
 class TonemappingPipeline final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> hdrTarget, ResourceHandle<Image> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
+    TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
     ~TonemappingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -29,8 +29,8 @@ private:
 
     std::shared_ptr<GraphicsContext> _context;
     const SwapChain& _swapChain;
-    ResourceHandle<Image> _hdrTarget;
-    ResourceHandle<Image> _bloomTarget;
+    ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _bloomTarget;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
