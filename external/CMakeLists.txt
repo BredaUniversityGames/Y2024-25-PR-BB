@@ -48,7 +48,7 @@ FetchContent_MakeAvailable(VMA)
 FetchContent_Declare(
         FastGLTF
         GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG v0.8.0
+        GIT_TAG main
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -91,8 +91,14 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(TRACY_ENABLE ON)
-override_option(TRACY_ON_DEMAND ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TRACY_ENABLE OFF)
+else ()
+    set(TRACY_ENABLE ON)
+endif ()
+
+set(TRACY_ON_DEMAND ON)
+
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
@@ -175,20 +181,6 @@ target_compile_options(Jolt PRIVATE
         -Wno-error  # Do not treat warnings as errors
 )
 
-# GoogleTest
-
-FetchContent_Declare(
-        GoogleTest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.15.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-override_option(gtest_force_shared_crt ON)
-FetchContent_MakeAvailable(GoogleTest)
-
 # SPIRV-Reflect
 
 FetchContent_Declare(
@@ -235,7 +227,7 @@ target_include_directories(ImGui
 
 # Enable Unity for external libraries
 
-if (USE_UNITY_BUILD)
+if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 

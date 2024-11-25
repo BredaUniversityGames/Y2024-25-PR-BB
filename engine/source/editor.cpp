@@ -3,6 +3,7 @@
 #include "bloom_settings.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -14,12 +15,13 @@
 #include "log.hpp"
 #include "mesh.hpp"
 #include "model_loader.hpp"
-#include "modules/physics_module.hpp"
 #include "performance_tracker.hpp"
+#include "physics_module.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "serialization.hpp"
+#include "systems/physics_system.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
@@ -244,6 +246,12 @@ void Editor::DisplaySelectedEntityDetails()
         {
             TransformHelpers::UpdateWorldMatrix(_ecs->registry, _selectedEntity);
         }
+    }
+
+    RigidbodyComponent* rigidbody = _ecs->registry.try_get<RigidbodyComponent>(_selectedEntity);
+    if (rigidbody != nullptr)
+    {
+        _ecs->GetSystem<PhysicsSystem>().InspectRigidBody(*rigidbody);
     }
 
     if (nameComponent != nullptr)

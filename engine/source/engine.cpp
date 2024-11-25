@@ -5,7 +5,9 @@
 
 #include "application_module.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
@@ -13,11 +15,11 @@
 #include "gbuffers.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
-#include "modules/physics_module.hpp"
 #include "old_engine.hpp"
 #include "particles/emitter_component.hpp"
 #include "particles/particle_interface.hpp"
 #include "particles/particle_util.hpp"
+#include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
@@ -44,9 +46,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
+    auto& physicsModule = engine.GetModule<PhysicsModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
+    // modules
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     _scene = std::make_shared<SceneDescription>();
     rendererModule.SetScene(_scene);
@@ -98,12 +105,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
-
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
 }
@@ -114,6 +115,7 @@ void OldEngine::Tick(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
+    auto& physicsModule = engine.GetModule<PhysicsModule>();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -122,11 +124,12 @@ void OldEngine::Tick(Engine& engine)
     float deltaTimeMS = deltaTime.count();
 
     // update physics
-    _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
-    auto linesData = _physicsModule->debugRenderer->GetLinesData();
+    auto linesData = physicsModule.debugRenderer->GetLinesData();
+    auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
     rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    _physicsModule->debugRenderer->ClearLines();
+    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -191,7 +194,19 @@ void OldEngine::Tick(Engine& engine)
 
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
-        _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+        physicsModule.debugRenderer->SetCameraPos(cameraPos);
+
+        // shoot rays
+        if (ImGui::IsKeyPressed(ImGuiKey_Space))
+        {
+            const glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
+            const RayHitInfo hitInfo = physicsModule.ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+
+            std::cout << "Hit: " << hitInfo.hasHit << std::endl
+                      << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
+                      << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
+                      << "Fraction: " << hitInfo.hitFraction << std::endl;
+        }
     }
     _lastMousePos = { mouseX, mouseY };
 
@@ -210,7 +225,7 @@ void OldEngine::Tick(Engine& engine)
     _ecs->RenderSystems();
 
     JPH::BodyManager::DrawSettings drawSettings;
-    _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
+    physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
     _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
 
@@ -218,7 +233,7 @@ void OldEngine::Tick(Engine& engine)
 
     _performanceTracker.Update();
 
-    _physicsModule->debugRenderer->NextFrame();
+    physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
 }
