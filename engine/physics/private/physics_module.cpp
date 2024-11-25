@@ -1,7 +1,8 @@
 ﻿#include "physics_module.hpp"
 
-PhysicsModule::PhysicsModule()
+ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
+
     // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
     // This needs to be done before any other Jolt function is called.
     JPH::RegisterDefaultAllocator();
@@ -62,8 +63,11 @@ PhysicsModule::PhysicsModule()
     // variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
     bodyInterface = &physicsSystem->GetBodyInterface();
     // just for testing now
+
+    return ModuleTickOrder::ePostTick;
 }
-PhysicsModule::~PhysicsModule()
+
+void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     JPH::UnregisterTypes();
     // Destroy the factory
@@ -73,7 +77,8 @@ PhysicsModule::~PhysicsModule()
     delete _tempAllocator;
     delete _jobSystem;
 }
-void PhysicsModule::UpdatePhysicsEngine(MAYBE_UNUSED float deltaTime)
+
+void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     // Step the world
     // TODO: is this correct? We are ignoring deltatime?
