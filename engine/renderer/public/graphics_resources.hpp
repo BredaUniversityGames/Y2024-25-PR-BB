@@ -4,7 +4,6 @@
 
 #include <memory>
 
-class BatchBuffer;
 class VulkanContext;
 
 class GraphicsResources
