@@ -93,7 +93,7 @@ else ()
     set(TRACY_ENABLE ON)
 endif ()
 
-set(TRACY_ON_DEMAND OFF)
+set(TRACY_ON_DEMAND ON)
 
 FetchContent_MakeAvailable(Tracy)
 
