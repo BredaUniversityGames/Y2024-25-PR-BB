@@ -1,5 +1,4 @@
 #include "resource_management/material_resource_manager.hpp"
-
 #include "resource_management/image_resource_manager.hpp"
 
 template <>

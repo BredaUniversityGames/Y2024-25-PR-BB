@@ -7,13 +7,9 @@
 template <>
 std::weak_ptr<ResourceManager<Sampler>> ResourceHandle<Sampler>::manager = {};
 
-SamplerResourceManager::SamplerResourceManager(const std::shared_ptr<VulkanContext> context)
+SamplerResourceManager::SamplerResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
-    // create default fallback sampler
-    SamplerCreation info;
-    info.name = "Default Sampler";
-    _defaultSampler = Create(info);
 }
 
 ResourceHandle<Sampler> SamplerResourceManager::Create(const SamplerCreation& creation)

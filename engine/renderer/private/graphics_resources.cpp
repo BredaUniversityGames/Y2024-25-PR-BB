@@ -11,6 +11,7 @@ GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulka
     : _vulkanContext(vulkanContext)
 {
     _samplerResourceManager = std::make_shared<class SamplerResourceManager>(_vulkanContext);
+    _samplerResourceManager->CreateDefaultSampler();
     _bufferResourceManager = std::make_shared<class BufferResourceManager>(_vulkanContext);
     _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext, _samplerResourceManager->GetDefaultSamplerHandle());
     _materialResourceManager = std::make_shared<class MaterialResourceManager>(_imageResourceManager);
