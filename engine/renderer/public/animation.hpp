@@ -1,9 +1,15 @@
 #pragma once
 
-#include <vector>
 #include <cassert>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <type_traits>
+#include <vector>
+
+using Translation = glm::vec3;
+using Rotation = glm::quat;
+using Scale = glm::vec3;
 
 template <typename T>
 struct AnimationSpline
@@ -11,28 +17,58 @@ struct AnimationSpline
 
     T Sample(float time)
     {
-        assert(!timestamps.empty() && "No timestamps to sample from!");
+        auto it = std::lower_bound(timestamps.begin(), timestamps.end(), time);
 
-        if(time <= timestamps.front())
+        if (it == timestamps.begin())
         {
             return values.front();
         }
 
-        if(time >= timestamps.back())
+        if (it == timestamps.end())
         {
             return values.back();
         }
 
-        for(uint32_t i = 1; i < timestamps.size(); ++i)
-        {
-            if(time <= timestamps[i])
-            {
-                float t = (time - timestamps[i - 1]) / (timestamps[i] - timestamps[i - 1]);
-                return glm::mix(values[i], values[i + 1], t);
-            }
-        }
+        uint32_t i = it - timestamps.begin();
+
+        float t = (time - timestamps[i - 1]) / (timestamps[i] - timestamps[i - 1]);
+
+        return glm::mix(values[i - 1], values[i], t);
     }
 
     std::vector<float> timestamps;
     std::vector<T> values;
+};
+
+struct Animation
+{
+    std::string name { "" };
+    float duration { 0.0f };
+    float time { 0.0f };
+
+    void Update(float dt, uint32_t frameIndex)
+    {
+        if (_frameIndex != frameIndex)
+        {
+            _frameIndex = frameIndex;
+            time += dt;
+
+            if (time > duration)
+            {
+                time = 0.0f;
+            }
+        }
+    }
+
+private:
+    uint32_t _frameIndex { 0 };
+};
+
+struct AnimationChannel
+{
+    std::shared_ptr<Animation> animation { nullptr };
+
+    std::optional<AnimationSpline<Translation>> translation { std::nullopt };
+    std::optional<AnimationSpline<Rotation>> rotation { std::nullopt };
+    std::optional<AnimationSpline<Scale>> scaling { std::nullopt };
 };

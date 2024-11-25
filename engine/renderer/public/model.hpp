@@ -1,5 +1,6 @@
 #pragma once
 
+#include "animation.hpp"
 #include "mesh.hpp"
 #include <glm/mat4x4.hpp>
 #include <vector>
@@ -19,6 +20,7 @@ struct Hierarchy
         glm::mat4 transform { 1.0f };
         ResourceHandle<Mesh> mesh {};
         std::vector<Node> children {};
+        std::optional<AnimationChannel> animationChannel {};
     };
 
     std::vector<Node> baseNodes {};
@@ -28,4 +30,5 @@ struct Model
 {
     ModelResources resources;
     Hierarchy hierarchy;
+    std::optional<Animation> animation { std::nullopt };
 };

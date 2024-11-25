@@ -12,6 +12,13 @@ class BatchBuffer;
 class ECS;
 class GraphicsContext;
 
+struct StagingAnimationChannels
+{
+    Animation animation;
+    std::vector<AnimationChannel> animationChannels;
+    std::vector<uint32_t> nodeIndices;
+};
+
 class ModelLoader
 {
 public:
@@ -58,8 +65,10 @@ private:
     Model LoadModel(const std::vector<Mesh>& meshes, const std::vector<ImageCreation>& textures,
         const std::vector<Material>& materials, BatchBuffer& batchBuffer, const fastgltf::Asset& gltf);
 
-    void RecurseHierarchy(const fastgltf::Node& gltfNode, Model& model, const fastgltf::Asset& gltf, Hierarchy::Node& parent);
+    void RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, Model& model, const fastgltf::Asset& gltf, Hierarchy::Node& parent, const StagingAnimationChannels& animationChannels);
 
     Mesh::Primitive LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
         ResourceHandle<Material> material);
+
+    StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf);
 };

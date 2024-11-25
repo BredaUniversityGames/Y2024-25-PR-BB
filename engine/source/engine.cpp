@@ -122,6 +122,34 @@ void OldEngine::Tick(Engine& engine)
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
 
+    // Update animations TODO: remove this later
+    const auto view = _ecs->registry.view<TransformComponent, AnimationChannel>();
+    for (auto entity : view)
+    {
+        auto& animation = view.get<AnimationChannel>(entity);
+
+        animation.animation->Update(deltaTimeMS / 1000.0f, _frameIndex);
+
+        if (animation.translation.has_value())
+        {
+            glm::vec3 position = animation.translation.value().Sample(animation.animation->time);
+
+            TransformHelpers::SetLocalPosition(_ecs->registry, entity, position);
+        }
+        if (animation.rotation.has_value())
+        {
+            glm::quat rotation = animation.rotation.value().Sample(animation.animation->time);
+
+            TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
+        }
+        if (animation.scaling.has_value())
+        {
+            glm::vec3 scale = animation.scaling.value().Sample(animation.animation->time);
+
+            TransformHelpers::SetLocalScale(_ecs->registry, entity, scale);
+        }
+    }
+
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
@@ -195,6 +223,7 @@ void OldEngine::Tick(Engine& engine)
         _physicsModule->debugRenderer->SetCameraPos(cameraPos);
     }
     _lastMousePos = { mouseX, mouseY };
+    _frameIndex++;
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
