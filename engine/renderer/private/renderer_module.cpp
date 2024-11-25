@@ -46,11 +46,6 @@ void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 {
 }
 
-void RendererModule::SetScene(std::shared_ptr<const SceneDescription> scene)
-{
-    _renderer->_scene = scene;
-}
-
 std::vector<Model> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     auto result = _renderer->FrontLoadModels(modelPaths);

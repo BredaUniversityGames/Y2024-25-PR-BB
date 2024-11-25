@@ -6,6 +6,9 @@
 #include "resource_management/buffer_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
+#include "components/transform_component.hpp"
+#include "components/camera_component.hpp"
+#include "components/transform_helpers.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 
@@ -112,20 +115,20 @@ glm::vec4 normalizePlane(glm::vec4 p)
     return p / length(glm::vec3(p));
 }
 
-void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
+void CameraResource::Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera)
 {
     GPUCamera cameraBuffer {};
 
-    glm::mat4 cameraRotation = glm::mat4_cast(glm::quat(camera.eulerRotation));
-    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, camera.position);
+    glm::mat4 cameraRotation = glm::mat4_cast(TransformHelpers::GetLocalRotation(transform));
+    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, TransformHelpers::GetLocalPosition(transform));
 
     cameraBuffer.view = glm::inverse(cameraTranslation * cameraRotation);
 
     switch (camera.projection)
     {
-    case Camera::Projection::ePerspective:
+    case CameraComponent::Projection::ePerspective:
     {
-        cameraBuffer.proj = glm::perspective(camera.fov, camera.aspectRatio, camera.nearPlane, camera.farPlane);
+        cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.nearPlane, camera.farPlane);
 
         glm::mat4 projT = glm::transpose(cameraBuffer.proj);
 
@@ -138,7 +141,7 @@ void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
         cameraBuffer.frustum[3] = frustumY.z;
     }
     break;
-    case Camera::Projection::eOrthographic:
+    case CameraComponent::Projection::eOrthographic:
     {
         float left = -camera.orthographicSize;
         float right = camera.orthographicSize;
@@ -151,13 +154,15 @@ void CameraResource::Update(uint32_t currentFrame, const Camera& camera)
         cameraBuffer.frustum[2] = bottom;
         cameraBuffer.frustum[3] = top;
     }
+
+    default:
     break;
     }
     cameraBuffer.proj[1][1] *= -1;
     cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
 
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
-    cameraBuffer.cameraPosition = camera.position;
+    cameraBuffer.cameraPosition = TransformHelpers::GetLocalPosition(transform);
 
     cameraBuffer.skydomeMVP = cameraBuffer.view;
     cameraBuffer.skydomeMVP[3][0] = 0.0f;

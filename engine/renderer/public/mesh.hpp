@@ -77,8 +77,3 @@ struct StaticMeshComponent
 {
     ResourceHandle<Mesh> mesh;
 };
-
-struct SceneDescription
-{
-    Camera camera;
-};

@@ -29,7 +29,6 @@ private:
 
     std::unique_ptr<Editor> _editor;
     std::shared_ptr<ECS> _ecs;
-    std::shared_ptr<SceneDescription> _scene;
     glm::ivec2 _lastMousePos {};
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
     PerformanceTracker _performanceTracker;

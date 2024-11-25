@@ -11,25 +11,8 @@
 #include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
-
-struct Camera
-{
-    enum class Projection
-    {
-        ePerspective,
-        eOrthographic
-    } projection;
-
-    glm::vec3 position {};
-    glm::vec3 eulerRotation {};
-    float fov {};
-
-    float orthographicSize;
-
-    float nearPlane {};
-    float farPlane {};
-    float aspectRatio {};
-};
+struct TransformComponent;
+struct CameraComponent;
 
 class CameraResource
 {
@@ -40,7 +23,7 @@ public:
     NON_COPYABLE(CameraResource);
     NON_MOVABLE(CameraResource);
 
-    void Update(uint32_t currentFrame, const Camera& camera);
+    void Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera);
 
     vk::DescriptorSet DescriptorSet(uint32_t frameIndex) const { return _descriptorSets[frameIndex]; }
     ResourceHandle<Buffer> BufferResource(uint32_t frameIndex) const { return _buffers[frameIndex]; }

@@ -3,8 +3,6 @@
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
 #include "camera.hpp"
-#include "entt/entity/entity.hpp"
-#include "mesh.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 
@@ -70,7 +68,6 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
-    std::shared_ptr<const SceneDescription> _scene;
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<Image> _environmentMap;
     ResourceHandle<Image> _brightnessTarget;
@@ -85,8 +82,6 @@ private:
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
     std::shared_ptr<BatchBuffer> _batchBuffer;
-
-    std::unique_ptr<CameraResource> _camera;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 

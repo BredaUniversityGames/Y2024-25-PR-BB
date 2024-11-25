@@ -2,6 +2,7 @@
 
 #include "batch_buffer.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/camera_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -24,6 +25,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     , directionalShadowMap(creation.directionalShadowMap)
     , _context(creation.context)
     , _ecs(creation.ecs)
+    , _mainCamera(creation.context)
+    , _directionalLightShadowCamera(creation.context)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();
@@ -44,6 +47,7 @@ GPUScene::~GPUScene()
 void GPUScene::Update(uint32_t frameIndex)
 {
     UpdateSceneData(frameIndex);
+    UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
     WriteDraws(frameIndex);
 }
@@ -52,48 +56,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
 {
     SceneData sceneData {};
 
-    auto directionalLightView = _ecs->registry.view<DirectionalLightComponent, TransformComponent>();
-    bool directionalLightIsSet = false;
-
-    for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
-    {
-        if (directionalLightIsSet)
-        {
-            spdlog::warn("Only 1 directional light is supported, the first one available will be used.");
-            return;
-        }
-
-        glm::vec3 eulerRotation = glm::eulerAngles(TransformHelpers::GetLocalRotation(transformComponent));
-        glm::vec3 direction = glm::vec3(
-            cos(eulerRotation.y) * cos(eulerRotation.x),
-            sin(eulerRotation.x),
-            sin(eulerRotation.y) * cos(eulerRotation.x));
-
-        float orthographicsSize = directionalLightComponent.orthographicSize;
-        glm::mat4 depthProjectionMatrix = glm::ortho(-orthographicsSize, orthographicsSize, -orthographicsSize, orthographicsSize, directionalLightComponent.nearPlane, directionalLightComponent.farPlane);
-        depthProjectionMatrix[1][1] *= -1;
-
-        glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
-        const glm::mat4 lightView = glm::lookAt(position, position - direction, glm::vec3(0, 1, 0));
-
-        DirectionalLightData& directionalLightData = sceneData.directionalLight;
-        directionalLightData.lightVP = depthProjectionMatrix * lightView;
-        directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
-        directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
-        directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
-
-        _directionalLightShadowCamera = Camera {
-            .projection = Camera::Projection::eOrthographic,
-            .position = position,
-            .eulerRotation = eulerRotation,
-            .orthographicSize = directionalLightComponent.orthographicSize,
-            .nearPlane = directionalLightComponent.nearPlane,
-            .farPlane = directionalLightComponent.farPlane,
-            .aspectRatio = directionalLightComponent.aspectRatio,
-        };
-
-        directionalLightIsSet = true;
-    }
+    UpdateDirectionalLightData(sceneData, frameIndex);
 
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
@@ -139,6 +102,71 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
+}
+
+void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
+{
+    auto directionalLightView = _ecs->registry.view<DirectionalLightComponent, TransformComponent>();
+    bool directionalLightIsSet = false;
+
+    for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
+    {
+        if (directionalLightIsSet)
+        {
+            bblog::warn("Only 1 directional light is supported, the first one available will be used.");
+            return;
+        }
+
+        glm::vec3 eulerRotation = glm::eulerAngles(TransformHelpers::GetLocalRotation(transformComponent));
+        glm::vec3 direction = glm::vec3(
+            cos(eulerRotation.y) * cos(eulerRotation.x),
+            sin(eulerRotation.x),
+            sin(eulerRotation.y) * cos(eulerRotation.x));
+
+        float orthographicsSize = directionalLightComponent.orthographicSize;
+        glm::mat4 depthProjectionMatrix = glm::ortho(-orthographicsSize, orthographicsSize, -orthographicsSize, orthographicsSize, directionalLightComponent.nearPlane, directionalLightComponent.farPlane);
+        depthProjectionMatrix[1][1] *= -1;
+
+        glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
+        const glm::mat4 lightView = glm::lookAt(position, position - direction, glm::vec3(0, 1, 0));
+
+        DirectionalLightData& directionalLightData = scene.directionalLight;
+        directionalLightData.lightVP = depthProjectionMatrix * lightView;
+        directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
+        directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
+        directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
+
+        CameraComponent camera{
+            .projection = CameraComponent::Projection::eOrthographic,
+            .nearPlane = directionalLightComponent.nearPlane,
+            .farPlane = directionalLightComponent.farPlane,
+            .orthographicSize = directionalLightComponent.orthographicSize,
+            .aspectRatio = directionalLightComponent.aspectRatio,
+        };
+
+        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);
+
+        directionalLightIsSet = true;
+    }
+}
+
+void GPUScene::UpdateCameraData(uint32_t frameIndex)
+{
+    auto cameraView = _ecs->registry.view<CameraComponent, TransformComponent>();
+    bool mainCameraIsSet = false;
+
+    for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
+    {
+        if (mainCameraIsSet)
+        {
+            bblog::warn("Only 1 camera is supported, the first one available will be used.");
+            return;
+        }
+
+        _mainCamera.Update(frameIndex, transformComponent, cameraComponent);
+
+        mainCameraIsSet = true;
+    }
 }
 
 void GPUScene::InitializeSceneBuffers()

@@ -5,6 +5,7 @@
 
 #include "application_module.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/camera_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -48,9 +49,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
 
-    _scene = std::make_shared<SceneDescription>();
-    rendererModule.SetScene(_scene);
-
     std::vector<std::string> modelPaths = {
         "assets/models/CathedralGLB_GLTF.glb",
         "assets/models/Terrain/scene.gltf",
@@ -78,19 +76,29 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
-    _scene->camera.position = glm::vec3 { 0.0f, 0.2f, 0.0f };
-    _scene->camera.fov = glm::radians(45.0f);
-    _scene->camera.nearPlane = 0.01f;
-    _scene->camera.farPlane = 600.0f;
-
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->registry.create();
     _ecs->registry.emplace<NameComponent>(lightEntity, "Directional Light");
     _ecs->registry.emplace<TransformComponent>(lightEntity);
-    _ecs->registry.emplace<DirectionalLightComponent>(lightEntity, glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f);
+
+    DirectionalLightComponent& directionalLightComponent = _ecs->registry.emplace<DirectionalLightComponent>(lightEntity);
+    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
 
     TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
     TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+
+    entt::entity cameraEntity = _ecs->registry.create();
+    _ecs->registry.emplace<NameComponent>(cameraEntity, "Camera");
+    _ecs->registry.emplace<TransformComponent>(cameraEntity);
+
+    CameraComponent& cameraComponent = _ecs->registry.emplace<CameraComponent>(cameraEntity);
+    cameraComponent.projection = CameraComponent::Projection::ePerspective;
+    cameraComponent.fov = 45.0f;
+    cameraComponent.nearPlane = 0.01f;
+    cameraComponent.farPlane = 600.0f;
+
+    TransformHelpers::SetLocalPosition(_ecs->registry, cameraEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalRotation(_ecs->registry, cameraEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -139,60 +147,74 @@ void OldEngine::Tick(Engine& engine)
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
 
-    auto windowSize = applicationModule.DisplaySize();
-    _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
-
     if (input.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
-    if (applicationModule.GetMouseHidden())
     {
         ZoneNamedN(zone, "Update Camera", true);
 
-        glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+        auto cameraView = _ecs->registry.view<CameraComponent, TransformComponent>();
 
-        constexpr float MOUSE_SENSITIVITY = 0.003f;
-        constexpr float CAM_SPEED = 0.003f;
-
-        constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-        constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
-
-        glm::vec3& rotation = _scene->camera.eulerRotation;
-        rotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
-        rotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
-
-        rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
-
-        glm::vec3 movementDir {};
-        if (input.IsKeyHeld(KeyboardCode::eW))
+        for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
-            movementDir -= FORWARD;
-        }
+            auto windowSize = applicationModule.DisplaySize();
+            cameraComponent.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
-        if (input.IsKeyHeld(KeyboardCode::eS))
-        {
-            movementDir += FORWARD;
-        }
+            if (!applicationModule.GetMouseHidden())
+            {
+                continue;
+            }
 
-        if (input.IsKeyHeld(KeyboardCode::eD))
-        {
-            movementDir += RIGHT;
-        }
+            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
 
-        if (input.IsKeyHeld(KeyboardCode::eA))
-        {
-            movementDir -= RIGHT;
-        }
+            constexpr float MOUSE_SENSITIVITY = 0.003f;
+            constexpr float CAM_SPEED = 0.003f;
 
-        if (glm::length(movementDir) != 0.0f)
-        {
-            movementDir = glm::normalize(movementDir);
-        }
+            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
+            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, 1.0f };
 
-        _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
-        JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
-        _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+            glm::vec3 eulerRotation = glm::eulerAngles(TransformHelpers::GetLocalRotation(transformComponent));
+            eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+            eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+            eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
+            glm::quat rotation = glm::quat(eulerRotation);
+            TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
+
+            glm::vec3 movementDir {};
+            if (input.IsKeyHeld(KeyboardCode::eW))
+            {
+                movementDir -= FORWARD;
+            }
+
+            if (input.IsKeyHeld(KeyboardCode::eS))
+            {
+                movementDir += FORWARD;
+            }
+
+            if (input.IsKeyHeld(KeyboardCode::eD))
+            {
+                movementDir += RIGHT;
+            }
+
+            if (input.IsKeyHeld(KeyboardCode::eA))
+            {
+                movementDir -= RIGHT;
+            }
+
+            if (glm::length(movementDir) != 0.0f)
+            {
+                movementDir = glm::normalize(movementDir);
+            }
+
+            glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
+            position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
+            TransformHelpers::SetLocalPosition(_ecs->registry, entity, position);
+
+            JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
+            _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+        }
     }
+
     _lastMousePos = { mouseX, mouseY };
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
