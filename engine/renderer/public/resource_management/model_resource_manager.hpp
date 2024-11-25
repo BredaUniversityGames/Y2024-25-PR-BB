@@ -1,16 +1,8 @@
 #pragma once
 
-#include <memory>
-#include <vulkan/vulkan.hpp>
-
-#include "common.hpp"
 #include "model.hpp"
 #include "resource_manager.hpp"
-
-class SingleTimeCommands;
-class BatchBuffer;
-class VulkanContext;
-struct GPUMesh;
+#include <memory>
 
 class ModelResourceManager final : public ResourceManager<GPUModel>
 {
