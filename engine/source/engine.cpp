@@ -104,8 +104,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.nearPlane = 0.01f;
     cameraComponent.farPlane = 600.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->registry, cameraEntity, glm::vec3(7.3f, 1.25f, 4.75f));
-    TransformHelpers::SetLocalRotation(_ecs->registry, cameraEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+    TransformHelpers::SetLocalPosition(_ecs->registry, cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -183,8 +182,8 @@ void OldEngine::Tick(Engine& engine)
             // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
-            glm::vec3 forward = glm::normalize(rotation * FORWARD);
-            if (forward.z > 0.0f) eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+            glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
+            if (cameraForward.z > 0.0f) eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
             else eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
             rotation = glm::quat(eulerRotation);
