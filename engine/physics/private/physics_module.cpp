@@ -1,7 +1,8 @@
-﻿#include "modules/physics_module.hpp"
+﻿#include "physics_module.hpp"
 
-PhysicsModule::PhysicsModule()
+ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
+
     // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
     // This needs to be done before any other Jolt function is called.
     JPH::RegisterDefaultAllocator();
@@ -61,10 +62,12 @@ PhysicsModule::PhysicsModule()
     // The main way to interact with the bodies in the physics system is through the body interface. There is a locking and a non-locking
     // variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
     bodyInterface = &physicsSystem->GetBodyInterface();
-
     // just for testing now
+
+    return ModuleTickOrder::ePostTick;
 }
-PhysicsModule::~PhysicsModule()
+
+void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     JPH::UnregisterTypes();
     // Destroy the factory
@@ -74,9 +77,39 @@ PhysicsModule::~PhysicsModule()
     delete _tempAllocator;
     delete _jobSystem;
 }
-void PhysicsModule::UpdatePhysicsEngine(MAYBE_UNUSED float deltaTime)
+
+void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     // Step the world
     // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
+}
+
+RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
+{
+    RayHitInfo hitInfo;
+
+    const JPH::Vec3 start(origin.x, origin.y, origin.z);
+    JPH::Vec3 dir(direction.x, direction.y, direction.z);
+    dir = dir.Normalized();
+    const JPH::RayCast ray(start, dir * distance);
+    debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+
+    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
+    physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
+    const int numHits = static_cast<int>(collector.mHits.size());
+    if (numHits < 1)
+    {
+        return hitInfo;
+    }
+
+    const auto firstHit = collector.mHits[numHits - 1];
+    const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(firstHit.mBodyID));
+    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
+
+    hitInfo.entity = hitEntity;
+    hitInfo.position = hitPosition;
+    hitInfo.hitFraction = firstHit.mFraction;
+    hitInfo.hasHit = true;
+    return hitInfo;
 }
