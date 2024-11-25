@@ -47,7 +47,7 @@ void PhysicsSystem::CleanUp()
     const auto toDestroy = _ecs.registry.view<ECS::ToDestroy, RigidbodyComponent>();
     for (const entt::entity entity : toDestroy)
     {
-        RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
+        const RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
         _physicsModule.bodyInterface->RemoveBody(rb.bodyID);
         _physicsModule.bodyInterface->DestroyBody(rb.bodyID);
     }

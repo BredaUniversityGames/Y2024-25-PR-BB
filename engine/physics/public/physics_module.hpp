@@ -5,9 +5,9 @@
 #pragma once
 
 #include "Jolt/Jolt.h"
-#include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 
 JPH_SUPPRESS_WARNING_PUSH
 
@@ -51,7 +51,6 @@ enum PhysicsShapes
 {
     eSPHERE,
     eBOX,
-    eCONVEXHULL,
 };
 
 /// Class that determines if two object layers can collide
@@ -225,12 +224,12 @@ public:
         // Not implemented
     }
 
-    [[nodiscard]] const std::vector<glm::vec3>& GetLinesData() const
+    NO_DISCARD const std::vector<glm::vec3>& GetLinesData() const
     {
         return linePositions;
     }
 
-    [[nodiscard]] const std::vector<glm::vec3>& GetPersistentLinesData() const
+    NO_DISCARD const std::vector<glm::vec3>& GetPersistentLinesData() const
     {
         return persistentLinePositions;
     }
