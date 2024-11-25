@@ -5,16 +5,17 @@
 #include "vulkan_context.hpp"
 
 template <>
-std::weak_ptr<ResourceManager<Image>> ResourceHandle<Image>::manager = {};
+std::weak_ptr<ResourceManager<GPUImage>> ResourceHandle<GPUImage>::manager = {};
 
-ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context)
+ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Sampler> defaultSampler)
     : _context(context)
+    , _defaultSampler(defaultSampler)
 {
 }
 
-ResourceHandle<Image> ImageResourceManager::Create(const ImageCreation& creation)
+ResourceHandle<GPUImage> ImageResourceManager::Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler)
 {
-    return ResourceManager::Create(Image { creation, _context });
+    return ResourceManager::Create(GPUImage { cpuImage, sampler, _context });
 }
 
 vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)

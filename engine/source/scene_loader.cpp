@@ -12,21 +12,9 @@
 #include "resource_management/mesh_resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <single_time_commands.hpp>
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model)
-{
-    std::vector<entt::entity> entities {};
-    entities.reserve(model.hierarchy.baseNodes.size());
-
-    for (const auto& i : model.hierarchy.baseNodes)
-    {
-        entities.emplace_back(LoadNodeRecursive(context, ecs, i));
-    }
-
-    return entities;
-}
-
-entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUModel& model)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -36,16 +24,22 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
     TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
 
-    if (context->Resources()->MeshResourceManager().IsValid(currentNode.mesh))
+    if (currentNode.meshIndex.has_value())
     {
-        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
+        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value());
     }
 
     for (const auto& node : currentNode.children)
     {
-        const entt::entity childEntity = LoadNodeRecursive(context, ecs, node);
+        const entt::entity childEntity = LoadNodeRecursive(ecs, node, model);
         RelationshipHelpers::AttachChild(ecs.registry, entity, childEntity);
     }
 
     return entity;
+}
+
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy)
+{
+    auto baseNode = hierarchy.baseNodes.at(0);
+    return (LoadNodeRecursive(ecs, baseNode, modelResources));
 }

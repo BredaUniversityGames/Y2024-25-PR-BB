@@ -10,13 +10,13 @@ struct Sampler;
 class IBLPipeline
 {
 public:
-    IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> environmentMap);
+    IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap);
     ~IBLPipeline();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
-    ResourceHandle<Image> IrradianceMap() const { return _irradianceMap; }
-    ResourceHandle<Image> PrefilterMap() const { return _prefilterMap; }
-    ResourceHandle<Image> BRDFLUTMap() const { return _brdfLUT; }
+    ResourceHandle<GPUImage> IrradianceMap() const { return _irradianceMap; }
+    ResourceHandle<GPUImage> PrefilterMap() const { return _prefilterMap; }
+    ResourceHandle<GPUImage> BRDFLUTMap() const { return _brdfLUT; }
 
     NON_MOVABLE(IBLPipeline);
     NON_COPYABLE(IBLPipeline);
@@ -36,7 +36,7 @@ private:
     };
 
     std::shared_ptr<GraphicsContext> _context;
-    ResourceHandle<Image> _environmentMap;
+    ResourceHandle<GPUImage> _environmentMap;
 
     vk::PipelineLayout _irradiancePipelineLayout;
     vk::Pipeline _irradiancePipeline;
@@ -45,9 +45,9 @@ private:
     vk::PipelineLayout _brdfLUTPipelineLayout;
     vk::Pipeline _brdfLUTPipeline;
 
-    ResourceHandle<Image> _irradianceMap;
-    ResourceHandle<Image> _prefilterMap;
-    ResourceHandle<Image> _brdfLUT;
+    ResourceHandle<GPUImage> _irradianceMap;
+    ResourceHandle<GPUImage> _prefilterMap;
+    ResourceHandle<GPUImage> _brdfLUT;
 
     ResourceHandle<Sampler> _sampler;
 

@@ -54,29 +54,29 @@ void GBuffers::CreateGBuffers()
 {
     auto resources { _context->Resources() };
 
-    ImageCreation gBufferCreation {};
-    gBufferCreation
+    CPUImage imageData {};
+    imageData
         .SetSize(_size.x, _size.y)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    gBufferCreation.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Albedo Metallic");
-    _attachments[0] = resources->ImageResourceManager().Create(gBufferCreation);
+    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Albedo Metallic");
+    _attachments[0] = resources->ImageResourceManager().Create(imageData);
 
-    gBufferCreation.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Normal Roughness");
-    _attachments[1] = resources->ImageResourceManager().Create(gBufferCreation);
+    imageData.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Normal Roughness");
+    _attachments[1] = resources->ImageResourceManager().Create(imageData);
 
-    gBufferCreation.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Emissive AO");
-    _attachments[2] = resources->ImageResourceManager().Create(gBufferCreation);
+    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Emissive AO");
+    _attachments[2] = resources->ImageResourceManager().Create(imageData);
 
-    gBufferCreation.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Position");
-    _attachments[3] = resources->ImageResourceManager().Create(gBufferCreation);
+    imageData.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Position");
+    _attachments[3] = resources->ImageResourceManager().Create(imageData);
 }
 
 void GBuffers::CreateDepthResources()
 {
-    ImageCreation depthCreation {};
-    depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
-    _depthImage = _context->Resources()->ImageResourceManager().Create(depthCreation);
+    CPUImage DepthImageData {};
+    DepthImageData.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
+    _depthImage = _context->Resources()->ImageResourceManager().Create(DepthImageData);
 }
 
 void GBuffers::CreateShadowMapResources()
@@ -89,15 +89,14 @@ void GBuffers::CreateShadowMapResources()
     shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
-    ImageCreation shadowCreation {};
+    CPUImage shadowCreation {};
     shadowCreation
         .SetFormat(_shadowFormat)
         .SetType(ImageType::eShadowMap)
         .SetSize(4096, 4096)
         .SetName("Shadow image")
-        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
-        .SetSampler(_shadowSampler);
-    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation);
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }
 
 void GBuffers::CleanUp()
@@ -117,7 +116,7 @@ void GBuffers::TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout
 {
     for (const auto& attachment : _attachments)
     {
-        const Image* image = _context->Resources()->ImageResourceManager().Access(attachment);
+        const GPUImage* image = _context->Resources()->ImageResourceManager().Access(attachment);
 
         util::TransitionImageLayout(commandBuffer, image->image, image->format, oldLayout, newLayout);
     }

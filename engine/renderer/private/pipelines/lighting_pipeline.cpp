@@ -11,7 +11,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<Image>& hdrTarget, const ResourceHandle<Image>& brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const CameraResource& camera, const BloomSettings& bloomSettings)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)

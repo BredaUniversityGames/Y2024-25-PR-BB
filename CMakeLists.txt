@@ -38,6 +38,7 @@ if (ENABLE_UNITY)
     message(STATUS "### Compiling with Unity (Jumbo) builds")
 endif ()
 
+
 # Add external dependencies
 add_subdirectory(external)
 
@@ -55,6 +56,8 @@ target_link_libraries(Game
         PRIVATE ProjectSettings
         PRIVATE Engine
 )
+
+# target_link_options(Game PRIVATE -static -static-libgcc -static-libstdc++)
 
 ### SHADERS COMPILE STEP ###
 

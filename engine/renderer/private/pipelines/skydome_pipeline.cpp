@@ -13,8 +13,8 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Mesh> sphere, const CameraResource& camera,
-    ResourceHandle<Image> hdrTarget, ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
+SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, const CameraResource& camera,
+    ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
     , _camera(camera)
     , _hdrTarget(hdrTarget)
