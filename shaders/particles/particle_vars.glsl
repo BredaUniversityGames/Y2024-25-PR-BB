@@ -1,4 +1,4 @@
-const uint MAX_PARTICLES = 1024;
+const uint MAX_PARTICLES = 1024 * 256;
 
 struct Particle
 {
@@ -8,6 +8,7 @@ struct Particle
     float maxLife;
     vec3 rotationVelocity;
     float life;
+    uint materialIndex;
 };
 
 struct ParticleCounters
@@ -23,8 +24,8 @@ struct ParticleInstance
     uint materialIndex;
 };
 
-struct CulledInstance
+struct CulledInstances
 {
     uint count;
-    uint indices[MAX_PARTICLES];
+    ParticleInstance instances[MAX_PARTICLES];
 };

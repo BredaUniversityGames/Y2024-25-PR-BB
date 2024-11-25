@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
+#include "vulkan_brain.hpp"
 
 class ECS;
 struct Emitter;
@@ -9,7 +8,8 @@ struct Emitter;
 class ParticleInterface
 {
 public:
-    ParticleInterface(ECS& ecs);
+    ParticleInterface(const VulkanBrain& brain, ECS& ecs);
+    ~ParticleInterface();
 
     enum class EmitterPreset
     {
@@ -21,5 +21,11 @@ public:
 
 private:
     ECS& _ecs;
+    const VulkanBrain& _brain;
+
     std::vector<Emitter> _emitterPresets;
+    std::vector<ResourceHandle<Image>> _emitterImages;
+
+    // temporary solution
+    uint32_t LoadEmitterImage(const char* imagePath);
 };

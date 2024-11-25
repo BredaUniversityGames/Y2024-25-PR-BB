@@ -68,8 +68,7 @@ private:
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
     // particle instances storage buffers
-    ResourceHandle<Buffer> _particleInstancesBuffer;
-    ResourceHandle<Buffer> _culledIndicesBuffer;
+    ResourceHandle<Buffer> _culledInstancesBuffer;
     vk::DescriptorSet _instancesDescriptorSet;
     vk::DescriptorSetLayout _instancesDescriptorSetLayout;
     // particle storage buffers
@@ -101,6 +100,6 @@ private:
 
     void UpdateBuffers(vk::CommandBuffer commandBuffer);
     void UpdateParticleBuffersDescriptorSets();
-    void UpdateParticleInstancesBuffersDescriptorSets();
+    void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();
 };

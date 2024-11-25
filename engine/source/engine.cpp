@@ -68,6 +68,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         _scene->gameObjects.emplace_back(transform, _scene->models[1]);
     }
 
+    _particleInterface = std::make_unique<ParticleInterface>(_renderer->_brain, *_ecs);
+
     _renderer->UpdateBindless();
 
     _editor = std::make_unique<Editor>(_renderer->_brain, _renderer->_swapChain->GetFormat(), _renderer->_gBuffers->DepthFormat(), _renderer->_swapChain->GetImageCount(), *_renderer->_gBuffers, *_ecs);
@@ -81,8 +83,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
-
-    _particleInterface = std::make_unique<ParticleInterface>(*_ecs);
 
     // modules
     _physicsModule = std::make_unique<PhysicsModule>();
@@ -176,7 +176,6 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         _particleInterface->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-        spdlog::info("Spawned emitter!");
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
@@ -209,6 +208,7 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
     ImGui::DestroyContext();
 
     _editor.reset();
+    _particleInterface.reset();
     _renderer.reset();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->_registry);

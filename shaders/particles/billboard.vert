@@ -2,14 +2,9 @@
 #include "particle_vars.glsl"
 #include "../scene.glsl"
 
-layout(set = 1, binding = 0) buffer ParticleInstancesSSB
+layout(set = 1, binding = 0) buffer CulledInstancesSSB
 {
-    ParticleInstance particleInstances[MAX_PARTICLES];
-};
-
-layout(set = 1, binding = 1) buffer CulledInstanceSSB
-{
-    CulledInstance culledInstance;
+    CulledInstances culledInstances;
 };
 
 layout (set = 2, binding = 0) uniform CameraUBO
@@ -35,8 +30,7 @@ layout (location = 3) out uint materialIndex;
 
 void main()
 {
-    uint particleIndex = culledInstance.indices[gl_InstanceIndex];
-    ParticleInstance instance = particleInstances[particleIndex];
+    ParticleInstance instance = culledInstances.instances[gl_InstanceIndex];
 
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
