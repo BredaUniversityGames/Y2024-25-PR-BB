@@ -7,7 +7,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
-#include <vulkan/vulkan.hpp>
+#include <lib/includes_vulkan.hpp>
 
 class GraphicsContext;
 struct Buffer;

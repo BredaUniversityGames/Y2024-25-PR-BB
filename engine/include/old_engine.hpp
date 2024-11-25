@@ -7,6 +7,7 @@
 
 #include <memory>
 
+struct RigidbodyComponent;
 class ECS;
 class Renderer;
 class Editor;
