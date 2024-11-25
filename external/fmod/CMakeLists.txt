@@ -1,8 +1,5 @@
 set(FMOD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(FMOD_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
-set(FMOD_BUILD_CONFIG_POSTFIX $<$<CONFIG:Debug>:L>
-        $<$<CONFIG:RelWithDebInfo>:L>
-)
 
 add_library(FMOD INTERFACE)
 
