@@ -21,13 +21,7 @@ public:
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    enum class LoadMode : uint8_t
-    {
-        eFlat,
-        eHierarchical
-    };
-
-    NO_DISCARD CPUModel ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode);
+    NO_DISCARD CPUModel ExtractModelFromGltfFile(std::string_view path);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 

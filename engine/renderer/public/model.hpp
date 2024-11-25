@@ -34,7 +34,7 @@ struct CPUMesh
 struct CPUModel
 {
 
-    // For now this is only meant to be used in combination with an owning CPUModel due to it not storing a
+    // For now this is only meant to be used in combination with an owning CPUModel.
     struct CPUMaterial
     {
         // Texture indices corrospond to the index in the array of textures located in the owning CPUModel

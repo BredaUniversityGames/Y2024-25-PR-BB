@@ -44,9 +44,9 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode);
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode)
+CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -68,7 +68,7 @@ CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode l
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    return ProcessModel(gltf, name, loadMode);
+    return ProcessModel(gltf, name);
 }
 
 glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
@@ -422,7 +422,7 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUModel& model
     return node;
 }
 
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode)
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 {
     CPUModel model {};
 
@@ -456,26 +456,15 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, 
         model.meshes.emplace_back(mesh);
     }
 
-    switch (loadMode)
-    {
-    case ModelLoader::LoadMode::eFlat:
-    {
-        assert(false);
-    }
-    case ModelLoader::LoadMode::eHierarchical:
-    {
-        Hierarchy::Node baseNode;
-        baseNode.name = name;
+    Hierarchy::Node baseNode;
+    baseNode.name = name;
 
-        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
-        {
-            const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
-            baseNode.children.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
-        }
-        model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
-        break;
+    for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
+    {
+        const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
+        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
     }
-    }
+    model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
 
     return model;
 }

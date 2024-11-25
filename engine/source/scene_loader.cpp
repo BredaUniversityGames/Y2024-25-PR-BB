@@ -18,7 +18,6 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
 {
     const entt::entity entity = ecs.registry.create();
 
-    std::cout << "sdfadw" << std::endl;
     ecs.registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs.registry.emplace<TransformComponent>(entity);
 
@@ -42,7 +41,6 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
 std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& model)
 {
     std::vector<entt::entity> entities {};
-    std::cout << "  dfrster 8" << std::endl;
 
     for (const auto& i : model.hierarchy.baseNodes)
     {
