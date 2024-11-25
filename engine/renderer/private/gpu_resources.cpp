@@ -3,8 +3,6 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-#include <iostream>
-
 SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode addressMode)
 {
     addressModeU = addressMode;
@@ -149,20 +147,6 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     default:
         throw std::runtime_error("Unsupported ImageType!");
     }
-}
-
-GPUImage::~GPUImage()
-{
-    if (!_context)
-    {
-        return;
-    }
-
-    vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
-    for (auto& aView : views)
-        _context->Device().destroy(aView);
-    if (type == ImageType::eCubeMap)
-        _context->Device().destroy(view);
 }
 
 GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context)
@@ -330,6 +314,20 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     {
         bblog::warn("Creating an unnamed image!");
     }
+}
+
+GPUImage::~GPUImage()
+{
+    if (!_context)
+    {
+        return;
+    }
+
+    vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
+    for (auto& aView : views)
+        _context->Device().destroy(aView);
+    if (type == ImageType::eCubeMap)
+        _context->Device().destroy(view);
 }
 
 GPUImage::GPUImage(GPUImage&& other) noexcept

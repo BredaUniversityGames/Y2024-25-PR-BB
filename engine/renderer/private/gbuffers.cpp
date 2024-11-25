@@ -96,7 +96,7 @@ void GBuffers::CreateShadowMapResources()
         .SetSize(4096, 4096)
         .SetName("Shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
-    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation);
+    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }
 
 void GBuffers::CleanUp()
