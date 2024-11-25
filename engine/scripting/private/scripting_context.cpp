@@ -158,7 +158,7 @@ ScriptingContext::~ScriptingContext()
     wrenFreeVM(_vm);
 }
 
-bool ScriptingContext::InterpretWrenModule(const std::string& path)
+std::optional<WrenModuleHandle> ScriptingContext::InterpretWrenModule(const std::string& path)
 {
     if (auto source = LoadModuleSource(path))
     {
@@ -171,13 +171,12 @@ bool ScriptingContext::InterpretWrenModule(const std::string& path)
         if (result)
         {
             _loadedModulePaths.emplace_back(preferredPath);
+            return WrenModuleHandle { preferredPath };
         }
-
-        return result;
     }
 
     bblog::error("Wren compilation: could not interpret {}", path);
-    return false;
+    return std::nullopt;
 }
 
 void ScriptingContext::AddWrenIncludePath(const std::string& path)

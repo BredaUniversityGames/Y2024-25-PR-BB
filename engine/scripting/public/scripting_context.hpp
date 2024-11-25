@@ -1,12 +1,14 @@
 #pragma once
-#include <common.hpp>
+
+#include "common.hpp"
+#include "utility/module_handle.hpp"
+
 #include <cstdint>
 #include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
-
-struct WrenVM;
+#include <wren.hpp>
 
 class ScriptingContext
 {
@@ -22,9 +24,12 @@ public:
     ScriptingContext(const VMMemoryConfig& memory_config);
     ~ScriptingContext();
 
-    size_t GetModuleCount() const { return _loadedModulePaths.size(); }
+    NON_COPYABLE(ScriptingContext);
+    NON_MOVABLE(ScriptingContext);
 
-    bool InterpretWrenModule(const std::string& path);
+    WrenVM* GetVM() const { return _vm; };
+    size_t GetModuleCount() const { return _loadedModulePaths.size(); }
+    std::optional<WrenModuleHandle> InterpretWrenModule(const std::string& path);
 
     // Sets the output stream for system log calls
     void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
@@ -32,9 +37,6 @@ public:
     // Adds an include path to wren scripts
     // Will not add another entry if it maps to the same directory
     void AddWrenIncludePath(const std::string& path);
-
-    NON_COPYABLE(ScriptingContext);
-    NON_MOVABLE(ScriptingContext);
 
 private:
     WrenVM* _vm;
@@ -48,4 +50,9 @@ private:
 
     std::vector<std::string> _loadedModulePaths {};
     std::vector<std::string> _includePaths {};
+
+    // Foreign storage
+
+    std::unordered_map<std::string, WrenForeignClassMethods> _classes {};
+    std::unordered_map<std::string, WrenForeignMethodFn> _methods {};
 };
