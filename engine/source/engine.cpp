@@ -176,6 +176,8 @@ void OldEngine::Tick(Engine& engine)
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
             eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+
+            // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 as well when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
             glm::vec3 forward = glm::normalize(rotation * FORWARD);
