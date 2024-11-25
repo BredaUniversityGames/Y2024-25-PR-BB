@@ -67,7 +67,6 @@ FetchContent_Declare(
 
 # FMOD (no git to fetch content)
 
-#install fmod dlls
 add_subdirectory(fmod)
 
 # Wren Language
