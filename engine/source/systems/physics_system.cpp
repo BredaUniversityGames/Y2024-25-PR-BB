@@ -59,7 +59,7 @@ void PhysicsSystem::Inspect()
         for (int i = 0; i < amount; i++)
         {
             entt::entity entity = _ecs.registry.create();
-            RigidbodyComponent rb(*_physicsModule.bodyInterface, currentShape, entity);
+            RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape);
             NameComponent node;
             node.name = "Physics Entity";
             _ecs.registry.emplace<NameComponent>(entity, node);
@@ -73,7 +73,7 @@ void PhysicsSystem::Inspect()
         JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
 
         entt::entity entity = _ecs.registry.create();
-        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, plane_settings, entity);
+        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, entity, plane_settings);
         NameComponent node;
         node.name = "Plane Entity";
         _ecs.registry.emplace<RigidbodyComponent>(entity, newRigidBody);

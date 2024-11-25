@@ -4,7 +4,7 @@
 struct RigidbodyComponent
 {
     // default creates a sphere at 0,2,0
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, PhysicsShapes shape = eSPHERE, entt::entity ownerEntity = entt::null)
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shape = eSPHERE)
     {
         shapeType = shape;
         if (shape == eSPHERE)
@@ -22,7 +22,8 @@ struct RigidbodyComponent
         bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
     }
 
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, JPH::BodyCreationSettings& bodyCreationSettings, entt::entity ownerEntity)
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings)
+        : shapeType(eCUSTOM)
     {
         bodyID = bodyInterface.CreateAndAddBody(bodyCreationSettings, JPH::EActivation::Activate);
 

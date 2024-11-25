@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "common.hpp"
 #include "entt/entity/entity.hpp"
 #include "systems/system.hpp"
 
@@ -8,6 +9,8 @@ class PhysicsSystem : public System
 {
 public:
     PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule);
+    NON_COPYABLE(PhysicsSystem);
+    NON_MOVABLE(PhysicsSystem);
 
     void CleanUp();
     void Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime) override;

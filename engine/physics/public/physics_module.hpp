@@ -3,8 +3,8 @@
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #pragma once
-
 #include "Jolt/Jolt.h"
+#include "common.hpp"
 #include "entt/entity/entity.hpp"
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
@@ -52,6 +52,7 @@ enum PhysicsShapes
 {
     eSPHERE,
     eBOX,
+    eCUSTOM,
 };
 
 /// Class that determines if two object layers can collide

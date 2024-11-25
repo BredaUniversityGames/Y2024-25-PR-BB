@@ -5,6 +5,7 @@
 
 #include "application_module.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
