@@ -22,16 +22,35 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
     if (result != FMOD_OK)
     {
         bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
-        FMOD_System_Release(_fmodSystem);
         return tickOrder;
     }
+
+    bblog::info("FMOD initialized successfully");
 
     return tickOrder;
 }
 void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     if (_fmodSystem)
-        FMOD_System_Release(_fmodSystem);
+    {
+        FMOD_RESULT result;
+
+        result = FMOD_System_Close(_fmodSystem);
+        if (result != FMOD_OK)
+        {
+            bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
+        }
+
+        result = FMOD_System_Release(_fmodSystem);
+        if (result != FMOD_OK)
+        {
+            bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
+        }
+    }
+
+    _fmodSystem = nullptr;
+
+    bblog::info("FMOD shutdown");
 }
 void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 {

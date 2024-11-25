@@ -14,8 +14,6 @@ public:
     AudioModule() = default;
     ~AudioModule() override = default;
 
-    // Do fun audio stuff
-
 private:
     FMOD_SYSTEM* _fmodSystem = nullptr;
 };
