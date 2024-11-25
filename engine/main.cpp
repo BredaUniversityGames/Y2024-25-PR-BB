@@ -1,6 +1,7 @@
 #include "application_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
+#include "physics_module.hpp"
 #include "renderer_module.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
@@ -10,7 +11,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     instance
         .AddModule<ApplicationModule>()
         .AddModule<OldEngine>()
-        .AddModule<RendererModule>();
+        .AddModule<RendererModule>()
+        .AddModule<PhysicsModule>();
 
     return instance.Run();
 }
