@@ -54,7 +54,7 @@ void GBuffers::CreateGBuffers()
 {
     auto resources { _context->Resources() };
 
-    ImageCreation gBufferCreation {};
+    CPUImage gBufferCreation {};
     gBufferCreation
         .SetSize(_size.x, _size.y)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
@@ -74,7 +74,7 @@ void GBuffers::CreateGBuffers()
 
 void GBuffers::CreateDepthResources()
 {
-    ImageCreation depthCreation {};
+    CPUImage depthCreation {};
     depthCreation.SetFormat(_depthFormat).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment);
     _depthImage = _context->Resources()->ImageResourceManager().Create(depthCreation);
 }
@@ -89,14 +89,13 @@ void GBuffers::CreateShadowMapResources()
     shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
-    ImageCreation shadowCreation {};
+    CPUImage shadowCreation {};
     shadowCreation
         .SetFormat(_shadowFormat)
         .SetType(ImageType::eShadowMap)
         .SetSize(4096, 4096)
         .SetName("Shadow image")
-        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled)
-        .SetSampler(_shadowSampler);
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation);
 }
 
@@ -117,7 +116,7 @@ void GBuffers::TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout
 {
     for (const auto& attachment : _attachments)
     {
-        const Image* image = _context->Resources()->ImageResourceManager().Access(attachment);
+        const GPUImage* image = _context->Resources()->ImageResourceManager().Access(attachment);
 
         util::TransitionImageLayout(commandBuffer, image->image, image->format, oldLayout, newLayout);
     }

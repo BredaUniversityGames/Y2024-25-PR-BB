@@ -67,7 +67,7 @@ void ImGuiBackend::NewFrame()
     ImGui_ImplSDL3_NewFrame();
 }
 
-ImTextureID ImGuiBackend::GetTexture(ResourceHandle<Image> image)
+ImTextureID ImGuiBackend::GetTexture(ResourceHandle<GPUImage> image)
 {
     const auto* resource = _context->Resources()->ImageResourceManager().Access(image);
     vk::ImageLayout layout {};

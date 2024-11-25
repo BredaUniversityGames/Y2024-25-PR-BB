@@ -10,5 +10,5 @@ class GraphicsContext;
 
 namespace SceneLoading
 {
-std::vector<entt::entity> LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUResources::Model& model);
+std::vector<entt::entity> LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& model);
 };

@@ -63,7 +63,7 @@ struct Vertex
 
 struct StaticMeshComponent
 {
-    ResourceHandle<Mesh> mesh;
+    ResourceHandle<GPUMesh> mesh;
 };
 
 struct SceneDescription

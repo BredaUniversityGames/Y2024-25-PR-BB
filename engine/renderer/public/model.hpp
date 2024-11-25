@@ -4,13 +4,6 @@
 #include <glm/mat4x4.hpp>
 #include <vector>
 
-struct ModelResources
-{
-    std::vector<ResourceHandle<Mesh>> meshes;
-    std::vector<ResourceHandle<Material>> materials;
-    std::vector<ResourceHandle<Image>> textures;
-};
-
 struct Hierarchy
 {
     struct Node
@@ -24,32 +17,27 @@ struct Hierarchy
     std::vector<Node> baseNodes {};
 };
 
-namespace CPUResources
-{
-
-struct Mesh
+struct CPUMesh
 {
     struct Primitive
     {
-        std::vector<uint32_t> indices;
         std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        uint32_t materialIndex { 0 };
 
         Vec3Range boundingBox;
-
-        std::optional<uint32_t> materialIndex;
     };
 
     std::vector<Primitive> primitives;
 };
 
-struct ModelData
+struct CPUModel
 {
-    struct Image
-    {
-    };
 
-    struct Material
+    // For now this is only meant to be used in combination with an owning CPUModel due to it not storing a
+    struct CPUMaterial
     {
+        // Texture indices corrospond to the index in the array of textures located in the owning CPUModel
         using TextureIndex = uint32_t;
         std::optional<TextureIndex> albedoMap;
         glm::vec4 albedoFactor { 0.0f };
@@ -75,21 +63,16 @@ struct ModelData
 
     Hierarchy hierarchy {};
 
-    std::vector<Mesh> meshes;
-    std::vector<Material> materials;
-    std::vector<ImageCreation> textures;
-};
+    std::vector<CPUMesh> meshes;
+    std::vector<CPUMaterial> materials;
+    std::vector<CPUImage> textures;
 };
 
-namespace GPUResources
+struct GPUModel
 {
-struct Model
-{
-
     Hierarchy hierarchy {};
 
-    std::vector<ResourceHandle<Mesh>> meshes;
-    std::vector<ResourceHandle<Material>> materials;
-    std::vector<ResourceHandle<Image>> textures;
+    std::vector<ResourceHandle<GPUMesh>> meshes;
+    std::vector<ResourceHandle<GPUMaterial>> materials;
+    std::vector<ResourceHandle<GPUImage>> textures;
 };
-}

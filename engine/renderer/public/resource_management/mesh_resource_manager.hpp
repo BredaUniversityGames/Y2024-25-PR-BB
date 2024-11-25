@@ -13,21 +13,26 @@ class SingleTimeCommands;
 
 #include "resource_manager.hpp"
 class VulkanContext;
-struct Mesh;
+struct GPUMesh;
 
-class MeshResourceManager final : public ResourceManager<Mesh>
+class MeshResourceManager final : public ResourceManager<GPUMesh>
 {
 public:
-    MeshResourceManager() = default;
+    MeshResourceManager(std::shared_ptr<VulkanContext> context)
+        : _vkContext(context)
+    {
+    }
     ~MeshResourceManager() = default;
 
     // deferred init
     void SetBatchBuffer(std::shared_ptr<BatchBuffer> batchBuffer) { _batchBuffer = batchBuffer; };
 
-    ResourceHandle<Mesh> Create(SingleTimeCommands& commandBuffer, const CPUResources::Mesh& data, std::vector<ResourceHandle<Material>> materials = {});
-    ResourceHandle<Mesh> Create(SingleTimeCommands& commandBuffer, const CPUResources::Mesh::Primitive& data, ResourceHandle<Material> material);
+    ResourceHandle<GPUMesh> Create(const CPUMesh& data, std::vector<ResourceHandle<GPUMaterial>> materials = {});
+    ResourceHandle<GPUMesh> Create(const CPUMesh::Primitive& data, ResourceHandle<GPUMaterial> material);
 
 private:
+    std::shared_ptr<MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<BatchBuffer> _batchBuffer;
-    Mesh::Primitive CreatePrimitive(SingleTimeCommands& commandBuffer, const CPUResources::Mesh::Primitive& data, ResourceHandle<Material> material);
+    std::shared_ptr<VulkanContext> _vkContext;
+    GPUMesh::Primitive CreatePrimitive(const CPUMesh::Primitive& data, ResourceHandle<GPUMaterial> material);
 };

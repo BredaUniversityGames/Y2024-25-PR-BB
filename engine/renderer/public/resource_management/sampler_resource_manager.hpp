@@ -15,6 +15,10 @@ public:
     explicit SamplerResourceManager(const std::shared_ptr<VulkanContext> context);
     ResourceHandle<Sampler> Create(const SamplerCreation& creation);
 
+    ResourceHandle<Sampler> GetDefaultSamplerHandle() const noexcept { return _defaultSampler; };
+
 private:
     std::shared_ptr<VulkanContext> _context;
+
+    ResourceHandle<Sampler> _defaultSampler;
 };

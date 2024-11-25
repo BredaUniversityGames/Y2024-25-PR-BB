@@ -44,9 +44,9 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUResources::ModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode);
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode);
 
-CPUResources::ModelData ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode)
+CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -124,7 +124,7 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
     }
 }
 
-void CalculateTangents(CPUResources::Mesh::Primitive& stagingPrimitive)
+void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -170,9 +170,9 @@ void CalculateTangents(CPUResources::Mesh::Primitive& stagingPrimitive)
     }
 }
 
-CPUResources::Mesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUResources::Mesh::Primitive primitive {};
+    CPUMesh::Primitive primitive {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
@@ -275,10 +275,10 @@ CPUResources::Mesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPr
     return primitive;
 }
 
-ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
+CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
     std::string_view name)
 {
-    ImageCreation imageCreation {};
+    CPUImage imageCreation {};
 
     std::visit(fastgltf::visitor {
                    [](MAYBE_UNUSED auto& arg) {},
@@ -346,14 +346,14 @@ ImageCreation ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Ass
     return imageCreation;
 }
 
-CPUResources::ModelData::Material ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto mapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUResources::ModelData::Material material {};
+    CPUModel::CPUMaterial material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -397,7 +397,7 @@ CPUResources::ModelData::Material ProcessMaterial(const fastgltf::Material& gltf
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUResources::ModelData& model, const fastgltf::Asset& gltf)
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUModel& model, const fastgltf::Asset& gltf)
 {
     Hierarchy::Node node {};
 
@@ -422,34 +422,34 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUResources::M
     return node;
 }
 
-CPUResources::ModelData ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode)
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, ModelLoader::LoadMode loadMode)
 {
-    CPUResources::ModelData model {};
+    CPUModel model {};
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
 
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
-        const ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.textures.emplace_back(imageCreation);
+        const CPUImage image = ProcessImage(gltf.images[i], gltf, textureData[i], name);
+        model.textures.emplace_back(image);
     }
 
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUResources::ModelData::Material material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
     // Extract mesh data
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUResources::Mesh mesh {};
+        CPUMesh mesh {};
 
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            CPUResources::Mesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
+            CPUMesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
             mesh.primitives.emplace_back(primitive);
         }
 

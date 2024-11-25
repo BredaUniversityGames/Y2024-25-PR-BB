@@ -9,8 +9,8 @@
 #include <memory>
 #include <vulkan/vulkan.hpp>
 
+struct GPUImage;
 class GraphicsContext;
-struct Image;
 struct Sampler;
 
 class GBuffers
@@ -26,9 +26,9 @@ public:
     void Resize(glm::uvec2 size);
 
     const auto& Attachments() const { return _attachments; }
-    ResourceHandle<Image> Depth() const { return _depthImage; }
+    ResourceHandle<GPUImage> Depth() const { return _depthImage; }
     vk::Format DepthFormat() const { return _depthFormat; }
-    ResourceHandle<Image> Shadow() const { return _shadowImage; }
+    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
     glm::uvec2 Size() const { return _size; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
@@ -39,12 +39,12 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     glm::uvec2 _size;
 
-    std::array<ResourceHandle<Image>, DEFERRED_ATTACHMENT_COUNT> _attachments;
+    std::array<ResourceHandle<GPUImage>, DEFERRED_ATTACHMENT_COUNT> _attachments;
 
-    ResourceHandle<Image> _depthImage;
+    ResourceHandle<GPUImage> _depthImage;
 
     vk::Format _depthFormat;
-    ResourceHandle<Image> _shadowImage;
+    ResourceHandle<GPUImage> _shadowImage;
     ResourceHandle<Sampler> _shadowSampler;
 
     vk::Format _shadowFormat;

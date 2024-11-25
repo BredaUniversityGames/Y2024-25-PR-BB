@@ -57,8 +57,8 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
     context->Resources()->MeshResourceManager().SetBatchBuffer(_batchBuffer);
 
-    SingleTimeCommands commandBufferPrimitive { _context };
-    ResourceHandle<Mesh> uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<Material>::Null());
+    SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null());
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -67,7 +67,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _context };
+    SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
@@ -164,7 +164,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -179,13 +179,13 @@ std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Mode
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<std::pair<CPUResources::ModelData, ResourceHandle<GPUResources::Model>>> models;
-    SingleTimeCommands commands { _context };
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
+    SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
 
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path, ModelLoader::LoadMode::eHierarchical);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, commands);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu);
         models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
@@ -275,7 +275,7 @@ void Renderer::InitializeHDRTarget()
 {
     auto size = _swapChain->GetImageSize();
 
-    ImageCreation hdrCreation {};
+    CPUImage hdrCreation {};
     hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrCreation);
@@ -285,10 +285,10 @@ void Renderer::InitializeBloomTargets()
 {
     auto size = _swapChain->GetImageSize();
 
-    ImageCreation hdrBloomCreation {};
+    CPUImage hdrBloomCreation {};
     hdrBloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    ImageCreation hdrBlurredBloomCreation {};
+    CPUImage hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
@@ -308,7 +308,7 @@ void Renderer::LoadEnvironmentMap()
 
     stbi_image_free(stbiData);
 
-    ImageCreation envMapCreation {};
+    CPUImage envMapCreation {};
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 

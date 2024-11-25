@@ -27,7 +27,7 @@ public:
         eHierarchical
     };
 
-    CPUResources::ModelData ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode);
+    NO_DISCARD CPUModel ExtractModelFromGltfFile(std::string_view path, LoadMode loadMode);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 

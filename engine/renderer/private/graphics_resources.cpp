@@ -12,9 +12,9 @@ GraphicsResources::GraphicsResources(const std::shared_ptr<VulkanContext>& vulka
 {
     _samplerResourceManager = std::make_shared<class SamplerResourceManager>(_vulkanContext);
     _bufferResourceManager = std::make_shared<class BufferResourceManager>(_vulkanContext);
-    _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext);
+    _imageResourceManager = std::make_shared<class ImageResourceManager>(_vulkanContext, _samplerResourceManager->GetDefaultSamplerHandle());
     _materialResourceManager = std::make_shared<class MaterialResourceManager>(_imageResourceManager);
-    _meshResourceManager = std::make_shared<class MeshResourceManager>();
+    _meshResourceManager = std::make_shared<class MeshResourceManager>(_vulkanContext);
     _modelResourceManager = std::make_shared<class ModelResourceManager>(_imageResourceManager, _materialResourceManager, _meshResourceManager);
 }
 

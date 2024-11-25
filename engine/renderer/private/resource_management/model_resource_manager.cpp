@@ -1,13 +1,15 @@
 #include "resource_management/model_resource_manager.hpp"
 
 #include "batch_buffer.hpp"
+#include "model.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include "single_time_commands.hpp"
 
+#include "fastgltf/base64.hpp"
+#include "single_time_commands.hpp"
 template <>
-std::weak_ptr<ResourceManager<GPUResources::Model>> ResourceHandle<GPUResources::Model>::manager = {};
+std::weak_ptr<ResourceManager<GPUModel>> ResourceHandle<GPUModel>::manager = {};
 
 ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager> imageResourceManager, std::shared_ptr<MaterialResourceManager> materialResourceManager, std::shared_ptr<MeshResourceManager> meshResourceManager)
     : _imageResourceManager(imageResourceManager)
@@ -16,13 +18,14 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 {
 }
 
-ResourceHandle<GPUResources::Model>
-ModelResourceManager::Create(const CPUResources::ModelData& data, SingleTimeCommands& commandBuffer)
+ResourceHandle<GPUModel>
+ModelResourceManager::Create(const CPUModel& data)
 {
-    GPUResources::Model model;
+    GPUModel model;
 
     for (const auto& i : data.textures)
     {
+
         model.textures.emplace_back(_imageResourceManager->Create(i));
     }
 
@@ -54,8 +57,9 @@ ModelResourceManager::Create(const CPUResources::ModelData& data, SingleTimeComm
 
     for (const auto& i : data.meshes)
     {
-        model.meshes.emplace_back(_meshResourceManager->Create(commandBuffer, i, model.materials));
+        model.meshes.emplace_back(_meshResourceManager->Create(i, model.materials));
     }
     model.hierarchy = data.hierarchy;
+
     return ResourceManager::Create(std::move(model));
 }

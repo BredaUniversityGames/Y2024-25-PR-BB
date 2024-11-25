@@ -17,7 +17,7 @@ FrameGraphNodeCreation::FrameGraphNodeCreation(FrameGraphRenderPass& renderPass,
 {
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Image> image, FrameGraphResourceType type)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<GPUImage> image, FrameGraphResourceType type)
 {
     FrameGraphResourceCreation& creation = inputs.emplace_back(image);
     creation.type = type;
@@ -33,7 +33,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> 
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type)
 {
     FrameGraphResourceCreation& creation = outputs.emplace_back(image);
     creation.type = type;
@@ -202,7 +202,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
 
         if (HasAnyFlags(resource.type, FrameGraphResourceType::eAttachment))
         {
-            const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
+            const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -217,7 +217,7 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
         // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
-            const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
+            const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
 
             viewportSize.x = attachment->width;
             viewportSize.y = attachment->height;
@@ -260,7 +260,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eTexture)
             {
-                const Image* texture = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
+                const GPUImage* texture = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -307,7 +307,7 @@ void FrameGraph::CreateMemoryBarriers()
 
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
-                const Image* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(resource.info.resource));
+                const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
 
                 if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -416,7 +416,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
-    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>> {});
+    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
@@ -439,7 +439,7 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
-    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>> {});
+    FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
@@ -452,7 +452,7 @@ std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creati
 
     if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
-        const Image* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<Image>>(creation.info.resource));
+        const GPUImage* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(creation.info.resource));
         return image->name;
     }
 

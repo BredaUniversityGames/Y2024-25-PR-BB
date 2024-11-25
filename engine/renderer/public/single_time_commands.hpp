@@ -14,7 +14,7 @@ struct Texture;
 class SingleTimeCommands
 {
 public:
-    SingleTimeCommands(const std::shared_ptr<GraphicsContext>& context);
+    SingleTimeCommands(const std::shared_ptr<VulkanContext>& context);
     ~SingleTimeCommands();
 
     void Submit();
@@ -39,7 +39,7 @@ public:
     NON_COPYABLE(SingleTimeCommands);
 
 private:
-    std::shared_ptr<GraphicsContext> _context;
+    std::shared_ptr<VulkanContext> _context;
     vk::CommandBuffer _commandBuffer;
     vk::Fence _fence;
     bool _submitted { false };

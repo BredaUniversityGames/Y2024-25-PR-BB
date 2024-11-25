@@ -10,7 +10,6 @@ class GraphicsContext;
 class SwapChain;
 class ApplicationModule;
 class GBuffers;
-struct Image;
 struct Sampler;
 
 class ImGuiBackend
@@ -24,7 +23,7 @@ public:
 
     void NewFrame();
 
-    ImTextureID GetTexture(ResourceHandle<Image> image);
+    ImTextureID GetTexture(ResourceHandle<GPUImage> image);
 
 private:
     std::shared_ptr<GraphicsContext> _context;

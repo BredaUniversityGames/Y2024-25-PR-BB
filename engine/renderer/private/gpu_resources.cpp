@@ -77,13 +77,13 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
-ImageCreation& ImageCreation::SetData(std::vector<std::byte> data)
+CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 {
     initialData = std::move(data);
     return *this;
 }
 
-ImageCreation& ImageCreation::SetSize(uint16_t width, uint16_t height, uint16_t depth)
+CPUImage& CPUImage::SetSize(uint16_t width, uint16_t height, uint16_t depth)
 {
     this->width = width;
     this->height = height;
@@ -91,39 +91,33 @@ ImageCreation& ImageCreation::SetSize(uint16_t width, uint16_t height, uint16_t 
     return *this;
 }
 
-ImageCreation& ImageCreation::SetMips(uint8_t mips)
+CPUImage& CPUImage::SetMips(uint8_t mips)
 {
     this->mips = mips;
     return *this;
 }
 
-ImageCreation& ImageCreation::SetFlags(vk::ImageUsageFlags flags)
+CPUImage& CPUImage::SetFlags(vk::ImageUsageFlags flags)
 {
     this->flags = flags;
     return *this;
 }
 
-ImageCreation& ImageCreation::SetFormat(vk::Format format)
+CPUImage& CPUImage::SetFormat(vk::Format format)
 {
     this->format = format;
     return *this;
 }
 
-ImageCreation& ImageCreation::SetName(std::string_view name)
+CPUImage& CPUImage::SetName(std::string_view name)
 {
     this->name = name;
     return *this;
 }
 
-ImageCreation& ImageCreation::SetType(ImageType type)
+CPUImage& CPUImage::SetType(ImageType type)
 {
     this->type = type;
-    return *this;
-}
-
-ImageCreation& ImageCreation::SetSampler(ResourceHandle<Sampler> sampler)
-{
-    this->sampler = sampler;
     return *this;
 }
 
@@ -157,7 +151,7 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     }
 }
 
-Image::~Image()
+GPUImage::~GPUImage()
 {
     if (!_context)
     {
@@ -170,7 +164,8 @@ Image::~Image()
     if (type == ImageType::eCubeMap)
         _context->Device().destroy(view);
 }
-Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>& context)
+
+GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
     width = creation.width;
@@ -183,7 +178,7 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
     mips = std::min(creation.mips, static_cast<uint8_t>(floor(log2(std::max(width, height))) + 1));
     name = creation.name;
     isHDR = creation.isHDR;
-    sampler = creation.sampler;
+    sampler = textureSampler;
 
     vk::ImageCreateInfo imageCreateInfo {};
     imageCreateInfo.imageType = ImageTypeConversion(creation.type);
@@ -337,7 +332,7 @@ Image::Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>
     }
 }
 
-Image::Image(Image&& other) noexcept
+GPUImage::GPUImage(GPUImage&& other) noexcept
     : image(other.image)
     , views(std::move(other.views))
     , view(other.view)
@@ -362,7 +357,7 @@ Image::Image(Image&& other) noexcept
     other._context = nullptr;
 }
 
-Image& Image::operator=(Image&& other) noexcept
+GPUImage& GPUImage::operator=(GPUImage&& other) noexcept
 {
     if (this == &other)
     {
@@ -395,7 +390,7 @@ Image& Image::operator=(Image&& other) noexcept
     return *this;
 }
 
-Material::Material(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<Image>>& imageResourceManager)
+GPUMaterial::GPUMaterial(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<GPUImage>>& imageResourceManager)
     : _imageResourceManager(imageResourceManager)
 {
     albedoMap = creation.albedoMap;
@@ -424,7 +419,7 @@ Material::Material(const MaterialCreation& creation, const std::shared_ptr<Resou
     gpuInfo.emissiveFactor = creation.emissiveFactor;
 }
 
-Material::~Material()
+GPUMaterial::~GPUMaterial()
 {
 }
 

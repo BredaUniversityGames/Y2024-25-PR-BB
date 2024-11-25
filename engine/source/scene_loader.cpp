@@ -14,7 +14,7 @@
 #include <entt/entity/entity.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUResources::Model& model)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUModel& model)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -39,7 +39,7 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
     return entity;
 }
 
-std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUResources::Model& model)
+std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& model)
 {
     std::vector<entt::entity> entities {};
     std::cout << "  dfrster 8" << std::endl;
