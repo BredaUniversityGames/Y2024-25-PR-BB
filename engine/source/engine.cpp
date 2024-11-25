@@ -199,7 +199,7 @@ void OldEngine::Tick(Engine& engine)
         if (ImGui::IsKeyPressed(ImGuiKey_Space))
         {
             const glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
-            const RayHitInfo hitInfo = _ecs->GetSystem<PhysicsSystem>().ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+            const RayHitInfo hitInfo = _physicsModule->ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
 
             std::cout << "Hit: " << hitInfo.hasHit << std::endl
                       << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl

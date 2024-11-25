@@ -79,3 +79,32 @@ void PhysicsModule::UpdatePhysicsEngine(MAYBE_UNUSED float deltaTime)
     // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
 }
+
+RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
+{
+    RayHitInfo hitInfo;
+
+    const JPH::Vec3 start(origin.x, origin.y, origin.z);
+    JPH::Vec3 dir(direction.x, direction.y, direction.z);
+    dir = dir.Normalized();
+    const JPH::RayCast ray(start, dir * distance);
+    debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+
+    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
+    physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
+    const int numHits = static_cast<int>(collector.mHits.size());
+    if (numHits < 1)
+    {
+        return hitInfo;
+    }
+
+    const auto firstHit = collector.mHits[numHits - 1];
+    const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(firstHit.mBodyID));
+    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
+
+    hitInfo.entity = hitEntity;
+    hitInfo.position = hitPosition;
+    hitInfo.hitFraction = firstHit.mFraction;
+    hitInfo.hasHit = true;
+    return hitInfo;
+}

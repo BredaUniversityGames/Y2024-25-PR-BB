@@ -11,37 +11,6 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 {
 }
 
-void PhysicsSystem::AddRigidBody(MAYBE_UNUSED entt::entity entity, MAYBE_UNUSED RigidbodyComponent& rigidbody)
-{
-}
-RayHitInfo PhysicsSystem::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
-{
-    RayHitInfo hitInfo;
-
-    const JPH::Vec3 start(origin.x, origin.y, origin.z);
-    JPH::Vec3 dir(direction.x, direction.y, direction.z);
-    dir = dir.Normalized();
-    const JPH::RayCast ray(start, dir * distance);
-    _physicsModule.debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
-
-    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
-    _physicsModule.physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
-    const int numHits = static_cast<int>(collector.mHits.size());
-    if (numHits < 1)
-    {
-        return hitInfo;
-    }
-
-    const auto firstHit = collector.mHits[numHits - 1];
-    const entt::entity hitEntity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(firstHit.mBodyID));
-    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
-
-    hitInfo.entity = hitEntity;
-    hitInfo.position = hitPosition;
-    hitInfo.hitFraction = firstHit.mFraction;
-    hitInfo.hasHit = true;
-    return hitInfo;
-}
 void PhysicsSystem::CleanUp()
 {
     const auto toDestroy = _ecs.registry.view<ECS::ToDestroy, RigidbodyComponent>();
