@@ -38,14 +38,8 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
     return entity;
 }
 
-std::vector<entt::entity> SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& model)
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& model)
 {
-    std::vector<entt::entity> entities {};
-
-    for (const auto& i : model.hierarchy.baseNodes)
-    {
-        entities.emplace_back(LoadNodeRecursive(ecs, i, model));
-    }
-
-    return entities;
+    auto baseNode = model.hierarchy.baseNodes.at(0);
+    return (LoadNodeRecursive(ecs, baseNode, model));
 }
