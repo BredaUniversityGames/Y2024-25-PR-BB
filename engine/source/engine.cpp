@@ -72,8 +72,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     SceneLoader sceneLoader {};
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
-        entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
+        for (size_t i = 0; i < 30; i++)
+        {
+            for (size_t j = 0; j < 30; j++)
+            {
+                auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
+                entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
+
+                TransformHelpers::SetLocalPosition(_ecs->registry, loadedEntities[0], glm::vec3(i, 0.0f, j));
+            }
+        }
     }
 
     // TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));

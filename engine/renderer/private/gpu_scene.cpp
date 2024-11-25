@@ -106,36 +106,40 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 {
-    std::array<InstanceData, MAX_MESHES> instances {};
+    static std::vector<InstanceData> instances { MAX_INSTANCES };
     uint32_t count = 0;
 
     _drawCommands.clear();
 
     auto meshView = _ecs->registry.view<StaticMeshComponent, WorldMatrixComponent>();
 
-    meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
+    for (auto entity : meshView)
+    {
+        auto meshComponent = meshView.get<StaticMeshComponent>(entity);
+        auto transformComponent = meshView.get<WorldMatrixComponent>(entity);
+
+        auto resources { _context->Resources() };
+
+        auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
+        for (const auto& primitive : mesh->primitives)
         {
-            auto resources{ _context->Resources() };
+            assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+            assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
 
-            auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
-            for (const auto& primitive : mesh->primitives)
-            {
-                assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
-                assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
+            instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+            instances[count].materialIndex = primitive.material.Index();
+            instances[count].boundingRadius = primitive.boundingRadius;
 
-                instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-                instances[count].materialIndex = primitive.material.Index();
-                instances[count].boundingRadius = primitive.boundingRadius;
+            _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
+                .indexCount = primitive.count,
+                .instanceCount = 1,
+                .firstIndex = primitive.indexOffset,
+                .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                .firstInstance = 0 });
 
-                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
-                    .indexCount = primitive.count,
-                    .instanceCount = 1,
-                    .firstIndex = primitive.indexOffset,
-                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
-                    .firstInstance = 0 });
-
-                count++;
-            } });
+            count++;
+        }
+    }
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
