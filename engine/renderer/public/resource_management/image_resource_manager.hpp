@@ -12,12 +12,12 @@ class ImageResourceManager final : public ResourceManager<GPUImage>
 public:
     explicit ImageResourceManager(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Sampler> defaultSampler);
 
-    ResourceHandle<GPUImage> Create(const CPUImage& creation, ResourceHandle<Sampler> sampler);
+    ResourceHandle<GPUImage> Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler);
 
     // Create an image with the default sampler
-    ResourceHandle<GPUImage> Create(const CPUImage& creation)
+    ResourceHandle<GPUImage> Create(const CPUImage& cpuImage)
     {
-        return Create(creation, _defaultSampler);
+        return Create(cpuImage, _defaultSampler);
     }
 
 private:

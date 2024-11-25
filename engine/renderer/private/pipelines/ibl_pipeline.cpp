@@ -285,15 +285,15 @@ void IBLPipeline::CreateBRDFLUTPipeline()
 
 void IBLPipeline::CreateIrradianceCubemap()
 {
-    CPUImage creation {};
-    creation
+    CPUImage ImageData {};
+    ImageData
         .SetName("Irradiance cubemap")
         .SetType(ImageType::eCubeMap)
         .SetSize(32, 32)
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _irradianceMap = _context->Resources()->ImageResourceManager().Create(creation);
+    _irradianceMap = _context->Resources()->ImageResourceManager().Create(ImageData);
 }
 
 void IBLPipeline::CreatePrefilterCubemap()

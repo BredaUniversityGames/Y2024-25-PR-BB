@@ -231,7 +231,6 @@ struct GPUMesh
         uint32_t indexOffset;
         float boundingRadius;
 
-        // Todo: change this into index into mesh material slots?
         ResourceHandle<GPUMaterial> material;
     };
 

@@ -20,15 +20,15 @@ GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
     const uint32_t size { 2 };
     std::vector<std::byte> data;
     data.assign(size * size * 4, std::byte(0));
-    CPUImage creation {};
-    creation
+    CPUImage imageData {};
+    imageData
         .SetSize(size, size)
         .SetFlags(vk::ImageUsageFlagBits::eSampled)
         .SetFormat(vk::Format::eR8G8B8A8Unorm)
         .SetData(data)
         .SetName("Fallback texture");
 
-    _fallbackImage = _graphicsResources->ImageResourceManager().Create(creation);
+    _fallbackImage = _graphicsResources->ImageResourceManager().Create(imageData);
 }
 
 GraphicsContext::~GraphicsContext()

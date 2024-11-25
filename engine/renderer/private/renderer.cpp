@@ -270,10 +270,10 @@ void Renderer::InitializeHDRTarget()
 {
     auto size = _swapChain->GetImageSize();
 
-    CPUImage hdrCreation {};
-    hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    CPUImage hdrImageData {};
+    hdrImageData.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData);
 }
 
 void Renderer::InitializeBloomTargets()
