@@ -11,11 +11,11 @@ class AudioModule final : public ModuleInterface
     void Tick(Engine& engine) override;
 
 public:
-    AudioModule();
+    AudioModule() = default;
     ~AudioModule() override = default;
 
     // Do fun audio stuff
 
 private:
-    FMOD_SYSTEM* _fmodSystem;
+    FMOD_SYSTEM* _fmodSystem = nullptr;
 };

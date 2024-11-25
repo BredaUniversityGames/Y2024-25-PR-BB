@@ -5,10 +5,6 @@
 #include "fmod_errors.h"
 #include "log.hpp"
 
-AudioModule::AudioModule()
-{
-}
-
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const ModuleTickOrder tickOrder = ModuleTickOrder::ePostTick;
