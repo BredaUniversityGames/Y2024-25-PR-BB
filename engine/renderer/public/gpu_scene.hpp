@@ -1,5 +1,6 @@
 #pragma once
 
+#include "camera.hpp"
 #include "constants.hpp"
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
