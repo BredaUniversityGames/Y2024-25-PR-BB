@@ -14,6 +14,7 @@
 #include "editor.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
@@ -28,6 +29,7 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -75,7 +77,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     for (const auto& model : models)
     {
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second));
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
 

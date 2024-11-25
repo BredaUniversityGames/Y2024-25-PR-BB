@@ -10,6 +10,7 @@
 
 class GraphicsContext;
 struct Texture;
+class VulkanContext;
 
 class SingleTimeCommands
 {

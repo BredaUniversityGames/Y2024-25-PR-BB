@@ -11,6 +11,7 @@ class SwapChain;
 class ApplicationModule;
 class GBuffers;
 struct Sampler;
+struct GPUImage;
 
 class ImGuiBackend
 {

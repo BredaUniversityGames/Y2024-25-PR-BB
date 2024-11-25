@@ -2,6 +2,11 @@
 
 #include "model.hpp"
 #include "resource_manager.hpp"
+class ImageResourceManager;
+class MaterialResourceManager;
+class MeshResourceManager;
+class BatchBuffer;
+
 #include <memory>
 
 class ModelResourceManager final : public ResourceManager<GPUModel>

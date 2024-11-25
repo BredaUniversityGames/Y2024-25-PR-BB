@@ -6,8 +6,6 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
-#include "fastgltf/base64.hpp"
-#include "single_time_commands.hpp"
 template <>
 std::weak_ptr<ResourceManager<GPUModel>> ResourceHandle<GPUModel>::manager = {};
 
@@ -23,41 +21,41 @@ ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
 {
     GPUModel model;
 
-    for (const auto& i : data.textures)
+    for (const auto& image : data.textures)
     {
 
-        model.textures.emplace_back(_imageResourceManager->Create(i));
+        model.textures.emplace_back(_imageResourceManager->Create(image));
     }
 
-    for (const auto& i : data.materials)
+    for (const auto& cpuMaterial : data.materials)
     {
-        MaterialCreation material {};
+        MaterialCreation materialCreation {};
 
-        material.albedoFactor = i.albedoFactor;
-        if (i.albedoMap.has_value())
-            material.albedoMap = model.textures[i.albedoMap.value()];
+        materialCreation.albedoFactor = cpuMaterial.albedoFactor;
+        if (cpuMaterial.albedoMap.has_value())
+            materialCreation.albedoMap = model.textures[cpuMaterial.albedoMap.value()];
 
-        material.metallicFactor = i.metallicFactor;
-        material.roughnessFactor = i.roughnessFactor;
-        material.metallicRoughnessUVChannel = i.metallicRoughnessUVChannel;
-        if (i.metallicRoughnessMap.has_value())
-            material.metallicRoughnessMap = model.textures[i.metallicRoughnessMap.value()];
+        materialCreation.metallicFactor = cpuMaterial.metallicFactor;
+        materialCreation.roughnessFactor = cpuMaterial.roughnessFactor;
+        materialCreation.metallicRoughnessUVChannel = cpuMaterial.metallicRoughnessUVChannel;
+        if (cpuMaterial.metallicRoughnessMap.has_value())
+            materialCreation.metallicRoughnessMap = model.textures[cpuMaterial.metallicRoughnessMap.value()];
 
-        material.emissiveFactor = i.emissiveFactor;
-        if (i.emissiveMap.has_value())
-            material.emissiveMap = model.textures[i.emissiveMap.value()];
+        materialCreation.emissiveFactor = cpuMaterial.emissiveFactor;
+        if (cpuMaterial.emissiveMap.has_value())
+            materialCreation.emissiveMap = model.textures[cpuMaterial.emissiveMap.value()];
 
-        material.occlusionStrength = i.occlusionStrength;
-        material.occlusionUVChannel = i.occlusionUVChannel;
-        if (i.occlusionMap.has_value())
-            material.occlusionMap = model.textures[i.occlusionMap.value()];
+        materialCreation.occlusionStrength = cpuMaterial.occlusionStrength;
+        materialCreation.occlusionUVChannel = cpuMaterial.occlusionUVChannel;
+        if (cpuMaterial.occlusionMap.has_value())
+            materialCreation.occlusionMap = model.textures[cpuMaterial.occlusionMap.value()];
 
-        model.materials.emplace_back(_materialResourceManager->Create(material));
+        model.materials.emplace_back(_materialResourceManager->Create(materialCreation));
     }
 
-    for (const auto& i : data.meshes)
+    for (const auto& cpuMesh : data.meshes)
     {
-        model.meshes.emplace_back(_meshResourceManager->Create(i, model.materials, batchBuffer));
+        model.meshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, batchBuffer));
     }
 
     return ResourceManager::Create(std::move(model));

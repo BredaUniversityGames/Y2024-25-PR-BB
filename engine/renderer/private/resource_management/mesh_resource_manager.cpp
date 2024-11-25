@@ -8,7 +8,7 @@
 template <>
 std::weak_ptr<ResourceManager<GPUMesh>> ResourceHandle<GPUMesh>::manager = {};
 
-ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, std::vector<ResourceHandle<GPUMaterial>> materials)
+ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
 {
     // todo: add fallback material.
     assert(materials.size() > 0);
@@ -26,20 +26,20 @@ ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, std:
         }
 
         const ResourceHandle<GPUMaterial> material = materials.at(correctedIndex);
-        mesh.primitives.emplace_back(CreatePrimitive(primitive, material));
+        mesh.primitives.emplace_back(CreatePrimitive(primitive, material, batchBuffer));
     }
 
     return ResourceManager::Create(std::move(mesh));
 }
 
-ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh::Primitive& data, ResourceHandle<GPUMaterial> material)
+ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh::Primitive& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
 {
     GPUMesh mesh;
-    mesh.primitives.emplace_back(CreatePrimitive(data, material));
+    mesh.primitives.emplace_back(CreatePrimitive(data, material, batchBuffer));
     return ResourceManager::Create(std::move(mesh));
 }
 
-GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive& cpuPrimitive, ResourceHandle<GPUMaterial> material)
+GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive& cpuPrimitive, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
 {
     GPUMesh::Primitive primitive;
     primitive.material = material;
@@ -47,8 +47,8 @@ GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive
 
     SingleTimeCommands commands { _vkContext };
 
-    primitive.vertexOffset = _batchBuffer->AppendVertices(cpuPrimitive.vertices, commands);
-    primitive.indexOffset = _batchBuffer->AppendIndices(cpuPrimitive.indices, commands);
+    primitive.vertexOffset = batchBuffer.AppendVertices(cpuPrimitive.vertices, commands);
+    primitive.indexOffset = batchBuffer.AppendIndices(cpuPrimitive.indices, commands);
     primitive.boundingRadius = glm::max(
         glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.min),
         glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.max));
