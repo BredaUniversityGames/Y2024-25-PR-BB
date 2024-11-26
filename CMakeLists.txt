@@ -57,11 +57,6 @@ target_link_libraries(Game
         PRIVATE Engine
 )
 
-# target_link_options(Game PRIVATE -static -static-libgcc -static-libstdc++)
-
-### SHADERS COMPILE STEP ###
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)

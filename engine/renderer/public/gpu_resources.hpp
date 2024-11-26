@@ -29,9 +29,7 @@ struct SamplerCreation
     vk::SamplerMipmapMode mipmapMode { vk::SamplerMipmapMode::eLinear };
     float mipLodBias { 0.0f };
     float minLod { 0.0f };
-    float maxLod {
-        std::floor(std::log2(2048.0f))
-    };
+    float maxLod { 1.0f };
 };
 
 struct Sampler
@@ -159,7 +157,7 @@ struct GPUMaterial
 
         float metallicFactor { 0.0f };
         float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
+        float normalScale { 1.0f };
         float occlusionStrength { 0.0f };
 
         glm::vec3 emissiveFactor { 0.0f };

@@ -18,6 +18,7 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, Resour
         .name = "IBL sampler",
         .maxLod = 0.0f,
     };
+
     createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
@@ -112,7 +113,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
                 .imageView = _prefilterMapViews[i][j],
                 .imageLayout = vk::ImageLayout::eAttachmentOptimal,
-                .loadOp = vk::AttachmentLoadOp::eClear,
+                .loadOp = vk::AttachmentLoadOp::eLoad,
                 .storeOp = vk::AttachmentStoreOp::eStore,
             };
             uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
@@ -307,7 +308,7 @@ void IBLPipeline::CreatePrefilterCubemap()
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled)
         .SetMips(fmin(floor(log2(creation.width)), 3.0));
 
-    _prefilterMap = _context->Resources()->ImageResourceManager().Create(creation);
+    _prefilterMap = _context->Resources()->ImageResourceManager().Create(creation, _sampler);
 
     _prefilterMapViews.resize(creation.mips);
     for (size_t i = 0; i < _prefilterMapViews.size(); ++i)

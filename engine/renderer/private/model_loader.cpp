@@ -166,7 +166,7 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
     {
         glm::vec3 tangent = stagingPrimitive.vertices[i].tangent;
         tangent = glm::normalize(tangent);
-        stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, glm::sign(stagingPrimitive.vertices[i].tangent.w) };
+        stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
     }
 }
 
