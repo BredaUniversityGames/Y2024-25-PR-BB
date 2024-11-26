@@ -12,6 +12,7 @@
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"

@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <type_traits>
+#include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 using Translation = glm::vec3;
