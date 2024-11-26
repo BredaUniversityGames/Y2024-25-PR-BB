@@ -7,6 +7,7 @@
 #include "application_module.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -60,7 +61,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/BrainStem.glb",
+        "assets/models/RiggedSimple.glb",
         // "assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         // "assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -160,8 +161,9 @@ void OldEngine::Tick(Engine& engine)
         }
     }
 
+    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+
     const auto debugView = _ecs->registry.view<JointComponent, RelationshipComponent, WorldMatrixComponent>();
-    std::vector<glm::vec3> lines {};
     for (auto entity : debugView)
     {
         auto& relationship = debugView.get<RelationshipComponent>(entity);
@@ -173,17 +175,14 @@ void OldEngine::Tick(Engine& engine)
         glm::vec3 position { matrix[3][0], matrix[3][1], matrix[3][2] };
         glm::vec3 parentPosition { parentMatrix[3][0], parentMatrix[3][1], parentMatrix[3][2] };
 
-        lines.emplace_back(position);
-        lines.emplace_back(parentPosition);
+        rendererModule.GetRenderer()->GetDebugPipeline().AddLine(position, parentPosition);
     }
 
     // update physics
     _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
     auto linesData = _physicsModule->debugRenderer->GetLinesData();
     auto persistentLinesData = _physicsModule->debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
     _physicsModule->debugRenderer->ClearLines();
-    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(lines);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
 
