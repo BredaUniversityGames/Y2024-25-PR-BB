@@ -19,7 +19,7 @@ void CameraComponent::Inspect()
     const char* projectionElementNames[projectionElementCount] = { "Perspective", "Orthographic" };
     const char* currentProjectionName = "Unknown";
 
-    if(currentProjection >= 0 && currentProjection < projectionElementCount)
+    if (currentProjection >= 0 && currentProjection < projectionElementCount)
     {
         currentProjectionName = projectionElementNames[currentProjection];
     }

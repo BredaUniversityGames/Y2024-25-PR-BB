@@ -1,8 +1,8 @@
 #include "gpu_scene.hpp"
 
 #include "batch_buffer.hpp"
-#include "components/directional_light_component.hpp"
 #include "components/camera_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -136,7 +136,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
         directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
 
-        CameraComponent camera{
+        CameraComponent camera {
             .projection = CameraComponent::Projection::eOrthographic,
             .nearPlane = directionalLightComponent.nearPlane,
             .farPlane = directionalLightComponent.farPlane,

@@ -4,8 +4,8 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
-#include "components/directional_light_component.hpp"
 #include "components/camera_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
@@ -189,8 +189,10 @@ void OldEngine::Tick(Engine& engine)
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
             glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
-            if (cameraForward.z > 0.0f) eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
-            else eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+            if (cameraForward.z > 0.0f)
+                eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+            else
+                eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
 
             rotation = glm::quat(eulerRotation);
             TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
@@ -227,19 +229,19 @@ void OldEngine::Tick(Engine& engine)
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
-			
-	    // shoot rays
-	    if (ImGui::IsKeyPressed(ImGuiKey_Space))
-	    {
-		const glm::vec3 cameraDir = (rotation * FORWARD);
-		const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
 
-		std::cout << "Hit: " << hitInfo.hasHit << std::endl
-		      << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
-		      << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
-		      << "Fraction: " << hitInfo.hitFraction << std::endl;
-	    }
-	}
+            // shoot rays
+            if (ImGui::IsKeyPressed(ImGuiKey_Space))
+            {
+                const glm::vec3 cameraDir = (rotation * FORWARD);
+                const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+
+                std::cout << "Hit: " << hitInfo.hasHit << std::endl
+                          << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
+                          << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
+                          << "Fraction: " << hitInfo.hitFraction << std::endl;
+            }
+        }
     }
 
     _lastMousePos = { mouseX, mouseY };

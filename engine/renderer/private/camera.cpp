@@ -1,14 +1,14 @@
 #include "camera.hpp"
 
+#include "components/camera_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-#include "components/transform_component.hpp"
-#include "components/camera_component.hpp"
-#include "components/transform_helpers.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 
@@ -156,7 +156,7 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     }
 
     default:
-    break;
+        break;
     }
     cameraBuffer.proj[1][1] *= -1;
     cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
