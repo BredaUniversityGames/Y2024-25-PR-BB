@@ -57,6 +57,7 @@ target_link_libraries(Game
         PRIVATE Engine
 )
 
+### SHADERS COMPILE STEP ###
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)
