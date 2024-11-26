@@ -1,5 +1,5 @@
 #include "ui_core.hpp"
-#include "../public/ui_pipelines.hpp"
+#include "../renderer/public/pipelines/ui_pipeline.hpp"
 
 void Canvas::UpdateChildAbsoluteLocations()
 {
@@ -31,10 +31,10 @@ void Canvas::UpdateChildAbsoluteLocations()
     }
 }
 
-void Canvas::SubmitDrawInfo(UIPipeline& piepline) const
+void Canvas::SubmitDrawInfo(UIPipeline& pipeline) const
 {
     for (const auto& i : GetChildren())
     {
-        i->SubmitDrawInfo(piepline);
+        i->SubmitDrawInfo(pipeline);
     }
 }

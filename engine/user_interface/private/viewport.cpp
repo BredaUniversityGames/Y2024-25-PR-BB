@@ -1,5 +1,5 @@
 #include "viewport.hpp"
-#include "ui_pipelines.hpp"
+#include "../renderer/public/pipelines/ui_pipeline.hpp"
 #include "ui_element.hpp"
 
 void Viewport::Update(const InputManager& input) const

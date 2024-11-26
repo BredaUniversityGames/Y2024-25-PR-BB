@@ -1,11 +1,8 @@
-//
-// Created by luuk on 30-9-2024.
-//
-#pragma once
-#include <functional>
+/*#pragma once
+#include "gpu_resources.hpp"
 #include "ui_core.hpp"
-#include "resource_manager.hpp"
-struct Image;
+#include <functional>
+
 class UIButton : public UIElement
 {
 public:
@@ -30,14 +27,14 @@ public:
 
     struct ButtonStyle
     {
-        ResourceHandle<Image>
+        ResourceHandle<GPUImage>
             normalImage = {};
-        ResourceHandle<Image> hoveredImage = {};
-        ResourceHandle<Image> pressedImage = {};
+        ResourceHandle<GPUImage> hoveredImage = {};
+        ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
     std::function<void()> onBeginHoverCallBack {};
     std::function<void()> onMouseDownCallBack {};
 
 private:
-};
+};*/

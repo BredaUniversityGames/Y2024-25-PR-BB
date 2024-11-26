@@ -1,12 +1,10 @@
 #pragma once
 
 #include "resource_manager.hpp"
-
+#include <gpu_resources.hpp>
 #include <map>
 
-struct Image;
-
-class VulkanBrain;
+class GraphicsContext;
 
 struct Font
 {
@@ -21,8 +19,8 @@ struct Font
     };
 
     std::map<uint8_t, Character> characters;
-    ResourceHandle<Image> _fontAtlas;
+    ResourceHandle<GPUImage> _fontAtlas;
     uint16_t characterHeight;
 };
 
-NO_DISCARD Font LoadFromFile(const std::string& path, uint16_t characterHeight, const VulkanBrain& brain);
+NO_DISCARD Font LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context);

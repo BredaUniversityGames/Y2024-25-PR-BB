@@ -1,9 +1,7 @@
-//
-// Created by luuk on 24-9-2024.
-//
+#include <glm/glm.hpp>
+#include <string>
 
 #pragma once
-#include "pch.hpp"
 
 struct UITransformComponent
 {
