@@ -1,6 +1,3 @@
-//
-// Created by luuk on 30-9-2024.
-//
 #pragma once
 
 #include "../public/ui_core.hpp"

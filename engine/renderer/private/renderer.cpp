@@ -8,6 +8,7 @@
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
 #include "ecs.hpp"
+#include "fonts.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "gpu_scene.hpp"
@@ -25,11 +26,14 @@
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
+#include "pipelines/ui_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
+#include "ui_main_menu.hpp"
+#include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -79,9 +83,18 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _camera = std::make_unique<CameraResource>(_context);
 
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
+    _viewport = std::make_unique<Viewport>(application.DisplaySize());
+
+    // TODO: FIX THIS CRASH.
+    // auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
+
+    //_viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _context, font));
+
+    _geometryPipeline
+        = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, *_swapChain);
@@ -139,6 +152,12 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
 
+    // TODO: THIS PASS SHOULD BE DONE LAST.
+    FrameGraphNodeCreation uiPass { *_uiPipeline };
+    uiPass.SetName("UI pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
@@ -155,6 +174,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
+        .AddNode(uiPass)
         .AddNode(debugPass)
         .Build();
 }
@@ -329,6 +349,9 @@ void Renderer::Render(float deltaTime)
     // TODO: handle this more gracefully
     assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
+
+    //_viewport->Update();
+    _viewport->Render(*_uiPipeline);
 
     uint32_t imageIndex {};
     vk::Result result {};

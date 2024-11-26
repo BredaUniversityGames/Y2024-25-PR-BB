@@ -11,6 +11,7 @@
 #include <graphics_context.hpp>
 #include <graphics_resources.hpp>
 #include <resource_management/image_resource_manager.hpp>
+#include <resource_management/sampler_resource_manager.hpp>
 
 // chatgpt
 void appendBitmapToAtlas(
@@ -54,6 +55,14 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
     FT_New_Face(library, path.c_str(), 0, &fontFace);
 
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
+
+    SamplerCreation createInfo;
+    createInfo.magFilter = vk::Filter::eLinear;
+    createInfo.minFilter = vk::Filter::eLinear;
+    createInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    createInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+
+    auto sampler = context->Resources()->SamplerResourceManager().Create(createInfo);
 
     Font font;
     font.characterHeight = characterHeight;
@@ -126,7 +135,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font._fontAtlas = context->Resources()->ImageResourceManager().Create(image);
+    font._fontAtlas = context->Resources()->ImageResourceManager().Create(image, sampler);
     context->UpdateBindlessSet();
 
     FT_Done_Face(fontFace);

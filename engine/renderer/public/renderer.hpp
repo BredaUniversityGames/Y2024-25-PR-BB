@@ -14,6 +14,7 @@ class GeometryPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class UIPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
@@ -27,6 +28,7 @@ class BatchBuffer;
 class ECS;
 class GPUScene;
 class FrameGraph;
+class Viewport;
 
 class Renderer
 {
@@ -64,6 +66,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
@@ -89,6 +92,8 @@ private:
     std::unique_ptr<CameraResource> _camera;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
+
+    std::unique_ptr<Viewport> _viewport;
 
     ResourceHandle<GPUImage> _hdrTarget;
 

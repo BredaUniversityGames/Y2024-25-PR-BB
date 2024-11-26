@@ -25,7 +25,7 @@ struct UIPushConstants
 class UIPipeline final : public FrameGraphRenderPass
 {
 public:
-    UIPipeline(GraphicsContext& context, const SwapChain& swapChain);
+    UIPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain);
     ~UIPipeline() final;
 
     NON_COPYABLE(UIPipeline);
@@ -33,13 +33,13 @@ public:
 
     std::vector<QuadDrawInfo> _drawlist;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
+    void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
 private:
     vk::Pipeline _pipeline;
     vk::PipelineLayout _pipelineLayout;
 
-    GraphicsContext& _context;
+    std::shared_ptr<GraphicsContext> _context;
     const SwapChain& _swapChain;
     vk::UniqueSampler _sampler;
 

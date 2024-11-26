@@ -7,8 +7,6 @@
 class GraphicsContext;
 struct GPUImage;
 
-class VulkanBrain;
-
 struct Font
 {
     struct Character
