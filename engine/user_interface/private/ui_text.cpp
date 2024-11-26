@@ -38,8 +38,7 @@ void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
         }
         else
         {
-
-            localOffset += static_cast<int>(scale.x); // TODO: Add * CharacterHeight
+            localOffset += (static_cast<int>(scale.x) * fontResource->characterHeight) / 4;
         }
     }
 }

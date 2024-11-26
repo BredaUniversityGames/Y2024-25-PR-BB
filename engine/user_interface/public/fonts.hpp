@@ -22,6 +22,7 @@ struct Font
 
     std::map<uint8_t, Character> characters;
     ResourceHandle<Image> _fontAtlas;
+    uint16_t characterHeight;
 };
 
 NO_DISCARD Font LoadFromFile(const std::string& path, uint16_t characterHeight, const VulkanBrain& brain);

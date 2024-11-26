@@ -54,6 +54,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, const Vulka
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
 
     Font font;
+    font.characterHeight = characterHeight;
 
     const int maxGlyphs = 128;
     std::array<stbrp_rect, maxGlyphs> rects;

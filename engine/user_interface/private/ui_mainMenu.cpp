@@ -9,7 +9,7 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, 
     // demo scene
     auto sampler = util::CreateSampler(brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eNearest, 0);
 
-    ImageCreation buttonNormalImage;
+    /*ImageCreation buttonNormalImage;
 
     buttonNormalImage.format
         = vk::Format::eR8G8B8A8Unorm;
@@ -46,19 +46,19 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, 
     {
         subButton->visible = !subButton->visible;
     };
-    playButton->onBeginHoverCallBack = []() { };
+    playButton->onBeginHoverCallBack = []() { };*/
 
     std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(brain.GetFontResourceManager());
     playText->font = font;
-    playText->text = "Play";
-    playText->scale = { 5, 5 };
+    playText->text = "Play the Game";
+    playText->scale = { 1, 1 };
     playText->SetLocation({ 810, 640 });
     playText->color = { 0, 1, 0, 1 };
 
     AddChild(std::move(playText));
 
-    AddChild(std::move(playButton));
-    AddChild(std::move(subButton));
+    //AddChild(std::move(playButton));
+    //AddChild(std::move(subButton));
 
     UpdateChildAbsoluteLocations();
 }
