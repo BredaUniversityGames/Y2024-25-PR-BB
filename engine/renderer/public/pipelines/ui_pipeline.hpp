@@ -1,5 +1,8 @@
 #pragma once
+
 #include "frame_graph.hpp"
+#include "gpu_resources.hpp"
+#include <memory>
 
 class SwapChain;
 class GraphicsContext;
@@ -19,7 +22,7 @@ struct UIPushConstants
     QuadDrawInfo quad;
 };
 
-class UIPipeline : FrameGraphRenderPass
+class UIPipeline final : public FrameGraphRenderPass
 {
 public:
     UIPipeline(GraphicsContext& context, const SwapChain& swapChain);
@@ -30,7 +33,7 @@ public:
 
     std::vector<QuadDrawInfo> _drawlist;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
 private:
     vk::Pipeline _pipeline;

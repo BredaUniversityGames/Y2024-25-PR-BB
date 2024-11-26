@@ -2,6 +2,7 @@
 
 #include "glm/vec2.hpp"
 #include "spdlog/spdlog.h"
+
 #include <memory>
 #include <stdint.h>
 

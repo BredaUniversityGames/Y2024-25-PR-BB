@@ -9,6 +9,8 @@
 
 #include "vulkan_helper.hpp"
 
+#include "gpu_resources.hpp"
+
 // TODO: UPDATE WITH THE NEW RENDER SYSTEMS
 void UIPipeline::CreatePipeLine()
 {
@@ -140,7 +142,7 @@ void UIPipeline::CreatePipeLine()
     _context.VulkanContext()->Device().destroy(vertModule);
     _context.VulkanContext()->Device().destroy(fragModule);
 }
-void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {};
     finalColorAttachmentInfo.imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex);
