@@ -91,14 +91,14 @@ private:
     void RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime);
     void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
-    void UpdateEmitters(ECS& ecs);
+    void UpdateEmitters(ECS& ecs, vk::CommandBuffer commandBuffer);
 
     void CreatePipelines();
     void CreateDescriptorSetLayouts();
     void CreateDescriptorSets();
     void CreateBuffers();
 
-    void UpdateBuffers(vk::CommandBuffer commandBuffer);
+    void UpdateBuffers();
     void UpdateParticleBuffersDescriptorSets();
     void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();

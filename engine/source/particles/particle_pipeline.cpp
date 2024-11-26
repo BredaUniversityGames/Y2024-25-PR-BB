@@ -54,8 +54,7 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime)
 {
-    UpdateEmitters(ecs);
-    UpdateBuffers(commandBuffer);
+    UpdateEmitters(ecs, commandBuffer);
 
     RecordKickOff(commandBuffer);
 
@@ -67,6 +66,8 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     RecordSimulate(commandBuffer, deltaTime);
 
     RecordRenderIndexed(commandBuffer, currentFrame, scene);
+
+    UpdateBuffers();
 }
 
 void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
@@ -81,6 +82,8 @@ void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
     commandBuffer.dispatch(1, 1, 1);
 
     vk::MemoryBarrier memoryBarrier {};
+    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderWrite;
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
@@ -116,6 +119,8 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     _emitters.clear();
 
     vk::MemoryBarrier memoryBarrier {};
+    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
@@ -218,7 +223,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
-void ParticlePipeline::UpdateEmitters(ECS& ecs)
+void ParticlePipeline::UpdateEmitters(ECS& ecs, vk::CommandBuffer commandBuffer)
 {
     auto view = ecs._registry.view<EmitterComponent>();
     for (auto entity : view)
@@ -233,12 +238,6 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs)
             component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
         }
     }
-}
-
-void ParticlePipeline::UpdateBuffers(vk::CommandBuffer commandBuffer)
-{
-    // TODO: check if this swapping works
-    std::swap(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveNew)], _particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveCurrent)]);
 
     if (!_emitters.empty())
     {
@@ -247,6 +246,12 @@ void ParticlePipeline::UpdateBuffers(vk::CommandBuffer commandBuffer)
         vmaCopyMemoryToAllocation(_brain.vmaAllocator, _emitters.data(), _stagingBufferAllocation, 0, bufferSize);
         util::CopyBuffer(commandBuffer, _stagingBuffer, _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
     }
+}
+
+void ParticlePipeline::UpdateBuffers()
+{
+    std::swap(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveNew)], _particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveCurrent)]);
+    UpdateParticleBuffersDescriptorSets();
 }
 
 void ParticlePipeline::CreatePipelines()
@@ -493,6 +498,7 @@ void ParticlePipeline::CreateDescriptorSetLayouts()
 {
     { // Particle Storage Buffers
         std::array<vk::DescriptorSetLayoutBinding, 5> bindings {};
+        std::array<vk::DescriptorBindingFlags, 5> flags {};
         for (size_t i = 0; i < bindings.size(); i++)
         {
             vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[i] };
@@ -501,11 +507,19 @@ void ParticlePipeline::CreateDescriptorSetLayouts()
             descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
             descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
             descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+            flags[i] = vk::DescriptorBindingFlagBits::eUpdateAfterBind;
         }
+
+        vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingCreateInfo {};
+        bindingCreateInfo.bindingCount = bindings.size();
+        bindingCreateInfo.pBindingFlags = flags.data();
 
         vk::DescriptorSetLayoutCreateInfo createInfo {};
         createInfo.bindingCount = bindings.size();
         createInfo.pBindings = bindings.data();
+        createInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
+        createInfo.pNext = &bindingCreateInfo;
 
         util::VK_ASSERT(_brain.device.createDescriptorSetLayout(&createInfo, nullptr, &_particlesBuffersDescriptorSetLayout),
             "Failed creating particle buffers descriptor set layout!");

@@ -388,7 +388,7 @@ void VulkanBrain::CreateDescriptorPool()
     createInfo.poolSizeCount = poolSizes.size();
     createInfo.pPoolSizes = poolSizes.data();
     createInfo.maxSets = 200;
-    createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+    createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
     util::VK_ASSERT(device.createDescriptorPool(&createInfo, nullptr, &descriptorPool), "Failed creating descriptor pool!");
 }
 
