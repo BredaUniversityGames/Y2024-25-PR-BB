@@ -1,8 +1,8 @@
 #pragma once
 
-#include "resource_manager.hpp"
 #include "common.hpp"
 #include "model.hpp"
+#include "resource_manager.hpp"
 
 #include <memory>
 #include <vulkan/vulkan.hpp>

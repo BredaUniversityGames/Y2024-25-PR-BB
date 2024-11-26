@@ -17,7 +17,7 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 }
 
 ResourceHandle<GPUModel>
-ModelResourceManager::Create(const CPUModel<Vertex>& data, BatchBuffer& batchBuffer)
+ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
 {
     GPUModel model;
 

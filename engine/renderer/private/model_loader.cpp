@@ -46,9 +46,9 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-CPUModel<Vertex> ModelLoader::ExtractModelFromGltfFile(std::string_view path)
+CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -126,7 +126,8 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
     }
 }
 
-void CalculateTangents(CPUMesh<Vertex>::Primitive& stagingPrimitive)
+template <typename T>
+void CalculateTangents(typename CPUMesh<T>::Primitive& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -272,7 +273,7 @@ CPUMesh<Vertex>::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
     }
 
     if (!tangentFound && texCoordFound)
-        CalculateTangents(primitive);
+        CalculateTangents<Vertex>(primitive);
 
     return primitive;
 }
@@ -437,14 +438,14 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
     return stagingAnimationChannels;
 }
 
-CPUModel<Vertex>::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUModel<Vertex>::CPUMaterial material {};
+    CPUModel::CPUMaterial material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -488,7 +489,7 @@ CPUModel<Vertex>::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMate
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel<Vertex>& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
 {
     Hierarchy::Node node {};
 
@@ -532,9 +533,9 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
     return node;
 }
 
-CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 {
-    CPUModel<Vertex> model {};
+    CPUModel model {};
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -548,7 +549,7 @@ CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_vie
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModel<Vertex>::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
@@ -566,8 +567,12 @@ CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_vie
         model.meshes.emplace_back(mesh);
     }
 
-    auto animations = LoadAnimations(gltf);
-    model.animation = animations.animation;
+    StagingAnimationChannels animations {};
+    if (!gltf.animations.empty())
+    {
+        animations = LoadAnimations(gltf);
+        model.animation = animations.animation;
+    }
 
     assert(gltf.skins.size() <= 1 && "Only support for one skin!");
 

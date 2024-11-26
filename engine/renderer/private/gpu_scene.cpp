@@ -328,7 +328,6 @@ void GPUScene::InitializeIndirectDrawBuffer()
             .SetName("Indirect draw buffer");
 
         _indirectDrawFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
-        bblog::info("Indirect draw buffer index: {}", _indirectDrawFrameData[i].buffer.Index());
     }
 }
 

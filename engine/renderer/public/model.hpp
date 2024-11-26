@@ -43,7 +43,6 @@ struct CPUMesh
     std::vector<Primitive> primitives;
 };
 
-template <typename T>
 struct CPUModel
 {
 
@@ -76,7 +75,8 @@ struct CPUModel
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh<T>> meshes;
+    std::vector<CPUMesh<Vertex>> meshes;
+    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes;
     std::vector<CPUMaterial> materials;
     std::vector<CPUImage> textures;
 
