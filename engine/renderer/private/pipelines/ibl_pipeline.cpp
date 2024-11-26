@@ -60,7 +60,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
             .imageView = irradianceMap.views[i],
             .imageLayout = vk::ImageLayout::eAttachmentOptimal,
-            .loadOp = vk::AttachmentLoadOp::eDontCare,
+            .loadOp = vk::AttachmentLoadOp::eClear,
             .storeOp = vk::AttachmentStoreOp::eStore,
         };
 
@@ -112,7 +112,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
             vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
                 .imageView = _prefilterMapViews[i][j],
                 .imageLayout = vk::ImageLayout::eAttachmentOptimal,
-                .loadOp = vk::AttachmentLoadOp::eDontCare,
+                .loadOp = vk::AttachmentLoadOp::eClear,
                 .storeOp = vk::AttachmentStoreOp::eStore,
             };
             uint32_t size = static_cast<uint32_t>(prefilterMap.width >> i);
@@ -165,7 +165,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_brdfLUT)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimal,
-        .loadOp = vk::AttachmentLoadOp::eDontCare,
+        .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
     };
 

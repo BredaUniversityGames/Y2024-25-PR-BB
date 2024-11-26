@@ -29,7 +29,9 @@ struct SamplerCreation
     vk::SamplerMipmapMode mipmapMode { vk::SamplerMipmapMode::eLinear };
     float mipLodBias { 0.0f };
     float minLod { 0.0f };
-    float maxLod { 1.0f };
+    float maxLod {
+        std::floor(std::log2(2048.0f))
+    };
 };
 
 struct Sampler
