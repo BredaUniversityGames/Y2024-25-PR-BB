@@ -1,7 +1,11 @@
+//
+// Created by luuk on 30-9-2024.
+//
+
 #include "../public/ui_button.hpp"
 #include "../../application/public/input_manager.hpp"
-#include "../renderer/public/pipelines/ui_pipeline.hpp"
-/*
+#include "../public/ui_pipelines.hpp"
+
 void UIButton::Update(const InputManager& input)
 {
     glm::ivec2 mousePos;
@@ -48,7 +52,7 @@ void UIButton::SubmitDrawInfo(UIPipeline& pipeline) const
 
     if (visible)
     {
-        ResourceHandle<GPUImage>
+        ResourceHandle<Image>
             image;
         switch (m_State)
         {
@@ -67,7 +71,7 @@ void UIButton::SubmitDrawInfo(UIPipeline& pipeline) const
 
         QuadDrawInfo info {
             .projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(scale, 0))),
-            .textureIndex = image.Index(),
+            .textureIndex = image.index,
         };
 
         info.useRedAsAlpha = false;
@@ -84,4 +88,4 @@ void UIButton::UpdateChildAbsoluteLocations()
 {
     for (auto& i : GetChildren())
         i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (scale / 2.f) + i->GetRelativeLocation());
-}*/
+}

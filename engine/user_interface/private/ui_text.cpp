@@ -1,7 +1,8 @@
-// #include "ui_text.hpp"
-#include "../renderer/public/pipelines/ui_pipeline.hpp"
 
-/*void UITextElement::SubmitDrawInfo(UIPipeline&) const
+#include "ui_text.hpp"
+
+#include "ui_pipelines.hpp"
+void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
 {
     const auto* fontResource = fontResourceManager.Access(font);
 
@@ -40,4 +41,4 @@
             localOffset += (static_cast<int>(scale.x) * fontResource->characterHeight) / 4;
         }
     }
-}*/
+}

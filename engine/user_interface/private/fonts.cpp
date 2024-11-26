@@ -3,9 +3,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include "vulkan_brain.hpp"
 #include "gpu_resources.hpp"
-#include "graphics_context.hpp"
-#include "resource_management/image_resource_manager.hpp"
+#include "vulkan_helper.hpp"
+
 #define STB_RECT_PACK_IMPLEMENTATION
 #include "stb_rect_pack.h"
 
@@ -42,7 +43,7 @@ void appendBitmapToAtlas(
         }
     }
 }
-Font LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context)
+Font LoadFromFile(const std::string& path, uint16_t characterHeight, const VulkanBrain& brain)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -73,16 +74,16 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsCon
 
     const int atlasWidth = 512;
     const int atlasHeight = 512;
-    stbrp_context stbContext;
+    stbrp_context context;
     std::vector<stbrp_node> nodes(atlasWidth);
 
-    stbrp_init_target(&stbContext, atlasWidth, atlasHeight, nodes.data(), atlasWidth);
-    if (stbrp_pack_rects(&stbContext, rects.data(), maxGlyphs) == 0)
+    stbrp_init_target(&context, atlasWidth, atlasHeight, nodes.data(), atlasWidth);
+    if (stbrp_pack_rects(&context, rects.data(), maxGlyphs) == 0)
     {
         throw std::runtime_error("Failed to pack font glyphs into the atlas.");
     }
 
-    std::vector<std::byte> atlasData(atlasWidth * atlasHeight, std::byte(0));
+    std::vector<uint8_t> atlasData(atlasWidth * atlasHeight, 0);
 
     for (unsigned char c = 0; c < maxGlyphs; ++c)
     {
@@ -98,7 +99,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsCon
             {
                 for (unsigned int x = 0; x < bitmap.width; ++x)
                 {
-                    // TODO: FIX atlasData[((rects[c].y + y) * atlasWidth) + (rects[c].x + x)] = bitmap.buffer[y * bitmap.width + x];
+                    atlasData[((rects[c].y + y) * atlasWidth) + (rects[c].x + x)] = bitmap.buffer[y * bitmap.width + x];
                 }
             }
 
@@ -114,16 +115,17 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsCon
         }
     }
 
-    CPUImage image;
+    ImageCreation image;
     image.name = path + " font atlas";
     image.width = atlasWidth;
     image.height = atlasHeight;
-    image.SetData(std::move(atlasData));
+    image.SetData(reinterpret_cast<std::byte*>(atlasData.data()));
     image.SetFormat(vk::Format::eR8Unorm);
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font._fontAtlas = context.Resources()->ImageResourceManager().Create(image);
+    font._fontAtlas = brain.GetImageResourceManager().Create(image);
+    brain.UpdateBindlessSet();
 
     FT_Done_Face(fontFace);
     FT_Done_FreeType(library);

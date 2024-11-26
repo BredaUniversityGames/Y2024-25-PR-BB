@@ -105,10 +105,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
     TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    // auto font = rendererModule.GetFontResourceManager().Create(LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _renderer->_brain));
+    auto font = _renderer->_brain.GetFontResourceManager().Create(LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _renderer->_brain));
     _viewport = std::make_unique<Viewport>(applicationModule.DisplaySize());
 
-    //_viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, rendererModule.GetRenderer()->GetContext(), font));
+    _viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _renderer->_brain, font));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -153,7 +153,7 @@ void OldEngine::Tick(Engine& engine)
     int32_t mouseX, mouseY;
     input.GetMousePosition(mouseX, mouseY);
     _viewport->Update(input);
-    //_viewport->Render(*_renderer->_uiPipeline);
+    _viewport->Render(*_renderer->_uiPipeline);
     auto windowSize = applicationModule.DisplaySize();
     _scene->camera.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 

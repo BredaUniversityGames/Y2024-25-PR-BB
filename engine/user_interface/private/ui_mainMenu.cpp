@@ -1,17 +1,14 @@
-#include "ui_main_menu.hpp"
-#include "graphics_context.hpp"
+#include "ui_mainMenu.hpp"
 #include "ui_core.hpp"
 #include "ui_text.hpp"
+#include "vulkan_helper.hpp"
 
-#include <graphics_resources.hpp>
-#include <resource_management/sampler_resource_manager.hpp>
-
-MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const GraphicsContext& context, MAYBE_UNUSED ResourceHandle<Font> font)
+MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const VulkanBrain& brain, MAYBE_UNUSED ResourceHandle<Font> font)
     : Canvas(size)
 {
     // demo scene
+    auto sampler = util::CreateSampler(brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToBorder, vk::SamplerMipmapMode::eNearest, 0);
 
-    auto sampler = context.Resources()->SamplerResourceManager().GetDefaultSamplerHandle();
     /*ImageCreation buttonNormalImage;
 
     buttonNormalImage.format
@@ -51,7 +48,7 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const GraphicsContext& con
     };
     playButton->onBeginHoverCallBack = []() { };*/
 
-    /*std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(context.Resources().);
+    std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(brain.GetFontResourceManager());
     playText->font = font;
     playText->text = "Play the Game";
     playText->scale = { 1, 1 };
@@ -59,10 +56,9 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, const GraphicsContext& con
     playText->color = { 0, 1, 0, 1 };
 
     AddChild(std::move(playText));
-    */
 
-    // AddChild(std::move(playButton));
-    // AddChild(std::move(subButton));
+    //AddChild(std::move(playButton));
+    //AddChild(std::move(subButton));
 
     UpdateChildAbsoluteLocations();
 }

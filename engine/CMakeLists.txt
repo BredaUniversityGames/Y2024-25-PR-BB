@@ -13,9 +13,12 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.hpp")
 
 target_sources(OldEngine PUBLIC ${headers} PRIVATE ${sources})
 target_include_directories(OldEngine PUBLIC "include" "../external")
-target_link_libraries(OldEngine PUBLIC Application PUBLIC Renderer PUBLIC External PUBLIC Physics PUBLIC UserInterface)
+target_link_libraries(OldEngine PUBLIC Application PUBLIC Renderer PUBLIC External PUBLIC Physics)
 
 source_exclude_unity("source/lib/stbi_impl.cpp")
+target_link_libraries(OldEngine PUBLIC Application PUBLIC External
+PUBLIC UserInterface)
+
 # ENGINE MODULES
 
 message(STATUS "### Linking Engine Modules:")
