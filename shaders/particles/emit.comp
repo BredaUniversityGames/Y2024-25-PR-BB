@@ -1,5 +1,5 @@
 #version 460
-#include "particle_vars.glsl"
+#include "particle_binds.glsl"
 
 struct Emitter
 {

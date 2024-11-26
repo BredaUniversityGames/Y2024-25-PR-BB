@@ -1,7 +1,7 @@
 #version 460
 #include "scene.glsl"
 
-layout (set = 1, binding = 0) uniform CameraUBO
+layout (set = 0, binding = 0) uniform CameraUBO
 {
     Camera camera;
 };

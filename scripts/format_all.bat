@@ -1,3 +1,3 @@
 cd ..
-py scripts/format.py "engine" "tests"
+py scripts/python/format.py "engine" "tests"
 pause

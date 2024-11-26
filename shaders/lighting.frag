@@ -67,7 +67,6 @@ void main()
 
     vec3 L = lightDir;
     vec3 H = normalize(V + L);
-    vec3 radiance = vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0; // Light color.
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
@@ -88,7 +87,7 @@ void main()
 
         float NoL = max(dot(N, L), 0.0);
 
-        Lo += (kD * albedo / PI + specular) * radiance * NoL;
+        Lo += (kD * albedo / PI + specular) * scene.directionalLight.color.rgb * NoL;
     }
 
     vec3 R = reflect(V, N);
@@ -101,7 +100,7 @@ void main()
     vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(scene.irradianceIndex)], -N).rgb;
     vec3 diffuse = irradiance * albedo;
 
-    const float MAX_REFLECTION_LOD = 4.0;
+    const float MAX_REFLECTION_LOD = 2.0;
     vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(scene.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
     vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);

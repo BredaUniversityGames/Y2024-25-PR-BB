@@ -408,3 +408,5 @@ FodyWeavers.xsd
 
 compile_commands.json
 imgui.ini
+
+memory-vis/

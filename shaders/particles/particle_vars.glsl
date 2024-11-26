@@ -1,3 +1,5 @@
+const uint MAX_PARTICLES = 1024;
+
 struct Particle
 {
     vec3 position;
@@ -13,37 +15,16 @@ struct ParticleCounters
     uint aliveCount;
     uint deadCount;
     uint aliveCountAfterSimulation;
-    uint culledCount;
 };
 
-const uint MAX_PARTICLES = 1024;
-
-const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT = 0;
-const uint PARTICLECOUNTER_OFFSET_DEADCOUNT = 1;
-const uint PARTICLECOUNTER_OFFSET_ALIVECOUNT_AFTERSIMULATION = 2;
-const uint PARTICLECOUNTER_OFFSET_CULLEDCOUNT = 3;
-
-layout(set = 1, binding = 0) buffer ParticleSSBO
+struct ParticleInstance
 {
-    Particle particles[MAX_PARTICLES];
+    vec3 position;
+    uint materialIndex;
 };
 
-layout(set = 1, binding = 1) buffer AliveNEWSSBO
+struct CulledInstance
 {
-    uint aliveBufferNEW[MAX_PARTICLES];
-};
-
-layout(set = 1, binding = 2) buffer AliveCURRENTSSBO
-{
-    uint aliveBufferCURRENT[MAX_PARTICLES];
-};
-
-layout(set = 1, binding = 3) buffer DeadSSBO
-{
-    uint deadBuffer[MAX_PARTICLES];
-};
-
-layout(set = 1, binding = 4) buffer CounterSSBO
-{
-    ParticleCounters particleCounters;
+    uint count;
+    uint indices[MAX_PARTICLES];
 };

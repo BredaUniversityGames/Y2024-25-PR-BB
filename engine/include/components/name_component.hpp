@@ -1,13 +1,20 @@
 #pragma once
 
+#include "imgui_entt_entity_editor.hpp"
+#include <entt/entity/registry.hpp>
 #include <string>
 #include <string_view>
-#include <entt/entity/registry.hpp>
 
 class NameComponent
 {
 public:
-    std::string _name {};
+    std::string name;
 
     static std::string_view GetDisplayName(const entt::registry& registry, entt::entity entity);
 };
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<NameComponent>(entt::registry& reg, entt::registry::entity_type e);
+}
