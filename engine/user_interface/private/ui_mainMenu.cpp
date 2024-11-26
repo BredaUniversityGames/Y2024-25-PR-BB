@@ -1,4 +1,5 @@
 #include "ui_mainMenu.hpp"
+#include "graphics_context.hpp"
 #include "ui_core.hpp"
 #include "ui_text.hpp"
 

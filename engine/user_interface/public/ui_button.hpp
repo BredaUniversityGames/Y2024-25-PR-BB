@@ -2,10 +2,11 @@
 // Created by luuk on 30-9-2024.
 //
 #pragma once
+#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
 #include "ui_core.hpp"
 #include <functional>
-struct GPUImage;
+
 class UIButton : public UIElement
 {
 public:

@@ -7,7 +7,7 @@
 #include "ui_button.hpp"
 
 class Font;
-class VulkanBrain;
+class GraphicsContext;
 class MainMenuCanvas : public Canvas
 {
 public:
