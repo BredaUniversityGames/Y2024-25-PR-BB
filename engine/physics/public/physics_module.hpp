@@ -57,6 +57,12 @@ enum PhysicsShapes
     eCUSTOM,
 };
 
+enum BodyType
+{
+    eDYNAMIC,
+    eSTATIC,
+};
+
 /// Class that determines if two object layers can collide
 class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
 {
