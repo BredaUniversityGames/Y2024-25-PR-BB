@@ -57,11 +57,21 @@ std::optional<fileIO::FileTime> fileIO::GetLastModifiedTime(const std::string& p
     }
 }
 
-std::vector<std::byte> fileIO::DumpFullStream(std::istream& stream)
+std::vector<std::byte> fileIO::DumpStreamIntoBytes(std::istream& stream)
 {
     stream.seekg(0, std::ios::end);
     size_t size = stream.tellg();
     std::vector<std::byte> out(size, {});
+    stream.seekg(0);
+    stream.read(std::bit_cast<char*>(out.data()), size);
+    return out;
+}
+
+std::string fileIO::DumpStreamIntoString(std::istream& stream)
+{
+    stream.seekg(0, std::ios::end);
+    size_t size = stream.tellg();
+    std::string out(size, {});
     stream.seekg(0);
     stream.read(std::bit_cast<char*>(out.data()), size);
     return out;

@@ -1,9 +1,9 @@
 #pragma once
 #include "common.hpp"
 
-#include "scripting_context.hpp"
-#include "scripting_entry_point.hpp"
 #include "engine.hpp"
+#include "main_script.hpp"
+#include "scripting_context.hpp"
 
 #include <memory>
 
@@ -11,9 +11,11 @@ class ScriptingModule : public ModuleInterface
 {
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
-        ScriptingContext::VMMemoryConfig memory_config {};
-        _context = std::make_unique<ScriptingContext>(memory_config);
-        _mainModule = std::make_unique<ScriptingEntryPoint>();
+        ScriptingContext::VMInitConfig config {};
+        config.includePaths.emplace_back("./");
+
+        _context = std::make_unique<ScriptingContext>(config);
+        _mainModule = std::make_unique<MainScript>();
         return ModuleTickOrder::ePreTick;
     };
 
@@ -28,5 +30,5 @@ public:
 
 private:
     std::unique_ptr<ScriptingContext> _context {};
-    std::unique_ptr<ScriptingEntryPoint> _mainModule {};
+    std::unique_ptr<MainScript> _mainModule {};
 };
