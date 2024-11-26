@@ -103,6 +103,45 @@ void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entit
 
     UpdateWorldMatrix(reg, entity);
 }
+void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entity, const glm::mat4& worldMatrix)
+{
+    assert(reg.valid(entity));
+
+    TransformComponent* transform = reg.try_get<TransformComponent>(entity);
+    RelationshipComponent* relationship = reg.try_get<RelationshipComponent>(entity);
+
+    if (!transform)
+    {
+        return;
+    }
+
+    glm::mat4 localMatrix = worldMatrix;
+
+    if (relationship && relationship->parent != entt::null)
+    {
+        WorldMatrixComponent* parentWorldMatrixComponent = reg.try_get<WorldMatrixComponent>(relationship->parent);
+        if (parentWorldMatrixComponent)
+        {
+            glm::mat4 parentWorldMatrix = parentWorldMatrixComponent->_worldMatrix;
+            glm::mat4 inverseParentWorldMatrix = glm::inverse(parentWorldMatrix);
+            localMatrix = inverseParentWorldMatrix * worldMatrix;
+        }
+    }
+
+    // Decompose the localMatrix to obtain position, rotation, and scale
+    glm::vec3 scale, translation, skew;
+    glm::quat rotation;
+    glm::vec4 perspective;
+    glm::decompose(localMatrix, scale, rotation, translation, skew, perspective);
+
+    // Set the local transform components
+    transform->_localPosition = translation;
+    transform->_localRotation = rotation;
+    transform->_localScale = scale;
+
+    // Update the world matrix of the entity
+    UpdateWorldMatrix(reg, entity);
+}
 glm::vec3 TransformHelpers::GetLocalPosition(const entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
@@ -146,7 +185,12 @@ glm::mat4 TransformHelpers::GetLocalMatrix(const entt::registry& reg, entt::enti
 const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
-    const WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
+    if (!reg.all_of<WorldMatrixComponent>(entity))
+    {
+        reg.emplace<WorldMatrixComponent>(entity);
+        UpdateWorldMatrix(reg, entity);
+    }
+    const WorldMatrixComponent& worldMatrix = reg.get<WorldMatrixComponent>(entity);
 
     return worldMatrix._worldMatrix;
 }

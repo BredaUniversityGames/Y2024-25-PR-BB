@@ -173,7 +173,8 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
 CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
     CPUMesh::Primitive primitive {};
-
+    primitive.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
+    primitive.boundingBox.max = glm::vec3 { std::numeric_limits<float>::min() };
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
@@ -234,8 +235,12 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
             if (attribute.name == "POSITION")
             {
                 const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
-                primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
-                primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
+                primitive.boundingBox.min.x = glm::min(primitive.boundingBox.min.x, position->x);
+                primitive.boundingBox.min.y = glm::min(primitive.boundingBox.min.y, position->y);
+                primitive.boundingBox.min.z = glm::min(primitive.boundingBox.min.z, position->z);
+                primitive.boundingBox.max.x = glm::max(primitive.boundingBox.max.x, position->x);
+                primitive.boundingBox.max.y = glm::max(primitive.boundingBox.max.y, position->y);
+                primitive.boundingBox.max.z = glm::max(primitive.boundingBox.max.z, position->z);
             }
         }
     }

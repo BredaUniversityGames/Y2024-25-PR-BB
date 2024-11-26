@@ -4,6 +4,7 @@
 #include "ecs.hpp"
 #include "imgui/imgui.h"
 #include "physics_module.hpp"
+#include <glm/glm.hpp>
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
     : _ecs(ecs)
@@ -11,6 +12,17 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 {
 }
 
+void PhysicsSystem::InitializePhysicsColliders()
+{
+    const auto view = _ecs.registry.view<TempPhysicsData, TransformComponent>();
+    for (const auto entity : view)
+    {
+        TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position, tempData.boundingBox, eSTATIC);
+        _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
+    }
+}
 void PhysicsSystem::CleanUp()
 {
     const auto toDestroy = _ecs.registry.view<ECS::ToDestroy, RigidbodyComponent>();
@@ -24,6 +36,28 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
+    // return;
+    //  Update the meshes
+    const auto view = _ecs.registry.view<RigidbodyComponent, TransformComponent, TempPhysicsData>();
+    for (const auto entity : view)
+    {
+        RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
+        TransformComponent& transform = view.get<TransformComponent>(entity);
+        TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+
+        const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
+        auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
+        if (boxShape == nullptr)
+        {
+            return;
+        }
+        const auto joltSize = boxShape->GetHalfExtent();
+        const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
+        glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
+        glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), joltBoxSize / oldExtent);
+
+        TransformHelpers::SetWorldTransform(ecs.registry, entity, joltToGlm);
+    }
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 {
@@ -90,6 +124,7 @@ void PhysicsSystem::Inspect()
 
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
+    ImGui::PushID(&rb.bodyID);
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };
     if (ImGui::DragFloat3("Position", pos, 0.1f))
@@ -163,4 +198,6 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         }
         ImGui::EndCombo();
     }
+
+    ImGui::PopID();
 }

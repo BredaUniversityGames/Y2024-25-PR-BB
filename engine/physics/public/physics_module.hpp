@@ -261,7 +261,28 @@ struct RayHitInfo
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
     bool hasHit = false;
 };
+static glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
+{
+    glm::mat4 glmMat;
 
+    // JPH::RMat44 stores rotation columns and translation separately
+    // mRotation is a 3x3 matrix, and mTranslation is a Vec3
+    // GLM uses column-major order, so we can map the columns directly
+
+    // Extract rotation columns from JPH::RMat44
+    JPH::Vec3 col0 = mat.GetColumn3(0);
+    JPH::Vec3 col1 = mat.GetColumn3(1);
+    JPH::Vec3 col2 = mat.GetColumn3(2);
+    JPH::Vec3 translation = mat.GetTranslation();
+
+    // Set the columns of glm::mat4
+    glmMat[0] = glm::vec4(col0.GetX(), col0.GetY(), col0.GetZ(), 0.0f);
+    glmMat[1] = glm::vec4(col1.GetX(), col1.GetY(), col1.GetZ(), 0.0f);
+    glmMat[2] = glm::vec4(col2.GetX(), col2.GetY(), col2.GetZ(), 0.0f);
+    glmMat[3] = glm::vec4(translation.GetX(), translation.GetY(), translation.GetZ(), 1.0f);
+
+    return glmMat;
+}
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
@@ -269,7 +290,8 @@ class PhysicsModule final : public ModuleInterface
     void Tick(Engine& engine) final;
 
 public:
-    PhysicsModule() = default;
+    PhysicsModule()
+        = default;
     ~PhysicsModule() final = default;
 
     NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
