@@ -16,10 +16,10 @@ struct GPUSceneCreation
     std::shared_ptr<GraphicsContext> context;
     std::shared_ptr<ECS> ecs;
 
-    ResourceHandle<Image> irradianceMap;
-    ResourceHandle<Image> prefilterMap;
-    ResourceHandle<Image> brdfLUTMap;
-    ResourceHandle<Image> directionalShadowMap;
+    ResourceHandle<GPUImage> irradianceMap;
+    ResourceHandle<GPUImage> prefilterMap;
+    ResourceHandle<GPUImage> brdfLUTMap;
+    ResourceHandle<GPUImage> directionalShadowMap;
 };
 
 struct RenderSceneDescription
