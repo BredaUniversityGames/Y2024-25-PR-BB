@@ -65,6 +65,9 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# FreeType
+add_subdirectory(freetype)
+
 # Wren Language
 
 add_subdirectory(wren)
@@ -244,6 +247,7 @@ target_link_libraries(External
         INTERFACE spdlog::spdlog
         INTERFACE glm::glm
         INTERFACE EnTT::EnTT
+        INTERFACE freetype
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
         INTERFACE spirv-reflect-static
