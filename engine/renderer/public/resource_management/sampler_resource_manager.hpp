@@ -12,9 +12,20 @@ class VulkanContext;
 class SamplerResourceManager final : public ResourceManager<Sampler>
 {
 public:
-    explicit SamplerResourceManager(const std::shared_ptr<VulkanContext> context);
+    explicit SamplerResourceManager(const std::shared_ptr<VulkanContext>& context);
     ResourceHandle<Sampler> Create(const SamplerCreation& creation);
+
+    // create default fallback sampler
+    void CreateDefaultSampler()
+    {
+        SamplerCreation info;
+        _defaultSampler = Create(info);
+    }
+
+    ResourceHandle<Sampler> GetDefaultSamplerHandle() const noexcept { return _defaultSampler; };
 
 private:
     std::shared_ptr<VulkanContext> _context;
+
+    ResourceHandle<Sampler> _defaultSampler;
 };

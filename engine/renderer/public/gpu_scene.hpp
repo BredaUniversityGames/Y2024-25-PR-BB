@@ -70,10 +70,10 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
 
-    ResourceHandle<Image> irradianceMap;
-    ResourceHandle<Image> prefilterMap;
-    ResourceHandle<Image> brdfLUTMap;
-    ResourceHandle<Image> directionalShadowMap;
+    ResourceHandle<GPUImage> irradianceMap;
+    ResourceHandle<GPUImage> prefilterMap;
+    ResourceHandle<GPUImage> brdfLUTMap;
+    ResourceHandle<GPUImage> directionalShadowMap;
 
 private:
     struct alignas(16) DirectionalLightData

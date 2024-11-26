@@ -19,7 +19,7 @@ public:
     RendererModule();
     ~RendererModule() final = default;
 
-    std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
     std::shared_ptr<Renderer> GetRenderer() { return _renderer; }
     ParticleInterface& GetParticleInterface() { return *_particleInterface; }
     std::shared_ptr<ImGuiBackend> GetImGuiBackend() { return _imguiBackend; }

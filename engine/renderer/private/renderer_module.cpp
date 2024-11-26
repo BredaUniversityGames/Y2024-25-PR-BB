@@ -46,7 +46,7 @@ void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 {
 }
 
-std::vector<Model> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     auto result = _renderer->FrontLoadModels(modelPaths);
 

@@ -14,6 +14,8 @@
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
@@ -25,6 +27,7 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
@@ -61,16 +64,19 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/Terrain/scene.gltf",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf",
         "assets/models/MetalRoughSpheres.glb"
+
     };
 
-    std::vector<Model> models = rendererModule.FrontLoadModels(modelPaths);
+    auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
 
-    SceneLoader sceneLoader {};
+    auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+
     for (const auto& model : models)
     {
-        auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
-        entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
+
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
+        entities.emplace_back(entity);
     }
 
     TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));

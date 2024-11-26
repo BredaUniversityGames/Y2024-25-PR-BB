@@ -12,8 +12,8 @@
 #include <vulkan/vulkan.hpp>
 
 struct RenderSceneDescription;
-struct Image;
 struct Buffer;
+struct GPUImage;
 class GraphicsContext;
 
 enum class FrameGraphRenderPassType : uint8_t
@@ -51,17 +51,17 @@ struct FrameGraphResourceInfo
         vk::PipelineStageFlags2 stageUsage;
     };
 
-    FrameGraphResourceInfo(const std::variant<std::monostate, StageBuffer, ResourceHandle<Image>>& resource)
+    FrameGraphResourceInfo(const std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>>& resource)
         : resource(resource)
     {
     }
 
-    std::variant<std::monostate, StageBuffer, ResourceHandle<Image>> resource;
+    std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>> resource;
 };
 
 struct FrameGraphResourceCreation
 {
-    FrameGraphResourceCreation(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>>& resource)
+    FrameGraphResourceCreation(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>>& resource)
         : info(resource)
     {
     }
@@ -72,7 +72,7 @@ struct FrameGraphResourceCreation
 
 struct FrameGraphResource
 {
-    FrameGraphResource(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<Image>>& resource)
+    FrameGraphResource(const std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>>& resource)
         : info(resource)
     {
     }
@@ -107,10 +107,10 @@ struct FrameGraphNodeCreation
 
     FrameGraphNodeCreation(FrameGraphRenderPass& renderPass, FrameGraphRenderPassType queueType = FrameGraphRenderPassType::eGraphics);
 
-    FrameGraphNodeCreation& AddInput(ResourceHandle<Image> image, FrameGraphResourceType type);
+    FrameGraphNodeCreation& AddInput(ResourceHandle<GPUImage> image, FrameGraphResourceType type);
     FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
 
-    FrameGraphNodeCreation& AddOutput(ResourceHandle<Image> image, FrameGraphResourceType type);
+    FrameGraphNodeCreation& AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type);
     FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
 
     FrameGraphNodeCreation& SetIsEnabled(bool isEnabled);

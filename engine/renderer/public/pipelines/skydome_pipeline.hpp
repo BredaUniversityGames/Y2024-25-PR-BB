@@ -36,7 +36,7 @@ private:
     ResourceHandle<Image> _environmentMap;
     const GBuffers& _gBuffers;
 
-    ResourceHandle<Mesh> _sphere;
+    ResourceHandle<GPUMesh> _sphere;
     const BloomSettings& _bloomSettings;
 
     vk::PipelineLayout _pipelineLayout;

@@ -8,16 +8,16 @@ void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangl
     indices.emplace_back(triangle[2]);
 }
 
-StagingMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
+CPUMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
 {
-    StagingMesh::Primitive primitive;
+    CPUMesh::Primitive primitive;
 
     uint32_t totalVertices = 2 + (stacks - 1) * slices;
 
     primitive.vertices.reserve(totalVertices);
 
     // TODO: Consider this based on the total amount of indices instead.
-    primitive.materialIndex = std::nullopt;
+    primitive.materialIndex = 0;
 
     for (uint32_t i = 0; i <= stacks; ++i)
     {

@@ -9,7 +9,7 @@
 class BloomSettings;
 class GraphicsContext;
 class CameraResource;
-
+struct GPUImage;
 struct RenderSceneDescription;
 
 class LightingPipeline final : public FrameGraphRenderPass
