@@ -31,6 +31,10 @@ ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
     {
         MaterialCreation materialCreation {};
 
+        materialCreation.normalScale = cpuMaterial.normalScale;
+        if (cpuMaterial.normalMap.has_value())
+            materialCreation.normalMap = model.textures[cpuMaterial.normalMap.value()];
+
         materialCreation.albedoFactor = cpuMaterial.albedoFactor;
         if (cpuMaterial.albedoMap.has_value())
             materialCreation.albedoMap = model.textures[cpuMaterial.albedoMap.value()];
