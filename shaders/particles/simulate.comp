@@ -25,6 +25,7 @@ void main()
 
     uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
+    particle.life -= deltaTime;
 
     if(particle.life > 0)
     {
@@ -33,8 +34,6 @@ void main()
         particle.position += particle.velocity * deltaTime;
 
         // TODO: kill particle on depth collision and break
-
-        particle.life -= deltaTime;
 
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
@@ -49,6 +48,7 @@ void main()
         ParticleInstance instance;
         instance.position = particle.position;
         instance.materialIndex = particle.materialIndex;
+        instance.size = particle.size;
         culledInstances.instances[culledIndex] = instance;
     }
     else // if dead

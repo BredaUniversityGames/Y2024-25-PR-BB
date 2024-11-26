@@ -57,23 +57,14 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     UpdateEmitters(ecs);
     UpdateBuffers(commandBuffer);
 
-    vk::MemoryBarrier memoryBarrier {};
-    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead;
-    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead;
-
     RecordKickOff(commandBuffer);
-
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     if (!_emitters.empty())
     {
         RecordEmit(commandBuffer);
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
     }
 
     RecordSimulate(commandBuffer, deltaTime);
-
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     RecordRenderIndexed(commandBuffer, currentFrame, scene);
 }
@@ -88,6 +79,9 @@ void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eKickOff)], 2, _instancesDescriptorSet, {});
 
     commandBuffer.dispatch(1, 1, 1);
+
+    vk::MemoryBarrier memoryBarrier {};
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
 }
@@ -121,6 +115,9 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     }
     _emitters.clear();
 
+    vk::MemoryBarrier memoryBarrier {};
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
+
     util::EndLabel(commandBuffer, _brain.dldi);
 }
 
@@ -137,6 +134,11 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(SimulatePushConstant), &_simulatePushConstant);
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
+
+    vk::MemoryBarrier memoryBarrier {};
+    memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, _brain.dldi);
 }

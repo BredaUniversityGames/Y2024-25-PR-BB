@@ -35,7 +35,8 @@ void main()
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
 
-    position = instance.position + cameraRight * inPosition.x + cameraUp * inPosition.y;
+    position = instance.position + cameraRight * inPosition.x * instance.size.x
+        + cameraUp * inPosition.y * instance.size.y;
 
     gl_Position = (camera.VP) * vec4(position, 1.0);
 }

@@ -12,6 +12,7 @@ struct Emitter
     float maxLife;
     float randomValue;
     uint materialIndex;
+    vec2 size;
 };
 
 const uint MAX_EMITTERS = 64;
@@ -46,6 +47,7 @@ void main()
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
     particle.materialIndex = emitter.materialIndex;
+    particle.size = emitter.size;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);

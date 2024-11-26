@@ -5,7 +5,7 @@
 
 // temporary values for testing/progress
 static constexpr uint32_t MAX_EMITTERS = 32;
-static constexpr int32_t MAX_PARTICLES = 1024 * 64;
+static constexpr int32_t MAX_PARTICLES = 1024;
 
 // Structs in line with shaders
 struct alignas(16) Emitter
@@ -18,6 +18,7 @@ struct alignas(16) Emitter
     float maxLife = 1.0f;
     float randomValue = 0.0f;
     uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
 };
 
 struct alignas(16) Particle
@@ -29,6 +30,7 @@ struct alignas(16) Particle
     glm::vec3 rotationVelocity = { 0.0f, 0.0f, 0.0f };
     float life = 5.0f;
     uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
 };
 
 struct alignas(16) ParticleCounters
@@ -42,6 +44,7 @@ struct alignas(16) ParticleInstance
 {
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
 };
 
 struct alignas(16) CulledInstances

@@ -21,6 +21,7 @@ ParticleInterface::ParticleInterface(const VulkanBrain& brain, ECS& ecs)
     emitter.rotationVelocity = glm::vec3(1.0f);
     emitter.maxLife = 5.0f;
     emitter.materialIndex = LoadEmitterImage("assets/textures/nogameplay.png");
+    emitter.size = glm::vec2(_brain.GetImageResourceManager().Access(_emitterImages[0])->width, _brain.GetImageResourceManager().Access(_emitterImages[0])->height) / static_cast<float>(glm::max(_brain.GetImageResourceManager().Access(_emitterImages[0])->width, _brain.GetImageResourceManager().Access(_emitterImages[0])->height));
     _emitterPresets.emplace_back(emitter);
 
     // fill ECS with emitters
