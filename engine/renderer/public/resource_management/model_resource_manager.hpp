@@ -16,7 +16,7 @@ public:
         std::shared_ptr<MaterialResourceManager> materialResourceManager,
         std::shared_ptr<MeshResourceManager> meshResourceManager);
 
-    ResourceHandle<GPUModel> Create(const CPUModel& data, BatchBuffer& batchBuffer);
+    ResourceHandle<GPUModel> Create(const CPUModel<Vertex>& data, BatchBuffer& batchBuffer);
 
     ModelResourceManager() = default;
 

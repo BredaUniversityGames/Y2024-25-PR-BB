@@ -8,9 +8,9 @@ void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangl
     indices.emplace_back(triangle[2]);
 }
 
-CPUMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
+CPUMesh<Vertex>::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
 {
-    CPUMesh::Primitive primitive;
+    CPUMesh<Vertex>::Primitive primitive;
 
     uint32_t totalVertices = 2 + (stacks - 1) * slices;
 

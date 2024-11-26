@@ -159,7 +159,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel<Vertex>, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -174,7 +174,7 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
+    std::vector<std::pair<CPUModel<Vertex>, ResourceHandle<GPUModel>>> models;
     SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {

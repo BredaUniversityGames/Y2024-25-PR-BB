@@ -36,7 +36,7 @@ struct Vertex
         ePOSITION,
         eNORMAL,
         eTANGENT,
-        eTEX_COORD
+        eTEX_COORD,
     };
 
     glm::vec3 position {};
@@ -57,8 +57,44 @@ struct Vertex
     }
 
     static vk::VertexInputBindingDescription GetBindingDescription();
-
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
+};
+
+struct SkinnedVertex
+{
+    enum Enumeration
+    {
+        ePOSITION,
+        eNORMAL,
+        eTANGENT,
+        eTEX_COORD,
+        eJOINT_INDICES,
+        eJOINT_WEIGHTS,
+    };
+
+    glm::vec3 position {};
+    glm::vec3 normal {};
+    glm::vec4 tangent {};
+    glm::vec2 texCoord {};
+    glm::vec4 jointIndices {};
+    glm::vec4 jointWeights {};
+
+    SkinnedVertex()
+    {
+    }
+
+    SkinnedVertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord, glm::vec4 jointIndices, glm::vec4 jointWeights)
+        : position(position)
+        , normal(normal)
+        , tangent(tangent)
+        , texCoord(texCoord)
+        , jointIndices(jointIndices)
+        , jointWeights(jointWeights)
+    {
+    }
+
+    static vk::VertexInputBindingDescription GetBindingDescription();
+    static std::array<vk::VertexInputAttributeDescription, 6> GetAttributeDescriptions();
 };
 
 struct StaticMeshComponent

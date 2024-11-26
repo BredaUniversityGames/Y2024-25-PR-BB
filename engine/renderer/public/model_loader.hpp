@@ -28,7 +28,7 @@ public:
     NON_COPYABLE(ModelLoader);
     NON_MOVABLE(ModelLoader);
 
-    NO_DISCARD CPUModel ExtractModelFromGltfFile(std::string_view path);
+    NO_DISCARD CPUModel<Vertex> ExtractModelFromGltfFile(std::string_view path);
 
     void ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize);
 

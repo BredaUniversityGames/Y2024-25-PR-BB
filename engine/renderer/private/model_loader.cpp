@@ -46,9 +46,9 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
+CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
+CPUModel<Vertex> ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -126,7 +126,7 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
     }
 }
 
-void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
+void CalculateTangents(CPUMesh<Vertex>::Primitive& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -172,9 +172,9 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
     }
 }
 
-CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+CPUMesh<Vertex>::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUMesh::Primitive primitive {};
+    CPUMesh<Vertex>::Primitive primitive {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
@@ -437,14 +437,14 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
     return stagingAnimationChannels;
 }
 
-CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUModel<Vertex>::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUModel::CPUMaterial material {};
+    CPUModel<Vertex>::CPUMaterial material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -488,7 +488,7 @@ CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel<Vertex>& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
 {
     Hierarchy::Node node {};
 
@@ -532,9 +532,9 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
     return node;
 }
 
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
+CPUModel<Vertex> ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 {
-    CPUModel model {};
+    CPUModel<Vertex> model {};
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -548,18 +548,18 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUModel<Vertex>::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
     // Extract mesh data
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUMesh mesh {};
+        CPUMesh<Vertex> mesh {};
 
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            CPUMesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
+            CPUMesh<Vertex>::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
             mesh.primitives.emplace_back(primitive);
         }
 
