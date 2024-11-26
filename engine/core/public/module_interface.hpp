@@ -1,6 +1,6 @@
 #pragma once
-#include "common.hpp"
 #include <cstdint>
+#include "common.hpp"
 
 class Engine;
 class MainEngine;

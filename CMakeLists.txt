@@ -6,21 +6,17 @@ project(Project)
 ### HELPERS AND INCLUDES
 
 include(FetchContent)
-include(scripts/cmake/code-modules.cmake)
+include(scripts/functions.cmake)
 
 ### COMPILATION SETTINGS ###
 
 option(ENABLE_TESTS "Compile with Unit Tests" ON)
-option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
+option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
-option(ENABLE_UNITY "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
-
-target_compile_options(ProjectSettings
-        INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
 
 target_compile_options(ProjectSettings
         INTERFACE -Wall INTERFACE -Wextra INTERFACE -Wno-unknown-pragmas)
@@ -30,25 +26,16 @@ if (WARNINGS_AS_ERRORS)
     target_compile_options(ProjectSettings INTERFACE -Werror)
 endif ()
 
-if (ENABLE_PCH)
-    message(STATUS "### Compiling with Precompiled Headers")
-endif ()
-
-if (ENABLE_UNITY)
-    message(STATUS "### Compiling with Unity (Jumbo) builds")
-endif ()
-
-
 # Add external dependencies
 add_subdirectory(external)
+
+# Add engine library
+add_subdirectory(engine)
 
 # Add unit testing target executable
 if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif ()
-
-# Add engine library
-add_subdirectory(engine)
 
 # Add game executable (currently just main.cpp)
 add_executable(Game "engine/main.cpp")
@@ -56,8 +43,6 @@ target_link_libraries(Game
         PRIVATE ProjectSettings
         PRIVATE Engine
 )
-
-# target_link_options(Game PRIVATE -static -static-libgcc -static-libstdc++)
 
 ### SHADERS COMPILE STEP ###
 

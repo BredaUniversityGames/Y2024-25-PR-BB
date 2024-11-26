@@ -1,6 +1,5 @@
 #pragma once
 
-#include "imgui_entt_entity_editor.hpp"
 #include <cstddef>
 #include <entt/entity/entity.hpp>
 
@@ -13,9 +12,3 @@ struct RelationshipComponent
     entt::entity next = entt::null; // Next sibling
     entt::entity parent = entt::null;
 };
-
-namespace EnttEditor
-{
-template <>
-void ComponentEditorWidget<RelationshipComponent>(entt::registry& reg, entt::registry::entity_type e);
-}

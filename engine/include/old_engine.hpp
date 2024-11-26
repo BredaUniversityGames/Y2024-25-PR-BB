@@ -1,13 +1,12 @@
 #pragma once
 
-#include "mesh.hpp"
 #include "module_interface.hpp"
-#include "particles/particle_interface.hpp"
 #include "performance_tracker.hpp"
+#include "mesh.hpp"
+#include "particles/particle_interface.hpp"
 
 #include <memory>
 
-struct RigidbodyComponent;
 #include "viewport.hpp"
 
 class MainMenuCanvas;
@@ -18,27 +17,34 @@ class Editor;
 class PhysicsModule;
 class OldEngine : public ModuleInterface
 {
-    ModuleTickOrder Init(Engine& engine) override;
-    void Tick(Engine& engine) override;
-    void Shutdown(Engine& engine) override;
+    virtual ModuleTickOrder Init(Engine& engine) override;
+    virtual void Tick(Engine& engine) override;
+    virtual void Shutdown(Engine& engine) override;
 
 public:
     OldEngine();
     ~OldEngine() override;
 
-    std::shared_ptr<ECS> GetECS() const { return _ecs; }
-
 private:
+    friend Renderer;
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
     std::unique_ptr<Editor> _editor;
+
+    std::unique_ptr<Renderer> _renderer;
+
+    std::unique_ptr<ParticleInterface> _particleInterface;
+
     std::shared_ptr<ECS> _ecs;
+
     std::shared_ptr<SceneDescription> _scene;
 
     std::unique_ptr<Viewport> _viewport;
     glm::ivec2 _lastMousePos {};
+
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
+
     PerformanceTracker _performanceTracker;
 
     // modules

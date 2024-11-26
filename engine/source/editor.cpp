@@ -1,60 +1,74 @@
+#include <imgui_impl_sdl3.h>
 #include "editor.hpp"
 
+#include "imgui_impl_vulkan.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
+#include "performance_tracker.hpp"
 #include "bloom_settings.hpp"
+#include "mesh.hpp"
+#include "modules/physics_module.hpp"
+#include "profile_macros.hpp"
+#include "log.hpp"
+
+#include <fstream>
+
+#include "ECS.hpp"
+#include <glm/gtx/matrix_decompose.hpp>
+
+#include "gbuffers.hpp"
+#include "serialization.hpp"
+
+#include <imgui_impl_sdl3.h>
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
-#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
-#include "ecs.hpp"
-#include "gbuffers.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
-#include "imgui_backend.hpp"
-#include "log.hpp"
-#include "mesh.hpp"
-#include "model_loader.hpp"
-#include "performance_tracker.hpp"
-#include "physics_module.hpp"
-#include "profile_macros.hpp"
-#include "renderer.hpp"
-#include "resource_management/image_resource_manager.hpp"
-#include "serialization.hpp"
-#include "systems/physics_system.hpp"
 
 #include <entt/entity/entity.hpp>
-#include <fstream>
-#include <imgui/misc/cpp/imgui_stdlib.h>
 
-// TODO: Editor shouldnt depend on this.
-#include "vulkan_context.hpp"
-#include <vk_mem_alloc.h>
-
-Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
+Editor::Editor(const VulkanBrain& brain, vk::Format swapchainFormat, vk::Format depthFormat, uint32_t swapchainImages, GBuffers& gBuffers, ECS& ecs)
     : _ecs(ecs)
-    , _renderer(renderer)
-    , _imguiBackend(imguiBackend)
+    , _brain(brain)
+    , _gBuffers(gBuffers)
 {
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfoKhr {};
+    pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
+    pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &swapchainFormat;
+    pipelineRenderingCreateInfoKhr.depthAttachmentFormat = depthFormat;
 
-    _entityEditor.registerComponent<TransformComponent>("Transform");
-    _entityEditor.registerComponent<NameComponent>("Name");
-    _entityEditor.registerComponent<RelationshipComponent>("Relationship");
-    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+    ImGui_ImplVulkan_InitInfo initInfoVulkan {};
+    initInfoVulkan.UseDynamicRendering = true;
+    initInfoVulkan.PipelineRenderingCreateInfo = static_cast<VkPipelineRenderingCreateInfo>(pipelineRenderingCreateInfoKhr);
+    initInfoVulkan.PhysicalDevice = _brain.physicalDevice;
+    initInfoVulkan.Device = _brain.device;
+    initInfoVulkan.ImageCount = MAX_FRAMES_IN_FLIGHT;
+    initInfoVulkan.Instance = _brain.instance;
+    initInfoVulkan.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+    initInfoVulkan.Queue = _brain.graphicsQueue;
+    initInfoVulkan.QueueFamily = _brain.queueFamilyIndices.graphicsFamily.value();
+    initInfoVulkan.DescriptorPool = _brain.descriptorPool;
+    initInfoVulkan.MinImageCount = 2;
+    initInfoVulkan.ImageCount = swapchainImages;
+    ImGui_ImplVulkan_Init(&initInfoVulkan);
+
+    ImGui_ImplVulkan_CreateFontsTexture();
+
+    _basicSampler = util::CreateSampler(_brain, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerMipmapMode::eLinear, 1);
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
+void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings, SceneDescription& scene, ECS& ecs)
 {
-    _imguiBackend->NewFrame();
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+
     ImGui::NewFrame();
 
     DrawMainMenuBar();
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
-        RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, entity));
+        RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
@@ -76,10 +90,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
                 entt::entity current = relationship->first;
                 for (size_t i {}; i < relationship->childrenCount; ++i)
                 {
-                    if (_ecs->registry.valid(current))
+                    if (ecs._registry.valid(current))
                     {
                         self(self, current);
-                        current = _ecs->registry.get<RelationshipComponent>(current).next;
+                        current = ecs._registry.get<RelationshipComponent>(current).next;
                     }
                 }
 
@@ -105,16 +119,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         if (ImGui::Button("+ Add entity"))
         {
-            entt::entity entity = _ecs->registry.create();
+            entt::entity entity = ecs._registry.create();
 
-            _ecs->registry.emplace<TransformComponent>(entity);
+            ecs._registry.emplace<TransformComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
-            for (const auto [entity] : _ecs->registry.storage<entt::entity>().each())
+            for (const auto [entity] : ecs._registry.storage<entt::entity>().each())
             {
-                RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
+                RelationshipComponent* relationship = ecs._registry.try_get<RelationshipComponent>(entity);
 
                 if (relationship == nullptr || relationship->parent == entt::null)
                 {
@@ -128,7 +142,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Begin("Entity Details"))
     {
-        DisplaySelectedEntityDetails();
+        DisplaySelectedEntityDetails(ecs);
     }
     ImGui::End();
 
@@ -136,14 +150,71 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs->systems)
+    for (const auto& system : ecs._systems)
     {
         system->Inspect();
     }
-
-    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
-    ImGui::Begin("Directional Light Shadow Map View");
+    DirectionalLight& light = scene.directionalLight;
+    // for debug info
+    static ImTextureID textureID = ImGui_ImplVulkan_AddTexture(_basicSampler.get(), _brain.GetImageResourceManager().Access(_gBuffers.Shadow())->view, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    ImGui::Begin("Light Debug");
+    ImGui::DragFloat3("Position", &light.camera.position.x, 0.05f);
+    ImGui::DragFloat3("Rotation", &light.camera.eulerRotation.x, 0.05f);
+    ImGui::DragFloat("Ortho Size", &light.camera.orthographicSize, 0.1f);
+    ImGui::DragFloat("Far Plane", &light.camera.farPlane, 0.1f);
+    ImGui::DragFloat("Near Plane", &light.camera.nearPlane, 0.1f);
+    ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f);
     ImGui::Image(textureID, ImVec2(512, 512));
+    ImGui::End();
+    //
+
+    ImGui::Begin("Scene");
+
+    int32_t indexToRemove = -1;
+    for (size_t i = 0; i < scene.gameObjects.size(); ++i)
+    {
+        glm::vec3 scale;
+        glm::vec3 translation;
+        glm::quat rotationQ;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(scene.gameObjects[i].transform, scale, rotationQ, translation, skew, perspective);
+        glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQ));
+
+        if (ImGui::BeginChild(i + 0xf00f, ImVec2 { 400, 110 }))
+        {
+            ImGui::Text("Gameobject %i", static_cast<uint32_t>(i));
+            ImGui::DragFloat3("Position", &translation.x);
+            ImGui::DragFloat3("Scale", &scale.x);
+            ImGui::DragFloat3("Rotation", &rotation.x);
+
+            glm::mat4 mTranslation = glm::translate(glm::mat4 { 1.0f }, translation);
+            glm::mat4 mScale = glm::scale(glm::mat4 { 1.0f }, scale);
+            glm::mat4 mRotation = glm::mat4 { glm::quat { glm::radians(rotation) } };
+
+            scene.gameObjects[i].transform = mTranslation * mRotation * mScale;
+
+            if (ImGui::Button("X"))
+            {
+                indexToRemove = i;
+            }
+        }
+        ImGui::EndChildFrame();
+    }
+
+    if (indexToRemove != -1)
+    {
+        scene.gameObjects.erase(scene.gameObjects.begin() + indexToRemove);
+    }
+
+    uint32_t count = scene.gameObjects.size();
+    if (ImGui::Button("Add model"))
+    {
+        glm::mat4 transform = glm::translate(glm::mat4 { 1.0f }, glm::vec3 { count * 7.0f, 0.0f, 0.0f });
+        transform = glm::scale(transform, glm::vec3 { 10.0f });
+        scene.gameObjects.emplace_back(transform, scene.models[1]);
+    }
+
     ImGui::End();
 
     ImGui::Begin("Dump VMA stats");
@@ -151,7 +222,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     if (ImGui::Button("Dump json"))
     {
         char* statsJson;
-        vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
+        vmaBuildStatsString(_brain.vmaAllocator, &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
 
@@ -167,16 +238,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             bblog::error("Failed writing VMA stats to file!");
         }
 
-        vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
+        vmaFreeStatsString(_brain.vmaAllocator, statsJson);
     }
 
     ImGui::End();
 
     ImGui::Begin("Renderer Stats");
 
-    ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
-    ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
+    ImGui::LabelText("Draw calls", "%i", _brain.drawStats.drawCalls);
+    ImGui::LabelText("Triangles", "%i", _brain.drawStats.indexCount / 3);
+    ImGui::LabelText("Debug lines", "%i", _brain.drawStats.debugLines);
 
     ImGui::End();
 
@@ -191,21 +262,16 @@ void Editor::DrawMainMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Load Scene"))
-            {
-                // Todo: Load saved scene.
-            }
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json", *_ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
             }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
 }
-
-void Editor::DisplaySelectedEntityDetails()
+void Editor::DisplaySelectedEntityDetails(ECS& ecs)
 {
     if (_selectedEntity == entt::null)
     {
@@ -213,24 +279,24 @@ void Editor::DisplaySelectedEntityDetails()
         return;
     }
 
-    if (!_ecs->registry.valid(_selectedEntity))
+    if (!ecs._registry.valid(_selectedEntity))
     {
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, _selectedEntity));
+    const std::string name = std::string(NameComponent::GetDisplayName(ecs._registry, _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
     {
-        _ecs->DestroyEntity(_selectedEntity);
+        ecs.DestroyEntity(_selectedEntity);
         _selectedEntity = entt::null;
         return;
     }
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
-    TransformComponent* transform = _ecs->registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = _ecs->registry.try_get<NameComponent>(_selectedEntity);
+    TransformComponent* transform = ecs._registry.try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = ecs._registry.try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -242,23 +308,19 @@ void Editor::DisplaySelectedEntityDetails()
 
         if (changed)
         {
-            TransformHelpers::UpdateWorldMatrix(_ecs->registry, _selectedEntity);
+            TransformHelpers::UpdateWorldMatrix(ecs._registry, _selectedEntity);
         }
-    }
-
-    RigidbodyComponent* rigidbody = _ecs->registry.try_get<RigidbodyComponent>(_selectedEntity);
-    if (rigidbody != nullptr)
-    {
-        _ecs->GetSystem<PhysicsSystem>().InspectRigidBody(*rigidbody);
     }
 
     if (nameComponent != nullptr)
     {
-        ImGui::InputText("Name", &nameComponent->name);
+        ImGui::InputText("Name", &nameComponent->_name);
     }
 
     ImGui::PopID();
     // inspect other components
 }
 
-Editor::~Editor() = default;
+Editor::~Editor()
+{
+}

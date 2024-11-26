@@ -1,9 +1,9 @@
-#if defined TRACY_ENABLE
+#include "common.hpp"
 #include "profile_macros.hpp"
 
 void* operator new(size_t size)
 {
-    if (auto* ptr = std::malloc(size)) // NOLINT
+    if (auto* ptr = std::malloc(size))
     {
         TracyAlloc(ptr, size);
         return ptr;
@@ -13,7 +13,7 @@ void* operator new(size_t size)
 
 void* operator new[](size_t size)
 {
-    if (auto* ptr = std::malloc(size)) // NOLINT
+    if (auto* ptr = std::malloc(size))
     {
         TracyAlloc(ptr, size);
         return ptr;
@@ -24,24 +24,23 @@ void* operator new[](size_t size)
 void operator delete(void* ptr) noexcept
 {
     TracyFree(ptr);
-    std::free(ptr); // NOLINT
+    std::free(ptr);
 }
 
 void operator delete(void* ptr, size_t) noexcept
 {
     TracyFree(ptr);
-    std::free(ptr); // NOLINT
+    std::free(ptr);
 }
 
 void operator delete[](void* ptr) noexcept
 {
     TracyFree(ptr);
-    std::free(ptr); // NOLINT
+    std::free(ptr);
 }
 
 void operator delete[](void* ptr, size_t) noexcept
 {
     TracyFree(ptr);
-    std::free(ptr); // NOLINT
+    std::free(ptr);
 }
-#endif

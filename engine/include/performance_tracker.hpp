@@ -1,8 +1,8 @@
 #pragma once
-#include <chrono>
 #include <cstdint>
-#include <string>
+#include <chrono>
 #include <vector>
+#include <string>
 
 class PerformanceTracker
 {

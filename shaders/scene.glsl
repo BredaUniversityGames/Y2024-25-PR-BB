@@ -21,7 +21,6 @@ struct DirectionalLight
     mat4 depthBiasMVP;
 
     vec4 direction;
-    vec4 color;
 };
 
 struct Scene
