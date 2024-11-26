@@ -652,7 +652,7 @@ void ParticlePipeline::CreateBuffers()
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto cmdBuffer = SingleTimeCommands(_context);
+    auto cmdBuffer = SingleTimeCommands(_context->VulkanContext());
 
     { // Particle SSB
         std::vector<Particle> particles(MAX_PARTICLES);

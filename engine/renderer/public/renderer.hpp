@@ -39,7 +39,7 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
@@ -72,9 +72,9 @@ private:
 
     std::shared_ptr<const SceneDescription> _scene;
     std::shared_ptr<GPUScene> _gpuScene;
-    ResourceHandle<Image> _environmentMap;
-    ResourceHandle<Image> _brightnessTarget;
-    ResourceHandle<Image> _bloomTarget;
+    ResourceHandle<GPUImage> _environmentMap;
+    ResourceHandle<GPUImage> _brightnessTarget;
+    ResourceHandle<GPUImage> _bloomTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -90,7 +90,7 @@ private:
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 
-    ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<GPUImage> _hdrTarget;
 
     uint32_t _currentFrame { 0 };
 

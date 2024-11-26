@@ -1,19 +1,17 @@
 #pragma once
 
+#include "animation.hpp"
 #include "model.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <memory>
+#include <optional>
 
 class ECS;
 class GraphicsContext;
 struct Animation;
 
-class SceneLoader
+namespace SceneLoading
 {
-public:
-    std::vector<entt::entity> LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model);
-
-private:
-    entt::entity LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& node, std::shared_ptr<Animation> animation);
+entt::entity LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy, std::optional<Animation> animation = std::nullopt);
 };

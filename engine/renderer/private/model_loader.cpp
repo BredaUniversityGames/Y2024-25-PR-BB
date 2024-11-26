@@ -16,6 +16,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 
@@ -45,29 +46,10 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-ModelLoader::ModelLoader(const std::shared_ptr<GraphicsContext>& context, std::shared_ptr<const ECS> ecs)
-    : _context(context)
-    , _ecs(ecs)
+CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
-    auto data = std::vector<std::byte>(2 * 2 * sizeof(std::byte) * 4);
-    ImageCreation defaultImageCreation {};
-    defaultImageCreation.SetName("Default image").SetData(data.data()).SetSize(2, 2).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
-
-    ResourceHandle<Image> defaultImage = _context->Resources()->ImageResourceManager().Create(defaultImageCreation);
-
-    MaterialCreation defaultMaterialCreationInfo {};
-    defaultMaterialCreationInfo.albedoMap = defaultImage;
-    _defaultMaterial = _context->Resources()->MaterialResourceManager().Create(defaultMaterialCreationInfo);
-}
-
-ModelLoader::~ModelLoader()
-{
-}
-
-Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMode loadMode)
-{
-    Stopwatch stopwatch;
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
@@ -76,6 +58,7 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
     std::string_view directory = path.substr(0, path.find_last_of('/'));
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
+
     auto loadedGltf = _parser.loadGltf(fileStream, directory,
         fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
@@ -87,239 +70,40 @@ Model ModelLoader::Load(std::string_view path, BatchBuffer& batchBuffer, LoadMod
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    bblog::info("Loaded model: {} in {} ms", path, stopwatch.GetElapsed().count());
-
-    return LoadModel(gltf, batchBuffer, name, loadMode);
+    return ProcessModel(gltf, name);
 }
 
-StagingMesh::Primitive ModelLoader::ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
+    glm::vec3 normal)
 {
-    StagingMesh::Primitive stagingPrimitive {};
+    glm::vec3 e1 = p1 - p0;
+    glm::vec3 e2 = p2 - p0;
 
-    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
-    if (gltfPrimitive.materialIndex.has_value())
-        stagingPrimitive.materialIndex = gltfPrimitive.materialIndex.value();
+    float deltaU1 = uv1.x - uv0.x;
+    float deltaV1 = uv1.y - uv0.y;
+    float deltaU2 = uv2.x - uv0.x;
+    float deltaV2 = uv2.y - uv0.y;
 
-    bool verticesReserved = false;
-    bool tangentFound = false;
-    bool texCoordFound = false;
-    float squaredBoundingRadius = 0.0f;
+    float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
 
-    for (auto& attribute : gltfPrimitive.attributes)
-    {
-        auto& accessor = gltf.accessors[attribute.accessorIndex];
-        if (!accessor.bufferViewIndex.has_value())
-            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
-        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-        auto& buffer = gltf.buffers[bufferView.bufferIndex];
-        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
+    glm::vec3 tangent;
+    tangent.x = f * (deltaV2 * e1.x - deltaV1 * e2.x);
+    tangent.y = f * (deltaV2 * e1.y - deltaV1 * e2.y);
+    tangent.z = f * (deltaV2 * e1.z - deltaV1 * e2.z);
+    tangent = glm::normalize(tangent);
 
-        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+    glm::vec3 bitangent;
+    bitangent.x = f * (-deltaU2 * e1.x + deltaU1 * e2.x);
+    bitangent.y = f * (-deltaU2 * e1.y + deltaU1 * e2.y);
+    bitangent.z = f * (-deltaU2 * e1.z + deltaU1 * e2.z);
+    bitangent = glm::normalize(bitangent);
 
-        // Make sure the mesh primitive has enough space allocated.
-        if (!verticesReserved)
-        {
-            stagingPrimitive.vertices = std::vector<Vertex>(accessor.count);
-            verticesReserved = true;
-        }
+    float w = (glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f;
 
-        std::uint32_t offset;
-        if (attribute.name == "POSITION")
-            offset = offsetof(Vertex, position);
-        else if (attribute.name == "NORMAL")
-            offset = offsetof(Vertex, normal);
-        else if (attribute.name == "TANGENT")
-        {
-            offset = offsetof(Vertex, tangent);
-            tangentFound = true;
-        }
-        else if (attribute.name == "TEXCOORD_0")
-        {
-            offset = offsetof(Vertex, texCoord);
-            texCoordFound = true;
-        }
-        else
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < accessor.count; ++i)
-        {
-            const std::byte* element;
-            if (bufferView.byteStride.has_value())
-                element = attributeBufferStart + i * bufferView.byteStride.value();
-            else
-                element = attributeBufferStart + i * fastgltf::getElementByteSize(accessor.type, accessor.componentType);
-
-            std::byte* writeTarget = reinterpret_cast<std::byte*>(&stagingPrimitive.vertices[i]) + offset;
-            std::memcpy(writeTarget, element, fastgltf::getElementByteSize(accessor.type, accessor.componentType));
-
-            if (attribute.name == "POSITION")
-            {
-                const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
-                float squaredLength = position->x * position->x + position->y * position->y + position->z * position->z;
-
-                if (squaredLength > squaredBoundingRadius)
-                    squaredBoundingRadius = squaredLength;
-            }
-        }
-    }
-
-    stagingPrimitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
-
-    if (gltfPrimitive.indicesAccessor.has_value())
-    {
-        auto& accessor = gltf.accessors[gltfPrimitive.indicesAccessor.value()];
-        if (!accessor.bufferViewIndex.has_value())
-            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
-        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-        auto& buffer = gltf.buffers[bufferView.bufferIndex];
-        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
-
-        stagingPrimitive.indices = std::vector<uint32_t>(accessor.count);
-
-        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-
-        if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
-        {
-            std::memcpy(stagingPrimitive.indices.data(), attributeBufferStart, stagingPrimitive.indices.size() * sizeof(uint32_t));
-        }
-        else
-        {
-            uint32_t gltfIndexTypeSize = fastgltf::getComponentByteSize(accessor.componentType);
-            for (size_t i = 0; i < accessor.count; ++i)
-            {
-                const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
-                uint32_t* indexPtr = stagingPrimitive.indices.data() + i;
-                std::memcpy(indexPtr, element, gltfIndexTypeSize);
-            }
-        }
-    }
-
-    if (!tangentFound && texCoordFound)
-        CalculateTangents(stagingPrimitive);
-
-    return stagingPrimitive;
+    return glm::vec4 { tangent.x, tangent.y, tangent.z, w };
 }
 
-ImageCreation ModelLoader::ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
-    std::string_view name)
-{
-    ImageCreation imageCreation {};
-
-    std::visit(fastgltf::visitor {
-                   [](MAYBE_UNUSED auto& arg) {},
-                   [&](const fastgltf::sources::URI& filePath)
-                   {
-                       assert(filePath.fileByteOffset == 0); // We don't support offsets with stbi.
-                       assert(filePath.uri.isLocalPath()); // We're only capable of loading local files.
-                       int32_t width, height, nrChannels;
-
-                       const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
-                       stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
-                       if (!stbiData)
-                           bblog::error("Failed loading data from STBI at path: {}", path);
-
-                       data = std::vector<std::byte>(width * height * 4);
-                       std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
-
-                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
-
-                       stbi_image_free(stbiData);
-                   },
-                   [&](const fastgltf::sources::Array& vector)
-                   {
-                       int32_t width, height, nrChannels;
-                       stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()),
-                           static_cast<int32_t>(vector.bytes.size()), &width, &height,
-                           &nrChannels, 4);
-
-                       data = std::vector<std::byte>(width * height * 4);
-                       std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
-
-                       imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
-
-                       stbi_image_free(stbiData);
-                   },
-                   [&](const fastgltf::sources::BufferView& view)
-                   {
-                       auto& bufferView = gltf.bufferViews[view.bufferViewIndex];
-                       auto& buffer = gltf.buffers[bufferView.bufferIndex];
-
-                       std::visit(
-                           fastgltf::visitor { // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning
-                               // all buffers are already loaded into a vector.
-                               [](MAYBE_UNUSED auto& arg) {},
-                               [&](const fastgltf::sources::Array& vector)
-                               {
-                                   int32_t width, height, nrChannels;
-                                   stbi_uc* stbiData = stbi_load_from_memory(
-                                       reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
-                                       static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels,
-                                       4);
-
-                                   data = std::vector<std::byte>(width * height * 4);
-                                   std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
-
-                                   imageCreation.SetName(name).SetSize(width, height).SetData(data.data()).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
-
-                                   stbi_image_free(stbiData);
-                               } },
-                           buffer.data);
-                   },
-               },
-        gltfImage.data);
-
-    return imageCreation;
-}
-
-MaterialCreation ModelLoader::ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<ResourceHandle<Image>>& modelTextures, const fastgltf::Asset& gltf)
-{
-    MaterialCreation material {};
-
-    if (gltfMaterial.pbrData.baseColorTexture.has_value())
-    {
-        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltf);
-        material.albedoMap = modelTextures[textureIndex];
-    }
-
-    if (gltfMaterial.pbrData.metallicRoughnessTexture.has_value())
-    {
-        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex, gltf);
-        material.metallicRoughnessMap = modelTextures[textureIndex];
-    }
-
-    if (gltfMaterial.normalTexture.has_value())
-    {
-        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltf);
-        material.normalMap = modelTextures[textureIndex];
-    }
-
-    if (gltfMaterial.occlusionTexture.has_value())
-    {
-        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltf);
-        material.occlusionMap = modelTextures[textureIndex];
-    }
-
-    if (gltfMaterial.emissiveTexture.has_value())
-    {
-        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltf);
-        material.emissiveMap = modelTextures[textureIndex];
-    }
-
-    material.albedoFactor = detail::ToVec4(gltfMaterial.pbrData.baseColorFactor);
-    material.metallicFactor = gltfMaterial.pbrData.metallicFactor;
-    material.roughnessFactor = gltfMaterial.pbrData.roughnessFactor;
-    material.normalScale = gltfMaterial.normalTexture.has_value() ? gltfMaterial.normalTexture.value().scale : 0.0f;
-    material.emissiveFactor = detail::ToVec3(gltfMaterial.emissiveFactor);
-    material.occlusionStrength = gltfMaterial.occlusionTexture.has_value()
-        ? gltfMaterial.occlusionTexture.value().strength
-        : 1.0f;
-
-    return material;
-}
-
-vk::PrimitiveTopology ModelLoader::MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
+vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
 {
     switch (gltfTopology)
     {
@@ -342,12 +126,7 @@ vk::PrimitiveTopology ModelLoader::MapGltfTopology(fastgltf::PrimitiveType gltfT
     }
 }
 
-uint32_t ModelLoader::MapTextureIndexToImageIndex(uint32_t textureIndex, const fastgltf::Asset& gltf)
-{
-    return gltf.textures[textureIndex].imageIndex.value();
-}
-
-void ModelLoader::CalculateTangents(StagingMesh::Primitive& stagingPrimitive)
+void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -393,126 +172,183 @@ void ModelLoader::CalculateTangents(StagingMesh::Primitive& stagingPrimitive)
     }
 }
 
-glm::vec4 ModelLoader::CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
-    glm::vec3 normal)
+CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    glm::vec3 e1 = p1 - p0;
-    glm::vec3 e2 = p2 - p0;
+    CPUMesh::Primitive primitive {};
 
-    float deltaU1 = uv1.x - uv0.x;
-    float deltaV1 = uv1.y - uv0.y;
-    float deltaU2 = uv2.x - uv0.x;
-    float deltaV2 = uv2.y - uv0.y;
+    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
+    if (gltfPrimitive.materialIndex.has_value())
+        primitive.materialIndex = gltfPrimitive.materialIndex.value();
 
-    float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+    bool verticesReserved = false;
+    bool tangentFound = false;
+    bool texCoordFound = false;
 
-    glm::vec3 tangent;
-    tangent.x = f * (deltaV2 * e1.x - deltaV1 * e2.x);
-    tangent.y = f * (deltaV2 * e1.y - deltaV1 * e2.y);
-    tangent.z = f * (deltaV2 * e1.z - deltaV1 * e2.z);
-    tangent = glm::normalize(tangent);
-
-    glm::vec3 bitangent;
-    bitangent.x = f * (-deltaU2 * e1.x + deltaU1 * e2.x);
-    bitangent.y = f * (-deltaU2 * e1.y + deltaU1 * e2.y);
-    bitangent.z = f * (-deltaU2 * e1.z + deltaU1 * e2.z);
-    bitangent = glm::normalize(bitangent);
-
-    float w = (glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f;
-
-    return glm::vec4 { tangent.x, tangent.y, tangent.z, w };
-}
-
-Model ModelLoader::LoadModel(const fastgltf::Asset& gltf, BatchBuffer& batchBuffer, const std::string_view name, LoadMode loadMode)
-{
-    Model model {};
-
-    SingleTimeCommands commandBuffer { _context };
-
-    // Load textures
-    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
-
-    for (size_t i = 0; i < gltf.images.size(); ++i)
+    for (auto& attribute : gltfPrimitive.attributes)
     {
-        ImageCreation imageCreation = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.resources.textures.emplace_back(_context->Resources()->ImageResourceManager().Create(imageCreation));
-    }
+        auto& accessor = gltf.accessors[attribute.accessorIndex];
+        if (!accessor.bufferViewIndex.has_value())
+            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
+        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+        auto& buffer = gltf.buffers[bufferView.bufferIndex];
+        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-    // Load materials
-    for (auto& material : gltf.materials)
-    {
-        MaterialCreation materialCreation = ProcessMaterial(material, model.resources.textures, gltf);
-        model.resources.materials.emplace_back(_context->Resources()->MaterialResourceManager().Create(materialCreation));
-    }
+        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
 
-    // Load meshes
-    for (auto& gltfMesh : gltf.meshes)
-    {
-        Mesh mesh {};
-
-        for (const auto& gltfPrimitive : gltfMesh.primitives)
+        // Make sure the mesh primitive has enough space allocated.
+        if (!verticesReserved)
         {
-            StagingMesh::Primitive stagingPrimitive = ProcessPrimitive(gltfPrimitive, gltf);
-            Mesh::Primitive primitive = LoadPrimitive(stagingPrimitive, commandBuffer, batchBuffer,
-                gltfPrimitive.materialIndex.has_value() ? model.resources.materials[gltfPrimitive.materialIndex.value()] : ResourceHandle<Material>::Null());
-            mesh.primitives.emplace_back(primitive);
+            primitive.vertices = std::vector<Vertex>(accessor.count);
+            verticesReserved = true;
         }
 
-        auto handle = _context->Resources()->MeshResourceManager().Create(std::move(mesh));
+        std::uint32_t offset;
+        if (attribute.name == "POSITION")
+            offset = offsetof(Vertex, position);
+        else if (attribute.name == "NORMAL")
+            offset = offsetof(Vertex, normal);
+        else if (attribute.name == "TANGENT")
+        {
+            offset = offsetof(Vertex, tangent);
+            tangentFound = true;
+        }
+        else if (attribute.name == "TEXCOORD_0")
+        {
+            offset = offsetof(Vertex, texCoord);
+            texCoordFound = true;
+        }
+        else
+        {
+            continue;
+        }
 
-        model.resources.meshes.emplace_back(handle);
+        for (size_t i = 0; i < accessor.count; ++i)
+        {
+            const std::byte* element;
+            if (bufferView.byteStride.has_value())
+                element = attributeBufferStart + i * bufferView.byteStride.value();
+            else
+                element = attributeBufferStart + i * fastgltf::getElementByteSize(accessor.type, accessor.componentType);
+
+            std::byte* writeTarget = reinterpret_cast<std::byte*>(&primitive.vertices[i]) + offset;
+            std::memcpy(writeTarget, element, fastgltf::getElementByteSize(accessor.type, accessor.componentType));
+
+            if (attribute.name == "POSITION")
+            {
+                const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
+                primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
+                primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
+            }
+        }
     }
 
-    auto animations = LoadAnimations(gltf);
-    model.animation = animations.animation;
-
-    assert(gltf.skins.size() <= 1 && "Only support for one skin!");
-
-    switch (loadMode)
+    if (gltfPrimitive.indicesAccessor.has_value())
     {
-    case LoadMode::eFlat:
-        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
-        {
-            uint32_t index = gltf.scenes[0].nodeIndices[i];
-            const auto& gltfNode { gltf.nodes[index] };
-            Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node {});
-            baseNode.name = gltfNode.name;
+        auto& accessor = gltf.accessors[gltfPrimitive.indicesAccessor.value()];
+        if (!accessor.bufferViewIndex.has_value())
+            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
+        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+        auto& buffer = gltf.buffers[bufferView.bufferIndex];
+        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-            RecurseHierarchy(gltfNode, index, model, gltf, baseNode, animations);
-        }
-        break;
-    case LoadMode::eHierarchical:
-        Hierarchy::Node& baseNode = model.hierarchy.baseNodes.emplace_back(Hierarchy::Node {});
-        baseNode.name = gltf.scenes[0].name;
+        primitive.indices = std::vector<uint32_t>(accessor.count);
 
-        for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
+        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+
+        if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            uint32_t index = gltf.scenes[0].nodeIndices[i];
-            const auto& gltfNode { gltf.nodes[index] };
-            RecurseHierarchy(gltfNode, index, model, gltf, baseNode, animations);
+            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size() * sizeof(uint32_t));
         }
-        break;
+        else
+        {
+            uint32_t gltfIndexTypeSize = fastgltf::getComponentByteSize(accessor.componentType);
+            for (size_t i = 0; i < accessor.count; ++i)
+            {
+                const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
+                uint32_t* indexPtr = primitive.indices.data() + i;
+                std::memcpy(indexPtr, element, gltfIndexTypeSize);
+            }
+        }
     }
 
-    commandBuffer.Submit();
-
-    return model;
-}
-
-Mesh::Primitive ModelLoader::LoadPrimitive(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer,
-    ResourceHandle<Material> material)
-{
-    Mesh::Primitive primitive {};
-    primitive.material = _context->Resources()->MaterialResourceManager().IsValid(material) ? material : _defaultMaterial;
-    primitive.count = stagingPrimitive.indices.size();
-    primitive.vertexOffset = batchBuffer.AppendVertices(stagingPrimitive.vertices, commandBuffer);
-    primitive.indexOffset = batchBuffer.AppendIndices(stagingPrimitive.indices, commandBuffer);
-    primitive.boundingRadius = stagingPrimitive.boundingRadius;
+    if (!tangentFound && texCoordFound)
+        CalculateTangents(primitive);
 
     return primitive;
 }
 
-StagingAnimationChannels ModelLoader::LoadAnimations(const fastgltf::Asset& gltf)
+CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
+    std::string_view name)
+{
+    CPUImage cpuImage {};
+
+    std::visit(fastgltf::visitor {
+                   [](MAYBE_UNUSED auto& arg) {},
+                   [&](const fastgltf::sources::URI& filePath)
+                   {
+                       assert(filePath.fileByteOffset == 0); // We don't support offsets with stbi.
+                       assert(filePath.uri.isLocalPath()); // We're only capable of loading local files.
+                       int32_t width, height, nrChannels;
+
+                       const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
+                       stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+                       if (!stbiData)
+                           bblog::error("Failed loading data from STBI at path: {}", path);
+
+                       data = std::vector<std::byte>(width * height * 4);
+                       std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
+
+                       cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                       stbi_image_free(stbiData);
+                   },
+                   [&](const fastgltf::sources::Array& vector)
+                   {
+                       int32_t width, height, nrChannels;
+                       stbi_uc* stbiData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(vector.bytes.data()),
+                           static_cast<int32_t>(vector.bytes.size()), &width, &height,
+                           &nrChannels, 4);
+
+                       data = std::vector<std::byte>(width * height * 4);
+                       std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
+
+                       cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                       stbi_image_free(stbiData);
+                   },
+                   [&](const fastgltf::sources::BufferView& view)
+                   {
+                       auto& bufferView = gltf.bufferViews[view.bufferViewIndex];
+                       auto& buffer = gltf.buffers[bufferView.bufferIndex];
+
+                       std::visit(
+                           fastgltf::visitor { // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning
+                               // all buffers are already loaded into a vector.
+                               [](MAYBE_UNUSED auto& arg) {},
+                               [&](const fastgltf::sources::Array& vector)
+                               {
+                                   int32_t width, height, nrChannels;
+                                   stbi_uc* stbiData = stbi_load_from_memory(
+                                       reinterpret_cast<const stbi_uc*>(vector.bytes.data() + bufferView.byteOffset),
+                                       static_cast<int32_t>(bufferView.byteLength), &width, &height, &nrChannels,
+                                       4);
+
+                                   data = std::vector<std::byte>(width * height * 4);
+                                   std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
+
+                                   cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+
+                                   stbi_image_free(stbiData);
+                               } },
+                           buffer.data);
+                   },
+               },
+        gltfImage.data);
+
+    return cpuImage;
+}
+
+StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
     StagingAnimationChannels stagingAnimationChannels {};
 
@@ -601,17 +437,68 @@ StagingAnimationChannels ModelLoader::LoadAnimations(const fastgltf::Asset& gltf
     return stagingAnimationChannels;
 }
 
-void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, Model& model, const fastgltf::Asset& gltf, Hierarchy::Node& parent, const StagingAnimationChannels& animationChannels)
+CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
-    Hierarchy::Node& node { parent.children.emplace_back() };
+    auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
+    {
+        return gltfTextures[textureIndex].imageIndex.value();
+    };
+
+    CPUModel::CPUMaterial material {};
+
+    if (gltfMaterial.pbrData.baseColorTexture.has_value())
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.baseColorTexture.value().textureIndex, gltfTextures);
+        material.albedoMap = textureIndex;
+    }
+
+    if (gltfMaterial.pbrData.metallicRoughnessTexture.has_value())
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.pbrData.metallicRoughnessTexture.value().textureIndex, gltfTextures);
+        material.metallicRoughnessMap = textureIndex;
+    }
+
+    if (gltfMaterial.normalTexture.has_value())
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.normalTexture.value().textureIndex, gltfTextures);
+        material.normalMap = textureIndex;
+    }
+
+    if (gltfMaterial.occlusionTexture.has_value())
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.occlusionTexture.value().textureIndex, gltfTextures);
+        material.occlusionMap = textureIndex;
+    }
+
+    if (gltfMaterial.emissiveTexture.has_value())
+    {
+        uint32_t textureIndex = MapTextureIndexToImageIndex(gltfMaterial.emissiveTexture.value().textureIndex, gltfTextures);
+        material.emissiveMap = textureIndex;
+    }
+
+    material.albedoFactor = detail::ToVec4(gltfMaterial.pbrData.baseColorFactor);
+    material.metallicFactor = gltfMaterial.pbrData.metallicFactor;
+    material.roughnessFactor = gltfMaterial.pbrData.roughnessFactor;
+    material.normalScale = gltfMaterial.normalTexture.has_value() ? gltfMaterial.normalTexture.value().scale : 0.0f;
+    material.emissiveFactor = detail::ToVec3(gltfMaterial.emissiveFactor);
+    material.occlusionStrength = gltfMaterial.occlusionTexture.has_value()
+        ? gltfMaterial.occlusionTexture.value().strength
+        : 1.0f;
+
+    return material;
+}
+
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
+{
+    Hierarchy::Node node {};
 
     if (gltfNode.meshIndex.has_value())
     {
-        node.mesh = model.resources.meshes[gltfNode.meshIndex.value()];
+        node.meshIndex = gltfNode.meshIndex.value();
     }
     else
     {
-        node.mesh = ResourceHandle<Mesh>::Null();
+        node.meshIndex = std::nullopt;
     }
 
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
@@ -639,8 +526,63 @@ void ModelLoader::RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltf
 
     for (size_t i : gltfNode.children)
     {
-        RecurseHierarchy(gltf.nodes[i], i, model, gltf, node, animationChannels);
+        node.children.emplace_back(RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels));
     }
+
+    return node;
+}
+
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
+{
+    CPUModel model {};
+
+    // Extract texture data
+    std::vector<std::vector<std::byte>> textureData(gltf.images.size());
+
+    for (size_t i = 0; i < gltf.images.size(); ++i)
+    {
+        const CPUImage image = ProcessImage(gltf.images[i], gltf, textureData[i], name);
+        model.textures.emplace_back(image);
+    }
+
+    // Extract material data
+    for (auto& gltfMaterial : gltf.materials)
+    {
+        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        model.materials.emplace_back(material);
+    }
+
+    // Extract mesh data
+    for (auto& gltfMesh : gltf.meshes)
+    {
+        CPUMesh mesh {};
+
+        for (const auto& gltfPrimitive : gltfMesh.primitives)
+        {
+            CPUMesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
+            mesh.primitives.emplace_back(primitive);
+        }
+
+        model.meshes.emplace_back(mesh);
+    }
+
+    auto animations = LoadAnimations(gltf);
+    model.animation = animations.animation;
+
+    assert(gltf.skins.size() <= 1 && "Only support for one skin!");
+
+    Hierarchy::Node baseNode;
+    baseNode.name = name;
+
+    for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
+    {
+        uint32_t index = gltf.scenes[0].nodeIndices[i];
+        const auto& gltfNode { gltf.nodes[index] };
+        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, index, model, gltf, animations));
+    }
+    model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
+
+    return model;
 }
 
 void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
@@ -680,13 +622,4 @@ void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBuffer
             }
         }
     }
-}
-
-ResourceHandle<Mesh> ModelLoader::LoadMesh(const StagingMesh::Primitive& stagingPrimitive, SingleTimeCommands& commandBuffer, BatchBuffer& batchBuffer, ResourceHandle<Material> material)
-{
-    auto primitive = LoadPrimitive(stagingPrimitive, commandBuffer, batchBuffer, material);
-    Mesh mesh;
-    mesh.primitives.emplace_back(primitive);
-
-    return _context->Resources()->MeshResourceManager().Create(std::move(mesh));
 }

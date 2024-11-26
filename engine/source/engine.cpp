@@ -15,6 +15,8 @@
 #include "ecs.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
@@ -26,6 +28,7 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
@@ -48,14 +51,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
+    auto& physicsModule = engine.GetModule<PhysicsModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
 
     // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     _scene = std::make_shared<SceneDescription>();
     rendererModule.SetScene(_scene);
@@ -68,20 +70,21 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         // "assets/models/MetalRoughSpheres.glb"
     };
 
-    std::vector<Model> models = rendererModule.FrontLoadModels(modelPaths);
+    auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
 
-    SceneLoader sceneLoader {};
+    auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+
     for (const auto& model : models)
     {
         for (size_t i = 0; i < 1; i++)
         {
             for (size_t j = 0; j < 1; j++)
             {
-                auto loadedEntities = sceneLoader.LoadModelIntoECSAsHierarchy(rendererModule.GetRenderer()->GetContext(), *_ecs, model);
-                entities.insert(entities.end(), loadedEntities.begin(), loadedEntities.end());
+                auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy, model.first.animation);
+                entities.emplace_back(entity);
 
-                TransformHelpers::SetLocalPosition(_ecs->registry, loadedEntities[0], glm::vec3(i, 0.0f, j) * 2.0f);
+                TransformHelpers::SetLocalPosition(_ecs->registry, entity, glm::vec3(i, 0.0f, j) * 2.0f);
             }
         }
     }
@@ -126,6 +129,7 @@ void OldEngine::Tick(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
+    auto& physicsModule = engine.GetModule<PhysicsModule>();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -161,7 +165,9 @@ void OldEngine::Tick(Engine& engine)
         }
     }
 
+    // TODO: Should be done at start of frame somewhere.
     rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+    physicsModule.debugRenderer->ClearLines();
 
     const auto debugView = _ecs->registry.view<JointComponent, RelationshipComponent, WorldMatrixComponent>();
     for (auto entity : debugView)
@@ -179,10 +185,8 @@ void OldEngine::Tick(Engine& engine)
     }
 
     // update physics
-    _physicsModule->UpdatePhysicsEngine(deltaTimeMS);
-    auto linesData = _physicsModule->debugRenderer->GetLinesData();
-    auto persistentLinesData = _physicsModule->debugRenderer->GetPersistentLinesData();
-    _physicsModule->debugRenderer->ClearLines();
+    auto linesData = physicsModule.debugRenderer->GetLinesData();
+    auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
 
@@ -249,13 +253,13 @@ void OldEngine::Tick(Engine& engine)
 
         _scene->camera.position += glm::quat(_scene->camera.eulerRotation) * movementDir * deltaTimeMS * CAM_SPEED;
         JPH::RVec3Arg cameraPos = { _scene->camera.position.x, _scene->camera.position.y, _scene->camera.position.z };
-        _physicsModule->debugRenderer->SetCameraPos(cameraPos);
+        physicsModule.debugRenderer->SetCameraPos(cameraPos);
 
         // shoot rays
         if (ImGui::IsKeyPressed(ImGuiKey_Space))
         {
             const glm::vec3 cameraDir = (glm::quat(_scene->camera.eulerRotation) * -FORWARD);
-            const RayHitInfo hitInfo = _physicsModule->ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
+            const RayHitInfo hitInfo = physicsModule.ShootRay(_scene->camera.position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
 
             std::cout << "Hit: " << hitInfo.hasHit << std::endl
                       << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
@@ -281,7 +285,7 @@ void OldEngine::Tick(Engine& engine)
     _ecs->RenderSystems();
 
     JPH::BodyManager::DrawSettings drawSettings;
-    _physicsModule->physicsSystem->DrawBodies(drawSettings, _physicsModule->debugRenderer);
+    physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
     _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
 
@@ -289,7 +293,7 @@ void OldEngine::Tick(Engine& engine)
 
     _performanceTracker.Update();
 
-    _physicsModule->debugRenderer->NextFrame();
+    physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
 }

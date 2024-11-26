@@ -13,27 +13,9 @@
 #include "resource_management/mesh_resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <single_time_commands.hpp>
 
-std::vector<entt::entity> SceneLoader::LoadModelIntoECSAsHierarchy(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Model& model)
-{
-    std::vector<entt::entity> entities {};
-    entities.reserve(model.hierarchy.baseNodes.size());
-
-    std::shared_ptr<Animation> animation { nullptr };
-    if (model.animation.has_value())
-    {
-        animation = std::make_shared<Animation>(model.animation.value());
-    }
-
-    for (const auto& i : model.hierarchy.baseNodes)
-    {
-        entities.emplace_back(LoadNodeRecursive(context, ecs, i, animation));
-    }
-
-    return entities;
-}
-
-entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContext>& context, ECS& ecs, const Hierarchy::Node& currentNode, std::shared_ptr<Animation> animation)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUModel& model, std::shared_ptr<Animation> animation)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -43,9 +25,9 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
     TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
 
-    if (context->Resources()->MeshResourceManager().IsValid(currentNode.mesh))
+    if (currentNode.meshIndex.has_value())
     {
-        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = currentNode.mesh;
+        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value());
     }
 
     if (currentNode.animationChannel.has_value())
@@ -66,9 +48,22 @@ entt::entity SceneLoader::LoadNodeRecursive(const std::shared_ptr<GraphicsContex
 
     for (const auto& node : currentNode.children)
     {
-        const entt::entity childEntity = LoadNodeRecursive(context, ecs, node, animation);
+        const entt::entity childEntity = LoadNodeRecursive(ecs, node, model, animation);
         RelationshipHelpers::AttachChild(ecs.registry, entity, childEntity);
     }
 
     return entity;
+}
+
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy, std::optional<Animation> animation)
+{
+    auto baseNode = hierarchy.baseNodes.at(0);
+
+    std::shared_ptr<Animation> animationControl { nullptr };
+    if (animation.has_value())
+    {
+        animationControl = std::make_shared<Animation>(animation.value());
+    }
+
+    return LoadNodeRecursive(ecs, baseNode, modelResources, animationControl);
 }

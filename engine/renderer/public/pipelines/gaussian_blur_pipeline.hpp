@@ -13,7 +13,7 @@ struct Sampler;
 class GaussianBlurPipeline final : public FrameGraphRenderPass
 {
 public:
-    GaussianBlurPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Image> source, ResourceHandle<Image> target);
+    GaussianBlurPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> source, ResourceHandle<GPUImage> target);
     ~GaussianBlurPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
@@ -24,8 +24,8 @@ public:
 private:
     std::shared_ptr<GraphicsContext> _context;
 
-    ResourceHandle<Image> _source;
-    std::array<ResourceHandle<Image>, 2> _targets;
+    ResourceHandle<GPUImage> _source;
+    std::array<ResourceHandle<GPUImage>, 2> _targets;
 
     vk::DescriptorSetLayout _descriptorSetLayout;
     vk::PipelineLayout _pipelineLayout;
