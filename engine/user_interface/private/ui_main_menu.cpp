@@ -3,7 +3,7 @@
 #include "ui_core.hpp"
 #include "ui_text.hpp"
 
-MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext> context, const Font& font)
+MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext> context, const std::shared_ptr<Font>& font)
     : Canvas(size)
 {
     // demo scene

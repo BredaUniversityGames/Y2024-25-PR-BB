@@ -8,5 +8,5 @@ class GraphicsContext;
 class MainMenuCanvas : public Canvas
 {
 public:
-    MainMenuCanvas(const glm::vec2& size, std::shared_ptr<GraphicsContext> context, const Font& font);
+    MainMenuCanvas(const glm::vec2& size, std::shared_ptr<GraphicsContext> context, const std::shared_ptr<Font>& font);
 };

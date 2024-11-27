@@ -229,6 +229,9 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     if (creation.initialData.data())
     {
         vk::DeviceSize imageSize = width * height * depth * 4;
+        if (format == vk::Format::eR8Unorm)
+            imageSize = width * height * depth;
+
         if (isHDR)
             imageSize *= sizeof(float);
 

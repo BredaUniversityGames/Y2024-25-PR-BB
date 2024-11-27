@@ -86,9 +86,9 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _viewport = std::make_unique<Viewport>(application.DisplaySize());
 
     // TODO: FIX THIS CRASH.
-    // auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
+    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
 
-    //_viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _context, font));
+    _viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _context, font));
 
     _geometryPipeline
         = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
@@ -151,11 +151,13 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
+    // TODO: OUTPUT TONEMAPPING TARGET AS eATTACHMENT
 
     // TODO: THIS PASS SHOULD BE DONE LAST.
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
+        // TODO: USE TONEMAPPING TARGET AS INPUT
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };

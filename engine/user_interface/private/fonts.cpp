@@ -46,7 +46,7 @@ void appendBitmapToAtlas(
         }
     }
 }
-Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext> context)
+std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext> context)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -64,8 +64,8 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
 
     auto sampler = context->Resources()->SamplerResourceManager().Create(createInfo);
 
-    Font font;
-    font.characterHeight = characterHeight;
+    auto font = std::make_shared<Font>();
+    font->characterHeight = characterHeight;
 
     const int maxGlyphs = 128;
     std::array<stbrp_rect, maxGlyphs> rects;
@@ -115,7 +115,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
             }
 
             // Store Character and GlyphRegion
-            font.characters[c] = {
+            font->characters[c] = {
                 .Size = glm::ivec2(bitmap.width, bitmap.rows),
                 .Bearing = glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
                 .Advance = static_cast<uint16_t>(fontFace->glyph->advance.x),
@@ -127,7 +127,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
     }
 
     CPUImage image;
-    image.name = path + " font atlas";
+    image.name = path + " fontatlas";
     image.width = atlasWidth;
     image.height = atlasHeight;
     image.SetData(std::move(atlasData));
@@ -135,7 +135,7 @@ Font LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font._fontAtlas = context->Resources()->ImageResourceManager().Create(image, sampler);
+    font->_fontAtlas = context->Resources()->ImageResourceManager().Create(image);
     context->UpdateBindlessSet();
 
     FT_Done_Face(fontFace);

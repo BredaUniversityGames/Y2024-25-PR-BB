@@ -78,6 +78,8 @@ private:
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
+    ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;

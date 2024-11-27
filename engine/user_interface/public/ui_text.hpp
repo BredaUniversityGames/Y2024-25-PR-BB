@@ -7,7 +7,7 @@ class UIPipeline;
 class Font;
 struct UITextElement : public UIElement
 {
-    UITextElement(const Font& font)
+    UITextElement(const std::shared_ptr<Font>& font)
         : UIElement(0)
         , _font(font)
     {
@@ -15,7 +15,7 @@ struct UITextElement : public UIElement
     void UpdateChildAbsoluteLocations() override { }
     void SubmitDrawInfo(UIPipeline& pipeline) const override;
 
-    const Font& _font;
+    const std::shared_ptr<Font> _font;
     std::string text;
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 };
