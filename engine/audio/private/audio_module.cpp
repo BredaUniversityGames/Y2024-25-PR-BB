@@ -1,5 +1,6 @@
 #include "audio_module.hpp"
 
+#include <iostream>
 #include <string>
 
 #include "fmod.h"
@@ -14,16 +15,17 @@ FMOD_RESULT DebugCallback(FMOD_DEBUG_FLAGS flags, MAYBE_UNUSED const char* file,
     std::string msg(message);
     msg.pop_back();
 
+    // We use std::cout instead of using spdlog because otherwise it crashes 💀 (some threading issue with fmod)
     switch (flags)
     {
     case FMOD_DEBUG_LEVEL_LOG:
-        bblog::info("FMOD : {0} ( {1} ) - {2}", line, func, msg);
+        std::cout << "[FMOD INFO] : " << line << " ( " << func << " ) - " << msg << std::endl;
         break;
     case FMOD_DEBUG_LEVEL_WARNING:
-        bblog::warn("FMOD : {0} ( {1} ) - {2}", line, func, msg);
+        std::cout << "[FMOD WARN] : " << line << " ( " << func << " ) - " << msg << std::endl;
         break;
     case FMOD_DEBUG_LEVEL_ERROR:
-        bblog::error("FMOD : {0} ( {1} ) - {2}", line, func, msg);
+        std::cout << "[FMOD ERROR] : " << line << " ( " << func << " ) - " << msg << std::endl;
         break;
     default:
         break;
