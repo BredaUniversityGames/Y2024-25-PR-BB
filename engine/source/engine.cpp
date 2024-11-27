@@ -4,6 +4,7 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_module.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -50,6 +51,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& audioModule = engine.GetModule<AudioModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
@@ -110,6 +112,15 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
+
+    SoundInfo si;
+
+    si.path = "assets/sounds/test.mp3";
+    si.volume = 1.0f;
+    si.isLoop = true;
+
+    audioModule.LoadSound(si);
+    audioModule.PlaySoundA(si);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
