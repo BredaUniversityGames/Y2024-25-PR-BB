@@ -4,17 +4,8 @@
 
 class TimeModule : public ModuleInterface
 {
-    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
-    {
-        return ModuleTickOrder::eFirst;
-    }
-
-    void Tick(MAYBE_UNUSED Engine& engine) override
-    {
-        current_deltatime = delta_timer.GetElapsed();
-        delta_timer.Reset();
-        total_time += current_deltatime;
-    }
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override;
+    void Tick(MAYBE_UNUSED Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 
 public:

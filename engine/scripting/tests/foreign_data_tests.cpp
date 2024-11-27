@@ -4,6 +4,10 @@
 
 #include "log.hpp"
 #include "scripting_context.hpp"
+#include "scripting_module.hpp"
+#include "time_module.hpp"
+
+#include "main_engine.hpp"
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 const ScriptingContext::VMInitConfig MEMORY_CONFIG {
@@ -11,7 +15,7 @@ const ScriptingContext::VMInitConfig MEMORY_CONFIG {
     256ull * 4ull, 256ull, 50
 };
 
-TEST(ScriptingContextTests, ForeignMethods)
+TEST(ForeignDataTests, ForeignBasicClass)
 {
     ScriptingContext context { MEMORY_CONFIG };
     auto& vm = context.GetVM();
@@ -20,7 +24,6 @@ TEST(ScriptingContextTests, ForeignMethods)
     context.SetScriptingOutputStream(&output);
 
     auto& module = vm.module("Engine");
-
     auto& v3 = module.klass<glm::vec3>("Vec3");
 
     constexpr auto identity = []()
@@ -44,4 +47,26 @@ TEST(ScriptingContextTests, ForeignMethods)
 
     EXPECT_TRUE(result.has_value());
     EXPECT_EQ(output.str(), "1, 2, 3\n");
+}
+
+TEST(ForeignDataTests, EngineWrapper)
+{
+    MainEngine e {};
+    auto& scripting = e.GetModule<ScriptingModule>();
+    e.AddModule<TimeModule>();
+
+    auto& context = scripting.GetContext();
+
+    std::stringstream output;
+    context.SetScriptingOutputStream(&output);
+
+    // Engine Binding
+    {
+        auto& engineAPI = scripting.StartEngineBind();
+        scripting.BindModule<TimeModule>(engineAPI, "Time");
+        scripting.EndEngineBind(e);
+    }
+
+    EXPECT_TRUE(context.InterpretWrenModule("tests/foreign_engine.wren"));
+    EXPECT_EQ(output.str(), "0\n");
 }

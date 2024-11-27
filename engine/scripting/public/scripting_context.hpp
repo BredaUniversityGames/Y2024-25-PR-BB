@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "utility/foreign_bindings.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -34,6 +35,7 @@ public:
 
     // Sets the output stream for system log calls
     void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
+    void FlushOutputStream() { _wrenOutStream->flush(); }
 
 private:
     std::unique_ptr<wren::VM> _vm;
