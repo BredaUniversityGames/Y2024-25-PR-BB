@@ -5,19 +5,20 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "particles/emitter_component.hpp"
-#include "ECS.hpp"
 #include "gpu_scene.hpp"
 #include "vulkan_helper.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
-#include "swap_chain.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, const SwapChain& swapChain)
+ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
     : _context(context)
+    , _ecs(ecs)
+    , _gBuffers(gBuffers)
+    , _hdrTarget(hdrTarget)
     , _camera(camera)
-    , _swapChain(swapChain)
 {
     srand(time(0));
 
@@ -30,37 +31,36 @@ ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& conte
 ParticlePipeline::~ParticlePipeline()
 {
     auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
 
     // Pipeline stuff
     for (auto& pipeline : _pipelines)
     {
-        _context->VulkanContext()->Device().destroy(pipeline);
+        vkContext->Device().destroy(pipeline);
     }
     for (auto& layout : _pipelineLayouts)
     {
-        _context->VulkanContext()->Device().destroy(layout);
+        vkContext->Device().destroy(layout);
     }
     // Buffer stuff
     for (auto& storageBuffer : _particlesBuffers)
     {
-        _brain.GetBufferResourceManager().Destroy(storageBuffer);
+        resources->BufferResourceManager().Destroy(storageBuffer);
     }
-    _brain.GetBufferResourceManager().Destroy(_culledInstancesBuffer);
-    _brain.GetBufferResourceManager().Destroy(_emittersBuffer);
-    _brain.GetBufferResourceManager().Destroy(_vertexBuffer);
-    _brain.GetBufferResourceManager().Destroy(_indexBuffer);
-    vmaDestroyBuffer(_context->VulkanContext()->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
+    resources->BufferResourceManager().Destroy(_culledInstancesBuffer);
+    resources->BufferResourceManager().Destroy(_emittersBuffer);
+    resources->BufferResourceManager().Destroy(_vertexBuffer);
+    resources->BufferResourceManager().Destroy(_indexBuffer);
+    vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
 
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
     vkContext->Device().destroy(_instancesDescriptorSetLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime)
+void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    auto vkContext { _context->VulkanContext() };
-
-    UpdateEmitters(ecs, commandBuffer);
+    UpdateEmitters(commandBuffer);
 
     RecordKickOff(commandBuffer);
 
@@ -69,7 +69,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         RecordEmit(commandBuffer);
     }
 
-    RecordSimulate(commandBuffer, deltaTime);
+    RecordSimulate(commandBuffer, scene.deltaTime); // TODO: get deltatime again somehow
 
     RecordRenderIndexed(commandBuffer, currentFrame, scene);
 
@@ -78,6 +78,8 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
 void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
 {
+    auto vkContext { _context->VulkanContext() };
+
     util::BeginLabel(commandBuffer, "Kick-off particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eKickOff)]);
@@ -97,9 +99,12 @@ void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
 
 void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
     // make sure the copy buffer command is done before dispatching
     vk::BufferMemoryBarrier barrier {};
-    barrier.buffer = _brain.GetBufferResourceManager().Access(_emittersBuffer)->buffer;
+    barrier.buffer = resources->BufferResourceManager().Access(_emittersBuffer)->buffer;
     barrier.size = _emitters.size() * sizeof(Emitter);
     barrier.offset = 0;
     barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
@@ -134,6 +139,8 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
 
 void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime)
 {
+    auto vkContext { _context->VulkanContext() };
+
     util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eSimulate)]);
@@ -156,7 +163,9 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
 
 void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    auto culledIndicesBuffer = _brain.GetBufferResourceManager().Access(_culledInstancesBuffer);
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+    auto culledIndicesBuffer = resources->BufferResourceManager().Access(_culledInstancesBuffer);
 
     // make sure the compute is done before the host reads from it
     vk::BufferMemoryBarrier culledIndicesBarrier {}; // TODO: is this buffer memory barrier necessary?
@@ -170,14 +179,14 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     std::array<vk::RenderingAttachmentInfoKHR, 1> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = _brain.GetImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = resources->ImageResourceManager().Access(_hdrTarget)->views[0];
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
-    depthAttachmentInfo.imageView = _brain.GetImageResourceManager().Access(_gBuffers.Depth())->view;
+    depthAttachmentInfo.imageView = resources->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
@@ -198,17 +207,17 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
     util::BeginLabel(commandBuffer, "Particle rendering pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
-    commandBuffer.beginRenderingKHR(&renderingInfo, _brain.dldi);
+    commandBuffer.beginRenderingKHR(&renderingInfo, vkContext->Dldi());
 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
 
-    auto camera = scene.sceneDescription.camera;
+    auto camera = scene.sceneDescription->camera;
     glm::mat4 cameraRotation = mat4_cast(glm::quat(camera.eulerRotation));
     glm::mat4 cameraTranslation = translate(glm::mat4 { 1.0f }, camera.position);
-    auto cameraView = inverse(cameraTranslation * cameraRotation);
+    auto cameraView = glm::inverse(cameraTranslation * cameraRotation);
     _renderPushConstant.cameraRight = glm::vec3(cameraView[0][0], cameraView[1][0], cameraView[2][0]);
     _renderPushConstant.cameraUp = glm::vec3(cameraView[0][1], cameraView[1][1], cameraView[2][1]);
     commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], vk::ShaderStageFlagBits::eVertex, 0, sizeof(RenderPushConstant), &_renderPushConstant);
@@ -217,8 +226,8 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
 
-    vk::Buffer vertexBuffer = _brain.GetBufferResourceManager().Access(_vertexBuffer)->buffer;
-    vk::Buffer indexBuffer = _brain.GetBufferResourceManager().Access(_indexBuffer)->buffer;
+    vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(_vertexBuffer)->buffer;
+    vk::Buffer indexBuffer = resources->BufferResourceManager().Access(_indexBuffer)->buffer;
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
@@ -229,9 +238,12 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::UpdateEmitters(ECS& ecs, vk::CommandBuffer commandBuffer)
+void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
 {
-    auto view = ecs->registry.view<EmitterComponent>();
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    auto view = _ecs->registry.view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
@@ -250,7 +262,7 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs, vk::CommandBuffer commandBuffer)
         vk::DeviceSize bufferSize = _emitters.size() * sizeof(Emitter);
 
         vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _stagingBufferAllocation, 0, bufferSize);
-        util::CopyBuffer(commandBuffer, _stagingBuffer, _context->Resources()->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
+        util::CopyBuffer(commandBuffer, _stagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
     }
 }
 
@@ -263,6 +275,7 @@ void ParticlePipeline::UpdateAliveLists()
 void ParticlePipeline::CreatePipelines()
 {
     auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
 
     { // kick-off
         vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
@@ -465,7 +478,7 @@ void ParticlePipeline::CreatePipelines()
 
         vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
         depthStencilStateCreateInfo.depthTestEnable = true;
-        depthStencilStateCreateInfo.depthWriteEnable = false;
+        depthStencilStateCreateInfo.depthWriteEnable = true;
         depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
         depthStencilStateCreateInfo.depthBoundsTestEnable = false;
         depthStencilStateCreateInfo.minDepthBounds = 0.0f;
@@ -492,7 +505,7 @@ void ParticlePipeline::CreatePipelines()
 
         auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
         pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
-        vk::Format format = _brain.GetImageResourceManager().Access(_hdrTarget)->format;
+        vk::Format format = resources->ImageResourceManager().Access(_hdrTarget)->format;
         pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
         pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
@@ -714,7 +727,7 @@ void ParticlePipeline::UpdateParticleInstancesBufferDescriptorSet()
 
     // Culled Instance (binding = 0)
     vk::DescriptorBufferInfo culledInstancesBufferInfo {};
-    culledInstancesBufferInfo.buffer = resources->BufferResourceManager().Access(_particleInstancesBuffer)->buffer;
+    culledInstancesBufferInfo.buffer = resources->BufferResourceManager().Access(_culledInstancesBuffer)->buffer;
     culledInstancesBufferInfo.offset = 0;
     culledInstancesBufferInfo.range = sizeof(ParticleInstance) * (MAX_PARTICLES) + sizeof(uint32_t);
     vk::WriteDescriptorSet& culledInstancesBufferWrite { descriptorWrites[0] };
@@ -821,8 +834,8 @@ void ParticlePipeline::CreateBuffers()
             .SetIsMappable(true)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
-        _culledInstancesBuffer = _brain.GetBufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(culledInstances, 0, _brain.GetBufferResourceManager().Access(_culledInstancesBuffer)->buffer);
+        _culledInstancesBuffer = resources->BufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(culledInstances, 0, resources->BufferResourceManager().Access(_culledInstancesBuffer)->buffer);
     }
 
     { // Billboard vertex buffer
@@ -841,8 +854,8 @@ void ParticlePipeline::CreateBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY);
-        _vertexBuffer = _brain.GetBufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(billboardPositions, 0, _brain.GetBufferResourceManager().Access(_vertexBuffer)->buffer);
+        _vertexBuffer = resources->BufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(billboardPositions, 0, resources->BufferResourceManager().Access(_vertexBuffer)->buffer);
     }
 
     { // Billboard index buffer
@@ -855,8 +868,8 @@ void ParticlePipeline::CreateBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY);
-        _indexBuffer = _brain.GetBufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(billboardIndices, 0, _brain.GetBufferResourceManager().Access(_indexBuffer)->buffer);
+        _indexBuffer = resources->BufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(billboardIndices, 0, resources->BufferResourceManager().Access(_indexBuffer)->buffer);
     }
 
     cmdBuffer.Submit();

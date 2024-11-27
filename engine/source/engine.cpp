@@ -18,9 +18,9 @@
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
+#include "particles/particle_util.hpp"
 #include "particles/emitter_component.hpp"
 #include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -80,10 +80,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
-
-    _particleInterface = std::make_unique<ParticleInterface>(_renderer->_brain, *_ecs);
-
-    _renderer->UpdateBindless();
     
     TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
     TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
@@ -231,7 +227,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        rendererModule.GetParticleInterface()->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
@@ -256,7 +252,6 @@ void OldEngine::Tick(Engine& engine)
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _editor.reset();
-    _particleInterface.reset();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::UnsubscribeToEvents(_ecs->registry);

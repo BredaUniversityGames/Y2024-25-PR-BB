@@ -3,6 +3,7 @@
 #include "gbuffers.hpp"
 #include "common.hpp"
 #include "resource_manager.hpp"
+#include "frame_graph.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -13,18 +14,17 @@ struct Emitter;
 
 class CameraResource;
 class RenderSceneDescription;
-class SwapChain;
 class ECS;
 class GraphicsContext;
 struct Buffer;
 
-class ParticlePipeline
+class ParticlePipeline final : public FrameGraphRenderPass
 {
 public:
-    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, const SwapChain& swapChain);
-    ~ParticlePipeline();
+    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera);
+    ~ParticlePipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, ECS& ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -65,8 +65,10 @@ private:
     } _renderPushConstant;
 
     std::shared_ptr<GraphicsContext> _context;
+    std::shared_ptr<ECS> _ecs;
+    const GBuffers& _gBuffers;
+    const ResourceHandle<GPUImage> _hdrTarget;
     const CameraResource& _camera;
-    const SwapChain& _swapChain;
 
     std::vector<Emitter> _emitters;
 
@@ -97,7 +99,7 @@ private:
     void RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime);
     void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
 
-    void UpdateEmitters(std::shared_ptr<ECS> ecs, vk::CommandBuffer commandBuffer);
+    void UpdateEmitters(vk::CommandBuffer commandBuffer);
 
     void CreatePipelines();
     void CreateDescriptorSetLayouts();
