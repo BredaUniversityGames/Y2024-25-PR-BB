@@ -50,7 +50,7 @@ struct CPUModel
         std::optional<TextureIndex> metallicRoughnessUVChannel;
 
         std::optional<TextureIndex> normalMap;
-        float normalScale { 0.0f };
+        float normalScale { 1.0f };
         uint32_t normalUVChannel;
 
         std::optional<TextureIndex> occlusionMap;
