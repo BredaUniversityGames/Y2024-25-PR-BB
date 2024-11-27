@@ -4,7 +4,8 @@
 #include <string>
 
 #include "fmod.h"
-#include "fmod_common.h"
+#include "fmod_studio.h"
+
 #include "fmod_errors.h"
 #include "log.hpp"
 
@@ -14,6 +15,11 @@ FMOD_RESULT DebugCallback(FMOD_DEBUG_FLAGS flags, MAYBE_UNUSED const char* file,
     // Get rid of "\n" for better formatting in bblog
     std::string msg(message);
     msg.pop_back();
+
+    if (msg.empty())
+    {
+        return FMOD_OK;
+    }
 
     // We use std::cout instead of using spdlog because otherwise it crashes 💀 (some threading issue with fmod)
     switch (flags)
@@ -41,14 +47,6 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 
     FMOD_RESULT result;
 
-    result = FMOD_System_Create(&_fmodSystem, FMOD_VERSION);
-
-    if (result != FMOD_OK)
-    {
-        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
-        return tickOrder;
-    }
-
 #if not defined(NDEBUG)
     // Use FMOD_DEBUG_LEVEL_MEMORY if you want to debug memory issues related to fmod
     result = FMOD_Debug_Initialize(FMOD_DEBUG_LEVEL_LOG, FMOD_DEBUG_MODE_CALLBACK, &DebugCallback, nullptr);
@@ -59,8 +57,21 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
     }
 #endif
 
-    result = FMOD_System_Init(_fmodSystem, 512, FMOD_INIT_NORMAL, nullptr);
+    result = FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION);
+    if (result != FMOD_OK)
+    {
+        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
+        return tickOrder;
+    }
 
+    result = FMOD_Studio_System_Initialize(_studioSystem, 512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr);
+    if (result != FMOD_OK)
+    {
+        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
+        return tickOrder;
+    }
+
+    result = FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem);
     if (result != FMOD_OK)
     {
         bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
@@ -73,30 +84,24 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 }
 void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    if (_fmodSystem)
+    if (_coreSystem)
     {
         FMOD_RESULT result;
 
-        result = FMOD_System_Close(_fmodSystem);
-        if (result != FMOD_OK)
-        {
-            bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
-        }
-
-        result = FMOD_System_Release(_fmodSystem);
+        result = FMOD_Studio_System_Release(_studioSystem);
         if (result != FMOD_OK)
         {
             bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
         }
     }
 
-    _fmodSystem = nullptr;
+    _coreSystem = nullptr;
 
     bblog::info("FMOD shutdown");
 }
 void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    FMOD_RESULT result = FMOD_System_Update(_fmodSystem);
+    FMOD_RESULT result = FMOD_System_Update(_coreSystem);
 
     if (result != FMOD_OK)
     {

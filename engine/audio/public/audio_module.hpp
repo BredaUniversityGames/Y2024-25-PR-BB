@@ -3,6 +3,7 @@
 #include "module_interface.hpp"
 
 class FMOD_SYSTEM;
+class FMOD_STUDIO_SYSTEM;
 
 class AudioModule final : public ModuleInterface
 {
@@ -15,5 +16,6 @@ public:
     ~AudioModule() override = default;
 
 private:
-    FMOD_SYSTEM* _fmodSystem = nullptr;
+    FMOD_SYSTEM* _coreSystem = nullptr;
+    FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 };
