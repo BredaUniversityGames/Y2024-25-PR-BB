@@ -30,7 +30,7 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
 
 ParticleInterface::~ParticleInterface()
 {
-    for (auto i : _emitterImages)
+    for (auto const &i : _emitterImages)
     {
         _context->Resources()->ImageResourceManager().Destroy(i);
     }

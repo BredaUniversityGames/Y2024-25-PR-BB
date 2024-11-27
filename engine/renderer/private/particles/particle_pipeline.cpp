@@ -12,6 +12,8 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
     : _context(context)
