@@ -3,6 +3,7 @@
 #include "old_engine.hpp"
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
+#include "pathfinding_module.h"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
@@ -12,7 +13,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<ApplicationModule>()
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
-        .AddModule<PhysicsModule>();
+        .AddModule<PhysicsModule>()
+        .AddModule<PathfindingModule>();
 
     return instance.Run();
 }
