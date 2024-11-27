@@ -227,7 +227,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        rendererModule.GetParticleInterface()->SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
