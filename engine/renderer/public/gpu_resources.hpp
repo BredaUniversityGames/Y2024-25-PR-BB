@@ -2,7 +2,6 @@
 
 #include "lib/includes_vulkan.hpp"
 #include "resource_manager.hpp"
-
 #include <glm/glm.hpp>
 #include <memory>
 #include <optional>
@@ -72,6 +71,12 @@ struct CPUImage
 
     std::string name;
 
+    /**
+     * loads the pixel data, width, height and format from a specifed png file.
+     * assigned format can be R8G8B8Unorm or vk::Format::eR8G8B8A8Unorm.
+     * @param path filepath for the png file, .png extention required.
+     */
+    void ExtractDataFromPNG(std::string_view path);
     CPUImage& SetData(std::vector<std::byte> data);
     CPUImage& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
     CPUImage& SetMips(uint8_t mips);

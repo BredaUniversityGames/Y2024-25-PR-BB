@@ -13,39 +13,6 @@
 #include <resource_management/image_resource_manager.hpp>
 #include <resource_management/sampler_resource_manager.hpp>
 
-// chatgpt
-void appendBitmapToAtlas(
-    const unsigned char* bitmapBuffer,
-    int bitmapWidth,
-    int bitmapHeight,
-    int targetWidth,
-    int targetHeight,
-    std::vector<std::byte>& atlasData)
-{
-    for (int row = 0; row < targetHeight; ++row)
-    {
-        if (row < bitmapHeight)
-        {
-            // Calculate the start of the current row in the bitmap buffer
-            const std::byte* rowStart = reinterpret_cast<const std::byte*>(bitmapBuffer + row * bitmapWidth);
-
-            // Copy the current row to atlasData
-            atlasData.insert(atlasData.end(), rowStart, rowStart + bitmapWidth);
-
-            // Add horizontal padding if the row width is less than the target width
-            if (bitmapWidth < targetWidth)
-            {
-                size_t padding = targetWidth - bitmapWidth;
-                atlasData.insert(atlasData.end(), padding, std::byte { 0 }); // Fill with zeros
-            }
-        }
-        else
-        {
-            // Add a full row of horizontal padding (blank row) for vertical padding
-            atlasData.insert(atlasData.end(), targetWidth, std::byte { 0 });
-        }
-    }
-}
 std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext> context)
 {
     FT_Library library;

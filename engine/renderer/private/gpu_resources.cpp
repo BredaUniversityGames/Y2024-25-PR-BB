@@ -3,6 +3,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <stb_image.h>
+
 SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode addressMode)
 {
     addressModeU = addressMode;
@@ -75,6 +77,36 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
+void CPUImage::ExtractDataFromPNG(std::string_view path)
+{
+    int width;
+    int height;
+    int nrChannels; // dummy
+
+    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(), &width, &height, &nrChannels,
+        4));
+
+    if (data == nullptr)
+        throw std::runtime_error("Failed to load image!");
+
+    if (width > UINT_FAST16_MAX || height > UINT_FAST16_MAX)
+        throw std::runtime_error("Image size is too large!");
+
+    vk::Format format;
+    if (nrChannels == 3)
+        format = vk::Format::eR8G8B8Unorm;
+
+    else if (nrChannels == 4)
+        format = vk::Format::eR8G8B8A8Unorm;
+
+    else
+        throw std::runtime_error("Image format is not supported!");
+
+    SetFormat(format);
+    SetSize(width, height);
+    initialData.assign(data, data + (width * height * nrChannels));
+    stbi_image_free(data);
+}
 CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 {
     initialData = std::move(data);

@@ -45,7 +45,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _ecs(ecs)
     , _viewport(viewport)
 {
-
     _bloomSettings = std::make_unique<BloomSettings>(_context);
 
     auto vulkanInfo = application.GetVulkanInfo();
@@ -161,7 +160,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
         .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };

@@ -39,7 +39,14 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     UpdateVertexData();
 
     auto uiTarget = _context->Resources()->ImageResourceManager().Access(_uiTarget);
+    auto swapChainImage = _swapChain.GetImage(scene.targetSwapChainImageIndex);
+    util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
+    util::TransitionImageLayout(commandBuffer, uiTarget->image, uiTarget->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+
     util::CopyImageToImage(commandBuffer, uiTarget->image, _swapChain.GetImage(scene.targetSwapChainImageIndex), vk::Extent2D { uiTarget->width, uiTarget->height }, _swapChain.GetExtent());
+
+    util::TransitionImageLayout(commandBuffer, uiTarget->image, uiTarget->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
+    util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex),

@@ -3,24 +3,23 @@
 #include "ui_core.hpp"
 #include "ui_text.hpp"
 
+#include <graphics_resources.hpp>
+#include <resource_management/image_resource_manager.hpp>
+
 MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext> context, const std::shared_ptr<Font>& font)
     : Canvas(size)
 {
     // demo scene
 
-    /*ImageCreation buttonNormalImage;
+    CPUImage buttonNormalImage;
 
     buttonNormalImage.format
         = vk::Format::eR8G8B8A8Unorm;
-    buttonNormalImage.sampler = sampler.get();
     buttonNormalImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    buttonNormalImage.LoadFromFile("assets/textures/buttonBackGround.png");
+    buttonNormalImage.ExtractDataFromPNG("assets/textures/button_background.png");
     buttonNormalImage.isHDR = false;
-
-    auto normalImage = brain.GetImageResourceManager().Create(buttonNormalImage);
-
-    buttonNormalImage.LoadFromFile("assets/textures/buttonHovered.png");
-    auto hoveredImage = brain.GetImageResourceManager().Create(buttonNormalImage);
+    auto normalImage = context->Resources()->ImageResourceManager().Create(buttonNormalImage);
+    auto hoveredImage = context->Resources()->ImageResourceManager().Create(buttonNormalImage);
 
     UIButton::ButtonStyle standardStyle {
         .normalImage = normalImage,
@@ -28,14 +27,14 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
         .pressedImage = normalImage
     };
 
-    brain.UpdateBindlessSet();
+    context->UpdateBindlessSet();
 
     std::unique_ptr<UIButton> subButton = std::make_unique<UIButton>();
     subButton->style = standardStyle;
     subButton->scale = { 300, 100 };
     subButton->SetLocation({ 100, 300 });
-    subButton->onMouseDownCallBack = []() { };
-    subButton->onBeginHoverCallBack = []() { };
+    subButton->onMouseDownCallBack = []() {};
+    subButton->onBeginHoverCallBack = []() {};
 
     std::unique_ptr<UIButton> playButton = std::make_unique<UIButton>();
     playButton->style = standardStyle;
@@ -45,7 +44,7 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     {
         subButton->visible = !subButton->visible;
     };
-    playButton->onBeginHoverCallBack = []() { };*/
+    playButton->onBeginHoverCallBack = []() {};
 
     std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(font);
     playText->text = "Play the Game";
@@ -55,8 +54,8 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
 
     AddChild(std::move(playText));
 
-    // AddChild(std::move(playButton));
-    // AddChild(std::move(subButton));
+    AddChild(std::move(playButton));
+    AddChild(std::move(subButton));
 
     UpdateChildAbsoluteLocations();
 }

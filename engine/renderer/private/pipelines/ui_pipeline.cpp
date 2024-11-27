@@ -52,9 +52,24 @@ void UIPipeline::CreatePipeLine()
     auto vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
     auto fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
 
+    vk::PipelineRasterizationStateCreateInfo rasterizationState {
+
+        .depthClampEnable = false,
+        .rasterizerDiscardEnable = false,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eNone,
+        .frontFace = vk::FrontFace::eClockwise,
+        .depthBiasEnable = false,
+        .depthBiasConstantFactor = 0.0f,
+        .depthBiasClamp = 0.0f,
+        .depthBiasSlopeFactor = 0.0f,
+        .lineWidth = 1.0f
+    };
+
     // TODO: CHANGE COLOR FORMAT TO UI TARGET
     PipelineBuilder pipelineBuilder { _context };
     pipelineBuilder
+        .SetRasterizationState(rasterizationState)
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
@@ -67,8 +82,15 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     auto toneMapping = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget);
     auto ui = _context->Resources()->ImageResourceManager().Access(_uiTarget);
     // TODO: BLIT TONE MAPPING TARGET TO UI TARGET.
+
+    util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+    util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
+
     util::CopyImageToImage(commandBuffer, toneMapping->image, ui->image,
         vk::Extent2D { toneMapping->width, toneMapping->height }, vk::Extent2D { ui->width, ui->height });
+
+    util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
+    util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
     vk::RenderingAttachmentInfoKHR const finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_uiTarget)->views[0],
@@ -88,6 +110,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
         .pDepthAttachment = nullptr,
         .pStencilAttachment = nullptr,
     };
+
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);

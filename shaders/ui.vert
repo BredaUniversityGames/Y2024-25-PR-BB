@@ -12,11 +12,11 @@ vec2(0.0, 0.0)
 
 struct QuadDrawInfo
 {
-    mat4 mpMatrix;       // 64 bytes, aligned to 16 bytes
-    vec4 color;          // 16 bytes, aligned to 16 bytes
-    vec2 uvp1;           // 8 bytes, aligned to 8 bytes
-    vec2 uvp2;           // 8 bytes, aligned to 8 bytes
-    uint textureIndex;   // 4 bytes, aligned to 4 bytes
+    mat4 mpMatrix;// 64 bytes, aligned to 16 bytes
+    vec4 color;// 16 bytes, aligned to 16 bytes
+    vec2 uvp1;// 8 bytes, aligned to 8 bytes
+    vec2 uvp2;// 8 bytes, aligned to 8 bytes
+    uint textureIndex;// 4 bytes, aligned to 4 bytes
     bool useRedAsAlpha;
 };
 
@@ -32,6 +32,8 @@ void main()
 {
     gl_Position = pushConstants.quad.mpMatrix * vec4(positions[gl_VertexIndex], 1.0, 1.0);
 
-    uv.x = mix(pushConstants.quad.uvp1.x, pushConstants.quad.uvp2.x, positions[gl_VertexIndex].x);
-    uv.y = mix(pushConstants.quad.uvp1.y, pushConstants.quad.uvp2.y, positions[gl_VertexIndex].y);
+    const vec2 uvp1 = { pushConstants.quad.uvp1.x, pushConstants.quad.uvp2.yy };
+    const vec2 uvp2 =   { pushConstants.quad.uvp2.x, pushConstants.quad.uvp1.y };
+    vec2[6] uvs = { uvp1, { uvp1.x, uvp2.y }, uvp2, uvp2, { uvp2.x, uvp1.y }, uvp1 };
+    uv= uvs[gl_VertexIndex];
 }
