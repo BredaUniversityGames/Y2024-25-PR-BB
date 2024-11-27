@@ -18,6 +18,27 @@ GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& conte
     , _culler(_context, gpuScene)
 {
     CreateStaticPipeline();
+
+    // TODO: Think about where this should actually be
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        BufferCreation creation {
+            .size = sizeof(glm::mat4) * 512, // TODO: Formalize this
+            .usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
+            .isMappable = true,
+            .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+            .name = "Skin matrices buffer",
+        };
+        _skinBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+
+        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+        for (uint32_t j = 0; j < 512; ++j)
+        {
+            glm::mat4 data { 1.0f };
+            std::memcpy(skinBuffer->mappedPtr + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+        }
+    }
+
     CreateSkinnedPipeline();
 
     auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
@@ -114,6 +135,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { _skinDescriptorSets[currentFrame] }, {});
 
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
@@ -217,6 +239,39 @@ void GeometryPipeline::CreateSkinnedPipeline()
         .SetColorAttachmentFormats(formats)
         .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
         .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
+
+    // TODO: DONT DO THIS HERE
+    vk::DescriptorSetLayout layout = pipelineBuilder.GetDescriptorSetLayouts()[3];
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { layout, layout, layout };
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+        .pSetLayouts = layouts.data(),
+    };
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, _skinDescriptorSets.data()),
+        "Failed allocating descriptor sets!");
+
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+
+        vk::DescriptorBufferInfo bufferInfo {
+            .buffer = buffer->buffer,
+            .offset = 0,
+            .range = vk::WholeSize,
+        };
+
+        vk::WriteDescriptorSet bufferWrite {
+            .dstSet = _skinDescriptorSets[i],
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfo,
+        };
+
+        _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+    }
 }
 
 void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
