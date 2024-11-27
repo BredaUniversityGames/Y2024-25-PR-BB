@@ -32,15 +32,18 @@
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
-#include "ui_main_menu.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+#include <ui_main_menu.hpp>
+#include <ui_module.hpp>
+
+Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
     : _context(context)
     , _application(application)
     , _ecs(ecs)
+    , _viewport(viewport)
 {
 
     _bloomSettings = std::make_unique<BloomSettings>(_context);
@@ -85,17 +88,16 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _camera = std::make_unique<CameraResource>(_context);
 
-    _viewport = std::make_unique<Viewport>(application.DisplaySize());
-
     // TODO: FIX THIS CRASH.
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
 
-    _viewport->AddElement(std::make_unique<MainMenuCanvas>(_viewport->extend, _context, font));
+    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.extend, _context, font));
 
     _geometryPipeline
         = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+
     _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
@@ -373,7 +375,7 @@ void Renderer::Render(float deltaTime)
     // TODO: handle this more gracefully
     assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
-
+    _viewport.SubmitDrawInfo(_uiPipeline->GetDrawList());
     uint32_t imageIndex {};
     vk::Result result {};
 

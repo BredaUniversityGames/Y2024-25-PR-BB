@@ -49,9 +49,7 @@ public:
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
     NO_DISCARD const glm::vec2& GetAbsouluteLocation() const noexcept { return _absoluteLocation; }
 
-    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const
-    {
-    }
+    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
     virtual void Update(const InputManager& input)
     {

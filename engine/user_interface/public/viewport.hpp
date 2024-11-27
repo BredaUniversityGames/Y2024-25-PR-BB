@@ -21,9 +21,11 @@ public:
     void Update(const InputManager& input) const;
 
     /**
-     * \brief adds all the visible elements to the drawlist of the supplied UIPipeline ,needs to be called before the Renderer renders.
+     * recursively adds all the draw data for the ui to the drawList argument.
+     * This drawList gets cleared when the uiPipeline records it's commands and thus this function needs to be called before the commandLists are submitted.
+     * @param drawList Reference to the vector holding the QuadDrawInfo, which is most likely located in the uiPipeline.
      */
-    void Render();
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const;
 
     UIElement& AddElement(std::unique_ptr<UIElement> element);
 
@@ -35,11 +37,5 @@ public:
     glm::vec2 extend;
     glm::vec2 offset;
 
-    NO_DISCARD const std::vector<QuadDrawInfo>& GetDrawList() const noexcept
-    {
-        return _drawList;
-    }
-
 private:
-    std::vector<QuadDrawInfo> _drawList;
 };

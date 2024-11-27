@@ -92,9 +92,9 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), static_cast<float>(_swapChain.GetExtent().height), 0.f, -1.f, 1.f);
+    const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), static_cast<float>(_swapChain.GetExtent().height), 0.f);
 
-    for (auto& i : _drawlist)
+    for (auto& i : _drawList)
     {
         _pushConstants.quad = i;
         _pushConstants.quad.projection = projectionMatrix * _pushConstants.quad.projection;
@@ -106,5 +106,5 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
         _context->GetDrawStats().Draw(6);
     }
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
-    _drawlist.clear();
+    _drawList.clear();
 }

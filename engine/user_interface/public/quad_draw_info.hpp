@@ -2,7 +2,7 @@
 
 struct alignas(16) QuadDrawInfo
 {
-    
+
     // todo:: remove alignas
     alignas(16) glm::mat4 projection;
     alignas(16) glm::vec4 color = { 1.f, 1.f, 1.f, 1.f };

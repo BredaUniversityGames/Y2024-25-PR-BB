@@ -9,11 +9,11 @@ void Viewport::Update(const InputManager& input) const
     }
 }
 
-void Viewport::Render()
+void Viewport::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     for (auto& i : baseElements)
     {
-        i->SubmitDrawInfo(_drawList);
+        i->SubmitDrawInfo(drawList);
     }
 }
 

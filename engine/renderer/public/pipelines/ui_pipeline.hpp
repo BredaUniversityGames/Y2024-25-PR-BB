@@ -15,10 +15,12 @@ public:
 
     NON_COPYABLE(UIPipeline);
     NON_MOVABLE(UIPipeline);
-
-    std::vector<QuadDrawInfo> _drawlist;
-
     void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
+
+    std::vector<QuadDrawInfo>& GetDrawList()
+    {
+        return _drawList;
+    }
 
 private:
     struct UIPushConstants
@@ -26,6 +28,8 @@ private:
         QuadDrawInfo quad;
         uint32_t tonemappingTargetIndex;
     } _pushConstants;
+
+    std::vector<QuadDrawInfo> _drawList;
 
     vk::Pipeline _pipeline;
     vk::PipelineLayout _pipelineLayout;

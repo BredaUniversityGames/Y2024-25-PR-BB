@@ -8,6 +8,7 @@
 #include "model.hpp"
 #include "swap_chain.hpp"
 
+class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
@@ -33,7 +34,7 @@ class Viewport;
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& applicationModule, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -59,7 +60,7 @@ private:
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
     std::shared_ptr<ECS> _ecs;
-
+    Viewport& _viewport;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
@@ -94,8 +95,6 @@ private:
     std::unique_ptr<CameraResource> _camera;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
-
-    std::unique_ptr<Viewport> _viewport;
 
     ResourceHandle<GPUImage> _hdrTarget;
 
