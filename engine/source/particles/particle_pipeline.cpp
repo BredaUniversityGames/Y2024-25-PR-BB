@@ -67,7 +67,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     RecordRenderIndexed(commandBuffer, currentFrame, scene);
 
-    UpdateBuffers();
+    UpdateAliveLists();
 }
 
 void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
@@ -248,7 +248,7 @@ void ParticlePipeline::UpdateEmitters(ECS& ecs, vk::CommandBuffer commandBuffer)
     }
 }
 
-void ParticlePipeline::UpdateBuffers()
+void ParticlePipeline::UpdateAliveLists()
 {
     std::swap(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveNew)], _particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveCurrent)]);
     UpdateParticleBuffersDescriptorSets();

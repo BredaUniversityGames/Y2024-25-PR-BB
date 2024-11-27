@@ -98,7 +98,7 @@ private:
     void CreateDescriptorSets();
     void CreateBuffers();
 
-    void UpdateBuffers();
+    void UpdateAliveLists();
     void UpdateParticleBuffersDescriptorSets();
     void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();

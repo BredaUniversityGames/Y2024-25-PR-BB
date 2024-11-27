@@ -10,11 +10,7 @@ layout ( local_size_x = 1, local_size_y = 1, local_size_z = 1 ) in;
 
 void main()
 {
-    uint aliveCount = particleCounters.aliveCountAfterSimulation;
-    uint deadCount = particleCounters.deadCount;
-
-    particleCounters.aliveCount = aliveCount;
+    particleCounters.aliveCount = particleCounters.aliveCountAfterSimulation;
     particleCounters.aliveCountAfterSimulation = 0;
-    particleCounters.deadCount = max(0, deadCount);
     culledInstances.count = 0;
 }

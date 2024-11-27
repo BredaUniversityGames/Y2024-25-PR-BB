@@ -24,6 +24,7 @@ void main()
 
     uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
+
     particle.life -= deltaTime;
 
     if(particle.life > 0)
