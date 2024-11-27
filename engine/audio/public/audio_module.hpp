@@ -2,10 +2,11 @@
 
 #include "module_interface.hpp"
 
-#include "fmod.h"
-
 class FMOD_SYSTEM;
+class FMOD_STUDIO_SYSTEM;
 class FMOD_SOUND;
+class FMOD_CHANNELGROUP;
+class FMOD_CHANNEL;
 
 struct SoundInfo
 {
@@ -39,8 +40,8 @@ public:
     void PlaySoundA(SoundInfo& soundInfo);
 
 private:
-    FMOD_SYSTEM* _fmodSystem
-        = nullptr;
+    FMOD_SYSTEM* _coreSystem = nullptr;
+    FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 
     static constexpr uint32_t MAX_CHANNELS = 1024;
 
