@@ -57,10 +57,7 @@ target_link_libraries(Game
         PRIVATE Engine
 )
 
-# target_link_options(Game PRIVATE -static -static-libgcc -static-libstdc++)
-
 ### SHADERS COMPILE STEP ###
-
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)
