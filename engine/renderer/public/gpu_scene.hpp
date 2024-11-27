@@ -3,6 +3,7 @@
 #include "camera.hpp"
 #include "constants.hpp"
 #include "gpu_resources.hpp"
+#include "range.hpp"
 #include "resource_manager.hpp"
 
 #include <lib/includes_vulkan.hpp>
@@ -31,7 +32,8 @@ struct RenderSceneDescription
     std::shared_ptr<GPUScene> gpuScene;
     std::shared_ptr<const SceneDescription> sceneDescription; // This will change to ecs
     std::shared_ptr<const ECS> ecs;
-    std::shared_ptr<BatchBuffer> batchBuffer;
+    std::shared_ptr<BatchBuffer> staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> skinnedBatchBuffer;
     uint32_t targetSwapChainImageIndex;
 };
 
@@ -62,8 +64,8 @@ public:
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
 
-    ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(DrawIndexedIndirectCommand); }
+    const Range& StaticDrawRange() const { return _staticDrawRange; }
+    const Range& SkinnedDrawRange() const { return _skinnedDrawRange; }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
@@ -83,11 +85,6 @@ public:
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
     ResourceHandle<GPUImage> directionalShadowMap;
-
-    uint32_t staticDrawsFirst;
-    uint32_t staticDrawsCount;
-    uint32_t skinnedDrawsFirst;
-    uint32_t skinnedDrawsCount;
 
 private:
     struct alignas(16) DirectionalLightData
@@ -134,6 +131,9 @@ private:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
 
     std::vector<DrawIndexedIndirectCommand> _drawCommands;
+
+    Range _staticDrawRange;
+    Range _skinnedDrawRange;
 
     // TODO: Change GPUScene to support all cameras in the scene
     Camera _directionalLightShadowCamera {};

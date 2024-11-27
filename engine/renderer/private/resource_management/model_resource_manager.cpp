@@ -16,7 +16,7 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 {
 }
 
-ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
+ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, BatchBuffer& staticBatchBuffer, BatchBuffer& skinnedBatchBuffer)
 {
     GPUModel model;
 
@@ -57,12 +57,12 @@ ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, Batc
 
     for (const auto& cpuMesh : data.meshes)
     {
-        model.meshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, batchBuffer));
+        model.meshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, staticBatchBuffer));
     }
 
     for (const auto& cpuMesh : data.skinnedMeshes)
     {
-        model.skinnedMeshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, batchBuffer));
+        model.skinnedMeshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, skinnedBatchBuffer));
     }
 
     return ResourceManager::Create(std::move(model));

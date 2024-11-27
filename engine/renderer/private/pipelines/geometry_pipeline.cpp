@@ -17,7 +17,8 @@ GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& conte
     , _camera(camera)
     , _culler(_context, gpuScene)
 {
-    CreatePipeline();
+    CreateStaticPipeline();
+    CreateSkinnedPipeline();
 
     auto mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
     const auto* mainDrawBuffer = _context->Resources()->BufferResourceManager().Access(mainDrawBufferHandle);
@@ -37,8 +38,10 @@ GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& conte
 
 GeometryPipeline::~GeometryPipeline()
 {
-    _context->VulkanContext()->Device().destroy(_pipeline);
-    _context->VulkanContext()->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_staticPipeline);
+    _context->VulkanContext()->Device().destroy(_staticPipelineLayout);
+    _context->VulkanContext()->Device().destroy(_skinnedPipeline);
+    _context->VulkanContext()->Device().destroy(_skinnedPipelineLayout);
 }
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -81,29 +84,60 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
+        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
+        vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_drawBuffer)->buffer;
 
-    vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.batchBuffer->VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.batchBuffer->IndexBuffer())->buffer;
-    vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_drawBuffer)->buffer;
-    vk::Buffer indirectCountBuffer = _context->Resources()->BufferResourceManager().Access(scene.gpuScene->IndirectCountBuffer(currentFrame))->buffer;
-    uint32_t indirectCountOffset = scene.gpuScene->IndirectCountOffset();
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
+        commandBuffer.drawIndexedIndirect(
+            indirectDrawBuffer,
+            scene.gpuScene->StaticDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            scene.gpuScene->StaticDrawRange().count,
+            sizeof(DrawIndexedIndirectCommand),
+            _context->VulkanContext()->Dldi());
 
-    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
-    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, scene.gpuScene->staticDrawsFirst, indirectCountBuffer, indirectCountOffset, scene.gpuScene->staticDrawsCount, sizeof(DrawIndexedIndirectCommand), _context->VulkanContext()->Dldi());
+        // TODO: wrong! doesnt consider static vs skinned buffer parts
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+    }
 
-    _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
+
+        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
+        vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_drawBuffer)->buffer;
+
+        commandBuffer.pushConstants<uint32_t>(_skinnedPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { scene.gpuScene->SkinnedDrawRange().start });
+
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
+        commandBuffer.drawIndexedIndirect(
+            indirectDrawBuffer,
+            scene.gpuScene->SkinnedDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            scene.gpuScene->SkinnedDrawRange().count,
+            sizeof(DrawIndexedIndirectCommand),
+            _context->VulkanContext()->Dldi());
+
+        // TODO: wrong! doesnt consider static vs skinned buffer parts
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+    }
 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-void GeometryPipeline::CreatePipeline()
+void GeometryPipeline::CreateStaticPipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
     for (auto& blendAttachmentState : colorBlendAttachmentStates)
@@ -141,7 +175,48 @@ void GeometryPipeline::CreatePipeline()
         .SetDepthStencilState(depthStencilStateCreateInfo)
         .SetColorAttachmentFormats(formats)
         .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_pipeline, _pipelineLayout);
+        .BuildPipeline(_staticPipeline, _staticPipelineLayout);
+}
+
+void GeometryPipeline::CreateSkinnedPipeline()
+{
+    std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
+    for (auto& blendAttachmentState : colorBlendAttachmentStates)
+    {
+        blendAttachmentState.blendEnable = vk::False;
+        blendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    }
+
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+    colorBlendStateCreateInfo.logicOpEnable = vk::False;
+    colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.size();
+    colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates.data();
+
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+    depthStencilStateCreateInfo.depthTestEnable = true;
+    depthStencilStateCreateInfo.depthWriteEnable = true;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthBoundsTestEnable = false;
+    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.stencilTestEnable = false;
+
+    std::vector<vk::Format> formats(DEFERRED_ATTACHMENT_COUNT);
+    for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+        formats.at(i) = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->format;
+
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_geom.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
+
+    PipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetColorBlendState(colorBlendStateCreateInfo)
+        .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetColorAttachmentFormats(formats)
+        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+        .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
 }
 
 void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)

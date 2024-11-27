@@ -111,7 +111,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _drawCommands.clear();
 
-    staticDrawsFirst = 0;
+    _staticDrawRange.start = 0;
 
     auto staticMeshView = _ecs->registry.view<StaticMeshComponent, WorldMatrixComponent>();
 
@@ -143,8 +143,8 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         count++;
     }
 
-    staticDrawsCount = count;
-    skinnedDrawsFirst = count;
+    _staticDrawRange.count = count;
+    _skinnedDrawRange.start = count;
 
     auto skinnedMeshView = _ecs->registry.view<SkinnedMeshComponent, WorldMatrixComponent>();
 
@@ -176,7 +176,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         count++;
     }
 
-    skinnedDrawsCount = count - staticDrawsCount;
+    _skinnedDrawRange.count = count - _staticDrawRange.count;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
@@ -428,9 +428,4 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
 
     std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
-
-    // Write draw count in the final 4 bytes of the indirect draw buffer.
-    uint32_t drawCount = _drawCommands.size();
-    std::byte* ptr = static_cast<std::byte*>(buffer->mappedPtr);
-    std::memcpy(ptr + IndirectCountOffset(), &drawCount, sizeof(uint32_t));
 }

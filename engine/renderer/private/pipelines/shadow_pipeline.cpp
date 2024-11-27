@@ -76,16 +76,19 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
 
-    vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.batchBuffer->VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.batchBuffer->IndexBuffer())->buffer;
+    vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
+    vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
     vk::Buffer indirectDrawBuffer = resources->BufferResourceManager().Access(_drawBuffer)->buffer;
-    vk::Buffer indirectCountBuffer = resources->BufferResourceManager().Access(scene.gpuScene->IndirectCountBuffer(currentFrame))->buffer;
 
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
+    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
 
-    uint32_t indirectCountOffset = scene.gpuScene->IndirectCountOffset();
-    commandBuffer.drawIndexedIndirectCountKHR(indirectDrawBuffer, scene.gpuScene->staticDrawsFirst, indirectCountBuffer, indirectCountOffset, scene.gpuScene->staticDrawsCount, sizeof(DrawIndexedIndirectCommand), _context->VulkanContext()->Dldi());
+    commandBuffer.drawIndexedIndirect(
+        indirectDrawBuffer,
+        scene.gpuScene->StaticDrawRange().start,
+        scene.gpuScene->StaticDrawRange().count,
+        sizeof(DrawIndexedIndirectCommand),
+        _context->VulkanContext()->Dldi());
 
     _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
 

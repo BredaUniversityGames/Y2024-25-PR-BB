@@ -30,12 +30,16 @@ private:
 
     IndirectCuller _culler;
 
-    vk::PipelineLayout _pipelineLayout;
-    vk::Pipeline _pipeline;
+    vk::PipelineLayout _staticPipelineLayout;
+    vk::Pipeline _staticPipeline;
+
+    vk::PipelineLayout _skinnedPipelineLayout;
+    vk::Pipeline _skinnedPipeline;
 
     ResourceHandle<Buffer> _drawBuffer;
     vk::DescriptorSet _drawBufferDescriptorSet;
 
-    void CreatePipeline();
+    void CreateStaticPipeline();
+    void CreateSkinnedPipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 };

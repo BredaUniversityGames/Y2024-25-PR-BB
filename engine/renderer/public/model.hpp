@@ -23,7 +23,7 @@ struct Hierarchy
         std::vector<Node> children {};
 
         std::optional<AnimationChannel> animationChannel {};
-        std::optional<Joint> joint;
+        std::optional<Joint> joint {};
     };
 
     std::vector<Node> baseNodes {};
