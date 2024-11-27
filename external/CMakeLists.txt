@@ -48,7 +48,7 @@ FetchContent_MakeAvailable(VMA)
 FetchContent_Declare(
         FastGLTF
         GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG v0.8.0
+        GIT_TAG main
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -64,6 +64,12 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
+
+# Wren Language
+
+add_subdirectory(wren)
+
+# Cereal
 
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_SANDBOX "Build sandbox examples" OFF)
@@ -81,8 +87,14 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(TRACY_ENABLE ON)
-override_option(TRACY_ON_DEMAND ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TRACY_ENABLE OFF)
+else ()
+    set(TRACY_ENABLE ON)
+endif ()
+
+set(TRACY_ON_DEMAND ON)
+
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
@@ -157,6 +169,26 @@ if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Jolt PUBLIC JPH_DEBUG_RENDERER)
 endif ()
 
+SET_INTERPROCEDURAL_OPTIMIZATION()
+
+# Set compiler options for Jolt
+target_compile_options(Jolt PRIVATE
+        -w          # Suppress all warnings
+        -Wno-error  # Do not treat warnings as errors
+)
+
+# SPIRV-Reflect
+
+FetchContent_Declare(
+        SPIRV-Reflect
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
+        GIT_TAG vulkan-sdk-1.3.296.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+override_option(SPIRV_REFLECT_STATIC_LIB ON)
+FetchContent_MakeAvailable(SPIRV-Reflect)
+
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
 
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
@@ -173,7 +205,7 @@ file(GLOB implot_sources CONFIGURE_DEPENDS "implot/*.cpp")
 file(GLOB implot_headers CONFIGURE_DEPENDS "implot/*.h")
 set(implot_files ${implot_sources} ${implot_headers})
 
-add_library(ImGui ${imgui_files} ${implot_files})
+add_library(ImGui ${imgui_files} ${implot_files} "imgui_entt_entity_editor/imgui_entt_entity_editor.hpp")
 target_compile_definitions(ImGui PRIVATE SDL_ENABLE_OLD_NAMES)
 
 target_link_libraries(ImGui
@@ -186,8 +218,14 @@ target_include_directories(ImGui
         PUBLIC imgui
         PUBLIC imgui/backends
         PUBLIC implot
+        PUBLIC imgui_entt_entity_editor
 )
 
+# Enable Unity for external libraries
+
+if (ENABLE_UNITY)
+    target_enable_unity(Jolt)
+endif ()
 
 # Main External Library
 
@@ -208,6 +246,7 @@ target_link_libraries(External
         INTERFACE EnTT::EnTT
         INTERFACE VulkanMemoryAllocator
         INTERFACE fastgltf::fastgltf
+        INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
 )

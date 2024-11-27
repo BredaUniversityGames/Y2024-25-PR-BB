@@ -1,6 +1,7 @@
 ﻿#pragma once
-#include "systems/system.hpp"
+#include "common.hpp"
 #include "entt/entity/entity.hpp"
+#include "systems/system.hpp"
 
 class PhysicsModule;
 struct RigidbodyComponent;
@@ -8,16 +9,14 @@ class PhysicsSystem : public System
 {
 public:
     PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule);
-    ~PhysicsSystem() = default;
+    NON_COPYABLE(PhysicsSystem);
+    NON_MOVABLE(PhysicsSystem);
 
-    entt::entity CreatePhysicsEntity();
-    void CreatePhysicsEntity(RigidbodyComponent& rb);
-    void AddRigidBody(entt::entity entity, RigidbodyComponent& rigidbody);
     void CleanUp();
-
-    void Update([[maybe_unused]] ECS& ecs, [[maybe_unused]] float deltaTime) override;
-    void Render([[maybe_unused]] const ECS& ecs) const override;
+    void Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime) override;
+    void Render(MAYBE_UNUSED const ECS& ecs) const override;
     void Inspect() override;
+    void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
     ECS& _ecs;

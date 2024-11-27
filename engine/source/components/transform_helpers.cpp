@@ -1,10 +1,10 @@
 #include "components/transform_helpers.hpp"
 
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-#include "components/transform_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
 #include <entt/entity/registry.hpp>
 
@@ -59,6 +59,16 @@ void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entit
 
     UpdateWorldMatrix(reg, entity);
 }
+void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entity, const glm::mat4& transform)
+{
+    glm::vec3 scale, skew, translation;
+    glm::quat orientation;
+    glm::vec4 perspective;
+
+    glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+    SetLocalTransform(reg, entity, translation, orientation, scale);
+}
 void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entity, const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {
     assert(reg.valid(entity));
@@ -111,6 +121,22 @@ glm::vec3 TransformHelpers::GetLocalScale(const entt::registry& reg, entt::entit
     const TransformComponent* transform = reg.try_get<TransformComponent>(entity);
     return transform == nullptr ? glm::vec3 { 1.0f, 1.0f, 1.0f } : transform->_localScale;
 }
+
+glm::vec3 TransformHelpers::GetLocalPosition(const TransformComponent& transformComponent)
+{
+    return transformComponent._localPosition;
+}
+
+glm::quat TransformHelpers::GetLocalRotation(const TransformComponent& transformComponent)
+{
+    return transformComponent._localRotation;
+}
+
+glm::vec3 TransformHelpers::GetLocalScale(const TransformComponent& transformComponent)
+{
+    return transformComponent._localScale;
+}
+
 glm::mat4 TransformHelpers::GetLocalMatrix(const entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
@@ -123,6 +149,10 @@ const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::ent
     const WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
 
     return worldMatrix._worldMatrix;
+}
+const glm::mat4& TransformHelpers::GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent)
+{
+    return worldMatrixComponent._worldMatrix;
 }
 glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {
@@ -141,7 +171,7 @@ void TransformHelpers::OnConstructTransform(entt::registry& reg, entt::entity en
 }
 void TransformHelpers::OnDestroyTransform(entt::registry& reg, entt::entity entity)
 {
-    reg.erase<WorldMatrixComponent>(entity);
+    reg.remove<WorldMatrixComponent>(entity);
 }
 void TransformHelpers::SubscribeToEvents(entt::registry& reg)
 {
