@@ -1,3 +1,4 @@
+#include "steam_module.hpp"
 #include "application_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
@@ -9,6 +10,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     MainEngine instance;
 
     instance
+        .AddModule<SteamModule>()
         .AddModule<ApplicationModule>()
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
