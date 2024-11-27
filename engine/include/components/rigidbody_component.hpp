@@ -6,7 +6,9 @@
 struct TempPhysicsData
 {
     Vec3Range boundingBox;
+    glm::vec3 meshScale;
     glm::vec3 position;
+    glm::quat rotation;
     entt::entity ownerEntity;
 };
 

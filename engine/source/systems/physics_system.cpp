@@ -19,7 +19,16 @@ void PhysicsSystem::InitializePhysicsColliders()
     {
         TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
 
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position, tempData.boundingBox, eSTATIC);
+        // size and position
+        Vec3Range boundingBox = tempData.boundingBox;
+        boundingBox.min *= tempData.meshScale;
+        boundingBox.max *= tempData.meshScale;
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position, boundingBox, eSTATIC);
+
+        // rotation now
+
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(tempData.rotation.x, tempData.rotation.y, tempData.rotation.z, tempData.rotation.w), JPH::EActivation::Activate);
+
         _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
     }
 }
