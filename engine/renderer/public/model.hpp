@@ -27,9 +27,9 @@ struct Hierarchy
     std::vector<Node> baseNodes {};
 };
 
-template <typename T>
 struct CPUMesh
 {
+    template <typename T>
     struct Primitive
     {
         std::vector<T> vertices;
@@ -40,7 +40,8 @@ struct CPUMesh
         float boundingRadius;
     };
 
-    std::vector<Primitive> primitives;
+    std::vector<Primitive<Vertex>> primitives;
+    std::vector<Primitive<SkinnedVertex>> skinnedPrimitives;
 };
 
 struct CPUModel
@@ -75,8 +76,7 @@ struct CPUModel
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh<Vertex>> meshes;
-    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes;
+    std::vector<CPUMesh> meshes;
     std::vector<CPUMaterial> materials;
     std::vector<CPUImage> textures;
 

@@ -69,15 +69,15 @@ std::array<vk::VertexInputAttributeDescription, 6> SkinnedVertex::GetAttributeDe
     attributeDescriptions[eTEX_COORD].format = vk::Format::eR32G32Sfloat;
     attributeDescriptions[eTEX_COORD].offset = offsetof(SkinnedVertex, texCoord);
 
-    attributeDescriptions[eJOINT_INDICES].binding = 0;
-    attributeDescriptions[eJOINT_INDICES].location = 4;
-    attributeDescriptions[eJOINT_INDICES].format = vk::Format::eR32G32B32A32Sfloat;
-    attributeDescriptions[eJOINT_INDICES].offset = offsetof(SkinnedVertex, jointIndices);
+    attributeDescriptions[eJOINTS].binding = 0;
+    attributeDescriptions[eJOINTS].location = 4;
+    attributeDescriptions[eJOINTS].format = vk::Format::eR32G32B32A32Sfloat;
+    attributeDescriptions[eJOINTS].offset = offsetof(SkinnedVertex, joints);
 
-    attributeDescriptions[eJOINT_WEIGHTS].binding = 0;
-    attributeDescriptions[eJOINT_WEIGHTS].location = 5;
-    attributeDescriptions[eJOINT_WEIGHTS].format = vk::Format::eR32G32B32A32Sfloat;
-    attributeDescriptions[eJOINT_WEIGHTS].offset = offsetof(SkinnedVertex, jointWeights);
+    attributeDescriptions[eWEIGHTS].binding = 0;
+    attributeDescriptions[eWEIGHTS].location = 5;
+    attributeDescriptions[eWEIGHTS].format = vk::Format::eR32G32B32A32Sfloat;
+    attributeDescriptions[eWEIGHTS].offset = offsetof(SkinnedVertex, weights);
 
     return attributeDescriptions;
 }

@@ -68,28 +68,28 @@ struct SkinnedVertex
         eNORMAL,
         eTANGENT,
         eTEX_COORD,
-        eJOINT_INDICES,
-        eJOINT_WEIGHTS,
+        eJOINTS,
+        eWEIGHTS,
     };
 
     glm::vec3 position {};
     glm::vec3 normal {};
     glm::vec4 tangent {};
     glm::vec2 texCoord {};
-    glm::vec4 jointIndices {};
-    glm::vec4 jointWeights {};
+    glm::vec4 joints {};
+    glm::vec4 weights {};
 
     SkinnedVertex()
     {
     }
 
-    SkinnedVertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord, glm::vec4 jointIndices, glm::vec4 jointWeights)
+    SkinnedVertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord, glm::vec4 joints, glm::vec4 weights)
         : position(position)
         , normal(normal)
         , tangent(tangent)
         , texCoord(texCoord)
-        , jointIndices(jointIndices)
-        , jointWeights(jointWeights)
+        , joints(joints)
+        , weights(weights)
     {
     }
 

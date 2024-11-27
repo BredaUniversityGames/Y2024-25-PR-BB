@@ -64,12 +64,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/RiggedSimple.glb",
+        "assets/models/BrainStem.glb",
         "assets/models/DamagedHelmet.glb",
         // "assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb"
     };
 
     auto models = rendererModule.FrontLoadModels(modelPaths);

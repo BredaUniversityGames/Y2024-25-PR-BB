@@ -8,7 +8,7 @@
 template <>
 std::weak_ptr<ResourceManager<GPUMesh>> ResourceHandle<GPUMesh>::manager = {};
 
-ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh<Vertex>& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
+ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
 {
     // todo: add fallback material.
     assert(materials.size() > 0);
@@ -32,14 +32,14 @@ ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh<Vertex>& cpuMe
     return ResourceManager::Create(std::move(mesh));
 }
 
-ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh<Vertex>::Primitive& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh::Primitive<Vertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
 {
     GPUMesh mesh;
     mesh.primitives.emplace_back(CreatePrimitive(data, material, batchBuffer));
     return ResourceManager::Create(std::move(mesh));
 }
 
-GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh<Vertex>::Primitive& cpuPrimitive, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive<Vertex>& cpuPrimitive, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
 {
     GPUMesh::Primitive primitive;
     primitive.material = material;

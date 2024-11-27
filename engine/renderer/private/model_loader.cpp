@@ -127,12 +127,12 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
 }
 
 template <typename T>
-void CalculateTangents(typename CPUMesh<T>::Primitive& stagingPrimitive)
+void CalculateTangents(CPUMesh::Primitive<T>& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
     {
-        std::array<Vertex*, 3> triangle = {};
+        std::array<T*, 3> triangle = {};
         if (stagingPrimitive.indices.size() > 0)
         {
             std::array<uint32_t, 3> indices = {};
@@ -173,75 +173,80 @@ void CalculateTangents(typename CPUMesh<T>::Primitive& stagingPrimitive)
     }
 }
 
-CPUMesh<Vertex>::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+template <typename T, typename U>
+void AssignAttribute(T& vertexAttribute, uint32_t index, const fastgltf::Attribute* attribute, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUMesh<Vertex>::Primitive primitive {};
+    if (attribute != gltfPrimitive.attributes.cend())
+    {
+        const auto& accessor = gltf.accessors[attribute->accessorIndex];
+        auto value = fastgltf::getAccessorElement<U>(gltf, accessor, index);
+        vertexAttribute = *reinterpret_cast<T*>(&value);
+    }
+}
+
+template <typename T>
+void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox);
+
+template <>
+void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox)
+{
+    uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
+    vertices = std::vector<Vertex>(vertexCount);
+
+    const fastgltf::Attribute* positionAttribute = gltfPrimitive.findAttribute("POSITION");
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].position, i, positionAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+
+        boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
+        boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+    }
+}
+
+template <>
+void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox)
+{
+    uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
+    vertices = std::vector<SkinnedVertex>(vertexCount);
+
+    const fastgltf::Attribute* positionAttribute = gltfPrimitive.findAttribute("POSITION");
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+    const fastgltf::Attribute* jointsAttribute = gltfPrimitive.findAttribute("JOINTS_0");
+    const fastgltf::Attribute* weightsAttribute = gltfPrimitive.findAttribute("WEIGHTS_0");
+
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].position, i, positionAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].joints, i, jointsAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].weights, i, weightsAttribute, gltfPrimitive, gltf);
+
+        boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
+        boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+    }
+}
+
+template <typename T>
+CPUMesh::Primitive<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+{
+    CPUMesh::Primitive<T> primitive {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
 
-    bool verticesReserved = false;
-    bool tangentFound = false;
-    bool texCoordFound = false;
-
-    for (auto& attribute : gltfPrimitive.attributes)
-    {
-        auto& accessor = gltf.accessors[attribute.accessorIndex];
-        if (!accessor.bufferViewIndex.has_value())
-            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
-        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-        auto& buffer = gltf.buffers[bufferView.bufferIndex];
-        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
-
-        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-
-        // Make sure the mesh primitive has enough space allocated.
-        if (!verticesReserved)
-        {
-            primitive.vertices = std::vector<Vertex>(accessor.count);
-            verticesReserved = true;
-        }
-
-        std::uint32_t offset;
-        if (attribute.name == "POSITION")
-            offset = offsetof(Vertex, position);
-        else if (attribute.name == "NORMAL")
-            offset = offsetof(Vertex, normal);
-        else if (attribute.name == "TANGENT")
-        {
-            offset = offsetof(Vertex, tangent);
-            tangentFound = true;
-        }
-        else if (attribute.name == "TEXCOORD_0")
-        {
-            offset = offsetof(Vertex, texCoord);
-            texCoordFound = true;
-        }
-        else
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < accessor.count; ++i)
-        {
-            const std::byte* element;
-            if (bufferView.byteStride.has_value())
-                element = attributeBufferStart + i * bufferView.byteStride.value();
-            else
-                element = attributeBufferStart + i * fastgltf::getElementByteSize(accessor.type, accessor.componentType);
-
-            std::byte* writeTarget = reinterpret_cast<std::byte*>(&primitive.vertices[i]) + offset;
-            std::memcpy(writeTarget, element, fastgltf::getElementByteSize(accessor.type, accessor.componentType));
-
-            if (attribute.name == "POSITION")
-            {
-                const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
-                primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
-                primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
-            }
-        }
-    }
+    ProcessVertices(primitive.vertices, gltfPrimitive, gltf, primitive.boundingBox);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {
@@ -272,8 +277,13 @@ CPUMesh<Vertex>::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimi
         }
     }
 
-    if (!tangentFound && texCoordFound)
-        CalculateTangents<Vertex>(primitive);
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+
+    if (tangentAttribute == gltfPrimitive.attributes.cend() && texCoordAttribute != gltfPrimitive.attributes.cend())
+    {
+        CalculateTangents<T>(primitive);
+    }
 
     return primitive;
 }
@@ -556,12 +566,20 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     // Extract mesh data
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUMesh<Vertex> mesh {};
+        CPUMesh mesh {};
 
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            CPUMesh<Vertex>::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
-            mesh.primitives.emplace_back(primitive);
+            if (gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
+            {
+                CPUMesh::Primitive<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
+                mesh.skinnedPrimitives.emplace_back(primitive);
+            }
+            else
+            {
+                CPUMesh::Primitive<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+                mesh.primitives.emplace_back(primitive);
+            }
         }
 
         model.meshes.emplace_back(mesh);
