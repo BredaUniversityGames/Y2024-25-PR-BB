@@ -23,28 +23,49 @@ public:
     }
     ~MeshResourceManager() = default;
 
-    ResourceHandle<GPUMesh> Create(const CPUMesh& data, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer);
-    ResourceHandle<GPUMesh> Create(const CPUMesh::Primitive<Vertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer);
+    template <typename TVertex>
+    ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
+    {
+        uint32_t correctedIndex = cpuMesh.materialIndex;
+
+        // Invalid index.
+        if (cpuMesh.materialIndex > materials.size())
+        {
+            correctedIndex = 0;
+        }
+
+        const ResourceHandle<GPUMaterial> material = materials.at(correctedIndex);
+
+        GPUMesh gpuMesh = CreateMesh(cpuMesh, material, batchBuffer);
+        return ResourceManager::Create(std::move(gpuMesh));
+    }
+
+    template <typename TVertex>
+    ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+    {
+        GPUMesh mesh = CreateMesh(data, material, batchBuffer);
+        return ResourceManager::Create(std::move(mesh));
+    }
 
 private:
     std::shared_ptr<MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<VulkanContext> _vkContext;
 
     template <typename TVertex>
-    GPUMesh::Primitive CreatePrimitive(const CPUMesh::Primitive<TVertex>& cpuPrimitive, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+    GPUMesh CreateMesh(const CPUMesh<TVertex>& cpuMesh, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
     {
-        GPUMesh::Primitive primitive;
-        primitive.material = material;
-        primitive.count = cpuPrimitive.indices.size();
+        GPUMesh gpuMesh;
+        gpuMesh.material = material;
+        gpuMesh.count = cpuMesh.indices.size();
 
         SingleTimeCommands commands { _vkContext };
 
-        primitive.vertexOffset = batchBuffer.AppendVertices(cpuPrimitive.vertices, commands);
-        primitive.indexOffset = batchBuffer.AppendIndices(cpuPrimitive.indices, commands);
-        primitive.boundingRadius = glm::max(
-            glm::distance(glm::vec3 { 0 }, cpuPrimitive.boundingBox.min),
-            glm::distance(glm::vec3 { 0 }, cpuPrimitive.boundingBox.max));
+        gpuMesh.vertexOffset = batchBuffer.AppendVertices(cpuMesh.vertices, commands);
+        gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, commands);
+        gpuMesh.boundingRadius = glm::max(
+            glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.min),
+            glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.max));
 
-        return primitive;
+        return gpuMesh;
     }
 };

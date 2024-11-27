@@ -1,5 +1,6 @@
 #pragma once
 
+#include "camera.hpp"
 #include "mesh.hpp"
 #include "module_interface.hpp"
 #include "particles/particle_interface.hpp"

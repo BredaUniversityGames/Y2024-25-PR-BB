@@ -89,10 +89,9 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.batchBuffer->IndexType());
 
     auto sphere = _context->Resources()->MeshResourceManager().Access(_sphere);
-    auto primitive = sphere->primitives[0];
-    commandBuffer.drawIndexed(primitive.count, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+    commandBuffer.drawIndexed(sphere->count, 1, sphere->indexOffset, sphere->vertexOffset, 0);
 
-    _context->GetDrawStats().Draw(primitive.count);
+    _context->GetDrawStats().Draw(sphere->count);
 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }

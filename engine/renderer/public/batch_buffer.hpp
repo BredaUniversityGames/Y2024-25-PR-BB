@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "constants.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh.hpp"

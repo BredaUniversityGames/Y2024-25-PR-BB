@@ -10,6 +10,12 @@
 
 class VulkanContext;
 
+enum class MeshType : uint8_t
+{
+    eSTATIC,
+    eSKINNED,
+};
+
 struct SamplerCreation
 {
     SamplerCreation& SetGlobalAddressMode(vk::SamplerAddressMode addressMode);
@@ -224,18 +230,13 @@ private:
 
 struct GPUMesh
 {
-    struct Primitive
-    {
-        uint32_t count;
-        uint32_t vertexOffset;
-        uint32_t indexOffset;
-        float boundingRadius;
+    uint32_t count;
+    uint32_t vertexOffset;
+    uint32_t indexOffset;
+    float boundingRadius;
 
-        ResourceHandle<GPUMaterial> material;
-    };
-
-    std::vector<Primitive> primitives;
-    std::vector<Primitive> skinnedPrimitives;
+    MeshType type;
+    ResourceHandle<GPUMaterial> material;
 };
 
 struct alignas(16) GPUCamera

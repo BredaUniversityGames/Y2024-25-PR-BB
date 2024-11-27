@@ -35,16 +35,9 @@ struct RenderSceneDescription
     uint32_t targetSwapChainImageIndex;
 };
 
-enum class DrawCommandType : uint32_t
-{
-    eSTATIC = 0,
-    eSKINNED = 1,
-};
-
 struct DrawIndexedIndirectCommand
 {
     vk::DrawIndexedIndirectCommand command;
-    DrawCommandType type;
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;

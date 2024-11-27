@@ -1,7 +1,9 @@
 #pragma once
 
 #include "animation.hpp"
+#include "geometric.hpp"
 #include "mesh.hpp"
+
 #include <glm/mat4x4.hpp>
 #include <vector>
 
@@ -17,7 +19,7 @@ struct Hierarchy
     {
         std::string name {};
         glm::mat4 transform { 1.0f };
-        std::optional<uint32_t> meshIndex = std::nullopt;
+        std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
         std::vector<Node> children {};
 
         std::optional<AnimationChannel> animationChannel {};
@@ -27,21 +29,15 @@ struct Hierarchy
     std::vector<Node> baseNodes {};
 };
 
+template <typename T>
 struct CPUMesh
 {
-    template <typename T>
-    struct Primitive
-    {
-        std::vector<T> vertices;
-        std::vector<uint32_t> indices;
-        uint32_t materialIndex { 0 };
+    std::vector<T> vertices;
+    std::vector<uint32_t> indices;
+    uint32_t materialIndex { 0 };
 
-        Vec3Range boundingBox;
-        float boundingRadius;
-    };
-
-    std::vector<Primitive<Vertex>> primitives;
-    std::vector<Primitive<SkinnedVertex>> skinnedPrimitives;
+    Vec3Range boundingBox;
+    float boundingRadius;
 };
 
 struct CPUModel
@@ -76,7 +72,9 @@ struct CPUModel
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh> meshes;
+    std::vector<CPUMesh<Vertex>> meshes;
+    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes;
+
     std::vector<CPUMaterial> materials;
     std::vector<CPUImage> textures;
 
@@ -86,6 +84,7 @@ struct CPUModel
 struct GPUModel
 {
     std::vector<ResourceHandle<GPUMesh>> meshes;
+    std::vector<ResourceHandle<GPUMesh>> skinnedMeshes;
     std::vector<ResourceHandle<GPUMaterial>> materials;
     std::vector<ResourceHandle<GPUImage>> textures;
 };

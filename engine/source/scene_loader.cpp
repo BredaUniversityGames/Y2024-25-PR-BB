@@ -15,19 +15,34 @@
 #include <entt/entity/entity.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const GPUModel& model, std::shared_ptr<Animation> animation)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation)
 {
     const entt::entity entity = ecs.registry.create();
 
     ecs.registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs.registry.emplace<TransformComponent>(entity);
 
-    TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
+    if (parent != entt::null)
+    {
+        RelationshipHelpers::AttachChild(ecs.registry, parent, entity);
+    }
+
+    TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
 
     if (currentNode.meshIndex.has_value())
     {
-        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value());
+        switch (currentNode.meshIndex.value().first)
+        {
+        case MeshType::eSTATIC:
+            ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value().second);
+            break;
+        case MeshType::eSKINNED:
+            ecs.registry.emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);
+            break;
+        default:
+            throw std::runtime_error("Mesh type not supported!");
+        }
     }
 
     if (currentNode.animationChannel.has_value())
@@ -48,8 +63,7 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
 
     for (const auto& node : currentNode.children)
     {
-        const entt::entity childEntity = LoadNodeRecursive(ecs, node, model, animation);
-        RelationshipHelpers::AttachChild(ecs.registry, entity, childEntity);
+        LoadNodeRecursive(ecs, node, entity, model, animation);
     }
 
     return entity;
@@ -65,5 +79,5 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel&
         animationControl = std::make_shared<Animation>(animation.value());
     }
 
-    return LoadNodeRecursive(ecs, baseNode, modelResources, animationControl);
+    return LoadNodeRecursive(ecs, baseNode, entt::null, modelResources, animationControl);
 }

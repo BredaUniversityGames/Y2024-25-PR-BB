@@ -2,16 +2,15 @@
 
 #include "common.hpp"
 #include "constants.hpp"
+#include "gpu_resources.hpp"
 
 #include <array>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
-#include <gpu_resources.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
-
 struct Camera
 {
     enum class Projection
@@ -29,6 +28,11 @@ struct Camera
     float nearPlane {};
     float farPlane {};
     float aspectRatio {};
+};
+
+struct SceneDescription
+{
+    Camera camera;
 };
 
 class CameraResource

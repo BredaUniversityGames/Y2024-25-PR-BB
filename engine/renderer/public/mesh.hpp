@@ -1,10 +1,9 @@
 #pragma once
 
-#include "camera.hpp"
-#include "geometric.hpp"
-
 #include <array>
-#include <memory>
+#include <lib/includes_vulkan.hpp>
+
+#include "gpu_resources.hpp"
 
 struct LineVertex
 {
@@ -102,15 +101,15 @@ struct StaticMeshComponent
     ResourceHandle<GPUMesh> mesh;
 };
 
+struct SkinnedMeshComponent
+{
+    ResourceHandle<GPUMesh> mesh;
+};
+
 struct SkeletonComponent
 {
 };
 struct JointComponent
 {
     glm::mat4 inverseBindMatrix {};
-};
-
-struct SceneDescription
-{
-    Camera camera;
 };

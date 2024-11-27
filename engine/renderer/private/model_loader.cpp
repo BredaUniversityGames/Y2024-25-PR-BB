@@ -127,7 +127,7 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
 }
 
 template <typename T>
-void CalculateTangents(CPUMesh::Primitive<T>& stagingPrimitive)
+void CalculateTangents(CPUMesh<T>& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
@@ -238,9 +238,9 @@ void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const 
 }
 
 template <typename T>
-CPUMesh::Primitive<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUMesh::Primitive<T> primitive {};
+    CPUMesh<T> primitive {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
@@ -499,17 +499,19 @@ CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels)
+Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels, const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT)
 {
     Hierarchy::Node node {};
 
     if (gltfNode.meshIndex.has_value())
     {
-        node.meshIndex = gltfNode.meshIndex.value();
-    }
-    else
-    {
-        node.meshIndex = std::nullopt;
+        // Add meshes as children, since glTF assumes 1 node -> 1 mesh -> >1 primitives
+        // But now we want 1 node -> mesh (mesh == primitive)
+        auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            node.children.emplace_back(Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second });
+        }
     }
 
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
@@ -537,7 +539,7 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
 
     for (size_t i : gltfNode.children)
     {
-        node.children.emplace_back(RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels));
+        node.children.emplace_back(RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels, meshLUT));
     }
 
     return node;
@@ -563,26 +565,30 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.materials.emplace_back(material);
     }
 
+    std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>> meshLUT {};
+
     // Extract mesh data
+    uint32_t counter { 0 };
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUMesh mesh {};
-
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
             if (gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
             {
-                CPUMesh::Primitive<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
-                mesh.skinnedPrimitives.emplace_back(primitive);
+                CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
+                model.skinnedMeshes.emplace_back(primitive);
+
+                meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
             }
             else
             {
-                CPUMesh::Primitive<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
-                mesh.primitives.emplace_back(primitive);
+                CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+                model.meshes.emplace_back(primitive);
+
+                meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });
             }
         }
-
-        model.meshes.emplace_back(mesh);
+        ++counter;
     }
 
     StagingAnimationChannels animations {};
@@ -601,7 +607,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     {
         uint32_t index = gltf.scenes[0].nodeIndices[i];
         const auto& gltfNode { gltf.nodes[index] };
-        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, index, model, gltf, animations));
+        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT));
     }
     model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
 
