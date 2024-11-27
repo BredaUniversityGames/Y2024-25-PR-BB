@@ -32,6 +32,7 @@ struct RigidbodyComponent
                 bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
             }
 
+            bodySettings.mAllowDynamicOrKinematic = true;
             bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
         }
         else if (shape == eBOX)
@@ -44,7 +45,7 @@ struct RigidbodyComponent
             {
                 bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
             }
-
+            bodySettings.mAllowDynamicOrKinematic = true;
             bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
         }
 
@@ -87,7 +88,7 @@ struct RigidbodyComponent
                 JPH::EMotionType::Dynamic,
                 PhysicsLayers::MOVING);
         }
-
+        bodySettings.mAllowDynamicOrKinematic = true;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 
         // set the owner entity so we can query it later from physics objects if needed

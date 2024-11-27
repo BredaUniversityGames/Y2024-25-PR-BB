@@ -102,7 +102,7 @@ void PhysicsSystem::Inspect()
         for (int i = 0; i < amount; i++)
         {
             entt::entity entity = _ecs.registry.create();
-            RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape);
+            RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape, eSTATIC);
             NameComponent node;
             node.name = "Physics Entity";
             _ecs.registry.emplace<NameComponent>(entity, node);
