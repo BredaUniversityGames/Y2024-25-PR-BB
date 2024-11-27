@@ -4,6 +4,8 @@
 #include "constants.hpp"
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+
+#include <lib/includes_vulkan.hpp>
 #include <memory>
 
 struct SceneDescription;
@@ -33,6 +35,18 @@ struct RenderSceneDescription
     uint32_t targetSwapChainImageIndex;
 };
 
+enum class DrawCommandType : uint32_t
+{
+    eSTATIC = 0,
+    eSKINNED = 1,
+};
+
+struct DrawIndexedIndirectCommand
+{
+    vk::DrawIndexedIndirectCommand command;
+    DrawCommandType type;
+};
+
 constexpr uint32_t MAX_INSTANCES = 2048;
 
 class GPUScene
@@ -56,16 +70,16 @@ public:
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
 
     ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
+    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(DrawIndexedIndirectCommand); }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
-    const std::vector<vk::DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
+    const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
     uint32_t DrawCommandIndexCount() const
     {
         uint32_t count { 0 };
         for (const auto& command : _drawCommands)
         {
-            count += command.indexCount;
+            count += command.command.indexCount;
         }
         return count;
     }
@@ -76,6 +90,11 @@ public:
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
     ResourceHandle<GPUImage> directionalShadowMap;
+
+    uint32_t staticDrawsFirst;
+    uint32_t staticDrawsCount;
+    uint32_t skinnedDrawsFirst;
+    uint32_t skinnedDrawsCount;
 
 private:
     struct alignas(16) DirectionalLightData
@@ -121,7 +140,7 @@ private:
     vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
 
-    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
+    std::vector<DrawIndexedIndirectCommand> _drawCommands;
 
     // TODO: Change GPUScene to support all cameras in the scene
     Camera _directionalLightShadowCamera {};

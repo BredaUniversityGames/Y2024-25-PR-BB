@@ -178,7 +178,6 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
-
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
         auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
         models.emplace_back(std::move(cpu), std::move(gpu));

@@ -235,6 +235,7 @@ struct GPUMesh
     };
 
     std::vector<Primitive> primitives;
+    std::vector<Primitive> skinnedPrimitives;
 };
 
 struct alignas(16) GPUCamera

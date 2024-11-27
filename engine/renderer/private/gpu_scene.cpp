@@ -130,16 +130,49 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
             instances[count].materialIndex = primitive.material.Index();
             instances[count].boundingRadius = primitive.boundingRadius;
 
-            _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
-                .indexCount = primitive.count,
-                .instanceCount = 1,
-                .firstIndex = primitive.indexOffset,
-                .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
-                .firstInstance = 0 });
+            _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = primitive.count,
+                    .instanceCount = 1,
+                    .firstIndex = primitive.indexOffset,
+                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                    .firstInstance = 0,
+                },
+                .type = DrawCommandType::eSTATIC });
+
+            count++;
+        }
+        for (const auto& primitive : mesh->skinnedPrimitives)
+        {
+            assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+            assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
+
+            instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+            instances[count].materialIndex = primitive.material.Index();
+            instances[count].boundingRadius = primitive.boundingRadius;
+
+            _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = primitive.count,
+                    .instanceCount = 1,
+                    .firstIndex = primitive.indexOffset,
+                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
+                    .firstInstance = 0,
+                },
+                .type = DrawCommandType::eSKINNED });
 
             count++;
         }
     }
+
+    // Organize draw commands based on type.
+    std::sort(_drawCommands.begin(), _drawCommands.end(), [](const auto& a, const auto& b)
+        { return a.type < b.type; });
+
+    staticDrawsFirst = std::distance(_drawCommands.begin(), std::ranges::lower_bound(_drawCommands, DrawCommandType::eSTATIC, {}, &DrawIndexedIndirectCommand::type));
+    staticDrawsCount = std::distance(_drawCommands.begin() + staticDrawsFirst, std::ranges::upper_bound(_drawCommands, DrawCommandType::eSTATIC, {}, &DrawIndexedIndirectCommand::type));
+    skinnedDrawsFirst = std::distance(_drawCommands.begin(), std::ranges::lower_bound(_drawCommands, DrawCommandType::eSKINNED, {}, &DrawIndexedIndirectCommand::type));
+    skinnedDrawsCount = std::distance(_drawCommands.begin() + skinnedDrawsFirst, std::ranges::upper_bound(_drawCommands, DrawCommandType::eSKINNED, {}, &DrawIndexedIndirectCommand::type));
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
@@ -321,7 +354,7 @@ void GPUScene::InitializeIndirectDrawBuffer()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         BufferCreation creation {};
-        creation.SetSize(sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t))
+        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t))
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
             .SetIsMappable(true)
@@ -390,7 +423,7 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
 
-    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
 
     // Write draw count in the final 4 bytes of the indirect draw buffer.
     uint32_t drawCount = _drawCommands.size();

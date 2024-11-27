@@ -16,14 +16,12 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 {
 }
 
-ResourceHandle<GPUModel>
-ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
+ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, BatchBuffer& batchBuffer)
 {
     GPUModel model;
 
     for (const auto& image : data.textures)
     {
-
         model.textures.emplace_back(_imageResourceManager->Create(image));
     }
 
