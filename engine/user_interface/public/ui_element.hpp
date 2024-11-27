@@ -30,13 +30,13 @@ public:
         eBottomRight,
     };
 
-    void SetLocation(const glm::vec2& location) { _relativeLocation = location; }
+    void SetLocation(const glm::vec2& location) noexcept { _relativeLocation = location; }
 
     /**
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
      */
-    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true)
+    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept
     {
         _absoluteLocation = location;
         if (updateChildren)
@@ -46,8 +46,8 @@ public:
     /**
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
-    NO_DISCARD const glm::vec2& GetRelativeLocation() const { return _relativeLocation; }
-    NO_DISCARD const glm::vec2& GetAbsouluteLocation() const { return _absoluteLocation; }
+    NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
+    NO_DISCARD const glm::vec2& GetAbsouluteLocation() const noexcept { return _absoluteLocation; }
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const
     {
@@ -59,16 +59,18 @@ public:
             i->Update(input);
     }
 
-    void AddChild(std::unique_ptr<UIElement> child)
+    UIElement* AddChild(std::unique_ptr<UIElement> child)
     {
         if (_children.size() < _maxChildren && child != nullptr)
         {
             _children.emplace_back(std::move(child));
             std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
                 { return v1->zLevel < v2->zLevel; });
+            return _children.back().get();
         }
-        else
-            spdlog::warn("UIElement::AddChild: Can't add, Too many children");
+
+        spdlog::warn("UIElement::AddChild: Can't add, Too many children");
+        return nullptr;
     }
 
     NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
