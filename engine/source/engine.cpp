@@ -119,8 +119,23 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     si.volume = 1.0f;
     si.isLoop = true;
 
-    audioModule.LoadSound(si);
-    audioModule.PlaySoundA(si);
+    // audioModule.LoadSound(si);
+    // audioModule.PlaySoundA(si);
+
+    BankInfo masterBank;
+    masterBank.path = "assets/sounds/Master.bank";
+
+    BankInfo stringBank;
+    stringBank.path = "assets/sounds/Master.strings.bank";
+
+    BankInfo bi;
+    bi.path = "assets/sounds/SFX.bank";
+
+    audioModule.LoadBank(masterBank);
+    audioModule.LoadBank(stringBank);
+    audioModule.LoadBank(bi);
+
+    audioModule.StartEvent("event:/Weapons/Machine Gun");
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;

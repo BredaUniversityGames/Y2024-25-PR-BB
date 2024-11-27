@@ -2,11 +2,13 @@
 
 #include "module_interface.hpp"
 
-class FMOD_SYSTEM;
-class FMOD_STUDIO_SYSTEM;
-class FMOD_SOUND;
-class FMOD_CHANNELGROUP;
-class FMOD_CHANNEL;
+struct FMOD_SYSTEM;
+struct FMOD_STUDIO_SYSTEM;
+struct FMOD_SOUND;
+struct FMOD_STUDIO_BANK;
+struct FMOD_STUDIO_EVENTINSTANCE;
+struct FMOD_CHANNELGROUP;
+struct FMOD_CHANNEL;
 
 struct SoundInfo
 {
@@ -16,8 +18,12 @@ struct SoundInfo
     bool isLoop = false;
     bool id3D = false;
     float volume = 1.0f;
+};
 
-    bool isLoaded = false;
+struct BankInfo
+{
+    std::string_view path;
+    uint32_t uid = 0;
 };
 
 class AudioModule final : public ModuleInterface
@@ -39,8 +45,15 @@ public:
     // PlaySound is already used by a MinGW macro 💀
     void PlaySoundA(SoundInfo& soundInfo);
 
+    void LoadBank(BankInfo& bankInfo);
+
+    void UnloadBank(const BankInfo& bankInfo);
+
+    uint32_t StartEvent(std::string_view name);
+
 private:
-    FMOD_SYSTEM* _coreSystem = nullptr;
+    FMOD_SYSTEM* _coreSystem
+        = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 
     static constexpr uint32_t MAX_CHANNELS = 1024;
@@ -50,7 +63,11 @@ private:
 
     // Sounds stored in FMOD
     std::unordered_map<uint32_t, FMOD_SOUND*> _sounds;
+    std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks;
+    std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events;
 
     // Channels that are currently active
     std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping;
+
+    uint32_t _nextEventId = 0;
 };
