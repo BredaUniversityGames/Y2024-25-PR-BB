@@ -21,7 +21,7 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
     auto ecs = engine.GetModule<OldEngine>().GetECS();
     _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
     _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), _context, ecs);
-    _particleInterface = std::make_shared<ParticleInterface>(_renderer->GetContext(), ecs);
+    _particleInterface = std::make_unique<ParticleInterface>(_renderer->GetContext(), ecs);
     _imguiBackend = std::make_shared<ImGuiBackend>(_renderer->GetContext(), engine.GetModule<ApplicationModule>(), _renderer->GetSwapChain(), _renderer->GetGBuffers());
 
     return ModuleTickOrder::eRender;
