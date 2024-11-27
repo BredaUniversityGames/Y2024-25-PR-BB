@@ -24,7 +24,7 @@ public:
     ScriptingContext(const VMInitConfig& info);
     ~ScriptingContext();
 
-    wren::VM& GetVM() { return _vm; }
+    wren::VM& GetVM() { return *_vm; }
 
     NON_COPYABLE(ScriptingContext);
     NON_MOVABLE(ScriptingContext);

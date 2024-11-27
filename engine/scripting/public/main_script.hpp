@@ -17,6 +17,7 @@ public:
     bool Update(DeltaMS deltatime);
 
 private:
+    bool valid = false;
     wren::Variable mainClass {};
     wren::Method mainUpdate {};
 };

@@ -13,9 +13,19 @@ class ScriptingModule : public ModuleInterface
     {
         ScriptingContext::VMInitConfig config {};
         config.includePaths.emplace_back("./");
+        config.includePaths.emplace_back("./game/");
 
         _context = std::make_unique<ScriptingContext>(config);
+
         _mainModule = std::make_unique<MainScript>();
+
+        auto result = _context->InterpretWrenModule("Main.wren");
+
+        if (result)
+        {
+            _mainModule->SetMainModule(_context->GetVM(), result.value(), "Main");
+        }
+
         return ModuleTickOrder::ePreTick;
     };
 
