@@ -21,16 +21,16 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <set>
 #include <map>
+#include <set>
 
 // Misc std
 
+#include <algorithm>
+#include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
-#include <functional>
-#include <chrono>
-#include <algorithm>
 
 // GLM math
 

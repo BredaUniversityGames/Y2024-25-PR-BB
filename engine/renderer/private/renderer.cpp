@@ -133,7 +133,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
-        // TODO: particle pass should also render to brightness target
+    // TODO: particle pass should also render to brightness target
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")

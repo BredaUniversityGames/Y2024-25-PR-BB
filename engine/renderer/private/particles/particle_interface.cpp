@@ -1,13 +1,13 @@
 #include "particles/particle_interface.hpp"
 #include "particles/particle_util.hpp"
 
-#include "ecs.hpp"
 #include "components/name_component.hpp"
+#include "ecs.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "model_loader.hpp"
-#include "resource_management/image_resource_manager.hpp"
 #include "particles/emitter_component.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
 #include "stb/stb_image.h"
 
@@ -30,7 +30,7 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
 
 ParticleInterface::~ParticleInterface()
 {
-    for(auto i : _emitterImages)
+    for (auto i : _emitterImages)
     {
         _context->Resources()->ImageResourceManager().Destroy(i);
     }

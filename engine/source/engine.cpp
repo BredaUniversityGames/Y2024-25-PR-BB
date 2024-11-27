@@ -18,9 +18,9 @@
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particles/particle_util.hpp"
 #include "particles/emitter_component.hpp"
 #include "particles/particle_interface.hpp"
+#include "particles/particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -80,7 +80,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
-    
+
     TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
     TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
 

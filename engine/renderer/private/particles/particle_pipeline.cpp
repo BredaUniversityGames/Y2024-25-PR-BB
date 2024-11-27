@@ -2,16 +2,16 @@
 
 #include "camera.hpp"
 #include "ecs.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "particles/emitter_component.hpp"
-#include "gpu_scene.hpp"
-#include "vulkan_helper.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
-#include "resource_management/image_resource_manager.hpp"
+#include "vulkan_helper.hpp"
 
 ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
     : _context(context)
@@ -722,7 +722,7 @@ void ParticlePipeline::UpdateParticleInstancesBufferDescriptorSet()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
-    
+
     std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
 
     // Culled Instance (binding = 0)
