@@ -13,7 +13,7 @@ struct UITextElement : public UIElement
     {
     }
     void UpdateChildAbsoluteLocations() override { }
-    void SubmitDrawInfo(UIPipeline& pipeline) const override;
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     const std::shared_ptr<Font> _font;
     std::string text;

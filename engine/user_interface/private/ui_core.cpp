@@ -31,10 +31,10 @@ void Canvas::UpdateChildAbsoluteLocations()
     }
 }
 
-void Canvas::SubmitDrawInfo(UIPipeline& piepline) const
+void Canvas::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     for (const auto& i : GetChildren())
     {
-        i->SubmitDrawInfo(piepline);
+        i->SubmitDrawInfo(drawList);
     }
 }

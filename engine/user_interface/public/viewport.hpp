@@ -1,5 +1,6 @@
 #pragma once
 
+#include "quad_draw_info.hpp"
 #include <memory>
 #include <vector>
 class InputManager;
@@ -22,7 +23,7 @@ public:
     /**
      * \brief adds all the visible elements to the drawlist of the supplied UIPipeline ,needs to be called before the Renderer renders.
      */
-    void Render(UIPipeline& pipeline) const;
+    void Render();
 
     UIElement& AddElement(std::unique_ptr<UIElement> element);
 
@@ -34,5 +35,11 @@ public:
     glm::vec2 extend;
     glm::vec2 offset;
 
+    NO_DISCARD const std::vector<QuadDrawInfo>& GetDrawList() const noexcept
+    {
+        return _drawList;
+    }
+
 private:
+    std::vector<QuadDrawInfo> _drawList;
 };

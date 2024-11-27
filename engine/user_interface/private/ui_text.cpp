@@ -4,7 +4,7 @@
 
 #include <fonts.hpp>
 
-void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
+void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     // todo: move this into font resource manager
 
@@ -29,7 +29,7 @@ void UITextElement::SubmitDrawInfo(UIPipeline& pipeline) const
             info.uvp1 = character.uvp1;
             info.uvp2 = character.uvp2;
 
-            pipeline._drawlist.emplace_back(info);
+            drawList.emplace_back(info);
 
             localOffset += (character.Advance >> 6) * scale.x; // Convert advance from 1/64th pixels
         }

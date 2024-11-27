@@ -3,9 +3,11 @@
 //
 
 #pragma once
+#include "../public/ui_element.hpp"
 #include "typeindex"
 #include <queue>
-#include "../public/ui_element.hpp"
+
+struct QuadDrawInfo;
 class UIPipeline;
 
 /**
@@ -21,5 +23,5 @@ public:
         this->scale = size;
     }
     void UpdateChildAbsoluteLocations() override;
-    void SubmitDrawInfo(UIPipeline& pipeline) const override;
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawliust) const override;
 };

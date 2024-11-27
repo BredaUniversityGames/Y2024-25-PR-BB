@@ -9,11 +9,11 @@ void Viewport::Update(const InputManager& input) const
     }
 }
 
-void Viewport::Render(UIPipeline& pipeline) const
+void Viewport::Render()
 {
     for (auto& i : baseElements)
     {
-        i->SubmitDrawInfo(pipeline);
+        i->SubmitDrawInfo(_drawList);
     }
 }
 

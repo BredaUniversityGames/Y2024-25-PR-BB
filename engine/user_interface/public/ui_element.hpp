@@ -1,8 +1,8 @@
 #pragma once
 
 #include "glm/vec2.hpp"
+#include "quad_draw_info.hpp"
 #include "spdlog/spdlog.h"
-
 #include <memory>
 #include <stdint.h>
 
@@ -49,7 +49,7 @@ public:
     NO_DISCARD const glm::vec2& GetRelativeLocation() const { return _relativeLocation; }
     NO_DISCARD const glm::vec2& GetAbsouluteLocation() const { return _absoluteLocation; }
 
-    virtual void SubmitDrawInfo(MAYBE_UNUSED UIPipeline& pipeline) const
+    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const
     {
     }
 

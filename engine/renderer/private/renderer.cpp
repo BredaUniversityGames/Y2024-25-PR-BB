@@ -352,9 +352,6 @@ void Renderer::Render(float deltaTime)
     assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
     _camera->Update(_currentFrame, _scene->camera);
 
-    //_viewport->Update();
-    _viewport->Render(*_uiPipeline);
-
     uint32_t imageIndex {};
     vk::Result result {};
 

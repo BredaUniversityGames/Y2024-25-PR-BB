@@ -45,7 +45,7 @@ void UIButton::Update(const InputManager& input)
         m_State = ButtonState::eNormal;
 }
 
-void UIButton::SubmitDrawInfo(UIPipeline& pipeline) const
+void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
 
     if (visible)
@@ -72,11 +72,11 @@ void UIButton::SubmitDrawInfo(UIPipeline& pipeline) const
         };
 
         info.useRedAsAlpha = false;
-        pipeline._drawlist.emplace_back(info);
+        drawList.emplace_back(info);
 
         for (auto& i : GetChildren())
         {
-            i->SubmitDrawInfo(pipeline);
+            i->SubmitDrawInfo(drawList);
         }
     }
 }

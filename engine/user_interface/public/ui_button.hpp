@@ -25,7 +25,7 @@ public:
 
     void Update(const InputManager& inputManager) override;
 
-    void SubmitDrawInfo(UIPipeline& uiPipeline) const override;
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     void UpdateChildAbsoluteLocations() override;
 

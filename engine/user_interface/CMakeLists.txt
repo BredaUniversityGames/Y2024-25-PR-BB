@@ -5,4 +5,5 @@ module_default_init(UserInterface)
 target_link_libraries(UserInterface
         PUBLIC Engine
         PUBLIC Utility
-        PRIVATE glm::glm)
+        PRIVATE glm::glm
+        PUBLIC Core)
