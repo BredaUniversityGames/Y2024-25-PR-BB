@@ -32,7 +32,6 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
         TempPhysicsData tempData;
         tempData.boundingBox = cpuModel.meshes.at(currentNode.meshIndex.value()).GetMeshBounds();
         tempData.position = TransformHelpers::GetLocalMatrix(ecs.registry, entity)[3];
-        tempData.ownerEntity = entity;
         tempData.rotation = TransformHelpers::GetLocalRotation(ecs.registry, entity);
         tempData.meshScale = TransformHelpers::GetLocalScale(ecs.registry, entity);
         ecs.registry.emplace<TempPhysicsData>(entity, tempData);

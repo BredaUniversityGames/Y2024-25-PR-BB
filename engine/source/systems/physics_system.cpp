@@ -26,7 +26,6 @@ void PhysicsSystem::InitializePhysicsColliders()
         RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position, boundingBox, eSTATIC);
 
         // rotation now
-
         _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(tempData.rotation.x, tempData.rotation.y, tempData.rotation.z, tempData.rotation.w), JPH::EActivation::Activate);
 
         _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
@@ -45,14 +44,12 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
-    // return;
     //  Update the meshes
-    const auto view = _ecs.registry.view<RigidbodyComponent, TransformComponent, TempPhysicsData>();
+    const auto view = _ecs.registry.view<RigidbodyComponent, TempPhysicsData>();
     for (const auto entity : view)
     {
-        RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
-        TransformComponent& transform = view.get<TransformComponent>(entity);
-        TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+        const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
+        const TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
