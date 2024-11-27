@@ -50,6 +50,8 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeTonemappingTarget();
+    InitializeUITarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
@@ -93,11 +95,11 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _geometryPipeline
         = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
-    _uiPipeline = std::make_unique<UIPipeline>(_context, *_swapChain);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, *_camera, *_swapChain);
 
@@ -150,20 +152,21 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     toneMappingPass.SetName("Tonemapping pass")
         .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
-    // TODO: OUTPUT TONEMAPPING TARGET AS eATTACHMENT
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
     // TODO: THIS PASS SHOULD BE DONE LAST.
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        // TODO: USE TONEMAPPING TARGET AS INPUT
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
+        .AddInput(_uiTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         // Reference to make sure it runs at the end
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
@@ -310,6 +313,25 @@ void Renderer::InitializeBloomTargets()
 
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
     _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
+}
+void Renderer::InitializeTonemappingTarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage tonemappingCreation {};
+    tonemappingCreation.SetName("Tonemapping Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _tonemappingTarget = _context->Resources()->ImageResourceManager().Create(tonemappingCreation);
+}
+
+void Renderer::InitializeUITarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage uiCreation {};
+    uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
 }
 
 void Renderer::LoadEnvironmentMap()

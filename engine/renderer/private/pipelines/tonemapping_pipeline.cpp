@@ -8,11 +8,15 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+#include <graphics_resources.hpp>
+#include <resource_management/image_resource_manager.hpp>
+
+TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> toneMappingTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
+    , _toneMappingTarget(toneMappingTarget)
     , _bloomSettings(bloomSettings)
 {
     CreatePipeline();
@@ -27,10 +31,10 @@ TonemappingPipeline::~TonemappingPipeline()
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex),
+        .imageView = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -88,7 +92,7 @@ void TonemappingPipeline::CreatePipeline()
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ _swapChain.GetFormat() })
+        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_toneMappingTarget)->format })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)
         .BuildPipeline(_pipeline, _pipelineLayout);
 }

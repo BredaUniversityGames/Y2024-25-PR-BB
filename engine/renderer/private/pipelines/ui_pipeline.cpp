@@ -10,11 +10,18 @@
 
 #include "vulkan_helper.hpp"
 
-UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain)
+#include <graphics_resources.hpp>
+#include <resource_management/image_resource_manager.hpp>
+
+UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> toneMappingTarget, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain)
     : _context(context)
+    , _toneMappingTarget(toneMappingTarget)
+    , _uiTarget(uiTarget)
     , _swapChain(swapChain)
 {
     CreatePipeLine();
+
+    _pushConstants.tonemappingTargetIndex = toneMappingTarget.Index();
 }
 
 UIPipeline::~UIPipeline()
@@ -45,19 +52,26 @@ void UIPipeline::CreatePipeLine()
     auto vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
     auto fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
 
+    // TODO: CHANGE COLOR FORMAT TO UI TARGET
     PipelineBuilder pipelineBuilder { _context };
     pipelineBuilder
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ _swapChain.GetFormat() })
+        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_toneMappingTarget)->format })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)
         .BuildPipeline(_pipeline, _pipelineLayout);
 }
-void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene)
+void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
+    auto toneMapping = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget);
+    auto ui = _context->Resources()->ImageResourceManager().Access(_uiTarget);
+    // TODO: BLIT TONE MAPPING TARGET TO UI TARGET.
+    util::CopyImageToImage(commandBuffer, toneMapping->image, ui->image,
+        vk::Extent2D { toneMapping->width, toneMapping->height }, vk::Extent2D { ui->width, ui->height });
+
     vk::RenderingAttachmentInfoKHR const finalColorAttachmentInfo {
-        .imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex),
+        .imageView = _context->Resources()->ImageResourceManager().Access(_uiTarget)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -80,12 +94,11 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), static_cast<float>(_swapChain.GetExtent().height), 0.f, -1.f, 1.f);
 
-    UIPushConstants pushConstants;
     for (auto& i : _drawlist)
     {
-        pushConstants.quad = i;
-        pushConstants.quad.projection = projectionMatrix * pushConstants.quad.projection;
-        commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, sizeof(UIPushConstants), &pushConstants);
+        _pushConstants.quad = i;
+        _pushConstants.quad.projection = projectionMatrix * _pushConstants.quad.projection;
+        commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(UIPushConstants), &_pushConstants);
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
 

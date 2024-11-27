@@ -106,6 +106,8 @@ private:
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
+    void InitializeTonemappingTarget();
+    void InitializeUITarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };
