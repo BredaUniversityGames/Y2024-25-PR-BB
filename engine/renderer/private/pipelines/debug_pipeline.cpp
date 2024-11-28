@@ -50,14 +50,14 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
         .imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view,
         .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .storeOp = vk::AttachmentStoreOp::eStore,
         .clearValue = {
             .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
     };
 
     vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
     stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
-    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
     stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
     vk::RenderingInfoKHR renderingInfo {
