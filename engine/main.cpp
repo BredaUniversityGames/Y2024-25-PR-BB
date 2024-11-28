@@ -1,9 +1,9 @@
-#include "steam_module.hpp"
 #include "application_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
+#include "steam_module.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
