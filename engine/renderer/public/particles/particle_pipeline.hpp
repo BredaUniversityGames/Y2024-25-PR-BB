@@ -56,13 +56,6 @@ private:
     {
         uint32_t bufferOffset;
     } _emitPushConstant;
-    struct RenderPushConstant
-    {
-        glm::vec3 cameraRight;
-        float _rightPadding;
-        glm::vec3 cameraUp;
-        float _upPadding;
-    } _renderPushConstant;
 
     std::shared_ptr<GraphicsContext> _context;
     std::shared_ptr<ECS> _ecs;

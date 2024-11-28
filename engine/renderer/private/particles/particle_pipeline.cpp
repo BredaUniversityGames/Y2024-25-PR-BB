@@ -216,14 +216,6 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
 
-    auto camera = scene.sceneDescription->camera;
-    glm::mat4 cameraRotation = mat4_cast(glm::quat(camera.eulerRotation));
-    glm::mat4 cameraTranslation = translate(glm::mat4 { 1.0f }, camera.position);
-    auto cameraView = glm::inverse(cameraTranslation * cameraRotation);
-    _renderPushConstant.cameraRight = glm::vec3(cameraView[0][0], cameraView[1][0], cameraView[2][0]);
-    _renderPushConstant.cameraUp = glm::vec3(cameraView[0][1], cameraView[1][1], cameraView[2][1]);
-    commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], vk::ShaderStageFlagBits::eVertex, 0, sizeof(RenderPushConstant), &_renderPushConstant);
-
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
@@ -396,12 +388,7 @@ void ParticlePipeline::CreatePipelines()
         pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
 
-        vk::PushConstantRange pcRange {};
-        pcRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
-        pcRange.size = sizeof(RenderPushConstant);
-
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pcRange;
+        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 
         _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)] = vkContext->Device().createPipelineLayout(pipelineLayoutCreateInfo);
 
