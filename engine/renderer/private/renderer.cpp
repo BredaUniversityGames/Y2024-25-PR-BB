@@ -77,16 +77,14 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    _camera = std::make_unique<CameraResource>(_context);
-
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, *_bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, *_camera);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -232,7 +230,6 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
-        .sceneDescription = _scene,
         .ecs = _ecs,
         .batchBuffer = _batchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
@@ -333,10 +330,6 @@ void Renderer::Render(float deltaTime)
     }
 
     _bloomSettings->Update(_currentFrame);
-
-    // TODO: handle this more gracefully
-    assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
-    _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};

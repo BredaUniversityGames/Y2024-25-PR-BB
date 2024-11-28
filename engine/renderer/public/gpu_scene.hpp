@@ -6,7 +6,6 @@
 #include "resource_manager.hpp"
 #include <memory>
 
-struct SceneDescription;
 class GPUScene;
 class BatchBuffer;
 class ECS;
@@ -17,7 +16,6 @@ struct GPUSceneCreation
     std::shared_ptr<GraphicsContext> context;
     std::shared_ptr<ECS> ecs;
 
-    // TODO: When we switch to ECS, fetch this data from a component in the world
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
@@ -27,7 +25,6 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
-    std::shared_ptr<const SceneDescription> sceneDescription; // This will change to ecs
     std::shared_ptr<const ECS> ecs;
     std::shared_ptr<BatchBuffer> batchBuffer;
     uint32_t targetSwapChainImageIndex;
@@ -71,7 +68,8 @@ public:
         return count;
     }
 
-    const Camera& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
+    const CameraResource& MainCamera() const { return _mainCamera; }
+    const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
 
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
@@ -124,11 +122,14 @@ private:
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
-    // TODO: Change GPUScene to support all cameras in the scene
-    Camera _directionalLightShadowCamera {};
+    // TODO: Handle all camera's in one buffer or array to enable better culling
+    CameraResource _mainCamera;
+    CameraResource _directionalLightShadowCamera;
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
+    void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);
+    void UpdateCameraData(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializeObjectInstancesBuffers();
