@@ -21,7 +21,7 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 
         CHECKRESULT(FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION));
 
-        CHECKRESULT(FMOD_Studio_System_Initialize(_studioSystem, 512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr));
+        CHECKRESULT(FMOD_Studio_System_Initialize(_studioSystem, MAX_CHANNELS, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr));
 
         CHECKRESULT(FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem));
 
