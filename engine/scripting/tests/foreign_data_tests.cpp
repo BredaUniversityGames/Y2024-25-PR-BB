@@ -15,6 +15,21 @@ const ScriptingContext::VMInitConfig MEMORY_CONFIG {
     256ull * 4ull, 256ull, 50
 };
 
+namespace bind
+{
+
+glm::vec3 Vec3Identity()
+{
+    return glm::vec3 {};
+}
+
+std::string Vec3ToString(glm::vec3& v)
+{
+    return fmt::format("{}, {}, {}", v.x, v.y, v.z);
+}
+
+}
+
 TEST(ForeignDataTests, ForeignBasicClass)
 {
     ScriptingContext context { MEMORY_CONFIG };
@@ -23,25 +38,15 @@ TEST(ForeignDataTests, ForeignBasicClass)
     std::stringstream output;
     context.SetScriptingOutputStream(&output);
 
-    auto& module = vm.module("Engine");
-    auto& v3 = module.klass<glm::vec3>("Vec3");
-
-    constexpr auto identity = []()
-    {
-        return glm::vec3 {};
-    };
-
-    constexpr auto to_string = [](glm::vec3& v)
-    {
-        return fmt::format("{}, {}, {}", v.x, v.y, v.z);
-    };
+    auto& foreignAPI = vm.module("Engine");
+    auto& v3 = foreignAPI.klass<glm::vec3>("Vec3");
 
     v3.ctor<float, float, float>();
-    v3.funcStatic<+identity>("Identity");
+    v3.funcStatic<bind::Vec3Identity>("Identity");
     v3.var<&glm::vec3::x>("x");
     v3.var<&glm::vec3::y>("y");
     v3.var<&glm::vec3::z>("z");
-    v3.funcExt<+to_string>("ToString");
+    v3.funcExt<bind::Vec3ToString>("ToString");
 
     auto result = context.InterpretWrenModule("game/tests/foreign_data.wren");
 
