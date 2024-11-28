@@ -1,6 +1,6 @@
 #include "pipelines/ibl_pipeline.hpp"
 
-#include "../vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"

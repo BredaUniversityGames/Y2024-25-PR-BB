@@ -1,12 +1,12 @@
-#include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
+#include "particle_interface.hpp"
+#include "particle_util.hpp"
 
 #include "components/name_component.hpp"
 #include "ecs.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "model_loader.hpp"
-#include "particles/emitter_component.hpp"
+#include "emitter_component.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
 #include "stb/stb_image.h"

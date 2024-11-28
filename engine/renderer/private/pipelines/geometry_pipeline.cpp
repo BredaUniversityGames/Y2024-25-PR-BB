@@ -1,6 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 
-#include "../vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"

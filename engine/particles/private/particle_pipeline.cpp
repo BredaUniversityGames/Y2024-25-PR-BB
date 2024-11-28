@@ -1,4 +1,4 @@
-#include "particles/particle_pipeline.hpp"
+#include "particle_pipeline.hpp"
 
 #include "camera.hpp"
 #include "ecs.hpp"
@@ -7,7 +7,7 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "particles/emitter_component.hpp"
+#include "emitter_component.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"

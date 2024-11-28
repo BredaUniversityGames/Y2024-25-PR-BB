@@ -1,6 +1,6 @@
 #include "pipelines/skydome_pipeline.hpp"
 
-#include "../vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
