@@ -14,7 +14,7 @@ option(ENABLE_TESTS "Compile with Unit Tests" ON)
 option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(ENABLE_PCH "Compile with precompiled header" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
-option(ENABLE_UNITY "Compile using Unity Builds" OFF)
+option(ENABLE_UNITY "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
 target_compile_features(ProjectSettings INTERFACE cxx_std_20)
@@ -83,4 +83,4 @@ add_custom_command(TARGET Game POST_BUILD
 add_custom_command(TARGET Game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "${PROJECT_SOURCE_DIR}/steam_appid.txt"
-		$<TARGET_FILE_DIR:Game>)
+        $<TARGET_FILE_DIR:Game>)
