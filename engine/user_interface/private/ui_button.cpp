@@ -1,8 +1,6 @@
-#include "../public/ui_button.hpp"
-#include "../../application/public/input_manager.hpp"
+#include "ui_button.hpp"
+#include "input_manager.hpp"
 #include "pipelines/ui_pipeline.hpp"
-
-#include "glm/glm.hpp"
 
 void UIButton::Update(const InputManager& input)
 {
@@ -17,11 +15,11 @@ void UIButton::Update(const InputManager& input)
             && mousePos.y > static_cast<int>(GetAbsouluteLocation().y)
             && mousePos.y < static_cast<int>(GetAbsouluteLocation().y + GetScale().y))
         {
-            switch (m_State)
+            switch (state)
             {
             case ButtonState::eNormal:
 
-                m_State = ButtonState::eHovered;
+                state = ButtonState::eHovered;
                 onBeginHoverCallBack();
                 [[fallthrough]];
 
@@ -29,7 +27,7 @@ void UIButton::Update(const InputManager& input)
 
                 if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
                 {
-                    m_State = ButtonState::ePressed;
+                    state = ButtonState::ePressed;
                     onMouseDownCallBack();
                 }
                 break;
@@ -37,14 +35,15 @@ void UIButton::Update(const InputManager& input)
             case ButtonState::ePressed:
                 if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
                 {
-                    m_State = ButtonState::eNormal;
+                    state = ButtonState::eNormal;
                 }
                 break;
             }
         }
-
         else
-            m_State = ButtonState::eNormal;
+        {
+            state = ButtonState::eNormal;
+        }
     }
 }
 
@@ -54,7 +53,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
     if (enabled)
     {
         ResourceHandle<GPUImage> image;
-        switch (m_State)
+        switch (state)
         {
         case ButtonState::eNormal:
             image = style.normalImage;
@@ -77,7 +76,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         info.useRedAsAlpha = false;
         drawList.emplace_back(info);
 
-        for (auto& i : GetChildren())
+        for (const auto& i : GetChildren())
         {
             i->SubmitDrawInfo(drawList);
         }
@@ -86,6 +85,8 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
 void UIButton::UpdateAllChildrenAbsoluteLocations()
 {
-    for (auto& i : GetChildren())
+    for (const auto& i : GetChildren())
+    {
         i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (GetScale() / 2.f) + i->GetRelativeLocation());
+    }
 }

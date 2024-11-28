@@ -6,10 +6,9 @@
 #include <graphics_resources.hpp>
 #include <resource_management/image_resource_manager.hpp>
 
-MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext> context, const std::shared_ptr<Font>& font)
+MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<Font>& font)
     : Canvas(size)
 {
-
     // demo scene
 
     CPUImage buttonNormalImage;
@@ -34,8 +33,8 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     subButton->style = standardStyle;
     subButton->SetScale({ 300, 100 });
     subButton->SetLocation({ 100, 300 });
-    subButton->onMouseDownCallBack = []() {};
-    subButton->onBeginHoverCallBack = []() {};
+    subButton->onMouseDownCallBack = []() { };
+    subButton->onBeginHoverCallBack = []() { };
 
     AddChild(std::move(subButton));
 
@@ -43,8 +42,8 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     playButton->style = standardStyle;
     playButton->SetScale({ 300, 100 });
     playButton->SetLocation({ 100, 100 });
-    playButton->onBeginHoverCallBack = []() {};
-    playButton->onMouseDownCallBack = []() {};
+    playButton->onBeginHoverCallBack = []() { };
+    playButton->onMouseDownCallBack = []() { };
     std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(font);
     playText->text = "Play the Game";
     playText->SetScale({ 100, 50 });

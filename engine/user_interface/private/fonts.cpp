@@ -13,7 +13,7 @@
 #include <resource_management/image_resource_manager.hpp>
 #include <resource_management/sampler_resource_manager.hpp>
 
-std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext> context)
+std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -22,14 +22,6 @@ std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHe
     FT_New_Face(library, path.c_str(), 0, &fontFace);
 
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
-
-    SamplerCreation createInfo;
-    createInfo.magFilter = vk::Filter::eLinear;
-    createInfo.minFilter = vk::Filter::eLinear;
-    createInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-    createInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-
-    auto sampler = context->Resources()->SamplerResourceManager().Create(createInfo);
 
     auto font = std::make_shared<Font>();
     font->characterHeight = characterHeight;
@@ -83,11 +75,11 @@ std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHe
 
             // Store Character and GlyphRegion
             font->characters[c] = {
-                .Size = glm::ivec2(bitmap.width, bitmap.rows),
-                .Bearing = glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
-                .Advance = static_cast<uint16_t>(fontFace->glyph->advance.x),
-                .uvp1 = glm::vec2(static_cast<float>(rects[c].x) / atlasWidth, static_cast<float>(rects[c].y) / atlasHeight),
-                .uvp2 = glm::vec2(static_cast<float>(rects[c].x + bitmap.width) / atlasWidth,
+                .size = glm::ivec2(bitmap.width, bitmap.rows),
+                .bearing = glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
+                .advance = static_cast<uint16_t>(fontFace->glyph->advance.x),
+                .uvMin = glm::vec2(static_cast<float>(rects[c].x) / atlasWidth, static_cast<float>(rects[c].y) / atlasHeight),
+                .uvMax = glm::vec2(static_cast<float>(rects[c].x + bitmap.width) / atlasWidth,
                     static_cast<float>(rects[c].y + bitmap.rows) / atlasHeight)
             };
         }
@@ -102,7 +94,7 @@ std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHe
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font->_fontAtlas = context->Resources()->ImageResourceManager().Create(image);
+    font->fontAtlas = context->Resources()->ImageResourceManager().Create(image);
     context->UpdateBindlessSet();
 
     FT_Done_Face(fontFace);

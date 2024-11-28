@@ -1,15 +1,11 @@
-//
-// Created by luuk on 30-9-2024.
-//
 #pragma once
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "ui_element.hpp"
 #include <functional>
-#include <ui_element.hpp>
 
-class UIButton : public UIElement
+struct UIButton : public UIElement
 {
-public:
     UIButton()
         : UIElement(1)
     {
@@ -20,7 +16,7 @@ public:
         eNormal,
         eHovered,
         ePressed
-    } m_State
+    } state
         = ButtonState::eNormal;
 
     void Update(const InputManager& inputManager) override;
@@ -38,6 +34,4 @@ public:
 
     std::function<void()> onBeginHoverCallBack {};
     std::function<void()> onMouseDownCallBack {};
-
-private:
 };

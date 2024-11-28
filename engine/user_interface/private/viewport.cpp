@@ -3,7 +3,7 @@
 
 void Viewport::Update(const InputManager& input) const
 {
-    for (auto& i : baseElements)
+    for (const auto& i : _baseElements)
     {
         i->Update(input);
     }
@@ -11,7 +11,7 @@ void Viewport::Update(const InputManager& input) const
 
 void Viewport::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    for (auto& i : baseElements)
+    for (const auto& i : _baseElements)
     {
         i->SubmitDrawInfo(drawList);
     }
@@ -19,9 +19,9 @@ void Viewport::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
 UIElement& Viewport::AddElement(std::unique_ptr<UIElement> element)
 {
-    baseElements.emplace_back(std::move(element));
-    std::ranges::sort(baseElements.begin(), baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+    _baseElements.emplace_back(std::move(element));
+    std::ranges::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
 
-    return *baseElements.back();
+    return *_baseElements.back();
 }

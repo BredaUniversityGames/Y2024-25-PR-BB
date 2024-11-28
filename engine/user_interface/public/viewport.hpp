@@ -1,12 +1,12 @@
 #pragma once
 
 #include "quad_draw_info.hpp"
+#include "ui_element.hpp"
 #include <memory>
 #include <vector>
+
 class InputManager;
-#include "ui_element.hpp"
 class UIElement;
-class UIPipeline;
 
 class Viewport
 {
@@ -16,9 +16,7 @@ public:
         , offset(offset)
     {
     }
-
     void Update(const InputManager& input) const;
-
     /**
      * adds all the draw data for the ui to the drawList argument, fynction calls SubmitDrawInfo on all the present uiElements in a hierarchical manner.
      * This drawList gets cleared when the uiPipeline records it's commands and thus this function needs to be called before the commandLists are submitted.
@@ -28,8 +26,8 @@ public:
 
     UIElement& AddElement(std::unique_ptr<UIElement> element);
 
-    std::vector<std::unique_ptr<UIElement>>& GetElements() { return baseElements; }
-    const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return baseElements; }
+    NO_DISCARD std::vector<std::unique_ptr<UIElement>>& GetElements() { return _baseElements; }
+    NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return _baseElements; }
 
     glm::vec2 extend;
     glm::vec2 offset;
@@ -38,5 +36,5 @@ private:
     /**
      * \brief Base elements present in viewport.
      */
-    std::vector<std::unique_ptr<UIElement>> baseElements;
+    std::vector<std::unique_ptr<UIElement>> _baseElements;
 };

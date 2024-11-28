@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 class InputManager;
-class UIPipeline;
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
  * mostly in a hierarchical manner. each element calls its children's update and draw functions.

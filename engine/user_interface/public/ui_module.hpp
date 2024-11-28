@@ -11,9 +11,7 @@ public:
     NON_COPYABLE(UIModule);
     NON_MOVABLE(UIModule);
 
-    std::unique_ptr<Viewport> _viewport;
-
-    void CreateMainMenu();
+    std::unique_ptr<Viewport> viewport;
 
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;

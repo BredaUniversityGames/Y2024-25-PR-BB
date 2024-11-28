@@ -1,16 +1,13 @@
 #include "ui_module.hpp"
-
 #include <application_module.hpp>
-void UIModule::CreateMainMenu()
-{
-}
+
 ModuleTickOrder UIModule::Init(Engine& engine)
 {
     const glm::vec2 extend = engine.GetModule<ApplicationModule>().DisplaySize();
-    _viewport = std::make_unique<Viewport>(extend);
+    viewport = std::make_unique<Viewport>(extend);
     return ModuleTickOrder::ePostTick;
 }
 void UIModule::Tick(Engine& engine)
 {
-    _viewport->Update(engine.GetModule<ApplicationModule>().GetInputManager());
+    viewport->Update(engine.GetModule<ApplicationModule>().GetInputManager());
 }

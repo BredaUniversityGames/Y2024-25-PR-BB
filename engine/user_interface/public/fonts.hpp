@@ -1,7 +1,6 @@
 #pragma once
 
 #include "resource_manager.hpp"
-
 #include <map>
 
 class GraphicsContext;
@@ -11,17 +10,17 @@ struct Font
 {
     struct Character
     {
-        glm::ivec2 Size;
-        glm::ivec2 Bearing;
-        uint16_t Advance;
+        glm::ivec2 size;
+        glm::ivec2 bearing;
+        uint16_t advance;
 
-        glm::vec2 uvp1;
-        glm::vec2 uvp2;
+        glm::vec2 uvMin;
+        glm::vec2 uvMax;
     };
 
     std::map<uint8_t, Character> characters;
-    ResourceHandle<GPUImage> _fontAtlas;
+    ResourceHandle<GPUImage> fontAtlas;
     uint16_t characterHeight;
 };
 
-NO_DISCARD std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext> context);
+NO_DISCARD std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context);
