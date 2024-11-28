@@ -12,10 +12,10 @@
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
-UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& toneMappingTarget, const ResourceHandle<GPUImage>& uiTarget, const SwapChain& swapChain)
+UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
-    , _toneMappingTarget(toneMappingTarget)
-    , _uiTarget(uiTarget)
+    , _inputTarget(inputTarget)
+    , _outputTarget(outputTarget)
     , _swapChain(swapChain)
 {
     CreatePipeLine();
@@ -53,14 +53,14 @@ void UIPipeline::CreatePipeLine()
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_toneMappingTarget)->format })
+        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)
         .BuildPipeline(_pipeline, _pipelineLayout);
 }
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget);
-    const auto* ui = _context->Resources()->ImageResourceManager().Access(_uiTarget);
+    const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_inputTarget);
+    const auto* ui = _context->Resources()->ImageResourceManager().Access(_outputTarget);
 
     util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
@@ -72,7 +72,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
     vk::RenderingAttachmentInfoKHR const finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_uiTarget)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
