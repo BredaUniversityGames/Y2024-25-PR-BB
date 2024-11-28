@@ -4,8 +4,8 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
-#include "components/camera_component.hpp"
 #include "audio_module.hpp"
+#include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -142,7 +142,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
 
-    audioModule.StartEvent("event:/Weapons/Machine Gun");
+    // audioModule.StartEvent("event:/Weapons/Machine Gun");
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -155,6 +155,7 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& audioModule = engine.GetModule<AudioModule>();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -279,6 +280,18 @@ void OldEngine::Tick(Engine& engine)
     {
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
         spdlog::info("Spawned emitter!");
+    }
+
+    static uint32_t soundId {};
+
+    if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
+    {
+        soundId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+    }
+
+    if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
+    {
+        audioModule.StopEvent(soundId);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);

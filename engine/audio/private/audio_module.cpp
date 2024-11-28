@@ -10,43 +10,28 @@
 #include "log.hpp"
 
 #include "fmod_debug.hpp"
-void CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
-{
-    if (result != FMOD_OK)
-        bblog::error("FMOD ERROR: audio_module.cpp [Line {0} ] {1} - {2}", line, static_cast<int>(result), FMOD_ErrorString(result));
-}
-#define CHECKRESULT(result) CHECKRESULT_fn(result, __FILE__, __LINE__)
-
 
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    const ModuleTickOrder tickOrder = ModuleTickOrder::ePostTick;
+    const auto tickOrder = ModuleTickOrder::ePostTick;
 
-
-    StartFMODDebugLogger();
-    FMOD_RESULT result;
-
-    result = FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION);
-    if (result != FMOD_OK)
+    try
     {
-        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
+        StartFMODDebugLogger();
+
+        CHECKRESULT(FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION));
+
+        CHECKRESULT(FMOD_Studio_System_Initialize(_studioSystem, 512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr));
+
+        CHECKRESULT(FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem));
+
+        CHECKRESULT(FMOD_System_GetMasterChannelGroup(_coreSystem, &_masterGroup));
+    }
+    catch (std::exception& e)
+    {
+        bblog::error("FMOD did not initialize successfully: {0}", e.what());
         return tickOrder;
     }
-
-    result = FMOD_Studio_System_Initialize(_studioSystem, 512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr);
-    if (result != FMOD_OK)
-    {
-        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
-        return tickOrder;
-    }
-
-    result = FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem);
-    if (result != FMOD_OK)
-    {
-        bblog::error("FMOD Error: {0}", FMOD_ErrorString(result));
-        return tickOrder;
-    }
-
     bblog::info("FMOD initialized successfully");
 
     return tickOrder;
@@ -93,7 +78,7 @@ void AudioModule::LoadSound(SoundInfo& soundInfo)
         return;
     }
 
-    FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
+    const FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
     FMOD_SOUND* sound;
 
     CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
@@ -119,6 +104,14 @@ void AudioModule::PlaySoundA(SoundInfo& soundInfo)
     }
 
     CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
+}
+void AudioModule::StopSound(const SoundInfo& soundInfo)
+{
+    if (soundInfo.isLoop && _channelsLooping.contains(soundInfo.uid))
+    {
+        CHECKRESULT(FMOD_Channel_Stop(_channelsLooping[soundInfo.uid]));
+        _channelsLooping.erase(soundInfo.uid);
+    }
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
 {
@@ -149,7 +142,15 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-uint32_t AudioModule::StartEvent(std::string_view name)
+uint32_t AudioModule::StartOneShotEvent(std::string_view name)
+{
+    return StartEvent(name, true);
+}
+uint32_t AudioModule::StartLoopingEvent(std::string_view name)
+{
+    return StartEvent(name, false);
+}
+uint32_t AudioModule::StartEvent(const std::string_view name, bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve;
     CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
@@ -157,13 +158,23 @@ uint32_t AudioModule::StartEvent(std::string_view name)
     FMOD_STUDIO_EVENTINSTANCE* evi;
     CHECKRESULT(FMOD_Studio_EventDescription_CreateInstance(eve, &evi));
 
-    uint32_t eventId = _nextEventId;
+    const uint32_t eventId = _nextEventId;
     _events[eventId] = evi;
     ++_nextEventId;
 
     CHECKRESULT(FMOD_Studio_EventInstance_Start(evi));
 
-    // CHECKRESULT(FMOD_Studio_EventInstance_Release(evi));
+    if (isOneShot)
+    {
+        CHECKRESULT(FMOD_Studio_EventInstance_Release(evi));
+    }
 
     return eventId;
+}
+void AudioModule::StopEvent(const uint32_t eventId)
+{
+    if (_events.contains(eventId))
+    {
+        CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[eventId], FMOD_STUDIO_STOP_ALLOWFADEOUT));
+    }
 }

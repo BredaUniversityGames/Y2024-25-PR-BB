@@ -41,17 +41,27 @@ public:
     void LoadSound(SoundInfo& soundInfo);
 
     // Play sound
-
     // PlaySound is already used by a MinGW macro 💀
     void PlaySoundA(SoundInfo& soundInfo);
+
+    void StopSound(const SoundInfo& soundInfo);
 
     void LoadBank(BankInfo& bankInfo);
 
     void UnloadBank(const BankInfo& bankInfo);
 
-    uint32_t StartEvent(std::string_view name);
+    // Play an event once
+    // Events started through this will stop on their own
+    uint32_t StartOneShotEvent(std::string_view name);
+
+    // Store the returned id and later call StopEvent(id), it might not stop otherwise
+    NO_DISCARD uint32_t StartLoopingEvent(std::string_view name);
+
+    void StopEvent(uint32_t eventId);
 
 private:
+    NO_DISCARD uint32_t StartEvent(std::string_view name, bool isOneShot);
+
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 
