@@ -53,11 +53,13 @@ void PhysicsSystem::InitializePhysicsColliders()
         tempData.position = translation;
         tempData.rotation = rotationQuat;
         tempData.meshScale = scale;
-        tempData.boundingBox.min *= scale;
-        tempData.boundingBox.max *= scale;
+        // tempData.boundingBox.min *= scale;
+        // tempData.boundingBox.max *= scale;
 
         // size and position
-        Vec3Range boundingBox = tempData.boundingBox;
+        Vec3Range boundingBox = tempData.boundingBox; // * scale;
+        boundingBox.min *= scale;
+        boundingBox.max *= scale;
         // boundingBox.min *= tempData.meshScale;
         // boundingBox.max *= tempData.meshScale;
         const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
@@ -83,7 +85,6 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
-    return;
     //    Update the meshes
     const auto view = _ecs.registry.view<RigidbodyComponent, TempPhysicsData>();
     for (const auto entity : view)
@@ -101,6 +102,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
         const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), joltBoxSize / oldExtent);
+        // glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), tempData.meshScale);
 
         const glm::vec3 centerPos = (tempData.boundingBox.max + tempData.boundingBox.min) * 0.5f;
         joltToGlm = glm::translate(joltToGlm, -centerPos);
