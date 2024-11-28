@@ -6,7 +6,7 @@
 #include "ui_text.hpp"
 #include "vulkan_context.hpp"
 
-MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<Font>& font)
+MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<UIFont>& font)
     : Canvas(size)
 {
     // demo scene
