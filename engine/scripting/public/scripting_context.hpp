@@ -2,13 +2,13 @@
 
 #include "common.hpp"
 #include "utility/foreign_bindings.hpp"
+#include "wren_common.hpp"
 
 #include <cstdint>
 #include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
-#include <wren_common.hpp>
 
 class ScriptingContext
 {
@@ -40,14 +40,4 @@ public:
 private:
     std::unique_ptr<wren::VM> _vm;
     std::ostream* _wrenOutStream = &std::cout;
-
-    // std::optional<std::string> LoadModuleSource(const std::string& modulePath);
-    //
-    // std::vector<std::string> _loadedModulePaths {};
-    // std::vector<std::string> _includePaths {};
-    //
-    // // Foreign storage
-    //
-    // std::unordered_map<std::string, WrenForeignClassMethods> _classes {};
-    // std::unordered_map<std::string, WrenForeignMethodFn> _methods {};
 };

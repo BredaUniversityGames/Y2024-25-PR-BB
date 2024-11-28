@@ -22,7 +22,8 @@ TEST(MainScriptTests, MainScript)
 
     MainScript wrenMain {};
     wrenMain.SetMainModule(context.GetVM(), *result, "ExampleMain");
+    wrenMain.Update(DeltaMS { 10.0f });
 
-    EXPECT_TRUE(wrenMain.Update(DeltaMS { 10.0f }));
+    EXPECT_TRUE(wrenMain.IsValid());
     EXPECT_EQ(output.str(), "10\n");
 }

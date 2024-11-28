@@ -1,5 +1,6 @@
 #include "scripting_context.hpp"
 #include "file_io.hpp"
+#include "log.hpp"
 #include "utility/script_file_loading.hpp"
 
 ScriptingContext::ScriptingContext(const VMInitConfig& info)

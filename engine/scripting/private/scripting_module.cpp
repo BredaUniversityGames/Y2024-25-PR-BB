@@ -1,5 +1,6 @@
-#include <scripting_module.hpp>
-#include <time_module.hpp>
+#include "scripting_module.hpp"
+#include "file_io.hpp"
+#include "time_module.hpp"
 
 void ScriptingModule::GenerateEngineBindingsFile(const std::string& path)
 {
@@ -24,9 +25,12 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
 void ScriptingModule::Tick(Engine& engine)
 {
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
-    _mainModule->Update(dt);
 
-    _context->FlushOutputStream();
+    if (_mainModule->IsValid())
+    {
+        _mainModule->Update(dt);
+        _context->FlushOutputStream();
+    }
 }
 
 void ScriptingModule::SetMainScript(const std::string& path)

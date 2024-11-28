@@ -1,4 +1,5 @@
 #include "main_script.hpp"
+#include "log.hpp"
 
 void MainScript::SetMainModule(wren::VM& vm, const std::string& module, const std::string& className)
 {
@@ -12,23 +13,20 @@ void MainScript::SetMainModule(wren::VM& vm, const std::string& module, const st
     catch (wren::NotFound& e)
     {
         bblog::error(e.what());
+        valid = false;
     }
 }
 
-bool MainScript::Update(DeltaMS deltatime)
+void MainScript::Update(DeltaMS deltatime)
 {
-    if (!valid)
-        return true;
-
     try
     {
         mainUpdate(deltatime.count());
-        return true;
+        valid = true;
     }
     catch (wren::NotFound& e)
     {
         bblog::error(e.what());
+        valid = false;
     }
-
-    return false;
 }

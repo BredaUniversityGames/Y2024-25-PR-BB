@@ -1,6 +1,5 @@
 #pragma once
 #include "common.hpp"
-
 #include "engine.hpp"
 #include "main_script.hpp"
 #include "scripting_context.hpp"
