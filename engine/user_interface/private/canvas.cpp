@@ -6,7 +6,7 @@
 void Canvas::UpdateAllChildrenAbsoluteLocations()
 {
 
-    if (visible)
+    if (enabled)
     {
         for (const auto& i : GetChildren())
         {

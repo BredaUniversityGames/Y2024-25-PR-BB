@@ -10,5 +10,5 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     : Canvas(size)
 {
 
-    // main menu will be created here, in the next pr.
+    // main menu will be created here in the next pr.
 }

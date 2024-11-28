@@ -6,49 +6,52 @@
 
 void UIButton::Update(const InputManager& input)
 {
-    glm::ivec2 mousePos;
-    input.GetMousePosition(mousePos.x, mousePos.y);
-
-    // mouse inside boundary
-    if (mousePos.x > static_cast<int>(GetAbsouluteLocation().x)
-        && mousePos.x < static_cast<int>(GetAbsouluteLocation().x + scale.x)
-        && mousePos.y > static_cast<int>(GetAbsouluteLocation().y)
-        && mousePos.y < static_cast<int>(GetAbsouluteLocation().y + scale.y))
+    if (enabled)
     {
-        switch (m_State)
+        glm::ivec2 mousePos;
+        input.GetMousePosition(mousePos.x, mousePos.y);
+
+        // mouse inside boundary
+        if (mousePos.x > static_cast<int>(GetAbsouluteLocation().x)
+            && mousePos.x < static_cast<int>(GetAbsouluteLocation().x + GetScale().x)
+            && mousePos.y > static_cast<int>(GetAbsouluteLocation().y)
+            && mousePos.y < static_cast<int>(GetAbsouluteLocation().y + GetScale().y))
         {
-        case ButtonState::eNormal:
-
-            m_State = ButtonState::eHovered;
-            onBeginHoverCallBack();
-            [[fallthrough]];
-
-        case ButtonState::eHovered:
-
-            if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
+            switch (m_State)
             {
-                m_State = ButtonState::ePressed;
-                onMouseDownCallBack();
-            }
-            break;
+            case ButtonState::eNormal:
 
-        case ButtonState::ePressed:
-            if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
-            {
-                m_State = ButtonState::eNormal;
+                m_State = ButtonState::eHovered;
+                onBeginHoverCallBack();
+                [[fallthrough]];
+
+            case ButtonState::eHovered:
+
+                if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
+                {
+                    m_State = ButtonState::ePressed;
+                    onMouseDownCallBack();
+                }
+                break;
+
+            case ButtonState::ePressed:
+                if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
+                {
+                    m_State = ButtonState::eNormal;
+                }
+                break;
             }
-            break;
         }
-    }
 
-    else
-        m_State = ButtonState::eNormal;
+        else
+            m_State = ButtonState::eNormal;
+    }
 }
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
 
-    if (visible)
+    if (enabled)
     {
         ResourceHandle<GPUImage> image;
         switch (m_State)
@@ -67,7 +70,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         }
 
         QuadDrawInfo info {
-            .modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(scale, 0))),
+            .modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(GetScale(), 0))),
             .textureIndex = image.Index(),
         };
 
@@ -84,5 +87,5 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 void UIButton::UpdateAllChildrenAbsoluteLocations()
 {
     for (auto& i : GetChildren())
-        i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (scale / 2.f) + i->GetRelativeLocation());
+        i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (GetScale() / 2.f) + i->GetRelativeLocation());
 }

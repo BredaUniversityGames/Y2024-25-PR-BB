@@ -77,14 +77,13 @@ public:
     AnchorPoint anchorPoint
         = AnchorPoint::eTopLeft;
 
-    bool visible = true;
+    bool enabled = true;
     uint16_t zLevel = 0;
 
     virtual void UpdateAllChildrenAbsoluteLocations() = 0;
 
     virtual ~UIElement() = default;
 
-protected:
     /**
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
