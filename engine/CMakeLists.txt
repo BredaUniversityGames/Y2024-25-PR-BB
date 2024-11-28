@@ -26,5 +26,7 @@ target_add_module(Engine application Application)
 target_add_module(Engine scripting Scripting)
 target_add_module(Engine renderer Renderer)
 target_add_module(Engine physics Physics)
+target_add_module(Engine steam Steam)
+target_add_module(Engine audio Audio)
 
 target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)

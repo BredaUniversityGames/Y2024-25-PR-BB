@@ -3,8 +3,6 @@
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
 #include "camera.hpp"
-#include "entt/entity/entity.hpp"
-#include "mesh.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 
@@ -39,7 +37,7 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<Model> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
@@ -70,11 +68,10 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
-    std::shared_ptr<const SceneDescription> _scene;
     std::shared_ptr<GPUScene> _gpuScene;
-    ResourceHandle<Image> _environmentMap;
-    ResourceHandle<Image> _brightnessTarget;
-    ResourceHandle<Image> _bloomTarget;
+    ResourceHandle<GPUImage> _environmentMap;
+    ResourceHandle<GPUImage> _brightnessTarget;
+    ResourceHandle<GPUImage> _bloomTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -86,11 +83,9 @@ private:
 
     std::shared_ptr<BatchBuffer> _batchBuffer;
 
-    std::unique_ptr<CameraResource> _camera;
-
     std::unique_ptr<BloomSettings> _bloomSettings;
 
-    ResourceHandle<Image> _hdrTarget;
+    ResourceHandle<GPUImage> _hdrTarget;
 
     uint32_t _currentFrame { 0 };
 

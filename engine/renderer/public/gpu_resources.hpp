@@ -56,9 +56,9 @@ enum class ImageType
     eShadowMap
 };
 
-struct ImageCreation
+struct CPUImage
 {
-    std::byte* initialData { nullptr };
+    std::vector<std::byte> initialData;
     uint16_t width { 1 };
     uint16_t height { 1 };
     uint16_t depth { 1 };
@@ -69,29 +69,27 @@ struct ImageCreation
 
     vk::Format format { vk::Format::eUndefined };
     ImageType type { ImageType::e2D };
-    ResourceHandle<Sampler> sampler {};
 
     std::string name;
 
-    ImageCreation& SetData(std::byte* data);
-    ImageCreation& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
-    ImageCreation& SetMips(uint8_t mips);
-    ImageCreation& SetFlags(vk::ImageUsageFlags flags);
-    ImageCreation& SetFormat(vk::Format format);
-    ImageCreation& SetName(std::string_view name);
-    ImageCreation& SetType(ImageType type);
-    ImageCreation& SetSampler(ResourceHandle<Sampler> sampler);
+    CPUImage& SetData(std::vector<std::byte> data);
+    CPUImage& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
+    CPUImage& SetMips(uint8_t mips);
+    CPUImage& SetFlags(vk::ImageUsageFlags flags);
+    CPUImage& SetFormat(vk::Format format);
+    CPUImage& SetName(std::string_view name);
+    CPUImage& SetType(ImageType type);
 };
 
-struct Image
+struct GPUImage
 {
-    Image(const ImageCreation& creation, const std::shared_ptr<VulkanContext>& context);
-    ~Image();
+    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context);
+    ~GPUImage();
 
-    Image(Image&& other) noexcept;
-    Image& operator=(Image&& other) noexcept;
+    GPUImage(GPUImage&& other) noexcept;
+    GPUImage& operator=(GPUImage&& other) noexcept;
 
-    NON_COPYABLE(Image);
+    NON_COPYABLE(GPUImage);
 
     vk::Image image {};
     std::vector<vk::ImageView> views {};
@@ -119,45 +117,47 @@ private:
 
 struct MaterialCreation
 {
-    ResourceHandle<Image> albedoMap = ResourceHandle<Image>::Null();
+    ResourceHandle<GPUImage> albedoMap = ResourceHandle<GPUImage>::Null();
     glm::vec4 albedoFactor { 0.0f };
     uint32_t albedoUVChannel;
 
-    ResourceHandle<Image> metallicRoughnessMap = ResourceHandle<Image>::Null();
+    ResourceHandle<GPUImage> metallicRoughnessMap = ResourceHandle<GPUImage>::Null();
     float metallicFactor { 0.0f };
     float roughnessFactor { 0.0f };
     std::optional<uint32_t> metallicRoughnessUVChannel;
 
-    ResourceHandle<Image> normalMap = ResourceHandle<Image>::Null();
+    ResourceHandle<GPUImage> normalMap = ResourceHandle<GPUImage>::Null();
     float normalScale { 0.0f };
     uint32_t normalUVChannel;
 
-    ResourceHandle<Image> occlusionMap = ResourceHandle<Image>::Null();
+    ResourceHandle<GPUImage> occlusionMap = ResourceHandle<GPUImage>::Null();
     float occlusionStrength { 0.0f };
     uint32_t occlusionUVChannel;
 
-    ResourceHandle<Image> emissiveMap = ResourceHandle<Image>::Null();
+    ResourceHandle<GPUImage> emissiveMap = ResourceHandle<GPUImage>::Null();
     glm::vec3 emissiveFactor { 0.0f };
     uint32_t emissiveUVChannel;
 };
 
-struct Material
+struct GPUMaterial
 {
-    Material(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<Image>>& imageResourceManager);
-    ~Material();
+    GPUMaterial() = default;
+    GPUMaterial(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<GPUImage>>& imageResourceManager);
+    ~GPUMaterial();
 
-    Material(Material&& other) noexcept = default;
-    Material& operator=(Material&& other) noexcept = default;
+    GPUMaterial(GPUMaterial&& other) noexcept = default;
+    GPUMaterial& operator=(GPUMaterial&& other) noexcept = default;
 
-    NON_COPYABLE(Material);
+    NON_COPYABLE(GPUMaterial);
 
+    // Info that gets send to the gpu
     struct alignas(16) GPUInfo
     {
         glm::vec4 albedoFactor { 0.0f };
 
         float metallicFactor { 0.0f };
         float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
+        float normalScale { 1.0f };
         float occlusionStrength { 0.0f };
 
         glm::vec3 emissiveFactor { 0.0f };
@@ -176,14 +176,14 @@ struct Material
         uint32_t emissiveMapIndex;
     } gpuInfo;
 
-    ResourceHandle<Image> albedoMap;
-    ResourceHandle<Image> mrMap;
-    ResourceHandle<Image> normalMap;
-    ResourceHandle<Image> occlusionMap;
-    ResourceHandle<Image> emissiveMap;
+    ResourceHandle<GPUImage> albedoMap;
+    ResourceHandle<GPUImage> mrMap;
+    ResourceHandle<GPUImage> normalMap;
+    ResourceHandle<GPUImage> occlusionMap;
+    ResourceHandle<GPUImage> emissiveMap;
 
 private:
-    std::shared_ptr<ResourceManager<Image>> _imageResourceManager;
+    std::shared_ptr<ResourceManager<GPUImage>> _imageResourceManager;
 };
 
 struct BufferCreation
@@ -222,7 +222,7 @@ private:
     std::shared_ptr<VulkanContext> _context;
 };
 
-struct Mesh
+struct GPUMesh
 {
     struct Primitive
     {
@@ -231,7 +231,7 @@ struct Mesh
         uint32_t indexOffset;
         float boundingRadius;
 
-        ResourceHandle<Material> material;
+        ResourceHandle<GPUMaterial> material;
     };
 
     std::vector<Primitive> primitives;

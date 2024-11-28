@@ -10,6 +10,8 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 
+#include "module_interface.hpp"
+
 JPH_SUPPRESS_WARNING_PUSH
 
 JPH_SUPPRESS_WARNINGS
@@ -254,12 +256,15 @@ struct RayHitInfo
     bool hasHit = false;
 };
 
-class PhysicsModule
+class PhysicsModule final : public ModuleInterface
 {
+    ModuleTickOrder Init(Engine& engine) final;
+    void Shutdown(Engine& engine) final;
+    void Tick(Engine& engine) final;
+
 public:
-    PhysicsModule();
-    ~PhysicsModule();
-    void UpdatePhysicsEngine(float deltaTime);
+    PhysicsModule() = default;
+    ~PhysicsModule() final = default;
 
     NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
 

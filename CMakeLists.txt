@@ -38,6 +38,7 @@ if (ENABLE_UNITY)
     message(STATUS "### Compiling with Unity (Jumbo) builds")
 endif ()
 
+
 # Add external dependencies
 add_subdirectory(external)
 
@@ -57,10 +58,29 @@ target_link_libraries(Game
 )
 
 ### SHADERS COMPILE STEP ###
-
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)
     add_dependencies(Game Shaders)
 endif ()
 
+### COPY FILES ###
+
+# DLLS
+
+add_custom_command(TARGET Game POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/external/fmod/lib/$<PLATFORM_ID>/$<CONFIG>"
+        $<TARGET_FILE_DIR:Game>)
+
+add_custom_command(TARGET Game POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/external/steamworks/lib/$<PLATFORM_ID>"
+        $<TARGET_FILE_DIR:Game>)
+
+# Steam app ID (TODO: Remove from distribution build!)
+
+add_custom_command(TARGET Game POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_SOURCE_DIR}/steam_appid.txt"
+		$<TARGET_FILE_DIR:Game>)

@@ -15,8 +15,8 @@ struct RenderSceneDescription;
 class SkydomePipeline final : public FrameGraphRenderPass
 {
 public:
-    SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<Mesh> sphere, const CameraResource& camera, ResourceHandle<Image> hdrTarget,
-        ResourceHandle<Image> brightnessTarget, ResourceHandle<Image> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
+    SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
+        ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
     ~SkydomePipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -31,13 +31,12 @@ private:
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
-    const CameraResource& _camera;
-    ResourceHandle<Image> _hdrTarget;
-    ResourceHandle<Image> _brightnessTarget;
-    ResourceHandle<Image> _environmentMap;
+    ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _brightnessTarget;
+    ResourceHandle<GPUImage> _environmentMap;
     const GBuffers& _gBuffers;
 
-    ResourceHandle<Mesh> _sphere;
+    ResourceHandle<GPUMesh> _sphere;
     const BloomSettings& _bloomSettings;
 
     vk::PipelineLayout _pipelineLayout;

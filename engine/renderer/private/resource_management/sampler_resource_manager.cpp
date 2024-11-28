@@ -7,7 +7,7 @@
 template <>
 std::weak_ptr<ResourceManager<Sampler>> ResourceHandle<Sampler>::manager = {};
 
-SamplerResourceManager::SamplerResourceManager(const std::shared_ptr<VulkanContext> context)
+SamplerResourceManager::SamplerResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
 }

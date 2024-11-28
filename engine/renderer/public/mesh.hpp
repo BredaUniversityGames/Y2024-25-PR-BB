@@ -1,6 +1,8 @@
 #pragma once
 
 #include "camera.hpp"
+#include "geometric.hpp"
+
 #include <array>
 #include <memory>
 
@@ -59,26 +61,7 @@ struct Vertex
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
-struct StagingMesh
-{
-    struct Primitive
-    {
-        std::vector<uint32_t> indices;
-        std::vector<Vertex> vertices;
-        float boundingRadius;
-
-        std::optional<uint32_t> materialIndex;
-    };
-
-    std::vector<StagingMesh::Primitive> primitives;
-};
-
 struct StaticMeshComponent
 {
-    ResourceHandle<Mesh> mesh;
-};
-
-struct SceneDescription
-{
-    Camera camera;
+    ResourceHandle<GPUMesh> mesh;
 };

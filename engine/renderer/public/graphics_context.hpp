@@ -10,12 +10,13 @@
 
 class VulkanContext;
 class GraphicsResources;
-struct Image;
 struct Buffer;
 struct VulkanInitInfo;
 struct Sampler;
+struct GPUImage;
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES = 128;
+constexpr uint32_t MAX_BINDLESS_RESOURCES
+    = 128;
 
 class GraphicsContext
 {
@@ -46,7 +47,7 @@ private:
 
     ResourceHandle<Sampler> _sampler;
 
-    ResourceHandle<Image> _fallbackImage;
+    ResourceHandle<GPUImage> _fallbackImage;
 
     std::array<vk::DescriptorImageInfo, MAX_BINDLESS_RESOURCES> _bindlessImageInfos;
     std::array<vk::WriteDescriptorSet, MAX_BINDLESS_RESOURCES> _bindlessImageWrites;

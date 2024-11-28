@@ -7,11 +7,11 @@
 
 class ImageResourceManager;
 
-class MaterialResourceManager final : public ResourceManager<Material>
+class MaterialResourceManager final : public ResourceManager<GPUMaterial>
 {
 public:
     explicit MaterialResourceManager(const std::shared_ptr<ImageResourceManager>& ImageResourceManager);
-    ResourceHandle<Material> Create(const MaterialCreation& creation);
+    ResourceHandle<GPUMaterial> Create(const MaterialCreation& creation);
 
 private:
     std::shared_ptr<ImageResourceManager> _imageResourceManager;

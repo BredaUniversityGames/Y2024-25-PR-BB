@@ -13,7 +13,6 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "log.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
@@ -27,9 +26,9 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
-#include "resource_management/material_resource_manager.hpp"
+#include "resource_management/mesh_resource_manager.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
@@ -49,12 +48,12 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     InitializeBloomTargets();
     LoadEnvironmentMap();
 
-    _modelLoader = std::make_unique<ModelLoader>(_context, _ecs);
+    _modelLoader = std::make_unique<ModelLoader>();
 
     _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
 
-    SingleTimeCommands commandBufferPrimitive { _context };
-    ResourceHandle<Mesh> uvSphere = _modelLoader->LoadMesh(GenerateUVSphere(32, 32), commandBufferPrimitive, *_batchBuffer, ResourceHandle<Material>::Null());
+    SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -63,7 +62,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _context };
+    SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
     _iblPipeline->RecordCommands(commandBufferIBL.CommandBuffer());
     commandBufferIBL.Submit();
 
@@ -78,16 +77,14 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    _camera = std::make_unique<CameraResource>(_context);
-
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_camera, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_camera, *_bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, *_camera, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -128,6 +125,14 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
 
+    FrameGraphNodeCreation particlePass { *_particlePipeline };
+    particlePass.SetName("Particle pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+    // TODO: particle pass should also render to brightness target
+
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f)
@@ -153,6 +158,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
         .AddNode(skyDomePass)
+        .AddNode(particlePass)
         .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
@@ -160,7 +166,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .Build();
 }
 
-std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -175,11 +181,14 @@ std::vector<Model> Renderer::FrontLoadModels(const std::vector<std::string>& mod
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<Model> models {};
-
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
+    SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
-        models.emplace_back(_modelLoader->Load(path, *_batchBuffer, ModelLoader::LoadMode::eHierarchical));
+
+        auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
+        models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
     return models;
@@ -221,10 +230,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
-        .sceneDescription = _scene,
         .ecs = _ecs,
         .batchBuffer = _batchBuffer,
-        .targetSwapChainImageIndex = swapChainImageIndex
+        .targetSwapChainImageIndex = swapChainImageIndex,
+        .deltaTime = deltaTime
     };
 
     _context->GetDrawStats().Clear();
@@ -235,8 +244,6 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, _ecs, deltaTime); // TODO: Add to frame graph after ECS is integrated into renderer
 
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
@@ -268,20 +275,20 @@ void Renderer::InitializeHDRTarget()
 {
     auto size = _swapChain->GetImageSize();
 
-    ImageCreation hdrCreation {};
-    hdrCreation.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    CPUImage hdrImageData {};
+    hdrImageData.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrCreation);
+    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData);
 }
 
 void Renderer::InitializeBloomTargets()
 {
     auto size = _swapChain->GetImageSize();
 
-    ImageCreation hdrBloomCreation {};
+    CPUImage hdrBloomCreation {};
     hdrBloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    ImageCreation hdrBlurredBloomCreation {};
+    CPUImage hdrBlurredBloomCreation {};
     hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
@@ -301,8 +308,8 @@ void Renderer::LoadEnvironmentMap()
 
     stbi_image_free(stbiData);
 
-    ImageCreation envMapCreation {};
-    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(data.data()).SetFormat(vk::Format::eR32G32B32A32Sfloat);
+    CPUImage envMapCreation {};
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
     _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);
@@ -323,10 +330,6 @@ void Renderer::Render(float deltaTime)
     }
 
     _bloomSettings->Update(_currentFrame);
-
-    // TODO: handle this more gracefully
-    assert(_scene->camera.aspectRatio > 0.0f && "Camera with invalid aspect ratio");
-    _camera->Update(_currentFrame, _scene->camera);
 
     uint32_t imageIndex {};
     vk::Result result {};
