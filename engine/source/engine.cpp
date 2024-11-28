@@ -57,7 +57,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     // systems
     _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
-    bblog::info("PULA");
     _scene = std::make_shared<SceneDescription>();
     rendererModule.SetScene(_scene);
 

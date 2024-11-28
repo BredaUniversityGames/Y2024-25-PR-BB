@@ -22,17 +22,9 @@ void PhysicsSystem::InitializePhysicsColliders()
     for (const auto entity : view)
     {
         TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
-        NameComponent& name = _ecs.registry.get<NameComponent>(entity);
 
-        if (&name)
-        {
-            std::cout << name.name << std::endl;
-        }
         // Assume worldMatrix is your 4x4 transformation matrix
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.registry, entity);
-        glm::mat4 localMatrix = TransformHelpers::GetLocalMatrix(_ecs.registry, entity);
-
-        std::cout << localMatrix[1][1] << std::endl;
 
         // Variables to store the decomposed components
         glm::vec3 scale;
@@ -50,24 +42,19 @@ void PhysicsSystem::InitializePhysicsColliders()
             skew,
             perspective);
 
-        tempData.position = translation;
-        tempData.rotation = rotationQuat;
         tempData.meshScale = scale;
-        // tempData.boundingBox.min *= scale;
-        // tempData.boundingBox.max *= scale;
 
         // size and position
         Vec3Range boundingBox = tempData.boundingBox; // * scale;
         boundingBox.min *= scale;
         boundingBox.max *= scale;
-        // boundingBox.min *= tempData.meshScale;
-        // boundingBox.max *= tempData.meshScale;
+
         const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
 
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position + centerPos, boundingBox, eSTATIC);
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, translation + centerPos, boundingBox, eSTATIC);
 
         // rotation now
-        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(tempData.rotation.x, tempData.rotation.y, tempData.rotation.z, tempData.rotation.w), JPH::EActivation::Activate);
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
 
         _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
     }
@@ -94,16 +81,13 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
-        if (boxShape == nullptr)
-        {
-            return;
-        }
+
         const auto joltSize = boxShape->GetHalfExtent();
         const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), joltBoxSize / oldExtent);
-        // glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), tempData.meshScale);
 
+        // account for odd models that dont have the center at 0,0,0
         const glm::vec3 centerPos = (tempData.boundingBox.max + tempData.boundingBox.min) * 0.5f;
         joltToGlm = glm::translate(joltToGlm, -centerPos);
 
