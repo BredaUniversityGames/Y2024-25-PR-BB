@@ -10,7 +10,7 @@ class GraphicsContext;
 class UIPipeline final : public FrameGraphRenderPass
 {
 public:
-    UIPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> toneMappingTarget, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain);
+    UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& toneMappingTarget, const ResourceHandle<GPUImage>& uiTarget, const SwapChain& swapChain);
     ~UIPipeline() final;
 
     NON_COPYABLE(UIPipeline);
@@ -26,7 +26,6 @@ private:
     struct UIPushConstants
     {
         QuadDrawInfo quad;
-        uint32_t tonemappingTargetIndex;
     } _pushConstants;
 
     std::vector<QuadDrawInfo> _drawList;

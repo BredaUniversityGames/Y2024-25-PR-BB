@@ -21,7 +21,6 @@ struct QuadDrawInfo
 layout (push_constant) uniform PushConstants
 {
     QuadDrawInfo quad;
-    uint index;
 } pushConstants;
 
 void main()

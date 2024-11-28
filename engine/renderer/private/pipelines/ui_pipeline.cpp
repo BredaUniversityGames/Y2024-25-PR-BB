@@ -4,24 +4,21 @@
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 
-#include <graphics_context.hpp>
-#include <pipeline_builder.hpp>
-#include <vulkan_context.hpp>
+#include "graphics_context.hpp"
+#include "pipeline_builder.hpp"
 
 #include "vulkan_helper.hpp"
 
-#include <graphics_resources.hpp>
-#include <resource_management/image_resource_manager.hpp>
+#include "graphics_resources.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
-UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> toneMappingTarget, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain)
+UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& toneMappingTarget, const ResourceHandle<GPUImage>& uiTarget, const SwapChain& swapChain)
     : _context(context)
     , _toneMappingTarget(toneMappingTarget)
     , _uiTarget(uiTarget)
     , _swapChain(swapChain)
 {
     CreatePipeLine();
-
-    _pushConstants.tonemappingTargetIndex = toneMappingTarget.Index();
 }
 
 UIPipeline::~UIPipeline()
@@ -32,7 +29,7 @@ UIPipeline::~UIPipeline()
 
 void UIPipeline::CreatePipeLine()
 {
-    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
+    vk::PipelineColorBlendAttachmentState const colorBlendAttachmentState {
         .blendEnable = vk::True,
         .srcColorBlendFactor = vk::BlendFactor::eSrcAlpha,
         .dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha,
@@ -43,7 +40,7 @@ void UIPipeline::CreatePipeLine()
         .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
     };
 
-    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
+    vk::PipelineColorBlendStateCreateInfo const colorBlendStateCreateInfo {
         .logicOpEnable = vk::False,
         .attachmentCount = 1,
         .pAttachments = &colorBlendAttachmentState,
@@ -51,25 +48,8 @@ void UIPipeline::CreatePipeLine()
 
     auto vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
     auto fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationState {
-
-        .depthClampEnable = false,
-        .rasterizerDiscardEnable = false,
-        .polygonMode = vk::PolygonMode::eFill,
-        .cullMode = vk::CullModeFlagBits::eNone,
-        .frontFace = vk::FrontFace::eClockwise,
-        .depthBiasEnable = false,
-        .depthBiasConstantFactor = 0.0f,
-        .depthBiasClamp = 0.0f,
-        .depthBiasSlopeFactor = 0.0f,
-        .lineWidth = 1.0f
-    };
-
-    // TODO: CHANGE COLOR FORMAT TO UI TARGET
     PipelineBuilder pipelineBuilder { _context };
     pipelineBuilder
-        .SetRasterizationState(rasterizationState)
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
@@ -79,15 +59,14 @@ void UIPipeline::CreatePipeLine()
 }
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    auto toneMapping = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget);
-    auto ui = _context->Resources()->ImageResourceManager().Access(_uiTarget);
-    // TODO: BLIT TONE MAPPING TARGET TO UI TARGET.
+    const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_toneMappingTarget);
+    const auto* ui = _context->Resources()->ImageResourceManager().Access(_uiTarget);
 
     util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
 
     util::CopyImageToImage(commandBuffer, toneMapping->image, ui->image,
-        vk::Extent2D { toneMapping->width, toneMapping->height }, vk::Extent2D { ui->width, ui->height });
+        vk::Extent2D { .width = toneMapping->width, .height = toneMapping->height }, vk::Extent2D { .width = ui->width, .height = ui->height });
 
     util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
@@ -101,7 +80,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     vk::RenderingInfoKHR const renderingInfo {
         .renderArea = {
-            .offset = vk::Offset2D { 0, 0 },
+            .offset = vk::Offset2D { .x = 0, .y = 0 },
             .extent = _swapChain.GetExtent(),
         },
         .layerCount = 1,
@@ -115,7 +94,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), static_cast<float>(_swapChain.GetExtent().height), 0.f);
+    const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), 0.f, static_cast<float>(_swapChain.GetExtent().height));
 
     for (auto& i : _drawList)
     {
