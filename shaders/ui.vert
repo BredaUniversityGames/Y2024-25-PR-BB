@@ -32,8 +32,8 @@ void main()
 {
     gl_Position = pushConstants.quad.mpMatrix * vec4(positions[gl_VertexIndex], 1.0, 1.0);
 
-    const vec2 uvp1 = { pushConstants.quad.uvp1.x, pushConstants.quad.uvp2.yy };
-    const vec2 uvp2 =   { pushConstants.quad.uvp2.x, pushConstants.quad.uvp1.y };
+    const vec2 uvp1 = pushConstants.quad.uvp1;
+    const vec2 uvp2 =  pushConstants.quad.uvp2;
     vec2[6] uvs = { uvp1, { uvp1.x, uvp2.y }, uvp2, uvp2, { uvp2.x, uvp1.y }, uvp1 };
     uv= uvs[gl_VertexIndex];
 }
