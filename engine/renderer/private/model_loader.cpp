@@ -247,6 +247,8 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
         }
     }
 
+    primitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
+
     if (gltfPrimitive.indicesAccessor.has_value())
     {
         auto& accessor = gltf.accessors[gltfPrimitive.indicesAccessor.value()];
