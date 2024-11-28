@@ -391,6 +391,15 @@ void ParticlePipeline::CreatePipelines()
         colorBlendStateCreateInfo.attachmentCount = 1;
         colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
+        vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
+        depthStencilStateCreateInfo.depthTestEnable = true;
+        depthStencilStateCreateInfo.depthWriteEnable = true;
+        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilStateCreateInfo.depthBoundsTestEnable = false;
+        depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+        depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+        depthStencilStateCreateInfo.stencilTestEnable = false;
+
         vk::Format format = resources->ImageResourceManager().Access(_hdrTarget)->format;
 
         std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/billboard.vert.spv");
@@ -402,6 +411,8 @@ void ParticlePipeline::CreatePipelines()
             .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
             .SetColorBlendState(colorBlendStateCreateInfo)
             .SetColorAttachmentFormats({ format })
+            .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
+            .SetDepthStencilState(depthStencilStateCreateInfo)
             .BuildPipeline(_pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
     }
 }
@@ -458,21 +469,16 @@ void ParticlePipeline::CreateDescriptorSetLayouts()
     }
 
     { // Particle Instances Storage Buffer
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+        std::vector<vk::DescriptorSetLayoutBinding> bindings {};
 
-        vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
+        vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings.emplace_back() };
         descriptorSetLayoutBinding.binding = 0;
         descriptorSetLayoutBinding.descriptorCount = 1;
         descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
         descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eVertex;
         descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
-        vk::DescriptorSetLayoutCreateInfo createInfo {};
-        createInfo.bindingCount = bindings.size();
-        createInfo.pBindings = bindings.data();
-
-        util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&createInfo, nullptr, &_instancesDescriptorSetLayout),
-            "Failed creating particle instances buffer descriptor set layout!");
+        _instancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, { "CulledInstancesSSB" });
     }
 }
 
