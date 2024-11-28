@@ -16,7 +16,6 @@
 ShadowPipeline::ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
-    , _shadowCamera(_context)
     , _culler(_context, gpuScene)
 {
     CreatePipeline();
@@ -48,9 +47,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    _shadowCamera.Update(currentFrame, scene.gpuScene->DirectionalLightShadowCamera());
-
-    _culler.RecordCommands(commandBuffer, currentFrame, scene, _shadowCamera, _drawBuffer, _drawBufferDescriptorSet);
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, scene.gpuScene->DirectionalLightShadowCamera(), _drawBuffer, _drawBufferDescriptorSet);
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
         .imageView = resources->ImageResourceManager().Access(_gBuffers.Shadow())->view,

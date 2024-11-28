@@ -13,10 +13,9 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, const CameraResource& camera,
-    ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
+SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
+    ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
-    , _camera(camera)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _environmentMap(environmentMap)
@@ -79,7 +78,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(_pushConstants), &_pushConstants);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
     vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;

@@ -3,8 +3,6 @@
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
 #include "camera.hpp"
-#include "entt/entity/entity.hpp"
-#include "mesh.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 
@@ -71,7 +69,6 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
 
-    std::shared_ptr<const SceneDescription> _scene;
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _brightnessTarget;
@@ -87,8 +84,6 @@ private:
 
     std::shared_ptr<BatchBuffer> _staticBatchBuffer;
     std::shared_ptr<BatchBuffer> _skinnedBatchBuffer;
-
-    std::unique_ptr<CameraResource> _camera;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 

@@ -17,10 +17,9 @@
 
 #include <entt/entt.hpp>
 
-GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
+GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
-    , _camera(camera)
     , _culler(_context, gpuScene)
 {
     CreateStaticPipeline();
@@ -69,6 +68,8 @@ GeometryPipeline::~GeometryPipeline()
     _context->VulkanContext()->Device().destroy(_staticPipelineLayout);
     _context->VulkanContext()->Device().destroy(_skinnedPipeline);
     _context->VulkanContext()->Device().destroy(_skinnedPipelineLayout);
+
+    _context->VulkanContext()->Device().destroy(_skinDescriptorSetLayout);
 }
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -85,7 +86,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         std::memcpy(buffer->mappedPtr + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
     }
 
-    _culler.RecordCommands(commandBuffer, currentFrame, scene, _camera, _drawBuffer, _drawBufferDescriptorSet);
+    _culler.RecordCommands(commandBuffer, currentFrame, scene, scene.gpuScene->MainCamera(), _drawBuffer, _drawBufferDescriptorSet);
 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
     for (size_t i = 0; i < colorAttachmentInfos.size(); ++i)
@@ -128,7 +129,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
 
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
@@ -152,7 +153,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _camera.DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { _skinDescriptorSets[currentFrame] }, {});
 
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
@@ -259,8 +260,8 @@ void GeometryPipeline::CreateSkinnedPipeline()
         .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
 
     // TODO: DONT DO THIS HERE
-    vk::DescriptorSetLayout layout = pipelineBuilder.GetDescriptorSetLayouts()[3];
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { layout, layout, layout };
+    _skinDescriptorSetLayout = pipelineBuilder.GetDescriptorSetLayouts()[3];
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { _skinDescriptorSetLayout, _skinDescriptorSetLayout, _skinDescriptorSetLayout };
     vk::DescriptorSetAllocateInfo allocateInfo {
         .descriptorPool = _context->VulkanContext()->DescriptorPool(),
         .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,

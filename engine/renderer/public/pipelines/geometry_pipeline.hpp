@@ -15,7 +15,7 @@ struct RenderSceneDescription;
 class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
-    GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene);
+    GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
     ~GeometryPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -26,7 +26,6 @@ public:
 private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
-    const CameraResource& _camera;
 
     IndirectCuller _culler;
 
@@ -35,6 +34,7 @@ private:
 
     vk::PipelineLayout _skinnedPipelineLayout;
     vk::Pipeline _skinnedPipeline;
+    vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
 

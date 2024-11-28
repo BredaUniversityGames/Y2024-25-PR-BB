@@ -16,7 +16,9 @@ struct alignas(16) Emitter
     float mass = 0.0f;
     glm::vec3 rotationVelocity = { 0.0f, 0.0f, 0.0f };
     float maxLife = 1.0f;
-    // TODO: image/color
+    float randomValue = 0.0f;
+    uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
 };
 
 struct alignas(16) Particle
@@ -27,7 +29,8 @@ struct alignas(16) Particle
     float maxLife = 5.0f;
     glm::vec3 rotationVelocity = { 0.0f, 0.0f, 0.0f };
     float life = 5.0f;
-    // TODO: image/color
+    uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
 };
 
 struct alignas(16) ParticleCounters
@@ -41,6 +44,13 @@ struct alignas(16) ParticleInstance
 {
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     uint32_t materialIndex = 0;
+    glm::vec2 size = { 1.0f, 1.0f };
+};
+
+struct alignas(16) CulledInstances
+{
+    uint32_t count;
+    ParticleInstance instances[MAX_PARTICLES];
 };
 
 enum class ParticleType
