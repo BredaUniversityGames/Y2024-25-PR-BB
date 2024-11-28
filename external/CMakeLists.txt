@@ -65,6 +65,10 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# FMOD (no git to fetch content)
+
+add_subdirectory(fmod)
+
 # Wren Language
 
 add_subdirectory(wren)
@@ -254,6 +258,7 @@ target_link_libraries(External
         INTERFACE VulkanAPI
         INTERFACE Jolt
         INTERFACE Steamworks
+        INTERFACE FMOD
 )
 
 target_include_directories(External
@@ -261,4 +266,5 @@ target_include_directories(External
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
         INTERFACE steamworks/include
+        INTERFACE fmod/include
 )
