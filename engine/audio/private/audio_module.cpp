@@ -9,6 +9,7 @@
 #include "fmod_errors.h"
 #include "log.hpp"
 
+#include "fmod_debug.hpp"
 void CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
 {
     if (result != FMOD_OK)
@@ -16,47 +17,13 @@ void CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
 }
 #define CHECKRESULT(result) CHECKRESULT_fn(result, __FILE__, __LINE__)
 
-#if not defined(NDEBUG)
-FMOD_RESULT DebugCallback(FMOD_DEBUG_FLAGS flags, MAYBE_UNUSED const char* file, int line, const char* func, const char* message)
-{
-    // Get rid of "\n" for better formatting in bblog
-    std::string msg(message);
-    msg.pop_back();
-
-    if (msg.empty())
-    {
-        return FMOD_OK;
-    }
-
-    // We use std::cout instead of using spdlog because otherwise it crashes 💀 (some threading issue with fmod)
-    switch (flags)
-    {
-    case FMOD_DEBUG_LEVEL_LOG:
-        std::cout << "[FMOD INFO] : " << line << " ( " << func << " ) - " << msg << std::endl;
-        break;
-    case FMOD_DEBUG_LEVEL_WARNING:
-        std::cout << "[FMOD WARN] : " << line << " ( " << func << " ) - " << msg << std::endl;
-        break;
-    case FMOD_DEBUG_LEVEL_ERROR:
-        std::cout << "[FMOD ERROR] : " << line << " ( " << func << " ) - " << msg << std::endl;
-        break;
-    default:
-        break;
-    }
-
-    return FMOD_OK;
-}
-#endif
 
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const ModuleTickOrder tickOrder = ModuleTickOrder::ePostTick;
 
-#if not defined(NDEBUG)
-    // Use FMOD_DEBUG_LEVEL_MEMORY if you want to debug memory issues related to fmod
-    CHECKRESULT(FMOD_Debug_Initialize(FMOD_DEBUG_LEVEL_LOG, FMOD_DEBUG_MODE_CALLBACK, &DebugCallback, nullptr));
-#endif
 
+    StartFMODDebugLogger();
     FMOD_RESULT result;
 
     result = FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION);

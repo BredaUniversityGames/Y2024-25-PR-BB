@@ -52,8 +52,7 @@ public:
     uint32_t StartEvent(std::string_view name);
 
 private:
-    FMOD_SYSTEM* _coreSystem
-        = nullptr;
+    FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 
     static constexpr uint32_t MAX_CHANNELS = 1024;

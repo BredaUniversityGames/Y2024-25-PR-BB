@@ -14,7 +14,7 @@ class GraphicsContext;
 class DebugPipeline final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain);
+    DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain);
     ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -42,7 +42,6 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
-    const CameraResource& _camera;
     bool _isEnabled = true;
 
     vk::PipelineLayout _pipelineLayout;
