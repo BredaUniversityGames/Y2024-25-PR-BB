@@ -225,6 +225,10 @@ target_include_directories(ImGui
         PUBLIC imgui_entt_entity_editor
 )
 
+# Steamworks API
+
+add_subdirectory(steamworks)
+
 # Enable Unity for external libraries
 
 if (ENABLE_UNITY)
@@ -253,6 +257,7 @@ target_link_libraries(External
         INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
+        INTERFACE Steamworks
         INTERFACE FMOD
 )
 
@@ -260,5 +265,6 @@ target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
+        INTERFACE steamworks/include
         INTERFACE fmod/include
 )
