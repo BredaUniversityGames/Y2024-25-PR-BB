@@ -3,9 +3,7 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "indirect_culler.hpp"
-#include "mesh.hpp"
 
-#include <cstddef>
 #include <memory>
 
 class BatchBuffer;
@@ -31,7 +29,6 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
 
-    CameraResource _shadowCamera;
     IndirectCuller _culler;
 
     vk::PipelineLayout _pipelineLayout;
