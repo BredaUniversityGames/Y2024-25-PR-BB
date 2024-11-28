@@ -1,10 +1,10 @@
 #include "fmod_debug.hpp"
-
-#include "fmod.h"
-#include "fmod_errors.h"
+#include "common.hpp"
 #include "log.hpp"
+
+#include <fmod.h>
+#include <fmod_errors.h>
 #include <iostream>
-#include <string>
 
 #if not defined(NDEBUG)
 FMOD_RESULT DebugCallback(FMOD_DEBUG_FLAGS flags, MAYBE_UNUSED const char* file, int line, const char* func, const char* message)

@@ -1,5 +1,5 @@
 // Automatically generated file: DO NOT MODIFY!
-// This script is purely for documentation and should not be imported from path
+// This script is purely for documentation and should not be imported by path
 // To use the bindings, import from "EngineAPI"
 
 foreign class EngineClass {
