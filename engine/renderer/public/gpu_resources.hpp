@@ -162,7 +162,7 @@ struct GPUMaterial
 
         float metallicFactor { 0.0f };
         float roughnessFactor { 0.0f };
-        float normalScale { 0.0f };
+        float normalScale { 1.0f };
         float occlusionStrength { 0.0f };
 
         glm::vec3 emissiveFactor { 0.0f };

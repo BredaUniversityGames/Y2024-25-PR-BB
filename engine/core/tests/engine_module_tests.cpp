@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "main_engine.hpp"
+#include <gtest/gtest.h>
 
 namespace TestModules
 {

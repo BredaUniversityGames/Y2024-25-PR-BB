@@ -1,6 +1,8 @@
 #pragma once
 
 #include "common.hpp"
+#include "frame_graph.hpp"
+#include "gbuffers.hpp"
 #include "resource_manager.hpp"
 
 #include <cstdint>
@@ -11,18 +13,18 @@
 struct Emitter;
 
 class CameraResource;
-class SwapChain;
+class RenderSceneDescription;
 class ECS;
 class GraphicsContext;
 struct Buffer;
 
-class ParticlePipeline
+class ParticlePipeline final : public FrameGraphRenderPass
 {
 public:
-    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, const SwapChain& swapChain);
-    ~ParticlePipeline();
+    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera);
+    ~ParticlePipeline() final;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, std::shared_ptr<ECS> ecs, float deltaTime);
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     NON_COPYABLE(ParticlePipeline);
     NON_MOVABLE(ParticlePipeline);
@@ -56,8 +58,10 @@ private:
     } _emitPushConstant;
 
     std::shared_ptr<GraphicsContext> _context;
+    std::shared_ptr<ECS> _ecs;
+    const GBuffers& _gBuffers;
+    const ResourceHandle<GPUImage> _hdrTarget;
     const CameraResource& _camera;
-    const SwapChain& _swapChain;
 
     std::vector<Emitter> _emitters;
 
@@ -65,8 +69,7 @@ private:
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
     // particle instances storage buffers
-    ResourceHandle<Buffer> _particleInstancesBuffer;
-    ResourceHandle<Buffer> _culledIndicesBuffer;
+    ResourceHandle<Buffer> _culledInstancesBuffer;
     vk::DescriptorSet _instancesDescriptorSet;
     vk::DescriptorSetLayout _instancesDescriptorSetLayout;
     // particle storage buffers
@@ -80,16 +83,24 @@ private:
     // staging buffer
     vk::Buffer _stagingBuffer;
     VmaAllocation _stagingBufferAllocation;
+    // buffers for rendering
+    ResourceHandle<Buffer> _vertexBuffer;
+    ResourceHandle<Buffer> _indexBuffer;
 
-    void UpdateEmitters(std::shared_ptr<ECS> ecs);
+    void RecordKickOff(vk::CommandBuffer commandBuffer);
+    void RecordEmit(vk::CommandBuffer commandBuffer);
+    void RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime);
+    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+
+    void UpdateEmitters(vk::CommandBuffer commandBuffer);
 
     void CreatePipelines();
     void CreateDescriptorSetLayouts();
     void CreateDescriptorSets();
     void CreateBuffers();
 
-    void UpdateBuffers(vk::CommandBuffer commandBuffer);
+    void UpdateAliveLists();
     void UpdateParticleBuffersDescriptorSets();
-    void UpdateParticleInstancesBuffersDescriptorSets();
+    void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();
 };
