@@ -120,15 +120,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    SoundInfo si;
-
-    si.path = "assets/sounds/test.mp3";
-    si.volume = 1.0f;
-    si.isLoop = false;
-
-    audioModule.LoadSound(si);
-    audioModule.PlaySFX(si);
-
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -279,16 +270,16 @@ void OldEngine::Tick(Engine& engine)
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
-    static uint32_t soundId {};
+    static uint32_t eventId {};
 
-    if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
+    if (input.IsKeyPressed(KeyboardCode::eO))
     {
-        soundId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
     }
 
-    if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
+    if (input.IsKeyReleased(KeyboardCode::eO))
     {
-        audioModule.StopEvent(soundId);
+        audioModule.StopEvent(eventId);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);

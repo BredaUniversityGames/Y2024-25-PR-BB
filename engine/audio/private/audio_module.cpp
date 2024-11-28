@@ -6,7 +6,6 @@
 #include "fmod.h"
 #include "fmod_studio.h"
 
-#include "fmod_errors.h"
 #include "log.hpp"
 
 #include "fmod_debug.hpp"
@@ -69,7 +68,7 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
         _events.erase(id);
     }
 }
-void AudioModule::LoadSound(SoundInfo& soundInfo)
+void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
     const uint32_t hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
@@ -142,15 +141,15 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-uint32_t AudioModule::StartOneShotEvent(std::string_view name)
+uint32_t AudioModule::StartOneShotEvent(const std::string_view name)
 {
     return StartEvent(name, true);
 }
-uint32_t AudioModule::StartLoopingEvent(std::string_view name)
+uint32_t AudioModule::StartLoopingEvent(const std::string_view name)
 {
     return StartEvent(name, false);
 }
-uint32_t AudioModule::StartEvent(const std::string_view name, bool isOneShot)
+uint32_t AudioModule::StartEvent(const std::string_view name, const bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve;
     CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));

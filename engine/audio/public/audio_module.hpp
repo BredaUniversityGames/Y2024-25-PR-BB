@@ -15,9 +15,8 @@ struct SoundInfo
     std::string_view path;
     uint32_t uid = 0;
 
-    bool isLoop = false;
-    bool id3D = false;
     float volume = 1.0f;
+    bool isLoop = false;
 };
 
 struct BankInfo
@@ -36,27 +35,33 @@ public:
     AudioModule() = default;
     ~AudioModule() override = default;
 
-    // Load sound
-
-    void LoadSound(SoundInfo& soundInfo);
+    // Load sound, mp3 or .wav etc
+    void LoadSFX(SoundInfo& soundInfo);
 
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
     void PlaySFX(SoundInfo& soundInfo);
 
+    // Stops looping sounds
+    // Regular sounds will stop by themselves once they are done
     void StopSFX(const SoundInfo& soundInfo);
 
+    // Load a .bank file
+    // make sure to load the master bank and .strings.bank as well
     void LoadBank(BankInfo& bankInfo);
 
+    // Unload a bank
     void UnloadBank(const BankInfo& bankInfo);
 
     // Play an event once
     // Events started through this will stop on their own
     uint32_t StartOneShotEvent(std::string_view name);
 
+    // Start an event that should play at least once
     // Store the returned id and later call StopEvent(id), it might not stop otherwise
     NO_DISCARD uint32_t StartLoopingEvent(std::string_view name);
 
+    // Stops an event that is
     void StopEvent(uint32_t eventId);
 
 private:
@@ -70,12 +75,10 @@ private:
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
 
-    // Sounds stored in FMOD
     std::unordered_map<uint32_t, FMOD_SOUND*> _sounds;
     std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks;
     std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events;
 
-    // Channels that are currently active
     std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping;
 
     uint32_t _nextEventId = 0;
