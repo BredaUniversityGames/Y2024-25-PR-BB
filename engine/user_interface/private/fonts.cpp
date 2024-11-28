@@ -13,7 +13,7 @@
 #include <resource_management/image_resource_manager.hpp>
 #include <resource_management/sampler_resource_manager.hpp>
 
-std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context)
+std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -23,7 +23,7 @@ std::shared_ptr<Font> LoadFromFile(const std::string& path, uint16_t characterHe
 
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
 
-    auto font = std::make_shared<Font>();
+    auto font = std::make_shared<UIFont>();
     font->characterHeight = characterHeight;
 
     const int maxGlyphs = 128;
