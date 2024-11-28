@@ -22,8 +22,8 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             QuadDrawInfo info;
 
-            glm::vec2 normalizedBearing = glm::vec2(character.Bearing) / static_cast<float>(_font->characterHeight);
-            glm::vec3 translation = glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + normalizedBearing.x, normalizedBearing.y), 0);
+            glm::vec2 correctedBearing = (glm::vec2(character.Bearing) / static_cast<float>(_font->characterHeight)) * GetScale();
+            glm::vec3 translation = glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + correctedBearing.x, correctedBearing.y), 0);
             glm::vec3 localScale = glm::vec3(glm::vec2(character.Size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetScale(), 0);
 
             info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), translation), localScale));
