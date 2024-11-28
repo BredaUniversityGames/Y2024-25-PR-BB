@@ -46,9 +46,9 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     playButton->onMouseDownCallBack = []() { };
     std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(font);
     playText->text = "Play the Game";
-    playText->SetScale({ 100, 50 });
+    playText->SetScale({ 25, 25 });
     playText->SetLocation({ 810, 640 });
-    playText->color = { 0, 1, 0, 1 };
+    playText->color = { 1, 1, 1, 1 };
 
     AddChild(std::move(playText));
     AddChild(std::move(playButton));
