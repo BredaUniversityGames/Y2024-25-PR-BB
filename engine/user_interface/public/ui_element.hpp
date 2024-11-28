@@ -3,6 +3,8 @@
 #include "glm/vec2.hpp"
 #include "quad_draw_info.hpp"
 #include "spdlog/spdlog.h"
+
+#include <common.hpp>
 #include <memory>
 #include <stdint.h>
 

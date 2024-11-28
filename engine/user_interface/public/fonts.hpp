@@ -2,6 +2,7 @@
 
 #include "resource_manager.hpp"
 #include <map>
+#include <glm/glm.hpp>
 
 class GraphicsContext;
 struct GPUImage;
