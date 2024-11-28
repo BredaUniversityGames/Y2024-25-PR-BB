@@ -89,7 +89,7 @@ void CPUImage::ExtractDataFromPNG(std::string_view path)
     if (data == nullptr)
         throw std::runtime_error("Failed to load image!");
 
-    if (width > UINT_FAST16_MAX || height > UINT_FAST16_MAX)
+    if (width > static_cast<int>(std::numeric_limits<uint16_t>::max()) || height > static_cast<int>(std::numeric_limits<uint16_t>::max()))
         throw std::runtime_error("Image size is too large!");
 
     vk::Format format;
