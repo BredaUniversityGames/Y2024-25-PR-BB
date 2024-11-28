@@ -1,6 +1,9 @@
 ### PROJECT ###
 cmake_minimum_required(VERSION 3.22.1)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 project(Project)
 
 ### HELPERS AND INCLUDES
@@ -83,4 +86,4 @@ add_custom_command(TARGET Game POST_BUILD
 add_custom_command(TARGET Game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "${PROJECT_SOURCE_DIR}/steam_appid.txt"
-		$<TARGET_FILE_DIR:Game>)
+        $<TARGET_FILE_DIR:Game>)
