@@ -40,7 +40,7 @@ public:
     {
         _absoluteLocation = location;
         if (updateChildren)
-            UpdateChildAbsoluteLocations();
+            UpdateAllChildrenAbsoluteLocations();
     }
 
     /**
@@ -64,6 +64,8 @@ public:
             _children.emplace_back(std::move(child));
             std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
                 { return v1->zLevel < v2->zLevel; });
+
+            UpdateAllChildrenAbsoluteLocations();
             return _children.back().get();
         }
 
@@ -82,7 +84,7 @@ public:
     bool visible = true;
     uint16_t zLevel = 0;
 
-    virtual void UpdateChildAbsoluteLocations() = 0;
+    virtual void UpdateAllChildrenAbsoluteLocations() = 0;
 
     glm::vec2 scale {};
 

@@ -81,7 +81,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
     }
 }
 
-void UIButton::UpdateChildAbsoluteLocations()
+void UIButton::UpdateAllChildrenAbsoluteLocations()
 {
     for (auto& i : GetChildren())
         i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (scale / 2.f) + i->GetRelativeLocation());

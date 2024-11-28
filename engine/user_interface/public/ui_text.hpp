@@ -12,7 +12,7 @@ struct UITextElement : public UIElement
         , _font(font)
     {
     }
-    void UpdateChildAbsoluteLocations() override { }
+    void UpdateAllChildrenAbsoluteLocations() override { }
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     const std::shared_ptr<Font> _font;

@@ -1,9 +1,12 @@
-#include "ui_core.hpp"
+#include "canvas.hpp"
 #include "pipelines/ui_pipeline.hpp"
 
-void Canvas::UpdateChildAbsoluteLocations()
+#include <iostream>
+
+void Canvas::UpdateAllChildrenAbsoluteLocations()
 {
     {
+        std::cout << "test" << std::endl;
         for (const auto& i : GetChildren())
         {
             auto relativeLocation = i->GetRelativeLocation();
@@ -26,7 +29,7 @@ void Canvas::UpdateChildAbsoluteLocations()
                 break;
             }
 
-            i->UpdateChildAbsoluteLocations();
+            i->UpdateAllChildrenAbsoluteLocations();
         }
     }
 }

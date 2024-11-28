@@ -6,7 +6,6 @@
 
 void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    // todo: move this into font resource manager
 
     int localOffset = 0;
 

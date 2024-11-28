@@ -22,6 +22,8 @@ public:
     {
         this->scale = size;
     }
-    void UpdateChildAbsoluteLocations() override;
+
+    void UpdateChildAbsoluteLocation(std::size_t index) override;
+    void UpdateAllChildrenAbsoluteLocations() override;
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawliust) const override;
 };

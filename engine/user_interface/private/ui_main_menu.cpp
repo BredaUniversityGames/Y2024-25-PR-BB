@@ -1,6 +1,6 @@
 #include "ui_main_menu.hpp"
+#include "canvas.hpp"
 #include "graphics_context.hpp"
-#include "ui_core.hpp"
 #include "ui_text.hpp"
 
 #include <graphics_resources.hpp>
@@ -36,6 +36,8 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     subButton->onMouseDownCallBack = []() {};
     subButton->onBeginHoverCallBack = []() {};
 
+    AddChild(std::move(subButton));
+
     std::unique_ptr<UIButton> playButton = std::make_unique<UIButton>();
     playButton->style = standardStyle;
     playButton->scale = { 300, 100 };
@@ -53,9 +55,5 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     playText->color = { 0, 1, 0, 1 };
 
     AddChild(std::move(playText));
-
     AddChild(std::move(playButton));
-    AddChild(std::move(subButton));
-
-    UpdateChildAbsoluteLocations();
 }

@@ -4,8 +4,8 @@
 #pragma once
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
-#include "ui_core.hpp"
 #include <functional>
+#include <ui_element.hpp>
 
 class UIButton : public UIElement
 {
@@ -27,7 +27,7 @@ public:
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
-    void UpdateChildAbsoluteLocations() override;
+    void UpdateAllChildrenAbsoluteLocations() override;
 
     struct ButtonStyle
     {

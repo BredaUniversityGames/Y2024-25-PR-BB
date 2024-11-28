@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../public/ui_core.hpp"
+#include "canvas.hpp"
 #include "ui_button.hpp"
 
 class Font;
