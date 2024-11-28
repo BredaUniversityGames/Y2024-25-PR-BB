@@ -41,10 +41,10 @@ public:
     void LoadSound(SoundInfo& soundInfo);
 
     // Play sound
-    // PlaySound is already used by a MinGW macro 💀
-    void PlaySoundA(SoundInfo& soundInfo);
+    // PlaySound(...) is already used by a MinGW macro 💀
+    void PlaySFX(SoundInfo& soundInfo);
 
-    void StopSound(const SoundInfo& soundInfo);
+    void StopSFX(const SoundInfo& soundInfo);
 
     void LoadBank(BankInfo& bankInfo);
 

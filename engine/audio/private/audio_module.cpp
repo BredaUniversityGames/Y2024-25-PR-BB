@@ -85,7 +85,7 @@ void AudioModule::LoadSound(SoundInfo& soundInfo)
 
     _sounds[hash] = sound;
 }
-void AudioModule::PlaySoundA(SoundInfo& soundInfo)
+void AudioModule::PlaySFX(SoundInfo& soundInfo)
 {
     if (!_sounds.contains(soundInfo.uid))
     {
@@ -105,7 +105,7 @@ void AudioModule::PlaySoundA(SoundInfo& soundInfo)
 
     CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
 }
-void AudioModule::StopSound(const SoundInfo& soundInfo)
+void AudioModule::StopSFX(const SoundInfo& soundInfo)
 {
     if (soundInfo.isLoop && _channelsLooping.contains(soundInfo.uid))
     {
