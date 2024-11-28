@@ -53,7 +53,9 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, ent
 
     if (currentNode.joint.has_value())
     {
-        ecs.registry.emplace<JointComponent>(entity).inverseBindMatrix = currentNode.joint.value().inverseBind;
+        auto& joint = ecs.registry.emplace<JointComponent>(entity);
+        joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
+        joint.jointIndex = currentNode.joint.value().index;
 
         if (currentNode.joint.value().isSkeletonRoot)
         {

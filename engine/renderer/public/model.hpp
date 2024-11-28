@@ -13,6 +13,7 @@ struct Hierarchy
     {
         bool isSkeletonRoot;
         glm::mat4 inverseBind;
+        uint32_t index;
     };
 
     struct Node

@@ -109,7 +109,9 @@ struct SkinnedMeshComponent
 struct SkeletonComponent
 {
 };
+
 struct JointComponent
 {
     glm::mat4 inverseBindMatrix {};
+    uint32_t jointIndex;
 };

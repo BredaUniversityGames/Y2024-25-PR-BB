@@ -2,14 +2,20 @@
 
 #include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
+#include "components/transform_helpers.hpp"
+#include "components/world_matrix_component.hpp"
+#include "ecs.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
+#include "mesh.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
+
+#include <entt/entt.hpp>
 
 GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const GPUScene& gpuScene)
     : _context(context)
@@ -67,6 +73,18 @@ GeometryPipeline::~GeometryPipeline()
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    auto jointView = scene.ecs->registry.view<JointComponent, WorldMatrixComponent>();
+    for (entt::entity entity : jointView)
+    {
+        const auto& joint = jointView.get<JointComponent>(entity);
+        const auto& matrix = jointView.get<WorldMatrixComponent>(entity);
+        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrix);
+
+        glm::mat4 skinMatrix = worldTransform * joint.inverseBindMatrix;
+        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[currentFrame]);
+        std::memcpy(buffer->mappedPtr + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
+    }
+
     _culler.RecordCommands(commandBuffer, currentFrame, scene, _camera, _drawBuffer, _drawBufferDescriptorSet);
 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};

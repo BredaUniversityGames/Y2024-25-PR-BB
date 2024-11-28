@@ -530,10 +530,15 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
     if (gltf.skins.size() > 0)
     {
         const auto& skin = gltf.skins[0];
-        if (std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex) != skin.joints.end())
+        auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
+        if (it != skin.joints.end())
         {
-            fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], gltfNodeIndex);
-            node.joint = Hierarchy::Joint { gltfNodeIndex == skin.skeleton.value(), *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix) };
+            fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
+            node.joint = Hierarchy::Joint {
+                gltfNodeIndex == skin.skeleton.value(),
+                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
+                static_cast<uint32_t>(std::distance(skin.joints.begin(), it))
+            };
         }
     }
 
