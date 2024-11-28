@@ -49,9 +49,6 @@ GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive
 
     primitive.vertexOffset = batchBuffer.AppendVertices(cpuPrimitive.vertices, commands);
     primitive.indexOffset = batchBuffer.AppendIndices(cpuPrimitive.indices, commands);
-    primitive.boundingRadius = glm::max(
-        glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.min),
-        glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.max));
-
+    primitive.boundingRadius = cpuPrimitive.boundingRadius;
     return primitive;
 }
