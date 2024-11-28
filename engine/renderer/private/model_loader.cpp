@@ -173,6 +173,39 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
     }
 }
 
+template <typename T>
+void CalculateNormals(CPUMesh<T>& mesh)
+{
+    for (size_t i = 0; i < mesh.indices.size(); i += 3)
+    {
+        uint32_t idx0 = mesh.indices[i];
+        uint32_t idx1 = mesh.indices[i + 1];
+        uint32_t idx2 = mesh.indices[i + 2];
+
+        glm::vec3& v0 = mesh.vertices[idx0].position;
+        glm::vec3& v1 = mesh.vertices[idx1].position;
+        glm::vec3& v2 = mesh.vertices[idx2].position;
+
+        // Compute edges
+        glm::vec3 edge1 = v1 - v0;
+        glm::vec3 edge2 = v2 - v0;
+
+        // Compute face normal (cross product)
+        glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
+
+        // Accumulate the face normal into vertex normals
+        mesh.vertices[idx0].normal += faceNormal;
+        mesh.vertices[idx1].normal += faceNormal;
+        mesh.vertices[idx2].normal += faceNormal;
+    }
+
+    // Normalize the normals at each vertex
+    for (auto& vertex : mesh.vertices)
+    {
+        vertex.normal = glm::normalize(vertex.normal);
+    }
+}
+
 template <typename T, typename U>
 void AssignAttribute(T& vertexAttribute, uint32_t index, const fastgltf::Attribute* attribute, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
@@ -240,13 +273,13 @@ void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const 
 template <typename T>
 CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
-    CPUMesh<T> primitive {};
+    CPUMesh<T> mesh {};
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
-        primitive.materialIndex = gltfPrimitive.materialIndex.value();
+        mesh.materialIndex = gltfPrimitive.materialIndex.value();
 
-    ProcessVertices(primitive.vertices, gltfPrimitive, gltf, primitive.boundingBox);
+    ProcessVertices(mesh.vertices, gltfPrimitive, gltf, mesh.boundingBox);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {
@@ -257,13 +290,13 @@ CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fast
         auto& buffer = gltf.buffers[bufferView.bufferIndex];
         auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-        primitive.indices = std::vector<uint32_t>(accessor.count);
+        mesh.indices = std::vector<uint32_t>(accessor.count);
 
         const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
 
         if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size() * sizeof(uint32_t));
+            std::memcpy(mesh.indices.data(), attributeBufferStart, mesh.indices.size() * sizeof(uint32_t));
         }
         else
         {
@@ -271,21 +304,35 @@ CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fast
             for (size_t i = 0; i < accessor.count; ++i)
             {
                 const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
-                uint32_t* indexPtr = primitive.indices.data() + i;
+                uint32_t* indexPtr = mesh.indices.data() + i;
                 std::memcpy(indexPtr, element, gltfIndexTypeSize);
             }
         }
     }
+    else
+    {
+        // Generate indices manually
+        mesh.indices.reserve(mesh.vertices.size());
+        for (size_t i = 0; i < mesh.vertices.size(); ++i)
+        {
+            mesh.indices.emplace_back(i);
+        }
+    }
+
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    if (normalAttribute == gltfPrimitive.attributes.cend())
+    {
+        CalculateNormals(mesh);
+    }
 
     const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
     const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
-
     if (tangentAttribute == gltfPrimitive.attributes.cend() && texCoordAttribute != gltfPrimitive.attributes.cend())
     {
-        CalculateTangents<T>(primitive);
+        CalculateTangents<T>(mesh);
     }
 
-    return primitive;
+    return mesh;
 }
 
 CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,

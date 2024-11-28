@@ -56,12 +56,15 @@ private:
     {
         GPUMesh gpuMesh;
         gpuMesh.material = material;
-        gpuMesh.count = cpuMesh.indices.size();
+        gpuMesh.count = cpuMesh.indices.empty() ? cpuMesh.vertices.size() : cpuMesh.indices.size();
 
         SingleTimeCommands commands { _vkContext };
 
         gpuMesh.vertexOffset = batchBuffer.AppendVertices(cpuMesh.vertices, commands);
-        gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, commands);
+        if (!cpuMesh.indices.empty())
+        {
+            gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, commands);
+        }
         gpuMesh.boundingRadius = glm::max(
             glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.min),
             glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.max));

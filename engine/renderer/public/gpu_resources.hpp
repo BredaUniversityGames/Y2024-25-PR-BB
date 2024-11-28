@@ -230,9 +230,9 @@ private:
 
 struct GPUMesh
 {
-    uint32_t count;
-    uint32_t vertexOffset;
-    uint32_t indexOffset;
+    uint32_t count { 0 };
+    uint32_t vertexOffset { 0 };
+    uint32_t indexOffset { 0 };
     float boundingRadius;
 
     MeshType type;
