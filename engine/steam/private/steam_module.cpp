@@ -1,10 +1,10 @@
 #include "steam_module.hpp"
 #include <steam_api.h>
 
-extern "C" void __cdecl DebugCallback(int severity, const char* message)
+void DebugCallback(int severity, const char* message)
 {
-    // if you're running in the debugger, only warnings (nSeverity >= 1) will be sent
-    // if you add -debug_steamapi to the command-line, a lot of extra informational messages will also be sent
+    // If you're running in the debugger, only warnings (severity >= 1) will be sent
+    // If you add -debug_steamapi to the command-line, a lot of extra informational messages will also be sent
 
     switch (severity)
     {
@@ -25,7 +25,7 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
     if (SteamAPI_InitEx(&errorMessage) != k_ESteamAPIInitResult_OK)
     {
         bblog::error("[Steamworks] ", errorMessage);
-        bblog::warn("[Steamworks] Steam is not running, Steamworks API functionality will be unavailable");
+        bblog::warn("[Steamworks] Steam is probably not running, Steamworks API functionality will be unavailable");
 
         return ModuleTickOrder::ePreTick;
     }

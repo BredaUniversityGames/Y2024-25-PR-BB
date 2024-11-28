@@ -19,6 +19,6 @@ public:
     ~SteamModule() override = default;
 
     // When the user launched the application through Steam, this will return true.
-    // If false, the steam module cannot be used, as Steam API does not work.
+    // If false, the Steam module cannot be used, as Steam API does not work.
     bool Available() const { return _steamAvailable; }
 };
