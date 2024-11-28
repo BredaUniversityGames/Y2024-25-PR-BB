@@ -77,7 +77,7 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
     }
 
     const FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
-    FMOD_SOUND* sound;
+    FMOD_SOUND* sound = nullptr;
 
     CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
 
@@ -91,7 +91,7 @@ void AudioModule::PlaySFX(SoundInfo& soundInfo)
         return;
     }
 
-    FMOD_CHANNEL* channel;
+    FMOD_CHANNEL* channel = nullptr;
     CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, true, &channel));
 
     CHECKRESULT(FMOD_Channel_SetVolume(channel, soundInfo.volume));
@@ -121,7 +121,7 @@ void AudioModule::LoadBank(BankInfo& bankInfo)
         return;
     }
 
-    FMOD_STUDIO_BANK* bank;
+    FMOD_STUDIO_BANK* bank = nullptr;
 
     CHECKRESULT(FMOD_Studio_System_LoadBankFile(_studioSystem, bankInfo.path.data(), FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
 
@@ -140,20 +140,20 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-uint32_t AudioModule::StartOneShotEvent(const std::string_view name)
+uint32_t AudioModule::StartOneShotEvent(std::string_view name)
 {
     return StartEvent(name, true);
 }
-uint32_t AudioModule::StartLoopingEvent(const std::string_view name)
+NO_DISCARD uint32_t AudioModule::StartLoopingEvent(std::string_view name)
 {
     return StartEvent(name, false);
 }
-uint32_t AudioModule::StartEvent(const std::string_view name, const bool isOneShot)
+NO_DISCARD uint32_t AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {
-    FMOD_STUDIO_EVENTDESCRIPTION* eve;
+    FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
 
-    FMOD_STUDIO_EVENTINSTANCE* evi;
+    FMOD_STUDIO_EVENTINSTANCE* evi = nullptr;
     CHECKRESULT(FMOD_Studio_EventDescription_CreateInstance(eve, &evi));
 
     const uint32_t eventId = _nextEventId;

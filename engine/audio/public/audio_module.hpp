@@ -14,7 +14,7 @@ struct FMOD_CHANNEL;
 
 struct SoundInfo
 {
-    std::string_view path;
+    std::string_view path {};
     uint32_t uid = 0;
 
     float volume = 1.0f;
@@ -23,7 +23,7 @@ struct SoundInfo
 
 struct BankInfo
 {
-    std::string_view path;
+    std::string_view path {};
     uint32_t uid = 0;
 };
 
@@ -77,11 +77,11 @@ private:
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
 
-    std::unordered_map<uint32_t, FMOD_SOUND*> _sounds;
-    std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks;
-    std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events;
+    std::unordered_map<uint32_t, FMOD_SOUND*> _sounds {};
+    std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks {};
+    std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
-    std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping;
+    std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping {};
 
     uint32_t _nextEventId = 0;
 };
