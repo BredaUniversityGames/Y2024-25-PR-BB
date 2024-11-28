@@ -8,7 +8,6 @@ class InputManager;
 class UIElement;
 class UIPipeline;
 
-// note: right now this is only stored inside the engine, preferably should be linked to the camera.
 class Viewport
 {
 public:
@@ -21,7 +20,7 @@ public:
     void Update(const InputManager& input) const;
 
     /**
-     * recursively adds all the draw data for the ui to the drawList argument.
+     * adds all the draw data for the ui to the drawList argument, fynction calls SubmitDrawInfo on all the present uiElements in a hierarchical manner.
      * This drawList gets cleared when the uiPipeline records it's commands and thus this function needs to be called before the commandLists are submitted.
      * @param drawList Reference to the vector holding the QuadDrawInfo, which is most likely located in the uiPipeline.
      */
@@ -29,13 +28,15 @@ public:
 
     UIElement& AddElement(std::unique_ptr<UIElement> element);
 
-    /**
-     * \brief Base elements present in viewport.
-     */
-    std::vector<std::unique_ptr<UIElement>> baseElements;
+    std::vector<std::unique_ptr<UIElement>>& GetElements() { return baseElements; }
+    const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return baseElements; }
 
     glm::vec2 extend;
     glm::vec2 offset;
 
 private:
+    /**
+     * \brief Base elements present in viewport.
+     */
+    std::vector<std::unique_ptr<UIElement>> baseElements;
 };

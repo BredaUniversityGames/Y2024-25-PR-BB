@@ -14,7 +14,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         if (i != ' ')
         {
             // Check if the character exists in the font's character map
-            if (_font->characters.find(i) == _font->characters.end())
+            if (!_font->characters.contains(i))
             {
                 continue;
             }
@@ -22,7 +22,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             const auto& character = _font->characters.at(i);
 
             QuadDrawInfo info;
-            info.projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + character.Bearing.x, -character.Bearing.y), 0)), glm::vec3(character.Size, 1.0) * glm::vec3(scale, 0)));
+            info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + character.Bearing.x, -character.Bearing.y), 0)), glm::vec3(character.Size, 1.0) * glm::vec3(scale, 0)));
             info.textureIndex = _font->_fontAtlas.Index();
             info.useRedAsAlpha = true;
             info.uvp1 = character.uvp1;

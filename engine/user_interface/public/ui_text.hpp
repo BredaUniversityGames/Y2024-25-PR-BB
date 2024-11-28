@@ -12,7 +12,12 @@ struct UITextElement : public UIElement
         , _font(font)
     {
     }
+
+    /**
+     * override because this function in UIElement is virtual, text cannot contain children.
+     */
     void UpdateAllChildrenAbsoluteLocations() override { }
+
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     const std::shared_ptr<Font> _font;

@@ -67,7 +67,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         }
 
         QuadDrawInfo info {
-            .projection = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(scale, 0))),
+            .modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(scale, 0))),
             .textureIndex = image.Index(),
         };
 

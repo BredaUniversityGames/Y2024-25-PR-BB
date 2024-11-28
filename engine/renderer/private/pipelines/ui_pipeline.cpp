@@ -99,7 +99,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     for (auto& i : _drawList)
     {
         _pushConstants.quad = i;
-        _pushConstants.quad.projection = projectionMatrix * _pushConstants.quad.projection;
+        _pushConstants.quad.modelMatrix = projectionMatrix * _pushConstants.quad.modelMatrix;
         commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(UIPushConstants), &_pushConstants);
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});

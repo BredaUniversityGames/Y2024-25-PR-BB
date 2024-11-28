@@ -31,8 +31,7 @@ public:
 
     struct ButtonStyle
     {
-        ResourceHandle<GPUImage>
-            normalImage = {};
+        ResourceHandle<GPUImage> normalImage = {};
         ResourceHandle<GPUImage> hoveredImage = {};
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
