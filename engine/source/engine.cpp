@@ -277,7 +277,6 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-        spdlog::info("Spawned emitter!");
     }
 
     static uint32_t soundId {};
