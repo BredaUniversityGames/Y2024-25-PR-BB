@@ -65,8 +65,3 @@ struct StaticMeshComponent
 {
     ResourceHandle<GPUMesh> mesh;
 };
-
-struct SceneDescription
-{
-    Camera camera;
-};
