@@ -8,7 +8,7 @@
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
@@ -92,7 +92,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    const glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(_swapChain.GetExtent().width), 0.f, static_cast<float>(_swapChain.GetExtent().height));
+    const glm::mat4 projectionMatrix = glm::ortho<float>(0.f, static_cast<float>(_swapChain.GetExtent().width), 0.f, static_cast<float>(_swapChain.GetExtent().height));
 
     for (auto& i : _drawList)
     {
