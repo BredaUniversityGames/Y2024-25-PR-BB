@@ -10,7 +10,7 @@ class GraphicsContext;
 class UIPipeline final : public FrameGraphRenderPass
 {
 public:
-    UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& toneMappingTarget, const ResourceHandle<GPUImage>& uiTarget, const SwapChain& swapChain);
+    UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain);
     ~UIPipeline() final;
 
     NON_COPYABLE(UIPipeline);
@@ -34,8 +34,8 @@ private:
     vk::PipelineLayout _pipelineLayout;
 
     std::shared_ptr<GraphicsContext> _context;
-    ResourceHandle<GPUImage> _toneMappingTarget;
-    ResourceHandle<GPUImage> _uiTarget;
+    ResourceHandle<GPUImage> _inputTarget;
+    ResourceHandle<GPUImage> _outputTarget;
     const SwapChain& _swapChain;
     vk::UniqueSampler _sampler;
 
