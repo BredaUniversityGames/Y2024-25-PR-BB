@@ -1,10 +1,10 @@
 #include "ui_main_menu.hpp"
 #include "canvas.hpp"
 #include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "ui_text.hpp"
-
-#include <graphics_resources.hpp>
-#include <resource_management/image_resource_manager.hpp>
+#include "vulkan_context.hpp"
 
 MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<Font>& font)
     : Canvas(size)
@@ -26,8 +26,6 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
         .hoveredImage = hoveredImage,
         .pressedImage = normalImage
     };
-
-    context->UpdateBindlessSet();
 
     std::unique_ptr<UIButton> subButton = std::make_unique<UIButton>();
     subButton->style = standardStyle;

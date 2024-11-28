@@ -85,25 +85,17 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
-
-
-    // TODO: FIX THIS CRASH.
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
 
     viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.extend, _context, font));
 
-    _geometryPipeline
-        = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_camera, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), *_camera, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
-
     _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 

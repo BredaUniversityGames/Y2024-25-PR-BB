@@ -16,12 +16,10 @@
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain)
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain)
     : _context(context)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
-    , _camera(camera)
     , _uiTarget(uiTarget)
 {
     _linesData.reserve(2048);

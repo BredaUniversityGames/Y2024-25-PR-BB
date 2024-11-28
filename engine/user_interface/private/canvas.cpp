@@ -7,22 +7,22 @@ void Canvas::UpdateAllChildrenAbsoluteLocations()
     {
         for (const auto& i : GetChildren())
         {
-            glm::vec2 childRelativeLocation = i->GetRelativeLocation();
+            glm::vec2 ChildRelativeLocation = i->GetRelativeLocation();
 
             glm::vec2 newChildLocation;
             switch (i->anchorPoint)
             {
             case AnchorPoint::eMiddle:
-                newChildLocation = GetAbsouluteLocation() + (GetScale() / 2.0f) + childRelativeLocation;
+                newChildLocation = GetAbsouluteLocation() + (GetScale() / 2.0f) + ChildRelativeLocation;
                 break;
             case AnchorPoint::eTopLeft:
-                newChildLocation = { GetAbsouluteLocation() + childRelativeLocation };
+                newChildLocation = { GetAbsouluteLocation() + ChildRelativeLocation };
                 break;
             case AnchorPoint::eTopRight:
-                newChildLocation = { GetAbsouluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsouluteLocation().y + childRelativeLocation.y };
+                newChildLocation = { GetAbsouluteLocation().x + GetScale().x - ChildRelativeLocation.x, GetAbsouluteLocation().y + ChildRelativeLocation.y };
                 break;
             case AnchorPoint::eBottomLeft:
-                newChildLocation = { GetAbsouluteLocation().x + childRelativeLocation.x, GetAbsouluteLocation().y + GetScale().y - childRelativeLocation.y };
+                newChildLocation = { GetAbsouluteLocation().x + ChildRelativeLocation.x, GetAbsouluteLocation().y + GetScale().y - ChildRelativeLocation.y };
                 break;
             case AnchorPoint::eBottomRight:
 
