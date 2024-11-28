@@ -57,15 +57,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     // systems
     _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
-
+    bblog::info("PULA");
     _scene = std::make_shared<SceneDescription>();
     rendererModule.SetScene(_scene);
 
     std::vector<std::string> modelPaths = {
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
-        "assets/models/monkey.gltf",
+        //"assets/models/monkey.gltf",
         //"assets/models/MetalRoughSpheres.glb"
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf"
 
     };
 

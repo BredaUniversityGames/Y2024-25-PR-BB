@@ -1,9 +1,13 @@
 ﻿#include "systems/physics_system.hpp"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "ecs.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
 #include "imgui/imgui.h"
 #include "physics_module.hpp"
+
 #include <glm/glm.hpp>
 
 PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
@@ -18,12 +22,47 @@ void PhysicsSystem::InitializePhysicsColliders()
     for (const auto entity : view)
     {
         TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+        NameComponent& name = _ecs.registry.get<NameComponent>(entity);
+
+        if (&name)
+        {
+            std::cout << name.name << std::endl;
+        }
+        // Assume worldMatrix is your 4x4 transformation matrix
+        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.registry, entity);
+        glm::mat4 localMatrix = TransformHelpers::GetLocalMatrix(_ecs.registry, entity);
+
+        std::cout << localMatrix[1][1] << std::endl;
+
+        // Variables to store the decomposed components
+        glm::vec3 scale;
+        glm::quat rotationQuat;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        // Decompose the matrix
+        glm::decompose(
+            worldMatrix,
+            scale,
+            rotationQuat,
+            translation,
+            skew,
+            perspective);
+
+        tempData.position = translation;
+        tempData.rotation = rotationQuat;
+        tempData.meshScale = scale;
+        tempData.boundingBox.min *= scale;
+        tempData.boundingBox.max *= scale;
 
         // size and position
         Vec3Range boundingBox = tempData.boundingBox;
-        boundingBox.min *= tempData.meshScale;
-        boundingBox.max *= tempData.meshScale;
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position, boundingBox, eSTATIC);
+        // boundingBox.min *= tempData.meshScale;
+        // boundingBox.max *= tempData.meshScale;
+        const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
+
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, tempData.position + centerPos, boundingBox, eSTATIC);
 
         // rotation now
         _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(tempData.rotation.x, tempData.rotation.y, tempData.rotation.z, tempData.rotation.w), JPH::EActivation::Activate);
@@ -44,7 +83,8 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
-    //  Update the meshes
+    return;
+    //    Update the meshes
     const auto view = _ecs.registry.view<RigidbodyComponent, TempPhysicsData>();
     for (const auto entity : view)
     {
@@ -61,6 +101,9 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
         const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), joltBoxSize / oldExtent);
+
+        const glm::vec3 centerPos = (tempData.boundingBox.max + tempData.boundingBox.min) * 0.5f;
+        joltToGlm = glm::translate(joltToGlm, -centerPos);
 
         TransformHelpers::SetWorldTransform(ecs.registry, entity, joltToGlm);
     }

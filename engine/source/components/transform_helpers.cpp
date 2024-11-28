@@ -185,12 +185,7 @@ glm::mat4 TransformHelpers::GetLocalMatrix(const entt::registry& reg, entt::enti
 const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
-    if (!reg.all_of<WorldMatrixComponent>(entity))
-    {
-        reg.emplace<WorldMatrixComponent>(entity);
-        UpdateWorldMatrix(reg, entity);
-    }
-    const WorldMatrixComponent& worldMatrix = reg.get<WorldMatrixComponent>(entity);
+    const WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
 
     return worldMatrix._worldMatrix;
 }

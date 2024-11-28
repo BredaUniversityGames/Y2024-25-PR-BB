@@ -13,17 +13,24 @@
 #include "resource_management/mesh_resource_manager.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, const CPUModel& cpuModel, const GPUModel& model)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, entt::entity parent, const CPUModel& cpuModel, const GPUModel& model)
 {
     const entt::entity entity = ecs.registry.create();
 
     ecs.registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs.registry.emplace<TransformComponent>(entity);
 
-    TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
     ecs.registry.emplace<RelationshipComponent>(entity);
+
+    if (parent != entt::null)
+    {
+        RelationshipHelpers::AttachChild(ecs.registry, parent, entity);
+    }
+    TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
 
     if (currentNode.meshIndex.has_value())
     {
@@ -31,15 +38,13 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
 
         TempPhysicsData tempData;
         tempData.boundingBox = cpuModel.meshes.at(currentNode.meshIndex.value()).GetMeshBounds();
-        tempData.position = TransformHelpers::GetLocalMatrix(ecs.registry, entity)[3];
-        tempData.rotation = TransformHelpers::GetLocalRotation(ecs.registry, entity);
-        tempData.meshScale = TransformHelpers::GetLocalScale(ecs.registry, entity);
+
         ecs.registry.emplace<TempPhysicsData>(entity, tempData);
     }
 
     for (const auto& node : currentNode.children)
     {
-        const entt::entity childEntity = LoadNodeRecursive(ecs, node, cpuModel, model);
+        const entt::entity childEntity = LoadNodeRecursive(ecs, node, entity, cpuModel, model);
         RelationshipHelpers::AttachChild(ecs.registry, entity, childEntity);
     }
 
@@ -49,5 +54,5 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, con
 entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const CPUModel& cpuModel, const GPUModel& modelResources, const Hierarchy& hierarchy)
 {
     auto baseNode = hierarchy.baseNodes.at(0);
-    return (LoadNodeRecursive(ecs, baseNode, cpuModel, modelResources));
+    return (LoadNodeRecursive(ecs, baseNode, entt::null, cpuModel, modelResources));
 }

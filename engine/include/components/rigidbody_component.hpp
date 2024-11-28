@@ -72,9 +72,9 @@ struct RigidbodyComponent
         if (bodyType == eSTATIC)
         {
             bodySettings = JPH::BodyCreationSettings(
-                new JPH::BoxShape(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z)),
-                JPH::Vec3(position.x, position.y, position.z),
-                JPH::Quat::sIdentity(),
+                new JPH::BoxShape(JPH::Vec3Arg(halfExtents.x, halfExtents.y, halfExtents.z)),
+                JPH::Vec3Arg(position.x, position.y, position.z),
+                JPH::QuatArg::sIdentity(),
                 JPH::EMotionType::Static,
                 PhysicsLayers::NON_MOVING);
         }

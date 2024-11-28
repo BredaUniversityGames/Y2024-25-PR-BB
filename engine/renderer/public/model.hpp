@@ -33,15 +33,11 @@ struct CPUMesh
     Vec3Range GetMeshBounds() const
     {
         glm::vec3 min { std::numeric_limits<float>::max() };
-        glm::vec3 max { std::numeric_limits<float>::min() };
+        glm::vec3 max { std::numeric_limits<float>::lowest() };
         for (const auto& primitive : primitives)
         {
-            min.x = glm::min(min.x, primitive.boundingBox.min.x);
-            min.y = glm::min(min.y, primitive.boundingBox.min.y);
-            min.z = glm::min(min.z, primitive.boundingBox.min.z);
-            max.x = glm::max(max.x, primitive.boundingBox.max.x);
-            max.y = glm::max(max.y, primitive.boundingBox.max.y);
-            max.z = glm::max(max.z, primitive.boundingBox.max.z);
+            min = glm::min(min, primitive.boundingBox.min);
+            max = glm::max(max, primitive.boundingBox.max);
         }
         return Vec3Range(min, max);
     }
