@@ -1,6 +1,7 @@
 #pragma once
 
 #include "module_interface.hpp"
+#include <string_view>
 
 struct FMOD_SYSTEM;
 struct FMOD_STUDIO_SYSTEM;
