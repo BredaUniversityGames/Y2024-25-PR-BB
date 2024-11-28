@@ -3,6 +3,8 @@
 #include "fmod.h"
 #include "fmod_errors.h"
 #include "log.hpp"
+
+#include <common.hpp>
 #include <iostream>
 #include <string>
 

@@ -1,16 +1,14 @@
 #include "pipelines/ui_pipeline.hpp"
 
 #include "gpu_scene.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "pipeline_builder.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
-
-#include "graphics_context.hpp"
-#include "pipeline_builder.hpp"
-
 #include "vulkan_helper.hpp"
-
-#include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
+#include <glm/glm.hpp>
 
 UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
