@@ -1,4 +1,5 @@
 #include "steam_module.hpp"
+#include "log.hpp"
 #include <steam_api.h>
 
 void DebugCallback(int severity, const char* message)
