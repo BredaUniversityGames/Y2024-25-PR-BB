@@ -9,6 +9,12 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
     float localOffset = 0;
 
+    glm::vec2 scale;
+    if (GetScale().x == 0)
+        scale = glm::vec2(GetScale().y);
+    else
+        scale = GetScale();
+
     for (const auto& i : text)
     {
         if (i != ' ')
@@ -23,9 +29,11 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             QuadDrawInfo info;
 
-            glm::vec3 translation = glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + character.Bearing.x, -character.Bearing.y), 0);
-            glm::vec3 scale = glm::vec3(character.Size, 1.0) * glm::vec3(GetScale(), 0);
-            info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), translation), scale));
+            glm::vec2 normalizedBearing = glm::vec2(character.Bearing) / static_cast<float>(_font->characterHeight);
+            glm::vec3 translation = glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + normalizedBearing.x, normalizedBearing.y), 0);
+            glm::vec3 localScale = glm::vec3(glm::vec2(character.Size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(scale, 0);
+
+            info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), translation), localScale));
             info.textureIndex = _font->_fontAtlas.Index();
             info.useRedAsAlpha = true;
             info.uvp1 = character.uvp1;
@@ -33,11 +41,11 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             drawList.emplace_back(info);
 
-            localOffset += (character.Advance >> 6) * GetScale().x; // Convert advance from 1/64th pixels
+            localOffset += (float(character.Advance >> 6) / _font->characterHeight) * scale.x; // Convert advance from 1/64th pixels
         }
         else
         {
-            localOffset += (static_cast<int>(GetScale().x) * _font->characterHeight) / 4.0;
+            localOffset += (static_cast<int>(scale.x)) / 4.0;
         }
     }
 }
