@@ -2,6 +2,7 @@
 
 #include "module_interface.hpp"
 #include <string_view>
+#include <unordered_map>
 
 struct FMOD_SYSTEM;
 struct FMOD_STUDIO_SYSTEM;
