@@ -1,20 +1,16 @@
 #version 460
 #include "particle_binds.glsl"
 
-layout (set = 2, binding = 1) buffer CulledInstanceSSB
+layout(set = 2, binding = 0) buffer CulledInstancesSSB
 {
-    CulledInstance culledInstance;
+    CulledInstances culledInstances;
 };
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    uint aliveCount = particleCounters.aliveCountAfterSimulation;
-    uint deadCount = particleCounters.deadCount;
-
-    particleCounters.aliveCount = aliveCount;
+    particleCounters.aliveCount = particleCounters.aliveCountAfterSimulation;
     particleCounters.aliveCountAfterSimulation = 0;
-    particleCounters.deadCount = max(0, deadCount);
-    culledInstance.count = 0;
+    culledInstances.count = 0;
 }

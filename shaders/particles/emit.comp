@@ -1,5 +1,6 @@
 #version 460
 #include "particle_binds.glsl"
+#include "rng_helper.glsl"
 
 struct Emitter
 {
@@ -9,7 +10,9 @@ struct Emitter
     float mass;
     vec3 rotationVelocity;
     float maxLife;
-    // TODO: image/color
+    float randomValue;
+    uint materialIndex;
+    vec2 size;
 };
 
 const uint MAX_EMITTERS = 64;
@@ -33,14 +36,18 @@ void main()
     if(index >= emitter.count)
         return;
 
+    vec2 rng = hash_simplex_2D(vec2(float(index), emitter.randomValue));
+
     // test particle variables
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = emitter.velocity; // TODO: add something to make this more random?
+    particle.velocity = vec3(rng.x, emitter.velocity.y, rng.y); // TODO: add something to make this more random?
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
+    particle.materialIndex = emitter.materialIndex;
+    particle.size = emitter.size;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);
@@ -52,6 +59,6 @@ void main()
     particles[newParticleIndex] = particle;
 
     // add index to alive list
-    uint aliveCount = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
+    uint aliveCount = atomicAdd(particleCounters.aliveCount, 1);
     aliveBufferCURRENT[aliveCount] = newParticleIndex;
 }

@@ -28,6 +28,7 @@ struct RenderSceneDescription
     std::shared_ptr<const ECS> ecs;
     std::shared_ptr<BatchBuffer> batchBuffer;
     uint32_t targetSwapChainImageIndex;
+    float deltaTime;
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;

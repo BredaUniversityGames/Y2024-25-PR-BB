@@ -118,6 +118,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
+    // modules
+    _physicsModule = std::make_unique<PhysicsModule>();
+
+    // systems
+    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
+
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
 }
@@ -252,7 +258,6 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-        spdlog::info("Spawned emitter!");
     }
 
     _ecs->UpdateSystems(deltaTimeMS);

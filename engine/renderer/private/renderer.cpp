@@ -84,7 +84,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _gpuScene->MainCamera(), *_swapChain);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -125,6 +125,14 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
 
+    FrameGraphNodeCreation particlePass { *_particlePipeline };
+    particlePass.SetName("Particle pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+    // TODO: particle pass should also render to brightness target
+
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f)
@@ -150,6 +158,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
         .AddNode(skyDomePass)
+        .AddNode(particlePass)
         .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
@@ -223,7 +232,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .gpuScene = _gpuScene,
         .ecs = _ecs,
         .batchBuffer = _batchBuffer,
-        .targetSwapChainImageIndex = swapChainImageIndex
+        .targetSwapChainImageIndex = swapChainImageIndex,
+        .deltaTime = deltaTime
     };
 
     _context->GetDrawStats().Clear();
@@ -234,8 +244,6 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-    _particlePipeline->RecordCommands(commandBuffer, _currentFrame, _ecs, deltaTime); // TODO: Add to frame graph after ECS is integrated into renderer
 
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
