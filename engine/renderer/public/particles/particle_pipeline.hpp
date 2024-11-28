@@ -90,7 +90,7 @@ private:
     void RecordKickOff(vk::CommandBuffer commandBuffer);
     void RecordEmit(vk::CommandBuffer commandBuffer);
     void RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime);
-    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene);
+    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
 
     void UpdateEmitters(vk::CommandBuffer commandBuffer);
 

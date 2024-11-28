@@ -73,7 +73,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     RecordSimulate(commandBuffer, scene.deltaTime); // TODO: get deltatime again somehow
 
-    RecordRenderIndexed(commandBuffer, currentFrame, scene);
+    RecordRenderIndexed(commandBuffer, currentFrame);
 
     UpdateAliveLists();
 }
@@ -125,7 +125,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     for (bufferOffset = 0; bufferOffset < _emitters.size(); bufferOffset++)
     {
         _emitPushConstant.bufferOffset = bufferOffset;
-        commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(EmitPushConstant), &_emitPushConstant);
+        commandBuffer.pushConstants<EmitPushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, { _emitPushConstant });
         // +63 so we always dispatch at least once.
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
@@ -151,7 +151,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
 
     _simulatePushConstant.deltaTime = deltaTime * 0.001f;
-    commandBuffer.pushConstants(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, sizeof(SimulatePushConstant), &_simulatePushConstant);
+    commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
 
@@ -163,7 +163,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -246,7 +246,6 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
             // TODO: do something with particle type later
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             _emitters.emplace_back(component.emitter);
-            spdlog::info("Emitter received!");
             component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
         }
     }
@@ -829,7 +828,6 @@ void ParticlePipeline::CreateBuffers()
 
     { // Billboard vertex buffer
         std::vector<Vertex> billboardPositions = {
-            // TODO: tangents..?
             Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)), // 0
             Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)), // 1
             Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 0.0f)), // 2

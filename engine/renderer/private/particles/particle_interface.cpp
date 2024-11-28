@@ -87,7 +87,6 @@ void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t times
         {
             emitterComponent.timesToEmit = timesToEmit;
             emitterComponent.emitter = _emitterPresets[static_cast<int>(emitterPreset)];
-            spdlog::info("Spawned emitter!");
             break;
         }
     }
