@@ -2,6 +2,8 @@
 
 #include "camera.hpp"
 #include "ecs.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -12,8 +14,8 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
+
+#include <pipeline_builder.hpp>
 
 ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
     : _context(context)
@@ -380,81 +382,6 @@ void ParticlePipeline::CreatePipelines()
     }
 
     { // instanced rendering (billboard)
-        // TODO: Make use of pipeline builder
-        std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = { _context->BindlessLayout(), _instancesDescriptorSetLayout, _camera.DescriptorSetLayout() };
-
-        vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        pipelineLayoutCreateInfo.setLayoutCount = descriptorLayouts.size();
-        pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
-
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-
-        _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)] = vkContext->Device().createPipelineLayout(pipelineLayoutCreateInfo);
-
-        std::vector<std::byte> vertByteCode = shader::ReadFile("shaders/bin/billboard.vert.spv");
-        std::vector<std::byte> fragByteCode = shader::ReadFile("shaders/bin/particle.frag.spv");
-
-        vk::ShaderModule vertModule = shader::CreateShaderModule(vertByteCode, vkContext->Device());
-        vk::ShaderModule fragModule = shader::CreateShaderModule(fragByteCode, vkContext->Device());
-
-        vk::PipelineShaderStageCreateInfo vertShaderStageCreateInfo {};
-        vertShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-        vertShaderStageCreateInfo.module = vertModule;
-        vertShaderStageCreateInfo.pName = "main";
-
-        vk::PipelineShaderStageCreateInfo fragShaderStageCreateInfo {};
-        fragShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-        fragShaderStageCreateInfo.module = fragModule;
-        fragShaderStageCreateInfo.pName = "main";
-
-        vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageCreateInfo, fragShaderStageCreateInfo };
-
-        auto bindingDesc = Vertex::GetBindingDescription();
-        auto attributes = Vertex::GetAttributeDescriptions();
-
-        vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {};
-        vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-        vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDesc;
-        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributes.size();
-        vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributes.data();
-
-        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
-        inputAssemblyStateCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-        inputAssemblyStateCreateInfo.primitiveRestartEnable = vk::False;
-
-        std::array<vk::DynamicState, 2> dynamicStates = {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eScissor,
-        };
-
-        vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {};
-        dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
-        dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-        vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
-        viewportStateCreateInfo.viewportCount = 1;
-        viewportStateCreateInfo.scissorCount = 1;
-
-        vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
-        rasterizationStateCreateInfo.depthClampEnable = vk::False;
-        rasterizationStateCreateInfo.rasterizerDiscardEnable = vk::False;
-        rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-        rasterizationStateCreateInfo.lineWidth = 1.0f;
-        rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-        rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-        rasterizationStateCreateInfo.depthBiasEnable = vk::False;
-        rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-        rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-        rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
-
-        vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
-        multisampleStateCreateInfo.sampleShadingEnable = vk::False;
-        multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-        multisampleStateCreateInfo.minSampleShading = 1.0f;
-        multisampleStateCreateInfo.pSampleMask = nullptr;
-        multisampleStateCreateInfo.alphaToCoverageEnable = vk::False;
-        multisampleStateCreateInfo.alphaToOneEnable = vk::False;
-
         vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
         colorBlendAttachmentState.blendEnable = vk::False;
         colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
@@ -464,47 +391,18 @@ void ParticlePipeline::CreatePipelines()
         colorBlendStateCreateInfo.attachmentCount = 1;
         colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-        vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
-        depthStencilStateCreateInfo.depthTestEnable = true;
-        depthStencilStateCreateInfo.depthWriteEnable = true;
-        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-        depthStencilStateCreateInfo.depthBoundsTestEnable = false;
-        depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-        depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-        depthStencilStateCreateInfo.stencilTestEnable = false;
-
-        vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;
-
-        auto& pipelineCreateInfo = structureChain.get<vk::GraphicsPipelineCreateInfo>();
-        pipelineCreateInfo.stageCount = 2;
-        pipelineCreateInfo.pStages = shaderStages;
-        pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-        pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-        pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-        pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-        pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-        pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-        pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-        pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-        pipelineCreateInfo.layout = _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)];
-        pipelineCreateInfo.subpass = 0;
-        pipelineCreateInfo.basePipelineHandle = nullptr;
-        pipelineCreateInfo.basePipelineIndex = -1;
-
-        auto& pipelineRenderingCreateInfoKhr = structureChain.get<vk::PipelineRenderingCreateInfoKHR>();
-        pipelineRenderingCreateInfoKhr.colorAttachmentCount = 1;
         vk::Format format = resources->ImageResourceManager().Access(_hdrTarget)->format;
-        pipelineRenderingCreateInfoKhr.pColorAttachmentFormats = &format;
-        pipelineRenderingCreateInfoKhr.depthAttachmentFormat = _gBuffers.DepthFormat();
 
-        pipelineCreateInfo.renderPass = nullptr; // Using dynamic rendering.
+        std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/billboard.vert.spv");
+        std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/particle.frag.spv");
 
-        auto result = vkContext->Device().createGraphicsPipeline(nullptr, pipelineCreateInfo, nullptr);
-        util::VK_ASSERT(result.result, "Failed creating the particle rendering pipeline layout!");
-        _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)] = result.value;
-
-        vkContext->Device().destroy(vertModule);
-        vkContext->Device().destroy(fragModule);
+        PipelineBuilder reflector { _context };
+        reflector
+            .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+            .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+            .SetColorBlendState(colorBlendStateCreateInfo)
+            .SetColorAttachmentFormats({ format })
+            .BuildPipeline(_pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
     }
 }
 
