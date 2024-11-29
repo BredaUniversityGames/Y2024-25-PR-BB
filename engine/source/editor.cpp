@@ -28,7 +28,9 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 // TODO: Editor shouldnt depend on this.
+#include "components/directional_light_component.hpp"
 #include "vulkan_context.hpp"
+
 #include <vk_mem_alloc.h>
 
 Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
@@ -42,6 +44,7 @@ Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>&
     _entityEditor.registerComponent<NameComponent>("Name");
     _entityEditor.registerComponent<RelationshipComponent>("Relationship");
     _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+    _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)

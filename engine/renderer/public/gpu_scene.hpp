@@ -40,7 +40,7 @@ struct DrawIndexedIndirectCommand
     vk::DrawIndexedIndirectCommand command;
 };
 
-constexpr uint32_t MAX_INSTANCES = 2048;
+constexpr uint32_t MAX_INSTANCES = 4096 * 4;
 
 class GPUScene
 {

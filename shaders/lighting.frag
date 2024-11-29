@@ -11,6 +11,7 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
+    uint depthIndex;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -46,6 +47,7 @@ void main()
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
     vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
     vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
@@ -127,7 +129,17 @@ void main()
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
-    outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
+    vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
+
+    const float near = 100.0;
+    const float far = 500.0;
+    const float fogDensity = 0.005;
+    const vec3 fogColor = vec3(0.6, 0.7, 0.9);
+
+    float linearDepth = distance(position, camera.cameraPosition);
+    float fogFactor = exp(-fogDensity * linearDepth);
+
+    outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);

@@ -171,6 +171,15 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
         tangent = glm::normalize(tangent);
         stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
     }
+
+    if (std::any_of(stagingPrimitive.vertices.begin(), stagingPrimitive.vertices.end(), [](const auto& v)
+            { return std::isnan(v.tangent.x); }))
+    {
+        for (auto& vertex : stagingPrimitive.vertices)
+        {
+            vertex.tangent = glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f };
+        }
+    }
 }
 
 template <typename T>
@@ -582,7 +591,7 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
         {
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
             node.joint = Hierarchy::Joint {
-                gltfNodeIndex == skin.skeleton.value(),
+                gltfNodeIndex == skin.skeleton.has_value() ? static_cast<bool>(skin.skeleton.value()) : false, // TODO: skeleton is an index, this should be properly handled in the case of multiple skins
                 *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
                 static_cast<uint32_t>(std::distance(skin.joints.begin(), it))
             };
@@ -650,7 +659,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.animation = animations.animation;
     }
 
-    assert(gltf.skins.size() <= 1 && "Only support for one skin!");
+    // assert(gltf.skins.size() <= 1 && "Only support for one skin!");
 
     Hierarchy::Node baseNode;
     baseNode.name = name;

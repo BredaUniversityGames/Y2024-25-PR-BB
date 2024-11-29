@@ -57,7 +57,7 @@ private:
 enum class ImageType
 {
     e2D,
-    e2DArray,
+    eDepth,
     eCubeMap,
     eShadowMap
 };

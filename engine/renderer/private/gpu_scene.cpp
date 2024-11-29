@@ -386,7 +386,7 @@ void GPUScene::InitializeIndirectDrawBuffer()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         BufferCreation creation {};
-        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t))
+        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
             .SetIsMappable(true)
