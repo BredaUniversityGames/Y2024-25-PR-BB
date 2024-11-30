@@ -5,9 +5,6 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 
-template <>
-std::weak_ptr<ResourceManager<GPUMesh>> ResourceHandle<GPUMesh>::manager = {};
-
 ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
 {
     // todo: add fallback material.
