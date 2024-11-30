@@ -119,9 +119,11 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(SDL_SHARED OFF)
-override_option(SDL_STATIC ON)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
 FetchContent_MakeAvailable(SDL)
+
+target_compile_options(SDL3-static PRIVATE -Wno-deprecated-declarations)
 
 # GLM
 

@@ -30,7 +30,7 @@ public:
         float maxBrightnessExtraction = 5.0f;
 
     private:
-        glm::vec2 _padding;
+        MAYBE_UNUSED glm::vec2 _padding;
     };
 
     struct FrameData

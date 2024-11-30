@@ -2,13 +2,13 @@
 
 #include <map>
 #include <set>
-#include <vulkan/vulkan.hpp>
 
 #include "application_module.hpp"
 #include "log.hpp"
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
+#include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
 
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
