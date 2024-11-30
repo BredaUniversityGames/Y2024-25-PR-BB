@@ -3,11 +3,10 @@
 #include <memory>
 #include <optional>
 #include <vk_mem_alloc.h>
-#include <vulkan/vulkan.hpp>
 
 #include "common.hpp"
 #include "gpu_resources.hpp"
-#include "lib/includes_vulkan.hpp"
+#include "vulkan_include.hpp"
 
 struct VulkanInitInfo;
 

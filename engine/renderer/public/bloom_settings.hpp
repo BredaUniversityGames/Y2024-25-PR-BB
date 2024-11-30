@@ -2,12 +2,12 @@
 
 #include "constants.hpp"
 #include "resource_manager.hpp"
+#include "vulkan_include.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
-#include <lib/includes_vulkan.hpp>
 
 class GraphicsContext;
 struct Buffer;

@@ -4,13 +4,7 @@
 #include <glm/vec2.hpp>
 #include <memory>
 
-#include <vulkan/vulkan.hpp>
-
-// Undefining problematic X11 defines
-
-#undef Bool
-#undef None
-#undef Convex
+#include "vulkan_include.hpp"
 
 class InputManager;
 struct SDL_Window;
