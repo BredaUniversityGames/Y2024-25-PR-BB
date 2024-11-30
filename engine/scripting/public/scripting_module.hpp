@@ -8,8 +8,8 @@
 
 class ScriptingModule : public ModuleInterface
 {
-    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override;
-    void Tick(MAYBE_UNUSED Engine& engine) override;
+    ModuleTickOrder Init(Engine& engine) override;
+    void Tick(Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 
 public:

@@ -1,3 +1,5 @@
+#include "../../../build/CI-CD/_deps/joltphysics-src/Jolt/ObjectStream/ObjectStreamBinaryIn.h"
+
 #include <bit>
 #include <file_io.hpp>
 #include <filesystem>
@@ -75,4 +77,9 @@ std::string fileIO::DumpStreamIntoString(std::istream& stream)
     stream.seekg(0);
     stream.read(std::bit_cast<char*>(out.data()), size);
     return out;
+}
+
+std::string fileIO::CanonicalizePath(const std::string& path)
+{
+    return std::filesystem::path(path).make_preferred().lexically_normal().string();
 }

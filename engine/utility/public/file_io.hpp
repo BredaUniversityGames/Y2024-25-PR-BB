@@ -54,4 +54,9 @@ bool MakeDirectory(const std::string& path);
 /// </summary>
 std::optional<FileTime> GetLastModifiedTime(const std::string& path);
 
+/// <summary>
+/// Simplifies and Transforms the path into OS preference
+/// </summary>
+std::string CanonicalizePath(const std::string& path);
+
 };

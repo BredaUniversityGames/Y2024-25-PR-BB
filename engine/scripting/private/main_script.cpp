@@ -1,5 +1,6 @@
 #include "main_script.hpp"
 #include "log.hpp"
+#include "utility/engine_wrapper.hpp"
 
 void MainScript::SetMainModule(wren::VM& vm, const std::string& module, const std::string& className)
 {
@@ -7,7 +8,7 @@ void MainScript::SetMainModule(wren::VM& vm, const std::string& module, const st
     {
         mainClass = vm.find(module, className);
         mainUpdate = mainClass.func("Update(_)");
-        mainClass.func("Start()")();
+        mainInit = mainClass.func("Start()");
         valid = true;
     }
     catch (wren::NotFound& e)
@@ -16,12 +17,25 @@ void MainScript::SetMainModule(wren::VM& vm, const std::string& module, const st
         valid = false;
     }
 }
-
-void MainScript::Update(DeltaMS deltatime)
+void MainScript::InitMainModule(Engine& e)
 {
     try
     {
-        mainUpdate(deltatime.count());
+        mainInit(EngineWrapper { e });
+        valid = true;
+    }
+    catch (wren::Exception& e)
+    {
+        bblog::error(e.what());
+        valid = false;
+    }
+}
+
+void MainScript::Update(Engine& e, DeltaMS deltatime)
+{
+    try
+    {
+        mainUpdate(EngineWrapper { e }, deltatime.count());
         valid = true;
     }
     catch (wren::NotFound& e)

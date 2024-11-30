@@ -81,8 +81,8 @@ FetchContent_MakeAvailable(cereal)
 
 FetchContent_Declare(
         wren
-        GIT_REPOSITORY https://github.com/matusnovak/wrenbind17.git
-        GIT_TAG v1.2.3
+        GIT_REPOSITORY https://github.com/santiberna/wrenbind17.git
+        GIT_TAG master
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )

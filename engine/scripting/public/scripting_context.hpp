@@ -10,28 +10,28 @@
 #include <string>
 #include <vector>
 
+// These default values are the same as specified in wren.h
+struct ScriptingInitConfig
+{
+    std::vector<std::string> includePaths;
+    size_t initialHeapSize = 1024ull * 1024ull * 10ull; // 10 MiB
+    size_t minHeapSize = 1024ull * 1024ull; // 1 MiB
+    uint32_t heapGrowthPercent = 50;
+};
+
 class ScriptingContext
 {
 public:
-    // These default values are the same as specified in wren.h
-    struct VMInitConfig
-    {
-        std::vector<std::string> includePaths;
-        size_t initialHeapSize = 1024ull * 1024ull * 10ull; // 10 MiB
-        size_t minHeapSize = 1024ull * 1024ull; // 1 MiB
-        uint32_t heapGrowthPercent = 50;
-    };
-
-    ScriptingContext(const VMInitConfig& info);
+    ScriptingContext(const ScriptingInitConfig& info);
     ~ScriptingContext();
-
-    wren::VM& GetVM() { return *_vm; }
 
     NON_COPYABLE(ScriptingContext);
     NON_MOVABLE(ScriptingContext);
 
-    // Interpret a Wren Module, returns the module name on success
-    std::optional<std::string> InterpretWrenModule(const std::string& path);
+    NO_DISCARD wren::VM& GetVM() { return *_vm; }
+
+    // Interpret a Wren Script, returns the name identifier of the script on success
+    std::optional<std::string> RunScript(const std::string& path);
 
     // Sets the output stream for system log calls
     void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
