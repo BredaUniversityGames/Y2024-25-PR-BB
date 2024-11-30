@@ -232,9 +232,12 @@ endif ()
 add_library(External INTERFACE)
 
 if (WIN32)
-    target_compile_options(External INTERFACE -DVK_USE_PLATFORM_WIN32_KHR)
+    target_compile_options(External
+            INTERFACE -DVK_USE_PLATFORM_WIN32_KHR
+            INTERFACE -DNOMINMAX)
 elseif (LINUX)
-    target_compile_options(External INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
+    target_compile_options(External
+            INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif ()
 
 target_link_libraries(External
