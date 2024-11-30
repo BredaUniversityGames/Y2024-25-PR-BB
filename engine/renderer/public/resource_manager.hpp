@@ -30,7 +30,7 @@ struct ResourceHandle final
 {
     ResourceHandle();
 
-    ResourceHandle(uint32_t index, uint8_t version);
+    ResourceHandle(std::weak_ptr<ResourceManager<T>> owner, uint32_t index, uint8_t version);
 
     ~ResourceHandle();
     ResourceHandle(const ResourceHandle<T>& other);
@@ -51,9 +51,9 @@ private:
     friend class VulkanContext;
     friend ResourceManager<T>;
 
+    std::weak_ptr<ResourceManager<T>> manager;
     uint32_t index : 24 { 0 };
     uint32_t version : 8 { 0 };
-    static std::weak_ptr<ResourceManager<T>> manager;
 };
 
 template <typename T>
@@ -77,15 +77,12 @@ public:
             _resources.emplace_back();
         }
 
-        if (ResourceHandle<T>::manager.use_count() == 0)
-        {
-            ResourceHandle<T>::manager = this->shared_from_this();
-        }
 
         ResourceSlot<T>& slot = _resources[index];
         slot.resource = std::move(resource);
 
-        ResourceHandle<T> handle(index, slot.version);
+        auto self_ptr = ResourceManager<T>::shared_from_this();
+        ResourceHandle<T> handle(self_ptr, index, slot.version);
 
         return handle;
     }
@@ -193,13 +190,14 @@ void ResourceManager<T>::DecrementReferenceCount(const ResourceHandle<T>& handle
 
 template <typename T>
 ResourceHandle<T>::ResourceHandle()
-    : ResourceHandle(RESOURCE_NULL_INDEX_VALUE, 0)
+    : ResourceHandle({}, RESOURCE_NULL_INDEX_VALUE, 0)
 {
 }
 
 template <typename T>
-ResourceHandle<T>::ResourceHandle(uint32_t index, uint8_t version)
-    : index(index)
+ResourceHandle<T>::ResourceHandle(std::weak_ptr<ResourceManager<T>> owner, uint32_t index, uint8_t version)
+    : manager(owner)
+    , index(index)
     , version(version)
 {
     if (auto mgr = manager.lock())
@@ -219,7 +217,8 @@ ResourceHandle<T>::~ResourceHandle()
 
 template <typename T>
 ResourceHandle<T>::ResourceHandle(const ResourceHandle<T>& other)
-    : index(other.index)
+    : manager(other.manager)
+    , index(other.index)
     , version(other.version)
 {
     if (auto mgr = manager.lock())
@@ -251,7 +250,8 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(const ResourceHandle<T>& other)
 
 template <typename T>
 ResourceHandle<T>::ResourceHandle(ResourceHandle<T>&& other) noexcept
-    : index(other.index)
+    : manager(other.manager)
+    , index(other.index)
     , version(other.version)
 {
     other = nullptr;
@@ -270,8 +270,10 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) noexc
         mgr->DecrementReferenceCount(*this);
     }
 
+
     index = other.index;
     version = other.version;
+    manager = other.manager;
 
     other = nullptr;
 
@@ -281,6 +283,7 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) noexc
 template <typename T>
 ResourceHandle<T>& ResourceHandle<T>::operator=(std::nullptr_t)
 {
+    manager = {};
     index = RESOURCE_NULL_INDEX_VALUE;
     version = 0;
 

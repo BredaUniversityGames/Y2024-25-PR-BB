@@ -226,7 +226,7 @@ void OldEngine::Tick(Engine& engine)
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
-    _ecs->GetSystem<PhysicsSystem>().CleanUp();
+    _ecs->GetSystem<PhysicsSystem>()->CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
 
