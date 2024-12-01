@@ -10,8 +10,8 @@
 #include "main_engine.hpp"
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
-const ScriptingContext::VMInitConfig MEMORY_CONFIG {
-    { "./", "./game/tests/", "./game/" },
+const VMInitConfig MEMORY_CONFIG {
+    { "", "./game/tests/", "./game/" },
     256ull * 4ull, 256ull, 50
 };
 
@@ -48,7 +48,7 @@ TEST(ForeignDataTests, ForeignBasicClass)
     v3.var<&glm::vec3::z>("z");
     v3.funcExt<bind::Vec3ToString>("ToString");
 
-    auto result = context.InterpretWrenModule("game/tests/foreign_data.wren");
+    auto result = context.RunScript("game/tests/foreign_data.wren");
 
     EXPECT_TRUE(result.has_value());
     EXPECT_EQ(output.str(), "1, 2, 3\n");
@@ -67,11 +67,17 @@ TEST(ForeignDataTests, EngineWrapper)
 
     // Engine Binding
     {
-        auto& engineAPI = scripting.StartEngineBind();
-        scripting.BindModule<TimeModule>(engineAPI, "Time");
-        scripting.EndEngineBind(e);
+        auto& engineAPI = scripting.GetEngineClass();
+        engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
     }
 
-    EXPECT_TRUE(context.InterpretWrenModule("tests/foreign_engine.wren"));
+    std::cout << scripting.GetForeignAPI().str();
+
+    auto script = context.RunScript("game/tests/foreign_engine.wren");
+    EXPECT_TRUE(script);
+
+    auto test_class = context.GetVM().find(script.value(), "Test");
+    test_class.func("test(_)")(WrenEngine { &e });
+
     EXPECT_EQ(output.str(), "0\n");
 }

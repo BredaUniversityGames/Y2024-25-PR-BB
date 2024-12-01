@@ -1,6 +1,11 @@
-import "EngineAPI" for Engine, TimeModule
+import "engine_api.wren" for Engine, TimeModule
 
-var time_module = Engine.GetTime()
-var deltatime = time_module.GetDeltatime()
+class Test {
+    static test(engine) {
 
-System.print(deltatime)
+        var time_module = engine.GetTime()
+        var deltatime = time_module.GetDeltatime()
+
+        System.print(deltatime)
+    }
+}

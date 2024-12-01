@@ -11,11 +11,7 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
+      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake"
     },
     {
       "name": "WSL",

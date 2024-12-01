@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.hpp"
-#include "utility/foreign_bindings.hpp"
 #include "wren_common.hpp"
 
 #include <cstdint>
@@ -11,7 +10,7 @@
 #include <vector>
 
 // These default values are the same as specified in wren.h
-struct ScriptingInitConfig
+struct VMInitConfig
 {
     std::vector<std::string> includePaths;
     size_t initialHeapSize = 1024ull * 1024ull * 10ull; // 10 MiB
@@ -22,7 +21,7 @@ struct ScriptingInitConfig
 class ScriptingContext
 {
 public:
-    ScriptingContext(const ScriptingInitConfig& info);
+    ScriptingContext(const VMInitConfig& info);
     ~ScriptingContext();
 
     NON_COPYABLE(ScriptingContext);
@@ -38,6 +37,7 @@ public:
     void FlushOutputStream() { _wrenOutStream->flush(); }
 
 private:
+    VMInitConfig _vmInitConfig{};
     std::unique_ptr<wren::VM> _vm;
     std::ostream* _wrenOutStream = &std::cout;
 };

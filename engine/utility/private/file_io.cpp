@@ -1,5 +1,3 @@
-#include "../../../build/CI-CD/_deps/joltphysics-src/Jolt/ObjectStream/ObjectStreamBinaryIn.h"
-
 #include <bit>
 #include <file_io.hpp>
 #include <filesystem>

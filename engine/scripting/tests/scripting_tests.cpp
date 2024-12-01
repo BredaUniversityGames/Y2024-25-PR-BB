@@ -3,7 +3,7 @@
 #include <sstream>
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
-const ScriptingContext::VMInitConfig MEMORY_CONFIG {
+const VMInitConfig MEMORY_CONFIG {
     { "./", "./game/tests/", "./game/" }, 256ull * 4ull, 256ull, 50
 };
 
@@ -14,7 +14,7 @@ TEST(ScriptingContextTests, PrintHelloWorld)
     std::stringstream output;
     context.SetScriptingOutputStream(&output);
 
-    auto result = context.InterpretWrenModule("game/tests/hello_world.wren");
+    auto result = context.RunScript("game/tests/hello_world.wren");
 
     EXPECT_TRUE(result);
     EXPECT_EQ(output.str(), "Hello World!\n");
@@ -27,7 +27,7 @@ TEST(ScriptingContextTests, ModuleImports)
     std::stringstream output;
     context.SetScriptingOutputStream(&output);
 
-    auto result = context.InterpretWrenModule("game/tests/import_modules.wren");
+    auto result = context.RunScript("game/tests/import_modules.wren");
     EXPECT_TRUE(result);
     EXPECT_EQ(output.str(), "Hello World!\n");
 }

@@ -3,7 +3,7 @@
 #include "wren_common.hpp"
 
 // Wrapper class for Accessing the engine
-struct EngineWrapper
+struct WrenEngine
 {
     Engine* instance {};
 
@@ -17,11 +17,5 @@ struct EngineWrapper
             return ptr;
 
         return std::nullopt;
-    }
-
-    template <typename T>
-    static void BindModule(wren::ForeignKlassImpl<WrenEngine>& engineClass, const std::string& name)
-    {
-        engineClass.func<&WrenEngine::GetModule<T>>("Get" + name);
     }
 };

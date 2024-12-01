@@ -8,7 +8,6 @@
 #include "steam_module.hpp"
 #include "time_module.hpp"
 
-
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
@@ -27,13 +26,12 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
     // Add modules here to expose them in scripting
     {
-        auto& engineAPI = scripting.StartEngineBind();
-        scripting.BindModule<TimeModule>(engineAPI, "Time");
-        scripting.EndEngineBind(instance);
+        auto& engineAPI = scripting.GetEngineClass();
+        engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
     }
 
-    scripting.GenerateEngineBindingsFile("game/engine_api.wren");
-    instance.GetModule<ScriptingModule>().SetMainScript("game/game.wren");
+    scripting.GenerateEngineBindingsFile();
+    instance.GetModule<ScriptingModule>().SetMainScript(instance, "game/game.wren");
 
     return instance.Run();
 }

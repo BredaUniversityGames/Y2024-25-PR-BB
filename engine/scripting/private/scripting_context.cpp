@@ -25,7 +25,7 @@ std::string ResolveImport(
     {
 
         auto composed = (Filepath(path) / Filepath(name).lexically_normal().make_preferred());
-        if (std::filesystem::exists(relative))
+        if (std::filesystem::exists(composed))
         {
             return composed.string();
         }
@@ -44,19 +44,20 @@ std::string LoadFile(const std::string& path)
 }
 }
 
-ScriptingContext::ScriptingContext(const ScriptingInitConfig& info)
+ScriptingContext::ScriptingContext(const VMInitConfig& info)
 {
-    std::vector<std::string> correctedPaths;
-    for (const auto& include_dir : info.includePaths)
+    _vmInitConfig = info;
+
+    for (auto& include_dir : _vmInitConfig.includePaths)
     {
-        correctedPaths.emplace_back(fileIO::CanonicalizePath(include_dir));
+        include_dir = fileIO::CanonicalizePath(include_dir);
     }
 
     _vm = std::make_unique<wren::VM>(
-        correctedPaths,
-        info.initialHeapSize,
-        info.minHeapSize,
-        info.heapGrowthPercent);
+        _vmInitConfig.includePaths,
+        _vmInitConfig.initialHeapSize,
+        _vmInitConfig.minHeapSize,
+        _vmInitConfig.heapGrowthPercent);
 
     _vm->setPrintFunc([this](const char* message)
         { *this->_wrenOutStream << message; });
@@ -77,7 +78,7 @@ std::optional<std::string> ScriptingContext::RunScript(const std::string& path)
     try
     {
         _vm->runFromModule(correctedPath);
-        return correctedPath;
+        return ScriptLoading::ResolveImport(_vmInitConfig.includePaths, "", correctedPath);
     }
     catch (const wren::Exception& e)
     {

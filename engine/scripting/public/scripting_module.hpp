@@ -1,8 +1,10 @@
 #pragma once
 #include "common.hpp"
 #include "engine.hpp"
+
 #include "main_script.hpp"
 #include "scripting_context.hpp"
+#include "utility/wren_engine.hpp"
 
 #include <memory>
 
@@ -19,45 +21,29 @@ public:
     ScriptingModule() = default;
     ~ScriptingModule() override = default;
 
-    // Generates the Engine API file, that contains all the foreign definitions
-    void GenerateEngineBindingsFile(const std::string& path);
+    // Generates the Engine API file, that contains all foreign definitions
+    void GenerateEngineBindingsFile();
 
-    // Sets the main execution script for Wren
-    // This script must define a "Main" class with the following static methods:
-    // static Start() -> void
-    // static Update(dt) -> void
-    void SetMainScript(const std::string& path);
+    // Sets the main entry point script
+    void SetMainScript(Engine& e, const std::string& path);
+
+    wren::ForeignModule& GetForeignAPI() const
+    {
+        return _context->GetVM().module(_engineBindingsPath);
+    }
 
     ScriptingContext& GetContext() const
     {
         return *_context;
     }
 
-    wren::ForeignModule& GetForeignAPI() const
+    wren::ForeignKlassImpl<WrenEngine>& GetEngineClass() const
     {
-        return _foreign_bindings.GetForeignModule(_context->GetVM());
-    }
-
-    auto& StartEngineBind() const
-    {
-        return WrenEngine::BindEngineStart(GetForeignAPI());
-    }
-
-    // Module will be visible from wren
-    // Exposes a .Get*name*() function in the Engine global object
-    template <typename T>
-    void BindModule(wren::ForeignKlassImpl<WrenEngine>& e, const std::string& name)
-    {
-        WrenEngine::BindModule<T>(e, name);
-    }
-
-    void EndEngineBind(Engine& e) const
-    {
-        WrenEngine::BindEngineEnd(GetForeignAPI(), _context->GetVM(), e);
+        return GetForeignAPI().klass<WrenEngine>("Engine");
     }
 
 private:
-    ForeignBindings _foreign_bindings { "EngineAPI" };
+    std::string _engineBindingsPath {};
 
     std::unique_ptr<ScriptingContext> _context {};
     std::unique_ptr<MainScript> _mainModule {};
