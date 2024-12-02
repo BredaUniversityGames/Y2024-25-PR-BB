@@ -1,14 +1,9 @@
 #version 460
 #include "particle_binds.glsl"
 
-layout (set = 2, binding = 0) buffer ParticleInstancesSSB
+layout(set = 2, binding = 0) buffer CulledInstancesSSB
 {
-    ParticleInstance particleInstances[MAX_PARTICLES];
-};
-
-layout (set = 2, binding = 1) buffer CulledInstanceSSB
-{
-    CulledInstance culledInstance;
+    CulledInstances culledInstances;
 };
 
 layout (push_constant) uniform DeltaTime
@@ -21,7 +16,6 @@ layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-
     uint aliveCount = particleCounters.aliveCount;
     if (index >= aliveCount)
     {
@@ -31,16 +25,15 @@ void main()
     uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
 
-    if (particle.life > 0)
+    particle.life -= deltaTime;
+
+    if(particle.life > 0)
     {
         // simulate particles
-        vec3 velocity = particle.velocity;
-        velocity.y += particle.mass;
-        particle.position += velocity * deltaTime;
+        particle.velocity.y -= particle.mass * deltaTime;
+        particle.position += particle.velocity * deltaTime;
 
         // TODO: kill particle on depth collision and break
-
-        particle.life -= deltaTime;
 
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
@@ -51,13 +44,12 @@ void main()
 
         // TODO: frustum culling
         // for now add all to culled list:
-        uint newCulledIndex = atomicAdd(culledInstance.count, 1);
-        culledInstance.indices[newCulledIndex] = particleIndex;
-
-        // set particle instance data
+        uint culledIndex = atomicAdd(culledInstances.count, 1);
         ParticleInstance instance;
         instance.position = particle.position;
-        particleInstances[particleIndex] = instance;
+        instance.materialIndex = particle.materialIndex;
+        instance.size = particle.size;
+        culledInstances.instances[culledIndex] = instance;
     }
     else // if dead
     {
