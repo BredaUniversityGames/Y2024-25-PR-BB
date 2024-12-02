@@ -25,6 +25,7 @@ struct CPUMesh
         std::vector<uint32_t> indices;
         uint32_t materialIndex { 0 };
 
+        // calculated using component wise min/max;
         Vec3Range boundingBox;
         float boundingRadius;
     };
