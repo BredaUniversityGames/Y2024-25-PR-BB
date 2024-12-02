@@ -10,6 +10,7 @@
 #include "vulkan_helper.hpp"
 
 GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
+    : _drawStats()
 {
     _vulkanContext = std::make_shared<class VulkanContext>(initInfo);
     _graphicsResources = std::make_shared<GraphicsResources>(_vulkanContext);
@@ -19,7 +20,7 @@ GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
 
     const uint32_t size { 2 };
     std::vector<std::byte> data;
-    data.assign(size * size * 4, std::byte(0));
+    data.assign(size * size * 4, std::byte {});
     CPUImage imageData {};
     imageData
         .SetSize(size, size)
@@ -143,7 +144,7 @@ void GraphicsContext::UpdateBindlessImages()
 
     for (uint32_t i = 0; i < MAX_BINDLESS_RESOURCES; ++i)
     {
-        const GPUImage* image = i < imageResourceManager.Resources().size()
+        const GPUImage* image = i < imageResourceManager.Resources().size() && imageResourceManager.Resources()[i].resource.has_value()
             ? &imageResourceManager.Resources()[i].resource.value()
             : imageResourceManager.Access(_fallbackImage);
 
@@ -175,17 +176,17 @@ void GraphicsContext::UpdateBindlessImages()
             _sampler = _graphicsResources->SamplerResourceManager().Create(createInfo);
         }
 
-        _bindlessImageInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        _bindlessImageInfos[i].imageView = image->view;
+        _bindlessImageInfos.at(i).imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        _bindlessImageInfos.at(i).imageView = image->view;
         ResourceHandle<Sampler> samplerHandle = _graphicsResources->SamplerResourceManager().IsValid(image->sampler) ? image->sampler : _sampler;
-        _bindlessImageInfos[i].sampler = _graphicsResources->SamplerResourceManager().Access(samplerHandle)->sampler;
+        _bindlessImageInfos.at(i).sampler = _graphicsResources->SamplerResourceManager().Access(samplerHandle)->sampler;
 
-        _bindlessImageWrites[i].dstSet = _bindlessSet;
-        _bindlessImageWrites[i].dstBinding = static_cast<uint32_t>(dstBinding);
-        _bindlessImageWrites[i].dstArrayElement = i;
-        _bindlessImageWrites[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        _bindlessImageWrites[i].descriptorCount = 1;
-        _bindlessImageWrites[i].pImageInfo = &_bindlessImageInfos[i];
+        _bindlessImageWrites.at(i).dstSet = _bindlessSet;
+        _bindlessImageWrites.at(i).dstBinding = static_cast<uint32_t>(dstBinding);
+        _bindlessImageWrites.at(i).dstArrayElement = i;
+        _bindlessImageWrites.at(i).descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        _bindlessImageWrites.at(i).descriptorCount = 1;
+        _bindlessImageWrites.at(i).pImageInfo = &_bindlessImageInfos[i];
     }
 
     _vulkanContext->Device().updateDescriptorSets(MAX_BINDLESS_RESOURCES, _bindlessImageWrites.data(), 0, nullptr);
@@ -195,6 +196,11 @@ void GraphicsContext::UpdateBindlessMaterials()
 {
     MaterialResourceManager& materialResourceManager { _graphicsResources->MaterialResourceManager() };
     BufferResourceManager& bufferResourceManager { _graphicsResources->BufferResourceManager() };
+
+    if (materialResourceManager.Resources().size() == 0)
+    {
+        return;
+    }
 
     assert(materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
 
