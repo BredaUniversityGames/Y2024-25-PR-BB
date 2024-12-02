@@ -22,10 +22,20 @@ if (WIN32)
 
     add_dependencies(FMOD COPY_FMOD_DLLS)
 elseif (UNIX)
+
     set(FMOD_LIBRARIES
-            ${FMOD_LIB_DIR}/Linux/libfmod${FMOD_DEBUG_POSTFIX}.so.14.4
-            ${FMOD_LIB_DIR}/Linux/libfmodstudio${FMOD_DEBUG_POSTFIX}.so.14.4
+            ${FMOD_LIB_DIR}/Linux/libfmod${FMOD_DEBUG_POSTFIX}.so.14
+            ${FMOD_LIB_DIR}/Linux/libfmodstudio${FMOD_DEBUG_POSTFIX}.so.14
     )
+
+    add_custom_target(COPY_FMOD_DLLS ALL
+            COMMENT "Copying FMOD SOs to Output"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${FMOD_LIBRARIES}
+            ${CMAKE_BINARY_DIR}
+    )
+
+    add_dependencies(FMOD COPY_FMOD_DLLS)
 endif ()
 
 target_link_libraries(FMOD INTERFACE ${FMOD_LIBRARIES})
