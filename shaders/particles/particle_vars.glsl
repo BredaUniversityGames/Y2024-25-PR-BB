@@ -24,6 +24,7 @@ struct ParticleInstance
     vec3 position;
     uint materialIndex;
     vec2 size;
+    float angle;
 };
 
 struct CulledInstances

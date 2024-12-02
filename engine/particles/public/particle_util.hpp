@@ -45,6 +45,7 @@ struct alignas(16) ParticleInstance
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
     uint32_t materialIndex = 0;
     glm::vec2 size = { 1.0f, 1.0f };
+    float angle = 0.0f;
 };
 
 struct alignas(16) CulledInstances
