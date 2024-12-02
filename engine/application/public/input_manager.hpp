@@ -26,13 +26,18 @@ public:
     void GetMousePosition(int& x, int& y) const;
 
 private:
-    std::unordered_map<KeyboardCode, bool> _keyPressed;
-    std::unordered_map<KeyboardCode, bool> _keyHeld;
-    std::unordered_map<KeyboardCode, bool> _keyReleased;
+    struct Mouse
+    {
+        std::unordered_map<MouseButton, bool> buttonPressed{};
+        std::unordered_map<MouseButton, bool> buttonHeld{};
+        std::unordered_map<MouseButton, bool> buttonReleased{};
+        float positionX {}, positionY {};
+    } _mouse{};
 
-    std::unordered_map<MouseButton, bool> _mouseButtonPressed;
-    std::unordered_map<MouseButton, bool> _mouseButtonHeld;
-    std::unordered_map<MouseButton, bool> _mouseButtonReleased;
-
-    float _mouseX {}, _mouseY {};
+    struct Keyboard
+    {
+        std::unordered_map<KeyboardCode, bool> keyPressed{};
+        std::unordered_map<KeyboardCode, bool> keyHeld{};
+        std::unordered_map<KeyboardCode, bool> keyReleased{};
+    } _keyboard;
 };
