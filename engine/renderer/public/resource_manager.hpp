@@ -52,8 +52,8 @@ private:
     friend ResourceManager<T>;
 
     std::weak_ptr<ResourceManager<T>> manager;
-    uint32_t index : 24 { 0 };
-    uint32_t version : 8 { 0 };
+    uint32_t index { 0 };
+    uint32_t version { 0 };
 };
 
 template <typename T>
@@ -76,7 +76,6 @@ public:
             index = _resources.size();
             _resources.emplace_back();
         }
-
 
         ResourceSlot<T>& slot = _resources[index];
         slot.resource = std::move(resource);
@@ -115,7 +114,7 @@ public:
         {
             _freeList.emplace_back(index);
             _resources[index].resource = std::nullopt;
-            _resources[index].version++;
+            ++_resources[index].version;
         }
     }
 
@@ -238,10 +237,14 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(const ResourceHandle<T>& other)
     if (auto mgr = manager.lock())
     {
         mgr->DecrementReferenceCount(*this);
+    }
 
-        index = other.index;
-        version = other.version;
+    index = other.index;
+    version = other.version;
+    manager = other.manager;
 
+    if (auto mgr = manager.lock())
+    {
         mgr->IncrementReferenceCount(*this);
     }
 
@@ -269,7 +272,6 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) noexc
     {
         mgr->DecrementReferenceCount(*this);
     }
-
 
     index = other.index;
     version = other.version;
