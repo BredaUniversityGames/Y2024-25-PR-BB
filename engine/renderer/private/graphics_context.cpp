@@ -196,6 +196,11 @@ void GraphicsContext::UpdateBindlessMaterials()
     MaterialResourceManager& materialResourceManager { _graphicsResources->MaterialResourceManager() };
     BufferResourceManager& bufferResourceManager { _graphicsResources->BufferResourceManager() };
 
+    if (materialResourceManager.Resources().size() == 0)
+    {
+        return;
+    }
+
     assert(materialResourceManager.Resources().size() < MAX_BINDLESS_RESOURCES && "There are more materials used than the amount that can be stored on the GPU.");
 
     std::array<GPUMaterial::GPUInfo, MAX_BINDLESS_RESOURCES> materialGPUData;
