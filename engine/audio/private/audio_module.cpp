@@ -1,11 +1,9 @@
 #include "audio_module.hpp"
 
-#include "fmod.h"
-#include "fmod_errors.h"
-#include "fmod_studio.h"
+#include "fmod_debug.hpp"
 #include "log.hpp"
 
-#include "fmod_debug.hpp"
+#include <fmod_include.hpp>
 
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {

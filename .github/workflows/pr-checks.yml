@@ -22,8 +22,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
-      OPTION_ARGS: -DWARNINGS_AS_ERRORS=ON -DCOMPILE_SHADERS=OFF -DENABLE_PCH=OFF -DENABLE_UNITY=ON
-      COMPILER: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+      OPTION_ARGS: -DWARNINGS_AS_ERRORS=ON -DCOMPILE_SHADERS=OFF -DENABLE_PCH=OFF -DENABLE_UNITY=OFF
       PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
       PRESET_SUFFIX: ${{ matrix.configuration }}
 
@@ -50,7 +49,7 @@ jobs:
       # Configure, Build and Test
 
       - name: Configure Project
-        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} ${{ env.COMPILER }} ${{ env.OPTION_ARGS }}
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} ${{ env.OPTION_ARGS }}
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}

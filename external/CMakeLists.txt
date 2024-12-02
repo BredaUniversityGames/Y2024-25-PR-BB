@@ -146,7 +146,6 @@ target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENA
 
 # Jolt
 
-
 FetchContent_Declare(
         JoltPhysics
         GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
@@ -270,6 +269,4 @@ target_include_directories(External
         INTERFACE external/SDL/include
         INTERFACE stb
         INTERFACE ${cereal_SOURCE_DIR}/include
-        INTERFACE steamworks/include
-        INTERFACE fmod/include
 )

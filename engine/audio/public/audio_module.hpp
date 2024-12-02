@@ -2,8 +2,8 @@
 
 #include "module_interface.hpp"
 
-class FMOD_SYSTEM;
-class FMOD_STUDIO_SYSTEM;
+struct FMOD_SYSTEM;
+struct FMOD_STUDIO_SYSTEM;
 
 class AudioModule final : public ModuleInterface
 {
