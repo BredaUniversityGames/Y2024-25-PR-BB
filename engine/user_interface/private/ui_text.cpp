@@ -6,34 +6,34 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     float localOffset = 0;
 
-    for (const auto& i : text)
+    for (const auto& character : _text)
     {
-        if (i != ' ')
+        if (character != ' ')
         {
             // Check if the character exists in the font's character map
-            if (!font->characters.contains(i))
+            if (!_font->characters.contains(character))
             {
                 continue;
             }
 
-            const UIFont::Character& character = font->characters.at(i);
+            const UIFont::Character& fontChar = _font->characters.at(character);
 
             QuadDrawInfo info;
 
-            glm::vec2 correctedBearing = (glm::vec2(character.bearing) / static_cast<float>(font->characterHeight)) * GetScale();
-            glm::vec3 translation = glm::vec3(GetAbsouluteLocation() + glm::vec2(localOffset + correctedBearing.x, -correctedBearing.y), 0);
-            glm::vec3 localScale = glm::vec3(glm::vec2(character.size) / glm::vec2(font->characterHeight), 1.0) * glm::vec3(GetScale(), 0);
+            glm::vec2 correctedBearing = (glm::vec2(fontChar.bearing) / static_cast<float>(_font->characterHeight)) * GetScale();
+            glm::vec3 translation = glm::vec3(GetAbsoluteLocation() + glm::vec2(localOffset + correctedBearing.x, -correctedBearing.y), 0);
+            glm::vec3 localScale = glm::vec3(glm::vec2(fontChar.size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetScale(), 0);
 
             info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), translation), localScale));
-            info.textureIndex = font->fontAtlas.Index();
+            info.textureIndex = _font->fontAtlas.Index();
             info.useRedAsAlpha = true;
-            info.color = color;
-            info.uvMin = character.uvMin;
-            info.uvMax = character.uvMax;
+            info.color = _color;
+            info.uvMin = fontChar.uvMin;
+            info.uvMax = fontChar.uvMax;
 
             drawList.emplace_back(info);
 
-            localOffset += (float(character.advance >> 6) / font->characterHeight) * GetScale().x; // Convert advance from 1/64th pixels
+            localOffset += (float(fontChar.advance >> 6) / _font->characterHeight) * GetScale().x; // Convert advance from 1/64th pixels
         }
         else
         {

@@ -39,7 +39,7 @@
 #include <ui_main_menu.hpp>
 #include <ui_module.hpp>
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Viewport>& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
     : _context(context)
     , _application(application)
     , _ecs(ecs)
@@ -87,7 +87,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Viewpor
 
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
 
-    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.extend, _context, font));
+    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
 
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);

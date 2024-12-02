@@ -1,6 +1,8 @@
 #include "viewport.hpp"
 #include "ui_element.hpp"
 
+#include <algorithm>
+
 void Viewport::Update(const InputManager& input) const
 {
     for (const auto& element : _baseElements)

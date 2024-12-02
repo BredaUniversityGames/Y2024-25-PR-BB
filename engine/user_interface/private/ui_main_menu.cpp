@@ -31,8 +31,8 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     subButton->style = standardStyle;
     subButton->SetScale({ 300, 100 });
     subButton->SetLocation({ 100, 300 });
-    subButton->onMouseDownCallBack = []() { };
-    subButton->onBeginHoverCallBack = []() { };
+    subButton->onMouseDownCallBack = []() {};
+    subButton->onBeginHoverCallBack = []() {};
 
     AddChild(std::move(subButton));
 
@@ -40,13 +40,13 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     playButton->style = standardStyle;
     playButton->SetScale({ 300, 100 });
     playButton->SetLocation({ 100, 100 });
-    playButton->onBeginHoverCallBack = []() { };
-    playButton->onMouseDownCallBack = []() { };
+    playButton->onBeginHoverCallBack = []() {};
+    playButton->onMouseDownCallBack = []() {};
     std::unique_ptr<UITextElement> playText = std::make_unique<UITextElement>(font);
-    playText->text = "Play the Game";
+    playText->SetText("Play the Game");
     playText->SetScale({ 25, 25 });
     playText->SetLocation({ 810, 640 });
-    playText->color = { 1, 1, 1, 1 };
+    playText->SetColor({ 1, 0, 1, 1 });
 
     AddChild(std::move(playText));
     AddChild(std::move(playButton));

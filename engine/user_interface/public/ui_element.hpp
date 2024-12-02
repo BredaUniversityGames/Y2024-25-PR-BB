@@ -38,7 +38,7 @@ public:
      * @return the location of the element relative to the set anchorpoint of the parent element.
      */
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
-    NO_DISCARD const glm::vec2& GetAbsouluteLocation() const noexcept { return _absoluteLocation; }
+    NO_DISCARD const glm::vec2& GetAbsoluteLocation() const noexcept { return _absoluteLocation; }
 
     NO_DISCARD const glm::vec2& GetScale() const noexcept { return _scale; }
     void SetScale(const glm::vec2& scale) noexcept { _scale = scale; }

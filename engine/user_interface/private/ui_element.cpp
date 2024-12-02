@@ -28,16 +28,16 @@ void UIElement::UpdateAllChildrenAbsoluteLocations()
             switch (child->anchorPoint)
             {
             case AnchorPoint::eMiddle:
-                newChildLocation = GetAbsouluteLocation() + (GetScale() / 2.0f) + childRelativeLocation;
+                newChildLocation = GetAbsoluteLocation() + (GetScale() / 2.0f) + childRelativeLocation;
                 break;
             case AnchorPoint::eTopLeft:
-                newChildLocation = { GetAbsouluteLocation() + childRelativeLocation };
+                newChildLocation = { GetAbsoluteLocation() + childRelativeLocation };
                 break;
             case AnchorPoint::eTopRight:
-                newChildLocation = { GetAbsouluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsouluteLocation().y + childRelativeLocation.y };
+                newChildLocation = { GetAbsoluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + childRelativeLocation.y };
                 break;
             case AnchorPoint::eBottomLeft:
-                newChildLocation = { GetAbsouluteLocation().x + childRelativeLocation.x, GetAbsouluteLocation().y + GetScale().y - childRelativeLocation.y };
+                newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
                 break;
             case AnchorPoint::eBottomRight:
 

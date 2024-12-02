@@ -11,10 +11,10 @@ void UIButton::Update(const InputManager& input)
         input.GetMousePosition(mousePos.x, mousePos.y);
 
         // mouse inside boundary
-        if (mousePos.x > static_cast<uint16_t>(GetAbsouluteLocation().x)
-            && mousePos.x < static_cast<uint16_t>(GetAbsouluteLocation().x + GetScale().x)
-            && mousePos.y > static_cast<uint16_t>(GetAbsouluteLocation().y)
-            && mousePos.y < static_cast<uint16_t>(GetAbsouluteLocation().y + GetScale().y))
+        if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
+            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetScale().x)
+            && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
+            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetScale().y))
         {
             switch (state)
             {
@@ -50,7 +50,6 @@ void UIButton::Update(const InputManager& input)
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-
     if (enabled)
     {
         ResourceHandle<GPUImage> image;
@@ -70,7 +69,7 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         }
 
         QuadDrawInfo info {
-            .modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsouluteLocation(), 0)), glm::vec3(GetScale(), 0))),
+            .modelMatrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetScale(), 0))),
             .textureIndex = image.Index(),
         };
 
@@ -88,6 +87,6 @@ void UIButton::UpdateAllChildrenAbsoluteLocations()
 {
     for (const auto& child : GetChildren())
     {
-        child->SetAbsoluteLocation(this->GetAbsouluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
+        child->SetAbsoluteLocation(this->GetAbsoluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
     }
 }
