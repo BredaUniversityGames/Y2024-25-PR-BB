@@ -1,5 +1,4 @@
 #pragma once
-
 #include "quad_draw_info.hpp"
 #include "ui_element.hpp"
 #include <memory>
@@ -11,9 +10,9 @@ class UIElement;
 class Viewport
 {
 public:
-    Viewport(const glm::vec2& extend, const glm::vec2& offset = glm::vec2(0))
-        : extend(extend)
-        , offset(offset)
+    Viewport(const glm::uvec2& extend, const glm::uvec2& offset = glm::uvec2(0))
+        : _extend(extend)
+        , _offset(offset)
     {
     }
     void Update(const InputManager& input) const;
@@ -29,10 +28,16 @@ public:
     NO_DISCARD std::vector<std::unique_ptr<UIElement>>& GetElements() { return _baseElements; }
     NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return _baseElements; }
 
-    glm::vec2 extend;
-    glm::vec2 offset;
+    const glm::uvec2& GetExtend() { return _extend; }
+    const glm::uvec2& GetOffset() { return _offset; }
+
+    void SetExtend(const glm::uvec2 extend) { _extend = extend; }
+    void SetOffset(const glm::uvec2 offset) { _offset = offset; }
 
 private:
+    glm::uvec2 _extend;
+    glm::uvec2 _offset;
+
     /**
      * \brief Base elements present in viewport.
      */

@@ -3,17 +3,17 @@
 
 void Viewport::Update(const InputManager& input) const
 {
-    for (const auto& i : _baseElements)
+    for (const auto& element : _baseElements)
     {
-        i->Update(input);
+        element->Update(input);
     }
 }
 
 void Viewport::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    for (const auto& i : _baseElements)
+    for (const auto& element : _baseElements)
     {
-        i->SubmitDrawInfo(drawList);
+        element->SubmitDrawInfo(drawList);
     }
 }
 

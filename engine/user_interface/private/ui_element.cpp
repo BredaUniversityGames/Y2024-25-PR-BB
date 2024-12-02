@@ -1,7 +1,22 @@
-#include "canvas.hpp"
-#include "pipelines/ui_pipeline.hpp"
+#include "ui_element.hpp"
+#include "log.hpp"
 
-void Canvas::UpdateAllChildrenAbsoluteLocations()
+void UIElement::Update(const InputManager& input)
+{
+    for (auto& child : _children)
+        child->Update(input);
+}
+UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
+{
+
+    _children.emplace_back(std::move(child));
+    std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+        { return v1->zLevel < v2->zLevel; });
+
+    UpdateAllChildrenAbsoluteLocations();
+    return *_children.back();
+}
+void UIElement::UpdateAllChildrenAbsoluteLocations()
 {
     if (enabled)
     {
@@ -34,11 +49,9 @@ void Canvas::UpdateAllChildrenAbsoluteLocations()
         }
     }
 }
-
-void Canvas::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
+void UIElement::SetAbsoluteLocation(const glm::vec2& location, bool updateChildren) noexcept
 {
-    for (const auto& child : GetChildren())
-    {
-        child->SubmitDrawInfo(drawList);
-    }
+    _absoluteLocation = location;
+    if (updateChildren)
+        UpdateAllChildrenAbsoluteLocations();
 }

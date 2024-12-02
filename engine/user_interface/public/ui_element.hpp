@@ -1,13 +1,13 @@
 #pragma once
-
-#include "glm/vec2.hpp"
-#include "quad_draw_info.hpp"
-#include "spdlog/spdlog.h"
-
 #include <common.hpp>
+#include <glm/vec2.hpp>
 #include <memory>
 #include <stdint.h>
 
+#include "quad_draw_info.hpp"
+
+#include <optional>
+#include <vector>
 class InputManager;
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
@@ -17,10 +17,7 @@ class InputManager;
 class UIElement
 {
 public:
-    explicit UIElement(uint16_t maxChildren)
-        : _maxChildren(maxChildren)
-    {
-    }
+    UIElement() = default;
 
     enum class AnchorPoint
     {
@@ -29,7 +26,7 @@ public:
         eTopRight,
         eBottomLeft,
         eBottomRight,
-    };
+    } anchorPoint;
 
     /**
      * Whenever this gets called the updateChildrenAbsoluteLocations of the parent needs to get called as well!
@@ -48,40 +45,19 @@ public:
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
-    virtual void Update(const InputManager& input)
-    {
-        for (auto& i : _children)
-            i->Update(input);
-    }
+    virtual void Update(const InputManager& input);
 
-    UIElement* AddChild(std::unique_ptr<UIElement> child)
-    {
-        if (_children.size() < _maxChildren && child != nullptr)
-        {
-            _children.emplace_back(std::move(child));
-            std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
-                { return v1->zLevel < v2->zLevel; });
-
-            UpdateAllChildrenAbsoluteLocations();
-            return _children.back().get();
-        }
-
-        spdlog::warn("UIElement::AddChild: Can't add, Too many children");
-        return nullptr;
-    }
+    UIElement& AddChild(std::unique_ptr<UIElement> child);
 
     NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
     {
         return _children;
     }
 
-    AnchorPoint anchorPoint
-        = AnchorPoint::eTopLeft;
-
     bool enabled = true;
     uint16_t zLevel = 0;
 
-    virtual void UpdateAllChildrenAbsoluteLocations() = 0;
+    virtual void UpdateAllChildrenAbsoluteLocations();
 
     virtual ~UIElement() = default;
 
@@ -89,12 +65,7 @@ public:
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
      */
-    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept
-    {
-        _absoluteLocation = location;
-        if (updateChildren)
-            UpdateAllChildrenAbsoluteLocations();
-    }
+    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept;
 
 private:
     glm::vec2 _absoluteLocation {};
@@ -102,6 +73,5 @@ private:
 
     glm::vec2 _scale {};
 
-    uint16_t _maxChildren = 0;
     std::vector<std::unique_ptr<UIElement>> _children {};
 };

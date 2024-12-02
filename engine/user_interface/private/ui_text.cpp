@@ -16,7 +16,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
                 continue;
             }
 
-            const auto& character = font->characters.at(i);
+            const UIFont::Character& character = font->characters.at(i);
 
             QuadDrawInfo info;
 

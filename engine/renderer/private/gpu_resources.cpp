@@ -77,19 +77,21 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
-void CPUImage::ExtractDataFromPNG(std::string_view path)
+void CPUImage::FromPNG(std::string_view path)
 {
-    int width;
-    int height;
-    int nrChannels; // dummy
 
-    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(), &width, &height, &nrChannels,
+    uint16_t width;
+    uint16_t height;
+    uint8_t nrChannels;
+
+    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(),
+        reinterpret_cast<int*>(&width), reinterpret_cast<int*>(&height), reinterpret_cast<int*>(&nrChannels),
         4));
 
     if (data == nullptr)
         throw std::runtime_error("Failed to load image!");
 
-    if (width > static_cast<int>(std::numeric_limits<uint16_t>::max()) || height > static_cast<int>(std::numeric_limits<uint16_t>::max()))
+    if (width > (std::numeric_limits<uint16_t>::max()) || height > static_cast<int>(std::numeric_limits<uint16_t>::max()))
         throw std::runtime_error("Image size is too large!");
 
     vk::Format format;
@@ -104,7 +106,7 @@ void CPUImage::ExtractDataFromPNG(std::string_view path)
 
     SetFormat(format);
     SetSize(width, height);
-    initialData.assign(data, data + (width * height * nrChannels));
+    initialData.assign(data, data + width * height * nrChannels);
     stbi_image_free(data);
 }
 CPUImage& CPUImage::SetData(std::vector<std::byte> data)

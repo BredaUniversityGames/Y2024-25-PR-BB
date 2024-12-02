@@ -11,10 +11,10 @@ void UIButton::Update(const InputManager& input)
         input.GetMousePosition(mousePos.x, mousePos.y);
 
         // mouse inside boundary
-        if (mousePos.x > static_cast<int>(GetAbsouluteLocation().x)
-            && mousePos.x < static_cast<int>(GetAbsouluteLocation().x + GetScale().x)
-            && mousePos.y > static_cast<int>(GetAbsouluteLocation().y)
-            && mousePos.y < static_cast<int>(GetAbsouluteLocation().y + GetScale().y))
+        if (mousePos.x > static_cast<uint16_t>(GetAbsouluteLocation().x)
+            && mousePos.x < static_cast<uint16_t>(GetAbsouluteLocation().x + GetScale().x)
+            && mousePos.y > static_cast<uint16_t>(GetAbsouluteLocation().y)
+            && mousePos.y < static_cast<uint16_t>(GetAbsouluteLocation().y + GetScale().y))
         {
             switch (state)
             {
@@ -86,8 +86,8 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
 void UIButton::UpdateAllChildrenAbsoluteLocations()
 {
-    for (const auto& i : GetChildren())
+    for (const auto& child : GetChildren())
     {
-        i->SetAbsoluteLocation(this->GetAbsouluteLocation() + (GetScale() / 2.f) + i->GetRelativeLocation());
+        child->SetAbsoluteLocation(this->GetAbsouluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
     }
 }

@@ -32,7 +32,7 @@ class Viewport;
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& applicationModule, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& applicationModule, const std::shared_ptr<Viewport>& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -58,7 +58,7 @@ private:
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
     std::shared_ptr<ECS> _ecs;
-    Viewport& _viewport;
+    std::shared_ptr<Viewport> _viewport;
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;

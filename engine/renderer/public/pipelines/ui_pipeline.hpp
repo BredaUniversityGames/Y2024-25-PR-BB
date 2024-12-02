@@ -16,8 +16,9 @@ public:
     NON_COPYABLE(UIPipeline);
     NON_MOVABLE(UIPipeline);
     void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
-
-    std::vector<QuadDrawInfo>& GetDrawList()
+    void SetProjectionMatrix(const glm::vec2 size, const glm::vec2 offset);
+    std::vector<QuadDrawInfo>&
+    GetDrawList()
     {
         return _drawList;
     }
@@ -26,10 +27,12 @@ private:
     struct UIPushConstants
     {
         QuadDrawInfo quad;
+        glm::mat4 projectionMatrix; // Subject to change with instancing.
     } _pushConstants;
 
     std::vector<QuadDrawInfo> _drawList;
 
+    glm::mat4 _projectionMatrix; // Orthographic projection matrix to handle resolution scaling.
     vk::Pipeline _pipeline;
     vk::PipelineLayout _pipelineLayout;
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <engine.hpp>
-#include <viewport.hpp>
+#include "engine.hpp"
+#include "viewport.hpp"
 
 class UIModule : public ModuleInterface
 {
@@ -11,10 +11,13 @@ public:
     NON_COPYABLE(UIModule);
     NON_MOVABLE(UIModule);
 
-    std::unique_ptr<Viewport> viewport;
+    NO_DISCARD Viewport& GetViewport() { return *_viewport; };
+    NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
+
+    std::unique_ptr<Viewport> _viewport;
 
     void Tick(MAYBE_UNUSED Engine& engine) final;
     void Shutdown(MAYBE_UNUSED Engine& engine) final { }

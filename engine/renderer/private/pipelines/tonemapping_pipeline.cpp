@@ -3,13 +3,12 @@
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-
-#include <graphics_resources.hpp>
-#include <resource_management/image_resource_manager.hpp>
 
 TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)

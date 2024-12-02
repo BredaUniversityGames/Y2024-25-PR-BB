@@ -39,7 +39,7 @@
 #include <ui_main_menu.hpp>
 #include <ui_module.hpp>
 
-Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Viewport>& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
     : _context(context)
     , _application(application)
     , _ecs(ecs)

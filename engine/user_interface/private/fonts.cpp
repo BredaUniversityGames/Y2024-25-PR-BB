@@ -3,15 +3,13 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "gpu_resources.hpp"
-
 #define STB_RECT_PACK_IMPLEMENTATION
-#include "stb_rect_pack.h"
+#include <stb_rect_pack.h>
 
-#include <graphics_context.hpp>
-#include <graphics_resources.hpp>
-#include <resource_management/image_resource_manager.hpp>
-#include <resource_management/sampler_resource_manager.hpp>
+#include "gpu_resources.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
 std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context)
 {
@@ -23,12 +21,12 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
 
     FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
 
-    auto font = std::make_shared<UIFont>();
+    std::shared_ptr<UIFont> font = std::make_shared<UIFont>();
     font->characterHeight = characterHeight;
 
-    const int maxGlyphs = 128;
+    const uint8_t maxGlyphs = 128;
     std::array<stbrp_rect, maxGlyphs> rects;
-    for (unsigned char c = 0; c < maxGlyphs; ++c)
+    for (uint8_t c = 0; c < maxGlyphs; ++c)
     {
         if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER) != 0)
         {
@@ -42,8 +40,9 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
         rects[c].h = fontFace->glyph->bitmap.rows + 1;
     }
 
-    const int atlasWidth = 512;
-    const int atlasHeight = 512;
+    const uint16_t atlasWidth = 512;
+    const uint16_t atlasHeight = 512;
+
     stbrp_context stbrpContext;
     std::vector<stbrp_node> nodes(atlasWidth);
 
@@ -55,7 +54,7 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
 
     std::vector<std::byte> atlasData(atlasWidth * atlasHeight, std::byte { 0 });
 
-    for (unsigned char c = 0; c < maxGlyphs; ++c)
+    for (uint8_t c = 0; c < maxGlyphs; ++c)
     {
         if (rects[c].was_packed != 0)
         {
@@ -64,10 +63,10 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
                 continue;
             }
 
-            const auto& bitmap = fontFace->glyph->bitmap;
-            for (unsigned int y = 0; y < bitmap.rows; ++y)
+            const FT_Bitmap& bitmap = fontFace->glyph->bitmap;
+            for (uint16_t y = 0; y < bitmap.rows; ++y)
             {
-                for (unsigned int x = 0; x < bitmap.width; ++x)
+                for (uint16_t x = 0; x < bitmap.width; ++x)
                 {
                     atlasData[((rects[c].y + y) * atlasWidth) + (rects[c].x + x)] = std::byte(bitmap.buffer[y * bitmap.width + x]);
                 }

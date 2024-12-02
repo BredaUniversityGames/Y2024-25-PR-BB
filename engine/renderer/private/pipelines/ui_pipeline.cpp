@@ -1,5 +1,6 @@
 #include "pipelines/ui_pipeline.hpp"
 
+#include "fastgltf/types.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -8,8 +9,8 @@
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include <glm/gtc/matrix_transform.hpp>
 
+#include <glm/gtc/matrix_transform.hpp>
 UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
     , _inputTarget(inputTarget)
@@ -17,6 +18,8 @@ UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const Re
     , _swapChain(swapChain)
 {
     CreatePipeLine();
+
+    SetProjectionMatrix(glm::vec2(_swapChain.GetExtent().width, _swapChain.GetExtent().height), glm::vec2(0));
 }
 
 UIPipeline::~UIPipeline()
@@ -27,7 +30,7 @@ UIPipeline::~UIPipeline()
 
 void UIPipeline::CreatePipeLine()
 {
-    vk::PipelineColorBlendAttachmentState const colorBlendAttachmentState {
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::True,
         .srcColorBlendFactor = vk::BlendFactor::eSrcAlpha,
         .dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha,
@@ -38,14 +41,14 @@ void UIPipeline::CreatePipeLine()
         .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
     };
 
-    vk::PipelineColorBlendStateCreateInfo const colorBlendStateCreateInfo {
+    vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
         .logicOpEnable = vk::False,
         .attachmentCount = 1,
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    auto vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
-    auto fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
     PipelineBuilder pipelineBuilder { _context };
     pipelineBuilder
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
@@ -55,6 +58,7 @@ void UIPipeline::CreatePipeLine()
         .SetDepthAttachmentFormat(vk::Format::eUndefined)
         .BuildPipeline(_pipeline, _pipelineLayout);
 }
+
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_inputTarget);
@@ -92,13 +96,11 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    const glm::mat4 projectionMatrix = glm::ortho<float>(0.f, static_cast<float>(_swapChain.GetExtent().width), 0.f, static_cast<float>(_swapChain.GetExtent().height));
-
-    for (auto& i : _drawList)
+    for (const auto& quad : _drawList)
     {
-        _pushConstants.quad = i;
-        _pushConstants.quad.modelMatrix = projectionMatrix * _pushConstants.quad.modelMatrix;
-        commandBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(UIPushConstants), &_pushConstants);
+        _pushConstants.quad = quad;
+        _pushConstants.projectionMatrix = _projectionMatrix * _pushConstants.quad.modelMatrix;
+        commandBuffer.pushConstants<UIPushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, { _pushConstants });
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
 
@@ -107,4 +109,8 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     }
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
     _drawList.clear();
+}
+void UIPipeline::SetProjectionMatrix(const glm::vec2 size, const glm::vec2 offset)
+{
+    _projectionMatrix = glm::ortho<float>(offset.x, size.x, offset.y, size.y);
 }

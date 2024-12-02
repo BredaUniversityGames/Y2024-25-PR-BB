@@ -4,10 +4,10 @@
 #include "ui_element.hpp"
 #include <functional>
 
-struct UIButton : public UIElement
+class UIButton : public UIElement
 {
+public:
     UIButton()
-        : UIElement(1)
     {
     }
 

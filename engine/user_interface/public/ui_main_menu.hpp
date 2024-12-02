@@ -1,5 +1,4 @@
 #pragma once
-
 #include "canvas.hpp"
 #include "ui_button.hpp"
 

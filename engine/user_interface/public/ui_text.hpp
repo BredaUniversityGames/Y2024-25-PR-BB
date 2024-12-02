@@ -3,17 +3,12 @@
 #include "ui_element.hpp"
 
 class UIFont;
-struct UITextElement : public UIElement
+class UITextElement : public UIElement
 {
     UITextElement(const std::shared_ptr<UIFont>& font)
-        : UIElement(0)
-        , font(font)
+        : font(font)
     {
     }
-    /**
-     * override because this function in UIElement is virtual, text cannot contain children.
-     */
-    void UpdateAllChildrenAbsoluteLocations() override { }
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 

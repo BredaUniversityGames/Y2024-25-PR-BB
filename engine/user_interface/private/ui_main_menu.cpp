@@ -16,7 +16,7 @@ MainMenuCanvas::MainMenuCanvas(const glm::vec2& size, MAYBE_UNUSED std::shared_p
     buttonNormalImage.format
         = vk::Format::eR8G8B8A8Unorm;
     buttonNormalImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    buttonNormalImage.ExtractDataFromPNG("assets/textures/button_background.png");
+    buttonNormalImage.FromPNG("assets/textures/button_background.png");
     buttonNormalImage.isHDR = false;
     auto normalImage = context->Resources()->ImageResourceManager().Create(buttonNormalImage);
     auto hoveredImage = context->Resources()->ImageResourceManager().Create(buttonNormalImage);
