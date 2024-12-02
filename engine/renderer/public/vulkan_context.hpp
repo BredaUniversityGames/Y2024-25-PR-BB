@@ -77,6 +77,7 @@ private:
     QueueFamilyIndices _queueFamilyIndices;
     uint32_t _minUniformBufferOffsetAlignment;
 
+    bool _validationEnabled = false;
     vk::DebugUtilsMessengerEXT _debugMessenger;
 
     const std::vector<const char*> _validationLayers = {
