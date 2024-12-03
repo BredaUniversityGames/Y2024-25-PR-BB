@@ -2,15 +2,18 @@
 
 #include "input_codes/keys.hpp"
 #include "input_codes/mousebuttons.hpp"
+#include "input_codes/gamepad.hpp"
+#include <SDL3/SDL_joystick.h>
 #include <unordered_map>
 
 union SDL_Event;
+struct SDL_Gamepad;
 
 class InputManager
 {
 public:
     InputManager();
-    ~InputManager() = default;
+    ~InputManager();
 
     void Update();
     void UpdateEvent(const SDL_Event& event);
@@ -22,8 +25,12 @@ public:
     bool IsMouseButtonPressed(MouseButton button) const;
     bool IsMouseButtonHeld(MouseButton button) const;
     bool IsMouseButtonReleased(MouseButton button) const;
-
     void GetMousePosition(int& x, int& y) const;
+
+    bool IsGamepadButtonPressed(GamepadButton button) const;
+    bool IsGamepadButtonHeld(GamepadButton button) const;
+    bool IsGamepadButtonReleased(GamepadButton button) const;
+    float GetGamepadAxis(GamepadAxis axis) const;
 
 private:
     struct Mouse
@@ -40,4 +47,12 @@ private:
         std::unordered_map<KeyboardCode, bool> keyHeld{};
         std::unordered_map<KeyboardCode, bool> keyReleased{};
     } _keyboard;
+
+    struct Gamepad
+    {
+        std::unordered_map<GamepadButton, bool> buttonPressed{};
+        std::unordered_map<GamepadButton, bool> buttonHeld{};
+        std::unordered_map<GamepadButton, bool> buttonReleased{};
+        SDL_Gamepad* sdlHandle {};
+    } _gamepad{};
 };

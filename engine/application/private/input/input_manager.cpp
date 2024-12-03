@@ -1,4 +1,4 @@
-#include "input_manager.hpp"
+#include "input/input_manager.hpp"
 #include "log.hpp"
 
 #include <SDL3/SDL.h>
@@ -19,19 +19,47 @@ V unordered_map_get_or(const std::unordered_map<K, V>& map, const K& key, const 
 InputManager::InputManager()
 {
     SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
+
+    int numGamepads{};
+    SDL_JoystickID* joySticks = SDL_GetGamepads(&numGamepads);
+
+    for (int i = 0; i < numGamepads; i++)
+    {
+        if (SDL_IsGamepad(joySticks[i]))
+        {
+            _gamepad.sdlHandle = SDL_OpenGamepad(joySticks[i]);
+            break;
+        }
+    }
+}
+
+InputManager::~InputManager()
+{
+    if (_gamepad.sdlHandle)
+    {
+        SDL_CloseGamepad(_gamepad.sdlHandle);
+    }
 }
 
 void InputManager::Update()
 {
-    // Reset key and mouse button states
     for (auto& key : _keyboard.keyPressed)
         key.second = false;
     for (auto& key : _keyboard.keyReleased)
         key.second = false;
+
     for (auto& button : _mouse.buttonPressed)
         button.second = false;
     for (auto& button : _mouse.buttonReleased)
         button.second = false;
+
+    if(_gamepad.sdlHandle)
+    {
+        for (auto& button : _gamepad.buttonPressed)
+            button.second = false;
+        for (auto& button : _gamepad.buttonReleased)
+            button.second = false;
+    }
 }
 
 void InputManager::UpdateEvent(const SDL_Event& event)
@@ -53,6 +81,7 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         _keyboard.keyReleased[key] = true;
         break;
     }
+
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     {
         MouseButton button = static_cast<MouseButton>(event.button.button);
@@ -68,11 +97,24 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         break;
     }
     case SDL_EVENT_MOUSE_MOTION:
-        // Handle mouse motion event if necessary
         _mouse.positionX += event.motion.xrel;
         _mouse.positionY += event.motion.yrel;
-
         break;
+
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    {
+        GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
+        _gamepad.buttonPressed[button] = true;
+        _gamepad.buttonHeld[button] = true;
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    {
+        GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
+        _gamepad.buttonHeld[button] = false;
+        _gamepad.buttonReleased[button] = true;
+        break;
+    }
     default:
         break;
     }
@@ -112,4 +154,49 @@ void InputManager::GetMousePosition(int& x, int& y) const
 {
     x = static_cast<int>(_mouse.positionX);
     y = static_cast<int>(_mouse.positionY);
+}
+
+bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
+{
+    if (!_gamepad.sdlHandle)
+    {
+        bblog::warn("Trying to get gamepad input while no controller is available.");
+        return false;
+    }
+
+    return detail::unordered_map_get_or(_gamepad.buttonPressed, button, false);
+}
+
+bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
+{
+    if (!_gamepad.sdlHandle)
+    {
+        bblog::warn("Trying to get gamepad input while no controller is available.");
+        return false;
+    }
+
+    return detail::unordered_map_get_or(_gamepad.buttonHeld, button, false);
+}
+
+bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
+{
+    if (!_gamepad.sdlHandle)
+    {
+        bblog::warn("Trying to get gamepad input while no controller is available.");
+        return false;
+    }
+
+    return detail::unordered_map_get_or(_gamepad.buttonReleased, button, false);
+}
+
+float InputManager::GetGamepadAxis(GamepadAxis axis) const
+{
+    if (!_gamepad.sdlHandle)
+    {
+        bblog::warn("Trying to get gamepad input while no controller is available.");
+        return 0.0f;
+    }
+
+    SDL_GamepadAxis sdlAxis = static_cast<SDL_GamepadAxis>(axis);
+    return SDL_GetGamepadAxis(_gamepad.sdlHandle, sdlAxis);
 }

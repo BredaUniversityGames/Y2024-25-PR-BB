@@ -16,7 +16,7 @@
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "input_manager.hpp"
+#include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
 #include "particles/emitter_component.hpp"
