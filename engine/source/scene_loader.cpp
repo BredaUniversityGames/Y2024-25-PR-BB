@@ -34,12 +34,10 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, ent
 
     if (currentNode.meshIndex.has_value())
     {
-        ecs.registry.emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value());
-
-        TempPhysicsData tempData;
-        tempData.boundingBox = cpuModel.meshes.at(currentNode.meshIndex.value()).GetMeshBounds();
-
-        ecs.registry.emplace<TempPhysicsData>(entity, tempData);
+        StaticMeshComponent meshComponent;
+        meshComponent.mesh = model.meshes.at(currentNode.meshIndex.value());
+        meshComponent.boundingBox = cpuModel.meshes.at(currentNode.meshIndex.value()).GetMeshBounds();
+        ecs.registry.emplace<StaticMeshComponent>(entity, meshComponent);
     }
 
     for (const auto& node : currentNode.children)

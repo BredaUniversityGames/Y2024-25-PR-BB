@@ -18,10 +18,10 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 
 void PhysicsSystem::InitializePhysicsColliders()
 {
-    const auto view = _ecs.registry.view<TempPhysicsData, TransformComponent>();
+    const auto view = _ecs.registry.view<StaticMeshComponent, TransformComponent>();
     for (const auto entity : view)
     {
-        TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+        StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
 
         // Assume worldMatrix is your 4x4 transformation matrix
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.registry, entity);
@@ -42,10 +42,8 @@ void PhysicsSystem::InitializePhysicsColliders()
             skew,
             perspective);
 
-        tempData.meshScale = scale;
-
         // size and position
-        Vec3Range boundingBox = tempData.boundingBox; // * scale;
+        Vec3Range boundingBox = meshComponent.boundingBox; // * scale;
         boundingBox.min *= scale;
         boundingBox.max *= scale;
 
@@ -73,23 +71,23 @@ void PhysicsSystem::CleanUp()
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
     //    Update the meshes
-    const auto view = _ecs.registry.view<RigidbodyComponent, TempPhysicsData>();
+    const auto view = _ecs.registry.view<RigidbodyComponent, StaticMeshComponent>();
     for (const auto entity : view)
     {
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
-        const TempPhysicsData& tempData = view.get<TempPhysicsData>(entity);
+        const StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
 
         const auto joltSize = boxShape->GetHalfExtent();
-        const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
+        const auto oldExtent = (meshComponent.boundingBox.max - meshComponent.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         const glm::mat4 joltToGLM = ToGLMMat4(joltMatrix);
         glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / oldExtent);
 
         // account for odd models that dont have the center at 0,0,0
-        const glm::vec3 centerPos = (tempData.boundingBox.max + tempData.boundingBox.min) * 0.5f;
+        const glm::vec3 centerPos = (meshComponent.boundingBox.max + meshComponent.boundingBox.min) * 0.5f;
         joltToGlm = glm::translate(joltToGlm, -centerPos);
 
         TransformHelpers::SetWorldTransform(ecs.registry, entity, joltToGlm);

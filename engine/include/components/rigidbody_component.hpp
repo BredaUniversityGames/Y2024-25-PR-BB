@@ -3,12 +3,6 @@
 
 #include <geometric.hpp>
 
-struct TempPhysicsData
-{
-    Vec3Range boundingBox;
-    glm::vec3 meshScale;
-};
-
 struct RigidbodyComponent
 {
     // default creates a sphere at 0,2,0
