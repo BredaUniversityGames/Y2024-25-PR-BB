@@ -21,6 +21,7 @@ public:
     template <typename T, typename... Args>
     void AddSystem(Args&&... args);
 
+    // Returns nullptr if no System T is found
     template <typename T>
     T* GetSystem();
 
