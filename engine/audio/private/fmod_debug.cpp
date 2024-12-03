@@ -4,12 +4,12 @@
 #include "fmod_errors.h"
 #include "log.hpp"
 #include <iostream>
-void CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
+void FMOD_CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
 {
     if (result != FMOD_OK)
     {
         bblog::error("FMOD ERROR: audio_module.cpp [Line {0} ] {1} - {2}", line, static_cast<int>(result), FMOD_ErrorString(result));
-        throw FMOD_ErrorString(result);
+        throw std::runtime_error(FMOD_ErrorString(result));
     }
 }
 
@@ -29,6 +29,7 @@ FMOD_RESULT DebugCallback(FMOD_DEBUG_FLAGS flags, MAYBE_UNUSED const char* file,
         std::cout << "[FMOD ERROR] : " << line << " ( " << func << " ) - " << message << std::flush;
         break;
     default:
+        std::cout << "[FMOD OTHER] : " << line << " ( " << func << " ) - " << message << std::flush;
         break;
     }
 
