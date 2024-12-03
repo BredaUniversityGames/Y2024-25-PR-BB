@@ -5,9 +5,6 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 
-template <>
-std::weak_ptr<ResourceManager<GPUMesh>> ResourceHandle<GPUMesh>::manager = {};
-
 ResourceHandle<GPUMesh> MeshResourceManager::Create(const CPUMesh& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
 {
     // todo: add fallback material.
@@ -49,9 +46,6 @@ GPUMesh::Primitive MeshResourceManager::CreatePrimitive(const CPUMesh::Primitive
 
     primitive.vertexOffset = batchBuffer.AppendVertices(cpuPrimitive.vertices, commands);
     primitive.indexOffset = batchBuffer.AppendIndices(cpuPrimitive.indices, commands);
-    primitive.boundingRadius = glm::max(
-        glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.min),
-        glm::distance(glm::vec3(0), cpuPrimitive.boundingBox.max));
-
+    primitive.boundingRadius = cpuPrimitive.boundingRadius;
     return primitive;
 }

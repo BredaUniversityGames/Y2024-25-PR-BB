@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/includes_vulkan.hpp"
+#include "vulkan_include.hpp"
 
 namespace util
 {

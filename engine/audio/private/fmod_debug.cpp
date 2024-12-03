@@ -1,9 +1,8 @@
 #include "fmod_debug.hpp"
 #include "common.hpp"
+#include "fmod_include.hpp"
 #include "log.hpp"
 
-#include <fmod.h>
-#include <fmod_errors.h>
 #include <iostream>
 
 #if not defined(NDEBUG)
