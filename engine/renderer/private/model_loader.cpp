@@ -182,6 +182,7 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
     bool verticesReserved = false;
     bool tangentFound = false;
     bool texCoordFound = false;
+    float squaredBoundingRadius = 0.0f;
 
     for (auto& attribute : gltfPrimitive.attributes)
     {
@@ -236,11 +237,19 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
             {
 
                 const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
+
+                // warning! this performs component wise min/max
                 primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
                 primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
+
+                float squaredLength = position->x * position->x + position->y * position->y + position->z * position->z;
+                if (squaredLength > squaredBoundingRadius)
+                    squaredBoundingRadius = squaredLength;
             }
         }
     }
+
+    primitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {

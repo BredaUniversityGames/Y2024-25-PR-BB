@@ -21,7 +21,7 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
     auto ecs = engine.GetModule<OldEngine>().GetECS();
     _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
     _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), _context, ecs);
-    _particleInterface = std::make_unique<ParticleInterface>(ecs);
+    _particleInterface = std::make_unique<ParticleInterface>(_renderer->GetContext(), ecs);
     _imguiBackend = std::make_shared<ImGuiBackend>(_renderer->GetContext(), engine.GetModule<ApplicationModule>(), _renderer->GetSwapChain(), _renderer->GetGBuffers());
 
     return ModuleTickOrder::eRender;
@@ -44,11 +44,6 @@ void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-}
-
-void RendererModule::SetScene(std::shared_ptr<const SceneDescription> scene)
-{
-    _renderer->_scene = scene;
 }
 
 std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)

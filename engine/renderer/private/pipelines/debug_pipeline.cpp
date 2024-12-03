@@ -16,11 +16,10 @@
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraResource& camera, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain)
     : _context(context)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
-    , _camera(camera)
 {
     _linesData.reserve(2048);
     CreateVertexBuffer();
@@ -50,14 +49,14 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
         .imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view,
         .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .storeOp = vk::AttachmentStoreOp::eStore,
         .clearValue = {
             .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
     };
 
     vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
     stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
-    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eDontCare;
+    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
     stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
     vk::RenderingInfoKHR renderingInfo {
@@ -76,7 +75,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _camera.DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_vertexBuffer);
     const std::array<vk::DeviceSize, 1> offsets = { 0 };
