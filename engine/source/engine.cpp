@@ -60,10 +60,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/monkey.gltf",
-        //"assets/models/MetalRoughSpheres.glb"
+        "assets/models/CathedralGLB_GLTF.glb",
+        "assets/models/Terrain/scene.gltf",
+        "assets/models/monkey.gltf",
+        "assets/models/MetalRoughSpheres.glb",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf"
 
     };

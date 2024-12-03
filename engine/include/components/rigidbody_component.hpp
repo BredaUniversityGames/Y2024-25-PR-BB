@@ -58,13 +58,13 @@ struct RigidbodyComponent
         : shapeType(eBOX)
         , bodyType(type)
     {
-        const glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
+        glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
         JPH::BodyCreationSettings bodySettings;
-
+        halfExtents = glm::abs(halfExtents);
         if (bodyType == eSTATIC)
         {
             bodySettings = JPH::BodyCreationSettings(
-                new JPH::BoxShape(JPH::Vec3Arg(halfExtents.x, halfExtents.y, halfExtents.z)),
+                new JPH::BoxShape(JPH::Vec3Arg(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
                 JPH::Vec3Arg(position.x, position.y, position.z),
                 JPH::QuatArg::sIdentity(),
                 JPH::EMotionType::Static,
@@ -73,7 +73,7 @@ struct RigidbodyComponent
         else if (bodyType == eDYNAMIC)
         {
             bodySettings = JPH::BodyCreationSettings(
-                new JPH::BoxShape(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z)),
+                new JPH::BoxShape(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
                 JPH::Vec3(position.x, position.y, position.z),
                 JPH::Quat::sIdentity(),
                 JPH::EMotionType::Dynamic,
