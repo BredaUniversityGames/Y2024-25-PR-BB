@@ -4,6 +4,7 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -53,6 +54,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
+    auto& audioModule = engine.GetModule<AudioModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
@@ -122,11 +124,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    // modules
-    _physicsModule = std::make_unique<PhysicsModule>();
+    BankInfo masterBank;
+    masterBank.path = "assets/sounds/Master.bank";
 
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, *_physicsModule);
+    BankInfo stringBank;
+    stringBank.path = "assets/sounds/Master.strings.bank";
+
+    BankInfo bi;
+    bi.path = "assets/sounds/SFX.bank";
+
+    audioModule.LoadBank(masterBank);
+    audioModule.LoadBank(stringBank);
+    audioModule.LoadBank(bi);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -140,6 +149,7 @@ void OldEngine::Tick(Engine& engine)
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
+    auto& audioModule = engine.GetModule<AudioModule>();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -263,6 +273,18 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    static uint32_t eventId {};
+
+    if (input.IsKeyPressed(KeyboardCode::eO))
+    {
+        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+    }
+
+    if (input.IsKeyReleased(KeyboardCode::eO))
+    {
+        audioModule.StopEvent(eventId);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
