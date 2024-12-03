@@ -15,8 +15,6 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
     : _context(context)
     , _ecs(ecs)
 {
-    LoadEmitterPresets();
-
     // fill ECS with emitters
     for (size_t i = 0; i < MAX_EMITTERS; i++)
     {

@@ -52,6 +52,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
@@ -67,6 +68,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/MetalRoughSpheres.glb"
 
     };
+
+    particleModule.GetParticleInterface().LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;

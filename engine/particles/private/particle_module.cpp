@@ -3,6 +3,7 @@
 #include "engine.hpp"
 #include "old_engine.hpp"
 #include "renderer.hpp"
+#include <memory>
 
 #include <renderer_module.hpp>
 
