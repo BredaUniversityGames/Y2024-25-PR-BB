@@ -57,5 +57,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
         bblog::log(logLevel, "{0} Validation layer: {1}", type, pCallbackData->pMessage);
 
+    if (logLevel == spdlog::level::err)
+    {
+        assert(false && "Vulkan Error: check logs");
+    }
+
     return VK_FALSE;
 }
