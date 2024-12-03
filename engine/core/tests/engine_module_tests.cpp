@@ -6,40 +6,40 @@ namespace TestModules
 
 class TestModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
 
-    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class DependentModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         engine.GetModule<TestModule>();
         return ModuleTickOrder::eFirst;
     };
 
-    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class CheckUpdateModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine)
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eTick;
     };
 
-    virtual void Tick(MAYBE_UNUSED Engine& engine)
+    void Tick(MAYBE_UNUSED Engine& engine) override
     {
         _has_updated = true;
     };
 
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine) {
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {
 
     };
 
@@ -49,44 +49,44 @@ public:
 
 class SelfDestructModuleFirst : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     };
 
-    virtual void Tick(Engine& engine) override
+    void Tick(Engine& engine) override
     {
         engine.SetExit(-1);
     };
 
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class SelfDestructModuleLast : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eLast;
     };
 
-    virtual void Tick(Engine& engine) override
+    void Tick(Engine& engine) override
     {
         engine.SetExit(-2);
     };
 
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
 };
 
 class SetAtFreeModule : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }
 
-    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
 
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine)
+    void Shutdown(MAYBE_UNUSED Engine& engine) override
     {
         *target = 1;
     };
@@ -97,14 +97,14 @@ public:
 
 class SetAtFreeModule2 : public ModuleInterface
 {
-    virtual ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
+    ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override
     {
         return ModuleTickOrder::eFirst;
     }
 
-    virtual void Tick(MAYBE_UNUSED Engine& engine) override {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
 
-    virtual void Shutdown(MAYBE_UNUSED Engine& engine)
+    void Shutdown(MAYBE_UNUSED Engine& engine) override
     {
         *target = 2;
     };

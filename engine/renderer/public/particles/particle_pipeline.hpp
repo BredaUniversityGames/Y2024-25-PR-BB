@@ -13,7 +13,7 @@
 struct Emitter;
 
 class CameraResource;
-class RenderSceneDescription;
+struct RenderSceneDescription;
 class ECS;
 class GraphicsContext;
 struct Buffer;

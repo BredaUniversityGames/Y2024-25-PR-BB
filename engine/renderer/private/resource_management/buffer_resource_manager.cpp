@@ -2,9 +2,6 @@
 
 #include "vulkan_context.hpp"
 
-template <>
-std::weak_ptr<ResourceManager<Buffer>> ResourceHandle<Buffer>::manager = {};
-
 BufferResourceManager::BufferResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {

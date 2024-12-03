@@ -1,4 +1,4 @@
-﻿// Implementation based on Jolt phusics Hello world example
+﻿// Implementation based on Jolt physics Hello world example
 // https://github.com/jrouwe/JoltPhysicsHelloWorld/blob/main/Source/HelloWorld.cpp
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
