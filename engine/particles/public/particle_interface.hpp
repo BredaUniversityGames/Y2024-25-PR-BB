@@ -15,7 +15,7 @@ class ParticleInterface
 {
 public:
     ParticleInterface(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
-    ~ParticleInterface();
+    ~ParticleInterface() = default;
 
     enum class EmitterPreset
     {
@@ -23,6 +23,7 @@ public:
         eNone
     };
 
+    void LoadEmitterPresets();
     void SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit = 1);
 
 private:
@@ -32,7 +33,6 @@ private:
     std::vector<Emitter> _emitterPresets;
     std::vector<ResourceHandle<GPUImage>> _emitterImages;
 
-    void LoadEmitterPresets();
 
     // temporary solution
     uint32_t LoadEmitterImage(const char* imagePath);
