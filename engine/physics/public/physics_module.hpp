@@ -209,6 +209,10 @@ class DebugRendererSimpleImpl : public JPH::DebugRendererSimple
 public:
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor) override
     {
+        if (!_isEnabled)
+        {
+            return;
+        }
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
@@ -218,6 +222,11 @@ public:
 
     void AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
     {
+        if (!_isEnabled)
+        {
+            return;
+        }
+
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
@@ -249,9 +258,13 @@ public:
         linePositions.clear();
     }
 
+    void SetState(const bool newState) { _isEnabled = newState; }
+    bool GetState() const { return _isEnabled; }
+
 private:
     std::vector<glm::vec3> linePositions;
     std::vector<glm::vec3> persistentLinePositions;
+    bool _isEnabled = true;
 };
 
 struct RayHitInfo

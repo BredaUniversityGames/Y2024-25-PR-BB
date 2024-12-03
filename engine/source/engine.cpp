@@ -132,6 +132,7 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -267,6 +268,11 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF1))
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
     _ecs->UpdateSystems(deltaTimeMS);

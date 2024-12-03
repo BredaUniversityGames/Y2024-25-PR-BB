@@ -55,6 +55,7 @@ void PhysicsSystem::InitializePhysicsColliders()
         _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
 
         _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
+        _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
     }
 }
 void PhysicsSystem::CleanUp()
@@ -70,12 +71,34 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
+
+    // this part should be fast because it returns a vector of just ids not whole rigidbodies
+    JPH::BodyIDVector activeBodies;
+    _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
+
+    // mark all active bodies to have their mesh updated
+    for (auto active_body : activeBodies)
+    {
+        const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(active_body));
+        if (_ecs.registry.valid(entity))
+        {
+            _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
+        }
+    }
+
     //    Update the meshes
-    const auto view = _ecs.registry.view<RigidbodyComponent, StaticMeshComponent>();
+    const auto view
+        = _ecs.registry.view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
         const StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
+
+        // if somehow is now not active or is static lets remove the update component
+        if (!_physicsModule.bodyInterface->IsActive(rb.bodyID))
+            _ecs.registry.remove<UpdateMeshAndPhysics>(entity);
+        if (_physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
+            _ecs.registry.remove<UpdateMeshAndPhysics>(entity);
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
@@ -103,6 +126,7 @@ void PhysicsSystem::Inspect()
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
+    ImGui::Text("Active bodies: %u", _physicsModule.physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
 
     ImGui::DragInt("Amount", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
@@ -158,6 +182,11 @@ void PhysicsSystem::Inspect()
 
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
+    _physicsModule.bodyInterface->ActivateBody(rb.bodyID);
+    const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(rb.bodyID));
+    if (_ecs.registry.valid(entity))
+        _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
+
     ImGui::PushID(&rb.bodyID);
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };

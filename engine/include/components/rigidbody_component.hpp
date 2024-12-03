@@ -3,6 +3,9 @@
 
 #include <geometric.hpp>
 
+struct UpdateMeshAndPhysics
+{
+};
 struct RigidbodyComponent
 {
     // default creates a sphere at 0,2,0
