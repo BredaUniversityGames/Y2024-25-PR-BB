@@ -41,7 +41,7 @@ void StartFMODDebugLogger()
 {
 #if not defined(NDEBUG)
     // Use FMOD_DEBUG_LEVEL_MEMORY if you want to debug memory issues related to fmod
-    FMOD_RESULT result = FMOD_Debug_Initialize(FMOD_DEBUG_LEVEL_LOG, FMOD_DEBUG_MODE_CALLBACK, &DebugCallback, nullptr);
+    FMOD_RESULT result = FMOD_Debug_Initialize(FMOD_DEBUG_LEVEL_WARNING, FMOD_DEBUG_MODE_CALLBACK, &DebugCallback, nullptr);
 
     if (result != FMOD_OK)
     {
