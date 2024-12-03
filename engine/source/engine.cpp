@@ -13,14 +13,15 @@
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
+#include "emitter_component.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "emitter_component.hpp"
 #include "particle_interface.hpp"
+#include "particle_module.hpp"
 #include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
@@ -51,6 +52,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
     RelationshipHelpers::SubscribeToEvents(_ecs->registry);
@@ -78,6 +80,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
+
+    particleModule.GetParticleInterface().LoadEmitterPresets();
 
     TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
     TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
@@ -135,6 +139,7 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -257,7 +262,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
     _ecs->UpdateSystems(deltaTimeMS);

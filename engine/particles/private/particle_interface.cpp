@@ -16,16 +16,6 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
     , _ecs(ecs)
 {
     LoadEmitterPresets();
-
-    // fill ECS with emitters
-    for (size_t i = 0; i < MAX_EMITTERS; i++)
-    {
-        auto entity = _ecs->registry.create();
-        EmitterComponent emitterComponent;
-        _ecs->registry.emplace<EmitterComponent>(entity, emitterComponent);
-        auto& name = _ecs->registry.emplace<NameComponent>(entity);
-        name.name = "Particle Emitter " + std::to_string(i);
-    }
 }
 
 ParticleInterface::~ParticleInterface()
@@ -53,6 +43,16 @@ void ParticleInterface::LoadEmitterPresets()
     emitter.materialIndex = LoadEmitterImage("assets/textures/nogameplay.png");
     emitter.size = glm::vec2(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height) / static_cast<float>(glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height));
     _emitterPresets.emplace_back(emitter);
+
+    // fill ECS with emitters
+    for (size_t i = 0; i < MAX_EMITTERS; i++)
+    {
+        auto entity = _ecs->registry.create();
+        EmitterComponent emitterComponent;
+        _ecs->registry.emplace<EmitterComponent>(entity, emitterComponent);
+        auto& name = _ecs->registry.emplace<NameComponent>(entity);
+        name.name = "Particle Emitter " + std::to_string(i);
+    }
 }
 
 uint32_t ParticleInterface::LoadEmitterImage(const char* imagePath)

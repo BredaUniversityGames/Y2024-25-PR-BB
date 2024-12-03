@@ -5,6 +5,7 @@
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
 #include "steam_module.hpp"
+#include "particle_module.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
@@ -16,7 +17,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
-        .AddModule<PhysicsModule>();
+        .AddModule<PhysicsModule>()
+        .AddModule<ParticleModule>();
 
     return instance.Run();
 }
