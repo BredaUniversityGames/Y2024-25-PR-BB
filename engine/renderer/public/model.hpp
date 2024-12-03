@@ -12,6 +12,7 @@ struct Hierarchy
     struct Joint
     {
         bool isSkeletonRoot;
+        entt::entity skinnedMesh;
         glm::mat4 inverseBind;
         uint32_t index;
     };

@@ -1,9 +1,9 @@
 #include "pipelines/geometry_pipeline.hpp"
 
-#include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
+#include "constants.hpp"
 #include "ecs.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
@@ -14,6 +14,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 #include <entt/entt.hpp>
 
@@ -64,7 +65,9 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     }
 
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
+    {
         colorAttachmentInfos.at(i).imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->view;
+    }
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;

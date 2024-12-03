@@ -17,8 +17,8 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/glm.hpp>
-#include <glm/gtx/norm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 #include <stb_image.h>
 
 namespace detail
@@ -250,7 +250,7 @@ void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Prim
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
-        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3{0.0f}, vertices[i].position));
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3 { 0.0f }, vertices[i].position));
     }
 
     boundingRadius = glm::sqrt(boundingRadius);
@@ -280,7 +280,7 @@ void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const 
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
-        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3{0.0f}, vertices[i].position));
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3 { 0.0f }, vertices[i].position));
     }
 
     boundingRadius = glm::sqrt(boundingRadius);
@@ -575,6 +575,12 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
         {
             node.children.emplace_back(Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second });
         }
+
+        if (gltfNode.skinIndex.has_value())
+        {
+            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
+            int x = 0;
+        }
     }
 
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
@@ -590,18 +596,19 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
         }
     }
 
-    if (gltf.skins.size() > 0)
+    for (const auto& skin : gltf.skins)
     {
-        const auto& skin = gltf.skins[0];
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
         if (it != skin.joints.end())
         {
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
             node.joint = Hierarchy::Joint {
-                gltfNodeIndex == skin.skeleton.has_value() ? static_cast<bool>(skin.skeleton.value()) : false, // TODO: skeleton is an index, this should be properly handled in the case of multiple skins
+                gltfNodeIndex == skin.skeleton.has_value() ? static_cast<bool>(skin.skeleton.value()) : false,
+                entt::null,
                 *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
                 static_cast<uint32_t>(std::distance(skin.joints.begin(), it))
             };
+            break;
         }
     }
 
@@ -665,9 +672,6 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         animations = LoadAnimations(gltf);
         model.animation = animations.animation;
     }
-
-    // TODO: Look into this before merge.
-    // assert(gltf.skins.size() <= 1 && "Only support for one skin!");
 
     Hierarchy::Node baseNode;
     baseNode.name = name;

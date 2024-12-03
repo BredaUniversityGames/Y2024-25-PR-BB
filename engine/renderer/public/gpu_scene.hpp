@@ -28,7 +28,7 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
-    std::shared_ptr<const ECS> ecs;
+    std::shared_ptr<ECS> ecs;
     std::shared_ptr<BatchBuffer> staticBatchBuffer;
     std::shared_ptr<BatchBuffer> skinnedBatchBuffer;
     uint32_t targetSwapChainImageIndex;
@@ -115,6 +115,7 @@ private:
 
         uint32_t materialIndex;
         float boundingRadius;
+        uint32_t boneOffset;
     };
 
     struct FrameData
@@ -124,7 +125,7 @@ private:
     };
 
     std::shared_ptr<GraphicsContext> _context;
-    std::shared_ptr<const ECS> _ecs;
+    std::shared_ptr<ECS> _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;

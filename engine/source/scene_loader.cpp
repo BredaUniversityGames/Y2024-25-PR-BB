@@ -15,7 +15,7 @@
 #include <entt/entity/entity.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation)
+entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation, entt::entity skeletonRoot = entt::null)
 {
     const entt::entity entity = ecs.registry.create();
 
@@ -53,19 +53,23 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, ent
 
     if (currentNode.joint.has_value())
     {
-        auto& joint = ecs.registry.emplace<JointComponent>(entity);
-        joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
-        joint.jointIndex = currentNode.joint.value().index;
-
         if (currentNode.joint.value().isSkeletonRoot)
         {
             ecs.registry.emplace<SkeletonComponent>(entity);
+            skeletonRoot = entity;
         }
+
+        auto& joint = ecs.registry.emplace<JointComponent>(entity);
+        joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
+        joint.jointIndex = currentNode.joint.value().index;
+        assert(skeletonRoot != entt::null && "Joint requires a skeleton root, that should be present!");
+        joint.skeletonEntity = skeletonRoot;
+        joint.skinnedMesh = currentNode.joint.value().skinnedMesh;
     }
 
     for (const auto& node : currentNode.children)
     {
-        LoadNodeRecursive(ecs, node, entity, model, animation);
+        LoadNodeRecursive(ecs, node, entity, model, animation, skeletonRoot);
     }
 
     return entity;

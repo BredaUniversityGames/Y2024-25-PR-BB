@@ -17,6 +17,7 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <unordered_map>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
@@ -128,6 +129,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         instances[count].materialIndex = mesh->material.Index();
         instances[count].boundingRadius = mesh->boundingRadius;
+        instances[count].boneOffset = meshComponent.boneOffset;
 
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -216,16 +218,43 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
     auto jointView = _ecs->registry.view<JointComponent, WorldMatrixComponent>();
+    static std::array<glm::mat4, MAX_BONES> skinMatrices {};
+    static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
+
+    _ecs->registry.sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
+        { return a.skeletonEntity < b.skeletonEntity; });
+
+    // Sort joint indices need to stay relative, but can have arbitrary offset.
+    entt::entity lastSkeleton = entt::null;
+    uint32_t offset = 0;
+    uint32_t ongoingOffset = 0;
     for (entt::entity entity : jointView)
     {
         const auto& joint = jointView.get<JointComponent>(entity);
-        const auto& matrix = jointView.get<WorldMatrixComponent>(entity);
-        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrix);
+        const auto& matrixComponent = jointView.get<WorldMatrixComponent>(entity);
+        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrixComponent);
 
-        glm::mat4 skinMatrix = worldTransform * joint.inverseBindMatrix;
-        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
-        std::memcpy(static_cast<std::byte*>(buffer->mappedPtr) + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
+        if (lastSkeleton != joint.skeletonEntity)
+        {
+            lastSkeleton = joint.skeletonEntity;
+            offset += ongoingOffset;
+
+            skeletonBoneOffset[lastSkeleton] = offset;
+        }
+
+        ongoingOffset = glm::max(ongoingOffset, joint.jointIndex);
+
+        skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
     }
+
+    auto skeletonView = _ecs->registry.view<SkeletonComponent>();
+    for (auto [entity, offset] : skeletonBoneOffset)
+    {
+        skeletonView.get<SkeletonComponent>(entity);
+    }
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat4) * skinMatrices.size());
 }
 
 void GPUScene::InitializeSceneBuffers()
