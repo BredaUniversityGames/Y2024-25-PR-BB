@@ -37,7 +37,7 @@ public:
     void FlushOutputStream() { _wrenOutStream->flush(); }
 
 private:
-    VMInitConfig _vmInitConfig{};
+    VMInitConfig _vmInitConfig {};
     std::unique_ptr<wren::VM> _vm;
     std::ostream* _wrenOutStream = &std::cout;
 };

@@ -72,9 +72,9 @@ TEST(ForeignDataTests, EngineWrapper)
     }
 
     auto script = context.RunScript("game/tests/foreign_engine.wren");
-    EXPECT_TRUE(script);
+    ASSERT_TRUE(script);
 
-    auto test_class = context.GetVM().find(script.value(), "Test");
+    auto test_class = context.GetVM().find(script.value_or(""), "Test");
     test_class.func("test(_)")(WrenEngine { &e });
 
     EXPECT_EQ(output.str(), "0\n");

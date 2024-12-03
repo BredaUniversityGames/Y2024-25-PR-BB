@@ -15,7 +15,6 @@ const VMInitConfig MEMORY_CONFIG {
 TEST(MainScriptTests, MainScript)
 {
     ScriptingContext context { MEMORY_CONFIG };
-    auto engineAPIPath = fileIO::CanonicalizePath("Engine");
     context.GetVM().module("Engine.wren").klass<WrenEngine>("Engine");
 
     std::stringstream output;
@@ -25,7 +24,7 @@ TEST(MainScriptTests, MainScript)
     ASSERT_TRUE(result.has_value());
 
     MainScript wrenMain {};
-    wrenMain.SetMainScript(context.GetVM(), *result, "ExampleMain");
+    wrenMain.SetMainScript(context.GetVM(), result.value_or(""), "ExampleMain");
     wrenMain.Update(nullptr, DeltaMS { 10.0f }); // Safe, the script does not use the engine parameter
 
     EXPECT_TRUE(wrenMain.IsValid());
