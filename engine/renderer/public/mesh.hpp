@@ -64,4 +64,5 @@ struct Vertex
 struct StaticMeshComponent
 {
     ResourceHandle<GPUMesh> mesh;
+    Vec3Range boundingBox;
 };

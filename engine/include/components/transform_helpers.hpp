@@ -19,6 +19,7 @@ public:
     static void SetLocalTransform(entt::registry& reg, entt::entity entity, const glm::mat4& transform);
 
     static void SetWorldTransform(entt::registry& reg, entt::entity entity, const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
+    static void SetWorldTransform(entt::registry& reg, entt::entity entity, const glm::mat4& transform);
 
     static glm::vec3 GetLocalPosition(const entt::registry& reg, entt::entity entity);
     static glm::quat GetLocalRotation(const entt::registry& reg, entt::entity entity);

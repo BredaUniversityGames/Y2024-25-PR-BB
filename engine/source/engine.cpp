@@ -77,7 +77,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     for (const auto& model : models)
     {
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
 
@@ -120,6 +120,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
+    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -145,6 +146,7 @@ void OldEngine::Tick(Engine& engine)
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
+    physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -256,6 +258,18 @@ void OldEngine::Tick(Engine& engine)
                           << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
                           << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
                           << "Fraction: " << hitInfo.hitFraction << std::endl;
+
+                if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
+                {
+
+                    RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
+
+                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
+                    {
+                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
+                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
+                    }
+                }
             }
         }
     }
@@ -268,6 +282,11 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
         rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF1))
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
     static uint32_t eventId {};
