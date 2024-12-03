@@ -1,9 +1,6 @@
 #include "ui_element.hpp"
 #include "log.hpp"
 
-void UIElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList)
-{
-}
 void UIElement::Update(const InputManager& input)
 {
     for (auto& child : _children)
@@ -11,7 +8,6 @@ void UIElement::Update(const InputManager& input)
 }
 UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
 {
-
     _children.emplace_back(std::move(child));
     std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
@@ -19,6 +15,7 @@ UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
     UpdateAllChildrenAbsoluteLocations();
     return *_children.back();
 }
+
 void UIElement::UpdateAllChildrenAbsoluteLocations()
 {
     if (enabled)
