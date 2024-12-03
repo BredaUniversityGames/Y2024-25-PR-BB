@@ -13,18 +13,6 @@ layout (push_constant) uniform DeltaTime
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-float calcAngle(vec3 a, vec3 b)
-{
-    vec3 na = normalize(a);
-    vec3 nb = normalize(b);
-
-    float dotProduct = dot(a, b);
-
-    dotProduct = clamp(dotProduct, -1.0, 1.0);
-
-    return acos(dotProduct);
-}
-
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
@@ -47,6 +35,9 @@ void main()
 
         // TODO: kill particle on depth collision and break
 
+        // simulate angle
+        particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
+
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
 
@@ -61,7 +52,12 @@ void main()
         instance.position = particle.position;
         instance.materialIndex = particle.materialIndex;
         instance.size = particle.size;
-        instance.angle = calcAngle(vec3(0.0, 1.0, 0.0), particle.velocity);
+        float angle = particle.rotationVelocity.x;
+        if(cross(vec3(0.0, 1.0, 0.0), particle.velocity).z > 0)
+        {
+            angle = -angle;
+        }
+        instance.angle = angle;
         culledInstances.instances[culledIndex] = instance;
     }
     else // if dead
