@@ -35,7 +35,7 @@ public:
     float GetGamepadAxis(GamepadAxis axis) const;
 
     // Returns whether a controller is connected and can be used for input
-    bool IsControllerAvailable() const { return _gamepad.sdlHandle != nullptr; }
+    bool IsGamepadAvailable() const { return _gamepad.sdlHandle != nullptr; }
 
 private:
     struct Mouse

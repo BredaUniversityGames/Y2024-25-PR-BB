@@ -69,7 +69,7 @@ void InputManager::Update()
     for (auto& button : _mouse.buttonReleased)
         button.second = false;
 
-    if (IsControllerAvailable())
+    if (IsGamepadAvailable())
     {
         for (auto& button : _gamepad.buttonPressed)
             button.second = false;
@@ -174,7 +174,7 @@ void InputManager::GetMousePosition(int& x, int& y) const
 
 bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
 {
-    if (!IsControllerAvailable())
+    if (!IsGamepadAvailable())
     {
         bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
@@ -185,7 +185,7 @@ bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
 
 bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
 {
-    if (!IsControllerAvailable())
+    if (!IsGamepadAvailable())
     {
         bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
@@ -196,7 +196,7 @@ bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
 
 bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
 {
-    if (!IsControllerAvailable())
+    if (!IsGamepadAvailable())
     {
         bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
@@ -207,7 +207,7 @@ bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
 
 float InputManager::GetGamepadAxis(GamepadAxis axis) const
 {
-    if (!IsControllerAvailable())
+    if (!IsGamepadAvailable())
     {
         bblog::warn("Trying to get gamepad input while no controller is available.");
         return 0.0f;
