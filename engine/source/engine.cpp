@@ -81,8 +81,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         entities.emplace_back(entity);
     }
 
-    particleModule.GetParticleInterface().LoadEmitterPresets();
-
     TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
     TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
 

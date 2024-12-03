@@ -9,7 +9,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
-#include "../vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 
 #include <vector>
 

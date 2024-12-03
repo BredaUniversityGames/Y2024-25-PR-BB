@@ -1,6 +1,6 @@
 #include "resource_management/sampler_resource_manager.hpp"
 
-#include "vulkan_helper.hpp"
+#include "../vulkan_helper.hpp"
 #include "gpu_resources.hpp"
 #include "vulkan_context.hpp"
 

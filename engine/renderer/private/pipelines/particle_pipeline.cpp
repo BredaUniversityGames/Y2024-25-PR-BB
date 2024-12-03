@@ -13,7 +13,7 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
-#include "../vulkan_helper.hpp"
+#include "vulkan_helper.hpp"
 
 #include <pipeline_builder.hpp>
 
@@ -227,7 +227,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
-    CulledInstances* culledData = reinterpret_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
+    CulledInstances* culledData = static_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
     commandBuffer.drawIndexed(6, culledData->count, 0, 0, 0, vkContext->Dldi());
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());

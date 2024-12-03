@@ -15,7 +15,7 @@ class ParticleInterface
 {
 public:
     ParticleInterface(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
-    ~ParticleInterface();
+    ~ParticleInterface() = default;
 
     enum class EmitterPreset
     {
