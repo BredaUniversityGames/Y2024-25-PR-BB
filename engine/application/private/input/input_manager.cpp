@@ -35,7 +35,7 @@ InputManager::InputManager()
 {
     SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
 
-    int numGamepads{};
+    int numGamepads {};
     SDL_JoystickID* joySticks = SDL_GetGamepads(&numGamepads);
 
     for (int i = 0; i < numGamepads; i++)
@@ -68,7 +68,7 @@ void InputManager::Update()
     for (auto& button : _mouse.buttonReleased)
         button.second = false;
 
-    if(_gamepad.sdlHandle)
+    if (_gamepad.sdlHandle)
     {
         for (auto& button : _gamepad.buttonPressed)
             button.second = false;

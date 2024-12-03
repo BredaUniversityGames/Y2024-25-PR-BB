@@ -1,8 +1,8 @@
 #pragma once
 
+#include "input_codes/gamepad.hpp"
 #include "input_codes/keys.hpp"
 #include "input_codes/mousebuttons.hpp"
-#include "input_codes/gamepad.hpp"
 #include <SDL3/SDL_joystick.h>
 #include <unordered_map>
 
@@ -37,24 +37,24 @@ public:
 private:
     struct Mouse
     {
-        std::unordered_map<MouseButton, bool> buttonPressed{};
-        std::unordered_map<MouseButton, bool> buttonHeld{};
-        std::unordered_map<MouseButton, bool> buttonReleased{};
+        std::unordered_map<MouseButton, bool> buttonPressed {};
+        std::unordered_map<MouseButton, bool> buttonHeld {};
+        std::unordered_map<MouseButton, bool> buttonReleased {};
         float positionX {}, positionY {};
-    } _mouse{};
+    } _mouse {};
 
     struct Keyboard
     {
-        std::unordered_map<KeyboardCode, bool> keyPressed{};
-        std::unordered_map<KeyboardCode, bool> keyHeld{};
-        std::unordered_map<KeyboardCode, bool> keyReleased{};
+        std::unordered_map<KeyboardCode, bool> keyPressed {};
+        std::unordered_map<KeyboardCode, bool> keyHeld {};
+        std::unordered_map<KeyboardCode, bool> keyReleased {};
     } _keyboard;
 
     struct Gamepad
     {
-        std::unordered_map<GamepadButton, bool> buttonPressed{};
-        std::unordered_map<GamepadButton, bool> buttonHeld{};
-        std::unordered_map<GamepadButton, bool> buttonReleased{};
+        std::unordered_map<GamepadButton, bool> buttonPressed {};
+        std::unordered_map<GamepadButton, bool> buttonHeld {};
+        std::unordered_map<GamepadButton, bool> buttonReleased {};
         SDL_Gamepad* sdlHandle {};
-    } _gamepad{};
+    } _gamepad {};
 };
