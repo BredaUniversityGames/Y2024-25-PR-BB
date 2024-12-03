@@ -1,0 +1,95 @@
+#version 460
+//TODO: NEED VEC2 SCREENDIMENSIONS, uvec4 tileSize
+
+#include "scene.glsl"
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct AABB
+{
+    vec4 min;
+    vec4 max;
+};
+
+layout (push_constant) uniform PushConstants
+{
+    uvec4 tileSizes;
+    vec2 screenSize;
+} pushConstants;
+
+layout (set = 1, binding = 0) uniform CameraUBO
+{
+    Camera camera;
+};
+
+layout (set = 0, binding = 0) buffer AABBs
+{
+    AABB clusters[];
+};
+
+vec3 LineIntersectToZPlane(vec3 p0, vec3 p1, float z)
+{
+    vec3 normal = vec3(0.0, 0.0, 1.0);
+
+    vec3 p = p1 - p0;
+
+    float t = (z - dot(normal, p0)) / dot(normal, p);
+
+    vec3 result = p0 + t * p;
+
+    return result;
+}
+
+vec4 ClipToView(vec4 clip)
+{
+    vec4 view = mul(camera.invProj, clip);
+    view /= view.w;
+
+    return view;
+}
+
+vec4 ScreenToView(vec4 screen)
+{
+    vec2 texCoord = screen.xy / screenSize;
+
+    //vec4 clip = vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+    vec4 clip = vec4(vec2(texCoord.x, texCoord.y) * 2.0 - 1.0, screen.z, screen.w);
+
+    return ClipToView(clip);
+}
+
+void main()
+{
+    const vec3 eyePos = vec3(0.0, 0.0, 0.0);
+    const float zNear = camera.zNear;
+    const float zFar = camera.zFar;
+
+    //gl_NumWorkGroups are the number of clusters in each dimension
+    uint tileSizePx = tileSizes[3];
+    uint tileIndex =
+    gl_WorkGroupID.x +
+    gl_WorkGroupID.y * gl_NumWorkGroups.x +
+    gl_WorkGroupID.z * (gl_NumWorkGroups.x * gl_NumWorkGroups.y);
+
+    vec4 minPoint_Screen = vec4(vec2(gl_WorkGroupID.xy) * tileSizePx, 1.0, 1.0);
+    vec4 maxPoint_Screen = vec4(vec2(gl_WorkGroupID.xy + 1) * tileSizePx, 1.0, 1.0);
+
+    vec4 minPoint_View = ScreenToView(minPoint_Screen);
+    vec4 maxPoint_View = ScreenToView(maxPoint_Screen);
+
+    float nearPlane = -zNear * pow(zFar / zNear, gl_WorkGroupID.z / float(gl_NumWorkGroups.z));
+    float farPlane = -zNear * pow(zFar / zNear, (gl_WorkGroupID.z + 1) / float(gl_NumWorkGroups.z));
+
+    vec3 minPointNear = LineIntersectToZPlane(eyePos, minPoint_View.xyz, nearPlane);
+    vec3 minPointFar = LineIntersectToZPlane(eyePos, minPoint_View.xyz, farPlane);
+    vec3 maxPointNear = LineIntersectToZPlane(eyePos, maxPoint_View.xyz, nearPlane);
+    vec3 maxPointFar = LineIntersectToZPlane(eyePos, maxPoint_View.xyz, farPlane);
+
+    vec3 minPointAABB = min(min(minPointNear, minPointFar), min(maxPointNear, maxPointFar));
+    vec3 maxPointAABB = max(max(minPointNear, minPointFar), max(maxPointNear, maxPointFar));
+
+
+    clusters[tileIndex].min = vec4(minPointAABB, 1.0);
+    clusters[tileIndex].max = vec4(maxPointAABB, 1.0);
+}
+

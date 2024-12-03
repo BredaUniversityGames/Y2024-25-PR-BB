@@ -3,6 +3,7 @@ struct Camera
     mat4 VP;
     mat4 view;
     mat4 proj;
+    mat4 invProj;
     mat4 skydomeMVP;
     vec3 cameraPosition;
     int distanceCullingEnabled;
