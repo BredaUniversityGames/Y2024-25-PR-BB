@@ -1,8 +1,8 @@
 #include "fmod_debug.hpp"
-
-#include "fmod.h"
-#include "fmod_errors.h"
+#include "common.hpp"
+#include "fmod_include.hpp"
 #include "log.hpp"
+
 #include <iostream>
 void FMOD_CHECKRESULT_fn(FMOD_RESULT result, MAYBE_UNUSED const char* file, int line)
 {
