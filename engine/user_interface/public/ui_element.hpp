@@ -67,6 +67,9 @@ public:
      */
     void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept;
 
+protected:
+    void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
+
 private:
     glm::vec2 _absoluteLocation {};
     glm::vec2 _relativeLocation {};

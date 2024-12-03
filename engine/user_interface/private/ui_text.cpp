@@ -4,6 +4,8 @@
 
 void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
+    UIElement::ChildrenSubmitDrawInfo(drawList);
+
     float localOffset = 0;
 
     for (const auto& character : _text)

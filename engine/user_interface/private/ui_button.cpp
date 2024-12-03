@@ -50,6 +50,7 @@ void UIButton::Update(const InputManager& input)
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
+    UIElement::ChildrenSubmitDrawInfo(drawList);
     if (enabled)
     {
         ResourceHandle<GPUImage> image;
@@ -75,11 +76,6 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
         info.useRedAsAlpha = false;
         drawList.emplace_back(info);
-
-        for (const auto& i : GetChildren())
-        {
-            i->SubmitDrawInfo(drawList);
-        }
     }
 }
 

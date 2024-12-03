@@ -1,6 +1,9 @@
 #include "ui_element.hpp"
 #include "log.hpp"
 
+void UIElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList)
+{
+}
 void UIElement::Update(const InputManager& input)
 {
     for (auto& child : _children)
@@ -54,4 +57,11 @@ void UIElement::SetAbsoluteLocation(const glm::vec2& location, bool updateChildr
     _absoluteLocation = location;
     if (updateChildren)
         UpdateAllChildrenAbsoluteLocations();
+}
+void UIElement::ChildrenSubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
+{
+    for (const auto& child : _children)
+    {
+        child->SubmitDrawInfo(drawList);
+    }
 }

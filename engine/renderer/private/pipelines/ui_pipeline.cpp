@@ -73,14 +73,14 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
-    vk::RenderingAttachmentInfoKHR const finalColorAttachmentInfo {
+    vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
     };
 
-    vk::RenderingInfoKHR const renderingInfo {
+    vk::RenderingInfoKHR renderingInfo {
         .renderArea = {
             .offset = vk::Offset2D { .x = 0, .y = 0 },
             .extent = _swapChain.GetExtent(),

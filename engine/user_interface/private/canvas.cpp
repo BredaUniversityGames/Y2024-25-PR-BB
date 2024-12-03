@@ -3,8 +3,5 @@
 
 void Canvas::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    for (const auto& child : GetChildren())
-    {
-        child->SubmitDrawInfo(drawList);
-    }
+    ChildrenSubmitDrawInfo(drawList);
 }
