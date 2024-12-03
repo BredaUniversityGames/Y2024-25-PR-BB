@@ -6,7 +6,7 @@
 namespace detail
 {
 template <typename K, typename V>
-V unorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& defaultValue)
+V UnorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& defaultValue)
 {
     if (auto it = map.find(key); it != map.end())
     {
@@ -137,32 +137,32 @@ void InputManager::UpdateEvent(const SDL_Event& event)
 
 bool InputManager::IsKeyPressed(KeyboardCode key) const
 {
-    return detail::unorderedMapGetOr(_keyboard.keyPressed, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.keyPressed, key, false);
 }
 
 bool InputManager::IsKeyHeld(KeyboardCode key) const
 {
-    return detail::unorderedMapGetOr(_keyboard.keyHeld, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.keyHeld, key, false);
 }
 
 bool InputManager::IsKeyReleased(KeyboardCode key) const
 {
-    return detail::unorderedMapGetOr(_keyboard.keyReleased, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.keyReleased, key, false);
 }
 
 bool InputManager::IsMouseButtonPressed(MouseButton button) const
 {
-    return detail::unorderedMapGetOr(_mouse.buttonPressed, button, false);
+    return detail::UnorderedMapGetOr(_mouse.buttonPressed, button, false);
 }
 
 bool InputManager::IsMouseButtonHeld(MouseButton button) const
 {
-    return detail::unorderedMapGetOr(_mouse.buttonHeld, button, false);
+    return detail::UnorderedMapGetOr(_mouse.buttonHeld, button, false);
 }
 
 bool InputManager::IsMouseButtonReleased(MouseButton button) const
 {
-    return detail::unorderedMapGetOr(_mouse.buttonReleased, button, false);
+    return detail::UnorderedMapGetOr(_mouse.buttonReleased, button, false);
 }
 
 void InputManager::GetMousePosition(int& x, int& y) const
@@ -179,7 +179,7 @@ bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
         return false;
     }
 
-    return detail::unorderedMapGetOr(_gamepad.buttonPressed, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.buttonPressed, button, false);
 }
 
 bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
@@ -190,7 +190,7 @@ bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
         return false;
     }
 
-    return detail::unorderedMapGetOr(_gamepad.buttonHeld, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.buttonHeld, button, false);
 }
 
 bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
@@ -201,7 +201,7 @@ bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
         return false;
     }
 
-    return detail::unorderedMapGetOr(_gamepad.buttonReleased, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.buttonReleased, button, false);
 }
 
 float InputManager::GetGamepadAxis(GamepadAxis axis) const
