@@ -1,4 +1,5 @@
 #include "fmod_debug.hpp"
+#include "common.hpp"
 
 #include "fmod.h"
 #include "fmod_errors.h"

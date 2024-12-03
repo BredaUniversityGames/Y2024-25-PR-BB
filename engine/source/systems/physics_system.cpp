@@ -85,7 +85,8 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
         const auto joltSize = boxShape->GetHalfExtent();
         const auto oldExtent = (tempData.boundingBox.max - tempData.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
-        glm::mat4 joltToGlm = glm::scale(ToGLMMat4(joltMatrix), joltBoxSize / oldExtent);
+        const glm::mat4 joltToGLM = ToGLMMat4(joltMatrix);
+        glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / oldExtent);
 
         // account for odd models that dont have the center at 0,0,0
         const glm::vec3 centerPos = (tempData.boundingBox.max + tempData.boundingBox.min) * 0.5f;

@@ -261,7 +261,7 @@ struct RayHitInfo
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
     bool hasHit = false;
 };
-static glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
+inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 {
     glm::mat4 glmMat;
 
