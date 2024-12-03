@@ -34,42 +34,6 @@ AlignConsecutiveShortCaseStatements:
   AlignCaseColons: false
 AlignEscapedNewlines: Right
 AlignOperands: DontAlign
----
-BasedOnStyle: WebKit
-AccessModifierOffset: -4
-AlignAfterOpenBracket: DontAlign
-AlignArrayOfStructures: None
-AlignConsecutiveAssignments:
-  Enabled: false
-  AcrossEmptyLines: false
-  AcrossComments: false
-  AlignCompound: false
-  PadOperators: true
-AlignConsecutiveBitFields:
-  Enabled: false
-  AcrossEmptyLines: false
-  AcrossComments: false
-  AlignCompound: false
-  PadOperators: false
-AlignConsecutiveDeclarations:
-  Enabled: false
-  AcrossEmptyLines: false
-  AcrossComments: false
-  AlignCompound: false
-  PadOperators: false
-AlignConsecutiveMacros:
-  Enabled: false
-  AcrossEmptyLines: false
-  AcrossComments: false
-  AlignCompound: false
-  PadOperators: false
-AlignConsecutiveShortCaseStatements:
-  Enabled: false
-  AcrossEmptyLines: false
-  AcrossComments: false
-  AlignCaseColons: false
-AlignEscapedNewlines: Right
-AlignOperands: DontAlign
 AlignTrailingComments:
   Kind: Never
   OverEmptyLines: 0

@@ -4,6 +4,8 @@
 #include "imgui/imgui.h"
 #include "implot/implot.h"
 
+#include <algorithm>
+
 PerformanceTracker::PerformanceTracker()
 {
     _totalTime = 0;

@@ -1,11 +1,12 @@
 #include "log.hpp"
 #include <spdlog/fmt/bundled/printf.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#pragma clang diagnostic ignored "-Wnullability-completeness"
 
 #define VMA_IMPLEMENTATION
 #define VMA_LEAK_LOG_FORMAT(format, ...)                 \
@@ -16,4 +17,4 @@
 
 #include "vk_mem_alloc.h"
 
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
