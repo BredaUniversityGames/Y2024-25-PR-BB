@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+#include "file_io.hpp"
 #include "main_script.hpp"
 #include "scripting_context.hpp"
 #include "time_module.hpp"
@@ -8,13 +9,14 @@
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 const VMInitConfig MEMORY_CONFIG {
-    { "./", "./game/tests/", "./game/" }, 256ull * 4ull, 256ull, 50
+    { "", "./game/tests/", "./game/" }, 256ull * 4ull, 256ull, 50
 };
 
 TEST(MainScriptTests, MainScript)
 {
     ScriptingContext context { MEMORY_CONFIG };
-    context.GetVM().module("game\\engine_api.wren").klass<WrenEngine>("Engine");
+    auto engineAPIPath = fileIO::CanonicalizePath("Engine");
+    context.GetVM().module("Engine.wren").klass<WrenEngine>("Engine");
 
     std::stringstream output;
     context.SetScriptingOutputStream(&output);

@@ -71,8 +71,6 @@ TEST(ForeignDataTests, EngineWrapper)
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
     }
 
-    std::cout << scripting.GetForeignAPI().str();
-
     auto script = context.RunScript("game/tests/foreign_engine.wren");
     EXPECT_TRUE(script);
 

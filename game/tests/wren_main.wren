@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine
+import "Engine.wren" for Engine
 
 class ExampleMain {
 
