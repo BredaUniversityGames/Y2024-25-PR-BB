@@ -1,4 +1,4 @@
-#include "particle_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 
 #include "camera.hpp"
 #include "ecs.hpp"
@@ -227,7 +227,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
     commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 
-    CulledInstances* culledData = reinterpret_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
+    CulledInstances* culledData = static_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
     commandBuffer.drawIndexed(6, culledData->count, 0, 0, 0, vkContext->Dldi());
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());

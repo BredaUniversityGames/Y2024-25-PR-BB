@@ -50,7 +50,7 @@ struct alignas(16) ParticleInstance
 
 struct alignas(16) CulledInstances
 {
-    uint32_t count;
+    uint32_t count = 0;
     ParticleInstance instances[MAX_PARTICLES];
 };
 
