@@ -93,6 +93,9 @@ void ApplicationModule::Tick(Engine& engine)
             break;
         }
     }
+
+    float axis = _inputManager->GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTX);
+    bblog::info("Gamepad axis: {}", axis);
 }
 
 ApplicationModule::ApplicationModule() = default;

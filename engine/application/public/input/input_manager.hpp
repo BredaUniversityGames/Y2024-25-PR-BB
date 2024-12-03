@@ -30,6 +30,8 @@ public:
     bool IsGamepadButtonPressed(GamepadButton button) const;
     bool IsGamepadButtonHeld(GamepadButton button) const;
     bool IsGamepadButtonReleased(GamepadButton button) const;
+
+    // Returns the given axis input from -1 to 1
     float GetGamepadAxis(GamepadAxis axis) const;
 
 private:

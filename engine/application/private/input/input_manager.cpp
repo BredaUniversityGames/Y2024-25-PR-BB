@@ -6,13 +6,28 @@
 namespace detail
 {
 template <typename K, typename V>
-V unordered_map_get_or(const std::unordered_map<K, V>& map, const K& key, const V& default_value)
+V unorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& defaultValue)
 {
     if (auto it = map.find(key); it != map.end())
     {
         return it->second;
     }
-    return default_value;
+    return defaultValue;
+}
+
+float ClampDeadzone(float input, float innerDeadzone, float outerDeadzone)
+{
+    if (glm::abs(input) < innerDeadzone)
+    {
+        return 0.0f;
+    }
+
+    if (glm::abs(input) > outerDeadzone)
+    {
+        return 1.0f;
+    }
+
+    return input;
 }
 }
 
@@ -122,32 +137,32 @@ void InputManager::UpdateEvent(const SDL_Event& event)
 
 bool InputManager::IsKeyPressed(KeyboardCode key) const
 {
-    return detail::unordered_map_get_or(_keyboard.keyPressed, key, false);
+    return detail::unorderedMapGetOr(_keyboard.keyPressed, key, false);
 }
 
 bool InputManager::IsKeyHeld(KeyboardCode key) const
 {
-    return detail::unordered_map_get_or(_keyboard.keyHeld, key, false);
+    return detail::unorderedMapGetOr(_keyboard.keyHeld, key, false);
 }
 
 bool InputManager::IsKeyReleased(KeyboardCode key) const
 {
-    return detail::unordered_map_get_or(_keyboard.keyReleased, key, false);
+    return detail::unorderedMapGetOr(_keyboard.keyReleased, key, false);
 }
 
 bool InputManager::IsMouseButtonPressed(MouseButton button) const
 {
-    return detail::unordered_map_get_or(_mouse.buttonPressed, button, false);
+    return detail::unorderedMapGetOr(_mouse.buttonPressed, button, false);
 }
 
 bool InputManager::IsMouseButtonHeld(MouseButton button) const
 {
-    return detail::unordered_map_get_or(_mouse.buttonHeld, button, false);
+    return detail::unorderedMapGetOr(_mouse.buttonHeld, button, false);
 }
 
 bool InputManager::IsMouseButtonReleased(MouseButton button) const
 {
-    return detail::unordered_map_get_or(_mouse.buttonReleased, button, false);
+    return detail::unorderedMapGetOr(_mouse.buttonReleased, button, false);
 }
 
 void InputManager::GetMousePosition(int& x, int& y) const
@@ -164,7 +179,7 @@ bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
         return false;
     }
 
-    return detail::unordered_map_get_or(_gamepad.buttonPressed, button, false);
+    return detail::unorderedMapGetOr(_gamepad.buttonPressed, button, false);
 }
 
 bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
@@ -175,7 +190,7 @@ bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
         return false;
     }
 
-    return detail::unordered_map_get_or(_gamepad.buttonHeld, button, false);
+    return detail::unorderedMapGetOr(_gamepad.buttonHeld, button, false);
 }
 
 bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
@@ -186,7 +201,7 @@ bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
         return false;
     }
 
-    return detail::unordered_map_get_or(_gamepad.buttonReleased, button, false);
+    return detail::unorderedMapGetOr(_gamepad.buttonReleased, button, false);
 }
 
 float InputManager::GetGamepadAxis(GamepadAxis axis) const
@@ -198,5 +213,14 @@ float InputManager::GetGamepadAxis(GamepadAxis axis) const
     }
 
     SDL_GamepadAxis sdlAxis = static_cast<SDL_GamepadAxis>(axis);
-    return SDL_GetGamepadAxis(_gamepad.sdlHandle, sdlAxis);
+    float value = SDL_GetGamepadAxis(_gamepad.sdlHandle, sdlAxis);
+    value /= SDL_JOYSTICK_AXIS_MAX; // Convert to -1 to 1
+
+    // No deadzone handling for triggers
+    if (axis == GamepadAxis::eGAMEPAD_AXIS_LEFT_TRIGGER || axis == GamepadAxis::eGAMEPAD_AXIS_RIGHT_TRIGGER)
+    {
+        return value;
+    }
+
+    return detail::ClampDeadzone(value, 0.1f, 0.9f);
 }
