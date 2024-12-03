@@ -1,6 +1,6 @@
 #pragma once
 
-#include "particles/particle_util.hpp"
+#include "particle_util.hpp"
 
 struct EmitterComponent
 {
