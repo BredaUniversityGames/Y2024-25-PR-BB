@@ -34,9 +34,6 @@ private:
 
     vk::PipelineLayout _skinnedPipelineLayout;
     vk::Pipeline _skinnedPipeline;
-    vk::DescriptorSetLayout _skinDescriptorSetLayout;
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
 
     ResourceHandle<Buffer> _drawBuffer;
     vk::DescriptorSet _drawBufferDescriptorSet;

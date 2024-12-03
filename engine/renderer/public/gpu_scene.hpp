@@ -41,6 +41,7 @@ struct DrawIndexedIndirectCommand
 };
 
 constexpr uint32_t MAX_INSTANCES = 4096 * 4;
+constexpr uint32_t MAX_BONES = 512;
 
 class GPUScene
 {
@@ -61,6 +62,9 @@ public:
     ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+
+    const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
+    const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
 
     const Range& StaticDrawRange() const { return _staticDrawRange; }
     const Range& SkinnedDrawRange() const { return _skinnedDrawRange; }
@@ -138,25 +142,35 @@ private:
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
 
+    vk::DescriptorSetLayout _skinDescriptorSetLayout;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
+
     void UpdateSceneData(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
     void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);
     void UpdateCameraData(uint32_t frameIndex);
+    void UpdateSkinBuffers(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializeObjectInstancesBuffers();
+    void InitializeSkinBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
+    void CreateSkinDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreateObjectInstancesDescriptorSets();
+    void CreateSkinDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
+    void UpdateSkinDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
     void CreateObjectInstancesBuffers();
+    void CreateSkinBuffers();
 
     void InitializeIndirectDrawBuffer();
     void InitializeIndirectDrawDescriptor();

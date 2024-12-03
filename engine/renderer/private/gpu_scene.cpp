@@ -30,6 +30,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 {
     InitializeSceneBuffers();
     InitializeObjectInstancesBuffers();
+    InitializeSkinBuffers();
 
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
@@ -42,6 +43,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_skinDescriptorSetLayout);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -49,6 +51,7 @@ void GPUScene::Update(uint32_t frameIndex)
     UpdateSceneData(frameIndex);
     UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
+    UpdateSkinBuffers(frameIndex);
     WriteDraws(frameIndex);
 }
 
@@ -210,6 +213,21 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
     }
 }
 
+void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
+{
+    auto jointView = _ecs->registry.view<JointComponent, WorldMatrixComponent>();
+    for (entt::entity entity : jointView)
+    {
+        const auto& joint = jointView.get<JointComponent>(entity);
+        const auto& matrix = jointView.get<WorldMatrixComponent>(entity);
+        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrix);
+
+        glm::mat4 skinMatrix = worldTransform * joint.inverseBindMatrix;
+        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+        std::memcpy(static_cast<std::byte*>(buffer->mappedPtr) + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
+    }
+}
+
 void GPUScene::InitializeSceneBuffers()
 {
     CreateSceneBuffers();
@@ -222,6 +240,13 @@ void GPUScene::InitializeObjectInstancesBuffers()
     CreateObjectInstancesBuffers();
     CreateObjectInstanceDescriptorSetLayout();
     CreateObjectInstancesDescriptorSets();
+}
+
+void GPUScene::InitializeSkinBuffers()
+{
+    CreateSkinBuffers();
+    CreateSkinDescriptorSetLayout();
+    CreateSkinDescriptorSets();
 }
 
 void GPUScene::CreateSceneDescriptorSetLayout()
@@ -255,6 +280,20 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
     std::vector<std::string_view> names { "InstanceData" };
 
     _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateSkinDescriptorSetLayout()
+{
+    vk::DescriptorSetLayoutBinding binding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
+    };
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
+    std::vector<std::string_view> names { "SkinningMatrices" };
+    _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -296,6 +335,22 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
     {
         _objectInstancesFrameData[i].descriptorSet = descriptorSets[i];
         UpdateObjectInstancesDescriptorSet(i);
+    }
+}
+
+void GPUScene::CreateSkinDescriptorSets()
+{
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { _skinDescriptorSetLayout, _skinDescriptorSetLayout, _skinDescriptorSetLayout };
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+        .pSetLayouts = layouts.data(),
+    };
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, _skinDescriptorSets.data()),
+        "Failed allocating object instance descriptor sets!");
+    for (size_t i = 0; i < _skinDescriptorSets.size(); ++i)
+    {
+        UpdateSkinDescriptorSet(i);
     }
 }
 
@@ -343,6 +398,28 @@ void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
     _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
+void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
+{
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = _skinDescriptorSets[frameIndex],
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
+
+    _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+}
+
 void GPUScene::CreateSceneBuffers()
 {
     for (size_t i = 0; i < _sceneFrameData.size(); ++i)
@@ -378,6 +455,27 @@ void GPUScene::CreateObjectInstancesBuffers()
             .SetName(name);
 
         _objectInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+    }
+}
+void GPUScene::CreateSkinBuffers()
+{
+    for (uint32_t i = 0; i < _skinBuffers.size(); ++i)
+    {
+        BufferCreation creation {
+            .size = sizeof(glm::mat4) * MAX_BONES,
+            .usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
+            .isMappable = true,
+            .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+            .name = "Skin matrices buffer",
+        };
+        _skinBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+
+        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+        for (uint32_t j = 0; j < MAX_BONES; ++j)
+        {
+            glm::mat4 data { 1.0f };
+            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+        }
     }
 }
 
