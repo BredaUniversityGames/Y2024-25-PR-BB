@@ -4,9 +4,6 @@
 #include "log.hpp"
 #include "vulkan_context.hpp"
 
-template <>
-std::weak_ptr<ResourceManager<GPUImage>> ResourceHandle<GPUImage>::manager = {};
-
 ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Sampler> defaultSampler)
     : _context(context)
     , _defaultSampler(defaultSampler)

@@ -6,8 +6,8 @@
 #include "range.hpp"
 #include "resource_manager.hpp"
 
-#include <lib/includes_vulkan.hpp>
 #include <memory>
+#include <vulkan_include.hpp>
 
 class GPUScene;
 class BatchBuffer;

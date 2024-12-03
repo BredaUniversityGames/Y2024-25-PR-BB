@@ -17,6 +17,7 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 
@@ -227,10 +228,10 @@ void AssignAttribute(T& vertexAttribute, uint32_t index, const fastgltf::Attribu
 }
 
 template <typename T>
-void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox);
+void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius);
 
 template <>
-void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox)
+void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
 {
     uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
     vertices = std::vector<Vertex>(vertexCount);
@@ -249,11 +250,14 @@ void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Prim
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3{0.0f}, vertices[i].position));
     }
+
+    boundingRadius = glm::sqrt(boundingRadius);
 }
 
 template <>
-void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox)
+void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
 {
     uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
     vertices = std::vector<SkinnedVertex>(vertexCount);
@@ -276,7 +280,10 @@ void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const 
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3{0.0f}, vertices[i].position));
     }
+
+    boundingRadius = glm::sqrt(boundingRadius);
 }
 
 template <typename T>
@@ -288,7 +295,7 @@ CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fast
     if (gltfPrimitive.materialIndex.has_value())
         mesh.materialIndex = gltfPrimitive.materialIndex.value();
 
-    ProcessVertices(mesh.vertices, gltfPrimitive, gltf, mesh.boundingBox);
+    ProcessVertices(mesh.vertices, gltfPrimitive, gltf, mesh.boundingBox, mesh.boundingRadius);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {
@@ -659,6 +666,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.animation = animations.animation;
     }
 
+    // TODO: Look into this before merge.
     // assert(gltf.skins.size() <= 1 && "Only support for one skin!");
 
     Hierarchy::Node baseNode;

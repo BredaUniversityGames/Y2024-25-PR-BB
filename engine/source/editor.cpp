@@ -248,7 +248,7 @@ void Editor::DisplaySelectedEntityDetails()
     RigidbodyComponent* rigidbody = _ecs->registry.try_get<RigidbodyComponent>(_selectedEntity);
     if (rigidbody != nullptr)
     {
-        _ecs->GetSystem<PhysicsSystem>().InspectRigidBody(*rigidbody);
+        _ecs->GetSystem<PhysicsSystem>()->InspectRigidBody(*rigidbody);
     }
 
     if (nameComponent != nullptr)

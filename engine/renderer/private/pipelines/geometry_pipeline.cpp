@@ -40,7 +40,7 @@ GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& conte
         for (uint32_t j = 0; j < 512; ++j)
         {
             glm::mat4 data { 1.0f };
-            std::memcpy(skinBuffer->mappedPtr + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
         }
     }
 
@@ -83,7 +83,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
         glm::mat4 skinMatrix = worldTransform * joint.inverseBindMatrix;
         const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[currentFrame]);
-        std::memcpy(buffer->mappedPtr + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
+        std::memcpy(static_cast<std::byte*>(buffer->mappedPtr) + joint.jointIndex * sizeof(glm::mat4), &skinMatrix, sizeof(glm::mat4));
     }
 
     _culler.RecordCommands(commandBuffer, currentFrame, scene, scene.gpuScene->MainCamera(), _drawBuffer, _drawBufferDescriptorSet);

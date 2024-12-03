@@ -2,11 +2,11 @@
 
 #include "constants.hpp"
 #include "resource_manager.hpp"
+#include "vulkan_include.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <lib/includes_vulkan.hpp>
 #include <memory>
 
 class GraphicsContext;
@@ -30,7 +30,7 @@ public:
         float maxBrightnessExtraction = 5.0f;
 
     private:
-        glm::vec2 _padding;
+        MAYBE_UNUSED glm::vec2 _padding;
     };
 
     struct FrameData

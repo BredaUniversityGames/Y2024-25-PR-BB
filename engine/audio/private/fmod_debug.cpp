@@ -1,8 +1,8 @@
 #include "fmod_debug.hpp"
-
-#include "fmod.h"
-#include "fmod_errors.h"
+#include "common.hpp"
+#include "fmod_include.hpp"
 #include "log.hpp"
+
 #include <iostream>
 #include <string>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <lib/includes_vulkan.hpp>
+#include <vulkan_include.hpp>
 
 #include "gpu_resources.hpp"
 

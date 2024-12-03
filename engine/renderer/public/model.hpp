@@ -43,7 +43,6 @@ struct CPUMesh
 
 struct CPUModel
 {
-
     // For now this is only meant to be used in combination with an owning CPUModel.
     struct CPUMaterial
     {

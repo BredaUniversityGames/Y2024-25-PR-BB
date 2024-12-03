@@ -6,9 +6,6 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
-template <>
-std::weak_ptr<ResourceManager<GPUModel>> ResourceHandle<GPUModel>::manager = {};
-
 ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager> imageResourceManager, std::shared_ptr<MaterialResourceManager> materialResourceManager, std::shared_ptr<MeshResourceManager> meshResourceManager)
     : _imageResourceManager(imageResourceManager)
     , _materialResourceManager(materialResourceManager)

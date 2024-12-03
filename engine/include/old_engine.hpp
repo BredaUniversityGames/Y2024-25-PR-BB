@@ -39,5 +39,5 @@ private:
     // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
-    bool _shouldQuit = false;
+    MAYBE_UNUSED bool _shouldQuit = false;
 };
