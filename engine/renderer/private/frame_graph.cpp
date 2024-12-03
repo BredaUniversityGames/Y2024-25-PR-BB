@@ -226,8 +226,8 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
     }
 
     const glm::vec2 fViewportSize = viewportSize;
-    node.viewport = vk::Viewport(0.0f, 0.0f, fViewportSize.x, fViewportSize.y, 0.0f, 1.0f);
-    node.scissor = vk::Rect2D(vk::Offset2D { 0, 0 }, vk::Extent2D { viewportSize.x, viewportSize.y });
+    node.viewport = vk::Viewport { 0.0f, 0.0f, fViewportSize.x, fViewportSize.y, 0.0f, 1.0f };
+    node.scissor = vk::Rect2D { vk::Offset2D { 0, 0 }, vk::Extent2D { viewportSize.x, viewportSize.y } };
 }
 
 void FrameGraph::CreateMemoryBarriers()
