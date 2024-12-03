@@ -8,8 +8,8 @@ class ParticleInterface;
 class ParticleModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
-    void Shutdown(Engine& engine) override;
-    void Tick(Engine& engine) override;
+    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    void Tick(MAYBE_UNUSED Engine& engine) override {};
 
 public:
     ParticleModule() = default;

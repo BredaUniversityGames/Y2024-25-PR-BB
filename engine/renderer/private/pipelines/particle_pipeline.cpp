@@ -1,4 +1,4 @@
-#include "particle_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 
 #include "camera.hpp"
 #include "ecs.hpp"
@@ -13,7 +13,7 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
+#include "../vulkan_helper.hpp"
 
 #include <pipeline_builder.hpp>
 

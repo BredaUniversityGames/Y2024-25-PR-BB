@@ -6,7 +6,7 @@
 #include "pipeline_builder.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
+#include "../vulkan_helper.hpp"
 
 TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)

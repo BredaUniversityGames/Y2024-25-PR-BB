@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
+#include <particle_module.hpp>
 
 RendererModule::RendererModule()
 {
@@ -29,7 +30,6 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
 void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _context->VulkanContext()->Device().waitIdle();
-
     _imguiBackend.reset();
 
     _renderer.reset();

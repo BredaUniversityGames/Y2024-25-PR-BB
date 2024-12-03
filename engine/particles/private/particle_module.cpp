@@ -12,14 +12,5 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
     auto renderer = engine.GetModule<RendererModule>().GetRenderer();
     _particleInterface = std::make_unique<ParticleInterface>(renderer->GetContext(), ecs);
 
-    return ModuleTickOrder::ePreRender;
-}
-
-void ParticleModule::Shutdown(MAYBE_UNUSED Engine& engine)
-{
-    _particleInterface.reset();
-}
-
-void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
-{
+    return ModuleTickOrder::ePostTick;
 }
