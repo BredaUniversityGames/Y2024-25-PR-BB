@@ -13,6 +13,7 @@ class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
 class GaussianBlurPipeline;
+class ClusteringPipeline;
 class ShadowPipeline;
 class IBLPipeline;
 class ParticlePipeline;
@@ -67,6 +68,7 @@ private:
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<ClusteringPipeline> _clusteringPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -87,6 +89,8 @@ private:
 
     ResourceHandle<GPUImage> _hdrTarget;
 
+    ResourceHandle<Buffer> _clusterOutputBuffer;
+
     uint32_t _currentFrame { 0 };
 
     void CreateCommandBuffers();
@@ -94,6 +98,7 @@ private:
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
+    void InitializeClusterOutputBuffer();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

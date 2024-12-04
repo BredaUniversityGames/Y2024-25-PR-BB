@@ -160,6 +160,7 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     }
     cameraBuffer.proj[1][1] *= -1;
     cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
+    cameraBuffer.invProj = glm::inverse(cameraBuffer.proj);
 
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
     cameraBuffer.cameraPosition = TransformHelpers::GetLocalPosition(transform);

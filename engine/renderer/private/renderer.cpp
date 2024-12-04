@@ -17,6 +17,7 @@
 #include "model_loader.hpp"
 #include "old_engine.hpp"
 #include "particles/particle_pipeline.hpp"
+#include "pipelines/clustering_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
@@ -26,6 +27,7 @@
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
@@ -46,6 +48,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeClusterOutputBuffer();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
@@ -85,6 +88,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
+    _clusteringPipeline = std::make_unique<ClusteringPipeline>(_context, *_gBuffers, *_swapChain, _clusterOutputBuffer);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -153,6 +157,11 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         // Reference to make sure it runs at the end
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
+    FrameGraphNodeCreation clusteringPass { *_clusteringPipeline, FrameGraphRenderPassType::eCompute };
+    clusteringPass.SetName("Clustering pass")
+        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        .AddOutput(_clusterOutputBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
@@ -163,6 +172,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
         .AddNode(debugPass)
+        .AddNode(clusteringPass)
         .Build();
 }
 
@@ -293,6 +303,19 @@ void Renderer::InitializeBloomTargets()
 
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
     _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
+}
+
+void Renderer::InitializeClusterOutputBuffer()
+{
+    // TODO: Remove hardcoded values
+    BufferCreation createInfo {};
+    createInfo.SetSize(3456 * (sizeof(glm::vec4) * 2))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(true)
+        .SetName("Clustering Buffer");
+
+    _clusterOutputBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
 }
 
 void Renderer::LoadEnvironmentMap()

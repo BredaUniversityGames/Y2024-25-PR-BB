@@ -17,15 +17,16 @@ layout (push_constant) uniform PushConstants
     vec2 screenSize;
 } pushConstants;
 
+layout (set = 0, binding = 0) buffer AABBs
+{
+    AABB clusters[];
+};
+
 layout (set = 1, binding = 0) uniform CameraUBO
 {
     Camera camera;
 };
 
-layout (set = 0, binding = 0) buffer AABBs
-{
-    AABB clusters[];
-};
 
 vec3 LineIntersectToZPlane(vec3 p0, vec3 p1, float z)
 {
@@ -39,10 +40,9 @@ vec3 LineIntersectToZPlane(vec3 p0, vec3 p1, float z)
 
     return result;
 }
-
 vec4 ClipToView(vec4 clip)
 {
-    vec4 view = mul(camera.invProj, clip);
+    vec4 view = camera.invProj * clip;
     view /= view.w;
 
     return view;
@@ -50,7 +50,7 @@ vec4 ClipToView(vec4 clip)
 
 vec4 ScreenToView(vec4 screen)
 {
-    vec2 texCoord = screen.xy / screenSize;
+    vec2 texCoord = screen.xy / pushConstants.screenSize;
 
     //vec4 clip = vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
     vec4 clip = vec4(vec2(texCoord.x, texCoord.y) * 2.0 - 1.0, screen.z, screen.w);
@@ -65,7 +65,8 @@ void main()
     const float zFar = camera.zFar;
 
     //gl_NumWorkGroups are the number of clusters in each dimension
-    uint tileSizePx = tileSizes[3];
+    //uint tileSizePx = pushConstants.tileSizes[3];
+    uint tileSizePx = pushConstants.tileSizes.z;
     uint tileIndex =
     gl_WorkGroupID.x +
     gl_WorkGroupID.y * gl_NumWorkGroups.x +
@@ -89,7 +90,7 @@ void main()
     vec3 maxPointAABB = max(max(minPointNear, minPointFar), max(maxPointNear, maxPointFar));
 
 
-    clusters[tileIndex].min = vec4(minPointAABB, 1.0);
+    clusters[tileIndex].min = vec4(minPointAABB, 0.0);
     clusters[tileIndex].max = vec4(maxPointAABB, 1.0);
 }
 
