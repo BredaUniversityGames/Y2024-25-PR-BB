@@ -15,21 +15,6 @@ V UnorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& 
     }
     return defaultValue;
 }
-
-float ClampDeadzone(float input, float innerDeadzone, float outerDeadzone)
-{
-    if (glm::abs(input) < innerDeadzone)
-    {
-        return 0.0f;
-    }
-
-    if (glm::abs(input) > outerDeadzone)
-    {
-        return 1.0f;
-    }
-
-    return input;
-}
 }
 
 InputManager::InputManager()
@@ -223,5 +208,20 @@ float InputManager::GetGamepadAxis(GamepadAxis axis) const
         return value;
     }
 
-    return detail::ClampDeadzone(value, 0.1f, 0.9f);
+    return ClampDeadzone(value, INNER_GAMEPAD_DEADZONE, OUTER_GAMEPAD_DEADZONE);
+}
+
+float InputManager::ClampDeadzone(float input, float innerDeadzone, float outerDeadzone) const
+{
+    if (glm::abs(input) < innerDeadzone)
+    {
+        return 0.0f;
+    }
+
+    if (glm::abs(input) > outerDeadzone)
+    {
+        return input < 0.0f ? MIN_GAMEPAD_AXIS : MAX_GAMEPAD_AXIS;
+    }
+
+    return input;
 }
