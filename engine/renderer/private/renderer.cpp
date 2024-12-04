@@ -314,7 +314,7 @@ void Renderer::InitializeSSAOTarget()
     CPUImage ssaoImageData {};
     ssaoImageData.SetName("SSAO Target")
         .SetSize(size.x, size.y)
-        .SetFormat(vk::Format::eR16Sfloat)
+        .SetFormat(vk::Format::eR8Unorm)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     _ssaoTarget = _context->Resources()->ImageResourceManager().Create(ssaoImageData);

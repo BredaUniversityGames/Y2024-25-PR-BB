@@ -62,6 +62,7 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, _pushConstants);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _descriptorSet }, {});
     // To add the descirpot sets for the kernel and noise buffers
 
     commandBuffer.draw(3, 1, 0, 0);
@@ -98,7 +99,7 @@ void SSAOPipeline::CreatePipeline()
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ vk::Format::eR16Sfloat })
+        .SetColorAttachmentFormats({ vk::Format::eR8Unorm })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)
         .BuildPipeline(_pipeline, _pipelineLayout);
 }
@@ -107,13 +108,14 @@ void SSAOPipeline::CreateBuffers()
     // c++ side first
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator;
-    std::vector<glm::vec3> ssaoKernel;
+    std::vector<glm::vec4> ssaoKernel;
     for (unsigned int i = 0; i < 64; ++i)
     {
-        glm::vec3 sample(
+        glm::vec4 sample(
             randomFloats(generator) * 2.0 - 1.0,
             randomFloats(generator) * 2.0 - 1.0,
-            randomFloats(generator));
+            randomFloats(generator),
+            0.0f); // padding
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
 
@@ -124,24 +126,26 @@ void SSAOPipeline::CreateBuffers()
         ssaoKernel.push_back(sample);
     }
 
-    std::vector<glm::vec3> ssaoNoise;
+    std::vector<glm::vec4> ssaoNoise;
     for (unsigned int i = 0; i < 16; i++)
     {
-        glm::vec3 noise(
+        glm::vec4 noise(
             randomFloats(generator) * 2.0 - 1.0,
             randomFloats(generator) * 2.0 - 1.0,
-            0.0f);
+            0.0f,
+            0.0f); // padding
         ssaoNoise.push_back(noise);
     }
 
     auto resources { _context->Resources() };
     auto cmdBuffer = SingleTimeCommands(_context->VulkanContext());
 
+    bblog::warn("{} {} {}", ssaoKernel[0].x, ssaoKernel[0].y, ssaoKernel[0].z);
     // Sample Kernel buffer
     {
         BufferCreation creation {};
         creation.SetName("Sample Kernel")
-            .SetSize(ssaoKernel.size() * sizeof(glm::vec3))
+            .SetSize(ssaoKernel.size() * sizeof(glm::vec4))
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
@@ -154,13 +158,13 @@ void SSAOPipeline::CreateBuffers()
     {
         BufferCreation creation {};
         creation.SetName("Noise Kernel")
-            .SetSize(ssaoNoise.size() * sizeof(glm::vec3))
+            .SetSize(ssaoNoise.size() * sizeof(glm::vec4))
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
         _noiseBuffer = resources->BufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(ssaoNoise, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->buffer);
+        cmdBuffer.CopyIntoLocalBuffer(ssaoNoise, 0, resources->BufferResourceManager().Access(_noiseBuffer)->buffer);
     }
 }
 void SSAOPipeline::CreateDescriptorSetLayouts()
@@ -170,13 +174,13 @@ void SSAOPipeline::CreateDescriptorSetLayouts()
             .binding = 0,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .stageFlags = vk::ShaderStageFlagBits::eAll,
             .pImmutableSamplers = nullptr },
         vk::DescriptorSetLayoutBinding {
             .binding = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .stageFlags = vk::ShaderStageFlagBits::eAll,
             .pImmutableSamplers = nullptr }
     };
 

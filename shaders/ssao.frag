@@ -37,8 +37,7 @@ void main()
     vec3 emissive = emissiveAOSample.rgb;
     float ao = emissiveAOSample.a;
 
-    outColor = vec4(1.0);
-
+    outColor = vec4(uSampleKernel.samples[0],1.0);
 
 }
 
