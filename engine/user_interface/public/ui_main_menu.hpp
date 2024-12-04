@@ -2,7 +2,7 @@
 #include "canvas.hpp"
 #include "ui_button.hpp"
 
-class UIFont;
+struct UIFont;
 class GraphicsContext;
 class MainMenuCanvas : public Canvas
 {

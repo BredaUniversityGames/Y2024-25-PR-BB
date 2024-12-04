@@ -85,8 +85,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
 
+    //temporary location
+    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
     viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
 
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);

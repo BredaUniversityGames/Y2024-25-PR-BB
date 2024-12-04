@@ -2,7 +2,7 @@
 #include "pch.hpp"
 #include "ui_element.hpp"
 
-class UIFont;
+struct UIFont;
 class UITextElement : public UIElement
 {
 public:

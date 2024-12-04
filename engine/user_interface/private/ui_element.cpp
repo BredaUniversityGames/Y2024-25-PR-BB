@@ -1,6 +1,8 @@
 #include "ui_element.hpp"
 #include "log.hpp"
 
+#include <algorithm>
+
 void UIElement::Update(const InputManager& input)
 {
     for (auto& child : _children)
