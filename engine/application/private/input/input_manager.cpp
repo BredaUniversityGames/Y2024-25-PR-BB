@@ -32,21 +32,21 @@ InputManager::~InputManager()
 
 void InputManager::Update()
 {
-    for (auto& key : _keyboard.keyPressed)
+    for (auto& key : _keyboard.inputPressed)
         key.second = false;
-    for (auto& key : _keyboard.keyReleased)
+    for (auto& key : _keyboard.inputReleased)
         key.second = false;
 
-    for (auto& button : _mouse.buttonPressed)
+    for (auto& button : _mouse.inputPressed)
         button.second = false;
-    for (auto& button : _mouse.buttonReleased)
+    for (auto& button : _mouse.inputReleased)
         button.second = false;
 
     if (IsGamepadAvailable())
     {
-        for (auto& button : _gamepad.buttonPressed)
+        for (auto& button : _gamepad.inputPressed)
             button.second = false;
-        for (auto& button : _gamepad.buttonReleased)
+        for (auto& button : _gamepad.inputReleased)
             button.second = false;
     }
 }
@@ -59,30 +59,30 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         if (event.key.repeat == 0)
         { // Only process on first keydown, not when holding
             KeyboardCode key = static_cast<KeyboardCode>(event.key.key);
-            _keyboard.keyPressed[key] = true;
-            _keyboard.keyHeld[key] = true;
+            _keyboard.inputPressed[key] = true;
+            _keyboard.inputHeld[key] = true;
         }
         break;
     case SDL_EVENT_KEY_UP:
     {
         KeyboardCode key = static_cast<KeyboardCode>(event.key.key);
-        _keyboard.keyHeld[key] = false;
-        _keyboard.keyReleased[key] = true;
+        _keyboard.inputHeld[key] = false;
+        _keyboard.inputReleased[key] = true;
         break;
     }
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     {
         MouseButton button = static_cast<MouseButton>(event.button.button);
-        _mouse.buttonPressed[button] = true;
-        _mouse.buttonHeld[button] = true;
+        _mouse.inputPressed[button] = true;
+        _mouse.inputHeld[button] = true;
         break;
     }
     case SDL_EVENT_MOUSE_BUTTON_UP:
     {
         MouseButton button = static_cast<MouseButton>(event.button.button);
-        _mouse.buttonHeld[button] = false;
-        _mouse.buttonReleased[button] = true;
+        _mouse.inputHeld[button] = false;
+        _mouse.inputReleased[button] = true;
         break;
     }
     case SDL_EVENT_MOUSE_MOTION:
@@ -93,15 +93,15 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     {
         GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
-        _gamepad.buttonPressed[button] = true;
-        _gamepad.buttonHeld[button] = true;
+        _gamepad.inputPressed[button] = true;
+        _gamepad.inputHeld[button] = true;
         break;
     }
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
     {
         GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
-        _gamepad.buttonHeld[button] = false;
-        _gamepad.buttonReleased[button] = true;
+        _gamepad.inputHeld[button] = false;
+        _gamepad.inputReleased[button] = true;
         break;
     }
     case SDL_EVENT_GAMEPAD_ADDED:
@@ -132,38 +132,38 @@ void InputManager::UpdateEvent(const SDL_Event& event)
 
 bool InputManager::IsKeyPressed(KeyboardCode key) const
 {
-    return detail::UnorderedMapGetOr(_keyboard.keyPressed, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.inputPressed, key, false);
 }
 
 bool InputManager::IsKeyHeld(KeyboardCode key) const
 {
-    return detail::UnorderedMapGetOr(_keyboard.keyHeld, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.inputHeld, key, false);
 }
 
 bool InputManager::IsKeyReleased(KeyboardCode key) const
 {
-    return detail::UnorderedMapGetOr(_keyboard.keyReleased, key, false);
+    return detail::UnorderedMapGetOr(_keyboard.inputReleased, key, false);
 }
 
 bool InputManager::IsMouseButtonPressed(MouseButton button) const
 {
-    return detail::UnorderedMapGetOr(_mouse.buttonPressed, button, false);
+    return detail::UnorderedMapGetOr(_mouse.inputPressed, button, false);
 }
 
 bool InputManager::IsMouseButtonHeld(MouseButton button) const
 {
-    return detail::UnorderedMapGetOr(_mouse.buttonHeld, button, false);
+    return detail::UnorderedMapGetOr(_mouse.inputHeld, button, false);
 }
 
 bool InputManager::IsMouseButtonReleased(MouseButton button) const
 {
-    return detail::UnorderedMapGetOr(_mouse.buttonReleased, button, false);
+    return detail::UnorderedMapGetOr(_mouse.inputReleased, button, false);
 }
 
-void InputManager::GetMousePosition(int& x, int& y) const
+void InputManager::GetMousePosition(int32_t& x, int32_t& y) const
 {
-    x = static_cast<int>(_mouse.positionX);
-    y = static_cast<int>(_mouse.positionY);
+    x = static_cast<int32_t>(_mouse.positionX);
+    y = static_cast<int32_t>(_mouse.positionY);
 }
 
 bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
@@ -173,7 +173,7 @@ bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.buttonPressed, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.inputPressed, button, false);
 }
 
 bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
@@ -183,7 +183,7 @@ bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.buttonHeld, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.inputHeld, button, false);
 }
 
 bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
@@ -193,10 +193,27 @@ bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.buttonReleased, button, false);
+    return detail::UnorderedMapGetOr(_gamepad.inputReleased, button, false);
 }
 
 float InputManager::GetGamepadAxis(GamepadAxis axis) const
+{
+    if (!IsGamepadAvailable())
+    {
+        return 0.0f;
+    }
+
+    float value = GetRawGamepadAxis(axis);
+
+    if (axis == GamepadAxis::eGAMEPAD_AXIS_LEFT_TRIGGER || axis == GamepadAxis::eGAMEPAD_AXIS_RIGHT_TRIGGER)
+    {
+        return value;
+    }
+
+    return ClampDeadzone(value, INNER_GAMEPAD_DEADZONE, OUTER_GAMEPAD_DEADZONE);
+}
+
+float InputManager::GetRawGamepadAxis(GamepadAxis axis) const
 {
     if (!IsGamepadAvailable())
     {
@@ -207,13 +224,7 @@ float InputManager::GetGamepadAxis(GamepadAxis axis) const
     float value = SDL_GetGamepadAxis(_gamepad.sdlHandle, sdlAxis);
     value /= SDL_JOYSTICK_AXIS_MAX; // Convert to -1 to 1
 
-    // No deadzone handling for triggers
-    if (axis == GamepadAxis::eGAMEPAD_AXIS_LEFT_TRIGGER || axis == GamepadAxis::eGAMEPAD_AXIS_RIGHT_TRIGGER)
-    {
-        return value;
-    }
-
-    return ClampDeadzone(value, INNER_GAMEPAD_DEADZONE, OUTER_GAMEPAD_DEADZONE);
+    return value;
 }
 
 float InputManager::ClampDeadzone(float input, float innerDeadzone, float outerDeadzone) const
