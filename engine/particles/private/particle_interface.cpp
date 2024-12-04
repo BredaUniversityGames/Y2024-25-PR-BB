@@ -38,7 +38,7 @@ void ParticleInterface::LoadEmitterPresets()
     emitter.count = 5;
     emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     emitter.mass = 2.0f;
-    emitter.rotationVelocity = glm::vec2(0.0f, 0.5f);
+    emitter.rotationVelocity = glm::vec2(0.0f, 4.0f);
     emitter.maxLife = 5.0f;
     emitter.materialIndex = LoadEmitterImage("assets/textures/jeremi.png");
     emitter.size = glm::vec2(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height) / static_cast<float>(glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height));

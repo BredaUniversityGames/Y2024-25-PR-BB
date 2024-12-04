@@ -46,18 +46,14 @@ void main()
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // TODO: frustum culling
+
         // for now add all to culled list:
         uint culledIndex = atomicAdd(culledInstances.count, 1);
         ParticleInstance instance;
         instance.position = particle.position;
         instance.materialIndex = particle.materialIndex;
         instance.size = particle.size;
-        float angle = particle.rotationVelocity.x;
-        if(cross(vec3(0.0, 1.0, 0.0), particle.velocity).z > 0)
-        {
-            angle = -angle;
-        }
-        instance.angle = angle;
+        instance.angle = particle.rotationVelocity.x;
         culledInstances.instances[culledIndex] = instance;
     }
     else // if dead
