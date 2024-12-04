@@ -17,7 +17,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
 
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK))
     {
         bblog::error("Failed initializing SDL: {0}", SDL_GetError());
         engine.SetExit(-1);
