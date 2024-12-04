@@ -32,6 +32,11 @@ InputManager::InputManager()
             break;
         }
     }
+
+    if (IsGamepadAvailable())
+    {
+        bblog::info("[INPUT] No gamepad connected, gamepad input will be unavailable.");
+    }
 }
 
 InputManager::~InputManager()
@@ -161,7 +166,6 @@ bool InputManager::IsGamepadButtonPressed(GamepadButton button) const
 {
     if (!IsGamepadAvailable())
     {
-        bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
     }
 
@@ -172,7 +176,6 @@ bool InputManager::IsGamepadButtonHeld(GamepadButton button) const
 {
     if (!IsGamepadAvailable())
     {
-        bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
     }
 
@@ -183,7 +186,6 @@ bool InputManager::IsGamepadButtonReleased(GamepadButton button) const
 {
     if (!IsGamepadAvailable())
     {
-        bblog::warn("Trying to get gamepad input while no controller is available.");
         return false;
     }
 
@@ -194,7 +196,6 @@ float InputManager::GetGamepadAxis(GamepadAxis axis) const
 {
     if (!IsGamepadAvailable())
     {
-        bblog::warn("Trying to get gamepad input while no controller is available.");
         return 0.0f;
     }
 
