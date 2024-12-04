@@ -69,10 +69,6 @@ FetchContent_Declare(
 
 add_subdirectory(fmod)
 
-# Wren Language
-
-add_subdirectory(wren)
-
 # Cereal
 
 option(BUILD_DOC "Build documentation" OFF)
@@ -80,6 +76,20 @@ option(BUILD_SANDBOX "Build sandbox examples" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
+
+# Wren Language
+
+FetchContent_Declare(
+        wren
+        GIT_REPOSITORY https://github.com/santiberna/wrenbind17.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+set(WRENBIND17_BUILD_WREN ON)
+FetchContent_MakeAvailable(wren)
+
 
 # Tracy Profiler
 
