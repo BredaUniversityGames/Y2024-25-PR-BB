@@ -1,7 +1,7 @@
 #include "particles/particle_pipeline.hpp"
 
 #include "camera.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "gpu_scene.hpp"
@@ -17,7 +17,7 @@
 
 #include <pipeline_builder.hpp>
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
+ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
@@ -239,7 +239,7 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs->registry.view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);

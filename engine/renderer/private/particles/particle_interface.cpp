@@ -2,16 +2,16 @@
 #include "particles/particle_util.hpp"
 
 #include "components/name_component.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "model_loader.hpp"
 #include "particles/emitter_component.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
-#include "stb/stb_image.h"
+#include "stb_image.h"
 
-ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _ecs(ecs)
 {
@@ -20,17 +20,17 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
     // fill ECS with emitters
     for (size_t i = 0; i < MAX_EMITTERS; i++)
     {
-        auto entity = _ecs->registry.create();
+        auto entity = _ecs.GetRegistry().create();
         EmitterComponent emitterComponent;
-        _ecs->registry.emplace<EmitterComponent>(entity, emitterComponent);
-        auto& name = _ecs->registry.emplace<NameComponent>(entity);
+        _ecs.GetRegistry().emplace<EmitterComponent>(entity, emitterComponent);
+        auto& name = _ecs.GetRegistry().emplace<NameComponent>(entity);
         name.name = "Particle Emitter " + std::to_string(i);
     }
 }
 
 ParticleInterface::~ParticleInterface()
 {
-    for (auto const &i : _emitterImages)
+    for (auto const& i : _emitterImages)
     {
         _context->Resources()->ImageResourceManager().Destroy(i);
     }
@@ -79,10 +79,10 @@ uint32_t ParticleInterface::LoadEmitterImage(const char* imagePath)
 
 void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit)
 {
-    auto view = _ecs->registry.view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent>();
     for (auto entity : view)
     {
-        auto& emitterComponent = _ecs->registry.get<EmitterComponent>(entity);
+        auto& emitterComponent = _ecs.GetRegistry().get<EmitterComponent>(entity);
         if (emitterComponent.timesToEmit == 0)
         {
             emitterComponent.timesToEmit = timesToEmit;

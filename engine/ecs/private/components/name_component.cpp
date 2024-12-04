@@ -1,6 +1,6 @@
 #include "components/name_component.hpp"
 
-#include "imgui/misc/cpp/imgui_stdlib.h"
+#include <misc/cpp/imgui_stdlib.h>
 #include <entt/entity/registry.hpp>
 
 std::string_view NameComponent::GetDisplayName(const entt::registry& registry, entt::entity entity)

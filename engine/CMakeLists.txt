@@ -13,7 +13,7 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.hpp")
 
 target_sources(OldEngine PUBLIC ${headers} PRIVATE ${sources})
 target_include_directories(OldEngine PUBLIC "include" "../external")
-target_link_libraries(OldEngine PUBLIC Application PUBLIC Renderer PUBLIC External PUBLIC Physics)
+target_link_libraries(OldEngine PUBLIC Application PUBLIC Renderer PUBLIC External PUBLIC Physics PUBLIC ECS)
 
 source_exclude_unity("source/lib/stbi_impl.cpp")
 
@@ -28,5 +28,6 @@ target_add_module(Engine renderer Renderer)
 target_add_module(Engine physics Physics)
 target_add_module(Engine steam Steam)
 target_add_module(Engine audio Audio)
+target_add_module(Engine ecs ECS)
 
 target_link_libraries(Engine INTERFACE OldEngine INTERFACE External)

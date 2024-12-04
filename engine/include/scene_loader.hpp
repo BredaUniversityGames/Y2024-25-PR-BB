@@ -5,10 +5,10 @@
 #include <entt/entity/entity.hpp>
 #include <memory>
 
-class ECS;
 class GraphicsContext;
+class ECSModule;
 
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy);
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy);
 };

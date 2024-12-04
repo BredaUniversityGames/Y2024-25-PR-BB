@@ -1,12 +1,11 @@
 #pragma once
-#include "cereal/cereal.hpp"
-
+#include <cereal/cereal.hpp>
 #include <entt/entity/registry.hpp>
 
 class EntitySerializer
 {
 public:
-    EntitySerializer(const entt::registry& registry, entt::entity entity = entt::null)
+    EntitySerializer(const entt::registry& registry, entt::entity entity)
         : _registry(registry)
         , _entity(entity)
     {
@@ -20,7 +19,6 @@ private:
     entt::entity _entity;
 };
 
-CEREAL_CLASS_VERSION(EntitySerializer, 0);
 template <class Archive>
 void EntitySerializer::save(Archive& archive, uint32_t version) const
 {
@@ -35,3 +33,5 @@ void EntitySerializer::save(Archive& archive, uint32_t version) const
         // add components here
     }
 }
+
+CEREAL_CLASS_VERSION(EntitySerializer, 0);

@@ -1,7 +1,7 @@
 #include "model_loader.hpp"
 
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"

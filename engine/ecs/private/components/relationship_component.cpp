@@ -1,5 +1,7 @@
 #include "components/relationship_component.hpp"
 
+#include <imgui.h>
+
 namespace EnttEditor
 {
 template <>

@@ -2,12 +2,12 @@
 
 #include <imgui.h>
 #include <memory>
-#include <stb/stb_image.h>
+#include <stb_image.h>
 #include <utility>
 
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "gpu_scene.hpp"
@@ -15,7 +15,6 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "old_engine.hpp"
 #include "particles/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
@@ -33,7 +32,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
     , _ecs(ecs)
