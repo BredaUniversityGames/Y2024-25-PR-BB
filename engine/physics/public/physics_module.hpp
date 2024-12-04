@@ -10,7 +10,6 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 
-#include "components/rigidbody_component.hpp"
 #include "module_interface.hpp"
 JPH_SUPPRESS_WARNING_PUSH
 
@@ -296,7 +295,7 @@ inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 
     return glmMat;
 }
-
+struct RigidbodyComponent;
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;

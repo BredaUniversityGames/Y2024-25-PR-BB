@@ -266,14 +266,8 @@ void OldEngine::Tick(Engine& engine)
 
                 if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
                 {
-
                     RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
-
-                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
-                    {
-                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
-                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
-                    }
+                    physicsModule.AddImpulse(rb, cameraDir, 2000000.0f);
                 }
             }
         }

@@ -1,4 +1,5 @@
 ﻿#include "physics_module.hpp"
+#include "components/rigidbody_component.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
