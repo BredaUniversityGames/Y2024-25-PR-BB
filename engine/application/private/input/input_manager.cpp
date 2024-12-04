@@ -33,6 +33,8 @@ InputManager::InputManager()
         }
     }
 
+    SDL_free(joySticks);
+
     if (IsGamepadAvailable())
     {
         bblog::info("[INPUT] No gamepad connected, gamepad input will be unavailable.");
