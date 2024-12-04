@@ -26,14 +26,18 @@ void main()
 {
     ParticleInstance instance = culledInstances.instances[gl_InstanceIndex];
 
-    vec3 cameraRight = vec3(camera.view[0][0], camera.view[1][0], camera.view[2][0]);
-    vec3 cameraUp = vec3(camera.view[0][1], camera.view[1][1], camera.view[2][1]);
+    vec3 quadPos = inPosition;
+    mat2 rot = mat2(
+        cos(instance.angle), -sin(instance.angle),
+        sin(instance.angle), cos(instance.angle)
+    );
+    quadPos.xy *= rot;
+    quadPos.xy *= instance.size;
+    quadPos *= mat3(camera.view);
+    position = instance.position + quadPos;
 
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
 
-    position = instance.position + cameraRight * inPosition.x * instance.size.x
-        + cameraUp * inPosition.y * instance.size.y;
-
-    gl_Position = (camera.VP) * vec4(position, 1.0);
+    gl_Position = camera.VP * vec4(position, 1.0);
 }

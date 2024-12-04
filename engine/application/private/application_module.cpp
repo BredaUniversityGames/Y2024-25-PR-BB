@@ -1,6 +1,6 @@
 #include "application_module.hpp"
 #include "engine.hpp"
-#include "input_manager.hpp"
+#include "input/input_manager.hpp"
 #include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
@@ -15,7 +15,9 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
 {
     ModuleTickOrder priority = ModuleTickOrder::eLast;
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         bblog::error("Failed initializing SDL: {0}", SDL_GetError());
         engine.SetExit(-1);
