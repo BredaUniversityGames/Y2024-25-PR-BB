@@ -23,7 +23,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
         .AddModule<PhysicsModule>()
-        .AddModule<UIModule>();
+        .AddModule<UIModule>()
         .AddModule<ParticleModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
