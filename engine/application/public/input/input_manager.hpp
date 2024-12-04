@@ -66,4 +66,5 @@ private:
     } _gamepad {};
 
     float ClampDeadzone(float input, float innerDeadzone, float outerDeadzone) const;
+    void CloseGamepad();
 };

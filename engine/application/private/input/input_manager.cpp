@@ -20,32 +20,13 @@ V UnorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& 
 InputManager::InputManager()
 {
     SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
-
-    int numGamepads {};
-    SDL_JoystickID* joySticks = SDL_GetGamepads(&numGamepads);
-
-    for (int i = 0; i < numGamepads; i++)
-    {
-        if (SDL_IsGamepad(joySticks[i]))
-        {
-            _gamepad.sdlHandle = SDL_OpenGamepad(joySticks[i]);
-            break;
-        }
-    }
-
-    SDL_free(joySticks);
-
-    if (IsGamepadAvailable())
-    {
-        bblog::info("[INPUT] No gamepad connected, gamepad input will be unavailable.");
-    }
 }
 
 InputManager::~InputManager()
 {
-    if (_gamepad.sdlHandle)
+    if (IsGamepadAvailable())
     {
-        SDL_CloseGamepad(_gamepad.sdlHandle);
+        CloseGamepad();
     }
 }
 
@@ -121,6 +102,27 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
         _gamepad.buttonHeld[button] = false;
         _gamepad.buttonReleased[button] = true;
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_ADDED:
+    {
+        if(!IsGamepadAvailable())
+        {
+            _gamepad.sdlHandle = SDL_OpenGamepad(event.gdevice.which);
+            bblog::info("[INPUT] Gamepad device added.");
+        }
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_REMOVED:
+    {
+        if(IsGamepadAvailable())
+        {
+            if (SDL_GetGamepadID(_gamepad.sdlHandle) == event.gdevice.which)
+            {
+                CloseGamepad();
+                bblog::info("[INPUT] Gamepad device removed.");
+            }
+        }
         break;
     }
     default:
@@ -227,4 +229,10 @@ float InputManager::ClampDeadzone(float input, float innerDeadzone, float outerD
     }
 
     return input;
+}
+
+void InputManager::CloseGamepad()
+{
+    SDL_CloseGamepad(_gamepad.sdlHandle);
+    _gamepad.sdlHandle = nullptr;
 }
