@@ -58,7 +58,7 @@ private:
         float positionX {}, positionY {};
     } _mouse {};
 
-    InputDevice<KeyboardCode> _keyboard{};
+    InputDevice<KeyboardCode> _keyboard {};
 
     struct Gamepad : InputDevice<GamepadButton>
     {

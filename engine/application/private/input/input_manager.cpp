@@ -106,7 +106,7 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     }
     case SDL_EVENT_GAMEPAD_ADDED:
     {
-        if(!IsGamepadAvailable())
+        if (!IsGamepadAvailable())
         {
             _gamepad.sdlHandle = SDL_OpenGamepad(event.gdevice.which);
             bblog::info("[INPUT] Gamepad device added.");
@@ -115,7 +115,7 @@ void InputManager::UpdateEvent(const SDL_Event& event)
     }
     case SDL_EVENT_GAMEPAD_REMOVED:
     {
-        if(IsGamepadAvailable())
+        if (IsGamepadAvailable())
         {
             if (SDL_GetGamepadID(_gamepad.sdlHandle) == event.gdevice.which)
             {
