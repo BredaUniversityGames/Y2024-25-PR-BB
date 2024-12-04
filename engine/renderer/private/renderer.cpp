@@ -16,14 +16,15 @@
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
+#include "pipelines/ssao_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
@@ -46,6 +47,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeSSAOTarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
@@ -81,6 +83,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
+    _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
@@ -102,6 +105,15 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     shadowPass.SetName("Shadow pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation ssaoPass { *_ssaoPipeline };
+    ssaoPass.SetName("SSAO pass")
+        .SetDebugLabelColor(glm::vec3(0.87f))
+        .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation lightingPass { *_lightingPipeline };
     lightingPass.SetName("Lighting pass")
@@ -156,6 +168,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
+        .AddNode(ssaoPass)
         .AddNode(shadowPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
@@ -293,6 +306,18 @@ void Renderer::InitializeBloomTargets()
 
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
     _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
+}
+void Renderer::InitializeSSAOTarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage ssaoImageData {};
+    ssaoImageData.SetName("SSAO Target")
+        .SetSize(size.x, size.y)
+        .SetFormat(vk::Format::eR16Sfloat)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+
+    _ssaoTarget = _context->Resources()->ImageResourceManager().Create(ssaoImageData);
 }
 
 void Renderer::LoadEnvironmentMap()

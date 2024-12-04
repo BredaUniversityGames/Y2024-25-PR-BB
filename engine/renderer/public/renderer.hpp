@@ -9,6 +9,7 @@
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
+class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
@@ -67,6 +68,7 @@ private:
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -86,6 +88,7 @@ private:
     std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
 
@@ -94,6 +97,7 @@ private:
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
+    void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };
