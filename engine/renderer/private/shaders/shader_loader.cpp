@@ -1,8 +1,7 @@
 #include "shaders/shader_loader.hpp"
 
-#include <fstream>
-
 #include "vulkan_helper.hpp"
+#include <fstream>
 
 std::vector<std::byte> shader::ReadFile(std::string_view filename)
 {

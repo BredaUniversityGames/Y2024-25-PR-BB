@@ -1,4 +1,4 @@
-﻿// Implementation based on Jolt phusics Hello world example
+﻿// Implementation based on Jolt physics Hello world example
 // https://github.com/jrouwe/JoltPhysicsHelloWorld/blob/main/Source/HelloWorld.cpp
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
@@ -55,6 +55,12 @@ enum PhysicsShapes
     eSPHERE,
     eBOX,
     eCUSTOM,
+};
+
+enum BodyType
+{
+    eDYNAMIC,
+    eSTATIC,
 };
 
 /// Class that determines if two object layers can collide
@@ -203,6 +209,10 @@ class DebugRendererSimpleImpl : public JPH::DebugRendererSimple
 public:
     void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor) override
     {
+        if (!_isEnabled)
+        {
+            return;
+        }
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
@@ -212,6 +222,11 @@ public:
 
     void AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
     {
+        if (!_isEnabled)
+        {
+            return;
+        }
+
         glm::vec3 fromPos(inFrom.GetX(), inFrom.GetY(), inFrom.GetZ());
         glm::vec3 toPos(inTo.GetX(), inTo.GetY(), inTo.GetZ());
 
@@ -243,9 +258,13 @@ public:
         linePositions.clear();
     }
 
+    void SetState(const bool newState) { _isEnabled = newState; }
+    bool GetState() const { return _isEnabled; }
+
 private:
     std::vector<glm::vec3> linePositions;
     std::vector<glm::vec3> persistentLinePositions;
+    bool _isEnabled = true;
 };
 
 struct RayHitInfo
@@ -255,7 +274,28 @@ struct RayHitInfo
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
     bool hasHit = false;
 };
+inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
+{
+    glm::mat4 glmMat;
 
+    // JPH::RMat44 stores rotation columns and translation separately
+    // mRotation is a 3x3 matrix, and mTranslation is a Vec3
+    // GLM uses column-major order, so we can map the columns directly
+
+    // Extract rotation columns from JPH::RMat44
+    JPH::Vec3 col0 = mat.GetColumn3(0);
+    JPH::Vec3 col1 = mat.GetColumn3(1);
+    JPH::Vec3 col2 = mat.GetColumn3(2);
+    JPH::Vec3 translation = mat.GetTranslation();
+
+    // Set the columns of glm::mat4
+    glmMat[0] = glm::vec4(col0.GetX(), col0.GetY(), col0.GetZ(), 0.0f);
+    glmMat[1] = glm::vec4(col1.GetX(), col1.GetY(), col1.GetZ(), 0.0f);
+    glmMat[2] = glm::vec4(col2.GetX(), col2.GetY(), col2.GetZ(), 0.0f);
+    glmMat[3] = glm::vec4(translation.GetX(), translation.GetY(), translation.GetZ(), 1.0f);
+
+    return glmMat;
+}
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
@@ -263,7 +303,8 @@ class PhysicsModule final : public ModuleInterface
     void Tick(Engine& engine) final;
 
 public:
-    PhysicsModule() = default;
+    PhysicsModule()
+        = default;
     ~PhysicsModule() final = default;
 
     NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
