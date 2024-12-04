@@ -128,6 +128,12 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
 
+    if (ImGui::Begin("Entity Details"))
+    {
+        DisplaySelectedEntityDetails();
+    }
+    ImGui::End();
+
     performanceTracker.Render();
     bloomSettings.Render();
 

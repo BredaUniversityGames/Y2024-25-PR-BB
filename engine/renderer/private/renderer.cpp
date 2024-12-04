@@ -15,12 +15,12 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "particles/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
@@ -31,6 +31,7 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
+
 
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)

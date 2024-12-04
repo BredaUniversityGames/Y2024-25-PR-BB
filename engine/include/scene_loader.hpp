@@ -10,5 +10,5 @@ class ECSModule;
 
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy);
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const CPUModel& cpuModel, const GPUModel& modelResources, const Hierarchy& hierarchy);
 };

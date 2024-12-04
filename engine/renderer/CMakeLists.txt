@@ -5,6 +5,7 @@ target_link_libraries(Renderer
         PUBLIC Core
         PUBLIC Application
         PUBLIC ECS
+        PUBLIC Particles
 )
 
 target_include_directories(Renderer
