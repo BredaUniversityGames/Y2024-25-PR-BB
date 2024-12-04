@@ -6,4 +6,5 @@ target_link_libraries(UserInterface
         PUBLIC Engine
         PUBLIC Utility
         PRIVATE glm::glm
-        PUBLIC Core)
+        PUBLIC Core
+        PUBLIC Application)
