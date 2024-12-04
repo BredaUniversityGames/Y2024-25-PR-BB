@@ -6,4 +6,5 @@ target_link_libraries(Physics
         PUBLIC Application
         PUBLIC Jolt
         PUBLIC EnTT::EnTT
+        PUBLIC OldEngine
 )

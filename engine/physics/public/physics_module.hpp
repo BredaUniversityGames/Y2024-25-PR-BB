@@ -10,8 +10,8 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 
+#include "components/rigidbody_component.hpp"
 #include "module_interface.hpp"
-
 JPH_SUPPRESS_WARNING_PUSH
 
 JPH_SUPPRESS_WARNINGS
@@ -296,6 +296,7 @@ inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 
     return glmMat;
 }
+
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
@@ -308,6 +309,12 @@ public:
     ~PhysicsModule() final = default;
 
     NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
+    void AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    void AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    glm::vec3 GetVelocity(RigidbodyComponent& rigidBody) const;
+    glm::vec3 GetAngularVelocity(RigidbodyComponent& rigidBody) const;
+    void SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
+    void SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
 
     JPH::BodyInterface* bodyInterface = nullptr;
     DebugRendererSimpleImpl* debugRenderer = nullptr;
