@@ -5,9 +5,6 @@
 #include <memory>
 #include <string>
 
-template <>
-std::weak_ptr<ResourceManager<std::string>> ResourceHandle<std::string>::manager = {};
-
 TEST(ResourceManagerTests, Creating)
 {
     // Arrange

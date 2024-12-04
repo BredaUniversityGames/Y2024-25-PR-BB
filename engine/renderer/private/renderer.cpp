@@ -17,7 +17,7 @@
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particles/particle_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"

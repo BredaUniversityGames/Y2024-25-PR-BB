@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh.hpp"
+#include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>
 
@@ -29,6 +30,18 @@ struct CPUMesh
         Vec3Range boundingBox;
         float boundingRadius;
     };
+
+    Vec3Range GetMeshBounds() const
+    {
+        glm::vec3 min { std::numeric_limits<float>::max() };
+        glm::vec3 max { std::numeric_limits<float>::lowest() };
+        for (const auto& primitive : primitives)
+        {
+            min = glm::min(min, primitive.boundingBox.min);
+            max = glm::max(max, primitive.boundingBox.max);
+        }
+        return Vec3Range(min, max);
+    }
 
     std::vector<Primitive> primitives;
 };

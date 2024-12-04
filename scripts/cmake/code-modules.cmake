@@ -38,8 +38,7 @@ function(module_default_init module)
         target_precompile_headers(${module} REUSE_FROM PCH)
     endif ()
 
-    if (ENABLE_TESTS)
-
+    if (COMPILE_TESTS)
         file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS "tests/*.cpp")
 
         if (test_sources)
