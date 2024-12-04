@@ -9,18 +9,17 @@ layout (location = 0) out vec4 outColor;
 
 struct QuadDrawInfo
 {
-    mat4 mpMatrix;       // 64 bytes, aligned to 16 bytes
-    vec4 color;          // 16 bytes, aligned to 16 bytes
-    vec2 uvMin;           // 8 bytes, aligned to 8 bytes
-    vec2 uvMax;           // 8 bytes, aligned to 8 bytes
-    uint textureIndex;   // 4 bytes, aligned to 4 bytes
+    mat4 matrix;// 64 bytes, aligned to 16 bytes
+    vec4 color;// 16 bytes, aligned to 16 bytes
+    vec2 uvMin;// 8 bytes, aligned to 8 bytes
+    vec2 uvMax;// 8 bytes, aligned to 8 bytes
+    uint textureIndex;// 4 bytes, aligned to 4 bytes
     bool useRedAsAlpha;
 };
 
 layout (push_constant) uniform PushConstants
 {
     QuadDrawInfo quad;
-    mat4 projection;
 } pushConstants;
 
 void main()

@@ -26,7 +26,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             glm::vec3 translation = glm::vec3(GetAbsoluteLocation() + glm::vec2(localOffset + correctedBearing.x, -correctedBearing.y), 0);
             glm::vec3 localScale = glm::vec3(glm::vec2(fontChar.size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetScale(), 0);
 
-            info.modelMatrix = (glm::scale(glm::translate(glm::mat4(1), translation), localScale));
+            info.matrix = (glm::scale(glm::translate(glm::mat4(1), translation), localScale));
             info.textureIndex = _font->fontAtlas.Index();
             info.useRedAsAlpha = true;
             info.color = _color;

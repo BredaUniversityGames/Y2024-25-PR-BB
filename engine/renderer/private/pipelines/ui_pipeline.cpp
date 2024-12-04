@@ -1,6 +1,7 @@
 #include "pipelines/ui_pipeline.hpp"
 
 #include "fastgltf/types.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -11,6 +12,7 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
     , _inputTarget(inputTarget)
@@ -95,14 +97,14 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
 
     for (const auto& quad : _drawList)
     {
         _pushConstants.quad = quad;
-        _pushConstants.projectionMatrix = _projectionMatrix * _pushConstants.quad.modelMatrix;
-        commandBuffer.pushConstants<UIPushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, { _pushConstants });
+        _pushConstants.quad.matrix = _projectionMatrix * _pushConstants.quad.matrix;
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.pushConstants<UIPushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, _pushConstants);
 
         commandBuffer.draw(6, 1, 0, 0);
         _context->GetDrawStats().Draw(6);
@@ -110,7 +112,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
     _drawList.clear();
 }
-void UIPipeline::SetProjectionMatrix(const glm::vec2 size, const glm::vec2 offset)
+void UIPipeline::SetProjectionMatrix(const glm::vec2& size, const glm::vec2& offset)
 {
-    _projectionMatrix = glm::ortho<float>(offset.x, size.x, offset.y, size.y);
+    _projectionMatrix = glm::ortho<float>(offset.x, offset.x + size.x, offset.y, offset.y + size.y);
 }

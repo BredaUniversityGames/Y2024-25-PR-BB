@@ -16,7 +16,7 @@ public:
     NON_COPYABLE(UIPipeline);
     NON_MOVABLE(UIPipeline);
     void RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
-    void SetProjectionMatrix(const glm::vec2 size, const glm::vec2 offset);
+    void SetProjectionMatrix(const glm::vec2& size, const glm::vec2& offset);
     std::vector<QuadDrawInfo>&
     GetDrawList()
     {
@@ -26,8 +26,7 @@ public:
 private:
     struct UIPushConstants
     {
-        QuadDrawInfo quad;
-        glm::mat4 projectionMatrix; // Subject to change with instancing.
+        alignas(16) QuadDrawInfo quad;
     } _pushConstants;
 
     std::vector<QuadDrawInfo> _drawList;

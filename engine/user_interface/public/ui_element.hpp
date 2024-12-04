@@ -26,7 +26,7 @@ public:
         eTopRight,
         eBottomLeft,
         eBottomRight,
-    } anchorPoint;
+    } anchorPoint = AnchorPoint::eTopLeft;
 
     /**
      * Whenever this gets called the updateChildrenAbsoluteLocations of the parent needs to get called as well!

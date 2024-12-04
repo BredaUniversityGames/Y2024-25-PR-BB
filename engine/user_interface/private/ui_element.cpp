@@ -11,11 +11,12 @@ void UIElement::Update(const InputManager& input)
 UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
 {
     _children.emplace_back(std::move(child));
+    UIElement& addedChild = *_children.back();
     std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
 
     UpdateAllChildrenAbsoluteLocations();
-    return *_children.back();
+    return addedChild;
 }
 
 void UIElement::UpdateAllChildrenAbsoluteLocations()
@@ -42,7 +43,7 @@ void UIElement::UpdateAllChildrenAbsoluteLocations()
                 newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
                 break;
             case AnchorPoint::eBottomRight:
-
+                newChildLocation = { GetAbsoluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
                 break;
             }
 
