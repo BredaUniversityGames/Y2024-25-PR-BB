@@ -18,13 +18,13 @@ PhysicsSystem::PhysicsSystem(ECSModule& ecs, PhysicsModule& physicsModule)
 
 void PhysicsSystem::InitializePhysicsColliders()
 {
-    const auto view = _ecs.registry.view<StaticMeshComponent, TransformComponent>();
+    const auto view = _ecs.GetRegistry().view<StaticMeshComponent, TransformComponent>();
     for (const auto entity : view)
     {
         StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
 
         // Assume worldMatrix is your 4x4 transformation matrix
-        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.registry, entity);
+        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
 
         // Variables to store the decomposed components
         glm::vec3 scale;
@@ -54,8 +54,8 @@ void PhysicsSystem::InitializePhysicsColliders()
         // rotation now
         _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
 
-        _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
-        _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
+        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
     }
 }
 void PhysicsSystem::CleanUp()
@@ -80,15 +80,14 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     for (auto active_body : activeBodies)
     {
         const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(active_body));
-        if (_ecs.registry.valid(entity))
+        if (_ecs.GetRegistry().valid(entity))
         {
-            _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
+            _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
         }
     }
 
     //    Update the meshes
-    const auto view
-        = _ecs.registry.view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
+    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
@@ -96,9 +95,9 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
 
         // if somehow is now not active or is static lets remove the update component
         if (!_physicsModule.bodyInterface->IsActive(rb.bodyID))
-            _ecs.registry.remove<UpdateMeshAndPhysics>(entity);
+            _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
         if (_physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
-            _ecs.registry.remove<UpdateMeshAndPhysics>(entity);
+            _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
@@ -113,7 +112,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         const glm::vec3 centerPos = (meshComponent.boundingBox.max + meshComponent.boundingBox.min) * 0.5f;
         joltToGlm = glm::translate(joltToGlm, -centerPos);
 
-        TransformHelpers::SetWorldTransform(ecs.registry, entity, joltToGlm);
+        TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);
     }
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
@@ -150,12 +149,9 @@ void PhysicsSystem::Inspect()
     {
         for (int i = 0; i < amount; i++)
         {
-<<<<<<< HEAD
             entt::entity entity = _ecs.GetRegistry().create();
             RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape);
-            == == == = entt::entity entity = _ecs.registry.create();
-            RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape, eSTATIC);
->>>>>>> main
+
             NameComponent node;
             node.name = "Physics Entity";
             _ecs.GetRegistry().emplace<NameComponent>(entity, node);
@@ -188,8 +184,8 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
     _physicsModule.bodyInterface->ActivateBody(rb.bodyID);
     const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(rb.bodyID));
-    if (_ecs.registry.valid(entity))
-        _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
+    if (_ecs.GetRegistry().valid(entity))
+        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
 
     ImGui::PushID(&rb.bodyID);
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);

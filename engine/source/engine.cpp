@@ -262,10 +262,10 @@ void OldEngine::Tick(Engine& engine)
                           << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
                           << "Fraction: " << hitInfo.hitFraction << std::endl;
 
-                if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
+                if (_ecs->GetRegistry().all_of<RigidbodyComponent>(hitInfo.entity))
                 {
 
-                    RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
+                    RigidbodyComponent& rb = _ecs->GetRegistry().get<RigidbodyComponent>(hitInfo.entity);
 
                     if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
                     {

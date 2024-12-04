@@ -1,10 +1,11 @@
 #include "renderer_module.hpp"
 
 #include "application_module.hpp"
+#include "ecs_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "particles/particle_interface.hpp"
+#include "particle_interface.hpp"
 #include "renderer.hpp"
 #include "vulkan_context.hpp"
 

@@ -28,9 +28,9 @@ entt::entity LoadNodeRecursive(ECSModule& ecs, const Hierarchy::Node& currentNod
 
     if (parent != entt::null)
     {
-        RelationshipHelpers::AttachChild(ecs.registry, parent, entity);
+        RelationshipHelpers::AttachChild(ecs.GetRegistry(), parent, entity);
     }
-    TransformHelpers::SetLocalTransform(ecs.registry, entity, currentNode.transform);
+    TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
 
     if (currentNode.meshIndex.has_value())
     {

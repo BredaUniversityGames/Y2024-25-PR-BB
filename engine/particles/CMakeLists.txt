@@ -5,5 +5,5 @@ target_link_libraries(Particles
         PUBLIC Utility
         PUBLIC Core
         PUBLIC Renderer
-        PUBLIC OldEngine
+        PUBLIC ECS
 )
