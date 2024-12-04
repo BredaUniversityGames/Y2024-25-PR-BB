@@ -20,6 +20,7 @@ struct QuadDrawInfo
 layout (push_constant) uniform PushConstants
 {
     QuadDrawInfo quad;
+    mat4 projection;
 } pushConstants;
 
 void main()

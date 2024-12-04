@@ -79,12 +79,12 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
 
 void CPUImage::FromPNG(std::string_view path)
 {
-    uint16_t width;
-    uint16_t height;
-    uint8_t nrChannels;
+    int width;
+    int height;
+    int nrChannels;
 
     std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(),
-        reinterpret_cast<int*>(&width), reinterpret_cast<int*>(&height), reinterpret_cast<int*>(&nrChannels),
+        &width,&height, &nrChannels,
         4));
 
     if (data == nullptr)
@@ -111,8 +111,8 @@ void CPUImage::FromPNG(std::string_view path)
         throw std::runtime_error("Image format is not supported!");
     }
     SetFormat(format);
-    SetSize(width, height);
-    initialData.assign(data, data + width * height * nrChannels);
+    SetSize(static_cast<uint16_t>(width),static_cast<uint16_t>(height));
+    initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * nrChannels));
     stbi_image_free(data);
 }
 CPUImage& CPUImage::SetData(std::vector<std::byte> data)
@@ -278,6 +278,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
         {
             imageSize *= sizeof(float);
         }
+        
         vk::Buffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
 
