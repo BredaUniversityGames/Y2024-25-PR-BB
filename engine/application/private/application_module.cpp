@@ -1,6 +1,7 @@
 #include "application_module.hpp"
 #include "engine.hpp"
 #include "input/input_manager.hpp"
+#include "input/action_manager.hpp"
 #include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
@@ -66,6 +67,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     };
 
     _inputManager = std::make_unique<InputManager>();
+    _actionManager = std::make_unique<ActionManager>();
     SetMouseHidden(_mouseHidden);
 
     return priority;
@@ -93,6 +95,8 @@ void ApplicationModule::Tick(Engine& engine)
             break;
         }
     }
+
+    _actionManager->Update();
 }
 
 ApplicationModule::ApplicationModule() = default;

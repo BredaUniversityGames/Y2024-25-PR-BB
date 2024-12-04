@@ -7,6 +7,7 @@
 #include "vulkan_include.hpp"
 
 class InputManager;
+class ActionManager;
 struct SDL_Window;
 
 // TODO: Maybe move to a GPU/Vulkan Context module
@@ -40,6 +41,7 @@ public:
 
 private:
     std::unique_ptr<InputManager> _inputManager {};
+    std::unique_ptr<ActionManager> _actionManager {};
     SDL_Window* _window = nullptr;
     VulkanInitInfo _vulkanInitInfo;
 
