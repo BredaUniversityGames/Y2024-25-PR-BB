@@ -1,12 +1,12 @@
-#include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
+#include "particle_interface.hpp"
+#include "particle_util.hpp"
 
 #include "components/name_component.hpp"
 #include "ecs.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "model_loader.hpp"
-#include "particles/emitter_component.hpp"
+#include "emitter_component.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
 #include "stb/stb_image.h"
@@ -15,8 +15,6 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
     : _context(context)
     , _ecs(ecs)
 {
-    LoadEmitterPresets();
-
     // fill ECS with emitters
     for (size_t i = 0; i < MAX_EMITTERS; i++)
     {
@@ -25,14 +23,6 @@ ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& con
         _ecs->registry.emplace<EmitterComponent>(entity, emitterComponent);
         auto& name = _ecs->registry.emplace<NameComponent>(entity);
         name.name = "Particle Emitter " + std::to_string(i);
-    }
-}
-
-ParticleInterface::~ParticleInterface()
-{
-    for (auto const &i : _emitterImages)
-    {
-        _context->Resources()->ImageResourceManager().Destroy(i);
     }
 }
 
@@ -57,7 +47,7 @@ void ParticleInterface::LoadEmitterPresets()
 
 uint32_t ParticleInterface::LoadEmitterImage(const char* imagePath)
 {
-    int32_t width, height, numChannels;
+    int32_t width = 0, height = 0, numChannels = 0;
     void* stbiData = stbi_load(imagePath, &width, &height, &numChannels, 4);
 
     if (stbiData == nullptr)

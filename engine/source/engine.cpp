@@ -14,15 +14,16 @@
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
+#include "emitter_component.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particles/emitter_component.hpp"
-#include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
+#include "particle_interface.hpp"
+#include "particle_module.hpp"
+#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -52,6 +53,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
@@ -69,6 +71,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     };
 
+    particleModule.GetParticleInterface().LoadEmitterPresets();
+
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
 
@@ -77,7 +81,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     for (const auto& model : models)
     {
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
 
@@ -120,6 +124,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
+    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -144,7 +149,9 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
+    physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -256,6 +263,18 @@ void OldEngine::Tick(Engine& engine)
                           << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
                           << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
                           << "Fraction: " << hitInfo.hitFraction << std::endl;
+
+                if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
+                {
+
+                    RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
+
+                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
+                    {
+                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
+                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
+                    }
+                }
             }
         }
     }
@@ -267,7 +286,12 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF1))
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
     static uint32_t eventId {};
