@@ -8,6 +8,8 @@
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
 #include "ui_module.hpp"
+#include "particle_module.hpp"
+
 #include "time_module.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
