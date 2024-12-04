@@ -1,6 +1,7 @@
 #pragma once
 
 #include "module_interface.hpp"
+#include "renderer.hpp"
 
 class PathfindingModule : public ModuleInterface
 {
@@ -14,4 +15,9 @@ public:
 
     NON_COPYABLE(PathfindingModule)
     NON_MOVABLE(PathfindingModule)
+
+    int SetNavigationMesh(const std::string& mesh);
+
+private:
+    std::shared_ptr<Renderer> _renderer;
 };

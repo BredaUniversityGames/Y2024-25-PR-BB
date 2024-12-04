@@ -7,4 +7,5 @@ target_link_libraries(Pathfinding
         PUBLIC Application
         PUBLIC OldEngine
         PUBLIC Physics
+        PUBLIC Renderer
 )
