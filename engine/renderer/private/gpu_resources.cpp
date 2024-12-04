@@ -79,7 +79,6 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
 
 void CPUImage::FromPNG(std::string_view path)
 {
-
     uint16_t width;
     uint16_t height;
     uint8_t nrChannels;
@@ -89,21 +88,28 @@ void CPUImage::FromPNG(std::string_view path)
         4));
 
     if (data == nullptr)
+    {
         throw std::runtime_error("Failed to load image!");
+    }
 
-    if (width > (std::numeric_limits<uint16_t>::max()) || height > static_cast<int>(std::numeric_limits<uint16_t>::max()))
+    if (width > UINT16_MAX || height > UINT16_MAX)
+    {
         throw std::runtime_error("Image size is too large!");
+    }
 
     vk::Format format;
     if (nrChannels == 3)
+    {
         format = vk::Format::eR8G8B8Unorm;
-
+    }
     else if (nrChannels == 4)
+    {
         format = vk::Format::eR8G8B8A8Unorm;
-
+    }
     else
+    {
         throw std::runtime_error("Image format is not supported!");
-
+    }
     SetFormat(format);
     SetSize(width, height);
     initialData.assign(data, data + width * height * nrChannels);
