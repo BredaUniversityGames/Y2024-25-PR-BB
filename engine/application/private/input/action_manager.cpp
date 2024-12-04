@@ -8,12 +8,23 @@ ActionManager::ActionManager()
         return;
     }
 
-    exitActionHandle = SteamInput()->GetDigitalActionHandle("Exit");
+    ActionMappingTable actionMappingTable{};
+    _actionMappingTable.name = "FlyCamera";
 
-    moveActionHandle = SteamInput()->GetAnalogActionHandle("Move");
-    cameraActionHandle = SteamInput()->GetAnalogActionHandle("Camera");
+    DigitalAction exitAction{};
+    exitAction.name = "Exit";
 
-    actionSetHandle = SteamInput()->GetActionSetHandle("FlyCamera");
+    AnalogAction moveAction{};
+    moveAction.name = "Move";
+
+    AnalogAction cameraAction{};
+    cameraAction.name = "Camera";
+
+    actionMappingTable.digitalActions.push_back(exitAction);
+    actionMappingTable.analogActions.push_back(moveAction);
+    actionMappingTable.analogActions.push_back(cameraAction);
+
+    SetActionMappingTable(actionMappingTable);
 }
 
 void ActionManager::Update()
@@ -34,17 +45,51 @@ void ActionManager::Update()
     }
 
     // Set action set for the controller
-    SteamInput()->ActivateActionSet(inputHandle, actionSetHandle);
+    SteamInput()->ActivateActionSet(inputHandle, _actionSetHandle);
 
-    ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(inputHandle, exitActionHandle);
+    bool a = GetDigitalAction("Exit");
+    bblog::info("Exit: {}", a);
+}
 
-    // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
-    if (digitalData.bActive)
+void ActionManager::SetActionMappingTable(const ActionMappingTable& actionMappingTable)
+{
+    _actionMappingTable = actionMappingTable;
+
+    // Caching Steam Input API handles
+    _actionSetHandle = SteamInput()->GetActionSetHandle(_actionMappingTable.name.c_str());
+
+    for (const DigitalAction& action : _actionMappingTable.digitalActions)
     {
-        if (digitalData.bState)
-        {
-            bblog::info("pressed!");
-        }
+        _gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
     }
 
+    for (const AnalogAction& action : _actionMappingTable.analogActions)
+    {
+        _gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
+    }
+}
+
+bool ActionManager::GetDigitalAction(std::string_view actionName) const
+{
+    if (inputHandle == 0)
+    {
+        return false;
+    }
+
+    auto itr = _gamepadDigitalActionsCache.find(actionName.data());
+    if (itr == _gamepadDigitalActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find digital action: \"{}\"", actionName);
+        return false;
+    }
+
+    ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(inputHandle, itr->second);
+
+    // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
+    if (!digitalData.bActive)
+    {
+        return false;
+    }
+
+    return digitalData.bState;
 }
