@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "module_interface.hpp"
 #include <string_view>
 #include <unordered_map>

@@ -2,7 +2,7 @@
 
 #include "mesh.hpp"
 #include "module_interface.hpp"
-#include "particles/particle_interface.hpp"
+#include "particle_interface.hpp"
 #include "performance_tracker.hpp"
 
 #include <memory>
@@ -37,5 +37,5 @@ private:
     // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
-    bool _shouldQuit = false;
+    MAYBE_UNUSED bool _shouldQuit = false;
 };

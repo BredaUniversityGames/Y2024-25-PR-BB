@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Generated wren header
+game/engine_api.wren
+
 # Build output for the project
 build
 package

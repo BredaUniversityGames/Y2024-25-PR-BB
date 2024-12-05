@@ -14,15 +14,16 @@
 #include "components/transform_helpers.hpp"
 #include "ecs.hpp"
 #include "editor.hpp"
+#include "emitter_component.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "input_manager.hpp"
+#include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particles/emitter_component.hpp"
-#include "particles/particle_interface.hpp"
-#include "particles/particle_util.hpp"
+#include "particle_interface.hpp"
+#include "particle_module.hpp"
+#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -52,6 +53,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
     TransformHelpers::UnsubscribeToEvents(_ecs->registry);
@@ -69,6 +71,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     };
 
+    particleModule.GetParticleInterface().LoadEmitterPresets();
+
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
 
@@ -77,7 +81,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     for (const auto& model : models)
     {
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
 
@@ -120,6 +124,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
+    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -144,7 +149,9 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
+    physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
     auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -189,26 +196,31 @@ void OldEngine::Tick(Engine& engine)
                 continue;
             }
 
-            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
-
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float CAM_SPEED = 0.003f;
-
             constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
             constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
 
+            constexpr float MOUSE_SENSITIVITY = 0.003f;
+            constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
+            constexpr float CAM_SPEED = 0.003f;
+
+            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+            glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
+
+            rotationDelta.x += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTX) * GAMEPAD_LOOK_SENSITIVITY;
+            rotationDelta.y += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTY) * GAMEPAD_LOOK_SENSITIVITY;
+
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+            eulerRotation.x -= rotationDelta.y;
 
             // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
             glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
             if (cameraForward.z > 0.0f)
-                eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+                eulerRotation.y += rotationDelta.x;
             else
-                eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+                eulerRotation.y -= rotationDelta.x;
 
             rotation = glm::quat(eulerRotation);
             TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
@@ -234,6 +246,9 @@ void OldEngine::Tick(Engine& engine)
                 movementDir -= RIGHT;
             }
 
+            movementDir += RIGHT * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTX);
+            movementDir -= FORWARD * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTY);
+
             if (glm::length(movementDir) != 0.0f)
             {
                 movementDir = glm::normalize(movementDir);
@@ -256,6 +271,18 @@ void OldEngine::Tick(Engine& engine)
                           << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
                           << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
                           << "Fraction: " << hitInfo.hitFraction << std::endl;
+
+                if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
+                {
+
+                    RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
+
+                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
+                    {
+                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
+                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
+                    }
+                }
             }
         }
     }
@@ -267,7 +294,24 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        rendererModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eF1))
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
+    }
+
+    static uint32_t eventId {};
+
+    if (input.IsKeyPressed(KeyboardCode::eO))
+    {
+        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+    }
+
+    if (input.IsKeyReleased(KeyboardCode::eO))
+    {
+        audioModule.StopEvent(eventId);
     }
 
     static uint32_t eventId {};
@@ -283,7 +327,7 @@ void OldEngine::Tick(Engine& engine)
     }
 
     _ecs->UpdateSystems(deltaTimeMS);
-    _ecs->GetSystem<PhysicsSystem>().CleanUp();
+    _ecs->GetSystem<PhysicsSystem>()->CleanUp();
     _ecs->RemovedDestroyed();
     _ecs->RenderSystems();
 

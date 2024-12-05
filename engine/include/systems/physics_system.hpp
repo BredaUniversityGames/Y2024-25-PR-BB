@@ -12,6 +12,8 @@ public:
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 
+    void InitializePhysicsColliders();
+
     void CleanUp();
     void Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime) override;
     void Render(MAYBE_UNUSED const ECS& ecs) const override;
