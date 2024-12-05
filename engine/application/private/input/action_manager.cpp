@@ -4,31 +4,6 @@
 ActionManager::ActionManager(const InputManager& inputManager)
     : _inputManager(inputManager)
 {
-    GameActions gameActions{};
-
-    ActionSet& actionSet = gameActions.emplace_back();
-    actionSet.name = "FlyCamera";
-
-    DigitalAction exitAction{};
-    exitAction.name = "Exit";
-    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, KeyboardCode::eY);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Released, MouseButton::eBUTTON_RIGHT);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, GamepadButton::eGAMEPAD_BUTTON_NORTH);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, KeyboardCode::eZ);
-
-    AnalogAction moveAction{};
-    moveAction.name = "Move";
-    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
-
-    AnalogAction cameraAction{};
-    cameraAction.name = "Camera";
-    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
-
-    actionSet.digitalActions.push_back(exitAction);
-    actionSet.analogActions.push_back(moveAction);
-    actionSet.analogActions.push_back(cameraAction);
-
-    SetGameActions(gameActions);
 }
 
 void ActionManager::Update()
@@ -93,15 +68,15 @@ bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
 {
     for (const DigitalInputAction& input : action.inputs)
     {
-        std::visit([&](auto& arg)
-        {
-            if (CheckInput(arg, input.type))
+        bool result = std::visit([&](auto& arg)
             {
-                return true;
-            }
+                return CheckInput(arg, input.type);
+            }, input.code);
 
-            return false;
-        }, input.code);
+        if (result)
+        {
+            return true;
+        }
     }
 
     return false;
@@ -114,7 +89,7 @@ void ActionManager::CheckAnalogInput(const AnalogAction& action, float& x, float
         return;
     }
 
-    std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
+    static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
     {
         { GamepadAnalog::eGAMEPAD_AXIS_LEFT, { GamepadAxis::eGAMEPAD_AXIS_LEFTX, GamepadAxis::eGAMEPAD_AXIS_LEFTY } },
         { GamepadAnalog::eGAMEPAD_AXIS_RIGHT, { GamepadAxis::eGAMEPAD_AXIS_RIGHTX, GamepadAxis::eGAMEPAD_AXIS_RIGHTY} }
@@ -122,7 +97,7 @@ void ActionManager::CheckAnalogInput(const AnalogAction& action, float& x, float
 
     for (const AnalogInputAction& input : action.inputs)
     {
-        std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
+        const std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
 
         x = _inputManager.GetGamepadAxis(axes.first);
         y = _inputManager.GetGamepadAxis(axes.second);

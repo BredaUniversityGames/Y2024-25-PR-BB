@@ -70,6 +70,32 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     _actionManager = std::make_unique<ActionManager>(*_inputManager);
     SetMouseHidden(_mouseHidden);
 
+    GameActions gameActions{};
+
+    ActionSet& actionSet = gameActions.emplace_back();
+    actionSet.name = "FlyCamera";
+
+    DigitalAction exitAction{};
+    exitAction.name = "Exit";
+    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, KeyboardCode::eY);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Released, MouseButton::eBUTTON_RIGHT);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, KeyboardCode::eZ);
+
+    AnalogAction moveAction{};
+    moveAction.name = "Move";
+    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
+
+    AnalogAction cameraAction{};
+    cameraAction.name = "Camera";
+    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
+
+    actionSet.digitalActions.push_back(exitAction);
+    actionSet.analogActions.push_back(moveAction);
+    actionSet.analogActions.push_back(cameraAction);
+
+    _actionManager->SetGameActions(gameActions);
+
     return priority;
 }
 
