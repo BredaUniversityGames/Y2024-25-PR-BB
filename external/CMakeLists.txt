@@ -65,6 +65,9 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# FreeType
+add_subdirectory(freetype)
+
 # FMOD (no git to fetch content)
 
 add_subdirectory(fmod)
@@ -256,3 +259,4 @@ elseif (LINUX)
     target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif ()
+
