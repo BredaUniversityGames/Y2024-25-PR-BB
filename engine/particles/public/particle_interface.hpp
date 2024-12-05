@@ -7,14 +7,14 @@
 #include <memory>
 #include <vector>
 
-class ECS;
+class ECSModule;
 class GraphicsContext;
 struct GPUImage;
 
 class ParticleInterface
 {
 public:
-    ParticleInterface(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    ParticleInterface(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs);
     ~ParticleInterface() = default;
 
     enum class EmitterPreset
@@ -28,11 +28,10 @@ public:
 
 private:
     std::shared_ptr<GraphicsContext> _context;
-    std::shared_ptr<ECS> _ecs;
+    ECSModule& _ecs;
 
     std::vector<Emitter> _emitterPresets;
     std::vector<ResourceHandle<GPUImage>> _emitterImages;
-
 
     // temporary solution
     uint32_t LoadEmitterImage(const char* imagePath);

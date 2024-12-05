@@ -21,6 +21,12 @@ public:
     ScriptingModule() = default;
     ~ScriptingModule() override = default;
 
+    // Used for tests, stick with default
+    void SetEngineBindingsPath(const std::string& p)
+    {
+        _engineBindingsPath = p;
+    }
+
     // Generates the Engine API file, that contains all foreign definitions
     void GenerateEngineBindingsFile();
 

@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule
+import "Engine.wren" for Engine, TimeModule
 
 class Test {
     static test(engine) {

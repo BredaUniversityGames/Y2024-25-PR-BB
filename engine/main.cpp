@@ -1,5 +1,6 @@
 #include "application_module.hpp"
 #include "audio_module.hpp"
+#include "ecs_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
 #include "particle_module.hpp"
@@ -7,6 +8,7 @@
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
+#include "ui_module.hpp"
 #include "particle_module.hpp"
 #include "time_module.hpp"
 
@@ -18,13 +20,15 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
     instance
         .AddModule<ScriptingModule>()
+        .AddModule<ECSModule>()
         .AddModule<TimeModule>()
         .AddModule<SteamModule>()
         .AddModule<ApplicationModule>()
+        .AddModule<PhysicsModule>()
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
-        .AddModule<PhysicsModule>()
+        .AddModule<UIModule>()
         .AddModule<ParticleModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
