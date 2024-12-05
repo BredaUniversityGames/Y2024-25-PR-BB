@@ -19,7 +19,6 @@ option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(COMPILE_TESTS "Compile with Unit Tests" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
 
-option(ENABLE_PCH "Compile with precompiled header" ON)
 option(ENABLE_UNITY "Compile using Unity Builds" ON)
 
 add_library(ProjectSettings INTERFACE)
@@ -31,10 +30,6 @@ target_compile_options(ProjectSettings
 if (WARNINGS_AS_ERRORS)
     message(STATUS "### Warnings are enabled as Errors")
     target_compile_options(ProjectSettings INTERFACE -Werror)
-endif ()
-
-if (ENABLE_PCH)
-    message(STATUS "### Compiling with Precompiled Headers")
 endif ()
 
 if (ENABLE_UNITY)

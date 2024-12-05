@@ -53,7 +53,6 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "WARNINGS_AS_ERRORS": true,
         "COMPILE_SHADERS": false,
-        "ENABLE_PCH": false,
         "ENABLE_UNITY": false
       }
     },
