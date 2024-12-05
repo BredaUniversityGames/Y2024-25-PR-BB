@@ -53,7 +53,7 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
     for (auto eventInstance : _events)
     {
         FMOD_STUDIO_PLAYBACK_STATE state;
-        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_GetPlaybackState(eventInstance.second, &state));
+        FMOD_Studio_EventInstance_GetPlaybackState(eventInstance.second, &state);
         if (state == FMOD_STUDIO_PLAYBACK_STOPPED)
         {
             eventsToRemove.emplace_back(eventInstance.first);
