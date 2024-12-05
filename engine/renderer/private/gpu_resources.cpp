@@ -1,6 +1,5 @@
 #include "gpu_resources.hpp"
 
-#include "pch.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 #include <stb_image.h>

@@ -1,5 +1,4 @@
 #pragma once
-#include "pch.hpp"
 #include "ui_element.hpp"
 
 struct UIFont;
