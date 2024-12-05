@@ -5,4 +5,6 @@ module_default_init(UserInterface)
 target_link_libraries(UserInterface
         PUBLIC Engine
         PUBLIC Utility
-        PUBLIC Core)
+        PUBLIC Core
+
+        PUBLIC freetype)

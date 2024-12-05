@@ -2,12 +2,12 @@
 
 #include <imgui.h>
 #include <memory>
-#include <stb/stb_image.h>
+#include <stb_image.h>
 #include <utility>
 
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "fonts.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
@@ -16,13 +16,12 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "old_engine.hpp"
-#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
@@ -32,18 +31,17 @@
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
+#include "ui_main_menu.hpp"
+#include "ui_module.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-#include <ui_main_menu.hpp>
-#include <ui_module.hpp>
-
-Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
-    , _ecs(ecs)
     , _viewport(viewport)
+    , _ecs(ecs)
 {
     _bloomSettings = std::make_unique<BloomSettings>(_context);
 
@@ -85,8 +83,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-
-    //temporary location
+    // temporary location
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
     viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
 
