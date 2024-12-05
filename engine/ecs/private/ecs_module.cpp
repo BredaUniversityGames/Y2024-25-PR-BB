@@ -1,6 +1,7 @@
 #include "ecs_module.hpp"
 #include "components/relationship_helpers.hpp"
-// #include "time_module.hpp"
+#include "components/transform_helpers.hpp"
+#include "time_module.hpp"
 
 ModuleTickOrder ECSModule::Init(MAYBE_UNUSED Engine& engine)
 {
@@ -17,8 +18,7 @@ void ECSModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ECSModule::Tick(Engine& engine)
 {
-    // auto dt = engine.GetModule<TimeModule>().GetDeltatime().count();
-    float dt = 16.66f;
+    auto dt = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     RemovedDestroyed();
     UpdateSystems(dt);

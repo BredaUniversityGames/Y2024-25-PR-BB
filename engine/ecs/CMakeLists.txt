@@ -4,5 +4,6 @@ module_default_init(ECS)
 target_link_libraries(ECS
         PUBLIC Core
         PUBLIC EnTT::EnTT
-        PRIVATE ImGui
+        PUBLIC cereal
+        PUBLIC ImGui
 )

@@ -2,7 +2,7 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
-#include "camera.hpp"
+#include "ecs_module.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 

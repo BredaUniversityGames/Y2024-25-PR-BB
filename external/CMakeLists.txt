@@ -246,37 +246,13 @@ if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 
-# Main External Library
-
-add_library(External INTERFACE)
+# Useful defines for vulkan
 
 if (WIN32)
-    target_compile_options(External
+    target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_WIN32_KHR
             INTERFACE -DNOMINMAX)
 elseif (LINUX)
-    target_compile_options(External
+    target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif ()
-
-target_link_libraries(External
-        INTERFACE ImGui
-        INTERFACE SDL3::SDL3-static
-        INTERFACE magic_enum::magic_enum
-        INTERFACE spdlog::spdlog
-        INTERFACE glm::glm
-        INTERFACE EnTT::EnTT
-        INTERFACE VulkanMemoryAllocator
-        INTERFACE fastgltf::fastgltf
-        INTERFACE spirv-reflect-static
-        INTERFACE VulkanAPI
-        INTERFACE Jolt
-        INTERFACE Steamworks
-        INTERFACE FMOD
-)
-
-target_include_directories(External
-        INTERFACE external/SDL/include
-        INTERFACE stb
-        INTERFACE ${cereal_SOURCE_DIR}/include
-)
