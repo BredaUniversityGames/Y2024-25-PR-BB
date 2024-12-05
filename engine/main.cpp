@@ -12,6 +12,8 @@
 #include "particle_module.hpp"
 #include "time_module.hpp"
 
+#include "utility/bind_math.hpp"
+
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
@@ -30,6 +32,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<ParticleModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
+    bindings::DefineMathTypes(scripting.GetForeignAPI());
 
     // Add modules here to expose them in scripting
     {
