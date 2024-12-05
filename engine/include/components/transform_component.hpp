@@ -18,6 +18,11 @@ public:
     void Inspect(entt::registry& reg, entt::entity entity);
 };
 
+struct ToBeUpdated
+{
+    int padding {};
+};
+
 namespace EnttEditor
 {
 template <>

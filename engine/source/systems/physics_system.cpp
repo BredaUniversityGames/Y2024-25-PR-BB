@@ -72,8 +72,46 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
 {
+    // let's check priority first between transforms and physics
+    const auto transformsView = ecs.registry.view<TransformComponent, RigidbodyComponent, ToBeUpdated, StaticMeshComponent>();
+    for (auto entity : transformsView)
+    {
+        const TransformComponent& transform = transformsView.get<TransformComponent>(entity);
+        const RigidbodyComponent& rb = transformsView.get<RigidbodyComponent>(entity);
+        StaticMeshComponent& meshComponent = transformsView.get<StaticMeshComponent>(entity);
 
-    // this part should be fast because it returns a vector of just ids not whole rigidbodies
+        // Assume worldMatrix is your 4x4 transformation matrix
+        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.registry, entity);
+
+        // Variables to store the decomposed components
+        glm::vec3 scale;
+        glm::quat rotationQuat;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        // Decompose the matrix
+        glm::decompose(
+            worldMatrix,
+            scale,
+            rotationQuat,
+            translation,
+            skew,
+            perspective);
+
+        // size and position
+        Vec3Range boundingBox = meshComponent.boundingBox; // * scale;
+        boundingBox.min *= scale;
+        boundingBox.max *= scale;
+
+        const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
+        const glm::vec3 newPosition = translation + centerPos;
+
+        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(newPosition.x, newPosition.y, newPosition.z), JPH::EActivation::Activate);
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+    }
+    // return;
+    //      this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
 
@@ -108,14 +146,16 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime)
         const auto oldExtent = (meshComponent.boundingBox.max - meshComponent.boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         const glm::mat4 joltToGLM = ToGLMMat4(joltMatrix);
-        glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / oldExtent);
+        glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / abs(oldExtent));
 
         // account for odd models that dont have the center at 0,0,0
         const glm::vec3 centerPos = (meshComponent.boundingBox.max + meshComponent.boundingBox.min) * 0.5f;
+
         joltToGlm = glm::translate(joltToGlm, -centerPos);
 
         TransformHelpers::SetWorldTransform(ecs.registry, entity, joltToGlm);
     }
+    TransformHelpers::ResetAllUpdateTags(ecs.registry);
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECS& ecs) const
 {

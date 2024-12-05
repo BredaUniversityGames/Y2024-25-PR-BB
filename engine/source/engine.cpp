@@ -331,6 +331,8 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
+
+    // TransformHelpers::ResetAllUpdateTags(_ecs->registry);
 }
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
