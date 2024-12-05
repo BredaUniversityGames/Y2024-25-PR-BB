@@ -115,3 +115,31 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
 
     return digitalData.bState;
 }
+
+void ActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
+{
+    if (_inputHandle == 0 || _gameActions.empty())
+    {
+        return;
+    }
+
+    const SteamActionSetCache& actionSetCache = _steamActionSetCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
+    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        return;
+    }
+
+    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_inputHandle, itr->second);
+
+    // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
+    if (!analogActionData.bActive)
+    {
+        return;
+    }
+
+    x = analogActionData.x;
+    y = analogActionData.y;
+}

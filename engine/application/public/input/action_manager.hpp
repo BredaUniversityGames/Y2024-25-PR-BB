@@ -62,6 +62,7 @@ public:
     void SetActiveActionSet(std::string_view actionSetName);
 
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
+    void GetAnalogAction(std::string_view actionName, float& x, float& y) const;
 
 private:
     GameActions _gameActions;
