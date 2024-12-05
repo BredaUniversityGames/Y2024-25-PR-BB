@@ -64,9 +64,5 @@ struct Vertex
 struct StaticMeshComponent
 {
     ResourceHandle<GPUMesh> mesh;
-};
-
-struct SceneDescription
-{
-    Camera camera;
+    Vec3Range boundingBox;
 };

@@ -32,7 +32,12 @@ std::optional<std::ofstream> OpenWriteStream(const std::string& path,
 /// <summary>
 /// Dumps all bytes of a stream into a vector
 /// </summary>
-std::vector<std::byte> DumpFullStream(std::istream& stream);
+std::vector<std::byte> DumpStreamIntoBytes(std::istream& stream);
+
+/// <summary>
+/// Dumps stream into a string
+/// </summary>
+std::string DumpStreamIntoString(std::istream& stream);
 
 /// <summary>
 /// Check if a file exists.
@@ -48,5 +53,10 @@ bool MakeDirectory(const std::string& path);
 /// Check the last time a file was modified. Nullopt if file doesn't exist
 /// </summary>
 std::optional<FileTime> GetLastModifiedTime(const std::string& path);
+
+/// <summary>
+/// Simplifies and Transforms the path into OS preference
+/// </summary>
+std::string CanonicalizePath(const std::string& path);
 
 };

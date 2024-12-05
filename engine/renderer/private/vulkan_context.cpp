@@ -2,17 +2,20 @@
 
 #include <map>
 #include <set>
-#include <vulkan/vulkan.hpp>
 
 #include "application_module.hpp"
 #include "log.hpp"
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
+#include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
 
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
 {
+    _validationEnabled = CheckValidationLayerSupport() && ENABLE_VALIDATION_LAYERS;
+    bblog::info("Validation layers enabled: {}", _validationEnabled ? "TRUE" : "FALSE");
+
     CreateInstance(initInfo);
     _dldi = vk::DispatchLoaderDynamic { _instance, vkGetInstanceProcAddr, _device, vkGetDeviceProcAddr };
     SetupDebugMessenger();
@@ -43,9 +46,8 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
 
 VulkanContext::~VulkanContext()
 {
-    if (ENABLE_VALIDATION_LAYERS)
+    if (_validationEnabled)
         _instance.destroyDebugUtilsMessengerEXT(_debugMessenger, nullptr, _dldi);
-    ;
 
     _device.destroy(_descriptorPool);
     _device.destroy(_commandPool);
@@ -59,12 +61,8 @@ VulkanContext::~VulkanContext()
 
 void VulkanContext::CreateInstance(const VulkanInitInfo& initInfo)
 {
-    CheckValidationLayerSupport();
-    if (ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport())
-        throw std::runtime_error("Validation layers requested, but not supported!");
-
     vk::ApplicationInfo appInfo {
-        .pApplicationName = "Sample Application Name",
+        .pApplicationName = "Bubonic Brotherhood Game",
         .applicationVersion = vk::makeApiVersion(0, 0, 0, 0),
         .pEngineName = "BB Engine",
         .engineVersion = vk::makeApiVersion(0, 1, 0, 0),
@@ -75,6 +73,7 @@ void VulkanContext::CreateInstance(const VulkanInitInfo& initInfo)
         structureChain;
 
     auto extensions = GetRequiredExtensions(initInfo);
+
     structureChain.assign({
         .flags = vk::InstanceCreateFlags {},
         .pApplicationInfo = &appInfo,
@@ -86,7 +85,7 @@ void VulkanContext::CreateInstance(const VulkanInitInfo& initInfo)
 
     auto& createInfo = structureChain.get<vk::InstanceCreateInfo>();
 
-    if (ENABLE_VALIDATION_LAYERS)
+    if (_validationEnabled)
     {
         createInfo.enabledLayerCount = _validationLayers.size();
         createInfo.ppEnabledLayerNames = _validationLayers.data();
@@ -199,7 +198,7 @@ bool VulkanContext::CheckValidationLayerSupport()
 std::vector<const char*> VulkanContext::GetRequiredExtensions(const VulkanInitInfo& initInfo)
 {
     std::vector<const char*> extensions(initInfo.extensions, initInfo.extensions + initInfo.extensionCount);
-    if (ENABLE_VALIDATION_LAYERS)
+    if (_validationEnabled)
         extensions.emplace_back(vk::EXTDebugUtilsExtensionName);
 
 #ifdef LINUX
@@ -211,7 +210,7 @@ std::vector<const char*> VulkanContext::GetRequiredExtensions(const VulkanInitIn
 
 void VulkanContext::SetupDebugMessenger()
 {
-    if (!ENABLE_VALIDATION_LAYERS)
+    if (!_validationEnabled)
         return;
 
     vk::DebugUtilsMessengerCreateInfoEXT createInfo {};
@@ -254,9 +253,7 @@ void VulkanContext::CreateDevice()
     createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
-    bblog::info("Validation layers enabled: {}", ENABLE_VALIDATION_LAYERS ? "TRUE" : "FALSE");
-
-    if (ENABLE_VALIDATION_LAYERS)
+    if (_validationEnabled)
     {
         createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
         createInfo.ppEnabledLayerNames = _validationLayers.data();
@@ -301,7 +298,7 @@ void VulkanContext::CreateDescriptorPool()
     createInfo.poolSizeCount = poolSizes.size();
     createInfo.pPoolSizes = poolSizes.data();
     createInfo.maxSets = 256;
-    createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+    createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
     util::VK_ASSERT(_device.createDescriptorPool(&createInfo, nullptr, &_descriptorPool), "Failed creating descriptor pool!");
 }
 

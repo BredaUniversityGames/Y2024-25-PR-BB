@@ -173,7 +173,8 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
 CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
     CPUMesh::Primitive primitive {};
-
+    primitive.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
+    primitive.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
@@ -181,6 +182,7 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
     bool verticesReserved = false;
     bool tangentFound = false;
     bool texCoordFound = false;
+    float squaredBoundingRadius = 0.0f;
 
     for (auto& attribute : gltfPrimitive.attributes)
     {
@@ -233,12 +235,21 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
 
             if (attribute.name == "POSITION")
             {
+
                 const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
+
+                // warning! this performs component wise min/max
                 primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
                 primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
+
+                float squaredLength = position->x * position->x + position->y * position->y + position->z * position->z;
+                if (squaredLength > squaredBoundingRadius)
+                    squaredBoundingRadius = squaredLength;
             }
         }
     }
+
+    primitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {

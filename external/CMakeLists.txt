@@ -65,9 +65,9 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-# Wren Language
+# FMOD (no git to fetch content)
 
-add_subdirectory(wren)
+add_subdirectory(fmod)
 
 # Cereal
 
@@ -76,6 +76,20 @@ option(BUILD_SANDBOX "Build sandbox examples" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
+
+# Wren Language
+
+FetchContent_Declare(
+        wren
+        GIT_REPOSITORY https://github.com/santiberna/wrenbind17.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+set(WRENBIND17_BUILD_WREN ON)
+FetchContent_MakeAvailable(wren)
+
 
 # Tracy Profiler
 
@@ -119,9 +133,11 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-override_option(SDL_SHARED OFF)
-override_option(SDL_STATIC ON)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
 FetchContent_MakeAvailable(SDL)
+
+target_compile_options(SDL3-static PRIVATE -Wno-deprecated-declarations)
 
 # GLM
 
@@ -139,7 +155,6 @@ FetchContent_MakeAvailable(GLM)
 target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
 # Jolt
-
 
 FetchContent_Declare(
         JoltPhysics
@@ -221,6 +236,10 @@ target_include_directories(ImGui
         PUBLIC imgui_entt_entity_editor
 )
 
+# Steamworks API
+
+add_subdirectory(steamworks)
+
 # Enable Unity for external libraries
 
 if (ENABLE_UNITY)
@@ -232,9 +251,12 @@ endif ()
 add_library(External INTERFACE)
 
 if (WIN32)
-    target_compile_options(External INTERFACE -DVK_USE_PLATFORM_WIN32_KHR)
+    target_compile_options(External
+            INTERFACE -DVK_USE_PLATFORM_WIN32_KHR
+            INTERFACE -DNOMINMAX)
 elseif (LINUX)
-    target_compile_options(External INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
+    target_compile_options(External
+            INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif ()
 
 target_link_libraries(External
@@ -249,6 +271,8 @@ target_link_libraries(External
         INTERFACE spirv-reflect-static
         INTERFACE VulkanAPI
         INTERFACE Jolt
+        INTERFACE Steamworks
+        INTERFACE FMOD
 )
 
 target_include_directories(External
