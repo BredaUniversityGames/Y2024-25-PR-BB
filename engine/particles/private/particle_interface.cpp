@@ -9,7 +9,6 @@
 #include "model_loader.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
-
 #include "stb_image.h"
 
 ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)

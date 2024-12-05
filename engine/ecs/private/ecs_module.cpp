@@ -1,6 +1,7 @@
 #include "ecs_module.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
+#include "systems/physics_system.hpp"
 #include "time_module.hpp"
 
 ModuleTickOrder ECSModule::Init(MAYBE_UNUSED Engine& engine)
@@ -41,6 +42,12 @@ void ECSModule::RenderSystems() const
 }
 void ECSModule::RemovedDestroyed()
 {
+    // TODO: should be somewhere else
+    if (auto* physics = GetSystem<PhysicsSystem>())
+    {
+        physics->CleanUp();
+    }
+
     const auto toDestroy = registry.view<DeleteTag>();
     for (const entt::entity entity : toDestroy)
     {

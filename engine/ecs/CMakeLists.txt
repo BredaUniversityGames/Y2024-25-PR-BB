@@ -6,4 +6,5 @@ target_link_libraries(ECS
         PUBLIC EnTT::EnTT
         PUBLIC cereal
         PUBLIC ImGui
+        PRIVATE Physics
 )

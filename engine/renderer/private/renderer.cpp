@@ -32,7 +32,6 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-
 Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
