@@ -32,7 +32,11 @@ function(module_default_init module)
     target_include_directories(${module} PUBLIC "public" PRIVATE "private")
 
     target_link_libraries(${module} PRIVATE ProjectSettings)
-    
+
+    if (ENABLE_PCH)
+        target_link_libraries(${module} PRIVATE PCH)
+        target_precompile_headers(${module} REUSE_FROM PCH)
+    endif ()
 
     if (COMPILE_TESTS)
         file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS "tests/*.cpp")

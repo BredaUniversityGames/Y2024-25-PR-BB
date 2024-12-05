@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 #include <vk_mem_alloc.h>
-#include <vulkan_include.hpp>
+#include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
 struct Texture;

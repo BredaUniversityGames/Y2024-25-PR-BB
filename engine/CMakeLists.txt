@@ -1,5 +1,9 @@
 add_library(Engine INTERFACE)
 
+if (ENABLE_PCH)
+    add_subdirectory(pch)
+endif ()
+
 # TODO: Replace with engine modules
 add_library(OldEngine)
 module_default_init(OldEngine)
