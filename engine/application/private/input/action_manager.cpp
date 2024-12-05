@@ -8,8 +8,8 @@ ActionManager::ActionManager()
         return;
     }
 
-    ActionMappingTable actionMappingTable{};
-    _actionMappingTable.name = "FlyCamera";
+    ActionSet actionSet{};
+    actionSet.name = "FlyCamera";
 
     DigitalAction exitAction{};
     exitAction.name = "Exit";
@@ -20,11 +20,11 @@ ActionManager::ActionManager()
     AnalogAction cameraAction{};
     cameraAction.name = "Camera";
 
-    actionMappingTable.digitalActions.push_back(exitAction);
-    actionMappingTable.analogActions.push_back(moveAction);
-    actionMappingTable.analogActions.push_back(cameraAction);
+    actionSet.digitalActions.push_back(exitAction);
+    actionSet.analogActions.push_back(moveAction);
+    actionSet.analogActions.push_back(cameraAction);
 
-    SetActionMappingTable(actionMappingTable);
+    SetActionSet(actionSet);
 }
 
 void ActionManager::Update()
@@ -48,22 +48,25 @@ void ActionManager::Update()
     SteamInput()->ActivateActionSet(inputHandle, _actionSetHandle);
 
     bool a = GetDigitalAction("Exit");
-    bblog::info("Exit: {}", a);
+    if (a)
+    {
+        bblog::info("Exit: {}", a);
+    }
 }
 
-void ActionManager::SetActionMappingTable(const ActionMappingTable& actionMappingTable)
+void ActionManager::SetActionSet(const ActionSet& actionSet)
 {
-    _actionMappingTable = actionMappingTable;
+    _actionSet = actionSet;
 
     // Caching Steam Input API handles
-    _actionSetHandle = SteamInput()->GetActionSetHandle(_actionMappingTable.name.c_str());
+    _actionSetHandle = SteamInput()->GetActionSetHandle(_actionSet.name.c_str());
 
-    for (const DigitalAction& action : _actionMappingTable.digitalActions)
+    for (const DigitalAction& action : _actionSet.digitalActions)
     {
         _gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
     }
 
-    for (const AnalogAction& action : _actionMappingTable.analogActions)
+    for (const AnalogAction& action : _actionSet.analogActions)
     {
         _gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
     }

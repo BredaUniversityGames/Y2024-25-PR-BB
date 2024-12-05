@@ -42,7 +42,7 @@ struct AnalogAction
     AnalogInputActionList inputs{};
 };
 
-struct ActionMappingTable
+struct ActionSet
 {
     std::string name {};
     std::vector<DigitalAction> digitalActions {};
@@ -56,12 +56,12 @@ public:
     ~ActionManager() = default;
 
     void Update();
-    void SetActionMappingTable(const ActionMappingTable& actionMappingTable);
+    void SetActionSet(const ActionSet& actionSet);
 
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
 
 private:
-    ActionMappingTable _actionMappingTable;
+    ActionSet _actionSet;
 
     // Steam specifics
     InputHandle_t inputHandle;
