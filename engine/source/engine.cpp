@@ -18,7 +18,7 @@
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "input_manager.hpp"
+#include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
@@ -188,26 +188,31 @@ void OldEngine::Tick(Engine& engine)
                 continue;
             }
 
-            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
-
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float CAM_SPEED = 0.003f;
-
             constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
             constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
 
+            constexpr float MOUSE_SENSITIVITY = 0.003f;
+            constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
+            constexpr float CAM_SPEED = 0.003f;
+
+            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
+            glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
+
+            rotationDelta.x += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTX) * GAMEPAD_LOOK_SENSITIVITY;
+            rotationDelta.y += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTY) * GAMEPAD_LOOK_SENSITIVITY;
+
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x -= mouseDelta.y * MOUSE_SENSITIVITY;
+            eulerRotation.x -= rotationDelta.y;
 
             // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
             glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
             if (cameraForward.z > 0.0f)
-                eulerRotation.y += mouseDelta.x * MOUSE_SENSITIVITY;
+                eulerRotation.y += rotationDelta.x;
             else
-                eulerRotation.y -= mouseDelta.x * MOUSE_SENSITIVITY;
+                eulerRotation.y -= rotationDelta.x;
 
             rotation = glm::quat(eulerRotation);
             TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
@@ -232,6 +237,9 @@ void OldEngine::Tick(Engine& engine)
             {
                 movementDir -= RIGHT;
             }
+
+            movementDir += RIGHT * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTX);
+            movementDir -= FORWARD * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTY);
 
             if (glm::length(movementDir) != 0.0f)
             {
