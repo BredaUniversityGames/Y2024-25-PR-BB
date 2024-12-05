@@ -2,7 +2,7 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
-#include "camera.hpp"
+#include "ecs_module.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 
@@ -22,14 +22,13 @@ class GraphicsContext;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
-class ECS;
 class GPUScene;
 class FrameGraph;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -52,9 +51,10 @@ private:
     std::shared_ptr<GraphicsContext> _context;
 
     std::unique_ptr<ModelLoader> _modelLoader;
+
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
-    std::shared_ptr<ECS> _ecs;
+    ECSModule& _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
