@@ -6,7 +6,7 @@
 #include "ecs_module.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "mesh.hpp"
 #include "physics_module.hpp"
 

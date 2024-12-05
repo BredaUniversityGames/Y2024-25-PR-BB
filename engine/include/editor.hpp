@@ -14,7 +14,6 @@ class Editor
 {
 public:
     Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend);
-
     ~Editor();
 
     NON_MOVABLE(Editor);

@@ -50,16 +50,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
     // modules
-
-    _ecs = &engine.GetModule<ECSModule>();
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     std::vector<std::string> modelPaths = {
         "assets/models/CathedralGLB_GLTF.glb",
