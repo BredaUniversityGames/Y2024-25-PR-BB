@@ -1,5 +1,4 @@
 #include "components/transform_component.hpp"
-
 #include "components/transform_helpers.hpp"
 
 namespace EnttEditor

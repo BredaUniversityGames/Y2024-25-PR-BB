@@ -1,8 +1,10 @@
 #pragma once
 
 #include "common.hpp"
-#include <memory>
 #include "module_interface.hpp"
+#include "particle_interface.hpp"
+
+#include <memory>
 
 class Renderer;
 class ParticleInterface;

@@ -8,11 +8,11 @@ struct Emitter
     uint count;
     vec3 velocity;
     float mass;
-    vec3 rotationVelocity;
+    vec2 rotationVelocity;
     float maxLife;
     float randomValue;
-    uint materialIndex;
     vec2 size;
+    uint materialIndex;
 };
 
 const uint MAX_EMITTERS = 64;
