@@ -1,26 +1,26 @@
 ﻿#pragma once
 #include "common.hpp"
+#include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
-#include "systems/system.hpp"
 
 class PhysicsModule;
 struct RigidbodyComponent;
-class PhysicsSystem : public System
+class PhysicsSystem : public SystemInterface
 {
 public:
-    PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule);
+    PhysicsSystem(ECSModule& ecs, PhysicsModule& physicsModule);
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 
     void InitializePhysicsColliders();
 
     void CleanUp();
-    void Update(MAYBE_UNUSED ECS& ecs, MAYBE_UNUSED float deltaTime) override;
-    void Render(MAYBE_UNUSED const ECS& ecs) const override;
+    void Update(ECSModule& ecs, float deltaTime) override;
+    void Render(const ECSModule& ecs) const override;
     void Inspect() override;
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
-    ECS& _ecs;
+    ECSModule& _ecs;
     PhysicsModule& _physicsModule;
 };

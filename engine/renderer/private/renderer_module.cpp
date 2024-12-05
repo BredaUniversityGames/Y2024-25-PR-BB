@@ -1,10 +1,11 @@
 #include "renderer_module.hpp"
 
 #include "application_module.hpp"
+#include "ecs_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "old_engine.hpp"
+#include "particle_interface.hpp"
 #include "renderer.hpp"
 #include "vulkan_context.hpp"
 #include <ui_module.hpp>
@@ -20,7 +21,7 @@ RendererModule::RendererModule()
 
 ModuleTickOrder RendererModule::Init(Engine& engine)
 {
-    auto ecs = engine.GetModule<OldEngine>().GetECS();
+    auto& ecs = engine.GetModule<ECSModule>();
     _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
   
     _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), engine.GetModule<UIModule>().GetViewport(), _context, ecs);

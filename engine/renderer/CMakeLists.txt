@@ -4,6 +4,15 @@ module_default_init(Renderer)
 target_link_libraries(Renderer
         PUBLIC Core
         PUBLIC Application
-        PUBLIC OldEngine
         PUBLIC Particles
+        PUBLIC ECS
+
+        PUBLIC VulkanAPI
+        PUBLIC VulkanMemoryAllocator
+        PUBLIC spirv-reflect-static
+        PUBLIC fastgltf::fastgltf
+)
+
+target_include_directories(Renderer
+        PUBLIC "${PROJECT_SOURCE_DIR}/external/stb"
 )

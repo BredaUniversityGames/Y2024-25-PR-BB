@@ -8,13 +8,13 @@
 
 class GPUScene;
 class BatchBuffer;
-class ECS;
+class ECSModule;
 class GraphicsContext;
 
 struct GPUSceneCreation
 {
     std::shared_ptr<GraphicsContext> context;
-    std::shared_ptr<ECS> ecs;
+    ECSModule& ecs;
 
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
@@ -25,7 +25,7 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
-    std::shared_ptr<const ECS> ecs;
+    ECSModule& ecs;
     std::shared_ptr<BatchBuffer> batchBuffer;
     uint32_t targetSwapChainImageIndex;
     float deltaTime;
@@ -111,7 +111,7 @@ private:
     };
 
     std::shared_ptr<GraphicsContext> _context;
-    std::shared_ptr<const ECS> _ecs;
+    ECSModule& _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;

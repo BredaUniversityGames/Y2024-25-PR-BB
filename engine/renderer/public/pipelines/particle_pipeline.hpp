@@ -14,14 +14,14 @@ struct Emitter;
 
 class CameraResource;
 struct RenderSceneDescription;
-class ECS;
+class ECSModule;
 class GraphicsContext;
 struct Buffer;
 
 class ParticlePipeline final : public FrameGraphRenderPass
 {
 public:
-    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera);
+    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera);
     ~ParticlePipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -58,7 +58,7 @@ private:
     } _emitPushConstant;
 
     std::shared_ptr<GraphicsContext> _context;
-    std::shared_ptr<ECS> _ecs;
+    ECSModule& _ecs;
     const GBuffers& _gBuffers;
     const ResourceHandle<GPUImage> _hdrTarget;
     const CameraResource& _camera;

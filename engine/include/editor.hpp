@@ -1,12 +1,10 @@
 #pragma once
 
 #include "common.hpp"
+#include "ecs_module.hpp"
 #include "imgui_entt_entity_editor.hpp"
-
-#include <entt/entity/entity.hpp>
 #include <memory>
 
-class ECS;
 class PerformanceTracker;
 class BloomSettings;
 class Renderer;
@@ -15,8 +13,7 @@ class ImGuiBackend;
 class Editor
 {
 public:
-    Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend);
-
+    Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend);
     ~Editor();
 
     NON_MOVABLE(Editor);
@@ -27,7 +24,7 @@ public:
 private:
     void DrawMainMenuBar();
 
-    std::shared_ptr<ECS> _ecs;
+    ECSModule& _ecs;
     std::shared_ptr<Renderer> _renderer;
     std::shared_ptr<ImGuiBackend> _imguiBackend;
 

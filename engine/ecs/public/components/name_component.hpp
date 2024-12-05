@@ -2,7 +2,6 @@
 
 #include "imgui_entt_entity_editor.hpp"
 #include <entt/entity/registry.hpp>
-#include <string>
 #include <string_view>
 
 class NameComponent
