@@ -41,19 +41,13 @@ void ActionManager::Update()
         _inputHandle = pHandles[ 0 ];
     }
 
-    if (_inputHandle == 0)
+    if (_inputHandle == 0 || _gameActions.empty())
     {
         return;
     }
 
     // Set action set for the controller
-    SteamInput()->ActivateActionSet(_inputHandle, _actionSetHandle);
-
-    bool a = GetDigitalAction("Exit");
-    if (a)
-    {
-        bblog::info("Exit: {}", a);
-    }
+    SteamInput()->ActivateActionSet(_inputHandle, _steamActionSetCache[_activeActionSet].actionSetHandle);
 }
 
 void ActionManager::SetGameActions(const GameActions& gameActions)
@@ -81,24 +75,37 @@ void ActionManager::SetGameActions(const GameActions& gameActions)
 
 void ActionManager::SetActiveActionSet(std::string_view actionSetName)
 {
-    auto itr = std::find()
+    auto itr = std::find_if(
+    _gameActions.begin(), _gameActions.end(),
+    [actionSetName](const ActionSet& actionSet) { return actionSet.name == actionSetName;});
+
+    if (itr == _gameActions.end())
+    {
+        bblog::error("[Input] Failed to find action set: \"{}\"", actionSetName);
+        return;
+    }
+
+    uint32_t index = itr - _gameActions.begin();
+    _activeActionSet = index;
 }
 
 bool ActionManager::GetDigitalAction(std::string_view actionName) const
 {
-    if (inputHandle == 0)
+    if (_inputHandle == 0 || _gameActions.empty())
     {
         return false;
     }
 
-    auto itr = _gamepadDigitalActionsCache.find(actionName.data());
-    if (itr == _gamepadDigitalActionsCache.end())
+    const SteamActionSetCache& actionSetCache = _steamActionSetCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadDigitalActionsCache.find(actionName.data());
+    if (itr == actionSetCache.gamepadDigitalActionsCache.end())
     {
         bblog::error("[Input] Failed to find digital action: \"{}\"", actionName);
         return false;
     }
 
-    ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(inputHandle, itr->second);
+    ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(_inputHandle, itr->second);
 
     // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
     if (!digitalData.bActive)
