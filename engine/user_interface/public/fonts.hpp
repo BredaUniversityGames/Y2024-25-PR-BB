@@ -1,8 +1,8 @@
 #pragma once
 
 #include "resource_manager.hpp"
-#include <map>
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 class GraphicsContext;
 struct GPUImage;
@@ -19,7 +19,7 @@ struct UIFont
         glm::vec2 uvMax;
     };
 
-    std::map<uint8_t, Character> characters;
+    std::unordered_map<uint8_t, Character> characters;
     ResourceHandle<GPUImage> fontAtlas;
     uint16_t characterHeight;
 };

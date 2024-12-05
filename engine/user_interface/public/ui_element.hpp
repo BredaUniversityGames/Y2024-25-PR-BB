@@ -1,14 +1,16 @@
 #pragma once
-#include <common.hpp>
-#include <glm/vec2.hpp>
-#include <memory>
-#include <stdint.h>
 
+#include "common.hpp"
 #include "quad_draw_info.hpp"
 
+#include <cstdint>
+#include <glm/vec2.hpp>
+#include <memory>
 #include <optional>
 #include <vector>
+
 class InputManager;
+
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
  * mostly in a hierarchical manner. each element calls its children's update and draw functions.
@@ -26,7 +28,8 @@ public:
         eTopRight,
         eBottomLeft,
         eBottomRight,
-    } anchorPoint = AnchorPoint::eTopLeft;
+    } anchorPoint
+        = AnchorPoint::eTopLeft;
 
     /**
      * Whenever this gets called the updateChildrenAbsoluteLocations of the parent needs to get called as well!

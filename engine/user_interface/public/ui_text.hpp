@@ -1,7 +1,12 @@
 #pragma once
+
 #include "ui_element.hpp"
 
+#include <glm/glm.hpp>
+#include <string>
+
 struct UIFont;
+
 class UITextElement : public UIElement
 {
 public:

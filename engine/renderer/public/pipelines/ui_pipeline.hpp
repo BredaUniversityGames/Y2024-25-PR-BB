@@ -4,6 +4,7 @@
 #include "gpu_resources.hpp"
 #include "quad_draw_info.hpp"
 #include <memory>
+
 class SwapChain;
 class GraphicsContext;
 
