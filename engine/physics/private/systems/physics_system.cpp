@@ -240,7 +240,7 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 
     if (ImGui::BeginCombo("Body type", currentItem))
     {
-        for (uint8_t n = 0; n < IM_ARRAYSIZE(rbTypeNames); n++)
+        for (int n = 0; n < IM_ARRAYSIZE(rbTypeNames); n++)
         {
             bool isSelected = (rbType == static_cast<JPH::EMotionType>(n));
             if (ImGui::Selectable(rbTypeNames[n], isSelected))
