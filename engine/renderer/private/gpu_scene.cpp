@@ -30,9 +30,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     , _directionalLightShadowCamera(creation.context)
 {
     InitializeSceneBuffers();
-
+    InitializePointLightBuffer();
     InitializeObjectInstancesBuffers();
-
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
 }
@@ -44,11 +43,13 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_pointLightDescriptorSetLayout);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
 {
     UpdateSceneData(frameIndex);
+    UpdatePointLightArray(frameIndex);
     UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
     WriteDraws(frameIndex);
@@ -160,7 +161,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightIsSet = true;
     }
 }
-void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex)
+void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUSED uint32_t frameIndex)
 {
     auto pointLightView = _ecs->registry.view<PointLightComponent, TransformComponent>();
     uint32_t pointLightCount = 0;
@@ -181,6 +182,7 @@ void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, uint32_t f
 
         pointLightCount++;
     }
+    pointLightArray.count = pointLightCount;
 }
 
 void GPUScene::UpdateCameraData(uint32_t frameIndex)
@@ -425,7 +427,7 @@ void GPUScene::CreatePointLightBuffer()
         name.insert(1, 1, static_cast<char>(i + '0'));
 
         BufferCreation creation {};
-        creation.SetSize(sizeof(PointLightData) * MAX_POINT_LIGHTS)
+        creation.SetSize(sizeof(PointLightArray))
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
             .SetName(name);
 

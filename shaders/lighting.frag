@@ -22,7 +22,12 @@ layout (set = 2, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
-layout (set = 3, binding = 0) uniform BloomSettingsUBO
+layout (set = 3, binding = 0) buffer PointLightSSBO
+{
+    PointLightArray pointLights;
+};
+
+layout (set = 4, binding = 0) uniform BloomSettingsUBO
 {
     BloomSettings bloomSettings;
 };
@@ -42,10 +47,10 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.albedoMIndex)], texCoords);
+    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.emissiveAOIndex)], texCoords);
+    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords);
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
@@ -90,6 +95,34 @@ void main()
         Lo += (kD * albedo / PI + specular) * scene.directionalLight.color.rgb * NoL;
     }
 
+    // Point Light Calculations
+    for (int i = 0; i < pointLights.count; i++)
+    {
+        PointLight light = pointLights.lights[i];
+        vec3 lightPos = light.position.xyz;
+        vec3 L = normalize(lightPos - position);
+        float distance = length(lightPos - position);
+        float attenuation = clamp(1.0 - (distance / light.range), 0.0, 1.0);
+
+        vec3 H = normalize(V + L);
+        vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+
+        float NDF = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
+        vec3 numerator = NDF * G * F;
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+        vec3 specular = numerator / denominator;
+
+        vec3 kD = vec3(1.0) - F;
+        kD *= 1.0 - metallic;
+        float NoL = max(dot(N, L), 0.0);
+
+        vec3 diffuse = kD * albedo / PI * NoL;
+        vec3 radiance = light.color.rgb * attenuation;
+
+        Lo += (diffuse + specular) * radiance * attenuation;
+    }
+
     vec3 R = reflect(V, N);
     vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 
@@ -97,12 +130,12 @@ void main()
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
 
-    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT(scene.irradianceIndex)], -N).rgb;
+    vec3 irradiance = texture(bindless_cubemap_textures[nonuniformEXT (scene.irradianceIndex)], -N).rgb;
     vec3 diffuse = irradiance * albedo;
 
     const float MAX_REFLECTION_LOD = 2.0;
-    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(scene.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT (scene.prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT (scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;
@@ -121,10 +154,10 @@ void main()
     float visibility = 1.0;
     float shadow = 0.0;
     float depthFactor = testCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT(scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
+    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
     shadow *= 0.25; // Average the samples
 
     outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);

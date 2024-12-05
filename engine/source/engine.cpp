@@ -111,15 +111,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->registry.emplace<NameComponent>(cameraEntity, "Camera");
     _ecs->registry.emplace<TransformComponent>(cameraEntity);
 
-    for (size_t i = 0; i < 100; ++i)
-    {
-        entt::entity entity = _ecs->registry.create();
-        _ecs->registry.emplace<NameComponent>(entity, "PointLight " + std::to_string(i));
-        _ecs->registry.emplace<TransformComponent>(entity);
-        PointLightComponent& pLightComponent = _ecs->registry.emplace<PointLightComponent>(entity);
-        pLightComponent.color = glm::vec3(1.0f, 1.0f, 1.0f);
-    }
-
     CameraComponent& cameraComponent = _ecs->registry.emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;

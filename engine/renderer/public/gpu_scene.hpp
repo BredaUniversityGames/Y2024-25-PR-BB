@@ -99,7 +99,8 @@ private:
 
     struct alignas(16) PointLightArray
     {
-        PointLightData lights[MAX_POINT_LIGHTS];
+        std::array<PointLightData, MAX_POINT_LIGHTS> lights;
+        uint32_t count;
     };
 
     struct alignas(16) SceneData

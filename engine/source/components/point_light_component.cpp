@@ -13,4 +13,6 @@ void ComponentEditorWidget<PointLightComponent>(entt::registry& reg, entt::regis
 void PointLightComponent::Inspect()
 {
     ImGui::ColorPicker4("Color##Point Light", &color.x);
+    ImGui::SliderFloat("Range##Point Light", &range, 0.0f, 100.0f);
+    // ImGui::SliderFloat("Attenuation##Point Light", &attenuation, 0.0f, 100.0f);
 }

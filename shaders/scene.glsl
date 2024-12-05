@@ -34,6 +34,12 @@ struct PointLight
     float attenuation;
 };
 
+struct PointLightArray
+{
+    PointLight lights[MAX_POINT_LIGHTS];
+    uint count;
+};
+
 struct Scene
 {
     DirectionalLight directionalLight;
