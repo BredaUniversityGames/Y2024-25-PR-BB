@@ -314,18 +314,6 @@ void OldEngine::Tick(Engine& engine)
         audioModule.StopEvent(eventId);
     }
 
-    static uint32_t eventId {};
-
-    if (input.IsKeyPressed(KeyboardCode::eO))
-    {
-        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
-    }
-
-    if (input.IsKeyReleased(KeyboardCode::eO))
-    {
-        audioModule.StopEvent(eventId);
-    }
-
     _ecs->UpdateSystems(deltaTimeMS);
     _ecs->GetSystem<PhysicsSystem>()->CleanUp();
     _ecs->RemovedDestroyed();
