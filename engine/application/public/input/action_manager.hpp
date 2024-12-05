@@ -49,6 +49,8 @@ struct ActionSet
     std::vector<AnalogAction> analogActions {};
 };
 
+using GameActions = std::vector<ActionSet>;
+
 class ActionManager
 {
 public:
@@ -56,16 +58,24 @@ public:
     ~ActionManager() = default;
 
     void Update();
-    void SetActionSet(const ActionSet& actionSet);
+    void SetGameActions(const GameActions& gameActions);
+    void SetActiveActionSet(std::string_view actionSetName);
 
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
 
 private:
-    ActionSet _actionSet;
+    GameActions _gameActions;
+    uint32_t _activeActionSet = 0;
 
     // Steam specifics
-    InputHandle_t inputHandle;
-    InputActionSetHandle_t _actionSetHandle;
-    std::unordered_map<std::string, InputDigitalActionHandle_t> _gamepadDigitalActionsCache {};
-    std::unordered_map<std::string, InputDigitalActionHandle_t> _gamepadAnalogActionsCache {};
+    InputHandle_t _inputHandle;
+
+    struct SteamActionSetCache
+    {
+        InputActionSetHandle_t actionSetHandle;
+        std::unordered_map<std::string, InputDigitalActionHandle_t> gamepadDigitalActionsCache {};
+        std::unordered_map<std::string, InputDigitalActionHandle_t> gamepadAnalogActionsCache {};
+    };
+
+    std::vector<SteamActionSetCache> _steamActionSetCache;
 };

@@ -8,7 +8,9 @@ ActionManager::ActionManager()
         return;
     }
 
-    ActionSet actionSet{};
+    GameActions gameActions{};
+
+    ActionSet& actionSet = gameActions.emplace_back();
     actionSet.name = "FlyCamera";
 
     DigitalAction exitAction{};
@@ -24,7 +26,7 @@ ActionManager::ActionManager()
     actionSet.analogActions.push_back(moveAction);
     actionSet.analogActions.push_back(cameraAction);
 
-    SetActionSet(actionSet);
+    SetGameActions(gameActions);
 }
 
 void ActionManager::Update()
@@ -34,18 +36,18 @@ void ActionManager::Update()
     int nNumActive = SteamInput()->GetConnectedControllers(pHandles);
 
     // If there's an active controller, and if we're not already using it, select the first one.
-    if (nNumActive && (inputHandle != pHandles[0]))
+    if (nNumActive && (_inputHandle != pHandles[0]))
     {
-        inputHandle = pHandles[ 0 ];
+        _inputHandle = pHandles[ 0 ];
     }
 
-    if (inputHandle == 0)
+    if (_inputHandle == 0)
     {
         return;
     }
 
     // Set action set for the controller
-    SteamInput()->ActivateActionSet(inputHandle, _actionSetHandle);
+    SteamInput()->ActivateActionSet(_inputHandle, _actionSetHandle);
 
     bool a = GetDigitalAction("Exit");
     if (a)
@@ -54,22 +56,32 @@ void ActionManager::Update()
     }
 }
 
-void ActionManager::SetActionSet(const ActionSet& actionSet)
+void ActionManager::SetGameActions(const GameActions& gameActions)
 {
-    _actionSet = actionSet;
+    _gameActions = gameActions;
 
     // Caching Steam Input API handles
-    _actionSetHandle = SteamInput()->GetActionSetHandle(_actionSet.name.c_str());
+    _steamActionSetCache.resize(_gameActions.size());
 
-    for (const DigitalAction& action : _actionSet.digitalActions)
+    for (uint32_t i = 0; i < _gameActions.size(); ++i)
     {
-        _gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
-    }
+        _steamActionSetCache[i].actionSetHandle = SteamInput()->GetActionSetHandle(_gameActions[i].name.c_str());
 
-    for (const AnalogAction& action : _actionSet.analogActions)
-    {
-        _gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
+        for (const DigitalAction& action : _gameActions[i].digitalActions)
+        {
+            _steamActionSetCache[i].gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
+        }
+
+        for (const AnalogAction& action : _gameActions[i].analogActions)
+        {
+            _steamActionSetCache[i].gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
+        }
     }
+}
+
+void ActionManager::SetActiveActionSet(std::string_view actionSetName)
+{
+    auto itr = std::find()
 }
 
 bool ActionManager::GetDigitalAction(std::string_view actionName) const
