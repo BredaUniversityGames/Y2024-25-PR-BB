@@ -34,6 +34,12 @@ void ActionManager::SetActiveActionSet(std::string_view actionSetName)
 
 bool ActionManager::GetDigitalAction(std::string_view actionName) const
 {
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return false;
+    }
+
     const ActionSet& actionSet = _gameActions[_activeActionSet];
     const auto& digitalActions = actionSet.digitalActions;
 
@@ -50,6 +56,12 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
 
 void ActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
 {
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return;
+    }
+
     const ActionSet& actionSet = _gameActions[_activeActionSet];
     const auto& analogActions = actionSet.analogActions;
 

@@ -1,6 +1,6 @@
 #include "input/steam_action_manager.hpp"
 
-SteamActionManager::SteamActionManager(const InputManager &inputManager)
+SteamActionManager::SteamActionManager(const InputManager& inputManager)
   : ActionManager(inputManager)
 {
 }
