@@ -8,7 +8,6 @@
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
-#include "particle_module.hpp"
 #include "time_module.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
@@ -21,10 +20,10 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<TimeModule>()
         .AddModule<SteamModule>()
         .AddModule<ApplicationModule>()
+        .AddModule<PhysicsModule>()
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
-        .AddModule<PhysicsModule>()
         .AddModule<ParticleModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();

@@ -70,6 +70,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
 
+    _ecs = &engine.GetModule<ECSModule>();
+
     for (const auto& model : models)
     {
 
