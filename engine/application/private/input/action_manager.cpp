@@ -18,9 +18,11 @@ ActionManager::ActionManager(const InputManager& inputManager)
 
     AnalogAction moveAction{};
     moveAction.name = "Move";
+    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
 
     AnalogAction cameraAction{};
     cameraAction.name = "Camera";
+    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
 
     actionSet.digitalActions.push_back(exitAction);
     actionSet.analogActions.push_back(moveAction);
@@ -71,43 +73,69 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
     return CheckDigitalInput(*itr);
 }
 
-void ActionManager::GetAnalogAction(std::string_view, float& x, float& y) const
+void ActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
 {
-    x = 1;
-    y = 1;
+    const ActionSet& actionSet = _gameActions[_activeActionSet];
+    const auto& analogActions = actionSet.analogActions;
+
+    auto itr = std::find_if(analogActions.begin(), analogActions.end(),
+        [actionName](const AnalogAction& action) { return action.name == actionName;});
+    if (itr == actionSet.analogActions.end())
+    {
+        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        return;
+    }
+
+    CheckAnalogInput(*itr, x, y);
 }
 
 bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
 {
     for (const DigitalInputAction& input : action.inputs)
     {
-        if (std::holds_alternative<KeyboardCode>(input.code))
+        std::visit([&](auto& arg)
         {
-            if (CheckKeyboardInput(std::get<KeyboardCode>(input.code), input.type))
+            if (CheckInput(arg, input.type))
             {
                 return true;
             }
-        }
-        else if (std::holds_alternative<GamepadButton>(input.code))
-        {
-            if (CheckGamepadInput(std::get<GamepadButton>(input.code), input.type))
-            {
-                return true;
-            }
-        }
-        else if (std::holds_alternative<MouseButton>(input.code))
-        {
-            if (CheckMouseInput(std::get<MouseButton>(input.code), input.type))
-            {
-                return true;
-            }
-        }
+
+            return false;
+        }, input.code);
     }
 
     return false;
 }
 
-bool ActionManager::CheckKeyboardInput(KeyboardCode code, DigitalInputActionType inputType) const
+void ActionManager::CheckAnalogInput(const AnalogAction& action, float& x, float& y) const
+{
+    if (!_inputManager.IsGamepadAvailable())
+    {
+        return;
+    }
+
+    std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
+    {
+        { GamepadAnalog::eGAMEPAD_AXIS_LEFT, { GamepadAxis::eGAMEPAD_AXIS_LEFTX, GamepadAxis::eGAMEPAD_AXIS_LEFTY } },
+        { GamepadAnalog::eGAMEPAD_AXIS_RIGHT, { GamepadAxis::eGAMEPAD_AXIS_RIGHTX, GamepadAxis::eGAMEPAD_AXIS_RIGHTY} }
+    };
+
+    for (const AnalogInputAction& input : action.inputs)
+    {
+        std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
+
+        x = _inputManager.GetGamepadAxis(axes.first);
+        y = _inputManager.GetGamepadAxis(axes.second);
+
+        // First actions with input have priority, so if any input is found return
+        if (x != 0.0f || y != 0.0f)
+        {
+            return;
+        }
+    }
+}
+
+bool ActionManager::CheckInput(KeyboardCode code, DigitalInputActionType inputType) const
 {
     switch (inputType)
     {
@@ -130,7 +158,7 @@ bool ActionManager::CheckKeyboardInput(KeyboardCode code, DigitalInputActionType
     return false;
 }
 
-bool ActionManager::CheckMouseInput(MouseButton button, DigitalInputActionType inputType) const
+bool ActionManager::CheckInput(MouseButton button, DigitalInputActionType inputType) const
 {
     switch (inputType)
     {
@@ -153,7 +181,7 @@ bool ActionManager::CheckMouseInput(MouseButton button, DigitalInputActionType i
     return false;
 }
 
-bool ActionManager::CheckGamepadInput(GamepadButton button, DigitalInputActionType inputType) const
+bool ActionManager::CheckInput(GamepadButton button, DigitalInputActionType inputType) const
 {
     switch (inputType)
     {

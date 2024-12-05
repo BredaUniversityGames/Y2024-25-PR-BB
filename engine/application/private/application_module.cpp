@@ -103,6 +103,13 @@ void ApplicationModule::Tick(Engine& engine)
     {
         bblog::info("EXIT!");
     }
+
+    float x{}, y{};
+    _actionManager->GetAnalogAction("Move", x, y);
+    if (x != 0.0f || y != 0.0f)
+    {
+        bblog::info("MOVED! x: {} y: {}", x, y);
+    }
 }
 
 ApplicationModule::ApplicationModule() = default;

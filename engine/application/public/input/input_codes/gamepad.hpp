@@ -41,5 +41,10 @@ enum class GamepadAxis : uint32_t
     eGAMEPAD_AXIS_RIGHTY,
     eGAMEPAD_AXIS_LEFT_TRIGGER,
     eGAMEPAD_AXIS_RIGHT_TRIGGER,
-    eGAMEPAD_AXIS_COUNT
+};
+
+enum class GamepadAnalog
+{
+    eGAMEPAD_AXIS_LEFT,
+    eGAMEPAD_AXIS_RIGHT,
 };

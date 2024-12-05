@@ -22,7 +22,7 @@ struct DigitalInputAction
     std::variant<GamepadButton, KeyboardCode, MouseButton> code;
 };
 
-using AnalogInputAction = GamepadAxis;
+using AnalogInputAction = GamepadAnalog;
 
 using DigitalInputActionList = std::vector<DigitalInputAction>;
 using AnalogInputActionList = std::vector<AnalogInputAction>;
@@ -69,8 +69,9 @@ protected:
     uint32_t _activeActionSet = 0;
 
 private:
-    bool CheckDigitalInput(const DigitalAction& action) const;
-    bool CheckKeyboardInput(KeyboardCode code, DigitalInputActionType inputType) const;
-    bool CheckMouseInput(MouseButton button, DigitalInputActionType inputType) const;
-    bool CheckGamepadInput(GamepadButton button, DigitalInputActionType inputType) const;
+    [[nodiscard]] bool CheckDigitalInput(const DigitalAction& action) const;
+    void CheckAnalogInput(const AnalogAction& action, float& x, float& y) const;
+    [[nodiscard]] bool CheckInput(KeyboardCode code, DigitalInputActionType inputType) const;
+    [[nodiscard]] bool CheckInput(MouseButton button, DigitalInputActionType inputType) const;
+    [[nodiscard]] bool CheckInput(GamepadButton button, DigitalInputActionType inputType) const;
 };
