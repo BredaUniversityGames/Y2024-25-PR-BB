@@ -67,7 +67,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     };
 
     _inputManager = std::make_unique<InputManager>();
-    _actionManager = std::make_unique<ActionManager>();
+    _actionManager = std::make_unique<ActionManager>(*_inputManager);
     SetMouseHidden(_mouseHidden);
 
     return priority;
@@ -97,6 +97,12 @@ void ApplicationModule::Tick(Engine& engine)
     }
 
     _actionManager->Update();
+
+
+    if (_actionManager->GetDigitalAction("Exit"))
+    {
+        bblog::info("EXIT!");
+    }
 }
 
 ApplicationModule::ApplicationModule() = default;

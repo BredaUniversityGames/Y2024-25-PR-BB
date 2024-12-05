@@ -1,13 +1,9 @@
 #include "input/action_manager.hpp"
+#include "input/input_manager.hpp"
 
-ActionManager::ActionManager()
+ActionManager::ActionManager(const InputManager& inputManager)
+    : _inputManager(inputManager)
 {
-    if (!SteamInput()->Init(false))
-    {
-        bblog::error("[Steamworks] Failed to initialize Steam Input");
-        return;
-    }
-
     GameActions gameActions{};
 
     ActionSet& actionSet = gameActions.emplace_back();
@@ -15,6 +11,10 @@ ActionManager::ActionManager()
 
     DigitalAction exitAction{};
     exitAction.name = "Exit";
+    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, KeyboardCode::eY);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Released, MouseButton::eBUTTON_RIGHT);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, KeyboardCode::eZ);
 
     AnalogAction moveAction{};
     moveAction.name = "Move";
@@ -31,46 +31,12 @@ ActionManager::ActionManager()
 
 void ActionManager::Update()
 {
-    // Find active controllers this frame
-    InputHandle_t pHandles[STEAM_CONTROLLER_MAX_COUNT];
-    int nNumActive = SteamInput()->GetConnectedControllers(pHandles);
 
-    // If there's an active controller, and if we're not already using it, select the first one.
-    if (nNumActive && (_inputHandle != pHandles[0]))
-    {
-        _inputHandle = pHandles[ 0 ];
-    }
-
-    if (_inputHandle == 0 || _gameActions.empty())
-    {
-        return;
-    }
-
-    // Set action set for the controller
-    SteamInput()->ActivateActionSet(_inputHandle, _steamActionSetCache[_activeActionSet].actionSetHandle);
 }
 
 void ActionManager::SetGameActions(const GameActions& gameActions)
 {
     _gameActions = gameActions;
-
-    // Caching Steam Input API handles
-    _steamActionSetCache.resize(_gameActions.size());
-
-    for (uint32_t i = 0; i < _gameActions.size(); ++i)
-    {
-        _steamActionSetCache[i].actionSetHandle = SteamInput()->GetActionSetHandle(_gameActions[i].name.c_str());
-
-        for (const DigitalAction& action : _gameActions[i].digitalActions)
-        {
-            _steamActionSetCache[i].gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
-        }
-
-        for (const AnalogAction& action : _gameActions[i].analogActions)
-        {
-            _steamActionSetCache[i].gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
-        }
-    }
 }
 
 void ActionManager::SetActiveActionSet(std::string_view actionSetName)
@@ -91,55 +57,121 @@ void ActionManager::SetActiveActionSet(std::string_view actionSetName)
 
 bool ActionManager::GetDigitalAction(std::string_view actionName) const
 {
-    if (_inputHandle == 0 || _gameActions.empty())
-    {
-        return false;
-    }
+    const ActionSet& actionSet = _gameActions[_activeActionSet];
+    const auto& digitalActions = actionSet.digitalActions;
 
-    const SteamActionSetCache& actionSetCache = _steamActionSetCache[_activeActionSet];
-
-    auto itr = actionSetCache.gamepadDigitalActionsCache.find(actionName.data());
-    if (itr == actionSetCache.gamepadDigitalActionsCache.end())
-    {
-        bblog::error("[Input] Failed to find digital action: \"{}\"", actionName);
-        return false;
-    }
-
-    ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(_inputHandle, itr->second);
-
-    // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
-    if (!digitalData.bActive)
-    {
-        return false;
-    }
-
-    return digitalData.bState;
-}
-
-void ActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
-{
-    if (_inputHandle == 0 || _gameActions.empty())
-    {
-        return;
-    }
-
-    const SteamActionSetCache& actionSetCache = _steamActionSetCache[_activeActionSet];
-
-    auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
-    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
+    auto itr = std::find_if(digitalActions.begin(), digitalActions.end(),
+        [actionName](const DigitalAction& action) { return action.name == actionName;});
+    if (itr == actionSet.digitalActions.end())
     {
         bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
-        return;
+        return false;
     }
 
-    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_inputHandle, itr->second);
+    return CheckDigitalInput(*itr);
+}
 
-    // Actions are only 'active' when they're assigned to a control in an action set, and that action set is active.
-    if (!analogActionData.bActive)
+void ActionManager::GetAnalogAction(std::string_view, float& x, float& y) const
+{
+    x = 1;
+    y = 1;
+}
+
+bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
+{
+    for (const DigitalInputAction& input : action.inputs)
     {
-        return;
+        if (std::holds_alternative<KeyboardCode>(input.code))
+        {
+            if (CheckKeyboardInput(std::get<KeyboardCode>(input.code), input.type))
+            {
+                return true;
+            }
+        }
+        else if (std::holds_alternative<GamepadButton>(input.code))
+        {
+            if (CheckGamepadInput(std::get<GamepadButton>(input.code), input.type))
+            {
+                return true;
+            }
+        }
+        else if (std::holds_alternative<MouseButton>(input.code))
+        {
+            if (CheckMouseInput(std::get<MouseButton>(input.code), input.type))
+            {
+                return true;
+            }
+        }
     }
 
-    x = analogActionData.x;
-    y = analogActionData.y;
+    return false;
+}
+
+bool ActionManager::CheckKeyboardInput(KeyboardCode code, DigitalInputActionType inputType) const
+{
+    switch (inputType)
+    {
+        case DigitalInputActionType::Pressed:
+        {
+            return _inputManager.IsKeyPressed(code);
+        }
+
+        case DigitalInputActionType::Released:
+        {
+            return _inputManager.IsKeyReleased(code);
+        }
+
+        case DigitalInputActionType::Hold:
+        {
+            return _inputManager.IsKeyHeld(code);
+        }
+    }
+
+    return false;
+}
+
+bool ActionManager::CheckMouseInput(MouseButton button, DigitalInputActionType inputType) const
+{
+    switch (inputType)
+    {
+        case DigitalInputActionType::Pressed:
+        {
+            return _inputManager.IsMouseButtonPressed(button);
+        }
+
+        case DigitalInputActionType::Released:
+        {
+            return _inputManager.IsMouseButtonReleased(button);
+        }
+
+        case DigitalInputActionType::Hold:
+        {
+            return _inputManager.IsMouseButtonHeld(button);
+        }
+    }
+
+    return false;
+}
+
+bool ActionManager::CheckGamepadInput(GamepadButton button, DigitalInputActionType inputType) const
+{
+    switch (inputType)
+    {
+        case DigitalInputActionType::Pressed:
+        {
+            return _inputManager.IsGamepadButtonPressed(button);
+        }
+
+        case DigitalInputActionType::Released:
+        {
+            return _inputManager.IsGamepadButtonReleased(button);
+        }
+
+        case DigitalInputActionType::Hold:
+        {
+            return _inputManager.IsGamepadButtonHeld(button);
+        }
+    }
+
+    return false;
 }

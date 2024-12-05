@@ -46,6 +46,15 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
 
     _steamAvailable = true;
 
+    if (!SteamInput()->Init(false))
+    {
+        bblog::error("[Steamworks] Failed to initialize Steam Input");
+
+        return ModuleTickOrder::ePreTick;
+    }
+
+    _steamInputAvailable = true;
+
     return ModuleTickOrder::ePreTick;
 }
 

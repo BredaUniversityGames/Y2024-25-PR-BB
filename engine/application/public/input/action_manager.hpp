@@ -1,16 +1,13 @@
 #pragma once
 
-// TODO: Custom include header
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#include <steam_api.h>
-#pragma clang diagnostic pop
-
-#include <variant>
-
 #include "input/input_codes/gamepad.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+
+#include <cstdint>
+#include <variant>
+
+class InputManager;
 
 enum class DigitalInputActionType : uint8_t
 {
@@ -54,29 +51,26 @@ using GameActions = std::vector<ActionSet>;
 class ActionManager
 {
 public:
-    ActionManager();
-    ~ActionManager() = default;
+    ActionManager(const InputManager& inputManager);
+    virtual ~ActionManager() = default;
 
-    void Update();
-    void SetGameActions(const GameActions& gameActions);
+    virtual void Update();
+    // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
+    virtual void SetGameActions(const GameActions& gameActions);
+    // Change the currently used action set in the game actions.
     void SetActiveActionSet(std::string_view actionSetName);
 
-    [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
-    void GetAnalogAction(std::string_view actionName, float& x, float& y) const;
+    [[nodiscard]] virtual bool GetDigitalAction(std::string_view actionName) const;
+    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const;
 
-private:
+protected:
+    const InputManager& _inputManager;
     GameActions _gameActions;
     uint32_t _activeActionSet = 0;
 
-    // Steam specifics
-    InputHandle_t _inputHandle;
-
-    struct SteamActionSetCache
-    {
-        InputActionSetHandle_t actionSetHandle;
-        std::unordered_map<std::string, InputDigitalActionHandle_t> gamepadDigitalActionsCache {};
-        std::unordered_map<std::string, InputDigitalActionHandle_t> gamepadAnalogActionsCache {};
-    };
-
-    std::vector<SteamActionSetCache> _steamActionSetCache;
+private:
+    bool CheckDigitalInput(const DigitalAction& action) const;
+    bool CheckKeyboardInput(KeyboardCode code, DigitalInputActionType inputType) const;
+    bool CheckMouseInput(MouseButton button, DigitalInputActionType inputType) const;
+    bool CheckGamepadInput(GamepadButton button, DigitalInputActionType inputType) const;
 };
