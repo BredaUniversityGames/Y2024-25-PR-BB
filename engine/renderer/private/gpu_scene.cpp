@@ -3,6 +3,7 @@
 #include "batch_buffer.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -29,6 +30,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     , _directionalLightShadowCamera(creation.context)
 {
     InitializeSceneBuffers();
+
     InitializeObjectInstancesBuffers();
 
     InitializeIndirectDrawBuffer();
@@ -65,6 +67,15 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
+}
+void GPUScene::UpdatePointLightArray(uint32_t frameIndex)
+{
+    PointLightArray pointLightArray {};
+
+    UpdatePointLightData(pointLightArray, frameIndex);
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_pointLightFrameData[frameIndex].buffer);
+    memcpy(buffer->mappedPtr, &pointLightArray, sizeof(PointLightArray));
 }
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
@@ -149,6 +160,28 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightIsSet = true;
     }
 }
+void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex)
+{
+    auto pointLightView = _ecs->registry.view<PointLightComponent, TransformComponent>();
+    uint32_t pointLightCount = 0;
+
+    for (const auto& [entity, pointLightComponent, transformComponent] : pointLightView.each())
+    {
+        if (pointLightCount >= MAX_POINT_LIGHTS)
+        {
+            bblog::warn("Reached the limit of point lights available");
+            break;
+        }
+
+        PointLightData& pointLightData = pointLightArray.lights[pointLightCount];
+        pointLightData.position = glm::vec4(TransformHelpers::GetLocalPosition(transformComponent), 1.0f);
+        pointLightData.color = glm::vec4(pointLightComponent.color, 1.0f);
+        pointLightData.range = pointLightComponent.range;
+        pointLightData.attenuation = pointLightComponent.attenuation;
+
+        pointLightCount++;
+    }
+}
 
 void GPUScene::UpdateCameraData(uint32_t frameIndex)
 {
@@ -176,6 +209,13 @@ void GPUScene::InitializeSceneBuffers()
     CreateSceneDescriptorSets();
 }
 
+void GPUScene::InitializePointLightBuffer()
+{
+    CreatePointLightBuffer();
+    CreatePointLightDescriptorSetLayout();
+    CreatePointLightDescriptorSets();
+}
+
 void GPUScene::InitializeObjectInstancesBuffers()
 {
     CreateObjectInstancesBuffers();
@@ -197,6 +237,21 @@ void GPUScene::CreateSceneDescriptorSetLayout()
     std::vector<std::string_view> names { "SceneUBO" };
 
     _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreatePointLightDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
+    descriptorSetLayoutBinding.binding = 0;
+    descriptorSetLayoutBinding.descriptorCount = 1;
+    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
+    descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+    std::vector<std::string_view> names { "PointLightSSBO" };
+
+    _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -234,6 +289,26 @@ void GPUScene::CreateSceneDescriptorSets()
     {
         _sceneFrameData[i].descriptorSet = descriptorSets[i];
         UpdateSceneDescriptorSet(i);
+    }
+}
+
+void GPUScene::CreatePointLightDescriptorSets()
+{
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _pointLightDescriptorSetLayout; });
+    vk::DescriptorSetAllocateInfo allocateInfo {};
+    allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocateInfo.pSetLayouts = layouts.data();
+
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+        "Failed allocating point light descriptor sets!");
+    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    {
+        _pointLightFrameData[i].descriptorSet = descriptorSets[i];
+        UpdatePointLightDescriptorSet(i);
     }
 }
 
@@ -280,6 +355,28 @@ void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
     _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
+void GPUScene::UpdatePointLightDescriptorSet(uint32_t frameIndex)
+{
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_pointLightFrameData[frameIndex].buffer);
+
+    vk::DescriptorBufferInfo bufferInfo {};
+    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = vk::WholeSize;
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
+    vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
+    bufferWrite.dstSet = _pointLightFrameData[frameIndex].descriptorSet;
+    bufferWrite.dstBinding = 0;
+    bufferWrite.dstArrayElement = 0;
+    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    bufferWrite.descriptorCount = 1;
+    bufferWrite.pBufferInfo = &bufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
@@ -317,6 +414,22 @@ void GPUScene::CreateSceneBuffers()
             .SetName(name);
 
         _sceneFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+    }
+}
+
+void GPUScene::CreatePointLightBuffer()
+{
+    for (size_t i = 0; i < _pointLightFrameData.size(); ++i)
+    {
+        std::string name = "[] PointLight SSBO";
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
+        BufferCreation creation {};
+        creation.SetSize(sizeof(PointLightData) * MAX_POINT_LIGHTS)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+            .SetName(name);
+
+        _pointLightFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
