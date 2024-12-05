@@ -33,6 +33,7 @@ std::string Vec3ToString(glm::vec3& v)
 TEST(ForeignDataTests, ForeignBasicClass)
 {
     ScriptingContext context { MEMORY_CONFIG };
+
     auto& vm = context.GetVM();
 
     std::stringstream output;
@@ -57,8 +58,9 @@ TEST(ForeignDataTests, ForeignBasicClass)
 TEST(ForeignDataTests, EngineWrapper)
 {
     MainEngine e {};
+
     auto& scripting = e.GetModule<ScriptingModule>();
-    e.AddModule<TimeModule>();
+    scripting.SetEngineBindingsPath("Engine.wren");
 
     auto& context = scripting.GetContext();
 
@@ -67,9 +69,12 @@ TEST(ForeignDataTests, EngineWrapper)
 
     // Engine Binding
     {
+        e.AddModule<TimeModule>();
         auto& engineAPI = scripting.GetEngineClass();
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
     }
+
+    std::cout << context.GetVM().module("Engine.wren").str();
 
     auto script = context.RunScript("game/tests/foreign_engine.wren");
     ASSERT_TRUE(script);
