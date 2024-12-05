@@ -40,7 +40,7 @@ void ParticleInterface::LoadEmitterPresets()
     emitter.mass = 2.0f;
     emitter.rotationVelocity = glm::vec2(0.0f, 4.0f);
     emitter.maxLife = 5.0f;
-    emitter.materialIndex = LoadEmitterImage("assets/textures/jeremi.png");
+    emitter.materialIndex = LoadEmitterImage("assets/textures/purple_orb_particle.png");
     emitter.size = glm::vec2(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height) / static_cast<float>(glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height));
     _emitterPresets.emplace_back(emitter);
 }

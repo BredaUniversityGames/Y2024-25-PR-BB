@@ -13,5 +13,12 @@ layout (location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor = texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord);
+    vec4 color = texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord);
+
+    if(color.a < 0.2f)
+    {
+        discard;
+    }
+
+    outColor = color;
 }
