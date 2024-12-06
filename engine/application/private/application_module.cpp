@@ -1,13 +1,14 @@
 #include "application_module.hpp"
 #include "engine.hpp"
 #include "input/input_manager.hpp"
-#include "input/action_manager.hpp"
+#include "input/steam_action_manager.hpp"
 #include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
 // This definition fixes the issues and does not change the final build output
 #define SDL_DISABLE_ANALYZE_MACROS
 
+#include <steam_module.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
@@ -67,7 +68,19 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     };
 
     _inputManager = std::make_unique<InputManager>();
-    _actionManager = std::make_unique<ActionManager>(*_inputManager);
+
+    const SteamModule& steam = engine.GetModule<SteamModule>();
+    if (steam.InputAvailable())
+    {
+        bblog::info("Steam Input available, creating SteamActionManager");
+        _actionManager = std::make_unique<SteamActionManager>(*_inputManager);
+    }
+    else
+    {
+        bblog::info("Steam Input not available, creating ActionManager");
+        _actionManager = std::make_unique<ActionManager>(*_inputManager);
+    }
+
     SetMouseHidden(_mouseHidden);
 
     GameActions gameActions{};
@@ -79,7 +92,8 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     exitAction.name = "Exit";
     exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, KeyboardCode::eY);
     exitAction.inputs.emplace_back(DigitalInputActionType::Released, MouseButton::eBUTTON_RIGHT);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    //exitAction.inputs.emplace_back(DigitalInputActionType::Released, GamepadButton::eGAMEPAD_BUTTON_WEST);
     exitAction.inputs.emplace_back(DigitalInputActionType::Hold, KeyboardCode::eZ);
 
     AnalogAction moveAction{};

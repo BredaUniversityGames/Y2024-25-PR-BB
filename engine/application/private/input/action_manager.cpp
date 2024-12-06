@@ -6,11 +6,6 @@ ActionManager::ActionManager(const InputManager& inputManager)
 {
 }
 
-void ActionManager::Update()
-{
-
-}
-
 void ActionManager::SetGameActions(const GameActions& gameActions)
 {
     _gameActions = gameActions;

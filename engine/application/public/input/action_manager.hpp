@@ -1,5 +1,4 @@
 #pragma once
-
 #include "input/input_codes/gamepad.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
@@ -54,13 +53,13 @@ public:
     ActionManager(const InputManager& inputManager);
     virtual ~ActionManager() = default;
 
-    virtual void Update();
+    virtual void Update(){}
     // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
     virtual void SetGameActions(const GameActions& gameActions);
     // Change the currently used action set in the game actions.
     void SetActiveActionSet(std::string_view actionSetName);
 
-    [[nodiscard]] virtual bool GetDigitalAction(std::string_view actionName) const;
+    [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
     virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const;
 
 protected:
@@ -68,10 +67,11 @@ protected:
     GameActions _gameActions;
     uint32_t _activeActionSet = 0;
 
-private:
-    [[nodiscard]] bool CheckDigitalInput(const DigitalAction& action) const;
+    [[nodiscard]] virtual bool CheckDigitalInput(const DigitalAction& action) const;
     void CheckAnalogInput(const AnalogAction& action, float& x, float& y) const;
     [[nodiscard]] bool CheckInput(KeyboardCode code, DigitalInputActionType inputType) const;
     [[nodiscard]] bool CheckInput(MouseButton button, DigitalInputActionType inputType) const;
+
+private:
     [[nodiscard]] bool CheckInput(GamepadButton button, DigitalInputActionType inputType) const;
 };
