@@ -7,7 +7,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -86,7 +86,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _drawCommands.clear();
 
-    auto meshView = _ecs->registry.view<StaticMeshComponent, WorldMatrixComponent>();
+    auto meshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
         {
@@ -118,7 +118,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
 void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
 {
-    auto directionalLightView = _ecs->registry.view<DirectionalLightComponent, TransformComponent>();
+    auto directionalLightView = _ecs.GetRegistry().view<DirectionalLightComponent, TransformComponent>();
     bool directionalLightIsSet = false;
 
     for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
@@ -187,7 +187,7 @@ void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUS
 
 void GPUScene::UpdateCameraData(uint32_t frameIndex)
 {
-    auto cameraView = _ecs->registry.view<CameraComponent, TransformComponent>();
+    auto cameraView = _ecs.GetRegistry().view<CameraComponent, TransformComponent>();
     bool mainCameraIsSet = false;
 
     for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())

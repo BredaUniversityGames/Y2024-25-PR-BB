@@ -1,4 +1,6 @@
 ﻿#include "physics_module.hpp"
+#include "ecs_module.hpp"
+#include "systems/physics_system.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
@@ -64,6 +66,9 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
     bodyInterface = &physicsSystem->GetBodyInterface();
     // just for testing now
 
+    auto& ecs = engine.GetModule<ECSModule>();
+    ecs.AddSystem<PhysicsSystem>(ecs, *this);
+
     return ModuleTickOrder::ePostTick;
 }
 
@@ -83,6 +88,8 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
     // Step the world
     // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
+
+    engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
 }
 
 RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
