@@ -77,8 +77,8 @@ bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
     {
         bool result = std::visit([&](auto& arg)
             {
-                return CheckInput(arg, input.type);
-            }, input.code);
+                return CheckInput(arg, action.type);
+            }, input);
 
         if (result)
         {
@@ -117,21 +117,21 @@ void ActionManager::CheckAnalogInput(const AnalogAction& action, float& x, float
     }
 }
 
-bool ActionManager::CheckInput(KeyboardCode code, DigitalInputActionType inputType) const
+bool ActionManager::CheckInput(KeyboardCode code, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalInputActionType::Pressed:
+        case DigitalActionType::Pressed:
         {
             return _inputManager.IsKeyPressed(code);
         }
 
-        case DigitalInputActionType::Released:
+        case DigitalActionType::Released:
         {
             return _inputManager.IsKeyReleased(code);
         }
 
-        case DigitalInputActionType::Hold:
+        case DigitalActionType::Hold:
         {
             return _inputManager.IsKeyHeld(code);
         }
@@ -140,21 +140,21 @@ bool ActionManager::CheckInput(KeyboardCode code, DigitalInputActionType inputTy
     return false;
 }
 
-bool ActionManager::CheckInput(MouseButton button, DigitalInputActionType inputType) const
+bool ActionManager::CheckInput(MouseButton button, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalInputActionType::Pressed:
+        case DigitalActionType::Pressed:
         {
             return _inputManager.IsMouseButtonPressed(button);
         }
 
-        case DigitalInputActionType::Released:
+        case DigitalActionType::Released:
         {
             return _inputManager.IsMouseButtonReleased(button);
         }
 
-        case DigitalInputActionType::Hold:
+        case DigitalActionType::Hold:
         {
             return _inputManager.IsMouseButtonHeld(button);
         }
@@ -163,21 +163,21 @@ bool ActionManager::CheckInput(MouseButton button, DigitalInputActionType inputT
     return false;
 }
 
-bool ActionManager::CheckInput(GamepadButton button, DigitalInputActionType inputType) const
+bool ActionManager::CheckInput(GamepadButton button, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalInputActionType::Pressed:
+        case DigitalActionType::Pressed:
         {
             return _inputManager.IsGamepadButtonPressed(button);
         }
 
-        case DigitalInputActionType::Released:
+        case DigitalActionType::Released:
         {
             return _inputManager.IsGamepadButtonReleased(button);
         }
 
-        case DigitalInputActionType::Hold:
+        case DigitalActionType::Hold:
         {
             return _inputManager.IsGamepadButtonHeld(button);
         }

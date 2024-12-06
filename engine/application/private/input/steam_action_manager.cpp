@@ -76,8 +76,8 @@ bool SteamActionManager::CheckDigitalInput(const DigitalAction& action) const
     {
         bool result = std::visit([&](auto& arg)
             {
-                return CheckInput(action.name, arg, input.type);
-            }, input.code);
+                return CheckInput(action.name, arg, action.type);
+            }, input);
 
         if (result)
         {
@@ -88,25 +88,25 @@ bool SteamActionManager::CheckDigitalInput(const DigitalAction& action) const
     return false;
 }
 
-bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalInputActionType inputType) const
+bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalInputActionType::Pressed:
+        case DigitalActionType::Pressed:
         {
             bool current = detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
             bool previous = detail::UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return current && !previous;
         }
 
-        case DigitalInputActionType::Released:
+        case DigitalActionType::Released:
         {
             bool current = detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
             bool previous = detail::UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return !current && previous;
         }
 
-        case DigitalInputActionType::Hold:
+        case DigitalActionType::Hold:
         {
             return detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
         }
@@ -115,12 +115,12 @@ bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED Ga
     return false;
 }
 
-bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalInputActionType inputType) const
+bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const
 {
     return ActionManager::CheckInput(code, inputType);
 }
 
-bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalInputActionType inputType) const
+bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const
 {
     return ActionManager::CheckInput(button, inputType);
 }

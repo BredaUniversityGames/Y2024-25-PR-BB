@@ -8,19 +8,14 @@
 
 class InputManager;
 
-enum class DigitalInputActionType : uint8_t
+enum class DigitalActionType : uint8_t
 {
     Pressed,
     Hold,
     Released,
 };
 
-struct DigitalInputAction
-{
-    DigitalInputActionType type{};
-    std::variant<GamepadButton, KeyboardCode, MouseButton> code;
-};
-
+using DigitalInputAction = std::variant<GamepadButton, KeyboardCode, MouseButton>;
 using AnalogInputAction = GamepadAnalog;
 
 using DigitalInputActionList = std::vector<DigitalInputAction>;
@@ -29,6 +24,7 @@ using AnalogInputActionList = std::vector<AnalogInputAction>;
 struct DigitalAction
 {
     std::string name{};
+    DigitalActionType type{};
     DigitalInputActionList inputs{};
 };
 
@@ -69,9 +65,9 @@ protected:
 
     [[nodiscard]] virtual bool CheckDigitalInput(const DigitalAction& action) const;
     void CheckAnalogInput(const AnalogAction& action, float& x, float& y) const;
-    [[nodiscard]] bool CheckInput(KeyboardCode code, DigitalInputActionType inputType) const;
-    [[nodiscard]] bool CheckInput(MouseButton button, DigitalInputActionType inputType) const;
+    [[nodiscard]] bool CheckInput(KeyboardCode code, DigitalActionType inputType) const;
+    [[nodiscard]] bool CheckInput(MouseButton button, DigitalActionType inputType) const;
 
 private:
-    [[nodiscard]] bool CheckInput(GamepadButton button, DigitalInputActionType inputType) const;
+    [[nodiscard]] bool CheckInput(GamepadButton button, DigitalActionType inputType) const;
 };

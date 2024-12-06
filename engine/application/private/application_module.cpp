@@ -72,12 +72,12 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     const SteamModule& steam = engine.GetModule<SteamModule>();
     if (steam.InputAvailable())
     {
-        bblog::info("Steam Input available, creating SteamActionManager");
+        bblog::info("Steam Input available, creating SteamActionManager. Steam controller input settings will be used");
         _actionManager = std::make_unique<SteamActionManager>(*_inputManager);
     }
     else
     {
-        bblog::info("Steam Input not available, creating ActionManager");
+        bblog::info("Steam Input not available, creating default ActionManager. SDL controller input settings will be used");
         _actionManager = std::make_unique<ActionManager>(*_inputManager);
     }
 
@@ -90,11 +90,12 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
 
     DigitalAction exitAction{};
     exitAction.name = "Exit";
-    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, KeyboardCode::eY);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Released, MouseButton::eBUTTON_RIGHT);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Pressed, GamepadButton::eGAMEPAD_BUTTON_NORTH);
-    //exitAction.inputs.emplace_back(DigitalInputActionType::Released, GamepadButton::eGAMEPAD_BUTTON_WEST);
-    exitAction.inputs.emplace_back(DigitalInputActionType::Hold, KeyboardCode::eZ);
+    exitAction.type = DigitalActionType::Pressed;
+    exitAction.inputs.emplace_back(KeyboardCode::eY);
+    exitAction.inputs.emplace_back(MouseButton::eBUTTON_RIGHT);
+    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_WEST);
+    exitAction.inputs.emplace_back(KeyboardCode::eZ);
 
     AnalogAction moveAction{};
     moveAction.name = "Move";
