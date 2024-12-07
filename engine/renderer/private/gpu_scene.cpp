@@ -228,7 +228,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     // Sort joint indices need to stay relative, but can have arbitrary offset.
     entt::entity lastSkeleton = entt::null;
     uint32_t offset = 0;
-    uint32_t ongoingOffset = 0;
+    uint32_t highestIndex = 0;
     for (entt::entity entity : jointView)
     {
         const auto& joint = jointView.get<JointComponent>(entity);
@@ -238,12 +238,12 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
         if (lastSkeleton != joint.skeletonEntity)
         {
             lastSkeleton = joint.skeletonEntity;
-            offset += ongoingOffset;
+            offset += highestIndex + 1;
 
             skeletonBoneOffset[lastSkeleton] = offset;
         }
 
-        ongoingOffset = glm::max(ongoingOffset, joint.jointIndex);
+        highestIndex = glm::max(highestIndex, joint.jointIndex);
 
         skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
     }

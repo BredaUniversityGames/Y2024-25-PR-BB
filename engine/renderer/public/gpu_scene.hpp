@@ -41,7 +41,7 @@ struct DrawIndexedIndirectCommand
 };
 
 constexpr uint32_t MAX_INSTANCES = 4096 * 4;
-constexpr uint32_t MAX_BONES = 512;
+constexpr uint32_t MAX_BONES = 2048;
 
 class GPUScene
 {
