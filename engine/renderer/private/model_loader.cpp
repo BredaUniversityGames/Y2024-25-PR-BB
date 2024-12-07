@@ -562,9 +562,18 @@ CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNodeIndex, CPUModel& model, const fastgltf::Asset& gltf, const StagingAnimationChannels& animationChannels, const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT)
+uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
+    uint32_t gltfNodeIndex,
+    CPUModel& model,
+    const fastgltf::Asset& gltf,
+    const StagingAnimationChannels& animationChannels,
+    const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT,
+    std::unordered_map<uint32_t, uint32_t>& nodeLUT)
 {
-    Hierarchy::Node node {};
+    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    uint32_t nodeIndex = model.hierarchy.nodes.size() - 1;
+
+    nodeLUT[gltfNodeIndex] = nodeIndex;
 
     if (gltfNode.meshIndex.has_value())
     {
@@ -573,51 +582,52 @@ Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, uint32_t gltfNo
         auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
         for (auto it = range.first; it != range.second; ++it)
         {
-            node.children.emplace_back(Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second });
-        }
-
-        if (gltfNode.skinIndex.has_value())
-        {
-            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
-            int x = 0;
+            model.hierarchy.nodes.emplace_back("mesh node", glm::identity<glm::mat4>(), it->second);
+            model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
         }
     }
 
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
-    node.transform = detail::ToMat4(gltfTransform);
-    node.name = gltfNode.name;
+    model.hierarchy.nodes[nodeIndex].transform = detail::ToMat4(gltfTransform);
+    model.hierarchy.nodes[nodeIndex].name = gltfNode.name;
 
     for (size_t i = 0; i < animationChannels.nodeIndices.size(); i++)
     {
         if (animationChannels.nodeIndices[i] == gltfNodeIndex)
         {
-            node.animationChannel = animationChannels.animationChannels[i];
+            model.hierarchy.nodes[nodeIndex].animationChannel = animationChannels.animationChannels[i];
             break;
         }
     }
 
-    for (const auto& skin : gltf.skins)
+    for (size_t i = 0; i < gltf.skins.size(); ++i)
     {
+        const auto& skin = gltf.skins[i];
+
+        if (!model.hierarchy.nodes[nodeIndex].isSkeletonRoot)
+            model.hierarchy.nodes[nodeIndex].isSkeletonRoot = skin.skeleton == gltfNodeIndex;
+
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
         if (it != skin.joints.end())
         {
+            auto nodeIt = std::find_if(gltf.nodes.begin(), gltf.nodes.end(), [i](const fastgltf::Node& node)
+                { return node.skinIndex.has_value() && node.skinIndex.value() == i; });
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
-            node.joint = Hierarchy::Joint {
-                gltfNodeIndex == skin.skeleton.has_value() ? static_cast<bool>(skin.skeleton.value()) : false,
-                entt::null,
+            model.hierarchy.nodes[nodeIndex].joint = Hierarchy::Joint {
+                static_cast<uint32_t>(std::distance(gltf.nodes.begin(), nodeIt)),
                 *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
                 static_cast<uint32_t>(std::distance(skin.joints.begin(), it))
             };
-            break;
         }
     }
 
     for (size_t i : gltfNode.children)
     {
-        node.children.emplace_back(RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels, meshLUT));
+        uint32_t index = RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels, meshLUT, nodeLUT);
+        model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
     }
 
-    return node;
+    return nodeIndex;
 }
 
 CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
@@ -653,6 +663,10 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
                 CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
                 model.skinnedMeshes.emplace_back(primitive);
 
+                // Iterate all nodes
+                // Check for mesh equal to this
+                // Save skeleton
+
                 meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
             }
             else
@@ -673,16 +687,46 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.animation = animations.animation;
     }
 
-    Hierarchy::Node baseNode;
-    baseNode.name = name;
+    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    uint32_t baseNodeIndex = model.hierarchy.nodes.size() - 1;
+    model.hierarchy.nodes[baseNodeIndex].name = name;
+
+    model.hierarchy.root = model.hierarchy.nodes.size() - 1;
+
+    std::unordered_map<uint32_t, uint32_t> nodeLUT {};
 
     for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
     {
         uint32_t index = gltf.scenes[0].nodeIndices[i];
         const auto& gltfNode { gltf.nodes[index] };
-        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT));
+
+        uint32_t result = RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT, nodeLUT);
+        model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
     }
-    model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
+
+    // After instantiating hierarchy, we do another pass to apply missing child references.
+    // In this case we match all the skeleton indices.
+    // Note, that we have to account for expanding the primitives into their own nodes.
+    for (size_t i = 0; i < gltf.nodes.size(); ++i)
+    {
+        const auto& gltfNode = gltf.nodes[i];
+        auto& node = model.hierarchy.nodes[nodeLUT[i]];
+
+        // Skins and meshes come together, we can assume here there is also a skinned mesh.
+        if (gltfNode.skinIndex.has_value())
+        {
+            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
+            if (skin.skeleton.has_value())
+            {
+                // Iterate over all the children of the matched node, since we expanded the primitives.
+                for (auto childIndex : node.children)
+                {
+                    // Apply the skeleton node using the node LUT.
+                    model.hierarchy.nodes[childIndex].skeletonNode = nodeLUT[skin.skeleton.value()];
+                }
+            }
+        }
+    }
 
     return model;
 }

@@ -62,13 +62,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/RiggedSimple.glb",
         "assets/models/BrainStem.glb",
+        //"assets/models/Cathedral.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         // "assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb"
     };
 
@@ -79,7 +79,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     for (const auto& model : models)
     {
-        for (size_t i = 0; i < 1; i++)
+        for (size_t i = 0; i < 5; i++)
         {
             for (size_t j = 0; j < 1; j++)
             {

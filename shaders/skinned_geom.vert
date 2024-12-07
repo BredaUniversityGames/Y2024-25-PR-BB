@@ -36,16 +36,18 @@ layout (location = 3) out flat int drawID;
 
 void main()
 {
+    Instance instance = instances[gl_DrawID + instanceOffset];
+
     mat4 skinMatrix =
-    inWeights.x * skinningMatrices[int(inJoints.x)] +
-    inWeights.y * skinningMatrices[int(inJoints.y)] +
-    inWeights.z * skinningMatrices[int(inJoints.z)] +
-    inWeights.w * skinningMatrices[int(inJoints.w)];
+    inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
+    inWeights.y * skinningMatrices[int(inJoints.y) + instance.boneOffset] +
+    inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
+    inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
 
     position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
     normal = normalize(skinMatrix * vec4(inNormal, 0.0)).xyz;
 
-    mat4 modelTransform = instances[gl_DrawID + instanceOffset].model;
+    mat4 modelTransform = instance.model;
     drawID = gl_DrawID + int(instanceOffset);
 
     vec3 tangent = normalize((modelTransform * vec4(inTangent.xyz, 0.0)).xyz);

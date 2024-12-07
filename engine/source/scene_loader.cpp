@@ -15,9 +15,12 @@
 #include <entt/entity/entity.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation, entt::entity skeletonRoot = entt::null)
+entt::entity LoadNodeRecursive(ECS& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation, std::unordered_map<uint32_t, entt::entity>& entityLUT, entt::entity skeletonRoot = entt::null)
 {
     const entt::entity entity = ecs.registry.create();
+    const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
+
+    entityLUT[currentNodeIndex] = entity;
 
     ecs.registry.emplace<NameComponent>(entity).name = currentNode.name;
     ecs.registry.emplace<TransformComponent>(entity);
@@ -51,39 +54,50 @@ entt::entity LoadNodeRecursive(ECS& ecs, const Hierarchy::Node& currentNode, ent
         animationChannel.animation = animation;
     }
 
+    if (currentNode.isSkeletonRoot)
+    {
+        ecs.registry.emplace<SkeletonComponent>(entity);
+        skeletonRoot = entity;
+    }
+
     if (currentNode.joint.has_value())
     {
-        if (currentNode.joint.value().isSkeletonRoot)
-        {
-            ecs.registry.emplace<SkeletonComponent>(entity);
-            skeletonRoot = entity;
-        }
-
         auto& joint = ecs.registry.emplace<JointComponent>(entity);
         joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
         joint.jointIndex = currentNode.joint.value().index;
         assert(skeletonRoot != entt::null && "Joint requires a skeleton root, that should be present!");
         joint.skeletonEntity = skeletonRoot;
-        joint.skinnedMesh = currentNode.joint.value().skinnedMesh;
     }
 
-    for (const auto& node : currentNode.children)
+    for (const auto& nodeIndex : currentNode.children)
     {
-        LoadNodeRecursive(ecs, node, entity, model, animation, skeletonRoot);
+        LoadNodeRecursive(ecs, nodeIndex, hierarchy, entity, model, animation, entityLUT, skeletonRoot);
     }
 
     return entity;
 }
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& modelResources, const Hierarchy& hierarchy, std::optional<Animation> animation)
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::optional<Animation> animation)
 {
-    auto baseNode = hierarchy.baseNodes.at(0);
-
     std::shared_ptr<Animation> animationControl { nullptr };
     if (animation.has_value())
     {
         animationControl = std::make_shared<Animation>(animation.value());
     }
 
-    return LoadNodeRecursive(ecs, baseNode, entt::null, modelResources, animationControl);
+    std::unordered_map<uint32_t, entt::entity> entityLUT;
+
+    entt::entity rootEntity = LoadNodeRecursive(ecs, hierarchy.root, hierarchy, entt::null, gpuModel, animationControl, entityLUT);
+
+    for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
+    {
+        const Hierarchy::Node& node = hierarchy.nodes[i];
+        if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+        {
+            SkinnedMeshComponent& skinnedMeshComponent = ecs.registry.get<SkinnedMeshComponent>(entityLUT[i]);
+            skinnedMeshComponent.skeletonEntity = entityLUT[node.skeletonNode.value()];
+        }
+    }
+
+    return rootEntity;
 }

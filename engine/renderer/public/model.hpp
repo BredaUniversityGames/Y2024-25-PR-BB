@@ -11,8 +11,7 @@ struct Hierarchy
 {
     struct Joint
     {
-        bool isSkeletonRoot;
-        entt::entity skinnedMesh;
+        uint32_t skinnedMesh;
         glm::mat4 inverseBind;
         uint32_t index;
     };
@@ -22,13 +21,16 @@ struct Hierarchy
         std::string name {};
         glm::mat4 transform { 1.0f };
         std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
-        std::vector<Node> children {};
+        std::vector<uint32_t> children {};
 
         std::optional<AnimationChannel> animationChannel {};
         std::optional<Joint> joint {};
+        bool isSkeletonRoot { false };
+        std::optional<uint32_t> skeletonNode {};
     };
 
-    std::vector<Node> baseNodes {};
+    uint32_t root {};
+    std::vector<Node> nodes {};
 };
 
 template <typename T>
@@ -73,11 +75,11 @@ struct CPUModel
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh<Vertex>> meshes;
-    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes;
+    std::vector<CPUMesh<Vertex>> meshes {};
+    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes {};
 
-    std::vector<CPUMaterial> materials;
-    std::vector<CPUImage> textures;
+    std::vector<CPUMaterial> materials {};
+    std::vector<CPUImage> textures {};
 
     std::optional<Animation> animation { std::nullopt };
 };

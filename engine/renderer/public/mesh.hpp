@@ -105,12 +105,12 @@ struct StaticMeshComponent
 struct SkinnedMeshComponent
 {
     ResourceHandle<GPUMesh> mesh;
-    uint32_t boneOffset = 0;
+    entt::entity skeletonEntity { entt::null };
 };
 
 struct SkeletonComponent
 {
-    entt::entity skinnedMesh;
+    uint32_t boneOffset = 0;
 };
 
 struct JointComponent
@@ -118,5 +118,4 @@ struct JointComponent
     glm::mat4 inverseBindMatrix {};
     uint32_t jointIndex;
     entt::entity skeletonEntity;
-    entt::entity skinnedMesh;
 };

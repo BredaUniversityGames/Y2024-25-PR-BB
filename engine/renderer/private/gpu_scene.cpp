@@ -117,19 +117,19 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     for (auto entity : skinnedMeshView)
     {
-        auto meshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
+        SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto transformComponent = skinnedMeshView.get<WorldMatrixComponent>(entity);
 
         auto resources { _context->Resources() };
 
-        auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
+        auto mesh = resources->MeshResourceManager().Access(skinnedMeshComponent.mesh);
         assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
         assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
 
         instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         instances[count].materialIndex = mesh->material.Index();
         instances[count].boundingRadius = mesh->boundingRadius;
-        instances[count].boneOffset = meshComponent.boneOffset;
+        instances[count].boneOffset = _ecs->registry.get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
 
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -220,6 +220,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     auto jointView = _ecs->registry.view<JointComponent, WorldMatrixComponent>();
     static std::array<glm::mat4, MAX_BONES> skinMatrices {};
     static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
+    skeletonBoneOffset.clear();
 
     _ecs->registry.sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
         { return a.skeletonEntity < b.skeletonEntity; });
@@ -250,7 +251,8 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     auto skeletonView = _ecs->registry.view<SkeletonComponent>();
     for (auto [entity, offset] : skeletonBoneOffset)
     {
-        skeletonView.get<SkeletonComponent>(entity);
+        auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
+        skeleton.boneOffset = offset;
     }
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
