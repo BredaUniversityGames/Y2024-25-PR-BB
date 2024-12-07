@@ -1,4 +1,5 @@
 #include "application_module.hpp"
+#include "steam_module.hpp"
 #include "engine.hpp"
 #include "input/steam/steam_input_device_manager.hpp"
 #include "input/sdl/sdl_input_device_manager.hpp"
@@ -10,7 +11,6 @@
 // This definition fixes the issues and does not change the final build output
 #define SDL_DISABLE_ANALYZE_MACROS
 
-#include <steam_module.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
