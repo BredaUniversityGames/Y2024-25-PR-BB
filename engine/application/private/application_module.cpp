@@ -1,9 +1,9 @@
 #include "application_module.hpp"
 #include "engine.hpp"
-#include "input/sdl_input_device_manager.hpp"
-#include "input/steam_input_device_manager.hpp"
-#include "input/steam_action_manager.hpp"
-#include "input/sdl_action_manager.hpp"
+#include "input/steam/steam_input_device_manager.hpp"
+#include "input/sdl/sdl_input_device_manager.hpp"
+#include "input/steam/steam_action_manager.hpp"
+#include "input/sdl/sdl_action_manager.hpp"
 #include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)

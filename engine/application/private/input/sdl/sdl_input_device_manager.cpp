@@ -1,4 +1,4 @@
-#include "input/sdl_input_device_manager.hpp"
+#include "input/sdl/sdl_input_device_manager.hpp"
 #include "log.hpp"
 #include <SDL3/SDL.h>
 

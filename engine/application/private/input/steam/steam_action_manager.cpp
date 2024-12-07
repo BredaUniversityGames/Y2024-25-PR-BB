@@ -1,5 +1,5 @@
-#include "input/steam_action_manager.hpp"
-#include "input/steam_input_device_manager.hpp"
+#include "input/steam/steam_action_manager.hpp"
+#include "input/steam/steam_input_device_manager.hpp"
 #include "hashmap_utils.hpp"
 
 SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInputDeviceManager)

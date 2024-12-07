@@ -1,5 +1,5 @@
-#include "input/sdl_action_manager.hpp"
-#include "input/sdl_input_device_manager.hpp"
+#include "input/sdl/sdl_action_manager.hpp"
+#include "input/sdl/sdl_input_device_manager.hpp"
 
 SDLActionManager::SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceManager)
     : ActionManager(sdlInputDeviceManager)

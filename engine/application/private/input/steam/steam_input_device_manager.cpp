@@ -1,4 +1,4 @@
-#include "input/steam_input_device_manager.hpp"
+#include "input/steam/steam_input_device_manager.hpp"
 
 void SteamInputDeviceManager::Update()
 {
