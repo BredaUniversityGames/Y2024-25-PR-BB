@@ -65,9 +65,8 @@ private:
         {
             gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, commands);
         }
-        gpuMesh.boundingRadius = glm::max(
-            glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.min),
-            glm::distance(glm::vec3 { 0 }, cpuMesh.boundingBox.max));
+        gpuMesh.boundingRadius = cpuMesh.boundingRadius;
+        gpuMesh.boundingBox = cpuMesh.boundingBox;
 
         return gpuMesh;
     }

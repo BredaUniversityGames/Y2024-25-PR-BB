@@ -2,7 +2,7 @@
 
 #include "animation.hpp"
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"
@@ -290,6 +290,8 @@ template <typename T>
 CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
     CPUMesh<T> mesh {};
+    mesh.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
+    mesh.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
 
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
@@ -658,7 +660,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     {
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            if (gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
+            if (gltf.skins.size() > 0 && gltfPrimitive.findAttribute("WEIGHTS_0") != gltfPrimitive.attributes.cend() && gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
             {
                 CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
                 model.skinnedMeshes.emplace_back(primitive);

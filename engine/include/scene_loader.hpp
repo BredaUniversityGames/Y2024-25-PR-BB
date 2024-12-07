@@ -7,11 +7,12 @@
 #include <memory>
 #include <optional>
 
-class ECS;
 class GraphicsContext;
+class ECSModule;
+
 struct Animation;
 
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECS& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::optional<Animation> animation = std::nullopt);
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::optional<Animation> animation = std::nullopt);
 };

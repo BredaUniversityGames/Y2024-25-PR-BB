@@ -6,7 +6,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -80,7 +80,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawRange.start = 0;
 
-    auto staticMeshView = _ecs->registry.view<StaticMeshComponent, WorldMatrixComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
     {
@@ -113,7 +113,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     _staticDrawRange.count = count;
     _skinnedDrawRange.start = count;
 
-    auto skinnedMeshView = _ecs->registry.view<SkinnedMeshComponent, WorldMatrixComponent>();
+    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : skinnedMeshView)
     {
@@ -129,7 +129,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         instances[count].materialIndex = mesh->material.Index();
         instances[count].boundingRadius = mesh->boundingRadius;
-        instances[count].boneOffset = _ecs->registry.get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        instances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
 
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -152,7 +152,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
 void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
 {
-    auto directionalLightView = _ecs->registry.view<DirectionalLightComponent, TransformComponent>();
+    auto directionalLightView = _ecs.GetRegistry().view<DirectionalLightComponent, TransformComponent>();
     bool directionalLightIsSet = false;
 
     for (const auto& [entity, directionalLightComponent, transformComponent] : directionalLightView.each())
@@ -198,7 +198,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
 
 void GPUScene::UpdateCameraData(uint32_t frameIndex)
 {
-    auto cameraView = _ecs->registry.view<CameraComponent, TransformComponent>();
+    auto cameraView = _ecs.GetRegistry().view<CameraComponent, TransformComponent>();
     bool mainCameraIsSet = false;
 
     for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
@@ -217,12 +217,12 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
-    auto jointView = _ecs->registry.view<JointComponent, WorldMatrixComponent>();
+    auto jointView = _ecs.GetRegistry().view<JointComponent, WorldMatrixComponent>();
     static std::array<glm::mat4, MAX_BONES> skinMatrices {};
     static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
     skeletonBoneOffset.clear();
 
-    _ecs->registry.sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
+    _ecs.GetRegistry().sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
         { return a.skeletonEntity < b.skeletonEntity; });
 
     // Sort joint indices need to stay relative, but can have arbitrary offset.
@@ -248,7 +248,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
         skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
     }
 
-    auto skeletonView = _ecs->registry.view<SkeletonComponent>();
+    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent>();
     for (auto [entity, offset] : skeletonBoneOffset)
     {
         auto& skeleton = skeletonView.get<SkeletonComponent>(entity);

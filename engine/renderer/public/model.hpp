@@ -4,6 +4,7 @@
 #include "geometric.hpp"
 #include "mesh.hpp"
 
+#include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>
 

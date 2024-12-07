@@ -12,3 +12,4 @@ assets/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 assets/**/*.glb filter=lfs diff=lfs merge=lfs -text
 assets/**/*.bin filter=lfs diff=lfs merge=lfs -text
 assets/**/*.json filter=lfs diff=lfs merge=lfs -text
+assets/**/*.bank filter=lfs diff=lfs merge=lfs -text

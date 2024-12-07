@@ -4,7 +4,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "constants.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
