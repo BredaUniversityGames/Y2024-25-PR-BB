@@ -1,12 +1,8 @@
 #pragma once
-#include "input/input_codes/gamepad.hpp"
-#include "input/input_codes/keys.hpp"
-#include "input/input_codes/mousebuttons.hpp"
-
-#include <cstdint>
+#include "input_device_manager.hpp"
 #include <variant>
 
-class InputManager;
+class InputDeviceManager;
 
 enum class DigitalActionType : uint8_t
 {
@@ -43,31 +39,33 @@ struct ActionSet
 
 using GameActions = std::vector<ActionSet>;
 
+// Abstract class, which manages keyboard and mouse actions.
+// Inherit to handle gamepad actions.
 class ActionManager
 {
 public:
-    ActionManager(const InputManager& inputManager);
+    ActionManager(const InputDeviceManager& inputDeviceManager);
     virtual ~ActionManager() = default;
 
     virtual void Update(){}
-    // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
-    virtual void SetGameActions(const GameActions& gameActions);
-    // Change the currently used action set in the game actions.
-    void SetActiveActionSet(std::string_view actionSetName);
 
+    // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
+    virtual void SetGameActions(const GameActions& gameActions) { _gameActions = gameActions; }
+    // Change the currently used action set in the game actions.
+    virtual void SetActiveActionSet(std::string_view actionSetName);
+
+    // Button actions.
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
-    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const;
+    // Axis actions.
+    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const = 0;
 
 protected:
-    const InputManager& _inputManager;
-    GameActions _gameActions;
+    const InputDeviceManager& _inputDeviceManager;
+    GameActions _gameActions {};
     uint32_t _activeActionSet = 0;
 
-    [[nodiscard]] virtual bool CheckDigitalInput(const DigitalAction& action) const;
-    void CheckAnalogInput(const AnalogAction& action, float& x, float& y) const;
-    [[nodiscard]] bool CheckInput(KeyboardCode code, DigitalActionType inputType) const;
-    [[nodiscard]] bool CheckInput(MouseButton button, DigitalActionType inputType) const;
-
-private:
-    [[nodiscard]] bool CheckInput(GamepadButton button, DigitalActionType inputType) const;
+    [[nodiscard]] bool CheckDigitalInput(const DigitalAction& action) const;
+    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const;
+    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const;
+    [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const = 0;
 };

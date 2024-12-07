@@ -1,21 +1,14 @@
 #include "input/action_manager.hpp"
-#include "input/input_manager.hpp"
 
-ActionManager::ActionManager(const InputManager& inputManager)
-    : _inputManager(inputManager)
+ActionManager::ActionManager(const InputDeviceManager& inputDeviceManager)
+    : _inputDeviceManager(inputDeviceManager)
 {
-}
-
-void ActionManager::SetGameActions(const GameActions& gameActions)
-{
-    _gameActions = gameActions;
 }
 
 void ActionManager::SetActiveActionSet(std::string_view actionSetName)
 {
-    auto itr = std::find_if(
-    _gameActions.begin(), _gameActions.end(),
-    [actionSetName](const ActionSet& actionSet) { return actionSet.name == actionSetName;});
+    auto itr = std::find_if(_gameActions.begin(), _gameActions.end(),
+        [actionSetName](const ActionSet& actionSet) { return actionSet.name == actionSetName; });
 
     if (itr == _gameActions.end())
     {
@@ -49,35 +42,13 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
     return CheckDigitalInput(*itr);
 }
 
-void ActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
-{
-    if (_gameActions.empty())
-    {
-        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
-        return;
-    }
-
-    const ActionSet& actionSet = _gameActions[_activeActionSet];
-    const auto& analogActions = actionSet.analogActions;
-
-    auto itr = std::find_if(analogActions.begin(), analogActions.end(),
-        [actionName](const AnalogAction& action) { return action.name == actionName;});
-    if (itr == actionSet.analogActions.end())
-    {
-        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
-        return;
-    }
-
-    CheckAnalogInput(*itr, x, y);
-}
-
-bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
+bool ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
     for (const DigitalInputAction& input : action.inputs)
     {
         bool result = std::visit([&](auto& arg)
             {
-                return CheckInput(arg, action.type);
+                return CheckInput(action.name, arg, action.type);
             }, input);
 
         if (result)
@@ -89,98 +60,47 @@ bool ActionManager::CheckDigitalInput(const DigitalAction &action) const
     return false;
 }
 
-void ActionManager::CheckAnalogInput(const AnalogAction& action, float& x, float& y) const
-{
-    if (!_inputManager.IsGamepadAvailable())
-    {
-        return;
-    }
-
-    static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
-    {
-        { GamepadAnalog::eGAMEPAD_AXIS_LEFT, { GamepadAxis::eGAMEPAD_AXIS_LEFTX, GamepadAxis::eGAMEPAD_AXIS_LEFTY } },
-        { GamepadAnalog::eGAMEPAD_AXIS_RIGHT, { GamepadAxis::eGAMEPAD_AXIS_RIGHTX, GamepadAxis::eGAMEPAD_AXIS_RIGHTY} }
-    };
-
-    for (const AnalogInputAction& input : action.inputs)
-    {
-        const std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
-
-        x = _inputManager.GetGamepadAxis(axes.first);
-        y = _inputManager.GetGamepadAxis(axes.second);
-
-        // First actions with input have priority, so if any input is found return
-        if (x != 0.0f || y != 0.0f)
-        {
-            return;
-        }
-    }
-}
-
-bool ActionManager::CheckInput(KeyboardCode code, DigitalActionType inputType) const
+bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalActionType::Pressed:
-        {
-            return _inputManager.IsKeyPressed(code);
-        }
+    case DigitalActionType::Pressed:
+    {
+        return _inputDeviceManager.IsKeyPressed(code);
+    }
 
-        case DigitalActionType::Released:
-        {
-            return _inputManager.IsKeyReleased(code);
-        }
+    case DigitalActionType::Released:
+    {
+        return _inputDeviceManager.IsKeyReleased(code);
+    }
 
-        case DigitalActionType::Hold:
-        {
-            return _inputManager.IsKeyHeld(code);
-        }
+    case DigitalActionType::Hold:
+    {
+        return _inputDeviceManager.IsKeyHeld(code);
+    }
     }
 
     return false;
 }
 
-bool ActionManager::CheckInput(MouseButton button, DigitalActionType inputType) const
+bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const
 {
     switch (inputType)
     {
-        case DigitalActionType::Pressed:
-        {
-            return _inputManager.IsMouseButtonPressed(button);
-        }
-
-        case DigitalActionType::Released:
-        {
-            return _inputManager.IsMouseButtonReleased(button);
-        }
-
-        case DigitalActionType::Hold:
-        {
-            return _inputManager.IsMouseButtonHeld(button);
-        }
+    case DigitalActionType::Pressed:
+    {
+        return _inputDeviceManager.IsMouseButtonPressed(button);
     }
 
-    return false;
-}
-
-bool ActionManager::CheckInput(GamepadButton button, DigitalActionType inputType) const
-{
-    switch (inputType)
+    case DigitalActionType::Released:
     {
-        case DigitalActionType::Pressed:
-        {
-            return _inputManager.IsGamepadButtonPressed(button);
-        }
+        return _inputDeviceManager.IsMouseButtonReleased(button);
+    }
 
-        case DigitalActionType::Released:
-        {
-            return _inputManager.IsGamepadButtonReleased(button);
-        }
-
-        case DigitalActionType::Hold:
-        {
-            return _inputManager.IsGamepadButtonHeld(button);
-        }
+    case DigitalActionType::Hold:
+    {
+        return _inputDeviceManager.IsMouseButtonHeld(button);
+    }
     }
 
     return false;

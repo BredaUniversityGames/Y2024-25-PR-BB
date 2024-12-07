@@ -1,21 +1,23 @@
 #include "input/steam_action_manager.hpp"
+#include "input/steam_input_device_manager.hpp"
+#include "hashmap_utils.hpp"
 
-SteamActionManager::SteamActionManager(const InputManager& inputManager)
-  : ActionManager(inputManager)
+SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInputDeviceManager)
+    : ActionManager(steamInputDeviceManager)
+    , _steamInputDeviceManager(steamInputDeviceManager)
 {
 }
 
 void SteamActionManager::Update()
 {
     ActionManager::Update();
-    UpdateActiveController();
 
-    if (!IsControllerAvailable() || _gameActions.empty())
+    if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
     {
         return;
     }
 
-    SteamInput()->ActivateActionSet(_inputHandle, _steamGameActionsCache[_activeActionSet].actionSetHandle);
+    SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
 
     UpdateSteamControllerInputState();
 }
@@ -50,7 +52,7 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
 
 void SteamActionManager::GetAnalogAction(std::string_view actionName, float &x, float &y) const
 {
-    if (!IsControllerAvailable() || _gameActions.empty())
+    if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
     {
         return;
     }
@@ -60,81 +62,45 @@ void SteamActionManager::GetAnalogAction(std::string_view actionName, float &x, 
     auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
     if (itr == actionSetCache.gamepadAnalogActionsCache.end())
     {
-        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        bblog::error("[Input] Failed to find analog action \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
         return;
     }
 
-    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_inputHandle, itr->second);
+    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_steamInputDeviceManager.GetGamepadHandle(), itr->second);
 
-    x = analogActionData.x;
-    y = analogActionData.y;
-}
-
-bool SteamActionManager::CheckDigitalInput(const DigitalAction& action) const
-{
-    for (const DigitalInputAction& input : action.inputs)
-    {
-        bool result = std::visit([&](auto& arg)
-            {
-                return CheckInput(action.name, arg, action.type);
-            }, input);
-
-        if (result)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    x = _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x);
+    y = _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y);
 }
 
 bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const
 {
+    // A bit of a waist honestly, as this gets called every time when an action has a digital gamepad input to check,
+    // but Steam checks all the gamepad inputs for an action for us. I didn't really find a clean way to do it another way for now.
+    // So we will just take the hit whenever we have multiple gamepad digital inputs bound to 1 action and check multiple times even when not needed.
+
     switch (inputType)
     {
         case DigitalActionType::Pressed:
         {
-            bool current = detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-            bool previous = detail::UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+            bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+            bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return current && !previous;
         }
 
         case DigitalActionType::Released:
         {
-            bool current = detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-            bool previous = detail::UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+            bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+            bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return !current && previous;
         }
 
         case DigitalActionType::Hold:
         {
-            return detail::UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+            return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
         }
     }
 
     return false;
-}
-
-bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const
-{
-    return ActionManager::CheckInput(code, inputType);
-}
-
-bool SteamActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const
-{
-    return ActionManager::CheckInput(button, inputType);
-}
-
-void SteamActionManager::UpdateActiveController()
-{
-    std::array<InputHandle_t, STEAM_CONTROLLER_MAX_COUNT> handles {};
-    int numActive = SteamInput()->GetConnectedControllers(handles.data());
-
-    // If there's an active controller, and if we're not already using it, select the first one.
-    if (numActive && (_inputHandle != handles[0]))
-    {
-        _inputHandle = handles[0];
-    }
 }
 
 void SteamActionManager::UpdateSteamControllerInputState()
@@ -144,7 +110,7 @@ void SteamActionManager::UpdateSteamControllerInputState()
 
     for (const auto& [actionName, actionHandle] : actionSetCache.gamepadDigitalActionsCache)
     {
-        ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(_inputHandle, actionHandle);
+        ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(_steamInputDeviceManager.GetGamepadHandle(), actionHandle);
         _currentControllerState[actionName] = digitalData.bState;
     }
 }

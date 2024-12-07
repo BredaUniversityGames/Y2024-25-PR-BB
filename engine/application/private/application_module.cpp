@@ -1,7 +1,9 @@
 #include "application_module.hpp"
 #include "engine.hpp"
-#include "input/input_manager.hpp"
+#include "input/sdl_input_device_manager.hpp"
+#include "input/steam_input_device_manager.hpp"
 #include "input/steam_action_manager.hpp"
+#include "input/sdl_action_manager.hpp"
 #include "log.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
@@ -67,49 +69,23 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
         return vk::SurfaceKHR(surface);
     };
 
-    _inputManager = std::make_unique<InputManager>();
-
     const SteamModule& steam = engine.GetModule<SteamModule>();
     if (steam.InputAvailable())
     {
-        bblog::info("Steam Input available, creating SteamActionManager. Steam controller input settings will be used");
-        _actionManager = std::make_unique<SteamActionManager>(*_inputManager);
+        bblog::info("Steam Input available, creating SteamActionManager. Controller input settings will be used from Steam");
+        _inputDeviceManager = std::make_unique<SteamInputDeviceManager>();
+        const SteamInputDeviceManager& inputManager = static_cast<SteamInputDeviceManager&>(*_inputDeviceManager);
+        _actionManager = std::make_unique<SteamActionManager>(inputManager);
     }
     else
     {
-        bblog::info("Steam Input not available, creating default ActionManager. SDL controller input settings will be used");
-        _actionManager = std::make_unique<ActionManager>(*_inputManager);
+        bblog::info("Steam Input not available, creating default ActionManager. Controller input settings will be used from program");
+        _inputDeviceManager = std::make_unique<SDLInputDeviceManager>();
+        const SDLInputDeviceManager& inputManager = static_cast<SDLInputDeviceManager&>(*_inputDeviceManager);
+        _actionManager = std::make_unique<SDLActionManager>(inputManager);
     }
 
     SetMouseHidden(_mouseHidden);
-
-    GameActions gameActions{};
-
-    ActionSet& actionSet = gameActions.emplace_back();
-    actionSet.name = "FlyCamera";
-
-    DigitalAction exitAction{};
-    exitAction.name = "Exit";
-    exitAction.type = DigitalActionType::Pressed;
-    exitAction.inputs.emplace_back(KeyboardCode::eY);
-    exitAction.inputs.emplace_back(MouseButton::eBUTTON_RIGHT);
-    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_NORTH);
-    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_WEST);
-    exitAction.inputs.emplace_back(KeyboardCode::eZ);
-
-    AnalogAction moveAction{};
-    moveAction.name = "Move";
-    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
-
-    AnalogAction cameraAction{};
-    cameraAction.name = "Camera";
-    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
-
-    actionSet.digitalActions.push_back(exitAction);
-    actionSet.analogActions.push_back(moveAction);
-    actionSet.analogActions.push_back(cameraAction);
-
-    _actionManager->SetGameActions(gameActions);
 
     return priority;
 }
@@ -122,12 +98,12 @@ void ApplicationModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ApplicationModule::Tick(Engine& engine)
 {
-    _inputManager->Update();
+    _inputDeviceManager->Update();
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        _inputManager->UpdateEvent(event);
+        _inputDeviceManager->UpdateEvent(event);
         ImGui_ImplSDL3_ProcessEvent(&event);
 
         if (event.type == SDL_EventType::SDL_EVENT_QUIT)
@@ -138,19 +114,6 @@ void ApplicationModule::Tick(Engine& engine)
     }
 
     _actionManager->Update();
-
-
-    if (_actionManager->GetDigitalAction("Exit"))
-    {
-        bblog::info("EXIT!");
-    }
-
-    float x{}, y{};
-    _actionManager->GetAnalogAction("Move", x, y);
-    if (x != 0.0f || y != 0.0f)
-    {
-        bblog::info("MOVED! x: {} y: {}", x, y);
-    }
 }
 
 ApplicationModule::ApplicationModule() = default;

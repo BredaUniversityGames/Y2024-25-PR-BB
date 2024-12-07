@@ -18,7 +18,8 @@
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "input/input_manager.hpp"
+#include "input/input_device_manager.hpp"
+#include "input/action_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
@@ -74,7 +75,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     for (const auto& model : models)
     {
-
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
@@ -115,7 +115,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
-    applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
     _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
@@ -132,16 +132,41 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
 
+    // Setting up game input actions
+    GameActions gameActions {};
+
+    ActionSet& actionSet = gameActions.emplace_back();
+    actionSet.name = "FlyCamera";
+
+    DigitalAction& exitAction = actionSet.digitalActions.emplace_back();
+    exitAction.name = "Exit";
+    exitAction.type = DigitalActionType::Pressed;
+    exitAction.inputs.emplace_back(KeyboardCode::eY);
+    exitAction.inputs.emplace_back(MouseButton::eBUTTON_RIGHT);
+    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_NORTH);
+    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_WEST);
+    exitAction.inputs.emplace_back(KeyboardCode::eZ);
+
+    AnalogAction& moveAction = actionSet.analogActions.emplace_back();
+    moveAction.name = "Move";
+    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
+
+    AnalogAction& cameraAction = actionSet.analogActions.emplace_back();
+    cameraAction.name = "Look";
+    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
+
+    applicationModule.GetActionManager().SetGameActions(gameActions);
+
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
 }
 
 void OldEngine::Tick(Engine& engine)
 {
-    // update input
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& input = applicationModule.GetInputManager();
+    auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
+    auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
@@ -170,9 +195,9 @@ void OldEngine::Tick(Engine& engine)
     }
 
     int32_t mouseX, mouseY;
-    input.GetMousePosition(mouseX, mouseY);
+    inputDeviceManager.GetMousePosition(mouseX, mouseY);
 
-    if (input.IsKeyPressed(KeyboardCode::eH))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
@@ -197,15 +222,18 @@ void OldEngine::Tick(Engine& engine)
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
             constexpr float CAM_SPEED = 0.003f;
 
-            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
-            glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
+            glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
+            glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
 
-            rotationDelta.x += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTX) * GAMEPAD_LOOK_SENSITIVITY;
-            rotationDelta.y += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTY) * GAMEPAD_LOOK_SENSITIVITY;
+            glm::vec2 lookAnalogAction {};
+            actionManager.GetAnalogAction("Look", lookAnalogAction.x, lookAnalogAction.y);
+
+            rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
+            rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
 
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x -= rotationDelta.y;
+            eulerRotation.x += rotationDelta.y;
 
             // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
@@ -220,28 +248,31 @@ void OldEngine::Tick(Engine& engine)
             TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
 
             glm::vec3 movementDir {};
-            if (input.IsKeyHeld(KeyboardCode::eW))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eW))
             {
                 movementDir += FORWARD;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eS))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eS))
             {
                 movementDir -= FORWARD;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eD))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
             {
                 movementDir += RIGHT;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eA))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eA))
             {
                 movementDir -= RIGHT;
             }
 
-            movementDir += RIGHT * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTX);
-            movementDir -= FORWARD * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTY);
+            glm::vec2 moveAnalogAction {};
+            actionManager.GetAnalogAction("Move", moveAnalogAction.x, moveAnalogAction.y);
+
+            movementDir += RIGHT * moveAnalogAction.x;
+            movementDir += FORWARD * moveAnalogAction.y;
 
             if (glm::length(movementDir) != 0.0f)
             {
@@ -256,7 +287,7 @@ void OldEngine::Tick(Engine& engine)
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
 
             // shoot rays
-            if (ImGui::IsKeyPressed(ImGuiKey_Space))
+            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
             {
                 const glm::vec3 cameraDir = (rotation * FORWARD);
                 const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
@@ -283,27 +314,27 @@ void OldEngine::Tick(Engine& engine)
 
     _lastMousePos = { mouseX, mouseY };
 
-    if (input.IsKeyPressed(KeyboardCode::eESCAPE))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (input.IsKeyPressed(KeyboardCode::eP))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eP))
     {
         particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
-    if (input.IsKeyPressed(KeyboardCode::eF1))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
     static uint32_t eventId {};
 
-    if (input.IsKeyPressed(KeyboardCode::eO))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
     {
         eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
     }
 
-    if (input.IsKeyReleased(KeyboardCode::eO))
+    if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))
     {
         audioModule.StopEvent(eventId);
     }

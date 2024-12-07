@@ -2,10 +2,12 @@
 #include "input/action_manager.hpp"
 #include "steam_include.hpp"
 
+class SteamInputDeviceManager;
+
 class SteamActionManager final : public ActionManager
 {
 public:
-    SteamActionManager(const InputManager& inputManager);
+    SteamActionManager(const SteamInputDeviceManager& steamInputDeviceManager);
     virtual ~SteamActionManager() final = default;
 
     virtual void Update() final;
@@ -14,7 +16,7 @@ public:
     virtual void GetAnalogAction(std::string_view actionName, float &x, float &y) const final;
 
 private:
-    InputHandle_t _inputHandle {};
+    const SteamInputDeviceManager& _steamInputDeviceManager;
 
     struct SteamActionSetCache
     {
@@ -26,17 +28,12 @@ private:
     using SteamGameActionsCache = std::vector<SteamActionSetCache>;
      SteamGameActionsCache _steamGameActionsCache {};
 
-    // We have to track pressed and released inputs ourselves as steam input API doesn't do it for us properly, so we save the current and previous frames input states
+    // We have to track pressed and released inputs ourselves as steam input API doesn't do it for us properly,
+    // so we save the current and previous frames input states per action.
     using SteamControllerState = std::unordered_map<std::string, bool>;
     SteamControllerState _currentControllerState {};
     SteamControllerState _prevControllerState {};
 
-    [[nodiscard]] virtual bool CheckDigitalInput(const DigitalAction& action) const final;
     [[nodiscard]] bool CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const;
-    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const;
-    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const;
-
-    void UpdateActiveController();
     void UpdateSteamControllerInputState();
-    [[nodiscard]] bool IsControllerAvailable() const { return _inputHandle != 0; }
 };
