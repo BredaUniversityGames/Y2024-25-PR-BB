@@ -1,20 +1,7 @@
 #include "input/sdl/sdl_input_device_manager.hpp"
 #include "log.hpp"
+#include "hashmap_utils.hpp"
 #include <SDL3/SDL.h>
-
-// TODO: Put in utils
-namespace detail
-{
-template <typename K, typename V>
-V UnorderedMapGetOr(const std::unordered_map<K, V>& map, const K& key, const V& defaultValue)
-{
-    if (auto it = map.find(key); it != map.end())
-    {
-        return it->second;
-    }
-    return defaultValue;
-}
-}
 
 SDLInputDeviceManager::SDLInputDeviceManager()
     : InputDeviceManager()
@@ -97,7 +84,7 @@ bool SDLInputDeviceManager::IsGamepadButtonPressed(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.inputPressed, button, false);
+    return UnorderedMapGetOr(_gamepad.inputPressed, button, false);
 }
 
 bool SDLInputDeviceManager::IsGamepadButtonHeld(GamepadButton button) const
@@ -107,7 +94,7 @@ bool SDLInputDeviceManager::IsGamepadButtonHeld(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.inputHeld, button, false);
+    return UnorderedMapGetOr(_gamepad.inputHeld, button, false);
 }
 
 bool SDLInputDeviceManager::IsGamepadButtonReleased(GamepadButton button) const
@@ -117,7 +104,7 @@ bool SDLInputDeviceManager::IsGamepadButtonReleased(GamepadButton button) const
         return false;
     }
 
-    return detail::UnorderedMapGetOr(_gamepad.inputReleased, button, false);
+    return UnorderedMapGetOr(_gamepad.inputReleased, button, false);
 }
 
 float SDLInputDeviceManager::GetGamepadAxis(GamepadAxis axis) const
