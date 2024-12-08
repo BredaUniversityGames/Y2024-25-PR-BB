@@ -1,11 +1,16 @@
 #include "input/steam/steam_action_manager.hpp"
 #include "input/steam/steam_input_device_manager.hpp"
 #include "hashmap_utils.hpp"
+#include <filesystem>
 
 SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInputDeviceManager)
     : ActionManager(steamInputDeviceManager)
     , _steamInputDeviceManager(steamInputDeviceManager)
 {
+    // TODO: File actions should be set from Steam's servers, but for that to happen we need to upload an official configuration via Steamworks
+    std::string actionManifestFilePath = std::filesystem::current_path().string();
+    actionManifestFilePath.append("\\assets\\input\\steam_input_manifest.vdf");
+    SteamInput()->SetInputActionManifestFilePath(actionManifestFilePath.c_str());
 }
 
 void SteamActionManager::Update()
