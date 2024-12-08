@@ -1,5 +1,6 @@
 #include "input/sdl/sdl_action_manager.hpp"
 #include "input/sdl/sdl_input_device_manager.hpp"
+#include <magic_enum.hpp>
 
 SDLActionManager::SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceManager)
     : ActionManager(sdlInputDeviceManager)
@@ -36,18 +37,41 @@ void SDLActionManager::CheckAnalogInput(const AnalogAction& action, float& x, fl
         return;
     }
 
-    static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
-    {
-        { GamepadAnalog::eGAMEPAD_AXIS_LEFT, { GamepadAxis::eGAMEPAD_AXIS_LEFTX, GamepadAxis::eGAMEPAD_AXIS_LEFTY } },
-        { GamepadAnalog::eGAMEPAD_AXIS_RIGHT, { GamepadAxis::eGAMEPAD_AXIS_RIGHTX, GamepadAxis::eGAMEPAD_AXIS_RIGHTY} }
-    };
-
     for (const AnalogInputAction& input : action.inputs)
     {
-        const std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
+        switch (input)
+        {
+        // Steam Input allows to use DPAD as analog input, so we do the same for SDL input
+        case AnalogInputAction::eDPAD:
+        {
+            x = -static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_LEFT)) +
+                static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_RIGHT));
+            y = -static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_DOWN)) +
+                static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_UP));
+            break;
+        }
 
-        x = _sdlInputDeviceManager.GetGamepadAxis(axes.first);
-        y = _sdlInputDeviceManager.GetGamepadAxis(axes.second);
+        case AnalogInputAction::eAXIS_LEFT:
+        case AnalogInputAction::eAXIS_RIGHT:
+        {
+            static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING
+            {
+                { GamepadAnalog::eAXIS_LEFT, { GamepadAxis::eLEFTX, GamepadAxis::eLEFTY } },
+                { GamepadAnalog::eAXIS_RIGHT, { GamepadAxis::eRIGHTX, GamepadAxis::eRIGHTY} },
+            };
+
+            const std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(input);
+            x = _sdlInputDeviceManager.GetGamepadAxis(axes.first);
+            y = _sdlInputDeviceManager.GetGamepadAxis(axes.second);
+            break;
+        }
+
+        default:
+        {
+            bblog::error("[Input] Unsupported analog input \"{}\" for action: \"{}\"", magic_enum::enum_name(input), action.name);
+            break;
+        }
+        }
 
         // First actions with input have priority, so if any input is found return
         if (x != 0.0f || y != 0.0f)

@@ -143,17 +143,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     exitAction.type = DigitalActionType::Pressed;
     exitAction.inputs.emplace_back(KeyboardCode::eY);
     exitAction.inputs.emplace_back(MouseButton::eBUTTON_RIGHT);
-    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_NORTH);
-    exitAction.inputs.emplace_back(GamepadButton::eGAMEPAD_BUTTON_WEST);
+    exitAction.inputs.emplace_back(GamepadButton::eNORTH);
+    exitAction.inputs.emplace_back(GamepadButton::eWEST);
     exitAction.inputs.emplace_back(KeyboardCode::eZ);
 
     AnalogAction& moveAction = actionSet.analogActions.emplace_back();
     moveAction.name = "Move";
-    moveAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_LEFT);
+    moveAction.inputs.emplace_back(GamepadAnalog::eAXIS_LEFT);
+    moveAction.inputs.emplace_back(GamepadAnalog::eDPAD);
 
     AnalogAction& cameraAction = actionSet.analogActions.emplace_back();
     cameraAction.name = "Look";
-    cameraAction.inputs.emplace_back(GamepadAnalog::eGAMEPAD_AXIS_RIGHT);
+    cameraAction.inputs.emplace_back(GamepadAnalog::eAXIS_RIGHT);
 
     applicationModule.GetActionManager().SetGameActions(gameActions);
 

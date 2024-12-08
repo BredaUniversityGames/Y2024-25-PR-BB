@@ -116,7 +116,7 @@ float SDLInputDeviceManager::GetGamepadAxis(GamepadAxis axis) const
 
     float value = GetRawGamepadAxis(axis);
 
-    if (axis == GamepadAxis::eGAMEPAD_AXIS_LEFT_TRIGGER || axis == GamepadAxis::eGAMEPAD_AXIS_RIGHT_TRIGGER)
+    if (axis == GamepadAxis::eLEFT_TRIGGER || axis == GamepadAxis::eRIGHT_TRIGGER)
     {
         return value;
     }
@@ -136,7 +136,7 @@ float SDLInputDeviceManager::GetRawGamepadAxis(GamepadAxis axis) const
     value /= SDL_JOYSTICK_AXIS_MAX; // Convert to -1 to 1
 
     // SDL Y axis is inverted (-1 is up and 1 is down), so we invert it
-    if (axis == GamepadAxis::eGAMEPAD_AXIS_LEFTY || axis == GamepadAxis::eGAMEPAD_AXIS_RIGHTY)
+    if (axis == GamepadAxis::eLEFTY || axis == GamepadAxis::eRIGHTY)
     {
         value *= -1.0f;
     }
