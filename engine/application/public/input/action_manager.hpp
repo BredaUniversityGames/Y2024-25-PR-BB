@@ -6,9 +6,12 @@ class InputDeviceManager;
 
 enum class DigitalActionType : uint8_t
 {
-    Pressed,
-    Hold,
-    Released,
+    // Action happens once when input is received.
+    ePressed,
+    // Action happens continuously when input is being received.
+    eHold,
+    // Action happens once when input is released.
+    eReleased,
 };
 
 using DigitalInputAction = std::variant<GamepadButton, KeyboardCode, MouseButton>;

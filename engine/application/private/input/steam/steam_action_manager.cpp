@@ -80,21 +80,21 @@ bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED Ga
 
     switch (inputType)
     {
-        case DigitalActionType::Pressed:
+        case DigitalActionType::ePressed:
         {
             bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
             bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return current && !previous;
         }
 
-        case DigitalActionType::Released:
+        case DigitalActionType::eReleased:
         {
             bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
             bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
             return !current && previous;
         }
 
-        case DigitalActionType::Hold:
+        case DigitalActionType::eHold:
         {
             return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
         }

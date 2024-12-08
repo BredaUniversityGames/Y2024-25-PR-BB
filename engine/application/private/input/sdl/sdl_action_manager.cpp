@@ -85,17 +85,17 @@ bool SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, Game
 {
     switch (inputType)
     {
-        case DigitalActionType::Pressed:
+        case DigitalActionType::ePressed:
         {
             return _sdlInputDeviceManager.IsGamepadButtonPressed(button);
         }
 
-        case DigitalActionType::Released:
+        case DigitalActionType::eReleased:
         {
             return _sdlInputDeviceManager.IsGamepadButtonReleased(button);
         }
 
-        case DigitalActionType::Hold:
+        case DigitalActionType::eHold:
         {
             return _sdlInputDeviceManager.IsGamepadButtonHeld(button);
         }

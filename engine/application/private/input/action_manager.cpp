@@ -64,17 +64,17 @@ bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, Keyboar
 {
     switch (inputType)
     {
-    case DigitalActionType::Pressed:
+    case DigitalActionType::ePressed:
     {
         return _inputDeviceManager.IsKeyPressed(code);
     }
 
-    case DigitalActionType::Released:
+    case DigitalActionType::eReleased:
     {
         return _inputDeviceManager.IsKeyReleased(code);
     }
 
-    case DigitalActionType::Hold:
+    case DigitalActionType::eHold:
     {
         return _inputDeviceManager.IsKeyHeld(code);
     }
@@ -87,17 +87,17 @@ bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseBu
 {
     switch (inputType)
     {
-    case DigitalActionType::Pressed:
+    case DigitalActionType::ePressed:
     {
         return _inputDeviceManager.IsMouseButtonPressed(button);
     }
 
-    case DigitalActionType::Released:
+    case DigitalActionType::eReleased:
     {
         return _inputDeviceManager.IsMouseButtonReleased(button);
     }
 
-    case DigitalActionType::Hold:
+    case DigitalActionType::eHold:
     {
         return _inputDeviceManager.IsMouseButtonHeld(button);
     }
