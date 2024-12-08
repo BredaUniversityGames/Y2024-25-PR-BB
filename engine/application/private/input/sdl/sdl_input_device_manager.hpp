@@ -30,7 +30,10 @@ private:
     struct Gamepad : InputDevice<GamepadButton>
     {
         SDL_Gamepad* sdlHandle {};
+        bool prevLeftTriggerState = false;
+        bool prevRightTriggerState = false;
     } _gamepad {};
 
     void CloseGamepad();
+    void UpdateGamepadTriggerButtons();
 };

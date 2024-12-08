@@ -140,12 +140,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     DigitalAction& exitAction = actionSet.digitalActions.emplace_back();
     exitAction.name = "Exit";
-    exitAction.type = DigitalActionType::eHold;
+    exitAction.type = DigitalActionType::eReleased;
     exitAction.inputs.emplace_back(KeyboardCode::eY);
     exitAction.inputs.emplace_back(MouseButton::eBUTTON_RIGHT);
     exitAction.inputs.emplace_back(GamepadButton::eNORTH);
     exitAction.inputs.emplace_back(GamepadButton::eWEST);
     exitAction.inputs.emplace_back(KeyboardCode::eZ);
+    exitAction.inputs.emplace_back(GamepadButton::eLEFT_TRIGGER);
 
     AnalogAction& moveAction = actionSet.analogActions.emplace_back();
     moveAction.name = "Move";

@@ -31,6 +31,8 @@ enum class GamepadButton : uint32_t
     eMISC4, /* Additional button */
     eMISC5, /* Additional button */
     eMISC6, /* Additional button */
+    eLEFT_TRIGGER,
+    eRIGHT_TRIGGER,
 };
 
 enum class GamepadAxis : uint32_t

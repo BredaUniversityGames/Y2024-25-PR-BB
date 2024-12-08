@@ -26,6 +26,9 @@ void SDLInputDeviceManager::Update()
             button.second = false;
         for (auto& button : _gamepad.inputReleased)
             button.second = false;
+
+        // SDL treats triggers as axis inputs, but Steam treats them as button inputs, so to stay consistent we also treat triggers as buttons
+        UpdateGamepadTriggerButtons();
     }
 }
 
@@ -115,12 +118,6 @@ float SDLInputDeviceManager::GetGamepadAxis(GamepadAxis axis) const
     }
 
     float value = GetRawGamepadAxis(axis);
-
-    if (axis == GamepadAxis::eLEFT_TRIGGER || axis == GamepadAxis::eRIGHT_TRIGGER)
-    {
-        return value;
-    }
-
     return ClampGamepadAxisDeadzone(value);
 }
 
@@ -148,4 +145,21 @@ void SDLInputDeviceManager::CloseGamepad()
 {
     SDL_CloseGamepad(_gamepad.sdlHandle);
     _gamepad.sdlHandle = nullptr;
+}
+
+void SDLInputDeviceManager::UpdateGamepadTriggerButtons()
+{
+    bool currentLeftTriggerState = GetGamepadAxis(GamepadAxis::eLEFT_TRIGGER) != 0.0f;
+    bool currentRightTriggerState = GetGamepadAxis(GamepadAxis::eRIGHT_TRIGGER) != 0.0f;
+
+    _gamepad.inputPressed[GamepadButton::eLEFT_TRIGGER] = currentLeftTriggerState && !_gamepad.prevLeftTriggerState;
+    _gamepad.inputHeld[GamepadButton::eLEFT_TRIGGER] = currentLeftTriggerState;
+    _gamepad.inputReleased[GamepadButton::eLEFT_TRIGGER] = !currentLeftTriggerState && _gamepad.prevLeftTriggerState;
+
+    _gamepad.inputPressed[GamepadButton::eRIGHT_TRIGGER] = currentRightTriggerState && !_gamepad.prevRightTriggerState;
+    _gamepad.inputHeld[GamepadButton::eRIGHT_TRIGGER] = currentRightTriggerState;
+    _gamepad.inputReleased[GamepadButton::eRIGHT_TRIGGER] = !currentRightTriggerState && _gamepad.prevRightTriggerState;
+
+    _gamepad.prevLeftTriggerState = currentLeftTriggerState;
+    _gamepad.prevRightTriggerState = currentRightTriggerState;
 }
