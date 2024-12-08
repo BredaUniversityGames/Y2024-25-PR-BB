@@ -13,7 +13,7 @@ public:
     virtual void Update() final;
     virtual void SetGameActions(const GameActions& gameActions) final;
 
-    virtual void GetAnalogAction(std::string_view actionName, float &x, float &y) const final;
+    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;
@@ -26,7 +26,7 @@ private:
     };
 
     using SteamGameActionsCache = std::vector<SteamActionSetCache>;
-     SteamGameActionsCache _steamGameActionsCache {};
+    SteamGameActionsCache _steamGameActionsCache {};
 
     // We have to track pressed and released inputs ourselves as steam input API doesn't do it for us properly,
     // so we save the current and previous frames input states per action.

@@ -1,7 +1,7 @@
 #pragma once
+#include "input/input_codes/gamepad.hpp"
 #include "input_codes/keys.hpp"
 #include "input_codes/mousebuttons.hpp"
-#include "input/input_codes/gamepad.hpp"
 #include <unordered_map>
 
 union SDL_Event;

@@ -22,15 +22,15 @@ using AnalogInputActionList = std::vector<AnalogInputAction>;
 
 struct DigitalAction
 {
-    std::string name{};
-    DigitalActionType type{};
-    DigitalInputActionList inputs{};
+    std::string name {};
+    DigitalActionType type {};
+    DigitalInputActionList inputs {};
 };
 
 struct AnalogAction
 {
-    std::string name{};
-    AnalogInputActionList inputs{};
+    std::string name {};
+    AnalogInputActionList inputs {};
 };
 
 struct ActionSet
@@ -50,7 +50,7 @@ public:
     ActionManager(const InputDeviceManager& inputDeviceManager);
     virtual ~ActionManager() = default;
 
-    virtual void Update(){}
+    virtual void Update() { }
 
     // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
     virtual void SetGameActions(const GameActions& gameActions) { _gameActions = gameActions; }

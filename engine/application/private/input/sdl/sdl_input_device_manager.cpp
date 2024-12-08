@@ -1,6 +1,6 @@
 #include "input/sdl/sdl_input_device_manager.hpp"
-#include "log.hpp"
 #include "hashmap_utils.hpp"
+#include "log.hpp"
 #include <SDL3/SDL.h>
 
 SDLInputDeviceManager::SDLInputDeviceManager()
@@ -36,7 +36,7 @@ void SDLInputDeviceManager::UpdateEvent(const SDL_Event& event)
 {
     InputDeviceManager::UpdateEvent(event);
 
-    switch(event.type)
+    switch (event.type)
     {
     case SDL_EVENT_GAMEPAD_ADDED:
     {

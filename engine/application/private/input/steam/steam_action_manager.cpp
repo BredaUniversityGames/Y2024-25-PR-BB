@@ -1,6 +1,6 @@
 #include "input/steam/steam_action_manager.hpp"
-#include "input/steam/steam_input_device_manager.hpp"
 #include "hashmap_utils.hpp"
+#include "input/steam/steam_input_device_manager.hpp"
 #include <filesystem>
 
 SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInputDeviceManager)
@@ -55,7 +55,7 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-void SteamActionManager::GetAnalogAction(std::string_view actionName, float &x, float &y) const
+void SteamActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
 {
     if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
     {
@@ -85,24 +85,24 @@ bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED Ga
 
     switch (inputType)
     {
-        case DigitalActionType::ePressed:
-        {
-            bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-            bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-            return current && !previous;
-        }
+    case DigitalActionType::ePressed:
+    {
+        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+        return current && !previous;
+    }
 
-        case DigitalActionType::eReleased:
-        {
-            bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-            bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-            return !current && previous;
-        }
+    case DigitalActionType::eReleased:
+    {
+        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+        return !current && previous;
+    }
 
-        case DigitalActionType::eHold:
-        {
-            return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-        }
+    case DigitalActionType::eHold:
+    {
+        return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+    }
     }
 
     return false;

@@ -8,7 +8,8 @@ ActionManager::ActionManager(const InputDeviceManager& inputDeviceManager)
 void ActionManager::SetActiveActionSet(std::string_view actionSetName)
 {
     auto itr = std::find_if(_gameActions.begin(), _gameActions.end(),
-        [actionSetName](const ActionSet& actionSet) { return actionSet.name == actionSetName; });
+        [actionSetName](const ActionSet& actionSet)
+        { return actionSet.name == actionSetName; });
 
     if (itr == _gameActions.end())
     {
@@ -32,7 +33,8 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
     const auto& digitalActions = actionSet.digitalActions;
 
     auto itr = std::find_if(digitalActions.begin(), digitalActions.end(),
-        [actionName](const DigitalAction& action) { return action.name == actionName;});
+        [actionName](const DigitalAction& action)
+        { return action.name == actionName; });
     if (itr == actionSet.digitalActions.end())
     {
         bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
@@ -47,9 +49,7 @@ bool ActionManager::CheckDigitalInput(const DigitalAction& action) const
     for (const DigitalInputAction& input : action.inputs)
     {
         bool result = std::visit([&](auto& arg)
-            {
-                return CheckInput(action.name, arg, action.type);
-            }, input);
+            { return CheckInput(action.name, arg, action.type); }, input);
 
         if (result)
         {
