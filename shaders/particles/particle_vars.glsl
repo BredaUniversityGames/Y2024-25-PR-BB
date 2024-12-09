@@ -9,7 +9,7 @@ struct Particle
     vec2 rotationVelocity;
     float life;
     uint materialIndex;
-    vec2 size;
+    vec3 size;
 };
 
 struct ParticleCounters

@@ -11,7 +11,7 @@ struct Emitter
     vec2 rotationVelocity;
     float maxLife;
     float randomValue;
-    vec2 size;
+    vec3 size;
     uint materialIndex;
 };
 

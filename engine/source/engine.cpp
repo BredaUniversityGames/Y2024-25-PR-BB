@@ -21,7 +21,6 @@
 #include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particle_interface.hpp"
 #include "particle_module.hpp"
 #include "particle_util.hpp"
 #include "physics_module.hpp"
@@ -50,7 +49,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& particleModule = engine.GetModule<ParticleModule>();
+    //auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
     // modules
@@ -63,7 +62,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     };
 
-    particleModule.GetParticleInterface().LoadEmitterPresets();
+    //particleModule.GetParticleInterface().LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
@@ -143,7 +142,7 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
-    auto& particleModule = engine.GetModule<ParticleModule>();
+    //auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
@@ -288,7 +287,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        //particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
     if (input.IsKeyPressed(KeyboardCode::eF1))
