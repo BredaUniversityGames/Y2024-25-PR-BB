@@ -30,6 +30,7 @@ private:
         uint32_t normalRIndex;
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
+        uint32_t ssaoNoiseIndex;
     } _pushConstants;
 
     void CreatePipeline();
@@ -51,4 +52,6 @@ private:
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
     const CameraResource& _camera;
+
+    ResourceHandle<GPUImage> _ssaoNoise;
 };

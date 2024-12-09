@@ -169,33 +169,54 @@ void SSAOPipeline::CreateBuffers()
         _noiseBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(ssaoNoise, 0, resources->BufferResourceManager().Access(_noiseBuffer)->buffer);
     }
+
+    // bag pula
+    std::vector<std::byte> byteData;
+    byteData.reserve(ssaoNoise.size() * sizeof(float) * 4);
+
+    for (const auto& color : ssaoNoise)
+    {
+        // No clamping, store raw floats (including negative)
+        float components[4] = { color.r, color.g, color.b, color.a };
+
+        // Push raw float bytes directly
+        const std::byte* rawBytes = reinterpret_cast<const std::byte*>(components);
+        byteData.insert(byteData.end(), rawBytes, rawBytes + sizeof(components));
+    }
+
+    // Use a float format
+    CPUImage noiseImage {};
+    noiseImage.SetName("SSAO_Noise_Image")
+        .SetSize(4, 4, 1)
+        .SetData(std::move(byteData))
+        .SetFlags(vk::ImageUsageFlagBits::eSampled)
+        .SetFormat(vk::Format::eR32G32B32A32Sfloat);
+
+    noiseImage.isHDR = true;
+
+    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage);
+    _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
+
+    // sizeof(glm::vec4);
 }
 void SSAOPipeline::CreateDescriptorSetLayouts()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {
         vk::DescriptorSetLayoutBinding {
             .binding = 0,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eAll,
+            .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
             .pImmutableSamplers = nullptr },
         vk::DescriptorSetLayoutBinding {
             .binding = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eAll,
+            .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
             .pImmutableSamplers = nullptr }
     };
 
-    vk::DescriptorSetLayoutCreateInfo layoutInfo {
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data()
-    };
-
-    if (_context->VulkanContext()->Device().createDescriptorSetLayout(&layoutInfo, nullptr, &_descriptorSetLayout) != vk::Result::eSuccess)
-    {
-        throw std::runtime_error("Failed to create descriptor set layout");
-    }
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uSampleKernel", "uNoiseBuffer" });
 }
 void SSAOPipeline::CreateDescriptorSets()
 {
