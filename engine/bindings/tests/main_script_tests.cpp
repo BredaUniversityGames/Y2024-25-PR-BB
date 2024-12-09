@@ -5,7 +5,7 @@
 #include "main_script.hpp"
 #include "scripting_context.hpp"
 #include "time_module.hpp"
-#include "utility/wren_engine.hpp"
+#include "wren_engine.hpp"
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 const VMInitConfig MEMORY_CONFIG {
