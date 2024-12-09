@@ -25,6 +25,11 @@ WrenEntity CreateEntity(ECSModule& self)
     return { self.GetRegistry().create(), &self.GetRegistry() };
 }
 
+void FreeEntity(ECSModule& self, WrenEntity& entity)
+{
+    self.GetRegistry().destroy(entity.entity);
+}
+
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
 {
     auto view = self.GetRegistry().view<NameComponent>();
@@ -100,7 +105,11 @@ void BindEngineAPI(wren::ForeignModule& module)
         auto& wren_class = module.klass<ECSModule>("ECS");
         wren_class.funcExt<bindings::CreateEntity>("NewEntity");
         wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
+        wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+    }
 
+    // Components
+    {
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
         nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
