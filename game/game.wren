@@ -18,10 +18,10 @@ class Main {
             System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
-        }
 
-        if (__player) {
-            System.print("Player is online!")
+            if (__player) {
+                System.print("Player is online!")
+            }
         }
     }
 }
