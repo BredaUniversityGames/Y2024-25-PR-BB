@@ -1,10 +1,11 @@
-import "engine_api.wren" for Engine, TimeModule
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity
 
 class Main {
 
     static Start(engine) {
         __counter = 0
         __frameTimer = 0
+        __player = engine.GetECS().GetEntityByName("Camera")
     }
 
     static Update(engine, dt) {
@@ -17,6 +18,10 @@ class Main {
             System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
+        }
+
+        if (__player) {
+            System.print("Player is online!")
         }
     }
 }

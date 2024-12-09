@@ -1,13 +1,71 @@
 #include "ecs_module.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
+#include "scripting_module.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
+#include "utility/wren_entity.hpp"
+
+#include <components/name_component.hpp>
+
+namespace bindings
+{
+
+WrenEntity CreateEntity(ECSModule& self)
+{
+    return { self.GetRegistry().create(), &self.GetRegistry() };
+}
+
+std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
+{
+    auto view = self.GetRegistry().view<NameComponent>();
+    for (auto&& [e, n] : view.each())
+    {
+        if (n.name == name)
+        {
+            return WrenEntity { e, &self.GetRegistry() };
+        }
+    }
+
+    return std::nullopt;
+}
+
+void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
+{
+    TransformHelpers::SetLocalPosition(*component.entity.registry, component.entity.entity, translation);
+}
+
+std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
+{
+    return nameComponent.component->name;
+}
+
+}
 
 ModuleTickOrder ECSModule::Init(MAYBE_UNUSED Engine& engine)
 {
     TransformHelpers::SubscribeToEvents(registry);
     RelationshipHelpers::SubscribeToEvents(registry);
+
+    // ECS class
+    auto& scripting = engine.GetModule<ScriptingModule>();
+    auto& wren_class = scripting.GetForeignAPI().klass<ECSModule>("ECS");
+    wren_class.funcExt<bindings::CreateEntity>("NewEntity");
+    wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
+
+    // Entity class
+    auto& entityClass = scripting.GetForeignAPI().klass<WrenEntity>("Entity");
+    entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
+    entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
+
+    // Name class
+    auto& nameClass = scripting.GetForeignAPI().klass<WrenComponent<NameComponent>>("NameComponent");
+    nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+
+    // Transform component
+    auto& transformClass = scripting.GetForeignAPI().klass<WrenComponent<TransformComponent>>("TransformComponent");
+    transformClass.funcExt<bindings::TransformComponentSetTranslation>("SetTranslation");
+
     return ModuleTickOrder::eTick;
 }
 
