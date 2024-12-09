@@ -33,6 +33,10 @@ public:
     static const glm::mat4& GetWorldMatrix(entt::registry& reg, entt::entity entity);
     static const glm::mat4& GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent);
 
+    static glm::vec3 GetWorldPosition(entt::registry& reg, entt::entity entity);
+    static glm::quat GetWorldRotation(entt::registry& reg, entt::entity entity);
+    static glm::vec3 GetWorldScale(entt::registry& reg, entt::entity entity);
+
     static glm::mat4 ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
 
     static void OnConstructTransform(entt::registry& reg, entt::entity entity);

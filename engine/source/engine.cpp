@@ -4,6 +4,7 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
@@ -33,6 +34,7 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
+SoundInfo si;
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -118,6 +120,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->registry, cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
+    _ecs->registry.emplace<AudioListenerComponent>(cameraEntity);
+
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
@@ -137,6 +141,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(masterBank);
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
+
+    si.path = "assets/sounds/fallback.mp3";
+    si.is3D = true;
+
+    audioModule.LoadSFX(si);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -294,6 +303,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
+        audioModule.PlaySFX(si);
         particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 

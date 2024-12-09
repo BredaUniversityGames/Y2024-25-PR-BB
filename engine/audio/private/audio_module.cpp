@@ -67,14 +67,15 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 }
 void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
-    const uint32_t hash = std::hash<std::string_view> {}(soundInfo.path);
+    const AudioUID hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
     if (_sounds.contains(hash))
     {
         return;
     }
 
-    const FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
+    FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
+    mode = soundInfo.is3D ? mode |= FMOD_3D : mode;
     FMOD_SOUND* sound = nullptr;
 
     FMOD_CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
@@ -111,7 +112,7 @@ void AudioModule::StopSFX(const SoundInfo& soundInfo)
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
 {
-    const uint32_t hash = std::hash<std::string_view> {}(bankInfo.path);
+    const AudioUID hash = std::hash<std::string_view> {}(bankInfo.path);
     bankInfo.uid = hash;
 
     if (_banks.contains(hash))
@@ -138,15 +139,15 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     FMOD_CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-uint32_t AudioModule::StartOneShotEvent(std::string_view name)
+AudioUID AudioModule::StartOneShotEvent(std::string_view name)
 {
     return StartEvent(name, true);
 }
-NO_DISCARD uint32_t AudioModule::StartLoopingEvent(std::string_view name)
+NO_DISCARD AudioUID AudioModule::StartLoopingEvent(std::string_view name)
 {
     return StartEvent(name, false);
 }
-NO_DISCARD uint32_t AudioModule::StartEvent(std::string_view name, const bool isOneShot)
+NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
@@ -154,7 +155,7 @@ NO_DISCARD uint32_t AudioModule::StartEvent(std::string_view name, const bool is
     FMOD_STUDIO_EVENTINSTANCE* evi = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_EventDescription_CreateInstance(eve, &evi));
 
-    const uint32_t eventId = _nextEventId;
+    const AudioUID eventId = _nextEventId;
     _events[eventId] = evi;
     ++_nextEventId;
 
@@ -167,10 +168,17 @@ NO_DISCARD uint32_t AudioModule::StartEvent(std::string_view name, const bool is
 
     return eventId;
 }
-void AudioModule::StopEvent(const uint32_t eventId)
+void AudioModule::StopEvent(const AudioUID eventId)
 {
     if (_events.contains(eventId))
     {
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[eventId], FMOD_STUDIO_STOP_ALLOWFADEOUT));
     }
+}
+
+void AudioModule::SetListener3DAttributes(const glm::vec3& position) const
+{
+    const auto pos = FMOD_VECTOR(position.x, position.y, position.z);
+
+    FMOD_System_Set3DListenerAttributes(_coreSystem, 0, &pos, nullptr, nullptr, nullptr);
 }

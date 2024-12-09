@@ -1,32 +1,11 @@
 #pragma once
 
+#include "audio_common.hpp"
 #include "common.hpp"
 #include "module_interface.hpp"
+#include <glm/glm.hpp>
 #include <string_view>
 #include <unordered_map>
-
-struct FMOD_SYSTEM;
-struct FMOD_STUDIO_SYSTEM;
-struct FMOD_SOUND;
-struct FMOD_STUDIO_BANK;
-struct FMOD_STUDIO_EVENTINSTANCE;
-struct FMOD_CHANNELGROUP;
-struct FMOD_CHANNEL;
-
-struct SoundInfo
-{
-    std::string_view path {};
-    uint32_t uid = 0;
-
-    float volume = 1.0f;
-    bool isLoop = false;
-};
-
-struct BankInfo
-{
-    std::string_view path {};
-    uint32_t uid = 0;
-};
 
 class AudioModule final : public ModuleInterface
 {
@@ -58,17 +37,19 @@ public:
 
     // Play an event once
     // Events started through this will stop on their own
-    uint32_t StartOneShotEvent(std::string_view name);
+    AudioUID StartOneShotEvent(std::string_view name);
 
     // Start an event that should play at least once
     // Store the returned id and later call StopEvent(id), it might not stop otherwise
-    NO_DISCARD uint32_t StartLoopingEvent(std::string_view name);
+    NO_DISCARD AudioUID StartLoopingEvent(std::string_view name);
 
     // Stops an event that is
-    void StopEvent(uint32_t eventId);
+    void StopEvent(AudioUID eventId);
+
+    void SetListener3DAttributes(const glm::vec3& position) const;
 
 private:
-    NO_DISCARD uint32_t StartEvent(std::string_view name, bool isOneShot);
+    NO_DISCARD AudioUID StartEvent(std::string_view name, bool isOneShot);
 
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
@@ -78,11 +59,11 @@ private:
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
 
-    std::unordered_map<uint32_t, FMOD_SOUND*> _sounds {};
-    std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks {};
-    std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events {};
+    std::unordered_map<AudioUID, FMOD_SOUND*> _sounds {};
+    std::unordered_map<AudioUID, FMOD_STUDIO_BANK*> _banks {};
+    std::unordered_map<AudioUID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
-    std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping {};
+    std::unordered_map<AudioUID, FMOD_CHANNEL*> _channelsLooping {};
 
-    uint32_t _nextEventId = 0;
+    AudioUID _nextEventId = 0;
 };
