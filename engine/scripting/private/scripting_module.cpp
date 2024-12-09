@@ -13,7 +13,7 @@ void ScriptingModule::GenerateEngineBindingsFile()
 
         // Craft the header of the Generated File
         output << "// Automatically generated file: DO NOT MODIFY!\n";
-        output << "// This script is purely for documentation\n";
+        output << "\n";
 
         // Dump module contents
         output << out_script << std::endl;

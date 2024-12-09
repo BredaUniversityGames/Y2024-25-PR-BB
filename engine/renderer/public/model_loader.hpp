@@ -3,13 +3,12 @@
 #include "mesh.hpp"
 #include "model.hpp"
 
-#include <lib/include_fastgltf.hpp>
+#include <include_fastgltf.hpp>
 #include <memory>
 #include <vector>
 
 class SingleTimeCommands;
 class BatchBuffer;
-class ECS;
 class GraphicsContext;
 
 class ModelLoader

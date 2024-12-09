@@ -4,6 +4,6 @@ module_default_init(Audio)
 target_link_libraries(Audio
         PUBLIC Core
         PUBLIC OldEngine
-        PUBLIC Utility
-        PUBLIC EnTT::EnTT
-        PUBLIC FMOD)
+        PRIVATE EnTT::EnTT
+        PRIVATE FMOD
+)
