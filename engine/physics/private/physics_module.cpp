@@ -67,7 +67,7 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
     // just for testing now
 
     auto& ecs = engine.GetModule<ECSModule>();
-    ecs.AddSystem<PhysicsSystem>(ecs, *this);
+    ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
 
     return ModuleTickOrder::ePostTick;
 }

@@ -2,7 +2,7 @@
 #include "particle_vars.glsl"
 #include "../scene.glsl"
 
-layout(set = 1, binding = 0) buffer CulledInstancesSSB
+layout (set = 1, binding = 0) buffer CulledInstancesSSB
 {
     CulledInstances culledInstances;
 };
@@ -28,8 +28,8 @@ void main()
 
     vec3 quadPos = inPosition;
     mat2 rot = mat2(
-        cos(instance.angle), -sin(instance.angle),
-        sin(instance.angle), cos(instance.angle)
+    cos(instance.angle), -sin(instance.angle),
+    sin(instance.angle), cos(instance.angle)
     );
     quadPos.xy *= rot;
     quadPos.xy *= instance.size;

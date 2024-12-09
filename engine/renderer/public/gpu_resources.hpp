@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometric.hpp"
 #include "resource_manager.hpp"
 #include "vulkan_include.hpp"
 
@@ -9,6 +10,12 @@
 #include <vk_mem_alloc.h>
 
 class VulkanContext;
+
+enum class MeshType : uint8_t
+{
+    eSTATIC,
+    eSKINNED,
+};
 
 struct SamplerCreation
 {
@@ -51,7 +58,7 @@ private:
 enum class ImageType
 {
     e2D,
-    e2DArray,
+    eDepth,
     eCubeMap,
     eShadowMap
 };
@@ -230,17 +237,14 @@ private:
 
 struct GPUMesh
 {
-    struct Primitive
-    {
-        uint32_t count;
-        uint32_t vertexOffset;
-        uint32_t indexOffset;
-        float boundingRadius;
+    uint32_t count { 0 };
+    uint32_t vertexOffset { 0 };
+    uint32_t indexOffset { 0 };
+    float boundingRadius;
+    Vec3Range boundingBox;
 
-        ResourceHandle<GPUMaterial> material;
-    };
-
-    std::vector<Primitive> primitives;
+    MeshType type;
+    ResourceHandle<GPUMaterial> material;
 };
 
 struct alignas(16) GPUCamera

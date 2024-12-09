@@ -32,6 +32,7 @@ public:
     NON_MOVABLE(ECSModule);
 
     entt::registry& GetRegistry() { return registry; }
+    const entt::registry& GetRegistry() const { return registry; }
     std::vector<std::unique_ptr<SystemInterface>>& GetSystems() { return systems; }
 
     template <typename T, typename... Args>

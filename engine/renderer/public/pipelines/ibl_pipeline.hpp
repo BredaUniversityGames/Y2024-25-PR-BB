@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mesh.hpp"
+#include "vertex.hpp"
 
 #include <memory>
 

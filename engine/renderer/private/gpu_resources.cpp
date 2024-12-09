@@ -163,7 +163,7 @@ vk::ImageType ImageTypeConversion(ImageType type)
     switch (type)
     {
     case ImageType::e2D:
-    case ImageType::e2DArray:
+    case ImageType::eDepth:
     case ImageType::eShadowMap:
     case ImageType::eCubeMap:
         return vk::ImageType::e2D;
@@ -179,8 +179,8 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     case ImageType::eShadowMap:
     case ImageType::e2D:
         return vk::ImageViewType::e2D;
-    case ImageType::e2DArray:
-        return vk::ImageViewType::e2DArray;
+    case ImageType::eDepth:
+        return vk::ImageViewType::e2D;
     case ImageType::eCubeMap:
         return vk::ImageViewType::eCube;
     default:

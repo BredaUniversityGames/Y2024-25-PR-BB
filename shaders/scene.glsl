@@ -39,4 +39,5 @@ struct Instance
     mat4 model;
     uint materialIndex;
     float boundingRadius;
+    uint boneOffset;
 };

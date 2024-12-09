@@ -1,8 +1,8 @@
 #pragma once
 
 #include "log.hpp"
-#include "mesh.hpp"
 #include "spirv_reflect.h"
+#include "vertex.hpp"
 #include "vulkan_context.hpp"
 #include <glm/glm.hpp>
 #include <magic_enum.hpp>

@@ -3,7 +3,7 @@
 #include "bloom_settings.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
-#include "mesh.hpp"
+#include "vertex.hpp"
 
 #include <cstddef>
 #include <memory>

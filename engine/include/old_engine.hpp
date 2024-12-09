@@ -1,7 +1,9 @@
 #pragma once
 
+#include "camera.hpp"
 #include "module_interface.hpp"
 #include "performance_tracker.hpp"
+#include "vertex.hpp"
 
 #include <memory>
 
@@ -33,7 +35,6 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
     PerformanceTracker _performanceTracker;
 
-    // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
     MAYBE_UNUSED bool _shouldQuit = false;

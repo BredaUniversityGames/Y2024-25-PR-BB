@@ -56,10 +56,12 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    const uint32_t mb128 = 128 * 1024 * 1024;
+    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
+    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -206,9 +208,8 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
-
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
         models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
@@ -252,9 +253,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
         .ecs = _ecs,
-        .batchBuffer = _batchBuffer,
+        .staticBatchBuffer = _staticBatchBuffer,
+        .skinnedBatchBuffer = _skinnedBatchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
-        .deltaTime = deltaTime
+        .deltaTime = deltaTime,
     };
 
     _context->GetDrawStats().Clear();

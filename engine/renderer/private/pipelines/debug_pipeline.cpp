@@ -100,6 +100,8 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
+
+    ClearLines();
 }
 
 void DebugPipeline::CreatePipeline()

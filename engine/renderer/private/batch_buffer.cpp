@@ -40,21 +40,6 @@ BatchBuffer::~BatchBuffer()
     auto resources { _context->Resources() };
 }
 
-uint32_t BatchBuffer::AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer)
-{
-    auto resources { _context->Resources() };
-
-    assert((_vertexOffset + vertices.size()) * sizeof(Vertex) < _vertexBufferSize);
-    uint32_t originalOffset = _vertexOffset;
-
-    const Buffer* buffer = resources->BufferResourceManager().Access(_vertexBuffer);
-    commandBuffer.CopyIntoLocalBuffer(vertices, _vertexOffset, buffer->buffer);
-
-    _vertexOffset += vertices.size();
-
-    return originalOffset;
-}
-
 uint32_t BatchBuffer::AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer)
 {
     auto resources { _context->Resources() };

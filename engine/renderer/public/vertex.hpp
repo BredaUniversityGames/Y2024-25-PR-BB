@@ -1,10 +1,9 @@
 #pragma once
 
-#include "camera.hpp"
-#include "geometric.hpp"
-
 #include <array>
-#include <memory>
+#include <vulkan_include.hpp>
+
+#include "gpu_resources.hpp"
 
 struct LineVertex
 {
@@ -36,7 +35,7 @@ struct Vertex
         ePOSITION,
         eNORMAL,
         eTANGENT,
-        eTEX_COORD
+        eTEX_COORD,
     };
 
     glm::vec3 position {};
@@ -57,12 +56,42 @@ struct Vertex
     }
 
     static vk::VertexInputBindingDescription GetBindingDescription();
-
     static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions();
 };
 
-struct StaticMeshComponent
+struct SkinnedVertex
 {
-    ResourceHandle<GPUMesh> mesh;
-    Vec3Range boundingBox;
+    enum Enumeration
+    {
+        ePOSITION,
+        eNORMAL,
+        eTANGENT,
+        eTEX_COORD,
+        eJOINTS,
+        eWEIGHTS,
+    };
+
+    glm::vec3 position {};
+    glm::vec3 normal {};
+    glm::vec4 tangent {};
+    glm::vec2 texCoord {};
+    glm::vec4 joints {};
+    glm::vec4 weights {};
+
+    SkinnedVertex()
+    {
+    }
+
+    SkinnedVertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord, glm::vec4 joints, glm::vec4 weights)
+        : position(position)
+        , normal(normal)
+        , tangent(tangent)
+        , texCoord(texCoord)
+        , joints(joints)
+        , weights(weights)
+    {
+    }
+
+    static vk::VertexInputBindingDescription GetBindingDescription();
+    static std::array<vk::VertexInputAttributeDescription, 6> GetAttributeDescriptions();
 };

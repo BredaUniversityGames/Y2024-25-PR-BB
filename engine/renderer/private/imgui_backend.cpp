@@ -74,7 +74,7 @@ ImTextureID ImGuiBackend::GetTexture(ResourceHandle<GPUImage> image)
     switch (resource->type)
     {
     case ImageType::e2D:
-    case ImageType::e2DArray:
+    case ImageType::eDepth:
     case ImageType::eCubeMap:
         layout = vk::ImageLayout::eShaderReadOnlyOptimal;
         break;
