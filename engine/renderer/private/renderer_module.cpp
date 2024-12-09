@@ -5,14 +5,13 @@
 #include "engine.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "particle_interface.hpp"
+#include "particle_module.hpp"
 #include "renderer.hpp"
 #include "vulkan_context.hpp"
 
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
-#include <particle_module.hpp>
 
 RendererModule::RendererModule()
 {

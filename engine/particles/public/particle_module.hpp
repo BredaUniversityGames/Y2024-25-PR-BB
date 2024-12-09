@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
+#include "particle_util.hpp"
 
 #include <memory>
 
@@ -30,7 +31,7 @@ public:
     };
 
     void LoadEmitterPresets();
-    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, bool emitOnce, bool hasRigidBody, bool isActive = true, );
+    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, bool emitOnce, bool isActive = true);
 
 private:
     std::shared_ptr<GraphicsContext> _context;

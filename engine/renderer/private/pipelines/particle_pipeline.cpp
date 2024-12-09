@@ -73,7 +73,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         RecordEmit(commandBuffer);
     }
 
-    RecordSimulate(commandBuffer, scene.deltaTime); // TODO: get deltatime again somehow
+    RecordSimulate(commandBuffer, scene.deltaTime);
 
     RecordRenderIndexed(commandBuffer, currentFrame);
 
@@ -152,7 +152,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
 
-    _simulatePushConstant.deltaTime = deltaTime * 0.001f;
+    _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
@@ -239,16 +239,15 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
-        if (component.timesToEmit != 0)
+        if (component.currentEmitDelay < 0.0f)
         {
             // TODO: do something with particle type later
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             _emitters.emplace_back(component.emitter);
-            component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
         }
     }
 
