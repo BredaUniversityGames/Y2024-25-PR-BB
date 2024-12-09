@@ -1,6 +1,6 @@
 #include "main_script.hpp"
 #include "log.hpp"
-#include "utility/wren_engine.hpp"
+#include "wren_engine.hpp"
 
 void MainScript::SetMainScript(wren::VM& vm, const std::string& module, const std::string& className)
 {

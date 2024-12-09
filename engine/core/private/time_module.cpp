@@ -1,23 +1,7 @@
 #include "time_module.hpp"
-#include "scripting_module.hpp"
 
-namespace bind
+ModuleTickOrder TimeModule::Init(MAYBE_UNUSED Engine& e)
 {
-
-float TimeModuleGetDeltatime(TimeModule& self)
-{
-    return self.GetDeltatime().count();
-}
-
-}
-
-ModuleTickOrder TimeModule::Init(Engine& e)
-{
-    auto& foreignApi = e.GetModule<ScriptingModule>().GetForeignAPI();
-
-    auto& module = foreignApi.klass<TimeModule>("TimeModule");
-    module.funcExt<bind::TimeModuleGetDeltatime>("GetDeltatime");
-
     return ModuleTickOrder::eFirst;
 }
 

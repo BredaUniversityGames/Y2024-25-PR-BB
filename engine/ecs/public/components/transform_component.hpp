@@ -7,15 +7,18 @@
 
 struct TransformComponent
 {
+    glm::vec3 GetLocalPosition() const { return _localPosition; }
+    glm::vec3 GetLocalScale() const { return _localScale; }
+    glm::quat GetLocalRotation() const { return _localRotation; }
+    void Inspect(entt::registry& reg, entt::entity entity);
+
 private:
     glm::vec3 _localPosition {};
     glm::quat _localRotation { 1.0f, 0.0f, 0.0f, 0.0f };
     glm::vec3 _localScale { 1.0f, 1.0f, 1.0f };
+
     friend class TransformHelpers;
     friend class Editor;
-
-public:
-    void Inspect(entt::registry& reg, entt::entity entity);
 };
 
 namespace EnttEditor
