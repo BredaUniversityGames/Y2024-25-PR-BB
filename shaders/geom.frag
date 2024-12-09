@@ -33,9 +33,11 @@ void main()
 
     if (material.useAlbedoMap)
     {
-
-        vec4 albedo = (texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord);
-        if (albedo.a < 1.0){ discard; }
+        vec4 albedo = texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord);
+        if (albedo.a < 1.0)
+        {
+            discard;
+        }
         albedoSample *= pow(albedo, vec4(2.2));
     }
     if (material.useMRMap)
