@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model.hpp"
+#include "cpu_resources.hpp"
 #include "resource_manager.hpp"
 class ImageResourceManager;
 class MaterialResourceManager;

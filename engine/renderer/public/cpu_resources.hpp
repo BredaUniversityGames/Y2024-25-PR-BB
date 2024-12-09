@@ -1,8 +1,9 @@
 #pragma once
 
 #include "animation.hpp"
+#include "components/animation_channel_component.hpp"
 #include "geometric.hpp"
-#include "mesh.hpp"
+#include "vertex.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
@@ -24,7 +25,7 @@ struct Hierarchy
         std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
         std::vector<uint32_t> children {};
 
-        std::optional<AnimationChannel> animationChannel {};
+        std::optional<AnimationChannelComponent> animationChannel {};
         std::optional<Joint> joint {};
         bool isSkeletonRoot { false };
         std::optional<uint32_t> skeletonNode {};

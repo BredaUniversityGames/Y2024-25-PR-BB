@@ -13,7 +13,6 @@
 #include "graphics_resources.hpp"
 #include "imgui_backend.hpp"
 #include "log.hpp"
-#include "mesh.hpp"
 #include "model_loader.hpp"
 #include "performance_tracker.hpp"
 #include "physics_module.hpp"
@@ -22,6 +21,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
+#include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <fstream>

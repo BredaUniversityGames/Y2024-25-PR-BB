@@ -1,9 +1,9 @@
 #pragma once
 
 #include "camera.hpp"
-#include "mesh.hpp"
 #include "module_interface.hpp"
 #include "performance_tracker.hpp"
+#include "vertex.hpp"
 
 #include <memory>
 

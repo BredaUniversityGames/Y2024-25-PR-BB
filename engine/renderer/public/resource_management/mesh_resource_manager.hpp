@@ -2,10 +2,10 @@
 
 #include "batch_buffer.hpp"
 #include "common.hpp"
-#include "mesh.hpp"
-#include "model.hpp"
+#include "cpu_resources.hpp"
 #include "resource_manager.hpp"
 #include "single_time_commands.hpp"
+#include "vertex.hpp"
 #include "vulkan_context.hpp"
 
 #include <glm/glm.hpp>

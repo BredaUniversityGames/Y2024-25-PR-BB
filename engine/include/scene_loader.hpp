@@ -1,7 +1,7 @@
 #pragma once
 
 #include "animation.hpp"
-#include "model.hpp"
+#include "cpu_resources.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <memory>

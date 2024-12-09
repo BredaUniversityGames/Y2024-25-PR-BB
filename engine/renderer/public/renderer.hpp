@@ -2,8 +2,8 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
-#include "model.hpp"
 #include "swap_chain.hpp"
 
 class UIModule;

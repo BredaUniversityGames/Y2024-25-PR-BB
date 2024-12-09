@@ -1,7 +1,8 @@
 #pragma once
 
-#include "mesh.hpp"
-#include "model.hpp"
+#include "components/animation_channel_component.hpp"
+#include "cpu_resources.hpp"
+#include "vertex.hpp"
 
 #include <include_fastgltf.hpp>
 #include <memory>
@@ -14,7 +15,7 @@ class GraphicsContext;
 struct StagingAnimationChannels
 {
     Animation animation;
-    std::vector<AnimationChannel> animationChannels;
+    std::vector<AnimationChannelComponent> animationChannels;
     std::vector<uint32_t> nodeIndices;
 };
 

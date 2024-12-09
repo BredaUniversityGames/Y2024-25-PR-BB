@@ -86,7 +86,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
             TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
         }
     }
-    auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
 
     _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
@@ -154,52 +153,7 @@ void OldEngine::Tick(Engine& engine)
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
 
-    // Update animations TODO: remove this later
-    const auto view = _ecs->GetRegistry().view<TransformComponent, AnimationChannel>();
-    for (auto entity : view)
-    {
-        auto& animation = view.get<AnimationChannel>(entity);
-
-        animation.animation->Update(deltaTimeMS / 1000.0f, _frameIndex);
-
-        if (animation.translation.has_value())
-        {
-            glm::vec3 position = animation.translation.value().Sample(animation.animation->time);
-
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
-        }
-        if (animation.rotation.has_value())
-        {
-            glm::quat rotation = animation.rotation.value().Sample(animation.animation->time);
-
-            TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
-        }
-        if (animation.scaling.has_value())
-        {
-            glm::vec3 scale = animation.scaling.value().Sample(animation.animation->time);
-
-            TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entity, scale);
-        }
-    }
-
-    // TODO: Should be done at start of frame somewhere.
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
     physicsModule.debugRenderer->ClearLines();
-
-    const auto debugView = _ecs->GetRegistry().view<JointComponent, RelationshipComponent, WorldMatrixComponent>();
-    for (auto entity : debugView)
-    {
-        auto& relationship = debugView.get<RelationshipComponent>(entity);
-        auto& transform = debugView.get<WorldMatrixComponent>(entity);
-
-        glm::mat4 matrix = TransformHelpers::GetWorldMatrix(transform);
-        glm::mat4 parentMatrix = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry(), relationship.parent);
-
-        glm::vec3 position { matrix[3][0], matrix[3][1], matrix[3][2] };
-        glm::vec3 parentPosition { parentMatrix[3][0], parentMatrix[3][1], parentMatrix[3][2] };
-
-        rendererModule.GetRenderer()->GetDebugPipeline().AddLine(position, parentPosition);
-    }
 
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();

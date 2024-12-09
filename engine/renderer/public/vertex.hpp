@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <entt/entity/entity.hpp>
 #include <vulkan_include.hpp>
 
 #include "gpu_resources.hpp"
@@ -95,27 +94,4 @@ struct SkinnedVertex
 
     static vk::VertexInputBindingDescription GetBindingDescription();
     static std::array<vk::VertexInputAttributeDescription, 6> GetAttributeDescriptions();
-};
-
-struct StaticMeshComponent
-{
-    ResourceHandle<GPUMesh> mesh;
-};
-
-struct SkinnedMeshComponent
-{
-    ResourceHandle<GPUMesh> mesh;
-    entt::entity skeletonEntity { entt::null };
-};
-
-struct SkeletonComponent
-{
-    uint32_t boneOffset = 0;
-};
-
-struct JointComponent
-{
-    glm::mat4 inverseBindMatrix {};
-    uint32_t jointIndex;
-    entt::entity skeletonEntity;
 };

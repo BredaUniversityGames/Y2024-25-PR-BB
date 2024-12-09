@@ -1,17 +1,21 @@
 #include "scene_loader.hpp"
 
 #include "animation.hpp"
+#include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/skeleton_component.hpp"
+#include "components/skinned_mesh_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "mesh.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <glm/glm.hpp>
@@ -52,7 +56,7 @@ entt::entity LoadNodeRecursive(ECSModule& ecs, uint32_t currentNodeIndex, const 
 
     if (currentNode.animationChannel.has_value())
     {
-        auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannel>(entity) = currentNode.animationChannel.value();
+        auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannelComponent>(entity) = currentNode.animationChannel.value();
         animationChannel.animation = animation;
     }
 

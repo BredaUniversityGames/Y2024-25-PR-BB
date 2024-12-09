@@ -438,7 +438,7 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
             continue;
         }
 
-        AnimationChannel* spline { nullptr };
+        AnimationChannelComponent* spline { nullptr };
         const auto it = std::find(stagingAnimationChannels.nodeIndices.begin(), stagingAnimationChannels.nodeIndices.end(), channel.nodeIndex.value());
 
         if (it == stagingAnimationChannels.nodeIndices.end())
