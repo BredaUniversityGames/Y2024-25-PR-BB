@@ -1,6 +1,6 @@
 #include "time_module.hpp"
 
-ModuleTickOrder TimeModule::Init(Engine& e)
+ModuleTickOrder TimeModule::Init(MAYBE_UNUSED Engine& e)
 {
     return ModuleTickOrder::eFirst;
 }
