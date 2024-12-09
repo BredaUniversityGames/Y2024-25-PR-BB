@@ -620,10 +620,6 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
         if (it != skin.joints.end())
         {
-            // Find the node that has the skin for this joint.
-            auto nodeIt = std::find_if(gltf.nodes.begin(), gltf.nodes.end(), [i](const fastgltf::Node& node)
-                { return node.skinIndex.has_value() && node.skinIndex.value() == i; });
-
             // Get the inverse bind matrix for this joint.
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
 
