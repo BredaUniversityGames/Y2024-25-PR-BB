@@ -15,6 +15,14 @@ public:
     {
     }
 
+    UITextElement(const std::shared_ptr<UIFont>& font, std::string text, const glm::vec2& location, const glm::vec2& size)
+        : _font(font)
+        , _text(std::move(text))
+    {
+        SetLocation(location);
+        SetScale(size);
+    }
+
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     void SetColor(glm::vec4 color) { _color = std::move(color); };

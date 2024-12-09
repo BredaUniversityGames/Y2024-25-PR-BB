@@ -28,6 +28,7 @@ public:
         eTopRight,
         eBottomLeft,
         eBottomRight,
+        eFill
     } anchorPoint
         = AnchorPoint::eTopLeft;
 
@@ -43,8 +44,14 @@ public:
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
     NO_DISCARD const glm::vec2& GetAbsoluteLocation() const noexcept { return _absoluteLocation; }
 
-    NO_DISCARD const glm::vec2& GetScale() const noexcept { return _scale; }
-    void SetScale(const glm::vec2& scale) noexcept { _scale = scale; }
+    NO_DISCARD const glm::vec2& GetScale() const noexcept { return _absoluteScale; }
+    NO_DISCARD const glm::vec2& GetRelativeScale() const noexcept { return _relativeScale; }
+
+    void SetScale(const glm::vec2& scale) noexcept
+    {
+        _relativeScale = scale;
+        _absoluteScale = scale;
+    }
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
@@ -60,15 +67,16 @@ public:
     bool enabled = true;
     uint16_t zLevel = 0;
 
-    virtual void UpdateAllChildrenAbsoluteLocations();
+    virtual void UpdateAllChildrenAbsoluteTransform();
 
     virtual ~UIElement() = default;
 
     /**
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.
      * @param location new location
+     * @param scale
      */
-    void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept;
+    void SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren = true) noexcept;
 
 protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
@@ -77,7 +85,8 @@ private:
     glm::vec2 _absoluteLocation {};
     glm::vec2 _relativeLocation {};
 
-    glm::vec2 _scale {};
+    glm::vec2 _relativeScale {};
+    glm::vec2 _absoluteScale {};
 
     std::vector<std::unique_ptr<UIElement>> _children {};
 };

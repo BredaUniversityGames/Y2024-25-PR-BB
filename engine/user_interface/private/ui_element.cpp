@@ -1,4 +1,5 @@
 #include "ui_element.hpp"
+
 #include "log.hpp"
 
 #include <algorithm>
@@ -15,23 +16,23 @@ UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
     std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
 
-    UpdateAllChildrenAbsoluteLocations();
+    UpdateAllChildrenAbsoluteTransform();
     return addedChild;
 }
 
-void UIElement::UpdateAllChildrenAbsoluteLocations()
+void UIElement::UpdateAllChildrenAbsoluteTransform()
 {
     if (enabled)
     {
         for (const auto& child : GetChildren())
         {
             glm::vec2 childRelativeLocation = child->GetRelativeLocation();
-
             glm::vec2 newChildLocation;
+            glm::vec2 newChildScale = child->GetRelativeScale();
             switch (child->anchorPoint)
             {
             case AnchorPoint::eMiddle:
-                newChildLocation = GetAbsoluteLocation() + (GetScale() / 2.0f) + childRelativeLocation;
+                newChildLocation = GetAbsoluteLocation() + (GetScale() / 2.0f) + (childRelativeLocation - child->_relativeScale / 2.0f);
                 break;
             case AnchorPoint::eTopLeft:
                 newChildLocation = { GetAbsoluteLocation() + childRelativeLocation };
@@ -45,18 +46,22 @@ void UIElement::UpdateAllChildrenAbsoluteLocations()
             case AnchorPoint::eBottomRight:
                 newChildLocation = { GetAbsoluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
                 break;
+            case AnchorPoint::eFill:
+                newChildLocation = { GetAbsoluteLocation() };
+                newChildScale = { GetScale() };
+                break;
             }
 
-            child->SetAbsoluteLocation(newChildLocation);
-            child->UpdateAllChildrenAbsoluteLocations();
+            child->SetAbsoluteTransform(newChildLocation, newChildScale);
         }
     }
 }
-void UIElement::SetAbsoluteLocation(const glm::vec2& location, bool updateChildren) noexcept
+void UIElement::SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren) noexcept
 {
     _absoluteLocation = location;
+    _absoluteScale = scale;
     if (updateChildren)
-        UpdateAllChildrenAbsoluteLocations();
+        UpdateAllChildrenAbsoluteTransform();
 }
 void UIElement::ChildrenSubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {

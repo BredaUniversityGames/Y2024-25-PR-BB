@@ -51,9 +51,10 @@ void UIButton::Update(const InputManager& input)
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    UIElement::ChildrenSubmitDrawInfo(drawList);
+
     if (enabled)
     {
+
         ResourceHandle<GPUImage> image;
         switch (state)
         {
@@ -77,13 +78,14 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
         info.useRedAsAlpha = false;
         drawList.emplace_back(info);
+        UIElement::ChildrenSubmitDrawInfo(drawList);
     }
 }
 
-void UIButton::UpdateAllChildrenAbsoluteLocations()
+void UIButton::UpdateAllChildrenAbsoluteTransform()
 {
     for (const auto& child : GetChildren())
     {
-        child->SetAbsoluteLocation(this->GetAbsoluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
+        child->SetAbsoluteTransform(this->GetAbsoluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation(), child->GetScale());
     }
 }
