@@ -22,6 +22,7 @@
 #include "particle_module.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
+#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
