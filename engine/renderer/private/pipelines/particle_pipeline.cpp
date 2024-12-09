@@ -243,7 +243,7 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
-        if (component.currentEmitDelay < 0.0f)
+        if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);

@@ -49,7 +49,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    //auto& particleModule = engine.GetModule<ParticleModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
     // modules
@@ -62,7 +62,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     };
 
-    //particleModule.GetParticleInterface().LoadEmitterPresets();
+    particleModule.LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
@@ -142,7 +142,7 @@ void OldEngine::Tick(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& input = applicationModule.GetInputManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
-    //auto& particleModule = engine.GetModule<ParticleModule>();
+    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
@@ -275,6 +275,8 @@ void OldEngine::Tick(Engine& engine)
                         JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
                         physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
                     }
+
+                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
                 }
             }
         }
@@ -284,11 +286,6 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
-
-    if (input.IsKeyPressed(KeyboardCode::eP))
-    {
-        //particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-    }
 
     if (input.IsKeyPressed(KeyboardCode::eF1))
     {

@@ -2,6 +2,7 @@
 
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
+#include "components/world_matrix_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
@@ -19,10 +20,9 @@
 
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
+    _physics = &engine.GetModule<PhysicsModule>();
     _context = engine.GetModule<RendererModule>().GetRenderer()->GetContext();
     _ecs = &engine.GetModule<ECSModule>();
-
-    LoadEmitterPresets();
 
     return ModuleTickOrder::ePostRender;
 }
@@ -32,11 +32,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     const auto emitterView = _ecs->GetRegistry().view<EmitterComponent>();
     for(const auto entity : emitterView)
     {
-        auto rb = _ecs->GetRegistry().try_get<RigidbodyComponent>(entity);
-
-        if(rb)
+        if(_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
-            if(_physics->bodyInterface->GetMotionType(rb->bodyID) == JPH::EMotionType::Dynamic)
+            const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
+            if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
             {
                 _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
             }
@@ -47,7 +46,6 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for(const auto entity : activeView)
     {
         auto& emitter = _ecs->GetRegistry().get<EmitterComponent>(entity);
-        const auto rb = _ecs->GetRegistry().try_get<RigidbodyComponent>(entity);
 
         // first remove active tags from inactive emitters and continue
         if(emitter.emitOnce)
@@ -56,29 +54,31 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
             continue;
         }
-        if(rb)
+        if(_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
-            if(_physics->bodyInterface->GetMotionType(rb->bodyID) != JPH::EMotionType::Dynamic)
+            const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
+
+            if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Dynamic)
             {
                 _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
                 continue;
+            }
+            if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+            {
+                JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+                emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             }
         }
 
         // update timers
         if(emitter.currentEmitDelay < 0.0f)
         {
-            emitter.currentEmitDelay += emitter.maxEmitDelay;
+            emitter.currentEmitDelay = emitter.maxEmitDelay;
         }
         emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
 
         // update position and velocity
-        emitter.emitter.position = TransformHelpers::GetLocalPosition(_ecs->GetRegistry().get<TransformComponent>(entity));
-        if(rb)
-        {
-            JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb->bodyID);
-            emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
-        }
+        emitter.emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
     }
 }
 
@@ -94,9 +94,12 @@ void ParticleModule::LoadEmitterPresets()
     preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
     preset.maxLife = 5.0f;
     preset.materialIndex = LoadEmitterImage("assets/textures/jeremi.png");
-    preset.count = 5;
+    preset.count = 10;
     preset.type = ParticleType::eBillboard;
-    preset.size = glm::vec3(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height / static_cast<float>(glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height)), 0.0f);
+    float biggestSize = glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height);
+    preset.size = glm::vec3(
+        resources->ImageResourceManager().Access(_emitterImages[0])->width / biggestSize,
+        resources->ImageResourceManager().Access(_emitterImages[0])->height / biggestSize, 0.0f);
     _emitterPresets.emplace_back(preset);
 }
 
@@ -122,10 +125,9 @@ uint32_t ParticleModule::LoadEmitterImage(const char* imagePath)
     return image.Index();
 }
 
-void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, bool emitOnce, bool isActive)
+void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    auto preset = _emitterPresets[static_cast<int>(emitterPreset)];
-    auto rb = _ecs->GetRegistry().try_get<RigidbodyComponent>(entity);
+    auto& preset = _emitterPresets[static_cast<int>(emitterPreset)];
 
     Emitter emitter;
     emitter.count = preset.count;
@@ -135,16 +137,33 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
     // TODO: get world instead of local?
-    emitter.position = TransformHelpers::GetLocalPosition(_ecs->GetRegistry().get<TransformComponent>(entity));
-    if(rb)
+    emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+    if(_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
     {
-        JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb->bodyID);
-        emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
+        const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
+
+        if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+        {
+            JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+            emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
+            _ecs->GetRegistry().emplace<ActiveEmitterTag>(entity);
+        }
     }
     else
     {
         emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     }
+
+    if(HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomPosition))
+    {
+        emitter.position = position;
+    }
+    if(HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomVelocity))
+    {
+        emitter.velocity = velocity;
+    }
+
+    bool emitOnce = HasAnyFlags(flags, SpawnEmitterFlagBits::eEmitOnce);
 
     EmitterComponent component;
     component.emitter = emitter;
@@ -154,16 +173,8 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     component.emitOnce = emitOnce;
 
     _ecs->GetRegistry().emplace<EmitterComponent>(entity, component);
-
-    if(rb)
+    if(HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
-        if(_physics->bodyInterface->GetMotionType(rb->bodyID) == JPH::EMotionType::Dynamic)
-        {
-            _ecs->GetRegistry().emplace<ActiveEmitterTag>(entity);
-        }
-    }
-    else if(isActive)
-    {
-        _ecs->GetRegistry().emplace<ActiveEmitterTag>(entity);
+        _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
     }
 }

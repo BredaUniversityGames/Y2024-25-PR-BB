@@ -6,6 +6,7 @@
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
+#include "enum_utils.hpp"
 
 #include <memory>
 
@@ -13,6 +14,22 @@ class GraphicsContext;
 struct GPUImage;
 class ECSModule;
 class PhysicsModule;
+
+// TODO: make bitflag utility base class if we want to use it in more places
+enum class SpawnEmitterFlagBits : uint8_t
+{
+    eEmitOnce = 1 << 0,
+    eIsActive = 1 << 1,
+    eSetCustomPosition = 1 << 2,
+    eSetCustomVelocity = 1 << 3
+};
+GENERATE_ENUM_FLAG_OPERATORS(SpawnEmitterFlagBits)
+
+enum class EmitterPresetID : uint8_t
+{
+    eTest = 0,
+    eNone
+};
 
 class ParticleModule final : public ModuleInterface
 {
@@ -24,14 +41,8 @@ public:
     ParticleModule() = default;
     ~ParticleModule() override = default;
 
-    enum class EmitterPresetID
-    {
-        eTest = 0,
-        eNone
-    };
-
     void LoadEmitterPresets();
-    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, bool emitOnce, bool isActive = true);
+    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f}, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f});
 
 private:
     std::shared_ptr<GraphicsContext> _context;
