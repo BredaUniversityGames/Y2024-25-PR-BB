@@ -48,8 +48,11 @@ public:
 
     void SetListener3DAttributes(const glm::vec3& position) const;
 
+    void Update3DSoundPosition(const AudioUID id, const glm::vec3& position);
+
 private:
-    NO_DISCARD AudioUID StartEvent(std::string_view name, bool isOneShot);
+    NO_DISCARD AudioUID
+    StartEvent(std::string_view name, bool isOneShot);
 
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
@@ -63,7 +66,7 @@ private:
     std::unordered_map<AudioUID, FMOD_STUDIO_BANK*> _banks {};
     std::unordered_map<AudioUID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
-    std::unordered_map<AudioUID, FMOD_CHANNEL*> _channelsLooping {};
+    std::unordered_map<AudioUID, FMOD_CHANNEL*> _channelsActive {};
 
     AudioUID _nextEventId = 0;
 };

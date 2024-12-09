@@ -11,6 +11,7 @@ struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
 
 using AudioUID = uint32_t;
+using ChannelID = uint32_t;
 
 struct SoundInfo
 {

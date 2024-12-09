@@ -1,21 +1,22 @@
 #pragma once
 
 #include "common.hpp"
-#include "systems/system.hpp"
+#include "ecs_module.hpp"
+#include "system_interface.hpp"
 
 class AudioModule;
-class AudioSystem final : public System
+class AudioSystem final : public SystemInterface
 {
 public:
-    AudioSystem(ECS& ecs, AudioModule& audioModule);
+    AudioSystem(ECSModule& ecs, AudioModule& audioModule);
     NON_COPYABLE(AudioSystem);
     NON_MOVABLE(AudioSystem);
 
-    void Update(ECS& ecs, float dt) override;
-    void Render(const ECS& ecs) const override;
+    void Update(ECSModule& ecs, MAYBE_UNUSED float dt) override;
+    void Render(const ECSModule& ecs) const override {};
     void Inspect() override;
 
 private:
-    ECS& _ecs;
+    ECSModule& _ecs;
     AudioModule& _audioModule;
 };

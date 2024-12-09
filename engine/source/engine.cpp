@@ -114,7 +114,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    _ecs->registry.emplace<AudioListenerComponent>(cameraEntity);
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 

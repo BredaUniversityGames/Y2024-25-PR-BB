@@ -1,5 +1,8 @@
 #include "audio_module.hpp"
 
+#include
+#include
+
 #include <iostream>
 
 #include "fmod_debug.hpp"
@@ -64,6 +67,15 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         _events.erase(id);
     }
+
+    _channelsActive.erase(std::remove_if(_channelsActive.begin(), _channelsActive.end(), [](FMOD_CHANNEL* channel)
+                              {   FMOD_BOOL isPlaying = false;
+            if (channel)
+            {
+                FMOD_CHECKRESULT(FMOD_Channel_IsPlaying(channel, &isPlaying));
+            }
+            return !static_cast<bool>(isPlaying); }),
+        _channelsActive.end());
 }
 void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
@@ -95,19 +107,16 @@ void AudioModule::PlaySFX(SoundInfo& soundInfo)
 
     FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, soundInfo.volume));
 
-    if (soundInfo.isLoop)
-    {
-        _channelsLooping.emplace(soundInfo.uid, channel);
-    }
+    _channelsActive.emplace(soundInfo.uid, channel);
 
     FMOD_CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
 }
 void AudioModule::StopSFX(const SoundInfo& soundInfo)
 {
-    if (soundInfo.isLoop && _channelsLooping.contains(soundInfo.uid))
+    if (soundInfo.isLoop && _channelsActive.contains(soundInfo.uid))
     {
-        FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsLooping[soundInfo.uid]));
-        _channelsLooping.erase(soundInfo.uid);
+        FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[soundInfo.uid]));
+        _channelsActive.erase(soundInfo.uid);
     }
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
@@ -146,6 +155,12 @@ AudioUID AudioModule::StartOneShotEvent(std::string_view name)
 NO_DISCARD AudioUID AudioModule::StartLoopingEvent(std::string_view name)
 {
     return StartEvent(name, false);
+}
+void AudioModule::Update3DSoundPosition(const AudioUID id, const glm::vec3& position)
+{
+    const auto pos = FMOD_VECTOR(position.x, position.y, position.z);
+
+    FMOD_Channel_Set3DAttributes(_channelsActive[id], pos, nullptr);
 }
 NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {

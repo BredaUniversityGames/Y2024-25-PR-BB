@@ -3,9 +3,9 @@
 #include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
 
+#include <entt/entity/registry.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <entt/entity/registry.hpp>
 
 void TransformHelpers::SetLocalPosition(entt::registry& reg, entt::entity entity, const glm::vec3& position)
 {
@@ -193,21 +193,21 @@ const glm::mat4& TransformHelpers::GetWorldMatrix(const WorldMatrixComponent& wo
     return worldMatrixComponent._worldMatrix;
 }
 
-glm::vec3 GetWorldPosition(entt::registry& reg, entt::entity entity)
+glm::vec3 TransformHelpers::GetWorldPosition(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
     auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
 
     return glm::vec3(m[3][0], m[3][1], m[3][2]);
 }
-glm::quat GetWorldRotation(entt::registry& reg, entt::entity entity)
+glm::quat TransformHelpers::GetWorldRotation(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
     auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
 
     return glm::quat_cast(m);
 }
-glm::vec3 GetWorldScale(entt::registry& reg, entt::entity entity)
+glm::vec3 TransformHelpers::GetWorldScale(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
     auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
