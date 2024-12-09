@@ -8,9 +8,8 @@
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
-#include "ui_module.hpp"
-#include "particle_module.hpp"
 #include "time_module.hpp"
+#include "ui_module.hpp"
 
 #include "utility/bind_math.hpp"
 
@@ -28,10 +27,11 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
-        .AddModule<UIModule>()
-        .AddModule<ParticleModule>();
+        .AddModule<ParticleModule>()
+        .AddModule<UIModule>();
 
-    auto& scripting = instance.GetModule<ScriptingModule>();
+    auto& scripting
+        = instance.GetModule<ScriptingModule>();
     bindings::DefineMathTypes(scripting.GetForeignAPI());
 
     // Add modules here to expose them in scripting

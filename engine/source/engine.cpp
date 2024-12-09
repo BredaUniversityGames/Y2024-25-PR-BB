@@ -33,6 +33,8 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
+#include <ui_module.hpp>
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -131,6 +133,25 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(masterBank);
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
+
+    // todo: move this to scripting.
+    bool createMainMenu
+        = true;
+    if (createMainMenu)
+    {
+        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
+        auto onPlayClick = [&]()
+        {
+            // todo: load scene data
+            engine.GetModule<UIModule>().GetViewport().ClearViewport();
+        };
+        auto onExitClick = [&]()
+        {
+            engine.SetExit(0);
+        };
+
+        engine.GetModule<UIModule>().CreateMainMenu(engine.GetModule<RendererModule>().GetRenderer()->GetContext(), onPlayClick, onExitClick);
+    }
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
