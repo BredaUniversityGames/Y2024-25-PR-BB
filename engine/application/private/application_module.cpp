@@ -101,7 +101,7 @@ void ApplicationModule::SetMouseHidden(bool val)
 {
     _mouseHidden = val;
 
-    // SDL_SetWindowMouseGrab(_window, _mouseHidden);
+    SDL_SetWindowMouseGrab(_window, _mouseHidden);
     SDL_SetWindowRelativeMouseMode(_window, _mouseHidden);
 
     if (_mouseHidden)

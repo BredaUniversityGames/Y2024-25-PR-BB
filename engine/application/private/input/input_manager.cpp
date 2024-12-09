@@ -49,6 +49,8 @@ void InputManager::Update()
         for (auto& button : _gamepad.inputReleased)
             button.second = false;
     }
+
+    ResetInputConsumed();
 }
 
 void InputManager::UpdateEvent(const SDL_Event& event)
@@ -86,8 +88,7 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         break;
     }
     case SDL_EVENT_MOUSE_MOTION:
-        _mouse.positionX += event.motion.xrel;
-        _mouse.positionY += event.motion.yrel;
+        SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
         break;
 
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:

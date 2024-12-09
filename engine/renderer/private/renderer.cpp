@@ -31,8 +31,6 @@
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
-#include "ui_main_menu.hpp"
-#include "ui_module.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
@@ -84,8 +82,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
     // temporary location
-    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
-    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
 
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
@@ -445,7 +441,8 @@ void Renderer::Render(float deltaTime)
         util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    _context->Resources()->Clean();
+    // 09-12 commented this because it doesnt work yet.
+    // _context->Resources()->Clean();
 
     _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }

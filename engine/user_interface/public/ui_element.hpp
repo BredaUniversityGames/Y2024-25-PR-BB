@@ -30,7 +30,7 @@ public:
         eBottomRight,
         eFill
     } anchorPoint
-        = AnchorPoint::eTopLeft;
+        = AnchorPoint::eMiddle;
 
     /**
      * Whenever this gets called the updateChildrenAbsoluteLocations of the parent needs to get called as well!
@@ -55,17 +55,35 @@ public:
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
-    virtual void Update(const InputManager& input);
+    virtual void Update(InputManager& input);
 
-    UIElement& AddChild(std::unique_ptr<UIElement> child);
+    template <typename T, typename... Args>
+        requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
+    T& AddChild(Args&&... args)
+    {
+        UIElement& addedChild = *_children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+        std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+            { return v1->zLevel < v2->zLevel; });
+
+        UpdateAllChildrenAbsoluteTransform();
+        return static_cast<T&>(addedChild);
+    }
 
     NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
     {
         return _children;
     }
 
-    bool enabled = true;
-    uint16_t zLevel = 0;
+    enum class VisibilityState
+    {
+        eUpdatedAndVisible,
+        eUpdatedAndInvisble,
+        eNotUpdatedAndVisible,
+        eNotUpdatedAndInvisble
+    } visibility
+        = VisibilityState::eUpdatedAndVisible;
+
+    int16_t zLevel = 1;
 
     virtual void UpdateAllChildrenAbsoluteTransform();
 

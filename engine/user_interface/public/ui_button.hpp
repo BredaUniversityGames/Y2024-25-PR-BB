@@ -7,10 +7,6 @@
 class UIButton : public UIElement
 {
 public:
-    UIButton()
-    {
-    }
-
     enum class ButtonState
     {
         eNormal,
@@ -19,12 +15,6 @@ public:
     } state
         = ButtonState::eNormal;
 
-    void Update(const InputManager& inputManager) override;
-
-    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
-
-    void UpdateAllChildrenAbsoluteLocations() override;
-
     struct ButtonStyle
     {
         ResourceHandle<GPUImage> normalImage = {};
@@ -32,6 +22,20 @@ public:
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
-    std::function<void()> onBeginHoverCallBack {};
-    std::function<void()> onMouseDownCallBack {};
+    UIButton() = default;
+    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
+        : style(aStyle)
+    {
+        SetLocation(location);
+        SetScale(size);
+    }
+
+    void Update(InputManager& inputManager) override;
+
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
+
+    void UpdateAllChildrenAbsoluteTransform() override;
+
+    std::function<void()> onBeginHoverCallBack = []() {};
+    std::function<void()> onMouseDownCallBack = []() {};
 };

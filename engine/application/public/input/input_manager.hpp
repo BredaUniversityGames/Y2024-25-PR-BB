@@ -39,6 +39,10 @@ public:
     // Returns whether a controller is connected and can be used for input
     [[nodiscard]] bool IsGamepadAvailable() const { return _gamepad.sdlHandle != nullptr; }
 
+    void SetInputConsumed() { _hasInputBeenConsumed = true; }
+    bool HasInputBeenConsumed() { return _hasInputBeenConsumed; }
+    void ResetInputConsumed() { _hasInputBeenConsumed = false; }
+
 private:
     static constexpr float MIN_GAMEPAD_AXIS = -1.0f;
     static constexpr float MAX_GAMEPAD_AXIS = 1.0f;
@@ -65,6 +69,7 @@ private:
         SDL_Gamepad* sdlHandle {};
     } _gamepad {};
 
+    bool _hasInputBeenConsumed = false;
     float ClampDeadzone(float input, float innerDeadzone, float outerDeadzone) const;
     void CloseGamepad();
 };

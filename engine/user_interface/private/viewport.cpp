@@ -1,13 +1,20 @@
 #include "viewport.hpp"
 #include "ui_element.hpp"
 
-#include <algorithm>
+#include <algorithm>s
+#include <ranges>
 
-void Viewport::Update(const InputManager& input) const
+void Viewport::Update(InputManager& input)
 {
-    for (const auto& element : _baseElements)
+    for (const auto& element : _baseElements | std::views::reverse)
     {
         element->Update(input);
+    }
+
+    if (_clearAtEndOfFrame)
+    {
+        _baseElements.clear();
+        _clearAtEndOfFrame = false;
     }
 }
 
@@ -17,13 +24,4 @@ void Viewport::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
     {
         element->SubmitDrawInfo(drawList);
     }
-}
-
-UIElement& Viewport::AddElement(std::unique_ptr<UIElement> element)
-{
-    _baseElements.emplace_back(std::move(element));
-    std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
-        { return v1->zLevel < v2->zLevel; });
-
-    return *_baseElements.back();
 }

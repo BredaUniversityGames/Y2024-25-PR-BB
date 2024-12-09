@@ -4,9 +4,10 @@
 
 #include "input/input_manager.hpp"
 
-void UIButton::Update(const InputManager& input)
+void UIButton::Update(InputManager& input)
 {
-    if (enabled)
+    if ((visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
+        && !input.HasInputBeenConsumed())
     {
         glm::ivec2 mousePos;
         input.GetMousePosition(mousePos.x, mousePos.y);
@@ -23,6 +24,7 @@ void UIButton::Update(const InputManager& input)
 
                 state = ButtonState::eHovered;
                 onBeginHoverCallBack();
+                input.SetInputConsumed();
                 [[fallthrough]];
 
             case ButtonState::eHovered:
@@ -30,6 +32,7 @@ void UIButton::Update(const InputManager& input)
                 if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
                 {
                     state = ButtonState::ePressed;
+                    input.SetInputConsumed();
                     onMouseDownCallBack();
                 }
                 break;
@@ -47,12 +50,14 @@ void UIButton::Update(const InputManager& input)
             state = ButtonState::eNormal;
         }
     }
+
+    
 }
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
 
-    if (enabled)
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
 
         ResourceHandle<GPUImage> image;
