@@ -31,7 +31,7 @@ struct RenderSceneDescription
     float deltaTime;
 };
 
-constexpr uint32_t MAX_INSTANCES = 2048;
+constexpr uint32_t MAX_INSTANCES = 10000;
 
 class GPUScene
 {

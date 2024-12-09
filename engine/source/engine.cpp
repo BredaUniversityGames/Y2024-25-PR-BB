@@ -64,11 +64,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
 
     std::vector<std::string> modelPaths = {
-        "assets/models/CathedralGLB_GLTF.glb",
-        "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
-
+        "assets/models/cathedral_new.glb"
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -84,14 +80,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
-
-    TransformHelpers::SetLocalRotation(_ecs->registry, entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
-
-    TransformHelpers::SetLocalScale(_ecs->registry, entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
-
-    TransformHelpers::SetLocalPosition(_ecs->registry, entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
@@ -201,7 +189,7 @@ void OldEngine::Tick(Engine& engine)
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.003f;
+            constexpr float CAM_SPEED = 0.03f;
 
             glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
             glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };

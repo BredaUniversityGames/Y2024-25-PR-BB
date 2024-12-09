@@ -10,7 +10,7 @@
 class SingleTimeCommands;
 class GraphicsContext;
 
-constexpr uint32_t MAX_MESHES = 2048;
+constexpr uint32_t MAX_MESHES = 10000;
 
 class BatchBuffer
 {

@@ -20,6 +20,7 @@ PhysicsSystem::PhysicsSystem(ECS& ecs, PhysicsModule& physicsModule)
 void PhysicsSystem::InitializePhysicsColliders()
 {
     const auto view = _ecs.registry.view<StaticMeshComponent, TransformComponent>();
+    /*
     for (const auto entity : view)
     {
         StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
@@ -57,7 +58,7 @@ void PhysicsSystem::InitializePhysicsColliders()
 
         _ecs.registry.emplace<RigidbodyComponent>(entity, rb);
         _ecs.registry.emplace_or_replace<UpdateMeshAndPhysics>(entity);
-    }
+    }*/
 }
 void PhysicsSystem::CleanUp()
 {

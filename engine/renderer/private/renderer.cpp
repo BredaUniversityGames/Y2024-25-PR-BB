@@ -16,12 +16,12 @@
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
+#include "pipelines/particle_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
@@ -50,7 +50,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024 * 4, 256 * 1024 * 1024 * 4);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
     ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
@@ -298,7 +298,7 @@ void Renderer::InitializeBloomTargets()
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
+    float* stbiData = stbi_loadf("assets/hdri/overcast_soil_2_4k.hdr", &width, &height, &numChannels, 4);
 
     if (stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");
@@ -309,7 +309,7 @@ void Renderer::LoadEnvironmentMap()
     stbi_image_free(stbiData);
 
     CPUImage envMapCreation {};
-    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetMips(6);
     envMapCreation.isHDR = true;
 
     _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);
