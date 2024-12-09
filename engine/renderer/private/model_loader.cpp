@@ -173,9 +173,12 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
         stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
     }
 
+    // Checks if there are any tangents that are nan. This can happen for some texCoords.
     if (std::any_of(stagingPrimitive.vertices.begin(), stagingPrimitive.vertices.end(), [](const auto& v)
             { return std::isnan(v.tangent.x); }))
     {
+        // In that case we just apply a default tangent, to prevent nan calculation issues.
+        // (Generally if this is the case, there is no normal provided anyway.)
         for (auto& vertex : stagingPrimitive.vertices)
         {
             vertex.tangent = glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -569,8 +572,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     CPUModel& model,
     const fastgltf::Asset& gltf,
     const StagingAnimationChannels& animationChannels,
-    const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT,
-    std::unordered_map<uint32_t, uint32_t>& nodeLUT)
+    const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT, // Used for looking up gltf mesh to engine mesh.
+    std::unordered_map<uint32_t, uint32_t>& nodeLUT) // Will be populated with gltf node to engine node.
 {
     model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
     uint32_t nodeIndex = model.hierarchy.nodes.size() - 1;
@@ -589,10 +592,12 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         }
     }
 
+    // Set transform and name.
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
     model.hierarchy.nodes[nodeIndex].transform = detail::ToMat4(gltfTransform);
     model.hierarchy.nodes[nodeIndex].name = gltfNode.name;
 
+    // If we have an animation channel that should be used on this node, we apply it.
     for (size_t i = 0; i < animationChannels.nodeIndices.size(); i++)
     {
         if (animationChannels.nodeIndices[i] == gltfNodeIndex)
@@ -602,30 +607,37 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         }
     }
 
+    // Check all the gltf skins for skinning data that might be applied to this node.
     for (size_t i = 0; i < gltf.skins.size(); ++i)
     {
         const auto& skin = gltf.skins[i];
 
+        // If this node is not a root, check if it should be.
         if (!model.hierarchy.nodes[nodeIndex].isSkeletonRoot)
             model.hierarchy.nodes[nodeIndex].isSkeletonRoot = skin.skeleton == gltfNodeIndex;
 
+        // Find whether this node is part of a joint in the skin.
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
         if (it != skin.joints.end())
         {
+            // Find the node that has the skin for this joint.
             auto nodeIt = std::find_if(gltf.nodes.begin(), gltf.nodes.end(), [i](const fastgltf::Node& node)
                 { return node.skinIndex.has_value() && node.skinIndex.value() == i; });
+
+            // Get the inverse bind matrix for this joint.
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
+
+            uint32_t jointIndex = std::distance(skin.joints.begin(), it);
             model.hierarchy.nodes[nodeIndex].joint = Hierarchy::Joint {
-                static_cast<uint32_t>(std::distance(gltf.nodes.begin(), nodeIt)),
                 *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
-                static_cast<uint32_t>(std::distance(skin.joints.begin(), it))
+                jointIndex,
             };
         }
     }
 
-    for (size_t i : gltfNode.children)
+    for (size_t childNodeIndex : gltfNode.children)
     {
-        uint32_t index = RecurseHierarchy(gltf.nodes[i], i, model, gltf, animationChannels, meshLUT, nodeLUT);
+        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, animationChannels, meshLUT, nodeLUT);
         model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
     }
 
@@ -652,6 +664,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.materials.emplace_back(material);
     }
 
+    // Tracks gltf mesh index to our engine mesh index.
     std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>> meshLUT {};
 
     // Extract mesh data
@@ -664,10 +677,6 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
             {
                 CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
                 model.skinnedMeshes.emplace_back(primitive);
-
-                // Iterate all nodes
-                // Check for mesh equal to this
-                // Save skeleton
 
                 meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
             }

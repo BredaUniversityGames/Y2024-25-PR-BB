@@ -2,23 +2,17 @@
 
 #include <glm/glm.hpp>
 #include <implot/implot.h>
-#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
-#include "components/relationship_component.hpp"
-#include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "editor.hpp"
-#include "emitter_component.hpp"
-#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
@@ -26,10 +20,8 @@
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
 #include "particle_module.hpp"
-#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
-#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
@@ -58,9 +50,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     std::vector<std::string> modelPaths = {
         "assets/models/BrainStem.glb",
-        //"assets/models/Cathedral.glb",
+        "assets/models/Cathedral.glb",
         //"assets/models/Adventure.glb",
-        "assets/models/DamagedHelmet.glb",
+        //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -86,6 +78,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
             TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
         }
     }
+
+    auto env = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
+    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
 
     _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
@@ -118,7 +113,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+    //_ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -282,7 +277,6 @@ void OldEngine::Tick(Engine& engine)
     }
 
     _lastMousePos = { mouseX, mouseY };
-    _frameIndex++;
 
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);

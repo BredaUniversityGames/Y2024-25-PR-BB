@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -16,7 +14,6 @@ using Scale = glm::vec3;
 template <typename T>
 struct AnimationSpline
 {
-
     T Sample(float time)
     {
         auto it = std::lower_bound(timestamps.begin(), timestamps.end(), time);

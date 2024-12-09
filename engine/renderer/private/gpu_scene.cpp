@@ -226,12 +226,15 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
     skeletonBoneOffset.clear();
 
+    // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
     _ecs.GetRegistry().sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
         { return a.skeletonEntity < b.skeletonEntity; });
 
-    // Sort joint indices need to stay relative, but can have arbitrary offset.
+    // While traversing all joints we keep track of skeleton we're on, this helps for determining when we switch to another skeleton.
     entt::entity lastSkeleton = entt::null;
+    // We track the offset that we need for each skeleton, so the bones are set properly in the buffer.
     uint32_t offset = 0;
+    // The highest index is used to determine what the count of joints is, so we can use that for our offset.
     uint32_t highestIndex = 0;
     for (entt::entity entity : jointView)
     {
@@ -245,6 +248,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
             offset += highestIndex + 1;
 
             skeletonBoneOffset[lastSkeleton] = offset;
+            highestIndex = 0;
         }
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
@@ -252,6 +256,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
         skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
     }
 
+    // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
     auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent>();
     for (auto [entity, offset] : skeletonBoneOffset)
     {

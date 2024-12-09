@@ -12,8 +12,6 @@
 #include <memory>
 #include <vector>
 
-constexpr uint32_t MAX_MESHES = 2048;
-
 class BatchBuffer
 {
 public:

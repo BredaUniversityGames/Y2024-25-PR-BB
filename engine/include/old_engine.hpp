@@ -34,9 +34,7 @@ private:
     glm::ivec2 _lastMousePos {};
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
     PerformanceTracker _performanceTracker;
-    uint32_t _frameIndex { 0 };
 
-    // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
     MAYBE_UNUSED bool _shouldQuit = false;

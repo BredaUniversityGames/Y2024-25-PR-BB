@@ -13,7 +13,6 @@ struct Hierarchy
 {
     struct Joint
     {
-        uint32_t skinnedMesh;
         glm::mat4 inverseBind;
         uint32_t index;
     };

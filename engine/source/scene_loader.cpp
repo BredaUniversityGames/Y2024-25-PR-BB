@@ -21,7 +21,14 @@
 #include <glm/glm.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, const GPUModel& model, std::shared_ptr<Animation> animation, std::unordered_map<uint32_t, entt::entity>& entityLUT, entt::entity skeletonRoot = entt::null)
+entt::entity LoadNodeRecursive(ECSModule& ecs,
+    uint32_t currentNodeIndex,
+    const Hierarchy& hierarchy,
+    entt::entity parent,
+    const GPUModel& model,
+    std::shared_ptr<Animation> animation,
+    std::unordered_map<uint32_t, entt::entity>& entityLUT, // Used for looking up from hierarchy node index to entt entity.
+    entt::entity skeletonRoot = entt::null)
 {
     const entt::entity entity = ecs.GetRegistry().create();
     const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];

@@ -131,9 +131,7 @@ void main()
 
     vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
 
-    const float near = 100.0;
-    const float far = 500.0;
-    const float fogDensity = 0.005;
+    const float fogDensity = 0.0025;
     const vec3 fogColor = vec3(0.6, 0.7, 0.9);
 
     float linearDepth = distance(position, camera.cameraPosition);

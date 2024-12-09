@@ -54,6 +54,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
+    // Draw skeletons as debug lines
     const auto debugView = ecs.GetRegistry().view<const JointComponent, const RelationshipComponent, const WorldMatrixComponent>();
     for (auto entity : debugView)
     {
