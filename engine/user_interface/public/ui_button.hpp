@@ -19,7 +19,7 @@ public:
     } state
         = ButtonState::eNormal;
 
-    void Update(const InputManager& inputManager) override;
+    void Update(const InputDeviceManager& inputManager) override;
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
