@@ -11,6 +11,7 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
+    uint ssaoIndex;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -46,6 +47,7 @@ void main()
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
     vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
     vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
@@ -105,7 +107,7 @@ void main()
     vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(scene.brdfLUTIndex)], vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
-    vec3 ambient = (kD * diffuse + specular) * ao;
+    vec3 ambient = (kD * diffuse + specular) * ambientOcclusion;
 
     vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
     vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
@@ -128,7 +130,7 @@ void main()
     shadow *= 0.25; // Average the samples
 
     outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
-
+    //outColor = vec4(ambientOcclusion.xxx, 1.0);
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
     vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);

@@ -53,7 +53,7 @@ void main()
     float ao = emissiveAOSample.a;
 
     vec3 screenSpacePosition = (camera.view * vec4(position.xyz, 1.0)).xyz;
-    vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 1.0)).xyz;
+    vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 0.0)).xyz;
 
     vec3 randomVec = texture(bindless_color_textures[nonuniformEXT(pushConstants.noiseIndex)], texCoords * noiseScale).xyz;
 
@@ -84,7 +84,7 @@ void main()
         occlusion += (occluderPosition.z >= thisSample.z + 0.025 ? 1.0 : 0.0) * rangeCheck;
 
     }
-    vec3 result = vec3(1.0 - occlusion / 64.0);
+    vec3 result = vec3(pow(1.0 - occlusion / 64.0, 8.0));
     outColor = vec4(result.xyz, 1.0);
 
 }

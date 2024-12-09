@@ -11,18 +11,20 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _bloomSettings(bloomSettings)
+    , _ssaoTarget(ssaoTarget)
 {
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.ssaoIndex = _ssaoTarget.Index();
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
