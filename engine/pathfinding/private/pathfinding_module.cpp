@@ -8,6 +8,9 @@
 ModuleTickOrder PathfindingModule::Init(Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
+
+    this->SetNavigationMesh("assets/models/NavMesh.gltf");
+
     return ModuleTickOrder::eTick;
 }
 
@@ -54,7 +57,7 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     std::vector<TriangleInfo> triangles;
     for(const auto& primitive : navmesh_mesh.primitives)
     {
-        for(size_t i = 0; i < primitive.indices.size() / 3; i += 3)
+        for(size_t i = 0; i < primitive.indices.size(); i += 3)
         {
             TriangleInfo info{};
             info.indices[0] = primitive.indices[i];
@@ -79,7 +82,7 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     // Loop over all triangles in the mesh
     for(size_t i = 0; i < triangles.size(); i++)
     {
-        TriangleInfo triangle = triangles[i];
+        TriangleInfo& triangle = triangles[i];
 
         // We store all triangles that share indices with the current triangle
         // If a triangle shares two indices with the current triangle, it's adjacent to the current triangle
