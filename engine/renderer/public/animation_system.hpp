@@ -2,6 +2,8 @@
 
 #include "system_interface.hpp"
 
+#include <cstdint>
+
 class RendererModule;
 
 class AnimationSystem final : public SystemInterface
