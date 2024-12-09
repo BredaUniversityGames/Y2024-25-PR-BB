@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, TransformComponent
 
 class Main {
 
@@ -6,6 +6,13 @@ class Main {
         __counter = 0
         __frameTimer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
+
+        if (__player) {
+            System.print("Player is online!")
+
+            var t = __player.GetTransformComponent()
+            t.translation = Vec3.new(0.0, 5.0, 0.0)
+        }
     }
 
     static Update(engine, dt) {
@@ -18,10 +25,6 @@ class Main {
             System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
-
-            if (__player) {
-                System.print("Player is online!")
-            }
         }
     }
 }

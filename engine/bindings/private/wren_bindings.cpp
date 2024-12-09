@@ -39,9 +39,34 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     return std::nullopt;
 }
 
+glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
+{
+    return component.component->GetLocalPosition();
+}
+
+glm::quat TransformComponentGetRotation(WrenComponent<TransformComponent>& component)
+{
+    return component.component->GetLocalRotation();
+}
+
+glm::vec3 TransformComponentGetScale(WrenComponent<TransformComponent>& component)
+{
+    return component.component->GetLocalScale();
+}
+
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
 {
     TransformHelpers::SetLocalPosition(*component.entity.registry, component.entity.entity, translation);
+}
+
+void TransformComponentSetRotation(WrenComponent<TransformComponent>& component, const glm::quat& rotation)
+{
+    TransformHelpers::SetLocalRotation(*component.entity.registry, component.entity.entity, rotation);
+}
+
+void TransformComponentSetScale(WrenComponent<TransformComponent>& component, const glm::vec3& scale)
+{
+    TransformHelpers::SetLocalScale(*component.entity.registry, component.entity.entity, scale);
 }
 
 std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
@@ -53,7 +78,6 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 
 void BindEngineAPI(wren::ForeignModule& module)
 {
-
     bindings::BindMath(module);
     bindings::BindEntity(module);
 
@@ -83,7 +107,15 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         // Transform component
         auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
-        transformClass.funcExt<bindings::TransformComponentSetTranslation>("SetTranslation");
+
+        transformClass.propExt<
+            bindings::TransformComponentGetTranslation, bindings::TransformComponentSetTranslation>("translation");
+
+        transformClass.propExt<
+            bindings::TransformComponentGetRotation, bindings::TransformComponentSetRotation>("rotation");
+
+        transformClass.propExt<
+            bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
     }
 }
 
