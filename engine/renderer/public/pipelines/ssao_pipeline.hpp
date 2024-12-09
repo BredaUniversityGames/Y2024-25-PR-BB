@@ -15,7 +15,7 @@ struct RenderSceneDescription;
 class SSAOPipeline final : public FrameGraphRenderPass
 {
 public:
-    SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget);
+    SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget, const CameraResource& camera);
     ~SSAOPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -50,4 +50,5 @@ private:
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
+    const CameraResource& _camera;
 };

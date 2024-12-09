@@ -2,7 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier: enable
 
 #include "bindless.glsl"
-
+#include "scene.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -12,8 +12,13 @@ layout (push_constant) uniform PushConstants
     uint positionIndex;
 } pushConstants;
 
-layout (set = 1, binding = 0) buffer SampleKernel { vec3 samples[]; } uSampleKernel;
-layout (set = 1, binding = 1) buffer NoiseBuffer { vec3 noises[]; } uNoiseBuffer;
+layout (set = 2, binding = 0) uniform CameraUBO
+{
+    Camera camera;
+};
+
+layout (set = 1, binding = 1) buffer SampleKernel { vec3 samples[]; } uSampleKernel;
+layout (set = 1, binding = 2) buffer NoiseBuffer { vec3 noises[]; } uNoiseBuffer;
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -37,7 +42,7 @@ void main()
     vec3 emissive = emissiveAOSample.rgb;
     float ao = emissiveAOSample.a;
 
-    outColor = vec4(uSampleKernel.samples[0],1.0);
+    outColor = vec4(uSampleKernel.samples[0], 1.0);
 
 }
 

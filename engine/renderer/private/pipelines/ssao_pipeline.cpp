@@ -15,11 +15,12 @@
 #include <resource_management/buffer_resource_manager.hpp>
 #include <single_time_commands.hpp>
 
-SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
+SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget, const CameraResource& camera)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
     , _ssaoTarget(ssaoTarget)
+    , _camera(camera)
 {
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
@@ -63,6 +64,8 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _descriptorSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, _camera.DescriptorSet(currentFrame), {});
+
     // To add the descirpot sets for the kernel and noise buffers
 
     commandBuffer.draw(3, 1, 0, 0);
