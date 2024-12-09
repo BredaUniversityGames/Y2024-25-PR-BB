@@ -1,4 +1,6 @@
 #include "input/action_manager.hpp"
+#include "log.hpp"
+#include <algorithm>
 
 ActionManager::ActionManager(const InputDeviceManager& inputDeviceManager)
     : _inputDeviceManager(inputDeviceManager)
