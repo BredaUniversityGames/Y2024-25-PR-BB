@@ -20,6 +20,7 @@ using AnalogInputAction = GamepadAnalog;
 using DigitalInputActionList = std::vector<DigitalInputAction>;
 using AnalogInputActionList = std::vector<AnalogInputAction>;
 
+// Action for button inputs.
 struct DigitalAction
 {
     std::string name {};
@@ -27,12 +28,14 @@ struct DigitalAction
     DigitalInputActionList inputs {};
 };
 
+// Action for axis inputs.
 struct AnalogAction
 {
     std::string name {};
     AnalogInputActionList inputs {};
 };
 
+// A collection of actions for a game mode. (game mode -> how a player should play in a situation, e.g. main menu or gameplay)
 struct ActionSet
 {
     std::string name {};
@@ -40,6 +43,7 @@ struct ActionSet
     std::vector<AnalogAction> analogActions {};
 };
 
+// A collection of action sets that contain all actions across the game.
 using GameActions = std::vector<ActionSet>;
 
 // Abstract class, which manages keyboard and mouse actions.
