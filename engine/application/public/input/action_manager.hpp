@@ -1,6 +1,9 @@
 #pragma once
 #include "input_device_manager.hpp"
+#include "common.hpp"
 #include <variant>
+#include <vector>
+#include <string>
 
 class InputDeviceManager;
 
