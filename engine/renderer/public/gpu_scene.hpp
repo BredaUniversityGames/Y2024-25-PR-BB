@@ -32,7 +32,7 @@ struct RenderSceneDescription
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;
-constexpr uint32_t MAX_POINT_LIGHTS = 10240;
+constexpr uint32_t MAX_POINT_LIGHTS = 8192;
 
 class GPUScene
 {

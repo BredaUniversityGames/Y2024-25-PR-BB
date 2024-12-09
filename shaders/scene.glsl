@@ -1,4 +1,4 @@
-#define MAX_POINT_LIGHTS 10240
+#define MAX_POINT_LIGHTS 8192
 
 struct Camera
 {

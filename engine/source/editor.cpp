@@ -23,13 +23,11 @@
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
 
+#include "components/point_light_component.hpp"
+#include "vulkan_context.hpp"
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-
-// TODO: Editor shouldnt depend on this.
-#include "components/point_light_component.hpp"
-#include "vulkan_context.hpp"
 
 #include <vk_mem_alloc.h>
 
