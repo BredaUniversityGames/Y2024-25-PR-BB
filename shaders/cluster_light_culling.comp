@@ -18,19 +18,14 @@ struct LightCell
     uint count;
 };
 
-struct LightData
-{
-    vec4 position;
-    vec4 color;
-    float radius;
-};
+layout (set = 0, binding = 0) readonly buffer Clusters { AABB clusters[]; }; //Input
 
-layout (set = 0, binding = 0) readonly buffer Clusters { AABB clusters[]; };
-layout (set = 0, binding = 1) readonly buffer Lights { LightData lights[]; };
-layout (set = 0, binding = 2) buffer AtomicCounter { uint globalIndex; };
-layout (set = 0, binding = 3) buffer LightCells { LightCell lightCells[]; };
-layout (set = 0, binding = 4) buffer LightIndices { uint lightIndices[]; };
-layout (set = 0, binding = 5) uniform CameraUBO { Camera camera; };
+layout (set = 1, binding = 0) readonly buffer Lights { PointLightArray lights; }; //Input
+
+layout (set = 2, binding = 0) buffer AtomicCounter { uint globalIndex; }; //Output
+layout (set = 2, binding = 1) buffer LightCells { LightCell lightCells[]; }; //Output
+layout (set = 2, binding = 2) buffer LightIndices { uint lightIndices[]; }; //Output
+layout (set = 3, binding = 0) uniform CameraUBO { Camera camera; }; //Input
 
 float SquaredDistancePointAABB(vec3 point, uint tile)
 {
@@ -51,12 +46,13 @@ float SquaredDistancePointAABB(vec3 point, uint tile)
 
 bool TestSphereAABB(uint lightIndex, uint tile)
 {
-    float lightRadius = lights[lightIndex].radius;
-    vec4 lightPosition = lights[lightIndex].position;
-    vec4 positionView = camera.view * lightPosition;
-    float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
+    //float lightRadius = lights[lightIndex].radius;
+    //vec4 lightPosition = lights[lightIndex].position;
+    //vec4 positionView = camera.view * lightPosition;
+    //float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
 
-    return squaredDistance <= (lightRadius * lightRadius);
+    //return squaredDistance <= (lightRadius * lightRadius);
+    return false;
 }
 
 void main()
@@ -68,7 +64,7 @@ void main()
 
     uint visibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
 
-    uint numLights = lights.length();
+    uint numLights = lights.count;
 
     uint lightIterator = 0;
     for (uint i = 0; i < numLights && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)

@@ -7,11 +7,15 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ClusterCullingPipeline::ClusterCullingPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, ResourceHandle<Buffer>& inputBuffer, ResourceHandle<Buffer>& outputBuffer)
+ClusterCullingPipeline::ClusterCullingPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain,
+    ResourceHandle<Buffer>& clusterBuffer, ResourceHandle<Buffer>& globalIndex,
+    ResourceHandle<Buffer>& lightCells, ResourceHandle<Buffer>& lightIndices)
     : _context(context)
     , _swapChain(swapChain)
-    , _inputBuffer(inputBuffer)
-    , _outputBuffer(outputBuffer)
+    , _clusterBuffer(clusterBuffer)
+    , _globalIndex(globalIndex)
+    , _lightCells(lightCells)
+    , _lightIndices(lightIndices)
 {
     CreateDescriptorSet();
     CreatePipeline();
@@ -22,20 +26,26 @@ ClusterCullingPipeline::~ClusterCullingPipeline()
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 
-    _context->VulkanContext()->Device().destroy(_outputBufferDescriptorSetLayout);
+    _context->VulkanContext()->Device().destroy(_clusterInputDescriptorSetLayout);
+    _context->VulkanContext()->Device().destroy(_globalIndexDescriptorSetLayout);
+    _context->VulkanContext()->Device().destroy(_lightCellsDescriptorSetLayout);
+    _context->VulkanContext()->Device().destroy(_lightIndicesDescriptorSetLayout);
 }
 
 void ClusterCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
+    // commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
-    commandBuffer.dispatch(16, 9, 24);
+    // commandBuffer.dispatch(16, 9, 24);
 }
 
 void ClusterCullingPipeline::CreatePipeline()
 {
-    std::array<vk::DescriptorSetLayout, 2> layouts {
-        _outputBufferDescriptorSetLayout,
+    std::array<vk::DescriptorSetLayout, 6> layouts {
+        _clusterInputDescriptorSetLayout,
+        _globalIndexDescriptorSetLayout,
+        _lightCellsDescriptorSetLayout,
+        _lightIndicesDescriptorSetLayout,
         CameraResource::DescriptorSetLayout(),
     };
 
@@ -72,24 +82,36 @@ void ClusterCullingPipeline::CreateDescriptorSet()
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
+    };+
 
     vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
         .bindingCount = 1,
         .pBindings = &layoutBinding,
     };
 
-    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_outputBufferDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
+    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_clusterInputDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
+    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_globalIndexDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
+    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_lightCellsDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
+    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_lightIndicesDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
+
+    std::array<vk::DescriptorSetLayout, 6> layouts {
+        _clusterInputDescriptorSetLayout,
+        _globalIndexDescriptorSetLayout,
+        _lightCellsDescriptorSetLayout,
+        _lightIndicesDescriptorSetLayout,
+        CameraResource::DescriptorSetLayout(),
+
+    };
 
     vk::DescriptorSetAllocateInfo allocateInfo {
         .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-        .descriptorSetCount = 1,
-        .pSetLayouts = &_outputBufferDescriptorSetLayout,
+        .descriptorSetCount = 6,
+        .pSetLayouts = layouts.data(),
     };
 
-    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_outputBufferDescriptorSet), "Failed to allocate descriptor set for cluster culling pipeline");
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_baseDecsriptorSet), "Failed to allocate descriptor set for cluster culling pipeline");
 
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_outputBuffer);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_lightCells);
 
     vk::DescriptorBufferInfo bufferInfo {
         .buffer = buffer->buffer,
@@ -98,7 +120,7 @@ void ClusterCullingPipeline::CreateDescriptorSet()
     };
 
     vk::WriteDescriptorSet bufferWrite {
-        .dstSet = _outputBufferDescriptorSet,
+        .dstSet = _baseDecsriptorSet,
         .dstBinding = 0,
         .dstArrayElement = 0,
         .descriptorCount = 1,

@@ -16,6 +16,7 @@ class TonemappingPipeline;
 class UIPipeline;
 class GaussianBlurPipeline;
 class ClusteringPipeline;
+class ClusterCullingPipeline;
 class ShadowPipeline;
 class IBLPipeline;
 class ParticlePipeline;
@@ -74,6 +75,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
     std::unique_ptr<ClusteringPipeline> _clusteringPipeline;
+    std::unique_ptr<ClusterCullingPipeline> _clusterCullingPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -97,6 +99,9 @@ private:
     ResourceHandle<GPUImage> _hdrTarget;
 
     ResourceHandle<Buffer> _clusterOutputBuffer;
+    ResourceHandle<Buffer> _clusterCullingGlobalIndexBuffer;
+    ResourceHandle<Buffer> _clusterCullingLightCellsBuffer;
+    ResourceHandle<Buffer> _clusterCullingLightIndicesBuffer;
 
     uint32_t _currentFrame { 0 };
 
@@ -108,6 +113,7 @@ private:
     void InitializeTonemappingTarget();
     void InitializeUITarget();
     void InitializeClusterOutputBuffer();
+    void InitializeClusterCullingBuffers();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };
