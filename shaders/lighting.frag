@@ -11,6 +11,7 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
+    uint ssaoIndex;
     uint depthIndex;
 } pushConstants;
 
@@ -58,6 +59,7 @@ void main()
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
     vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
     vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
@@ -102,7 +104,7 @@ void main()
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
     vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
-    vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
+    vec3 ambient = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
 
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
