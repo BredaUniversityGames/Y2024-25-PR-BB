@@ -9,6 +9,7 @@ struct FMOD_STUDIO_BANK;
 struct FMOD_STUDIO_EVENTINSTANCE;
 struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
+struct FMOD_DSP;
 
 using AudioUID = int32_t;
 using ChannelID = int32_t;

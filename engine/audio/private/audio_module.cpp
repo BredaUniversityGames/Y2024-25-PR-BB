@@ -6,24 +6,34 @@
 #include "fmod_debug.hpp"
 #include "fmod_include.hpp"
 
+#include "audio_system.hpp"
+#include "ecs_module.hpp"
+
 #include "log.hpp"
 
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const auto tickOrder = ModuleTickOrder::ePostTick;
 
+    auto& ecs = engine.GetModule<ECSModule>();
+    ecs.AddSystem<AudioSystem>(ecs, *this);
+
     try
     {
         StartFMODDebugLogger();
 
         FMOD_CHECKRESULT(FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION));
-
         FMOD_CHECKRESULT(FMOD_Studio_System_Initialize(_studioSystem, MAX_CHANNELS, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr));
-
         FMOD_CHECKRESULT(FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem));
-
         FMOD_CHECKRESULT(FMOD_System_GetMasterChannelGroup(_coreSystem, &_masterGroup));
+
+        // FFT DSP for spectrum debug info
+        FMOD_CHECKRESULT(FMOD_System_CreateDSPByType(_coreSystem, FMOD_DSP_TYPE_FFT, &_fftDSP));
+        FMOD_CHECKRESULT(FMOD_DSP_SetParameterInt(_fftDSP, FMOD_DSP_FFT_WINDOWSIZE, 512));
+        FMOD_CHECKRESULT(FMOD_DSP_SetActive(_fftDSP, true));
+        FMOD_CHECKRESULT(FMOD_ChannelGroup_AddDSP(_masterGroup, FMOD_CHANNELCONTROL_DSP_TAIL, _fftDSP));
     }
+
     catch (std::exception& e)
     {
         bblog::error("FMOD did not initialize successfully: {0}", e.what());

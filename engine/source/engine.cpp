@@ -35,6 +35,8 @@
 #include "systems/physics_system.hpp"
 
 SoundInfo si;
+SoundInfo musicSi;
+SoundInfo eagleSi;
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -140,6 +142,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     si.is3D = true;
 
     audioModule.LoadSFX(si);
+
+    musicSi.path = "assets/sounds/music1.wav";
+    musicSi.isLoop = true;
+
+    audioModule.LoadSFX(musicSi);
+    audioModule.PlaySFX(musicSi, 1.0f, false);
+
+    eagleSi.path = "assets/sounds/eagle.mp3";
+
+    audioModule.LoadSFX(eagleSi);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -299,6 +311,11 @@ void OldEngine::Tick(Engine& engine)
     {
         audioModule.PlaySFX(si, 1.0f, false);
         particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::eL))
+    {
+        audioModule.PlaySFX(eagleSi, 1.5f, false);
     }
 
     if (input.IsKeyPressed(KeyboardCode::eF1))

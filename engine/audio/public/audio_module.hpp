@@ -55,6 +55,7 @@ public:
     void Update3DSoundPosition(const AudioUID id, const glm::vec3& position);
 
 private:
+    friend class AudioSystem;
     NO_DISCARD AudioUID
     StartEvent(std::string_view name, bool isOneShot);
 
@@ -65,6 +66,7 @@ private:
 
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
+    FMOD_DSP* _fftDSP = nullptr;
 
     std::unordered_map<AudioUID, SoundInfo*> _soundInfos {};
 

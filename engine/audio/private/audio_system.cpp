@@ -44,4 +44,37 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
 }
 void AudioSystem::Inspect()
 {
+    ImGui::Begin("AudioSystem");
+
+    ImGui::Text("Sounds loaded: %u", _audioModule._sounds.size());
+    // if (ImGui::TreeNode("Collapsing Headers"))
+    // {
+    //     static bool closable_group = true;
+    //     ImGui::Checkbox("Show 2nd header", &closable_group);
+    //     if (ImGui::CollapsingHeader("Header", ImGuiTreeNodeFlags_None))
+    //     {
+    //         for ()
+    //     }
+    //     ImGui::TreePop();
+    // }
+    ImGui::Text("Sounds playing: %u", _audioModule._channelsActive.size());
+    ImGui::Text("Banks loaded: %u", _audioModule._banks.size());
+    ImGui::Text("Events playing %u", _audioModule._events.size());
+
+    static constexpr int spectrumSize = 128;
+    static float spectrum[spectrumSize];
+
+    void* data;
+    unsigned int length = 0;
+
+    FMOD_CHECKRESULT(FMOD_DSP_GetParameterData(_audioModule._fftDSP, FMOD_DSP_FFT_SPECTRUMDATA, &data, &length, nullptr, NULL));
+
+    if (const auto fftData = static_cast<FMOD_DSP_PARAMETER_FFT*>(data); fftData && fftData->numchannels > 0)
+    {
+        memcpy(spectrum, fftData->spectrum[0], spectrumSize * sizeof(float));
+    }
+
+    ImGui::PlotLines("##Spectrum", spectrum, spectrumSize, 0, nullptr, 0.0f, 1.0f, ImVec2(0, 100));
+
+    ImGui::End();
 }
