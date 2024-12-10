@@ -82,7 +82,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         }
     }
 
-    auto env = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
 
     _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
@@ -116,7 +116,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    //_ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -151,13 +151,13 @@ void OldEngine::Tick(Engine& engine)
     _lastFrameTime = currentFrameTime;
     float deltaTimeMS = deltaTime.count();
 
-    physicsModule.debugRenderer->ClearLines();
-
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())

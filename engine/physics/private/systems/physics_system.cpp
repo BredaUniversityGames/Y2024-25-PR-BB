@@ -77,7 +77,6 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-
     // this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
