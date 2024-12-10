@@ -154,20 +154,6 @@ void SSAOPipeline::CreateBuffers()
         cmdBuffer.CopyIntoLocalBuffer(ssaoKernel, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->buffer);
     }
 
-    // Random noise buffer
-    {
-        BufferCreation creation {};
-        creation.SetName("Noise Kernel")
-            .SetSize(ssaoNoise.size() * sizeof(glm::vec4))
-            .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
-
-        _noiseBuffer = resources->BufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(ssaoNoise, 0, resources->BufferResourceManager().Access(_noiseBuffer)->buffer);
-    }
-
-    // bag pula
     std::vector<std::byte> byteData;
     byteData.reserve(ssaoNoise.size() * sizeof(float) * 4);
 
@@ -204,16 +190,10 @@ void SSAOPipeline::CreateDescriptorSetLayouts()
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
-            .pImmutableSamplers = nullptr },
-        vk::DescriptorSetLayoutBinding {
-            .binding = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
             .pImmutableSamplers = nullptr }
     };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uSampleKernel", "uNoiseBuffer" });
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uSampleKernel" });
 }
 void SSAOPipeline::CreateDescriptorSets()
 {
@@ -234,27 +214,14 @@ void SSAOPipeline::CreateDescriptorSets()
         .range = vk::WholeSize,
     };
 
-    vk::DescriptorBufferInfo noiseBufferInfo {
-        .buffer = _context->Resources()->BufferResourceManager().Access(_noiseBuffer)->buffer,
-        .offset = 0,
-        .range = vk::WholeSize,
-    };
-
-    std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
         vk::WriteDescriptorSet {
             .dstSet = _descriptorSet,
             .dstBinding = 0,
             .dstArrayElement = 0,
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &sampleKernelBufferInfo },
-        vk::WriteDescriptorSet {
-            .dstSet = _descriptorSet,
-            .dstBinding = 1,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &noiseBufferInfo }
+            .pBufferInfo = &sampleKernelBufferInfo }
     };
 
     _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);

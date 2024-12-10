@@ -20,9 +20,8 @@ layout (set = 2, binding = 0) uniform CameraUBO
 };
 
 layout (set = 1, binding = 0) buffer SampleKernel { vec4 samples[]; } uSampleKernel;
-layout (set = 1, binding = 1) buffer NoiseBuffer { vec4 noises[]; } uNoiseBuffer;
-layout (location = 0) in vec2 texCoords;
 
+layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
