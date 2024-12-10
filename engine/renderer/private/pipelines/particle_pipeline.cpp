@@ -17,12 +17,11 @@
 
 #include <pipeline_builder.hpp>
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
+ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
-    , _camera(camera)
 {
     srand(time(0));
 
@@ -75,7 +74,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 
     RecordSimulate(commandBuffer, scene.deltaTime);
 
-    RecordRenderIndexed(commandBuffer, currentFrame);
+    RecordRenderIndexed(commandBuffer, scene.gpuScene->MainCamera(), currentFrame);
 
     UpdateAliveLists();
 }
@@ -165,7 +164,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const CameraResource& camera, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -220,7 +219,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, camera.DescriptorSet(currentFrame), {});
 
     vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(_vertexBuffer)->buffer;
     vk::Buffer indexBuffer = resources->BufferResourceManager().Access(_indexBuffer)->buffer;
