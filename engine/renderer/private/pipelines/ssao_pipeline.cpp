@@ -1,7 +1,7 @@
 ﻿#include "pipelines/ssao_pipeline.hpp"
 
 #include "../vulkan_helper.hpp"
-// #include "bloom_settings.hpp"
+
 #include "camera.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
