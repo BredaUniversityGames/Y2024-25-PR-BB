@@ -29,6 +29,8 @@
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
+#include <pipelines/ssao_pipeline.hpp>
+
 #include <vk_mem_alloc.h>
 
 Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
