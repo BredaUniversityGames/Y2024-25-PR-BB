@@ -74,7 +74,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     for (const auto& model : models)
     {
-
         auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
         entities.emplace_back(entity);
     }
