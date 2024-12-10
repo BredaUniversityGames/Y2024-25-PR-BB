@@ -79,6 +79,8 @@ SSAOPipeline::~SSAOPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
+    _context->Resources()->BufferResourceManager().Destroy(_sampleKernelBuffer);
 }
 
 void SSAOPipeline::CreatePipeline()
