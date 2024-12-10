@@ -27,6 +27,8 @@ private:
     struct PushConstants
     {
         uint32_t sourceIndex;
+        uint32_t screenWidth;
+        uint32_t screenHeight;
     } _pushConstants;
 
     void CreatePipeline();

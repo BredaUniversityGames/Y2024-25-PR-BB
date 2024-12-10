@@ -176,7 +176,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation fxaaPass { *_fxaaPipeline };
-    toneMappingPass.SetName("FXAA pass")
+    fxaaPass.SetName("FXAA pass")
         .SetDebugLabelColor(glm::vec3 { 139.0f, 190.0f, 16.0f } / 255.0f)
         .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
