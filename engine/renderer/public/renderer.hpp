@@ -10,6 +10,7 @@ class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
+class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
@@ -49,6 +50,7 @@ public:
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
+    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
 
 private:
     friend class RendererModule;
@@ -73,6 +75,7 @@ private:
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -95,6 +98,7 @@ private:
     std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
 
@@ -105,6 +109,7 @@ private:
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
     void InitializeUITarget();
+    void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

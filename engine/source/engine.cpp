@@ -52,7 +52,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/cathedral_new.glb"
+        //"assets/models/cathedral_new.glb"
         //"assets/models/BrainStem.glb",
         //"assets/models/Cathedral.glb",
         //"assets/models/Adventure.glb",
@@ -60,7 +60,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb"
+        "assets/models/MetalRoughSpheres.glb"
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
