@@ -51,14 +51,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/BrainStem.glb",
+        "assets/models/CathedralGLB_GLTF.glb",
+        "assets/models/Terrain/scene.gltf",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        "assets/models/MetalRoughSpheres.glb",
         //"assets/models/Cathedral.glb",
-        //"assets/models/Adventure.glb",
-        "assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        // "assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb"
     };
 
     particleModule.LoadEmitterPresets();
@@ -70,19 +67,20 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    for (size_t i = 0; i < 5; i++)
+    for (const auto& model : models)
     {
-        for (size_t j = 0; j < 1; j++)
-        {
-            auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
-            entities.emplace_back(entity);
 
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
-        }
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy, model.first.animation);
+        entities.emplace_back(entity);
     }
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
-    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
+    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
+
+    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
