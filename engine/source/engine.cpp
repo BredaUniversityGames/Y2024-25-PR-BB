@@ -94,7 +94,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.01f;
+    cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
