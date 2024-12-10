@@ -14,9 +14,7 @@
 #include "renderer.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
-
 #include <renderer_module.hpp>
-#include <stb_image.h>
 
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
