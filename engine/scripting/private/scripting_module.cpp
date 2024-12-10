@@ -1,6 +1,7 @@
 #include "scripting_module.hpp"
 #include "file_io.hpp"
 #include "time_module.hpp"
+#include "wren_bindings.hpp"
 
 void ScriptingModule::GenerateEngineBindingsFile()
 {
@@ -47,7 +48,20 @@ void ScriptingModule::Tick(Engine& engine)
 
 void ScriptingModule::SetMainScript(Engine& e, const std::string& path)
 {
-    if (auto result = _context->RunScript(path))
+    _mainEngineScript = path;
+    if (auto result = _context->RunScript(_mainEngineScript))
+    {
+        _mainModule->SetMainScript(_context->GetVM(), result.value(), "Main");
+        _mainModule->InitMainScript(&e);
+    }
+}
+
+void ScriptingModule::HotReload(Engine& e)
+{
+    _context->Reset();
+    BindEngineAPI(GetForeignAPI());
+
+    if (auto result = _context->RunScript(_mainEngineScript))
     {
         _mainModule->SetMainScript(_context->GetVM(), result.value(), "Main");
         _mainModule->InitMainScript(&e);

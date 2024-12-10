@@ -214,6 +214,10 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
 
     return models;
 }
+void Renderer::FlushCommands()
+{
+    GetContext()->VulkanContext()->Device().waitIdle();
+}
 
 Renderer::~Renderer()
 {
@@ -392,11 +396,6 @@ void Renderer::Render(float deltaTime)
     }
 
     util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
-
-    {
-        ZoneNamedN(zz, "ImGui Render", true);
-        ImGui::Render();
-    }
 
     _commandBuffers[_currentFrame].reset();
 

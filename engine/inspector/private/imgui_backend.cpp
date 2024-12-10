@@ -12,7 +12,6 @@
 #include "resource_management/sampler_resource_manager.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 ImGuiBackend::ImGuiBackend(const std::shared_ptr<GraphicsContext>& context, const ApplicationModule& applicationModule, const SwapChain& swapChain, const GBuffers& gbuffers)
     : _context(context)

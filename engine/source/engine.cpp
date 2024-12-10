@@ -13,7 +13,6 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "editor.hpp"
 #include "emitter_component.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
@@ -37,15 +36,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
-
-    ImGui::CreateContext();
-    ImPlot::CreateContext();
-
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
@@ -85,8 +75,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
-
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -310,12 +298,6 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
-
-    rendererModule.GetRenderer()->Render(deltaTimeMS);
-
-    _performanceTracker.Update();
-
     physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
@@ -323,7 +305,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _editor.reset();
 }
 
 OldEngine::OldEngine() = default;

@@ -14,6 +14,7 @@ BatchBuffer::BatchBuffer(const std::shared_ptr<GraphicsContext>& context, uint32
     , _indexType(vk::IndexType::eUint32)
     , _topology(vk::PrimitiveTopology::eTriangleList)
 {
+
     auto resources { _context->Resources() };
 
     BufferCreation vertexBufferCreation {};

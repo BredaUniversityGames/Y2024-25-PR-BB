@@ -5,4 +5,5 @@ target_link_libraries(Scripting
         PUBLIC WrenBind17
         PUBLIC Wren
         PUBLIC Core
+        PRIVATE Bindings
 )

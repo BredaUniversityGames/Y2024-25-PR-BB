@@ -2,6 +2,10 @@
 #include "common.hpp"
 #include "engine.hpp"
 
+class Editor;
+class ImGuiBackend;
+class PerformanceTracker;
+
 class InspectorModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
@@ -9,9 +13,14 @@ class InspectorModule : public ModuleInterface
     void Tick(Engine& engine) override;
 
 public:
-    InspectorModule() = default;
-    ~InspectorModule() override = default;
+    InspectorModule();
+    ~InspectorModule() override;
 
     NON_MOVABLE(InspectorModule);
     NON_COPYABLE(InspectorModule);
+
+private:
+    std::unique_ptr<Editor> _editor;
+    std::unique_ptr<PerformanceTracker> _performanceTracker;
+    std::shared_ptr<ImGuiBackend> _imguiBackend;
 };

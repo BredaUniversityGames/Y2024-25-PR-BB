@@ -13,9 +13,9 @@
 #include "graphics_resources.hpp"
 #include "imgui_backend.hpp"
 #include "log.hpp"
+#include "menus/performance_tracker.hpp"
 #include "mesh.hpp"
 #include "model_loader.hpp"
-#include "performance_tracker.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
@@ -46,10 +46,7 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
-    _imguiBackend->NewFrame();
-    ImGui::NewFrame();
 
-    DrawMainMenuBar();
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -181,30 +178,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
 
     ImGui::End();
-
-    {
-        ZoneNamedN(zone, "ImGui Render", true);
-        ImGui::Render();
-    }
-}
-void Editor::DrawMainMenuBar()
-{
-    if (ImGui::BeginMainMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Load Scene"))
-            {
-                // Todo: Load saved scene.
-            }
-            if (ImGui::MenuItem("Save Scene"))
-            {
-                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
 }
 
 void Editor::DisplaySelectedEntityDetails()

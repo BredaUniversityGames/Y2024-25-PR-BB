@@ -49,6 +49,8 @@ public:
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
 
+    void FlushCommands();
+
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;
