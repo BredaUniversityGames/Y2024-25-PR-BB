@@ -1,6 +1,8 @@
 #include "ecs_module.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
+#include "scripting_module.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
 
@@ -8,6 +10,7 @@ ModuleTickOrder ECSModule::Init(MAYBE_UNUSED Engine& engine)
 {
     TransformHelpers::SubscribeToEvents(registry);
     RelationshipHelpers::SubscribeToEvents(registry);
+
     return ModuleTickOrder::eTick;
 }
 
