@@ -76,9 +76,7 @@ struct SkinnedVertex
     glm::vec4 joints {};
     glm::vec4 weights {};
 
-    SkinnedVertex()
-    {
-    }
+    SkinnedVertex() = default;
 
     SkinnedVertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord, glm::vec4 joints, glm::vec4 weights)
         : position(position)
