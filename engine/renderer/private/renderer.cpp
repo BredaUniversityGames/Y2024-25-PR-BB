@@ -2,12 +2,13 @@
 
 #include <imgui.h>
 #include <memory>
-#include <stb/stb_image.h>
+#include <stb_image.h>
 #include <utility>
 
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
+#include "fonts.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "gpu_scene.hpp"
@@ -15,7 +16,6 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "old_engine.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
@@ -25,20 +25,24 @@
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
+#include "pipelines/ui_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "single_time_commands.hpp"
+#include "ui_main_menu.hpp"
+#include "ui_module.hpp"
+#include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
+    , _viewport(viewport)
     , _ecs(ecs)
 {
-
     _bloomSettings = std::make_unique<BloomSettings>(_context);
 
     auto vulkanInfo = application.GetVulkanInfo();
@@ -46,14 +50,18 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeTonemappingTarget();
+    InitializeUITarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024 * 4, 256 * 1024 * 1024 * 4);
+    const uint32_t mb128 = 128 * 1024 * 1024;
+    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
+    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -77,12 +85,17 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
+    // temporary location
+    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
+    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
+
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
-    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, std::move(uvSphere), _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, *_swapChain, *_bloomSettings);
+    _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 
@@ -143,12 +156,21 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
     toneMappingPass.SetName("Tonemapping pass")
         .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture);
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
+
+    // TODO: THIS PASS SHOULD BE DONE LAST.
+    FrameGraphNodeCreation uiPass { *_uiPipeline };
+    uiPass.SetName("UI pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
+        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
+        .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
+        .AddInput(_uiTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         // Reference to make sure it runs at the end
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
@@ -162,6 +184,7 @@ Renderer::Renderer(ApplicationModule& application, const std::shared_ptr<Graphic
         .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
+        .AddNode(uiPass)
         .AddNode(debugPass)
         .Build();
 }
@@ -185,9 +208,8 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
-
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
         models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
@@ -231,9 +253,10 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
         .ecs = _ecs,
-        .batchBuffer = _batchBuffer,
+        .staticBatchBuffer = _staticBatchBuffer,
+        .skinnedBatchBuffer = _skinnedBatchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
-        .deltaTime = deltaTime
+        .deltaTime = deltaTime,
     };
 
     _context->GetDrawStats().Clear();
@@ -294,6 +317,25 @@ void Renderer::InitializeBloomTargets()
     _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
     _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
 }
+void Renderer::InitializeTonemappingTarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage tonemappingCreation {};
+    tonemappingCreation.SetName("Tonemapping Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _tonemappingTarget = _context->Resources()->ImageResourceManager().Create(tonemappingCreation);
+}
+
+void Renderer::InitializeUITarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage uiCreation {};
+    uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
+}
 
 void Renderer::LoadEnvironmentMap()
 {
@@ -330,7 +372,7 @@ void Renderer::Render(float deltaTime)
     }
 
     _bloomSettings->Update(_currentFrame);
-
+    _viewport.SubmitDrawInfo(_uiPipeline->GetDrawList());
     uint32_t imageIndex {};
     vk::Result result {};
 

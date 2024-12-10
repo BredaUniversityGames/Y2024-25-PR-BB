@@ -1,7 +1,8 @@
 #include "model_loader.hpp"
 
+#include "animation.hpp"
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"
@@ -15,7 +16,9 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 #include <stb_image.h>
 
 namespace detail
@@ -124,12 +127,13 @@ vk::PrimitiveTopology MapGltfTopology(fastgltf::PrimitiveType gltfTopology)
     }
 }
 
-void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
+template <typename T>
+void CalculateTangents(CPUMesh<T>& stagingPrimitive)
 {
     uint32_t triangleCount = stagingPrimitive.indices.size() > 0 ? stagingPrimitive.indices.size() / 3 : stagingPrimitive.vertices.size() / 3;
     for (size_t i = 0; i < triangleCount; ++i)
     {
-        std::array<Vertex*, 3> triangle = {};
+        std::array<T*, 3> triangle = {};
         if (stagingPrimitive.indices.size() > 0)
         {
             std::array<uint32_t, 3> indices = {};
@@ -168,88 +172,135 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
         tangent = glm::normalize(tangent);
         stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
     }
-}
 
-CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
-{
-    CPUMesh::Primitive primitive {};
-    primitive.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
-    primitive.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
-    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
-    if (gltfPrimitive.materialIndex.has_value())
-        primitive.materialIndex = gltfPrimitive.materialIndex.value();
-
-    bool verticesReserved = false;
-    bool tangentFound = false;
-    bool texCoordFound = false;
-    float squaredBoundingRadius = 0.0f;
-
-    for (auto& attribute : gltfPrimitive.attributes)
+    // Checks if there are any tangents that are nan. This can happen for some texCoords.
+    if (std::any_of(stagingPrimitive.vertices.begin(), stagingPrimitive.vertices.end(), [](const auto& v)
+            { return std::isnan(v.tangent.x); }))
     {
-        auto& accessor = gltf.accessors[attribute.accessorIndex];
-        if (!accessor.bufferViewIndex.has_value())
-            throw std::runtime_error("Failed retrieving buffer view index from accessor!");
-        auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-        auto& buffer = gltf.buffers[bufferView.bufferIndex];
-        auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
-
-        const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-
-        // Make sure the mesh primitive has enough space allocated.
-        if (!verticesReserved)
+        // In that case we just apply a default tangent, to prevent nan calculation issues.
+        // (Generally if this is the case, there is no normal provided anyway.)
+        for (auto& vertex : stagingPrimitive.vertices)
         {
-            primitive.vertices = std::vector<Vertex>(accessor.count);
-            verticesReserved = true;
-        }
-
-        std::uint32_t offset;
-        if (attribute.name == "POSITION")
-            offset = offsetof(Vertex, position);
-        else if (attribute.name == "NORMAL")
-            offset = offsetof(Vertex, normal);
-        else if (attribute.name == "TANGENT")
-        {
-            offset = offsetof(Vertex, tangent);
-            tangentFound = true;
-        }
-        else if (attribute.name == "TEXCOORD_0")
-        {
-            offset = offsetof(Vertex, texCoord);
-            texCoordFound = true;
-        }
-        else
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < accessor.count; ++i)
-        {
-            const std::byte* element;
-            if (bufferView.byteStride.has_value())
-                element = attributeBufferStart + i * bufferView.byteStride.value();
-            else
-                element = attributeBufferStart + i * fastgltf::getElementByteSize(accessor.type, accessor.componentType);
-
-            std::byte* writeTarget = reinterpret_cast<std::byte*>(&primitive.vertices[i]) + offset;
-            std::memcpy(writeTarget, element, fastgltf::getElementByteSize(accessor.type, accessor.componentType));
-
-            if (attribute.name == "POSITION")
-            {
-
-                const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
-
-                // warning! this performs component wise min/max
-                primitive.boundingBox.min = glm::min(primitive.boundingBox.min, *position);
-                primitive.boundingBox.max = glm::max(primitive.boundingBox.max, *position);
-
-                float squaredLength = position->x * position->x + position->y * position->y + position->z * position->z;
-                if (squaredLength > squaredBoundingRadius)
-                    squaredBoundingRadius = squaredLength;
-            }
+            vertex.tangent = glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f };
         }
     }
+}
 
-    primitive.boundingRadius = glm::sqrt(squaredBoundingRadius);
+template <typename T>
+void CalculateNormals(CPUMesh<T>& mesh)
+{
+    for (size_t i = 0; i < mesh.indices.size(); i += 3)
+    {
+        uint32_t idx0 = mesh.indices[i];
+        uint32_t idx1 = mesh.indices[i + 1];
+        uint32_t idx2 = mesh.indices[i + 2];
+
+        glm::vec3& v0 = mesh.vertices[idx0].position;
+        glm::vec3& v1 = mesh.vertices[idx1].position;
+        glm::vec3& v2 = mesh.vertices[idx2].position;
+
+        // Compute edges
+        glm::vec3 edge1 = v1 - v0;
+        glm::vec3 edge2 = v2 - v0;
+
+        // Compute face normal (cross product)
+        glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
+
+        // Accumulate the face normal into vertex normals
+        mesh.vertices[idx0].normal += faceNormal;
+        mesh.vertices[idx1].normal += faceNormal;
+        mesh.vertices[idx2].normal += faceNormal;
+    }
+
+    // Normalize the normals at each vertex
+    for (auto& vertex : mesh.vertices)
+    {
+        vertex.normal = glm::normalize(vertex.normal);
+    }
+}
+
+template <typename T, typename U>
+void AssignAttribute(T& vertexAttribute, uint32_t index, const fastgltf::Attribute* attribute, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+{
+    if (attribute != gltfPrimitive.attributes.cend())
+    {
+        const auto& accessor = gltf.accessors[attribute->accessorIndex];
+        auto value = fastgltf::getAccessorElement<U>(gltf, accessor, index);
+        vertexAttribute = *reinterpret_cast<T*>(&value);
+    }
+}
+
+template <typename T>
+void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius);
+
+template <>
+void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
+{
+    uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
+    vertices = std::vector<Vertex>(vertexCount);
+
+    const fastgltf::Attribute* positionAttribute = gltfPrimitive.findAttribute("POSITION");
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].position, i, positionAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+
+        boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
+        boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3 { 0.0f }, vertices[i].position));
+    }
+
+    boundingRadius = glm::sqrt(boundingRadius);
+}
+
+template <>
+void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
+{
+    uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
+    vertices = std::vector<SkinnedVertex>(vertexCount);
+
+    const fastgltf::Attribute* positionAttribute = gltfPrimitive.findAttribute("POSITION");
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+    const fastgltf::Attribute* jointsAttribute = gltfPrimitive.findAttribute("JOINTS_0");
+    const fastgltf::Attribute* weightsAttribute = gltfPrimitive.findAttribute("WEIGHTS_0");
+
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].position, i, positionAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].joints, i, jointsAttribute, gltfPrimitive, gltf);
+        AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].weights, i, weightsAttribute, gltfPrimitive, gltf);
+
+        boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
+        boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
+        boundingRadius = glm::max(boundingRadius, glm::distance2(glm::vec3 { 0.0f }, vertices[i].position));
+    }
+
+    boundingRadius = glm::sqrt(boundingRadius);
+}
+
+template <typename T>
+CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
+{
+    CPUMesh<T> mesh {};
+    mesh.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
+    mesh.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
+
+    assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
+    if (gltfPrimitive.materialIndex.has_value())
+        mesh.materialIndex = gltfPrimitive.materialIndex.value();
+
+    ProcessVertices(mesh.vertices, gltfPrimitive, gltf, mesh.boundingBox, mesh.boundingRadius);
 
     if (gltfPrimitive.indicesAccessor.has_value())
     {
@@ -260,13 +311,13 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
         auto& buffer = gltf.buffers[bufferView.bufferIndex];
         auto& bufferBytes = std::get<fastgltf::sources::Array>(buffer.data);
 
-        primitive.indices = std::vector<uint32_t>(accessor.count);
+        mesh.indices = std::vector<uint32_t>(accessor.count);
 
         const std::byte* attributeBufferStart = bufferBytes.bytes.data() + bufferView.byteOffset + accessor.byteOffset;
 
         if (accessor.componentType == fastgltf::ComponentType::UnsignedInt && (!bufferView.byteStride.has_value() || bufferView.byteStride.value() == 0))
         {
-            std::memcpy(primitive.indices.data(), attributeBufferStart, primitive.indices.size() * sizeof(uint32_t));
+            std::memcpy(mesh.indices.data(), attributeBufferStart, mesh.indices.size() * sizeof(uint32_t));
         }
         else
         {
@@ -274,16 +325,35 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
             for (size_t i = 0; i < accessor.count; ++i)
             {
                 const std::byte* element = attributeBufferStart + i * gltfIndexTypeSize + (bufferView.byteStride.has_value() ? bufferView.byteStride.value() : 0);
-                uint32_t* indexPtr = primitive.indices.data() + i;
+                uint32_t* indexPtr = mesh.indices.data() + i;
                 std::memcpy(indexPtr, element, gltfIndexTypeSize);
             }
         }
     }
+    else
+    {
+        // Generate indices manually
+        mesh.indices.reserve(mesh.vertices.size());
+        for (size_t i = 0; i < mesh.vertices.size(); ++i)
+        {
+            mesh.indices.emplace_back(i);
+        }
+    }
 
-    if (!tangentFound && texCoordFound)
-        CalculateTangents(primitive);
+    const fastgltf::Attribute* normalAttribute = gltfPrimitive.findAttribute("NORMAL");
+    if (normalAttribute == gltfPrimitive.attributes.cend())
+    {
+        CalculateNormals(mesh);
+    }
 
-    return primitive;
+    const fastgltf::Attribute* tangentAttribute = gltfPrimitive.findAttribute("TANGENT");
+    const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
+    if (tangentAttribute == gltfPrimitive.attributes.cend() && texCoordAttribute != gltfPrimitive.attributes.cend())
+    {
+        CalculateTangents<T>(mesh);
+    }
+
+    return mesh;
 }
 
 CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& gltf, std::vector<std::byte>& data,
@@ -357,6 +427,95 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
     return cpuImage;
 }
 
+StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
+{
+    StagingAnimationChannels stagingAnimationChannels {};
+
+    stagingAnimationChannels.animation.name = gltf.animations[0].name;
+
+    for (const auto& channel : gltf.animations[0].channels)
+    {
+        // If there is no node, the channel is invalid.
+        if (!channel.nodeIndex.has_value())
+        {
+            continue;
+        }
+
+        AnimationChannelComponent* spline { nullptr };
+        const auto it = std::find(stagingAnimationChannels.nodeIndices.begin(), stagingAnimationChannels.nodeIndices.end(), channel.nodeIndex.value());
+
+        if (it == stagingAnimationChannels.nodeIndices.end())
+        {
+            stagingAnimationChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
+            spline = &stagingAnimationChannels.animationChannels.emplace_back();
+        }
+        else
+        {
+            spline = &stagingAnimationChannels.animationChannels[std::distance(stagingAnimationChannels.nodeIndices.begin(), it)];
+        }
+
+        const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
+
+        assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
+
+        std::span<const float> timestamps;
+
+        {
+            const auto& accessor = gltf.accessors[sampler.inputAccessor];
+            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+            timestamps = std::span<const float> { reinterpret_cast<const float*>(data), accessor.count };
+
+            if (stagingAnimationChannels.animation.duration < timestamps.back())
+            {
+                stagingAnimationChannels.animation.duration = timestamps.back();
+            }
+        }
+        {
+            const auto& accessor = gltf.accessors[sampler.outputAccessor];
+            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+            if (channel.path == fastgltf::AnimationPath::Translation)
+            {
+                spline->translation = AnimationSpline<Translation> {};
+
+                std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
+
+                spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
+                spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+            }
+            else if (channel.path == fastgltf::AnimationPath::Rotation)
+            {
+                spline->rotation = AnimationSpline<Rotation> {};
+
+                std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
+
+                spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
+                spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+            }
+            else if (channel.path == fastgltf::AnimationPath::Scale)
+            {
+                spline->scaling = AnimationSpline<Scale> {};
+
+                std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+
+                spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
+                spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+            }
+        }
+    }
+
+    return stagingAnimationChannels;
+}
+
 CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
@@ -408,29 +567,77 @@ CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     return material;
 }
 
-Hierarchy::Node RecurseHierarchy(const fastgltf::Node& gltfNode, CPUModel& model, const fastgltf::Asset& gltf)
+uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
+    uint32_t gltfNodeIndex,
+    CPUModel& model,
+    const fastgltf::Asset& gltf,
+    const StagingAnimationChannels& animationChannels,
+    const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT, // Used for looking up gltf mesh to engine mesh.
+    std::unordered_map<uint32_t, uint32_t>& nodeLUT) // Will be populated with gltf node to engine node.
 {
-    Hierarchy::Node node {};
+    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    uint32_t nodeIndex = model.hierarchy.nodes.size() - 1;
+
+    nodeLUT[gltfNodeIndex] = nodeIndex;
 
     if (gltfNode.meshIndex.has_value())
     {
-        node.meshIndex = gltfNode.meshIndex.value();
-    }
-    else
-    {
-        node.meshIndex = std::nullopt;
+        // Add meshes as children, since glTF assumes 1 node -> 1 mesh -> >1 primitives
+        // But now we want 1 node -> mesh (mesh == primitive)
+        auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            model.hierarchy.nodes.emplace_back("mesh node", glm::identity<glm::mat4>(), it->second);
+            model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
+        }
     }
 
+    // Set transform and name.
     fastgltf::math::fmat4x4 gltfTransform = fastgltf::getTransformMatrix(gltfNode);
-    node.transform = detail::ToMat4(gltfTransform);
-    node.name = gltfNode.name;
+    model.hierarchy.nodes[nodeIndex].transform = detail::ToMat4(gltfTransform);
+    model.hierarchy.nodes[nodeIndex].name = gltfNode.name;
 
-    for (size_t i : gltfNode.children)
+    // If we have an animation channel that should be used on this node, we apply it.
+    for (size_t i = 0; i < animationChannels.nodeIndices.size(); i++)
     {
-        node.children.emplace_back(RecurseHierarchy(gltf.nodes[i], model, gltf));
+        if (animationChannels.nodeIndices[i] == gltfNodeIndex)
+        {
+            model.hierarchy.nodes[nodeIndex].animationChannel = animationChannels.animationChannels[i];
+            break;
+        }
     }
 
-    return node;
+    // Check all the gltf skins for skinning data that might be applied to this node.
+    for (size_t i = 0; i < gltf.skins.size(); ++i)
+    {
+        const auto& skin = gltf.skins[i];
+
+        // If this node is not a root, check if it should be.
+        if (!model.hierarchy.nodes[nodeIndex].isSkeletonRoot)
+            model.hierarchy.nodes[nodeIndex].isSkeletonRoot = skin.skeleton == gltfNodeIndex;
+
+        // Find whether this node is part of a joint in the skin.
+        auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
+        if (it != skin.joints.end())
+        {
+            // Get the inverse bind matrix for this joint.
+            fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
+
+            uint32_t jointIndex = std::distance(skin.joints.begin(), it);
+            model.hierarchy.nodes[nodeIndex].joint = Hierarchy::Joint {
+                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
+                jointIndex,
+            };
+        }
+    }
+
+    for (size_t childNodeIndex : gltfNode.children)
+    {
+        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, animationChannels, meshLUT, nodeLUT);
+        model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
+    }
+
+    return nodeIndex;
 }
 
 CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
@@ -453,29 +660,80 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.materials.emplace_back(material);
     }
 
+    // Tracks gltf mesh index to our engine mesh index.
+    std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>> meshLUT {};
+
     // Extract mesh data
+    uint32_t counter { 0 };
     for (auto& gltfMesh : gltf.meshes)
     {
-        CPUMesh mesh {};
-
         for (const auto& gltfPrimitive : gltfMesh.primitives)
         {
-            CPUMesh::Primitive primitive = ProcessPrimitive(gltfPrimitive, gltf);
-            mesh.primitives.emplace_back(primitive);
-        }
+            if (gltf.skins.size() > 0 && gltfPrimitive.findAttribute("WEIGHTS_0") != gltfPrimitive.attributes.cend() && gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
+            {
+                CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
+                model.skinnedMeshes.emplace_back(primitive);
 
-        model.meshes.emplace_back(mesh);
+                meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
+            }
+            else
+            {
+                CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+                model.meshes.emplace_back(primitive);
+
+                meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });
+            }
+        }
+        ++counter;
     }
 
-    Hierarchy::Node baseNode;
-    baseNode.name = name;
+    StagingAnimationChannels animations {};
+    if (!gltf.animations.empty())
+    {
+        animations = LoadAnimations(gltf);
+        model.animation = animations.animation;
+    }
+
+    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    uint32_t baseNodeIndex = model.hierarchy.nodes.size() - 1;
+    model.hierarchy.nodes[baseNodeIndex].name = name;
+
+    model.hierarchy.root = model.hierarchy.nodes.size() - 1;
+
+    std::unordered_map<uint32_t, uint32_t> nodeLUT {};
 
     for (size_t i = 0; i < gltf.scenes[0].nodeIndices.size(); ++i)
     {
-        const auto& gltfNode { gltf.nodes[gltf.scenes[0].nodeIndices[i]] };
-        baseNode.children.emplace_back(RecurseHierarchy(gltfNode, model, gltf));
+        uint32_t index = gltf.scenes[0].nodeIndices[i];
+        const auto& gltfNode { gltf.nodes[index] };
+
+        uint32_t result = RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT, nodeLUT);
+        model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
     }
-    model.hierarchy.baseNodes.emplace_back(std::move(baseNode));
+
+    // After instantiating hierarchy, we do another pass to apply missing child references.
+    // In this case we match all the skeleton indices.
+    // Note, that we have to account for expanding the primitives into their own nodes.
+    for (size_t i = 0; i < gltf.nodes.size(); ++i)
+    {
+        const auto& gltfNode = gltf.nodes[i];
+        auto& node = model.hierarchy.nodes[nodeLUT[i]];
+
+        // Skins and meshes come together, we can assume here there is also a skinned mesh.
+        if (gltfNode.skinIndex.has_value())
+        {
+            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
+            if (skin.skeleton.has_value())
+            {
+                // Iterate over all the children of the matched node, since we expanded the primitives.
+                for (auto childIndex : node.children)
+                {
+                    // Apply the skeleton node using the node LUT.
+                    model.hierarchy.nodes[childIndex].skeletonNode = nodeLUT[skin.skeleton.value()];
+                }
+            }
+        }
+    }
 
     return model;
 }

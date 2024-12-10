@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometric.hpp"
 #include "resource_manager.hpp"
 #include "vulkan_include.hpp"
 
@@ -9,6 +10,12 @@
 #include <vk_mem_alloc.h>
 
 class VulkanContext;
+
+enum class MeshType : uint8_t
+{
+    eSTATIC,
+    eSKINNED,
+};
 
 struct SamplerCreation
 {
@@ -51,7 +58,7 @@ private:
 enum class ImageType
 {
     e2D,
-    e2DArray,
+    eDepth,
     eCubeMap,
     eShadowMap
 };
@@ -72,6 +79,12 @@ struct CPUImage
 
     std::string name;
 
+    /**
+     * loads the pixel data, width, height and format from a specifed png file.
+     * assigned format can be R8G8B8Unorm or vk::Format::eR8G8B8A8Unorm.
+     * @param path filepath for the png file, .png extention required.
+     */
+    void FromPNG(std::string_view path);
     CPUImage& SetData(std::vector<std::byte> data);
     CPUImage& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
     CPUImage& SetMips(uint8_t mips);
@@ -224,17 +237,14 @@ private:
 
 struct GPUMesh
 {
-    struct Primitive
-    {
-        uint32_t count;
-        uint32_t vertexOffset;
-        uint32_t indexOffset;
-        float boundingRadius;
+    uint32_t count { 0 };
+    uint32_t vertexOffset { 0 };
+    uint32_t indexOffset { 0 };
+    float boundingRadius;
+    Vec3Range boundingBox;
 
-        ResourceHandle<GPUMaterial> material;
-    };
-
-    std::vector<Primitive> primitives;
+    MeshType type;
+    ResourceHandle<GPUMaterial> material;
 };
 
 struct alignas(16) GPUCamera

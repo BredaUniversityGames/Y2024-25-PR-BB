@@ -1,16 +1,23 @@
 #pragma once
 
-#include "mesh.hpp"
-#include "model.hpp"
+#include "components/animation_channel_component.hpp"
+#include "cpu_resources.hpp"
+#include "vertex.hpp"
 
-#include <lib/include_fastgltf.hpp>
+#include <include_fastgltf.hpp>
 #include <memory>
 #include <vector>
 
 class SingleTimeCommands;
 class BatchBuffer;
-class ECS;
 class GraphicsContext;
+
+struct StagingAnimationChannels
+{
+    Animation animation;
+    std::vector<AnimationChannelComponent> animationChannels;
+    std::vector<uint32_t> nodeIndices;
+};
 
 class ModelLoader
 {

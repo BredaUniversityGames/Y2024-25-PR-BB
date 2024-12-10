@@ -3,6 +3,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <stb_image.h>
+
 SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode addressMode)
 {
     addressModeU = addressMode;
@@ -75,6 +77,44 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
+void CPUImage::FromPNG(std::string_view path)
+{
+    int width;
+    int height;
+    int nrChannels;
+
+    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(),
+        &width, &height, &nrChannels,
+        4));
+
+    if (data == nullptr)
+    {
+        throw std::runtime_error("Failed to load image!");
+    }
+
+    if (width > UINT16_MAX || height > UINT16_MAX)
+    {
+        throw std::runtime_error("Image size is too large!");
+    }
+
+    vk::Format format;
+    if (nrChannels == 3)
+    {
+        format = vk::Format::eR8G8B8Unorm;
+    }
+    else if (nrChannels == 4)
+    {
+        format = vk::Format::eR8G8B8A8Unorm;
+    }
+    else
+    {
+        throw std::runtime_error("Image format is not supported!");
+    }
+    SetFormat(format);
+    SetSize(static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+    initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * nrChannels));
+    stbi_image_free(data);
+}
 CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 {
     initialData = std::move(data);
@@ -124,7 +164,7 @@ vk::ImageType ImageTypeConversion(ImageType type)
     switch (type)
     {
     case ImageType::e2D:
-    case ImageType::e2DArray:
+    case ImageType::eDepth:
     case ImageType::eShadowMap:
     case ImageType::eCubeMap:
         return vk::ImageType::e2D;
@@ -140,8 +180,8 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     case ImageType::eShadowMap:
     case ImageType::e2D:
         return vk::ImageViewType::e2D;
-    case ImageType::e2DArray:
-        return vk::ImageViewType::e2DArray;
+    case ImageType::eDepth:
+        return vk::ImageViewType::e2D;
     case ImageType::eCubeMap:
         return vk::ImageViewType::eCube;
     default:
@@ -229,8 +269,14 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     if (creation.initialData.data())
     {
         vk::DeviceSize imageSize = width * height * depth * 4;
+        if (format == vk::Format::eR8Unorm)
+        {
+            imageSize = width * height * depth;
+        }
         if (isHDR)
+        {
             imageSize *= sizeof(float);
+        }
 
         vk::Buffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;

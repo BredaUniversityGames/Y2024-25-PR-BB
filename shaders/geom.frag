@@ -7,8 +7,8 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normalIn;
 layout (location = 2) in vec2 texCoord;
-layout (location = 4) in mat3 TBN;
 layout (location = 3) in flat int drawID;
+layout (location = 4) in mat3 TBN;
 
 layout (location = 0) out vec4 outAlbedoM;// RGB: Albedo,   A: Metallic
 layout (location = 1) out vec4 outNormalR;// RGB: Normal,   A: Roughness

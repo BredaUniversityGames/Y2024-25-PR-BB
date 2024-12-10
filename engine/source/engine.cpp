@@ -1,21 +1,20 @@
 #include "engine.hpp"
 
+#include <glm/glm.hpp>
 #include <implot/implot.h>
-#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "editor.hpp"
-#include "emitter_component.hpp"
-#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
@@ -23,7 +22,6 @@
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
 #include "particle_module.hpp"
-#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -48,23 +46,21 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     spdlog::info("Starting engine...");
 
-    _ecs = std::make_shared<ECS>();
-
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
-    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
-    RelationshipHelpers::SubscribeToEvents(_ecs->registry);
-    // modules
-
-    // systems
-    _ecs->AddSystem<PhysicsSystem>(*_ecs, physicsModule);
-
     std::vector<std::string> modelPaths = {
         "assets/models/cathedral_new.glb"
+        "assets/models/BrainStem.glb",
+        //"assets/models/Cathedral.glb",
+        //"assets/models/Adventure.glb",
+        //"assets/models/DamagedHelmet.glb",
+        //"assets/models/CathedralGLB_GLTF.glb",
+        // "assets/models/Terrain/scene.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb"
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -74,37 +70,46 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
 
-    for (const auto& model : models)
-    {
+    _ecs = &engine.GetModule<ECSModule>();
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
-        entities.emplace_back(entity);
+    for (size_t i = 0; i < 5; i++)
+    {
+        for (size_t j = 0; j < 1; j++)
+        {
+            auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
+            entities.emplace_back(entity);
+
+            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
+        }
     }
 
-    _editor = std::make_unique<Editor>(_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
+    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
+
+    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
     // TODO: Once level saving is done, this should be deleted
-    entt::entity lightEntity = _ecs->registry.create();
-    _ecs->registry.emplace<NameComponent>(lightEntity, "Directional Light");
-    _ecs->registry.emplace<TransformComponent>(lightEntity);
+    entt::entity lightEntity = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
+    _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
 
-    DirectionalLightComponent& directionalLightComponent = _ecs->registry.emplace<DirectionalLightComponent>(lightEntity);
+    DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
     directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->registry, lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
-    TransformHelpers::SetLocalRotation(_ecs->registry, lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    entt::entity cameraEntity = _ecs->registry.create();
-    _ecs->registry.emplace<NameComponent>(cameraEntity, "Camera");
-    _ecs->registry.emplace<TransformComponent>(cameraEntity);
+    entt::entity cameraEntity = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
+    _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
 
-    CameraComponent& cameraComponent = _ecs->registry.emplace<CameraComponent>(cameraEntity);
+    CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;
     cameraComponent.nearPlane = 0.01f;
     cameraComponent.farPlane = 600.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->registry, cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -150,10 +155,10 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -172,7 +177,7 @@ void OldEngine::Tick(Engine& engine)
     {
         ZoneNamedN(zone, "Update Camera", true);
 
-        auto cameraView = _ecs->registry.view<CameraComponent, TransformComponent>();
+        auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
@@ -211,7 +216,7 @@ void OldEngine::Tick(Engine& engine)
                 eulerRotation.y -= rotationDelta.x;
 
             rotation = glm::quat(eulerRotation);
-            TransformHelpers::SetLocalRotation(_ecs->registry, entity, rotation);
+            TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
 
             glm::vec3 movementDir {};
             if (input.IsKeyHeld(KeyboardCode::eW))
@@ -244,7 +249,7 @@ void OldEngine::Tick(Engine& engine)
 
             glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TransformHelpers::SetLocalPosition(_ecs->registry, entity, position);
+            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
@@ -260,10 +265,10 @@ void OldEngine::Tick(Engine& engine)
                           << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
                           << "Fraction: " << hitInfo.hitFraction << std::endl;
 
-                if (_ecs->registry.all_of<RigidbodyComponent>(hitInfo.entity))
+                if (_ecs->GetRegistry().all_of<RigidbodyComponent>(hitInfo.entity))
                 {
 
-                    RigidbodyComponent& rb = _ecs->registry.get<RigidbodyComponent>(hitInfo.entity);
+                    RigidbodyComponent& rb = _ecs->GetRegistry().get<RigidbodyComponent>(hitInfo.entity);
 
                     if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
                     {
@@ -302,11 +307,6 @@ void OldEngine::Tick(Engine& engine)
         audioModule.StopEvent(eventId);
     }
 
-    _ecs->UpdateSystems(deltaTimeMS);
-    _ecs->GetSystem<PhysicsSystem>()->CleanUp();
-    _ecs->RemovedDestroyed();
-    _ecs->RenderSystems();
-
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
@@ -324,10 +324,6 @@ void OldEngine::Tick(Engine& engine)
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _editor.reset();
-
-    TransformHelpers::UnsubscribeToEvents(_ecs->registry);
-    RelationshipHelpers::UnsubscribeToEvents(_ecs->registry);
-    _ecs.reset();
 }
 
 OldEngine::OldEngine() = default;

@@ -2,16 +2,18 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
-#include "camera.hpp"
-#include "model.hpp"
+#include "cpu_resources.hpp"
+#include "ecs_module.hpp"
 #include "swap_chain.hpp"
 
+class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class UIPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
@@ -22,14 +24,14 @@ class GraphicsContext;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
-class ECS;
 class GPUScene;
 class FrameGraph;
+class Viewport;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& applicationModule, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -40,7 +42,8 @@ public:
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
-    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
+    BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
@@ -52,9 +55,11 @@ private:
     std::shared_ptr<GraphicsContext> _context;
 
     std::unique_ptr<ModelLoader> _modelLoader;
+
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
-    std::shared_ptr<ECS> _ecs;
+    Viewport& _viewport;
+    ECSModule& _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
@@ -62,6 +67,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
@@ -72,6 +78,8 @@ private:
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
+    ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -81,7 +89,8 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::shared_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> _skinnedBatchBuffer;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 
@@ -94,6 +103,8 @@ private:
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
+    void InitializeTonemappingTarget();
+    void InitializeUITarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

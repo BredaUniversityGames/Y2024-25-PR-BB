@@ -1,8 +1,8 @@
 #pragma once
 
 #include "log.hpp"
-#include "mesh.hpp"
 #include "spirv_reflect.h"
+#include "vertex.hpp"
 #include "vulkan_context.hpp"
 #include <glm/glm.hpp>
 #include <magic_enum.hpp>
@@ -31,6 +31,7 @@ ImageLayoutTransitionState GetImageLayoutTransitionDestinationState(vk::ImageLay
 void InitializeImageMemoryBarrier(vk::ImageMemoryBarrier2& barrier, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 void TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t numLayers = 1, uint32_t mipLevel = 0, uint32_t mipCount = 1, vk::ImageAspectFlagBits imageAspect = vk::ImageAspectFlagBits::eColor);
 void CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
+void CopyImageToImage(vk::CommandBuffer commandBuffer, vk::Image srcImage, vk::Image dstImage, vk::Extent2D srcSize, vk::Extent2D dstSize);
 void BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi);
 void EndLabel(vk::Queue queue, const vk::DispatchLoaderDynamic dldi);
 void BeginLabel(vk::CommandBuffer commandBuffer, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi);
