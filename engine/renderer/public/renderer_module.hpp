@@ -1,9 +1,11 @@
 #pragma once
 
-#include "model.hpp"
+#include "cpu_resources.hpp"
 #include "module_interface.hpp"
 
 class Renderer;
+class ImGuiBackend;
+class GraphicsContext;
 
 struct SceneDescription;
 
@@ -19,6 +21,7 @@ public:
 
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
     std::shared_ptr<Renderer> GetRenderer() { return _renderer; }
+    std::shared_ptr<GraphicsContext> GetGraphicsContext() { return _context; }
 
 private:
     std::shared_ptr<GraphicsContext> _context;

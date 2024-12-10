@@ -1,7 +1,9 @@
 #include "editor.hpp"
 
 #include "bloom_settings.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -22,13 +24,13 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
+#include "vertex.hpp"
+#include "vulkan_context.hpp"
+
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-
-// TODO: Editor shouldnt depend on this.
-#include "vulkan_context.hpp"
 #include <vk_mem_alloc.h>
 
 Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
@@ -41,7 +43,9 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<TransformComponent>("Transform");
     _entityEditor.registerComponent<NameComponent>("Name");
     _entityEditor.registerComponent<RelationshipComponent>("Relationship");
-    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+    _entityEditor.registerComponent<WorldMatrixComponent>("World Matrix");
+    _entityEditor.registerComponent<PointLightComponent>("Point Light");
+    _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
