@@ -9,7 +9,7 @@ ModuleTickOrder PathfindingModule::Init(Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
-    this->SetNavigationMesh("assets/models/NavMesh.gltf");
+    this->SetNavigationMesh("assets/models/NavMesh2.gltf");
 
     return ModuleTickOrder::eTick;
 }
@@ -35,26 +35,18 @@ PathfindingModule::~PathfindingModule()
 
 }
 
-struct TriangleInfo
-{
-    uint32_t indices[3] = {UINT32_MAX};
-    glm::vec3 centre = glm::vec3{0.0f};
-
-    uint32_t adjacentTriangleIndices[3] = {};
-    uint8_t adjacentTriangleCount = 0;
-};
-
 int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 {
     CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
     CPUMesh navmesh_mesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
+
+    _triangles.clear();
 
     std::unordered_map<uint32_t, std::vector<uint32_t>> indices_to_triangles;
 
     // We store all the triangles with their indices and center points
     //
     // We also store the triangles that use an index to find adjacent triangles
-    std::vector<TriangleInfo> triangles;
     for(const auto& primitive : navmesh_mesh.primitives)
     {
         for(size_t i = 0; i < primitive.indices.size(); i += 3)
@@ -70,8 +62,8 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
             info.centre = (p0 + p1 + p2) / 3.0f;
 
-            size_t triangle_idx = triangles.size();
-            triangles.push_back(info);
+            size_t triangle_idx = _triangles.size();
+            _triangles.push_back(info);
 
             indices_to_triangles[info.indices[0]].push_back(triangle_idx);
             indices_to_triangles[info.indices[1]].push_back(triangle_idx);
@@ -80,9 +72,9 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     }
 
     // Loop over all triangles in the mesh
-    for(size_t i = 0; i < triangles.size(); i++)
+    for(size_t i = 0; i < _triangles.size(); i++)
     {
-        TriangleInfo& triangle = triangles[i];
+        TriangleInfo& triangle = _triangles[i];
 
         // We store all triangles that share indices with the current triangle
         // If a triangle shares two indices with the current triangle, it's adjacent to the current triangle
@@ -110,14 +102,40 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         {
             if(shared_triangles.count(triangle_idx) > 1)
             {
+                bool insert = true;
                 // We share more than 2 indices now so we're adjacent to the current triangle
-                triangle.adjacentTriangleIndices[triangle.adjacentTriangleCount++] = triangle_idx;
+                for(uint32_t k = 0; k < triangle.adjacentTriangleCount; k++)
+                {
+                    if(triangle.adjacentTriangleIndices[k] == triangle_idx)
+                    {
+                        insert = false;
+                    }
+                }
+                if(insert)
+                {
+                    triangle.adjacentTriangleIndices[triangle.adjacentTriangleCount++] = triangle_idx;
+                }
             }
         }
     }
 
     // Now that we have adjacency information about the triangles we can start constructing a node tree
+    for(size_t i = 0; i < _triangles.size(); i++)
+    {
+        TriangleInfo& info = _triangles[i];
 
+        for(size_t j = 0; j < info.adjacentTriangleCount; j++)
+        {
+            _triangles_to_neighbours[i][j] = info.adjacentTriangleIndices[j];
+        }
+    }
 
     return 0;
+}
+
+ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos)
+{
+    ComputedPath path{};
+
+    return path;
 }
