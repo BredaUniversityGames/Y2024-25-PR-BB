@@ -2,16 +2,18 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
-#include "camera.hpp"
+#include "ecs_module.hpp"
 #include "model.hpp"
 #include "swap_chain.hpp"
 
+class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class UIPipeline;
 class GaussianBlurPipeline;
 class ClusteringPipeline;
 class ShadowPipeline;
@@ -23,14 +25,14 @@ class GraphicsContext;
 class ModelLoader;
 class Engine;
 class BatchBuffer;
-class ECS;
 class GPUScene;
 class FrameGraph;
+class Viewport;
 
 class Renderer
 {
 public:
-    Renderer(ApplicationModule& application_module, const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs);
+    Renderer(ApplicationModule& applicationModule, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs);
     ~Renderer();
 
     NON_COPYABLE(Renderer);
@@ -53,9 +55,11 @@ private:
     std::shared_ptr<GraphicsContext> _context;
 
     std::unique_ptr<ModelLoader> _modelLoader;
+
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
-    std::shared_ptr<ECS> _ecs;
+    Viewport& _viewport;
+    ECSModule& _ecs;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
@@ -63,6 +67,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
@@ -74,6 +79,8 @@ private:
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
+    ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -98,6 +105,8 @@ private:
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
+    void InitializeTonemappingTarget();
+    void InitializeUITarget();
     void InitializeClusterOutputBuffer();
     void LoadEnvironmentMap();
     void UpdateBindless();

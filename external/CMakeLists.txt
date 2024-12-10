@@ -65,13 +65,12 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+# FreeType
+add_subdirectory(freetype)
+
 # FMOD (no git to fetch content)
 
 add_subdirectory(fmod)
-
-# Wren Language
-
-add_subdirectory(wren)
 
 # Cereal
 
@@ -80,6 +79,20 @@ option(BUILD_SANDBOX "Build sandbox examples" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
+
+# Wren Language
+
+FetchContent_Declare(
+        wren
+        GIT_REPOSITORY https://github.com/santiberna/wrenbind17.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+set(WRENBIND17_BUILD_WREN ON)
+FetchContent_MakeAvailable(wren)
+
 
 # Tracy Profiler
 
@@ -236,37 +249,14 @@ if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 
-# Main External Library
-
-add_library(External INTERFACE)
+# Useful defines for vulkan
 
 if (WIN32)
-    target_compile_options(External
+    target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_WIN32_KHR
             INTERFACE -DNOMINMAX)
 elseif (LINUX)
-    target_compile_options(External
+    target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_XLIB_KHR)
 endif ()
 
-target_link_libraries(External
-        INTERFACE ImGui
-        INTERFACE SDL3::SDL3-static
-        INTERFACE magic_enum::magic_enum
-        INTERFACE spdlog::spdlog
-        INTERFACE glm::glm
-        INTERFACE EnTT::EnTT
-        INTERFACE VulkanMemoryAllocator
-        INTERFACE fastgltf::fastgltf
-        INTERFACE spirv-reflect-static
-        INTERFACE VulkanAPI
-        INTERFACE Jolt
-        INTERFACE Steamworks
-        INTERFACE FMOD
-)
-
-target_include_directories(External
-        INTERFACE external/SDL/include
-        INTERFACE stb
-        INTERFACE ${cereal_SOURCE_DIR}/include
-)

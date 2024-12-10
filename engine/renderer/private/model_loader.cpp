@@ -1,7 +1,7 @@
 #include "model_loader.hpp"
 
 #include "batch_buffer.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"
@@ -173,7 +173,8 @@ void CalculateTangents(CPUMesh::Primitive& stagingPrimitive)
 CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
     CPUMesh::Primitive primitive {};
-
+    primitive.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
+    primitive.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
     assert(MapGltfTopology(gltfPrimitive.type) == vk::PrimitiveTopology::eTriangleList && "Only triangle list topology is supported!");
     if (gltfPrimitive.materialIndex.has_value())
         primitive.materialIndex = gltfPrimitive.materialIndex.value();
@@ -234,6 +235,7 @@ CPUMesh::Primitive ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, co
 
             if (attribute.name == "POSITION")
             {
+
                 const glm::vec3* position = reinterpret_cast<const glm::vec3*>(element);
 
                 // warning! this performs component wise min/max

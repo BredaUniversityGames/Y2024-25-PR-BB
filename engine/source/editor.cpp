@@ -7,7 +7,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -23,15 +23,15 @@
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
 
+#include "components/point_light_component.hpp"
+#include "vulkan_context.hpp"
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
-// TODO: Editor shouldnt depend on this.
-#include "vulkan_context.hpp"
 #include <vk_mem_alloc.h>
 
-Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
+Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
     : _ecs(ecs)
     , _renderer(renderer)
     , _imguiBackend(imguiBackend)
@@ -42,6 +42,7 @@ Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>&
     _entityEditor.registerComponent<NameComponent>("Name");
     _entityEditor.registerComponent<RelationshipComponent>("Relationship");
     _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+    _entityEditor.registerComponent<PointLightComponent>("Point Light Component");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
@@ -53,8 +54,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
-        RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, entity));
+        RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
+        const std::string name = std::string(NameComponent::GetDisplayName(_ecs.GetRegistry(), entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
@@ -76,10 +77,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
                 entt::entity current = relationship->first;
                 for (size_t i {}; i < relationship->childrenCount; ++i)
                 {
-                    if (_ecs->registry.valid(current))
+                    if (_ecs.GetRegistry().valid(current))
                     {
                         self(self, current);
-                        current = _ecs->registry.get<RelationshipComponent>(current).next;
+                        current = _ecs.GetRegistry().get<RelationshipComponent>(current).next;
                     }
                 }
 
@@ -105,16 +106,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         if (ImGui::Button("+ Add entity"))
         {
-            entt::entity entity = _ecs->registry.create();
+            entt::entity entity = _ecs.GetRegistry().create();
 
-            _ecs->registry.emplace<TransformComponent>(entity);
+            _ecs.GetRegistry().emplace<TransformComponent>(entity);
         }
 
         if (ImGui::BeginChild("Hierarchy Panel"))
         {
-            for (const auto [entity] : _ecs->registry.storage<entt::entity>().each())
+            for (const auto [entity] : _ecs.GetRegistry().storage<entt::entity>().each())
             {
-                RelationshipComponent* relationship = _ecs->registry.try_get<RelationshipComponent>(entity);
+                RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
 
                 if (relationship == nullptr || relationship->parent == entt::null)
                 {
@@ -126,13 +127,19 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    _entityEditor.renderSimpleCombo(_ecs->registry, _selectedEntity);
+    _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
+
+    if (ImGui::Begin("Entity Details"))
+    {
+        DisplaySelectedEntityDetails();
+    }
+    ImGui::End();
 
     performanceTracker.Render();
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs->systems)
+    for (const auto& system : _ecs.GetSystems())
     {
         system->Inspect();
     }
@@ -193,7 +200,7 @@ void Editor::DrawMainMenuBar()
             }
             if (ImGui::MenuItem("Save Scene"))
             {
-                Serialization::SerialiseToJSON("assets/maps/scene.json", *_ecs);
+                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
             }
             ImGui::EndMenu();
         }
@@ -209,24 +216,24 @@ void Editor::DisplaySelectedEntityDetails()
         return;
     }
 
-    if (!_ecs->registry.valid(_selectedEntity))
+    if (!_ecs.GetRegistry().valid(_selectedEntity))
     {
         ImGui::Text("Selected entity is not valid");
         return;
     }
-    const std::string name = std::string(NameComponent::GetDisplayName(_ecs->registry, _selectedEntity));
+    const std::string name = std::string(NameComponent::GetDisplayName(_ecs.GetRegistry(), _selectedEntity));
     ImGui::LabelText("##EntityDetails", "%s", name.c_str());
 
     if (ImGui::Button("Delete"))
     {
-        _ecs->DestroyEntity(_selectedEntity);
+        _ecs.DestroyEntity(_selectedEntity);
         _selectedEntity = entt::null;
         return;
     }
     ImGui::PushID(static_cast<int>(_selectedEntity));
 
-    TransformComponent* transform = _ecs->registry.try_get<TransformComponent>(_selectedEntity);
-    NameComponent* nameComponent = _ecs->registry.try_get<NameComponent>(_selectedEntity);
+    TransformComponent* transform = _ecs.GetRegistry().try_get<TransformComponent>(_selectedEntity);
+    NameComponent* nameComponent = _ecs.GetRegistry().try_get<NameComponent>(_selectedEntity);
     if (transform != nullptr)
     {
         bool changed = false;
@@ -238,14 +245,14 @@ void Editor::DisplaySelectedEntityDetails()
 
         if (changed)
         {
-            TransformHelpers::UpdateWorldMatrix(_ecs->registry, _selectedEntity);
+            TransformHelpers::UpdateWorldMatrix(_ecs.GetRegistry(), _selectedEntity);
         }
     }
 
-    RigidbodyComponent* rigidbody = _ecs->registry.try_get<RigidbodyComponent>(_selectedEntity);
+    RigidbodyComponent* rigidbody = _ecs.GetRegistry().try_get<RigidbodyComponent>(_selectedEntity);
     if (rigidbody != nullptr)
     {
-        _ecs->GetSystem<PhysicsSystem>()->InspectRigidBody(*rigidbody);
+        _ecs.GetSystem<PhysicsSystem>()->InspectRigidBody(*rigidbody);
     }
 
     if (nameComponent != nullptr)

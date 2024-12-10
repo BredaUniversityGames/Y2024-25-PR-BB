@@ -1,16 +1,19 @@
 #include "renderer_module.hpp"
 
 #include "application_module.hpp"
+#include "ecs_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "old_engine.hpp"
+#include "particle_interface.hpp"
 #include "renderer.hpp"
 #include "vulkan_context.hpp"
+#include <ui_module.hpp>
 
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
+#include <particle_module.hpp>
 
 RendererModule::RendererModule()
 {
@@ -18,10 +21,11 @@ RendererModule::RendererModule()
 
 ModuleTickOrder RendererModule::Init(Engine& engine)
 {
-    auto ecs = engine.GetModule<OldEngine>().GetECS();
+    auto& ecs = engine.GetModule<ECSModule>();
     _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
-    _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), _context, ecs);
-    _particleInterface = std::make_unique<ParticleInterface>(_renderer->GetContext(), ecs);
+  
+    _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), engine.GetModule<UIModule>().GetViewport(), _context, ecs);
+  
     _imguiBackend = std::make_shared<ImGuiBackend>(_renderer->GetContext(), engine.GetModule<ApplicationModule>(), _renderer->GetSwapChain(), _renderer->GetGBuffers());
 
     return ModuleTickOrder::eRender;
@@ -30,8 +34,6 @@ ModuleTickOrder RendererModule::Init(Engine& engine)
 void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     _context->VulkanContext()->Device().waitIdle();
-
-    _particleInterface.reset();
     _imguiBackend.reset();
 
     _renderer.reset();

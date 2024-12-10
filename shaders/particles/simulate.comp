@@ -35,6 +35,9 @@ void main()
 
         // TODO: kill particle on depth collision and break
 
+        // simulate angle
+        particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
+
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
 
@@ -43,12 +46,14 @@ void main()
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // TODO: frustum culling
+
         // for now add all to culled list:
         uint culledIndex = atomicAdd(culledInstances.count, 1);
         ParticleInstance instance;
         instance.position = particle.position;
         instance.materialIndex = particle.materialIndex;
         instance.size = particle.size;
+        instance.angle = particle.rotationVelocity.x;
         culledInstances.instances[culledIndex] = instance;
     }
     else // if dead

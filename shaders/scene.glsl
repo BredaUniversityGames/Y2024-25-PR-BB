@@ -1,3 +1,5 @@
+#define MAX_POINT_LIGHTS 8192
+
 struct Camera
 {
     mat4 VP;
@@ -23,6 +25,20 @@ struct DirectionalLight
 
     vec4 direction;
     vec4 color;
+};
+
+struct PointLight
+{
+    vec4 position;
+    vec4 color;
+    float range;
+    float attenuation;
+};
+
+struct PointLightArray
+{
+    PointLight lights[MAX_POINT_LIGHTS];
+    uint count;
 };
 
 struct Scene

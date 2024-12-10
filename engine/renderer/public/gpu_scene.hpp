@@ -8,13 +8,13 @@
 
 class GPUScene;
 class BatchBuffer;
-class ECS;
+class ECSModule;
 class GraphicsContext;
 
 struct GPUSceneCreation
 {
     std::shared_ptr<GraphicsContext> context;
-    std::shared_ptr<ECS> ecs;
+    ECSModule& ecs;
 
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
@@ -25,13 +25,14 @@ struct GPUSceneCreation
 struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
-    std::shared_ptr<const ECS> ecs;
+    ECSModule& ecs;
     std::shared_ptr<BatchBuffer> batchBuffer;
     uint32_t targetSwapChainImageIndex;
     float deltaTime;
 };
 
 constexpr uint32_t MAX_INSTANCES = 2048;
+constexpr uint32_t MAX_POINT_LIGHTS = 8192;
 
 class GPUScene
 {
@@ -46,8 +47,10 @@ public:
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDescriptorSetLayout; }
 
     ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
@@ -86,6 +89,20 @@ private:
         glm::vec4 color;
     };
 
+    struct alignas(16) PointLightData
+    {
+        glm::vec4 position;
+        glm::vec4 color;
+        float range;
+        float attenuation;
+    };
+
+    struct alignas(16) PointLightArray
+    {
+        std::array<PointLightData, MAX_POINT_LIGHTS> lights;
+        uint32_t count;
+    };
+
     struct alignas(16) SceneData
     {
         DirectionalLightData directionalLight;
@@ -110,8 +127,14 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
+    struct PointLightFrameData
+    {
+        ResourceHandle<Buffer> buffer;
+        vk::DescriptorSet descriptorSet;
+    };
+
     std::shared_ptr<GraphicsContext> _context;
-    std::shared_ptr<const ECS> _ecs;
+    ECSModule& _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
@@ -119,6 +142,8 @@ private:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
     vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
+    vk::DescriptorSetLayout _pointLightDescriptorSetLayout;
+    std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
@@ -127,23 +152,30 @@ private:
     CameraResource _directionalLightShadowCamera;
 
     void UpdateSceneData(uint32_t frameIndex);
+    void UpdatePointLightArray(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
     void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);
+    void UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex);
     void UpdateCameraData(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
+    void InitializePointLightBuffer();
     void InitializeObjectInstancesBuffers();
 
     void CreateSceneDescriptorSetLayout();
+    void CreatePointLightDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
+    void CreatePointLightDescriptorSets();
     void CreateObjectInstancesDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
+    void UpdatePointLightDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
+    void CreatePointLightBuffer();
     void CreateObjectInstancesBuffers();
 
     void InitializeIndirectDrawBuffer();

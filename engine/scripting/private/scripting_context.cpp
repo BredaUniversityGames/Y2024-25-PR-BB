@@ -1,207 +1,88 @@
 #include "scripting_context.hpp"
-#include <bit>
-#include <file_io.hpp>
+#include "file_io.hpp"
+#include "log.hpp"
+
 #include <filesystem>
-#include <log.hpp>
-#include <wren.hpp>
 
-struct WrenCallbacks
+namespace ScriptLoading
 {
-    static void SystemWrite(WrenVM* _vm, const char* text)
-    {
-        auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
-
-        if (context->_wrenOutStream != nullptr)
-        {
-            *(context->_wrenOutStream) << text;
-        }
-    }
-
-    static void ErrorHandler(
-        MAYBE_UNUSED WrenVM* _vm,
-        WrenErrorType errorType,
-        const char* module,
-        const int line,
-        const char* msg)
-    {
-        switch (errorType)
-        {
-        case WREN_ERROR_COMPILE:
-        {
-            bblog::error("Wren Interpreter: in module {}, line {}: {}", module, line, msg);
-            break;
-        }
-        case WREN_ERROR_STACK_TRACE:
-        {
-            bblog::error(">>> in module {}, line {}: {}", module, line, msg);
-            break;
-        }
-        case WREN_ERROR_RUNTIME:
-        {
-            bblog::error("Wren Runtime: {}", msg);
-            break;
-        }
-        }
-    }
-
-    static WrenForeignClassMethods BindForeignClass(
-        MAYBE_UNUSED WrenVM* _vm,
-        MAYBE_UNUSED const char* module,
-        MAYBE_UNUSED const char* className)
-    {
-        return { nullptr, nullptr };
-    }
-
-    static WrenForeignMethodFn BindForeignMethod(
-        MAYBE_UNUSED WrenVM* _vm,
-        MAYBE_UNUSED const char* module,
-        MAYBE_UNUSED const char* className,
-        MAYBE_UNUSED bool isStatic,
-        MAYBE_UNUSED const char* signature)
-    {
-        return nullptr;
-    }
-
-    static WrenLoadModuleResult LoadModule(WrenVM* _vm, const char* name)
-    {
-        auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
-        WrenLoadModuleResult result {};
-
-        if (std::optional<std::string> source = context->LoadModuleSource(name))
-        {
-            context->_loadedModulePaths.emplace_back(std::string(name));
-            std::string* heapString = new std::string(std::move(source.value()));
-
-            result.source = heapString->c_str();
-            result.onComplete = &FreeModuleSource;
-            result.userData = heapString;
-        }
-
-        return result;
-    }
-
-    static void FreeModuleSource(MAYBE_UNUSED WrenVM* _vm, MAYBE_UNUSED const char* name, WrenLoadModuleResult result)
-    {
-        auto* sourceStr = static_cast<std::string*>(result.userData);
-        delete sourceStr;
-    }
-
-    static const char* ImportHandler(WrenVM* _vm, const char* importer, const char* imported)
-    {
-        using FilePath = std::filesystem::path;
-
-        auto MakeCString = [](const std::string& str)
-        {
-            // Unfortunately, we need to allocate and pass ownership of paths to wren
-            size_t allocationSize = sizeof(char) * (str.size() + 1);
-            char* ret_val = std::bit_cast<char*>(std::malloc(allocationSize)); // NOLINT
-
-            std::memset(ret_val, 0, allocationSize);
-            std::memcpy(ret_val, str.data(), allocationSize - 1);
-
-            return ret_val;
-        };
-
-        auto* context = static_cast<ScriptingContext*>(wrenGetUserData(_vm));
-
-        // First check if the file exists relative to current directory
-        FilePath sourcePath = FilePath(importer).make_preferred();
-        FilePath importPath = FilePath(imported).make_preferred();
-
-        FilePath relativeImportPath = sourcePath.parent_path() / importPath;
-
-        auto relativePath = relativeImportPath.string();
-        if (fileIO::Exists(relativePath))
-        {
-            return MakeCString(relativePath);
-        }
-
-        for (auto& includePath : context->_includePaths)
-        {
-            FilePath tryPath = FilePath(includePath) / importPath;
-            std::string path = tryPath.string();
-
-            if (fileIO::Exists(path))
-            {
-                return MakeCString(path);
-            }
-        }
-
-        // Otherwise, just return the import path unmodified
-        return MakeCString(importPath.string());
-    }
-};
-
-ScriptingContext::ScriptingContext(const VMMemoryConfig& mem)
+std::string ResolveImport(
+    const std::vector<std::string>& paths,
+    const std::string& importer,
+    const std::string& name)
 {
-    WrenConfiguration config;
-    wrenInitConfiguration(&config);
+    using Filepath = std::filesystem::path;
 
-    config.userData = this;
+    auto parent = Filepath(importer).parent_path();
+    auto relative = (Filepath(parent) / Filepath(name)).lexically_normal().make_preferred();
 
-    config.writeFn = &WrenCallbacks::SystemWrite;
-    config.errorFn = &WrenCallbacks::ErrorHandler;
-    config.bindForeignMethodFn = &WrenCallbacks::BindForeignMethod;
-    config.bindForeignClassFn = &WrenCallbacks::BindForeignClass;
-    config.loadModuleFn = &WrenCallbacks::LoadModule;
-    config.resolveModuleFn = &WrenCallbacks::ImportHandler;
+    if (std::filesystem::exists(relative))
+    {
+        return relative.string();
+    }
 
-    config.initialHeapSize = mem.initialHeapSize;
-    config.minHeapSize = mem.minHeapSize;
-    config.heapGrowthPercent = mem.heapGrowthPercent;
+    for (const auto& path : paths)
+    {
 
-    _vm = wrenNewVM(&config);
+        auto composed = (Filepath(path) / Filepath(name).lexically_normal().make_preferred());
+        if (std::filesystem::exists(composed))
+        {
+            return composed.string();
+        }
+    }
+
+    return fileIO::CanonicalizePath(name);
+}
+
+std::string LoadFile(const std::string& path)
+{
+    if (auto stream = fileIO::OpenReadStream(path, fileIO::TEXT_READ_FLAGS))
+    {
+        return fileIO::DumpStreamIntoString(stream.value());
+    }
+    throw wren::NotFound();
+}
+}
+
+ScriptingContext::ScriptingContext(const VMInitConfig& info)
+{
+    _vmInitConfig = info;
+
+    for (auto& include_dir : _vmInitConfig.includePaths)
+    {
+        include_dir = fileIO::CanonicalizePath(include_dir);
+    }
+
+    _vm = std::make_unique<wren::VM>(
+        _vmInitConfig.includePaths,
+        _vmInitConfig.initialHeapSize,
+        _vmInitConfig.minHeapSize,
+        _vmInitConfig.heapGrowthPercent);
+
+    _vm->setPrintFunc([this](const char* message)
+        { *this->_wrenOutStream << message; });
+
+    _vm->setPathResolveFunc(ScriptLoading::ResolveImport);
+    _vm->setLoadFileFunc(ScriptLoading::LoadFile);
 }
 
 ScriptingContext::~ScriptingContext()
 {
-    wrenFreeVM(_vm);
+    _vm.reset();
 }
 
-bool ScriptingContext::InterpretWrenModule(const std::string& path)
+std::optional<std::string> ScriptingContext::RunScript(const std::string& path)
 {
-    if (auto source = LoadModuleSource(path))
+    auto correctedPath = fileIO::CanonicalizePath(path);
+
+    try
     {
-        // Paths that map to the same file need to map to the same string as well
-        using FilePath = std::filesystem::path;
-        std::string preferredPath = FilePath(path).make_preferred().string();
-
-        auto result = wrenInterpret(_vm, preferredPath.c_str(), source->c_str()) == WREN_RESULT_SUCCESS;
-
-        if (result)
-        {
-            _loadedModulePaths.emplace_back(preferredPath);
-        }
-
-        return result;
+        _vm->runFromModule(correctedPath);
+        return ScriptLoading::ResolveImport(_vmInitConfig.includePaths, "", correctedPath);
     }
-
-    bblog::error("Wren compilation: could not interpret {}", path);
-    return false;
-}
-
-void ScriptingContext::AddWrenIncludePath(const std::string& path)
-{
-    using FilePath = std::filesystem::path;
-
-    std::string preferredPath = FilePath(path).make_preferred().string();
-    auto equals = [&preferredPath](const auto& rhs)
-    { return preferredPath == rhs; };
-
-    auto it = std::find_if(_includePaths.begin(), _includePaths.end(), equals);
-
-    if (it == _includePaths.end())
+    catch (const wren::Exception& e)
     {
-        _includePaths.emplace_back(preferredPath);
-    }
-}
-
-std::optional<std::string> ScriptingContext::LoadModuleSource(const std::string& modulePath)
-{
-    if (auto stream = fileIO::OpenReadStream(modulePath, fileIO::TEXT_READ_FLAGS))
-    {
-        auto fileData = fileIO::DumpFullStream(stream.value());
-        return std::string { std::bit_cast<const char*>(fileData.data()), fileData.size() };
+        bblog::error(e.what());
     }
 
     return std::nullopt;
