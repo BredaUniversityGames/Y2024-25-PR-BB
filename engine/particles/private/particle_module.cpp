@@ -58,6 +58,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
+            // TODO: this is temporary to avoid when an entity doesn't have a WorldMatrixComponent. Would there be a way to do this differently?
+            const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+            emitter.emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
+
             if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Dynamic)
             {
                 _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
@@ -78,7 +82,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
 
         // update position and velocity
-        emitter.emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+        if(_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+        {
+            emitter.emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+        }
     }
 }
 
@@ -89,7 +96,7 @@ void ParticleModule::LoadEmitterPresets()
 
     // hardcoded test emitter preset for now
     EmitterPreset preset;
-    preset.emitDelay = 2.0f;
+    preset.emitDelay = 0.2f;
     preset.mass = 2.0f;
     preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
     preset.maxLife = 5.0f;
@@ -136,11 +143,14 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     emitter.materialIndex = preset.materialIndex;
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
-    // TODO: get world instead of local?
-    emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+
+    // Set position and velocity according to which components the entity already has
     if(_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
+
+        const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+        emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
 
         if(_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
@@ -151,7 +161,12 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     }
     else
     {
+        emitter.position = glm::vec3(0.0f, 0.0f, 0.0f);
         emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
+    }
+    if(_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+    {
+        emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
     }
 
     if(HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomPosition))
@@ -162,7 +177,6 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     {
         emitter.velocity = velocity;
     }
-
     bool emitOnce = HasAnyFlags(flags, SpawnEmitterFlagBits::eEmitOnce);
 
     EmitterComponent component;

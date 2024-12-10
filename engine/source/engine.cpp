@@ -292,6 +292,20 @@ void OldEngine::Tick(Engine& engine)
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
+    if (input.IsKeyPressed(KeyboardCode::e0))
+    {
+        entt::entity entity = _ecs->GetRegistry().create();
+        RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
+
+        NameComponent node;
+        node.name = "Physics Entity";
+        _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
+
+        particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
+    }
+
     static uint32_t eventId {};
 
     if (input.IsKeyPressed(KeyboardCode::eO))
