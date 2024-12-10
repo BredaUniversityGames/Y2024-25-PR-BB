@@ -78,7 +78,7 @@ void main()
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
-    vec3 F = FresnelSchlick(max(dot(N, V), 0.0), F0);
+    vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kS = F;
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
@@ -101,7 +101,7 @@ void main()
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
-    vec3 specularIBL = CalculateSpecularIBL(N, -V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
+    vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
     vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
 
     float shadow = 0.0;
@@ -186,7 +186,7 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex) {
 
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex) {
     const float MAX_REFLECTION_LOD = 2.0;
-    vec3 R = reflect(-viewDir, normal);
+    vec3 R = reflect(viewDir, normal);
     vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
     vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(brdfLUTIndex)], vec2(max(dot(normal, viewDir), 0.0), roughness)).rg;
     return prefilteredColor * (F * envBRDF.x + envBRDF.y);
@@ -207,7 +207,8 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
     shadow *= 0.25; // Average the samples
 }
 
-vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor) {
+vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor)
+{
     vec3 H = normalize(view + lightDir);
     vec3 F = FresnelSchlick(max(dot(H, view), 0.0), F0);
     float NDF = DistributionGGX(normal, H, roughness);
