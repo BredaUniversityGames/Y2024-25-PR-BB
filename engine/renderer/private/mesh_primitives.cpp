@@ -8,16 +8,16 @@ void AddTriangle(std::vector<uint32_t>& indices, std::array<uint32_t, 3> triangl
     indices.emplace_back(triangle[2]);
 }
 
-CPUMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
+CPUMesh<Vertex> GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
 {
-    CPUMesh::Primitive primitive;
+    CPUMesh<Vertex> mesh;
 
     uint32_t totalVertices = 2 + (stacks - 1) * slices;
 
-    primitive.vertices.reserve(totalVertices);
+    mesh.vertices.reserve(totalVertices);
 
     // TODO: Consider this based on the total amount of indices instead.
-    primitive.materialIndex = 0;
+    mesh.materialIndex = 0;
 
     for (uint32_t i = 0; i <= stacks; ++i)
     {
@@ -37,7 +37,7 @@ CPUMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radi
             glm::vec2 texCoords { u, v };
             glm::vec3 position { point * radius };
 
-            primitive.vertices.emplace_back(position, point, glm::vec4 {}, texCoords);
+            mesh.vertices.emplace_back(position, point, glm::vec4 {}, texCoords);
         }
     }
 
@@ -49,10 +49,12 @@ CPUMesh::Primitive GenerateUVSphere(uint32_t slices, uint32_t stacks, float radi
             uint32_t first = i * (slices + 1) + j;
             uint32_t second = first + slices + 1;
 
-            AddTriangle(primitive.indices, Triangle { first, second, first + 1 });
-            AddTriangle(primitive.indices, Triangle { second, second + 1, first + 1 });
+            AddTriangle(mesh.indices, Triangle { first, second, first + 1 });
+            AddTriangle(mesh.indices, Triangle { second, second + 1, first + 1 });
         }
     }
 
-    return primitive;
+    mesh.boundingRadius = radius;
+    mesh.boundingBox = { glm::vec3 { -radius }, glm::vec3 { radius } };
+    return mesh;
 }

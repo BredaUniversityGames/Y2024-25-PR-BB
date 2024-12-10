@@ -2,8 +2,8 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
-#include "model.hpp"
 #include "swap_chain.hpp"
 
 class UIModule;
@@ -42,7 +42,8 @@ public:
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
-    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
+    BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
@@ -88,7 +89,8 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::shared_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> _skinnedBatchBuffer;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 
