@@ -4,7 +4,7 @@
 
 #include "main_script.hpp"
 #include "scripting_context.hpp"
-#include "utility/wren_engine.hpp"
+#include "wren_engine.hpp"
 
 #include <memory>
 

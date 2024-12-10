@@ -3,7 +3,7 @@
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
 #include "geometry_pipeline.hpp"
-#include "mesh.hpp"
+#include "vertex.hpp"
 
 #include <memory>
 

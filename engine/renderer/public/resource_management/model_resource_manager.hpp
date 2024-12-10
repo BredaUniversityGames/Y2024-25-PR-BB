@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model.hpp"
+#include "cpu_resources.hpp"
 #include "resource_manager.hpp"
 class ImageResourceManager;
 class MaterialResourceManager;
@@ -16,7 +16,7 @@ public:
         std::shared_ptr<MaterialResourceManager> materialResourceManager,
         std::shared_ptr<MeshResourceManager> meshResourceManager);
 
-    ResourceHandle<GPUModel> Create(const CPUModel& data, BatchBuffer& batchBuffer);
+    ResourceHandle<GPUModel> Create(const CPUModel& data, BatchBuffer& staticBatchBuffer, BatchBuffer& skinnedBatchBuffer);
 
     ModelResourceManager() = default;
 

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "common.hpp"
-#include "mesh.hpp"
+#include "constants.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
+#include "single_time_commands.hpp"
+#include "vertex.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <vector>
-
-class SingleTimeCommands;
-class GraphicsContext;
-
-constexpr uint32_t MAX_MESHES = 2048;
 
 class BatchBuffer
 {
@@ -30,7 +30,22 @@ public:
 
     ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
 
-    uint32_t AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer);
+    template <typename T>
+    uint32_t AppendVertices(const std::vector<T>& vertices, SingleTimeCommands& commandBuffer)
+    {
+        auto resources { _context->Resources() };
+
+        assert((_vertexOffset + vertices.size()) * sizeof(T) < _vertexBufferSize);
+        uint32_t originalOffset = _vertexOffset;
+
+        const Buffer* buffer = resources->BufferResourceManager().Access(_vertexBuffer);
+        commandBuffer.CopyIntoLocalBuffer(vertices, _vertexOffset, buffer->buffer);
+
+        _vertexOffset += vertices.size();
+
+        return originalOffset;
+    }
+
     uint32_t AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer);
 
 private:

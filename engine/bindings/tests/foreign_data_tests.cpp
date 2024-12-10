@@ -2,12 +2,15 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+#include "wren_bindings.hpp"
+
 #include "log.hpp"
 #include "scripting_context.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 
 #include "main_engine.hpp"
+#include "wren_engine.hpp"
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 const VMInitConfig MEMORY_CONFIG {
@@ -58,6 +61,7 @@ TEST(ForeignDataTests, ForeignBasicClass)
 TEST(ForeignDataTests, EngineWrapper)
 {
     MainEngine e {};
+    e.AddModule<TimeModule>();
 
     auto& scripting = e.GetModule<ScriptingModule>();
     scripting.SetEngineBindingsPath("Engine.wren");
@@ -68,13 +72,8 @@ TEST(ForeignDataTests, EngineWrapper)
     context.SetScriptingOutputStream(&output);
 
     // Engine Binding
-    {
-        e.AddModule<TimeModule>();
-        auto& engineAPI = scripting.GetEngineClass();
-        engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
-    }
 
-    std::cout << context.GetVM().module("Engine.wren").str();
+    BindEngineAPI(scripting.GetForeignAPI());
 
     auto script = context.RunScript("game/tests/foreign_engine.wren");
     ASSERT_TRUE(script);
