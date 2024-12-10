@@ -71,7 +71,7 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
             FMOD_BOOL isPlaying = false;
             if (pair.second)
             {
-                FMOD_CHECKRESULT(FMOD_Channel_IsPlaying(pair.second, &isPlaying));
+                FMOD_Channel_IsPlaying(pair.second, &isPlaying);
             }
             return !static_cast<bool>(isPlaying); });
 }
@@ -116,7 +116,7 @@ SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, con
     }
 
     FMOD_CHANNEL* channel = nullptr;
-    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, startPaused, &channel));
+    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, true, &channel));
     FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, volume));
     if (!startPaused)
     {
