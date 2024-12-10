@@ -72,14 +72,14 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     {
         bblog::info("Steam Input available, creating SteamActionManager. Controller input settings will be used from Steam");
         _inputDeviceManager = std::make_unique<SteamInputDeviceManager>();
-        const SteamInputDeviceManager& inputManager = static_cast<SteamInputDeviceManager&>(*_inputDeviceManager);
+        const SteamInputDeviceManager& inputManager = dynamic_cast<SteamInputDeviceManager&>(*_inputDeviceManager);
         _actionManager = std::make_unique<SteamActionManager>(inputManager);
     }
     else
     {
         bblog::info("Steam Input not available, creating default ActionManager. Controller input settings will be used from program");
         _inputDeviceManager = std::make_unique<SDLInputDeviceManager>();
-        const SDLInputDeviceManager& inputManager = static_cast<SDLInputDeviceManager&>(*_inputDeviceManager);
+        const SDLInputDeviceManager& inputManager = dynamic_cast<SDLInputDeviceManager&>(*_inputDeviceManager);
         _actionManager = std::make_unique<SDLActionManager>(inputManager);
     }
 
