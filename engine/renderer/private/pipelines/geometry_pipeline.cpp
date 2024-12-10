@@ -92,6 +92,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
+    if (scene.gpuScene->StaticDrawRange().count > 0)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
@@ -112,10 +113,10 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             sizeof(DrawIndexedIndirectCommand),
             _context->VulkanContext()->Dldi());
 
-        // TODO: wrong! doesnt consider static vs skinned buffer parts
-        _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawRange().count, scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawRange()));
     }
 
+    if (scene.gpuScene->SkinnedDrawRange().count > 0)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
 
@@ -139,8 +140,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             sizeof(DrawIndexedIndirectCommand),
             _context->VulkanContext()->Dldi());
 
-        // TODO: wrong! doesnt consider static vs skinned buffer parts
-        _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->SkinnedDrawRange().count, scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->SkinnedDrawRange()));
     }
 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());

@@ -87,7 +87,7 @@ struct CPUModel
 
 struct GPUModel
 {
-    std::vector<ResourceHandle<GPUMesh>> meshes;
+    std::vector<ResourceHandle<GPUMesh>> staticMeshes;
     std::vector<ResourceHandle<GPUMesh>> skinnedMeshes;
     std::vector<ResourceHandle<GPUMaterial>> materials;
     std::vector<ResourceHandle<GPUImage>> textures;

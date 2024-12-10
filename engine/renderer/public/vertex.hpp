@@ -43,9 +43,7 @@ struct Vertex
     glm::vec4 tangent {};
     glm::vec2 texCoord {};
 
-    Vertex()
-    {
-    }
+    Vertex() = default;
 
     Vertex(glm::vec3 position, glm::vec3 normal, glm::vec4 tangent, glm::vec2 texCoord)
         : position(position)

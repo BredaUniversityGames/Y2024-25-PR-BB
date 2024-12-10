@@ -51,7 +51,7 @@ entt::entity LoadNodeRecursive(ECSModule& ecs,
         switch (currentNode.meshIndex.value().first)
         {
         case MeshType::eSTATIC:
-            ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.meshes.at(currentNode.meshIndex.value().second);
+            ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
             break;
         case MeshType::eSKINNED:
             ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);

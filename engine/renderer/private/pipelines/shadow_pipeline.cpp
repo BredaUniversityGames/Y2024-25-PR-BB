@@ -87,7 +87,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
         sizeof(DrawIndexedIndirectCommand),
         _context->VulkanContext()->Dldi());
 
-    _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount());
+    _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawRange()));
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());
 }

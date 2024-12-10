@@ -54,7 +54,7 @@ ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, Batc
 
     for (const auto& cpuMesh : data.meshes)
     {
-        model.meshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, staticBatchBuffer));
+        model.staticMeshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, staticBatchBuffer));
     }
 
     for (const auto& cpuMesh : data.skinnedMeshes)
