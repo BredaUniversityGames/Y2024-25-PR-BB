@@ -29,6 +29,7 @@
 
 // TODO: Editor shouldnt depend on this.
 #include "vulkan_context.hpp"
+#include <pipelines/ssao_pipeline.hpp>
 #include <vk_mem_alloc.h>
 
 Editor::Editor(const std::shared_ptr<ECS>& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
@@ -148,6 +149,11 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
 
+    ImGui::Begin("SSAO settings");
+    ImGui::DragFloat("AO strength", &_renderer->GetSSAOPipeline().GetAOStrength(), 0.1f, 0.0f, 16.0f);
+    ImGui::DragFloat("Bias", &_renderer->GetSSAOPipeline().GetAOBias(), 0.001f, 0.0f, 0.1f);
+    ImGui::DragFloat("Radius", &_renderer->GetSSAOPipeline().GetAORadius(), 0.05f, 0.0f, 2.0f);
+    ImGui::End();
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))

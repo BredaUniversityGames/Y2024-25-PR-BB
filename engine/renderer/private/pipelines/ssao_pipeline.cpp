@@ -22,9 +22,7 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     , _ssaoTarget(ssaoTarget)
     , _camera(camera)
 {
-    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
-    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
 
     vk::PhysicalDeviceProperties properties {};
@@ -38,7 +36,6 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
 
 void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) // NOLINT(*-include-cleaner)
 {
-
     vk::RenderingAttachmentInfoKHR ssaoColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_ssaoTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,

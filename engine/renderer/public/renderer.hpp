@@ -47,6 +47,7 @@ public:
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
+    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
 
 private:
     friend class RendererModule;

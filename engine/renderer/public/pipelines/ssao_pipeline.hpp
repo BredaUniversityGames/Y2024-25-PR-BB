@@ -20,17 +20,21 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
+    float& GetAOStrength() { return _pushConstants.aoStrength; }
+    float& GetAOBias() { return _pushConstants.aoBias; }
+    float& GetAORadius() { return _pushConstants.aoRadius; }
     NON_MOVABLE(SSAOPipeline);
     NON_COPYABLE(SSAOPipeline);
 
 private:
     struct PushConstants
     {
-        uint32_t albedoMIndex;
         uint32_t normalRIndex;
-        uint32_t emissiveAOIndex;
         uint32_t positionIndex;
         uint32_t ssaoNoiseIndex;
+        float aoStrength = 1.0f;
+        float aoBias = 0.025f;
+        float aoRadius = 0.5f;
     } _pushConstants;
 
     void CreatePipeline();

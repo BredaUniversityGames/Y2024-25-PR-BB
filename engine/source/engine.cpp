@@ -68,7 +68,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/Terrain/scene.gltf",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf",
         "assets/models/MetalRoughSpheres.glb"
-
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();

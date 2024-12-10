@@ -6,11 +6,12 @@
 
 layout (push_constant) uniform PushConstants
 {
-    uint albedoMIndex;
     uint normalRIndex;
-    uint emissiveAOIndex;
     uint positionIndex;
     uint noiseIndex;
+    float aoStrength;
+    float aoBias;
+    float aoRadius;
 } pushConstants;
 
 layout (set = 2, binding = 0) uniform CameraUBO
@@ -35,22 +36,13 @@ float hash12(vec2 p)
 
 
 const vec2 noiseScale = vec2(1920.0 / 4.0, 1080.0 / 4.0); // screen = 800x600
-const float radius = 0.5;
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
     vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
 
-    vec3 albedo = albedoMSample.rgb;
-    float metallic = albedoMSample.a;
     vec3 normal = normalRSample.rgb;
     vec3 position = positionSample.rgb;
-
-    float roughness = normalRSample.a;
-    vec3 emissive = emissiveAOSample.rgb;
-    float ao = emissiveAOSample.a;
 
     vec3 screenSpacePosition = (camera.view * vec4(position.xyz, 1.0)).xyz;
     vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 0.0)).xyz;
@@ -68,7 +60,7 @@ void main()
         //sample pos
         vec3 kernelResult = uSampleKernel.samples[i].xyz;
         vec3 thisSample = TBN * kernelResult;
-        thisSample = screenSpacePosition + thisSample * radius;
+        thisSample = screenSpacePosition + thisSample * pushConstants.aoRadius;
 
         vec4 offset = vec4(thisSample, 1.0);
         offset = camera.proj * offset;
@@ -79,12 +71,12 @@ void main()
         occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
 
         //check distance to avoid ao on objects that are far away from each other
-        float rangeCheck = smoothstep(0.0, 1.0, radius / length(screenSpacePosition - occluderPosition));
+        float rangeCheck = smoothstep(0.0, 1.0, pushConstants.aoRadius / length(screenSpacePosition - occluderPosition));
 
-        occlusion += (occluderPosition.z >= thisSample.z + 0.025 ? 1.0 : 0.0) * rangeCheck;
+        occlusion += (occluderPosition.z >= thisSample.z + pushConstants.aoBias ? 1.0 : 0.0) * rangeCheck;
 
     }
-    vec3 result = vec3(pow(1.0 - occlusion / 64.0, 8.0));
+    vec3 result = vec3(pow(1.0 - occlusion / 64.0, pushConstants.aoStrength));
     outColor = vec4(result.xyz, 1.0);
 
 }
