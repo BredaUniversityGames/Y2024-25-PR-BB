@@ -35,7 +35,7 @@ struct RenderSceneDescription
     float deltaTime;
 };
 
-constexpr uint32_t MAX_INSTANCES = 4096 * 4;
+constexpr uint32_t MAX_INSTANCES = 4096 * 100;
 constexpr uint32_t MAX_POINT_LIGHTS = 8192;
 constexpr uint32_t MAX_BONES = 2048;
 
