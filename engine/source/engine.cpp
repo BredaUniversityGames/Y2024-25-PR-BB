@@ -53,9 +53,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     std::vector<std::string> modelPaths = {
         "assets/models/BrainStem.glb",
-        //"assets/models/Cathedral.glb",
-        //"assets/models/Adventure.glb",
-        "assets/models/DamagedHelmet.glb",
+        "assets/models/Cathedral.glb",
+        //"assets/models/Military.glb",
+        //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -116,7 +116,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+    //_ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
