@@ -1,21 +1,20 @@
 #include "engine.hpp"
 
+#include <glm/glm.hpp>
 #include <implot/implot.h>
-#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "editor.hpp"
-#include "emitter_component.hpp"
-#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
@@ -23,7 +22,6 @@
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
 #include "particle_module.hpp"
-#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -55,14 +53,15 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
-    // modules
-
     std::vector<std::string> modelPaths = {
-        "assets/models/CathedralGLB_GLTF.glb",
-        "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
-
+        "assets/models/BrainStem.glb",
+        //"assets/models/Cathedral.glb",
+        //"assets/models/Adventure.glb",
+        "assets/models/DamagedHelmet.glb",
+        //"assets/models/CathedralGLB_GLTF.glb",
+        // "assets/models/Terrain/scene.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb"
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -74,20 +73,19 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    for (const auto& model : models)
+    for (size_t i = 0; i < 5; i++)
     {
+        for (size_t j = 0; j < 1; j++)
+        {
+            auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
+            entities.emplace_back(entity);
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
-        entities.emplace_back(entity);
+            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
+        }
     }
 
-    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
-
-    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
-
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
+    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
 
     _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
 
@@ -177,10 +175,10 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())

@@ -5,10 +5,11 @@
 
 class PhysicsModule;
 struct RigidbodyComponent;
+
 class PhysicsSystem : public SystemInterface
 {
 public:
-    PhysicsSystem(ECSModule& ecs, PhysicsModule& physicsModule);
+    PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule);
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 
@@ -21,6 +22,7 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
+    Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;
 };

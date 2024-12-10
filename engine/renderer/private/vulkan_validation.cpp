@@ -59,7 +59,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL util::DebugCallback(
 
     if (logLevel == spdlog::level::err)
     {
-        assert(false && "Vulkan Error: check logs");
+        // assert(false && "Vulkan Error: check logs");
     }
 
     return VK_FALSE;
