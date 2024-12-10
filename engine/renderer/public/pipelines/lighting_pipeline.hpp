@@ -39,10 +39,10 @@ private:
     const GBuffers& _gBuffers;
     const ResourceHandle<GPUImage> _hdrTarget;
     const ResourceHandle<GPUImage> _brightnessTarget;
-    const ResourceHandle<GPUImage> _ssaoTarget;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
+    const ResourceHandle<GPUImage> _ssaoTarget;
 };

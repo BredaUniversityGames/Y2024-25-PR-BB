@@ -34,7 +34,7 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     CreatePipeline();
 }
 
-void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) // NOLINT(*-include-cleaner)
+void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) // NOLINT(*-include-cleaner)
 {
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
