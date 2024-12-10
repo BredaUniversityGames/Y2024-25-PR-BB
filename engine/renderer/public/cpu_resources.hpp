@@ -1,54 +1,52 @@
 #pragma once
 
-#include "mesh.hpp"
+#include "animation.hpp"
+#include "components/animation_channel_component.hpp"
+#include "geometric.hpp"
+#include "vertex.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>
 
 struct Hierarchy
 {
+    struct Joint
+    {
+        glm::mat4 inverseBind;
+        uint32_t index;
+    };
+
     struct Node
     {
         std::string name {};
         glm::mat4 transform { 1.0f };
-        std::optional<uint32_t> meshIndex = std::nullopt;
-        std::vector<Node> children {};
+        std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
+        std::vector<uint32_t> children {};
+
+        std::optional<AnimationChannelComponent> animationChannel {};
+        std::optional<Joint> joint {};
+        bool isSkeletonRoot { false };
+        std::optional<uint32_t> skeletonNode {};
     };
 
-    std::vector<Node> baseNodes {};
+    uint32_t root {};
+    std::vector<Node> nodes {};
 };
 
+template <typename T>
 struct CPUMesh
 {
-    struct Primitive
-    {
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
-        uint32_t materialIndex { 0 };
+    std::vector<T> vertices;
+    std::vector<uint32_t> indices;
+    uint32_t materialIndex { 0 };
 
-        // calculated using component wise min/max;
-        Vec3Range boundingBox;
-        float boundingRadius;
-    };
-
-    Vec3Range GetMeshBounds() const
-    {
-        glm::vec3 min { std::numeric_limits<float>::max() };
-        glm::vec3 max { std::numeric_limits<float>::lowest() };
-        for (const auto& primitive : primitives)
-        {
-            min = glm::min(min, primitive.boundingBox.min);
-            max = glm::max(max, primitive.boundingBox.max);
-        }
-        return Vec3Range(min, max);
-    }
-
-    std::vector<Primitive> primitives;
+    Vec3Range boundingBox;
+    float boundingRadius;
 };
 
 struct CPUModel
 {
-
     // For now this is only meant to be used in combination with an owning CPUModel.
     struct CPUMaterial
     {
@@ -78,14 +76,19 @@ struct CPUModel
 
     Hierarchy hierarchy {};
 
-    std::vector<CPUMesh> meshes;
-    std::vector<CPUMaterial> materials;
-    std::vector<CPUImage> textures;
+    std::vector<CPUMesh<Vertex>> meshes {};
+    std::vector<CPUMesh<SkinnedVertex>> skinnedMeshes {};
+
+    std::vector<CPUMaterial> materials {};
+    std::vector<CPUImage> textures {};
+
+    std::optional<Animation> animation { std::nullopt };
 };
 
 struct GPUModel
 {
-    std::vector<ResourceHandle<GPUMesh>> meshes;
+    std::vector<ResourceHandle<GPUMesh>> staticMeshes;
+    std::vector<ResourceHandle<GPUMesh>> skinnedMeshes;
     std::vector<ResourceHandle<GPUMaterial>> materials;
     std::vector<ResourceHandle<GPUImage>> textures;
 };

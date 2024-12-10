@@ -1,17 +1,22 @@
 ﻿#include "systems/physics_system.hpp"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "imgui.h"
-#include "mesh.hpp"
 #include "physics_module.hpp"
+#include "renderer_module.hpp"
+#include "resource_management/mesh_resource_manager.hpp"
 
-PhysicsSystem::PhysicsSystem(ECSModule& ecs, PhysicsModule& physicsModule)
-    : _ecs(ecs)
+PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule)
+    : engine(engine)
+    , _ecs(ecs)
     , _physicsModule(physicsModule)
 {
 }
@@ -43,7 +48,8 @@ void PhysicsSystem::InitializePhysicsColliders()
             perspective);
 
         // size and position
-        Vec3Range boundingBox = meshComponent.boundingBox; // * scale;
+        auto& meshResourceManager = engine.GetModule<RendererModule>().GetGraphicsContext()->Resources()->MeshResourceManager();
+        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
         boundingBox.min *= scale;
         boundingBox.max *= scale;
 
@@ -71,7 +77,6 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-
     // this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
@@ -85,6 +90,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
             _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
         }
     }
+    auto& meshResourceManager = engine.GetModule<RendererModule>().GetGraphicsContext()->Resources()->MeshResourceManager();
 
     //    Update the meshes
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
@@ -102,14 +108,15 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
 
+        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
         const auto joltSize = boxShape->GetHalfExtent();
-        const auto oldExtent = (meshComponent.boundingBox.max - meshComponent.boundingBox.min) * 0.5f;
+        const auto oldExtent = (boundingBox.max - boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
         const glm::mat4 joltToGLM = ToGLMMat4(joltMatrix);
         glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / oldExtent);
 
         // account for odd models that dont have the center at 0,0,0
-        const glm::vec3 centerPos = (meshComponent.boundingBox.max + meshComponent.boundingBox.min) * 0.5f;
+        const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
         joltToGlm = glm::translate(joltToGlm, -centerPos);
 
         TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);

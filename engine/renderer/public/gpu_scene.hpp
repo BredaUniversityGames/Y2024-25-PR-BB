@@ -3,7 +3,10 @@
 #include "camera.hpp"
 #include "constants.hpp"
 #include "gpu_resources.hpp"
+#include "range.hpp"
 #include "resource_manager.hpp"
+#include "vulkan_include.hpp"
+
 #include <memory>
 
 class GPUScene;
@@ -26,13 +29,20 @@ struct RenderSceneDescription
 {
     std::shared_ptr<GPUScene> gpuScene;
     ECSModule& ecs;
-    std::shared_ptr<BatchBuffer> batchBuffer;
+    std::shared_ptr<BatchBuffer> staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> skinnedBatchBuffer;
     uint32_t targetSwapChainImageIndex;
     float deltaTime;
 };
 
-constexpr uint32_t MAX_INSTANCES = 2048;
+constexpr uint32_t MAX_INSTANCES = 4096 * 4;
 constexpr uint32_t MAX_POINT_LIGHTS = 8192;
+constexpr uint32_t MAX_BONES = 2048;
+
+struct DrawIndexedIndirectCommand
+{
+    vk::DrawIndexedIndirectCommand command;
+};
 
 class GPUScene
 {
@@ -56,17 +66,23 @@ public:
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
 
-    ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
+    const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
+    const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
+
+    const Range& StaticDrawRange() const { return _staticDrawRange; }
+    const Range& SkinnedDrawRange() const { return _skinnedDrawRange; }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
-    const std::vector<vk::DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
-    uint32_t DrawCommandIndexCount() const
+    const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
+    uint32_t DrawCommandIndexCount(const Range& range) const
     {
+        assert(range.count <= _drawCommands.size());
+
         uint32_t count { 0 };
-        for (const auto& command : _drawCommands)
+        for (size_t i = range.start; i < range.count; ++i)
         {
-            count += command.indexCount;
+            const auto& command = _drawCommands[i];
+            count += command.command.indexCount;
         }
         return count;
     }
@@ -91,9 +107,9 @@ private:
 
     struct alignas(16) PointLightData
     {
-        glm::vec4 position;
-        glm::vec4 color;
+        glm::vec3 position;
         float range;
+        glm::vec3 color;
         float attenuation;
     };
 
@@ -119,6 +135,7 @@ private:
 
         uint32_t materialIndex;
         float boundingRadius;
+        uint32_t boneOffset;
     };
 
     struct FrameData
@@ -145,11 +162,18 @@ private:
     vk::DescriptorSetLayout _pointLightDescriptorSetLayout;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
-    std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
+    std::vector<DrawIndexedIndirectCommand> _drawCommands;
+
+    Range _staticDrawRange;
+    Range _skinnedDrawRange;
 
     // TODO: Handle all camera's in one buffer or array to enable better culling
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
+
+    vk::DescriptorSetLayout _skinDescriptorSetLayout;
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
@@ -157,26 +181,32 @@ private:
     void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);
     void UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex);
     void UpdateCameraData(uint32_t frameIndex);
+    void UpdateSkinBuffers(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
     void InitializeObjectInstancesBuffers();
+    void InitializeSkinBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreatePointLightDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
+    void CreateSkinDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
     void CreateObjectInstancesDescriptorSets();
+    void CreateSkinDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdatePointLightDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
+    void UpdateSkinDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
     void CreatePointLightBuffer();
     void CreateObjectInstancesBuffers();
+    void CreateSkinBuffers();
 
     void InitializeIndirectDrawBuffer();
     void InitializeIndirectDrawDescriptor();

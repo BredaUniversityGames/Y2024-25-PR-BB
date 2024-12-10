@@ -28,9 +28,9 @@ struct DirectionalLight
 
 struct PointLight
 {
-    vec4 position;
-    vec4 color;
+    vec3 position;
     float range;
+    vec3 color;
     float attenuation;
 };
 
@@ -55,4 +55,5 @@ struct Instance
     mat4 model;
     uint materialIndex;
     float boundingRadius;
+    uint boneOffset;
 };
