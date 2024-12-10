@@ -2,26 +2,26 @@
 #include "particle_util.hpp"
 
 #include "components/name_component.hpp"
-#include "ecs.hpp"
+#include "ecs_module.hpp"
+#include "emitter_component.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "model_loader.hpp"
-#include "emitter_component.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
-#include "stb/stb_image.h"
+#include "stb_image.h"
 
-ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<ECS>& ecs)
+ParticleInterface::ParticleInterface(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _ecs(ecs)
 {
     // fill ECS with emitters
     for (size_t i = 0; i < MAX_EMITTERS; i++)
     {
-        auto entity = _ecs->registry.create();
+        auto entity = _ecs.GetRegistry().create();
         EmitterComponent emitterComponent;
-        _ecs->registry.emplace<EmitterComponent>(entity, emitterComponent);
-        auto& name = _ecs->registry.emplace<NameComponent>(entity);
+        _ecs.GetRegistry().emplace<EmitterComponent>(entity, emitterComponent);
+        auto& name = _ecs.GetRegistry().emplace<NameComponent>(entity);
         name.name = "Particle Emitter " + std::to_string(i);
     }
 }
@@ -38,9 +38,9 @@ void ParticleInterface::LoadEmitterPresets()
     emitter.count = 5;
     emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     emitter.mass = 2.0f;
-    emitter.rotationVelocity = glm::vec3(1.0f);
+    emitter.rotationVelocity = glm::vec2(0.0f, 4.0f);
     emitter.maxLife = 5.0f;
-    emitter.materialIndex = LoadEmitterImage("assets/textures/nogameplay.png");
+    emitter.materialIndex = LoadEmitterImage("assets/textures/jeremi.png");
     emitter.size = glm::vec2(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height) / static_cast<float>(glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height));
     _emitterPresets.emplace_back(emitter);
 }
@@ -69,10 +69,10 @@ uint32_t ParticleInterface::LoadEmitterImage(const char* imagePath)
 
 void ParticleInterface::SpawnEmitter(EmitterPreset emitterPreset, uint32_t timesToEmit)
 {
-    auto view = _ecs->registry.view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent>();
     for (auto entity : view)
     {
-        auto& emitterComponent = _ecs->registry.get<EmitterComponent>(entity);
+        auto& emitterComponent = _ecs.GetRegistry().get<EmitterComponent>(entity);
         if (emitterComponent.timesToEmit == 0)
         {
             emitterComponent.timesToEmit = timesToEmit;

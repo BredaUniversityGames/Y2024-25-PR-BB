@@ -4,7 +4,7 @@
 
 #include "main_script.hpp"
 #include "scripting_context.hpp"
-#include "utility/wren_engine.hpp"
+#include "wren_engine.hpp"
 
 #include <memory>
 
@@ -20,6 +20,12 @@ public:
 
     ScriptingModule() = default;
     ~ScriptingModule() override = default;
+
+    // Used for tests, stick with default
+    void SetEngineBindingsPath(const std::string& p)
+    {
+        _engineBindingsPath = p;
+    }
 
     // Generates the Engine API file, that contains all foreign definitions
     void GenerateEngineBindingsFile();
