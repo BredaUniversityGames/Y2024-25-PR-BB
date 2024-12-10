@@ -15,9 +15,7 @@ layout (push_constant) uniform PushConstants
 layout (location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
-#define MIP_CLAMP 3
-
-
+#define CLAMP_VAL 3
 
 vec3 MapDirection(vec2 coords, uint faceIndex);
 vec2 SampleSphericalMap(vec3 dir);
@@ -31,37 +29,25 @@ void main()
     vec3 direction = MapDirection(texCoords, pc.index);
 
     vec3 N = normalize(direction);
-    vec3 V = N;
-    const uint SAMPLE_COUNT = 1024u;
-    float totalWeight = 1.0;
-    vec3 prefilteredColor = vec3(0.0);
+    vec3 R = N;
+    vec3 V = R;
 
-    for (uint i = 0u; i < SAMPLE_COUNT; ++i)
+    const uint SAMPLE_COUNT = 512;
+    float totalWeight = 0.0;
+    vec3 prefilteredColor = vec3(0.0);
+    for (uint i = 0; i < SAMPLE_COUNT; ++i)
+
     {
         vec2 Xi = Hammersley(i, SAMPLE_COUNT);
         vec3 H = ImportantceSampleGGX(Xi, N, pc.roughness);
-        vec3 L = reflect(-V, H);
-        float NdotL = max(dot(N, L), 0.0);
+        vec3 L = normalize(2.0 * dot(V, H) * H - V);
 
-        if (NdotL > 0.0)
+
+        float NoL = max(dot(N, L), 0.0);
+        if (NoL > 0.0)
         {
-
-            float D   = DistributionGGX(N, H, pc.roughness);
-            float NdotH = max(dot(N, H), 0.0);
-            float HdotV = max(dot(H, V), 0.0);
-            float pdf = D * NdotH / (4.0 * HdotV) + 0.0001;
-
-            float resolution = 512.0;// resolution of source cubemap (per face)
-            float saTexel  = 4.0 * PI / (6.0 * resolution * resolution);
-            float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
-
-
-            float mipLevel = pc.roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
-
-            vec3 sampleColor = clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, MIP_CLAMP);
-
-            prefilteredColor += sampleColor * NdotL;
-            totalWeight += NdotL;
+            prefilteredColor += clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, CLAMP_VAL)* NoL;
+            totalWeight += NoL;
         }
     }
 

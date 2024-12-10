@@ -16,7 +16,7 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, Resour
 {
     SamplerCreation createInfo {
         .name = "IBL sampler",
-        .maxLod = 6.0f,
+        .maxLod = 2.0f,
     };
 
     createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);

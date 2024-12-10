@@ -351,7 +351,7 @@ void Renderer::LoadEnvironmentMap()
     stbi_image_free(stbiData);
 
     CPUImage envMapCreation {};
-    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetMips(6);
+    envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
     envMapCreation.isHDR = true;
 
     _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);
