@@ -32,6 +32,7 @@ void UIModule::CreateMainMenu(std::shared_ptr<GraphicsContext> context, std::fun
 {
     std::shared_ptr<UIFont> mainMenuFont = LoadFromFile("assets/fonts/Rooters.ttf", 48, context);
 
+    // common image data.
     CPUImage commonImageData;
     commonImageData.format
         = vk::Format::eR8G8B8A8Unorm;

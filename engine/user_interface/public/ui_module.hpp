@@ -15,6 +15,7 @@ public:
     NO_DISCARD Viewport& GetViewport() { return *_viewport; };
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
+    // temp location
     void CreateMainMenu(std::shared_ptr<GraphicsContext> context, std::function<void(void)> onPlayButtonClick, std::function<void(void)> onExitButtonClick);
 
 private:
