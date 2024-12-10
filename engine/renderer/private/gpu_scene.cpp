@@ -175,8 +175,9 @@ void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUS
         }
 
         PointLightData& pointLightData = pointLightArray.lights[pointLightCount];
-        pointLightData.position = glm::vec4(TransformHelpers::GetLocalPosition(transformComponent), 1.0f);
-        pointLightData.color = glm::vec4(pointLightComponent.color, 1.0f);
+        pointLightData.position = glm::vec4(TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3]);
+        pointLightData.color
+            = glm::vec4(pointLightComponent.color, 1.0f);
         pointLightData.range = pointLightComponent.range;
         pointLightData.attenuation = pointLightComponent.attenuation;
 
