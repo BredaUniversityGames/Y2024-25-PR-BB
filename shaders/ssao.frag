@@ -28,8 +28,8 @@ layout (set = 1, binding = 0) buffer SampleKernel { vec4 samples[]; } uSampleKer
 layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
-
 const int kernelSize = 64;
+
 void main()
 {
     const vec2 noiseScale = vec2(pushConstants.screenWidth / 4.0, pushConstants.screenHeight / 4.0); // scale noise to screen size

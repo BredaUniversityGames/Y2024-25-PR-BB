@@ -1,6 +1,7 @@
 ﻿#include "pipelines/ssao_pipeline.hpp"
 
 #include "camera.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -12,12 +13,11 @@
 #include <random>
 #include <single_time_commands.hpp>
 
-SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget, const CameraResource& camera)
+SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
     , _ssaoTarget(ssaoTarget)
-    , _camera(camera)
 {
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
@@ -61,8 +61,7 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _descriptorSet }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, _camera.DescriptorSet(currentFrame), {});
-
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, scene.gpuScene->MainCamera().DescriptorSet(currentFrame), {});
     commandBuffer.draw(3, 1, 0, 0);
 
     _context->GetDrawStats().Draw(3);
