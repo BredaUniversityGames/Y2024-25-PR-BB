@@ -20,13 +20,17 @@ public:
     // Load sound, mp3 or .wav etc
     void LoadSFX(SoundInfo& soundInfo);
 
+    // Return the soundinfo associated with the path
+    // TODO return vec with all infos with this path
+    SoundInfo& GetSFX(std::string_view path);
+
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
-    void PlaySFX(SoundInfo& soundInfo);
+    SoundInstance PlaySFX(SoundInfo& soundInfo, float volume, bool startPaused);
 
     // Stops looping sounds
     // Regular sounds will stop by themselves once they are done
-    void StopSFX(const SoundInfo& soundInfo);
+    void StopSFX(SoundInstance instance);
 
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well
@@ -62,6 +66,8 @@ private:
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
 
+    std::unordered_map<AudioUID, SoundInfo*> _soundInfos {};
+
     std::unordered_map<AudioUID, FMOD_SOUND*> _sounds {};
     std::unordered_map<AudioUID, FMOD_STUDIO_BANK*> _banks {};
     std::unordered_map<AudioUID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
@@ -69,4 +75,5 @@ private:
     std::unordered_map<AudioUID, FMOD_CHANNEL*> _channelsActive {};
 
     AudioUID _nextEventId = 0;
+    AudioUID _nextSoundId = 0;
 };

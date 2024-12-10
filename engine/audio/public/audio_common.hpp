@@ -10,21 +10,30 @@ struct FMOD_STUDIO_EVENTINSTANCE;
 struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
 
-using AudioUID = uint32_t;
-using ChannelID = uint32_t;
+using AudioUID = int32_t;
+using ChannelID = int32_t;
 
 struct SoundInfo
 {
     std::string_view path {};
-    AudioUID uid = 0;
+    AudioUID uid = -1;
 
-    float volume = 1.0f;
     bool isLoop = false;
     bool is3D = false;
+};
+
+struct SoundInstance
+{
+    SoundInstance();
+    explicit SoundInstance(const ChannelID channelId)
+        : id(channelId)
+    {
+    }
+    ChannelID id = -1;
 };
 
 struct BankInfo
 {
     std::string_view path {};
-    AudioUID uid = 0;
+    AudioUID uid = -1;
 };

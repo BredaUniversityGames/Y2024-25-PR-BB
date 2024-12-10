@@ -1,8 +1,6 @@
 #include "audio_module.hpp"
 
-#include
-#include
-
+#include <algorithm>
 #include <iostream>
 
 #include "fmod_debug.hpp"
@@ -63,26 +61,27 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    for (auto id : eventsToRemove)
+    for (const auto id : eventsToRemove)
     {
         _events.erase(id);
     }
 
-    _channelsActive.erase(std::remove_if(_channelsActive.begin(), _channelsActive.end(), [](FMOD_CHANNEL* channel)
-                              {   FMOD_BOOL isPlaying = false;
-            if (channel)
+    std::erase_if(_channelsActive, [](const auto& pair)
+        {
+            FMOD_BOOL isPlaying = false;
+            if (pair.second)
             {
-                FMOD_CHECKRESULT(FMOD_Channel_IsPlaying(channel, &isPlaying));
+                FMOD_CHECKRESULT(FMOD_Channel_IsPlaying(pair.second, &isPlaying));
             }
-            return !static_cast<bool>(isPlaying); }),
-        _channelsActive.end());
+            return !static_cast<bool>(isPlaying); });
 }
 void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
     const AudioUID hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
-    if (_sounds.contains(hash))
+    if (_sounds.contains(hash) && _soundInfos.contains(hash))
     {
+        bblog::error("Could not load sound, sound already loaded: {0}", soundInfo.path);
         return;
     }
 
@@ -93,30 +92,47 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
     FMOD_CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
 
     _sounds[hash] = sound;
+    _soundInfos[hash] = &soundInfo;
 }
-void AudioModule::PlaySFX(SoundInfo& soundInfo)
+SoundInfo& AudioModule::GetSFX(const std::string_view path)
+{
+    const AudioUID hash = std::hash<std::string_view> {}(path);
+    const auto it = std::ranges::find_if(_soundInfos, [&](const std::unordered_map<AudioUID, SoundInfo*>::value_type& vt)
+        {
+        if (vt.second->uid == hash)
+        {
+            return true;
+        }
+        return false; });
+
+    return *it->second;
+}
+SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, const bool startPaused)
 {
     if (!_sounds.contains(soundInfo.uid))
     {
         bblog::error("Could not play sound, sound not loaded: {0}", soundInfo.path);
-        return;
+        return SoundInstance(-1);
     }
 
     FMOD_CHANNEL* channel = nullptr;
-    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, true, &channel));
-
-    FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, soundInfo.volume));
-
-    _channelsActive.emplace(soundInfo.uid, channel);
-
-    FMOD_CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
-}
-void AudioModule::StopSFX(const SoundInfo& soundInfo)
-{
-    if (soundInfo.isLoop && _channelsActive.contains(soundInfo.uid))
+    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, startPaused, &channel));
+    FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, volume));
+    if (!startPaused)
     {
-        FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[soundInfo.uid]));
-        _channelsActive.erase(soundInfo.uid);
+        FMOD_CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
+    }
+    const ChannelID soundId = _nextSoundId;
+    _channelsActive[soundId] = channel;
+    ++_nextSoundId;
+
+    return SoundInstance(soundId);
+}
+void AudioModule::StopSFX(const SoundInstance instance)
+{
+    if (_channelsActive.contains(instance.id))
+    {
+        FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[instance.id]));
     }
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
@@ -160,7 +176,7 @@ void AudioModule::Update3DSoundPosition(const AudioUID id, const glm::vec3& posi
 {
     const auto pos = FMOD_VECTOR(position.x, position.y, position.z);
 
-    FMOD_Channel_Set3DAttributes(_channelsActive[id], pos, nullptr);
+    FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, nullptr);
 }
 NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {

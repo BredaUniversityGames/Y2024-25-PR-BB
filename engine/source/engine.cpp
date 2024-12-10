@@ -297,7 +297,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (input.IsKeyPressed(KeyboardCode::eP))
     {
-        audioModule.PlaySFX(si);
+        audioModule.PlaySFX(si, 1.0f, false);
         particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
     }
 
