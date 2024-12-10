@@ -363,7 +363,7 @@ void Renderer::InitializeSSAOTarget()
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* stbiData = stbi_loadf("assets/hdri/overcast_soil_2_4k.hdr", &width, &height, &numChannels, 4);
+    float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
 
     if (stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");

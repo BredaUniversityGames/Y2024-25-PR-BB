@@ -15,7 +15,7 @@ layout (push_constant) uniform PushConstants
 layout (location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
-#define CLAMP_VAL 3
+#define CLAMP_VAL 10
 
 vec3 MapDirection(vec2 coords, uint faceIndex);
 vec2 SampleSphericalMap(vec3 dir);
@@ -32,7 +32,7 @@ void main()
     vec3 R = N;
     vec3 V = R;
 
-    const uint SAMPLE_COUNT = 512;
+    const uint SAMPLE_COUNT = 64;
     float totalWeight = 0.0;
     vec3 prefilteredColor = vec3(0.0);
     for (uint i = 0; i < SAMPLE_COUNT; ++i)
@@ -46,7 +46,7 @@ void main()
         float NoL = max(dot(N, L), 0.0);
         if (NoL > 0.0)
         {
-            prefilteredColor += clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, CLAMP_VAL)* NoL;
+            prefilteredColor += clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, CLAMP_VAL) * NoL;
             totalWeight += NoL;
         }
     }
@@ -62,27 +62,27 @@ vec3 MapDirection(vec2 coords, uint faceIndex)
     vec3 direction;
     if (faceIndex == 0)
     { // +X face
-        direction = vec3(1.0, -uvRemapped.y, -uvRemapped.x);
+      direction = vec3(1.0, -uvRemapped.y, -uvRemapped.x);
     }
     else if (faceIndex == 1)
     { // -X face
-        direction = vec3(-1.0, -uvRemapped.y, uvRemapped.x);
+      direction = vec3(-1.0, -uvRemapped.y, uvRemapped.x);
     }
     else if (faceIndex == 2)
     { // +Y face
-        direction = vec3(uvRemapped.x, 1.0, uvRemapped.y);
+      direction = vec3(uvRemapped.x, 1.0, uvRemapped.y);
     }
     else if (faceIndex == 3)
     { // -Y face
-        direction = vec3(uvRemapped.x, -1.0, -uvRemapped.y);
+      direction = vec3(uvRemapped.x, -1.0, -uvRemapped.y);
     }
     else if (faceIndex == 4)
     { // +Z face
-        direction = vec3(uvRemapped.x, -uvRemapped.y, 1.0);
+      direction = vec3(uvRemapped.x, -uvRemapped.y, 1.0);
     }
     else if (faceIndex == 5)
     { // -Z face
-        direction = vec3(-uvRemapped.x, -uvRemapped.y, -1.0);
+      direction = vec3(-uvRemapped.x, -uvRemapped.y, -1.0);
     }
 
     return normalize(direction);
@@ -135,12 +135,12 @@ vec3 ImportantceSampleGGX(vec2 Xi, vec3 N, float roughness)
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-    float a = roughness*roughness;
-    float a2 = a*a;
+    float a = roughness * roughness;
+    float a2 = a * a;
     float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
+    float NdotH2 = NdotH * NdotH;
 
-    float nom   = a2;
+    float nom = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = PI * denom * denom;
 

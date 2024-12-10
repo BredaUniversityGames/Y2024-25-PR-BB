@@ -306,7 +306,7 @@ void IBLPipeline::CreatePrefilterCubemap()
         .SetSize(128, 128)
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled)
-        .SetMips(fmin(floor(log2(creation.width)), 3.0));
+        .SetMips(fmin(floor(log2(creation.width)), 6.0));
 
     _prefilterMap = _context->Resources()->ImageResourceManager().Create(creation, _sampler);
 
