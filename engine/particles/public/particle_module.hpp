@@ -4,9 +4,9 @@
 
 #include "common.hpp"
 #include "entt/entity/entity.hpp"
+#include "enum_utils.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
-#include "enum_utils.hpp"
 
 #include <memory>
 
@@ -42,7 +42,7 @@ public:
     ~ParticleModule() override = default;
 
     void LoadEmitterPresets();
-    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f}, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f});
+    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f });
 
 private:
     std::shared_ptr<GraphicsContext> _context;
