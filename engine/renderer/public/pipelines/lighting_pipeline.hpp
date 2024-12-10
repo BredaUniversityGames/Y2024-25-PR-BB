@@ -15,7 +15,7 @@ struct RenderSceneDescription;
 class LightingPipeline final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
+    LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
     ~LightingPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -30,6 +30,7 @@ private:
         uint32_t normalRIndex;
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
+        uint32_t ssaoIndex;
         uint32_t depthIndex;
     } _pushConstants;
 

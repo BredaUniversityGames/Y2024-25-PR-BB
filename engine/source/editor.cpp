@@ -25,6 +25,7 @@
 #include "components/directional_light_component.hpp"
 #include "vulkan_context.hpp"
 #include "components/point_light_component.hpp"
+#include "pipelines/ssao_pipeline.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
@@ -150,6 +151,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
 
+    ImGui::Begin("SSAO settings");
+    ImGui::DragFloat("AO strength", &_renderer->GetSSAOPipeline().GetAOStrength(), 0.1f, 0.0f, 16.0f);
+    ImGui::DragFloat("Bias", &_renderer->GetSSAOPipeline().GetAOBias(), 0.001f, 0.0f, 0.1f);
+    ImGui::DragFloat("Radius", &_renderer->GetSSAOPipeline().GetAORadius(), 0.05f, 0.0f, 2.0f);
+    ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
+    ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
+    ImGui::End();
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))
