@@ -9,9 +9,13 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint positionIndex;
     uint noiseIndex;
+    uint screenWidth;
+    uint screenHeight;
     float aoStrength;
     float aoBias;
     float aoRadius;
+    float minAoDistance; // Distance at which AO parameters start to adjust
+    float maxAoDistance; // Distance at which AO parameters are at full strength
 } pushConstants;
 
 layout (set = 2, binding = 0) uniform CameraUBO
@@ -25,10 +29,11 @@ layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
 
-const vec2 noiseScale = vec2(1920.0 / 4.0, 1080.0 / 4.0); // screen = 800x600
 const int kernelSize = 64;
 void main()
 {
+    const vec2 noiseScale = vec2(pushConstants.screenWidth / 4.0, pushConstants.screenHeight / 4.0); // scale noise to screen size
+
     const vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
     const vec4 positionSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords);
 
@@ -47,10 +52,9 @@ void main()
 
     float distanceToCamera = length(screenSpacePosition);
 
-    // Define distance thresholds for interpolation
-    const float minDistance = 0.5; // Distance at which AO parameters start to adjust
-    const float maxDistance = 1.0; // Distance at which AO parameters are at full strength
-    const float factor = smoothstep(minDistance, maxDistance, distanceToCamera);
+    // Treshhold factor to determine AO amount
+    // Nice for performance and quality balance
+    const float factor = smoothstep(pushConstants.minAoDistance, pushConstants.maxAoDistance, distanceToCamera);
 
     const float adaptiveAoStrength = mix(pushConstants.aoStrength * 0.25, pushConstants.aoStrength, factor);
     const float adaptiveAoRadius = mix(pushConstants.aoRadius * 0.25, pushConstants.aoRadius, factor);

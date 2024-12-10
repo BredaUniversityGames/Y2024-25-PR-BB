@@ -36,6 +36,9 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
 
 void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) // NOLINT(*-include-cleaner)
 {
+    _pushConstants.screenWidth = _gBuffers.Size().x;
+    _pushConstants.screenHeight = _gBuffers.Size().y;
+
     vk::RenderingAttachmentInfoKHR ssaoColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_ssaoTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,

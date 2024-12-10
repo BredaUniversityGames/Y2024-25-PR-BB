@@ -23,6 +23,8 @@ public:
     float& GetAOStrength() { return _pushConstants.aoStrength; }
     float& GetAOBias() { return _pushConstants.aoBias; }
     float& GetAORadius() { return _pushConstants.aoRadius; }
+    float& GetMinAODistance() { return _pushConstants.minAoDistance; }
+    float& GetMaxAODistance() { return _pushConstants.maxAoDistance; }
     NON_MOVABLE(SSAOPipeline);
     NON_COPYABLE(SSAOPipeline);
 
@@ -32,9 +34,13 @@ private:
         uint32_t normalRIndex;
         uint32_t positionIndex;
         uint32_t ssaoNoiseIndex;
+        uint32_t screenWidth = 1920; // just for refference
+        uint32_t screenHeight = 1080;
         float aoStrength = 1.0f;
         float aoBias = 0.025f;
         float aoRadius = 0.5f;
+        float minAoDistance = 0.3f;
+        float maxAoDistance = 1.0f;
     } _pushConstants;
 
     void CreatePipeline();
