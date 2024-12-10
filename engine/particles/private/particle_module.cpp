@@ -9,6 +9,7 @@
 #include "engine.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
+#include "gpu_resources.hpp"
 #include "physics_module.hpp"
 #include "renderer.hpp"
 #include "resource_management/image_resource_manager.hpp"
@@ -95,41 +96,26 @@ void ParticleModule::LoadEmitterPresets()
     auto resources = _context->Resources();
 
     // hardcoded test emitter preset for now
+    CPUImage creation;
+    creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
+    creation.FromPNG("assets/textures/jeremi.png");
+    creation.isHDR = false;
+    auto image = _context->Resources()->ImageResourceManager().Create(creation);
+    _emitterImages.emplace_back(image);
+
     EmitterPreset preset;
     preset.emitDelay = 0.2f;
     preset.mass = 2.0f;
     preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
     preset.maxLife = 5.0f;
-    preset.materialIndex = LoadEmitterImage("assets/textures/jeremi.png");
+    preset.materialIndex = image.Index();
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
-    float biggestSize = glm::max(resources->ImageResourceManager().Access(_emitterImages[0])->width, resources->ImageResourceManager().Access(_emitterImages[0])->height);
+    float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
-        resources->ImageResourceManager().Access(_emitterImages[0])->width / biggestSize,
-        resources->ImageResourceManager().Access(_emitterImages[0])->height / biggestSize, 0.0f);
+        resources->ImageResourceManager().Access(image)->width / biggestSize,
+        resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
     _emitterPresets.emplace_back(preset);
-}
-
-uint32_t ParticleModule::LoadEmitterImage(const char* imagePath)
-{
-    int32_t width = 0, height = 0, numChannels = 0;
-    void* stbiData = stbi_load(imagePath, &width, &height, &numChannels, 4);
-
-    if (stbiData == nullptr)
-        throw std::runtime_error("Failed loading Emitter Image!");
-
-    std::vector<std::byte> data(width * height * 4);
-    std::memcpy(data.data(), stbiData, data.size());
-
-    stbi_image_free(stbiData);
-
-    CPUImage creation {};
-    creation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Emitter Image").SetData(std::move(data)).SetFormat(vk::Format::eR8G8B8A8Unorm);
-
-    auto image = _context->Resources()->ImageResourceManager().Create(creation);
-    _emitterImages.emplace_back(image);
-
-    return image.Index();
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)

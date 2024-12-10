@@ -63,7 +63,4 @@ private:
 
     std::vector<EmitterPreset> _emitterPresets;
     std::vector<ResourceHandle<GPUImage>> _emitterImages;
-
-    // temporary solution
-    uint32_t LoadEmitterImage(const char* imagePath);
 };
