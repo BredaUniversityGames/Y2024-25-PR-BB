@@ -31,6 +31,7 @@ private:
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
         uint32_t ssaoIndex;
+        uint32_t depthIndex;
     } _pushConstants;
 
     void CreatePipeline();

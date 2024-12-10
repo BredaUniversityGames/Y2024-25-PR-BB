@@ -1,7 +1,7 @@
 #include "engine.hpp"
 
+#include <glm/glm.hpp>
 #include <implot/implot.h>
-#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
@@ -15,8 +15,6 @@
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "editor.hpp"
-#include "emitter_component.hpp"
-#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
@@ -24,7 +22,6 @@
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
 #include "particle_module.hpp"
-#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -54,13 +51,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
-    // modules
-
     std::vector<std::string> modelPaths = {
         "assets/models/CathedralGLB_GLTF.glb",
         "assets/models/Terrain/scene.gltf",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
+        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/Cathedral.glb",
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -156,10 +152,10 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())

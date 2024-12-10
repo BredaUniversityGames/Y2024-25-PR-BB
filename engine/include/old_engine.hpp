@@ -33,7 +33,6 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
     PerformanceTracker _performanceTracker;
 
-    // modules
     std::unique_ptr<PhysicsModule> _physicsModule;
 
     MAYBE_UNUSED bool _shouldQuit = false;
