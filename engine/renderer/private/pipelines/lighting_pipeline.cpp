@@ -18,13 +18,12 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _bloomSettings(bloomSettings)
-    , _ssaoTarget(ssaoTarget)
 {
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
-    _pushConstants.ssaoIndex = _ssaoTarget.Index();
+    _pushConstants.ssaoIndex = ssaoTarget.Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
 
     vk::PhysicalDeviceProperties properties {};

@@ -1,9 +1,6 @@
 ﻿#include "pipelines/ssao_pipeline.hpp"
 
-#include "../vulkan_helper.hpp"
-
 #include "camera.hpp"
-#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -11,8 +8,8 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
+#include "resource_management/buffer_resource_manager.hpp"
 #include <random>
-#include <resource_management/buffer_resource_manager.hpp>
 #include <single_time_commands.hpp>
 
 SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget, const CameraResource& camera)
@@ -34,7 +31,7 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     CreatePipeline();
 }
 
-void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) // NOLINT(*-include-cleaner)
+void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
@@ -65,8 +62,6 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _descriptorSet }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, _camera.DescriptorSet(currentFrame), {});
-
-    // To add the descirpot sets for the kernel and noise buffers
 
     commandBuffer.draw(3, 1, 0, 0);
 
@@ -114,7 +109,7 @@ void SSAOPipeline::CreateBuffers()
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator;
     std::vector<glm::vec4> ssaoKernel;
-    for (unsigned int i = 0; i < 64; ++i)
+    for (uint32_t i = 0; i < 64; ++i)
     {
         glm::vec4 sample(
             randomFloats(generator) * 2.0 - 1.0,
@@ -125,14 +120,14 @@ void SSAOPipeline::CreateBuffers()
         sample *= randomFloats(generator);
 
         // scale magic to be more cluster near the actual fragment.
-        float scale = (float)i / 64.0;
+        float scale = static_cast<float>(i) / 64.0;
         scale = glm::mix(0.1f, 1.0f, scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
     }
 
     std::vector<glm::vec4> ssaoNoise;
-    for (unsigned int i = 0; i < 16; i++)
+    for (uint32_t i = 0; i < 16; i++)
     {
         glm::vec4 noise(
             randomFloats(generator) * 2.0 - 1.0,
@@ -145,7 +140,6 @@ void SSAOPipeline::CreateBuffers()
     auto resources { _context->Resources() };
     auto cmdBuffer = SingleTimeCommands(_context->VulkanContext());
 
-    bblog::warn("{} {} {}", ssaoKernel[0].x, ssaoKernel[0].y, ssaoKernel[0].z);
     // Sample Kernel buffer
     {
         BufferCreation creation {};
@@ -179,13 +173,10 @@ void SSAOPipeline::CreateBuffers()
         .SetData(std::move(byteData))
         .SetFlags(vk::ImageUsageFlagBits::eSampled)
         .SetFormat(vk::Format::eR32G32B32A32Sfloat);
-
     noiseImage.isHDR = true;
 
     _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage);
     _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
-
-    // sizeof(glm::vec4);
 }
 void SSAOPipeline::CreateDescriptorSetLayouts()
 {

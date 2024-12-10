@@ -45,5 +45,4 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
-    const ResourceHandle<GPUImage> _ssaoTarget;
 };
