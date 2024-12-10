@@ -9,6 +9,9 @@
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
 #include "time_module.hpp"
+#include "ui_module.hpp"
+
+#include "wren_bindings.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
@@ -24,18 +27,14 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
         .AddModule<AudioModule>()
+        .AddModule<UIModule>()
         .AddModule<ParticleModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
 
-    // Add modules here to expose them in scripting
-    {
-        auto& engineAPI = scripting.GetEngineClass();
-        engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
-    }
-
+    BindEngineAPI(scripting.GetForeignAPI());
     scripting.GenerateEngineBindingsFile();
-    instance.GetModule<ScriptingModule>().SetMainScript(instance, "game/game.wren");
+    scripting.SetMainScript(instance, "game/game.wren");
 
     return instance.Run();
 }

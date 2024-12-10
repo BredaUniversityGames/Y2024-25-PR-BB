@@ -242,6 +242,42 @@ void util::CopyBufferToImage(vk::CommandBuffer commandBuffer, vk::Buffer buffer,
 
     commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &region);
 }
+void util::CopyImageToImage(vk::CommandBuffer commandBuffer, vk::Image srcImage, vk::Image dstImage, vk::Extent2D srcSize, vk::Extent2D dstSize)
+{
+    vk::ImageBlit2 region {};
+    region.sType = vk::StructureType::eImageBlit2;
+    region.pNext = nullptr;
+
+    region.srcOffsets[1].x = srcSize.width;
+    region.srcOffsets[1].y = srcSize.height;
+    region.srcOffsets[1].z = 1;
+
+    region.dstOffsets[1].x = dstSize.width;
+    region.dstOffsets[1].y = dstSize.height;
+    region.dstOffsets[1].z = 1;
+
+    region.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+    region.srcSubresource.baseArrayLayer = 0;
+    region.srcSubresource.layerCount = 1;
+    region.srcSubresource.mipLevel = 0;
+    region.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+    region.dstSubresource.baseArrayLayer = 0;
+    region.dstSubresource.layerCount = 1;
+    region.dstSubresource.mipLevel = 0;
+
+    vk::BlitImageInfo2 blitInfo {};
+    blitInfo.sType = vk::StructureType::eBlitImageInfo2;
+    blitInfo.pNext = nullptr;
+    blitInfo.dstImage = dstImage;
+    blitInfo.dstImageLayout = vk::ImageLayout::eTransferDstOptimal;
+    blitInfo.srcImage = srcImage;
+    blitInfo.srcImageLayout = vk::ImageLayout::eTransferSrcOptimal;
+    blitInfo.filter = vk::Filter::eLinear;
+    blitInfo.regionCount = 1;
+    blitInfo.pRegions = &region;
+
+    commandBuffer.blitImage2(&blitInfo);
+}
 
 void util::BeginLabel(vk::Queue queue, std::string_view label, glm::vec3 color, const vk::DispatchLoaderDynamic dldi)
 {
