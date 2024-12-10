@@ -23,6 +23,7 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.depthIndex = _gBuffers.Depth().Index();
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);

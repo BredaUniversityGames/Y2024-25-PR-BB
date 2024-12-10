@@ -20,8 +20,8 @@ layout (location = 3) in vec2 inTexCoord;
 layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
-layout (location = 4) out mat3 TBN;
 layout (location = 3) out flat int drawID;
+layout (location = 4) out mat3 TBN;
 
 void main()
 {
