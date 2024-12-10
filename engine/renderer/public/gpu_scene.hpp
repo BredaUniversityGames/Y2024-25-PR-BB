@@ -73,8 +73,7 @@ public:
     const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
     uint32_t DrawCommandIndexCount(const Range& range) const
     {
-        assert(range.start > 0);
-        assert(range.count < _drawCommands.size());
+        assert(range.count <= _drawCommands.size());
 
         uint32_t count { 0 };
         for (size_t i = range.start; i < range.count; ++i)

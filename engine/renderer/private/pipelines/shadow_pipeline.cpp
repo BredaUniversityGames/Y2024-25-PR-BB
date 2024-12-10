@@ -18,7 +18,8 @@ ShadowPipeline::ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, 
     , _gBuffers(gBuffers)
     , _culler(_context, gpuScene)
 {
-    CreatePipeline();
+    CreateStaticPipeline();
+    CreateSkinnedPipeline();
 
     ResourceHandle<Buffer> mainDrawBufferHandle = gpuScene.IndirectDrawBuffer(0);
     const Buffer* mainDrawBuffer = _context->Resources()->BufferResourceManager().Access(mainDrawBufferHandle);
@@ -38,8 +39,10 @@ ShadowPipeline::ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, 
 
 ShadowPipeline::~ShadowPipeline()
 {
-    _context->VulkanContext()->Device().destroy(_pipeline);
-    _context->VulkanContext()->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_staticPipeline);
+    _context->VulkanContext()->Device().destroy(_staticPipelineLayout);
+    _context->VulkanContext()->Device().destroy(_skinnedPipeline);
+    _context->VulkanContext()->Device().destroy(_skinnedPipelineLayout);
 }
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -68,31 +71,62 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
+    if (scene.gpuScene->StaticDrawRange().count > 0)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
 
-    vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
-    vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
-    vk::Buffer indirectDrawBuffer = resources->BufferResourceManager().Access(_drawBuffer)->buffer;
+        vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
+        vk::Buffer indirectDrawBuffer = resources->BufferResourceManager().Access(_drawBuffer)->buffer;
 
-    commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-    commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
+        commandBuffer.pushConstants<uint32_t>(_skinnedPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { scene.gpuScene->StaticDrawRange().start });
 
-    commandBuffer.drawIndexedIndirect(
-        indirectDrawBuffer,
-        scene.gpuScene->StaticDrawRange().start,
-        scene.gpuScene->StaticDrawRange().count,
-        sizeof(DrawIndexedIndirectCommand),
-        _context->VulkanContext()->Dldi());
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
 
-    _context->GetDrawStats().IndirectDraw(scene.gpuScene->DrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawRange()));
+        commandBuffer.drawIndexedIndirect(
+            indirectDrawBuffer,
+            scene.gpuScene->StaticDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            scene.gpuScene->StaticDrawRange().count,
+            sizeof(DrawIndexedIndirectCommand),
+            _context->VulkanContext()->Dldi());
+
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawRange().count, scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawRange()));
+    }
+
+    if (scene.gpuScene->SkinnedDrawRange().count > 0)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
+
+        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
+        vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_drawBuffer)->buffer;
+
+        commandBuffer.pushConstants<uint32_t>(_skinnedPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { scene.gpuScene->SkinnedDrawRange().start });
+
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
+        commandBuffer.drawIndexedIndirect(
+            indirectDrawBuffer,
+            scene.gpuScene->SkinnedDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            scene.gpuScene->SkinnedDrawRange().count,
+            sizeof(DrawIndexedIndirectCommand),
+            _context->VulkanContext()->Dldi());
+
+        _context->GetDrawStats().IndirectDraw(scene.gpuScene->SkinnedDrawRange().count, scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->SkinnedDrawRange()));
+    }
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());
 }
 
-void ShadowPipeline::CreatePipeline()
+void ShadowPipeline::CreateStaticPipeline()
 {
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {
         .depthTestEnable = vk::True,
@@ -110,7 +144,28 @@ void ShadowPipeline::CreatePipeline()
         .SetDepthStencilState(depthStencilStateCreateInfo)
         .SetColorAttachmentFormats({})
         .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
-        .BuildPipeline(_pipeline, _pipelineLayout);
+        .BuildPipeline(_staticPipeline, _staticPipelineLayout);
+}
+
+void ShadowPipeline::CreateSkinnedPipeline()
+{
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {
+        .depthTestEnable = vk::True,
+        .depthWriteEnable = vk::True,
+        .depthCompareOp = vk::CompareOp::eLess,
+        .depthBoundsTestEnable = vk::False,
+    };
+
+    std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_shadow.vert.spv");
+
+    PipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder
+        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
+        .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
+        .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetColorAttachmentFormats({})
+        .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
+        .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
 }
 
 void ShadowPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
