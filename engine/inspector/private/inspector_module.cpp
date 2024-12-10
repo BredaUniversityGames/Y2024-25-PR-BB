@@ -1,7 +1,10 @@
 #include "inspector_module.hpp"
 #include "editor.hpp"
+#include "imgui_backend.hpp"
 #include "implot/implot.h"
 #include "menus/performance_tracker.hpp"
+#include "profile_macros.hpp"
+#include "renderer.hpp"
 #include "renderer_module.hpp"
 
 #include <scripting_module.hpp>

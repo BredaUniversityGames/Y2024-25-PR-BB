@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include "engine.hpp"
+#include <memory>
 
 class Editor;
 class ImGuiBackend;
