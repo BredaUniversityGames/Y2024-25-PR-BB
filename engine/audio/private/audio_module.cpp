@@ -87,7 +87,7 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 }
 void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
-    const AudioUID hash = std::hash<std::string_view> {}(soundInfo.path);
+    const SoundID hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
     if (_sounds.contains(hash) && _soundInfos.contains(hash))
     {
@@ -106,8 +106,8 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
 }
 SoundInfo& AudioModule::GetSFX(const std::string_view path)
 {
-    const AudioUID hash = std::hash<std::string_view> {}(path);
-    const auto it = std::ranges::find_if(_soundInfos, [&](const std::unordered_map<AudioUID, SoundInfo*>::value_type& vt)
+    const SoundInfoID hash = std::hash<std::string_view> {}(path);
+    const auto it = std::ranges::find_if(_soundInfos, [&](const std::unordered_map<SoundInfoID, SoundInfo*>::value_type& vt)
         {
         if (vt.second->uid == hash)
         {
@@ -122,7 +122,7 @@ SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, con
     if (!_sounds.contains(soundInfo.uid))
     {
         bblog::error("Could not play sound, sound not loaded: {0}", soundInfo.path);
-        return SoundInstance(-1);
+        return SoundInstance(-1, soundInfo.is3D);
     }
 
     FMOD_CHANNEL* channel = nullptr;
@@ -136,7 +136,7 @@ SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, con
     _channelsActive[soundId] = channel;
     ++_nextSoundId;
 
-    return SoundInstance(soundId);
+    return SoundInstance(soundId, soundInfo.is3D);
 }
 void AudioModule::StopSFX(const SoundInstance instance)
 {
@@ -147,7 +147,7 @@ void AudioModule::StopSFX(const SoundInstance instance)
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
 {
-    const AudioUID hash = std::hash<std::string_view> {}(bankInfo.path);
+    const BankID hash = std::hash<std::string_view> {}(bankInfo.path);
     bankInfo.uid = hash;
 
     if (_banks.contains(hash))
@@ -174,21 +174,20 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     FMOD_CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-AudioUID AudioModule::StartOneShotEvent(std::string_view name)
+EventInstanceID AudioModule::StartOneShotEvent(std::string_view name)
 {
     return StartEvent(name, true);
 }
-NO_DISCARD AudioUID AudioModule::StartLoopingEvent(std::string_view name)
+NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(std::string_view name)
 {
     return StartEvent(name, false);
 }
-void AudioModule::Update3DSoundPosition(const AudioUID id, const glm::vec3& position)
+void AudioModule::Update3DSoundPosition(const ChannelID id, const glm::vec3& position)
 {
-    const auto pos = FMOD_VECTOR(position.x, position.y, position.z);
-
+    const auto pos = GLMToFMOD(position);
     FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, nullptr);
 }
-NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
+NO_DISCARD EventInstanceID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
@@ -196,7 +195,7 @@ NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool is
     FMOD_STUDIO_EVENTINSTANCE* evi = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_EventDescription_CreateInstance(eve, &evi));
 
-    const AudioUID eventId = _nextEventId;
+    const EventInstanceID eventId = _nextEventId;
     _events[eventId] = evi;
     ++_nextEventId;
 
@@ -209,7 +208,7 @@ NO_DISCARD AudioUID AudioModule::StartEvent(std::string_view name, const bool is
 
     return eventId;
 }
-void AudioModule::StopEvent(const AudioUID eventId)
+void AudioModule::StopEvent(const EventInstanceID eventId)
 {
     if (_events.contains(eventId))
     {
@@ -219,7 +218,6 @@ void AudioModule::StopEvent(const AudioUID eventId)
 
 void AudioModule::SetListener3DAttributes(const glm::vec3& position) const
 {
-    const auto pos = FMOD_VECTOR(position.x, position.y, position.z);
-
+    const auto pos = GLMToFMOD(position);
     FMOD_System_Set3DListenerAttributes(_coreSystem, 0, &pos, nullptr, nullptr, nullptr);
 }

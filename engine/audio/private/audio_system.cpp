@@ -1,13 +1,13 @@
 #include "audio_system.hpp"
 
-#include "glm/glm.hpp"
-
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "fmod_debug.hpp"
 
+#include <fmod.h>
 #include <ranges>
 
 AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
@@ -21,21 +21,24 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
 
     if (!listenerView.empty())
     {
-        const auto listener = listenerView.front();
-        if (ecs.GetRegistry().all_of<TransformComponent>(listener))
+        const auto entity = listenerView.front();
+        if (ecs.GetRegistry().all_of<TransformComponent>(entity))
         {
-            _audioModule.SetListener3DAttributes(TransformHelpers::GetWorldPosition(ecs.GetRegistry(), listener));
+            _audioModule.SetListener3DAttributes(TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity));
         }
     }
 
     const auto& emitterView = ecs.GetRegistry().view<AudioEmitterComponent, TransformComponent>();
-    for (const auto e : emitterView)
+    for (const auto entity : emitterView)
     {
-        AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(e);
-        TransformComponent& transform = ecs.GetRegistry().get<TransformComponent>(e);
+        AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(entity);
 
-        for (auto id : emitter.ids)
+        for (auto soundInstance : emitter.ids)
         {
+            if (soundInstance.is3D)
+            {
+                _audioModule.Update3DSoundPosition(soundInstance.id, TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity));
+            }
         }
     }
 }
@@ -45,7 +48,7 @@ void AudioSystem::Inspect()
 
     if (ImGui::TreeNode((std::string("Sounds loaded: ") + std::to_string(_audioModule._sounds.size())).c_str()))
     {
-        for (auto [fst, snd] : _audioModule._soundInfos)
+        for (const auto snd : _audioModule._soundInfos | std::views::values)
         {
             ImGui::Text("--| %s", snd->path.data());
         }

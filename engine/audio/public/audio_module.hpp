@@ -41,22 +41,22 @@ public:
 
     // Play an event once
     // Events started through this will stop on their own
-    AudioUID StartOneShotEvent(std::string_view name);
+    EventInstanceID StartOneShotEvent(std::string_view name);
 
     // Start an event that should play at least once
     // Store the returned id and later call StopEvent(id), it might not stop otherwise
-    NO_DISCARD AudioUID StartLoopingEvent(std::string_view name);
+    NO_DISCARD EventInstanceID StartLoopingEvent(std::string_view name);
 
     // Stops an event that is
-    void StopEvent(AudioUID eventId);
+    void StopEvent(EventInstanceID eventId);
 
     void SetListener3DAttributes(const glm::vec3& position) const;
 
-    void Update3DSoundPosition(const AudioUID id, const glm::vec3& position);
+    void Update3DSoundPosition(const ChannelID id, const glm::vec3& position);
 
 private:
     friend class AudioSystem;
-    NO_DISCARD AudioUID
+    NO_DISCARD EventInstanceID
     StartEvent(std::string_view name, bool isOneShot);
 
     FMOD_SYSTEM* _coreSystem = nullptr;
@@ -68,14 +68,14 @@ private:
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
-    std::unordered_map<AudioUID, SoundInfo*> _soundInfos {};
+    std::unordered_map<SoundInfoID, SoundInfo*> _soundInfos {};
 
-    std::unordered_map<AudioUID, FMOD_SOUND*> _sounds {};
-    std::unordered_map<AudioUID, FMOD_STUDIO_BANK*> _banks {};
-    std::unordered_map<AudioUID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
+    std::unordered_map<SoundID, FMOD_SOUND*> _sounds {};
+    std::unordered_map<BankID, FMOD_STUDIO_BANK*> _banks {};
+    std::unordered_map<EventInstanceID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
-    std::unordered_map<AudioUID, FMOD_CHANNEL*> _channelsActive {};
+    std::unordered_map<ChannelID, FMOD_CHANNEL*> _channelsActive {};
 
-    AudioUID _nextEventId = 0;
-    AudioUID _nextSoundId = 0;
+    EventInstanceID _nextEventId = 0;
+    SoundID _nextSoundId = 0;
 };

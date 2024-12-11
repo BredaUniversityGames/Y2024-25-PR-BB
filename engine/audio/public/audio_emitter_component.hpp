@@ -5,7 +5,7 @@
 struct FMOD_CHANNEL;
 struct AudioEmitterComponent
 {
-    std::vector<AudioUID> ids {};
+    std::vector<SoundInstance> ids {};
 
     bool _playFlag = false;
 };
