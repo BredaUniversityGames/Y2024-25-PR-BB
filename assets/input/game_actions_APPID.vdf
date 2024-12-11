@@ -28,7 +28,7 @@
 				"Ultimate"			"#Action_Ultimate"
 				"Reload"			"#Action_Reload"
 				"Jump"				"#Action_Jump"
-				"Meelee"			"#Action_Meelee"
+				"Melee"				"#Action_Melee"
 			}
 		}
 	}
@@ -47,7 +47,7 @@
 			"Action_Ultimate"		"Ultimate"
 			"Action_Reload"			"Reload Weapon"
 			"Action_Jump"			"Jump"
-			"Action_Meelee"			"Meelee Attack"
+			"Action_Melee"			"Melee Attack"
 		}
 	}
 }

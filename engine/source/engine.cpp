@@ -187,7 +187,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     jumpAction.inputs.emplace_back(GamepadButton::eSOUTH);
 
     DigitalAction& meeleeAction = actionSet.digitalActions.emplace_back();
-    meeleeAction.name = "Meelee";
+    meeleeAction.name = "Melee";
     meeleeAction.type = DigitalActionType::ePressed;
     meeleeAction.inputs.emplace_back(GamepadButton::eRIGHT_STICK);
 
