@@ -52,9 +52,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/cathedral_new.glb"
+        "assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
-        //"assets/models/Cathedral.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
