@@ -12,9 +12,9 @@
 #include "graphics_resources.hpp"
 #include "physics_module.hpp"
 #include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
-#include <renderer_module.hpp>
 
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
@@ -27,16 +27,13 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    const auto emitterView = _ecs->GetRegistry().view<EmitterComponent>();
+    const auto emitterView = _ecs->GetRegistry().view<EmitterComponent, RigidbodyComponent>();
     for (const auto entity : emitterView)
     {
-        if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
+        const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
+        if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
-            const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
-            {
-                _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
-            }
+            _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
     }
 
