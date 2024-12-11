@@ -17,7 +17,10 @@ class RendererModule final : public ModuleInterface
 
 public:
     RendererModule();
-    ~RendererModule() final = default;
+    ~RendererModule() override = default;
+
+    NON_COPYABLE(RendererModule);
+    NON_MOVABLE(RendererModule);
 
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
     std::shared_ptr<Renderer> GetRenderer() { return _renderer; }

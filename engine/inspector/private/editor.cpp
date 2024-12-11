@@ -52,7 +52,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
         if (relationship != nullptr && relationship->childrenCount > 0)
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name.c_str());
 
             if (ImGui::IsItemClicked())
             {
@@ -81,7 +81,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
@@ -145,7 +145,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Button("Dump json"))
     {
-        char* statsJson;
+        char* statsJson {};
         vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";

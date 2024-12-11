@@ -5,7 +5,6 @@
 #include "ecs_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
-#include "imgui_backend.hpp"
 #include "renderer.hpp"
 #include "ui_module.hpp"
 #include "vulkan_context.hpp"

@@ -32,6 +32,8 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
+#include <time_module.hpp>
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -99,13 +101,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    _lastFrameTime = std::chrono::high_resolution_clock::now();
-
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+    auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+    physics_system->InitializePhysicsColliders();
+
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -135,10 +137,7 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
-    auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
-    _lastFrameTime = currentFrameTime;
-    float deltaTimeMS = deltaTime.count();
+    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();

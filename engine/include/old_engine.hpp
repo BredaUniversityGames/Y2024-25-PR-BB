@@ -2,6 +2,7 @@
 
 #include "module_interface.hpp"
 
+#include <glm/glm.hpp>
 #include <memory>
 
 struct RigidbodyComponent;
@@ -20,6 +21,9 @@ public:
     OldEngine();
     ~OldEngine() override;
 
+    NON_COPYABLE(OldEngine);
+    NON_MOVABLE(OldEngine);
+
     ECSModule& GetECS() const { return *_ecs; }
 
 private:
@@ -28,7 +32,5 @@ private:
 
     ECSModule* _ecs;
     glm::ivec2 _lastMousePos {};
-    std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
-
     MAYBE_UNUSED bool _shouldQuit = false;
 };
