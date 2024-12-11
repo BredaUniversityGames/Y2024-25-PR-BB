@@ -1,7 +1,11 @@
 #include "application_module.hpp"
 #include "engine.hpp"
-#include "input/input_manager.hpp"
+#include "input/sdl/sdl_action_manager.hpp"
+#include "input/sdl/sdl_input_device_manager.hpp"
+#include "input/steam/steam_action_manager.hpp"
+#include "input/steam/steam_input_device_manager.hpp"
 #include "log.hpp"
+#include "steam_module.hpp"
 
 // SDL throws some weird errors when parsed with clang-analyzer (used in clang-tidy checks)
 // This definition fixes the issues and does not change the final build output
@@ -14,8 +18,6 @@
 ModuleTickOrder ApplicationModule::Init(Engine& engine)
 {
     ModuleTickOrder priority = ModuleTickOrder::eLast;
-
-    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
@@ -65,7 +67,22 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
         return vk::SurfaceKHR(surface);
     };
 
-    _inputManager = std::make_unique<InputManager>();
+    const SteamModule& steam = engine.GetModule<SteamModule>();
+    if (steam.InputAvailable())
+    {
+        bblog::info("Steam Input available, creating SteamActionManager. Controller input settings will be used from Steam");
+        _inputDeviceManager = std::make_unique<SteamInputDeviceManager>();
+        const SteamInputDeviceManager& inputManager = dynamic_cast<SteamInputDeviceManager&>(*_inputDeviceManager);
+        _actionManager = std::make_unique<SteamActionManager>(inputManager);
+    }
+    else
+    {
+        bblog::info("Steam Input not available, creating default ActionManager. Controller input settings will be used from program");
+        _inputDeviceManager = std::make_unique<SDLInputDeviceManager>();
+        const SDLInputDeviceManager& inputManager = dynamic_cast<SDLInputDeviceManager&>(*_inputDeviceManager);
+        _actionManager = std::make_unique<SDLActionManager>(inputManager);
+    }
+
     SetMouseHidden(_mouseHidden);
 
     return priority;
@@ -79,12 +96,12 @@ void ApplicationModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ApplicationModule::Tick(Engine& engine)
 {
-    _inputManager->Update();
+    _inputDeviceManager->Update();
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        _inputManager->UpdateEvent(event);
+        _inputDeviceManager->UpdateEvent(event);
         ImGui_ImplSDL3_ProcessEvent(&event);
 
         if (event.type == SDL_EventType::SDL_EVENT_QUIT)
@@ -93,6 +110,8 @@ void ApplicationModule::Tick(Engine& engine)
             break;
         }
     }
+
+    _actionManager->Update();
 }
 
 ApplicationModule::ApplicationModule() = default;
