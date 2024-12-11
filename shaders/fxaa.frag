@@ -43,9 +43,11 @@ void main()
 
     const float EDGE_THRESHOLD_MIN = pushConstants.edgeThresholdMin;
     const float EDGE_THRESHOLD_MAX = pushConstants.edgeThresholdMax;
+    const uint textureIndex = nonuniformEXT(pushConstants.sourceIndex);
+
 
     const vec2 inverseScreenSize = vec2(1.0 / float(pushConstants.screenWidth), 1.0 / float(pushConstants.screenHeight));
-    vec3 colorCenter = texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords).rgb;
+    vec3 colorCenter = texture(bindless_color_textures[textureIndex], texCoords).rgb;
 
     if (!pushConstants.enableFXAA) {
         outColor = vec4(colorCenter, 1.0);
@@ -56,10 +58,10 @@ void main()
     float lumaCenter = rgb2luma(colorCenter);
 
     // Luma at the four direct neighbours of the current fragment.
-    float lumaDown = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(0, -1)).rgb);
-    float lumaUp = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(0, 1)).rgb);
-    float lumaLeft = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(-1, 0)).rgb);
-    float lumaRight = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(1, 0)).rgb);
+    float lumaDown = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(0, -1)).rgb);
+    float lumaUp = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(0, 1)).rgb);
+    float lumaLeft = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(-1, 0)).rgb);
+    float lumaRight = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(1, 0)).rgb);
 
     // Find the maximum and minimum luma around the current fragment.
     float lumaMin = min(lumaCenter, min(min(lumaDown, lumaUp), min(lumaLeft, lumaRight)));
@@ -74,10 +76,10 @@ void main()
     }
 
     // Query the 4 remaining corners lumas.
-    float lumaDownLeft = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(-1, -1)).rgb);
-    float lumaUpRight = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(1, 1)).rgb);
-    float lumaUpLeft = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(-1, 1)).rgb);
-    float lumaDownRight = rgb2luma(textureOffset(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords, ivec2(1, -1)).rgb);
+    float lumaDownLeft = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(-1, -1)).rgb);
+    float lumaUpRight = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(1, 1)).rgb);
+    float lumaUpLeft = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(-1, 1)).rgb);
+    float lumaDownRight = rgb2luma(textureOffset(bindless_color_textures[textureIndex], texCoords, ivec2(1, -1)).rgb);
 
     // Combine the four edges lumas (using intermediary variables for future computations with the same values).
     float lumaDownUp = lumaDown + lumaUp;
@@ -138,8 +140,8 @@ void main()
     vec2 uv2 = currentUv + offset;
 
     // Read the lumas at both current extremities of the exploration segment, and compute the delta wrt to the local average luma.
-    float lumaEnd1 = rgb2luma(texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], uv1).rgb);
-    float lumaEnd2 = rgb2luma(texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], uv2).rgb);
+    float lumaEnd1 = rgb2luma(texture(bindless_color_textures[textureIndex], uv1).rgb);
+    float lumaEnd2 = rgb2luma(texture(bindless_color_textures[textureIndex], uv2).rgb);
     lumaEnd1 -= lumaLocalAverage;
     lumaEnd2 -= lumaLocalAverage;
 
@@ -163,12 +165,12 @@ void main()
         for (int i = 2; i < pushConstants.iterations; i++) {
             // If needed, read luma in 1st direction, compute delta.
             if (!reached1) {
-                lumaEnd1 = rgb2luma(texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], uv1).rgb);
+                lumaEnd1 = rgb2luma(texture(bindless_color_textures[textureIndex], uv1).rgb);
                 lumaEnd1 = lumaEnd1 - lumaLocalAverage;
             }
             // If needed, read luma in opposite direction, compute delta.
             if (!reached2) {
-                lumaEnd2 = rgb2luma(texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], uv2).rgb);
+                lumaEnd2 = rgb2luma(texture(bindless_color_textures[textureIndex], uv2).rgb);
                 lumaEnd2 = lumaEnd2 - lumaLocalAverage;
             }
             // If the luma deltas at the current extremities is larger than the local gradient, we have reached the side of the edge.
@@ -234,7 +236,7 @@ void main()
     }
 
     // Read the color at the new UV coordinates, and use it.
-    vec3 finalColor = texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], finalUv).rgb;
+    vec3 finalColor = texture(bindless_color_textures[textureIndex], finalUv).rgb;
     outColor = vec4(finalColor.xyz, 1.0);
 }
 
