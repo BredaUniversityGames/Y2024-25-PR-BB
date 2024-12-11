@@ -7,9 +7,6 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-#include <random>
-#include <resource_management/sampler_resource_manager.hpp>
-
 FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
     : _pushConstants()
     , _context(context)
@@ -17,12 +14,7 @@ FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     , _fxaaTarget(fxaaTarget)
     , _source(sourceTarget)
 {
-
-    vk::PhysicalDeviceProperties properties {};
-    _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
-
     _pushConstants.sourceIndex = _source.Index();
-
     CreatePipeline();
 }
 

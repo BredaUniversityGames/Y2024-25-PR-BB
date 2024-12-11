@@ -1,14 +1,11 @@
 ﻿#pragma once
 
 #include "frame_graph.hpp"
-#include "gbuffers.hpp"
 
 #include <cstdint>
 #include <memory>
 
-class BloomSettings;
 class GraphicsContext;
-class CameraResource;
 struct GPUImage;
 struct RenderSceneDescription;
 
@@ -16,9 +13,9 @@ class FXAAPipeline final : public FrameGraphRenderPass
 {
 public:
     FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget);
-    ~FXAAPipeline() final;
+    ~FXAAPipeline() override;
 
-    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
+    void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) override;
 
     float& GetEdgeTreshholdMin() { return _pushConstants.edgeThresholdMin; }
     float& GetEdgeTreshholdMax() { return _pushConstants.edgeThresholdMax; }
