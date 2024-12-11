@@ -88,7 +88,9 @@ void InputManager::UpdateEvent(const SDL_Event& event)
         break;
     }
     case SDL_EVENT_MOUSE_MOTION:
-        SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
+
+        _mouse.positionX = event.motion.x;
+        _mouse.positionY = event.motion.y;
         break;
 
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
