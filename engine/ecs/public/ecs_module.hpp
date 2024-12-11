@@ -66,8 +66,8 @@ T* ECSModule::GetSystem()
 {
     for (auto& s : systems)
     {
-        T* found = dynamic_cast<T*>(s.get());
-        return found;
+        if (auto* found = dynamic_cast<T*>(s.get()))
+            return found;
     }
     assert(false && "Could not find system");
     return nullptr;

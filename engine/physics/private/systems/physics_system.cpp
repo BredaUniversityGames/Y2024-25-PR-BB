@@ -24,6 +24,7 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
 void PhysicsSystem::InitializePhysicsColliders()
 {
     const auto view = _ecs.GetRegistry().view<StaticMeshComponent, TransformComponent>();
+ 
     for (const auto entity : view)
     {
         StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
