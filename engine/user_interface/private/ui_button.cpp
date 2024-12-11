@@ -87,6 +87,6 @@ void UIButton::UpdateAllChildrenAbsoluteTransform()
 {
     for (const auto& child : GetChildren())
     {
-        child->SetAbsoluteTransform(this->GetAbsoluteLocation() + (GetAbsoluteScale() / 2.f) + child->GetRelativeLocation(), child->GetAbsoluteScale());
+        child->SetAbsoluteTransform(this->GetAbsoluteLocation() + (GetAbsoluteScale() / 2.f) + child->GetRelativeLocation(), child->GetRelativeScale());
     }
 }

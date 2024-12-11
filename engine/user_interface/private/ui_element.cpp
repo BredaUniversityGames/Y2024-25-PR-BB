@@ -50,7 +50,9 @@ void UIElement::SetAbsoluteTransform(const glm::vec2& location, const glm::vec2&
     _absoluteLocation = location;
     _absoluteScale = scale;
     if (updateChildren)
+    {
         UpdateAllChildrenAbsoluteTransform();
+    }
 }
 void UIElement::ChildrenSubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {

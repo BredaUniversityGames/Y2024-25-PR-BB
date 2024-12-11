@@ -134,7 +134,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(bi);
 
     // todo: move this to scripting.
-    constexpr bool createMainMenu = false;
+    constexpr bool createMainMenu = true;
     if (createMainMenu)
     {
         engine.GetModule<ApplicationModule>().SetMouseHidden(false);
