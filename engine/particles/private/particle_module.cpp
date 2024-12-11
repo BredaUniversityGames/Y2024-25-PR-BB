@@ -53,11 +53,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
-            // TODO: this is temporary to avoid when an entity doesn't have a WorldMatrixComponent. Would there be a way to do this differently?
             const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
             emitter.emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
 
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Dynamic)
+            if (_physics->bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             {
                 _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
                 continue;
@@ -74,7 +73,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         {
             emitter.currentEmitDelay = emitter.maxEmitDelay;
         }
-        emitter.currentEmitDelay -= std::chrono::duration_cast<std::chrono::seconds>(engine.GetModule<TimeModule>().GetDeltatime()).count();
+        emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
 
         // update position and velocity
         if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
@@ -136,7 +135,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
         {
             JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
             emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
-            _ecs->GetRegistry().emplace<ActiveEmitterTag>(entity);
+            _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
     }
     else
@@ -166,7 +165,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;
 
-    _ecs->GetRegistry().emplace<EmitterComponent>(entity, component);
+    _ecs->GetRegistry().emplace_or_replace<EmitterComponent>(entity, component);
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
         _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
