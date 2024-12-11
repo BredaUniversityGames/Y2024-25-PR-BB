@@ -8,6 +8,8 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 
+#include <ranges>
+
 AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
     : _ecs(ecs)
     , _audioModule(audioModule)
@@ -15,30 +17,25 @@ AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
 }
 void AudioSystem::Update(ECSModule& ecs, float dt)
 {
-    {
-        const auto& view = ecs.GetRegistry().view<AudioListenerComponent>();
+    const auto& listenerView = ecs.GetRegistry().view<AudioListenerComponent>();
 
-        if (!view.empty())
+    if (!listenerView.empty())
+    {
+        const auto listener = listenerView.front();
+        if (ecs.GetRegistry().all_of<TransformComponent>(listener))
         {
-            const auto listener = view.front();
-            auto* transform = ecs.GetRegistry().try_get<TransformComponent>(listener);
-            if (transform)
-            {
-                _audioModule.SetListener3DAttributes(TransformHelpers::GetWorldPosition(ecs.GetRegistry(), listener));
-            }
+            _audioModule.SetListener3DAttributes(TransformHelpers::GetWorldPosition(ecs.GetRegistry(), listener));
         }
     }
 
+    const auto& emitterView = ecs.GetRegistry().view<AudioEmitterComponent, TransformComponent>();
+    for (const auto e : emitterView)
     {
-        const auto& view = ecs.GetRegistry().view<AudioEmitterComponent, TransformComponent>();
-        for (const auto e : view)
-        {
-            AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(e);
-            TransformComponent& transform = ecs.GetRegistry().get<TransformComponent>(e);
+        AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(e);
+        TransformComponent& transform = ecs.GetRegistry().get<TransformComponent>(e);
 
-            for (auto id : emitter.ids)
-            {
-            }
+        for (auto id : emitter.ids)
+        {
         }
     }
 }
@@ -46,20 +43,38 @@ void AudioSystem::Inspect()
 {
     ImGui::Begin("AudioSystem");
 
-    ImGui::Text("Sounds loaded: %u", _audioModule._sounds.size());
-    // if (ImGui::TreeNode("Collapsing Headers"))
-    // {
-    //     static bool closable_group = true;
-    //     ImGui::Checkbox("Show 2nd header", &closable_group);
-    //     if (ImGui::CollapsingHeader("Header", ImGuiTreeNodeFlags_None))
-    //     {
-    //         for ()
-    //     }
-    //     ImGui::TreePop();
-    // }
-    ImGui::Text("Sounds playing: %u", _audioModule._channelsActive.size());
-    ImGui::Text("Banks loaded: %u", _audioModule._banks.size());
-    ImGui::Text("Events playing %u", _audioModule._events.size());
+    if (ImGui::TreeNode((std::string("Sounds loaded: ") + std::to_string(_audioModule._sounds.size())).c_str()))
+    {
+        for (auto [fst, snd] : _audioModule._soundInfos)
+        {
+            ImGui::Text("--| %s", snd->path.data());
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode((std::string("Sounds playing: ") + std::to_string(_audioModule._channelsActive.size())).c_str()))
+    {
+        for (const auto key : _audioModule._channelsActive | std::views::keys)
+        {
+            ImGui::Text("--| %u", key);
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode((std::string("Banks Loaded: ") + std::to_string(_audioModule._banks.size())).c_str()))
+    {
+        for (const auto key : _audioModule._banks | std::views::keys)
+        {
+            ImGui::Text("--| %u", key);
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode((std::string("Events Playing: ") + std::to_string(_audioModule._events.size())).c_str()))
+    {
+        for (const auto key : _audioModule._events | std::views::keys)
+        {
+            ImGui::Text("--| %u", key);
+        }
+        ImGui::TreePop();
+    }
 
     static constexpr int spectrumSize = 128;
     static float spectrum[spectrumSize];
