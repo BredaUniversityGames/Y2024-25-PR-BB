@@ -12,43 +12,45 @@ layout (push_constant) uniform PushConstants
     uint sourceIndex;
     uint screenWidth;
     uint screenHeight;
+    int iterations;
+    float edgeThresholdMin;
+    float edgeThresholdMax;
+    float subPixelQuality;
+    bool enableFXAA;
 } pushConstants;
 
 layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
 float rgb2luma(vec3 rgb) {
-    rgb *= 255.0;
     return sqrt(dot(rgb, vec3(0.299, 0.587, 0.114)));
 }
 
-const float EDGE_THRESHOLD_MIN = 0.0312;
-const float EDGE_THRESHOLD_MAX = 0.125;
 
 float QUALITY(int i) {
-    if (i == 2) return float(i);
-    if (i == 3)return float(i);
-    if (i == 4) return float(i);
-    if (i == 5) return float(i);
-/** if (i == 2) return 1.0;
-    if (i == 3)return 1.0;
-    if (i == 4) return 1.0;
-    if (i == 5) return 1.0;*/
+    if (i >= 2 && i <= 5) return 1.0;
     if (i == 6) return 1.5;
-    if (i == 7) return 2.0;
-    if (i == 8) return 2.0;
-    if (i == 9) return 2.0;
-    if (i == 10) return 2.0;
+    if (i >= 7 && i <= 10) return 2.0;
     if (i == 11) return 4.0;
     if (i == 12) return 8.0;
 
-
+    // Optionally, handle unexpected values
+    return 8.0; // Default step size
 }
 
 void main()
 {
+
+    const float EDGE_THRESHOLD_MIN = pushConstants.edgeThresholdMin;
+    const float EDGE_THRESHOLD_MAX = pushConstants.edgeThresholdMax;
+
     const vec2 inverseScreenSize = vec2(1.0 / float(pushConstants.screenWidth), 1.0 / float(pushConstants.screenHeight));
     vec3 colorCenter = texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], texCoords).rgb;
+
+    if (!pushConstants.enableFXAA) {
+        outColor = vec4(colorCenter, 1.0);
+        return;
+    }
 
     // Luma at the current fragment
     float lumaCenter = rgb2luma(colorCenter);
@@ -158,7 +160,7 @@ void main()
     // If both sides have not been reached, continue to explore.
     if (!reachedBoth) {
 
-        for (int i = 2; i < 12; i++) {
+        for (int i = 2; i < pushConstants.iterations; i++) {
             // If needed, read luma in 1st direction, compute delta.
             if (!reached1) {
                 lumaEnd1 = rgb2luma(texture(bindless_color_textures[nonuniformEXT(pushConstants.sourceIndex)], uv1).rgb);
@@ -218,7 +220,7 @@ void main()
     float subPixelOffset1 = clamp(abs(lumaAverage - lumaCenter) / lumaRange, 0.0, 1.0);
     float subPixelOffset2 = (-2.0 * subPixelOffset1 + 3.0) * subPixelOffset1 * subPixelOffset1;
     // Compute a sub-pixel offset based on this delta.
-    float subPixelOffsetFinal = subPixelOffset2 * subPixelOffset2 * 0.75;
+    float subPixelOffsetFinal = subPixelOffset2 * subPixelOffset2 * pushConstants.subPixelQuality;
 
     // Pick the biggest of the two offsets.
     finalOffset = max(finalOffset, subPixelOffsetFinal);

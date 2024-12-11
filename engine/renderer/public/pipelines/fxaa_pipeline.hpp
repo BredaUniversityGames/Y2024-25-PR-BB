@@ -20,6 +20,12 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
+    float& GetEdgeTreshholdMin() { return _pushConstants.edgeThresholdMin; }
+    float& GetEdgeTreshholdMax() { return _pushConstants.edgeThresholdMax; }
+    float& GetSubPixelQuality() { return _pushConstants.subPixelQuality; }
+    int32_t& GetIterations() { return _pushConstants.iterations; }
+    bool& GetEnableFXAA() { return _pushConstants.enableFXAA; }
+
     NON_MOVABLE(FXAAPipeline);
     NON_COPYABLE(FXAAPipeline);
 
@@ -29,6 +35,11 @@ private:
         uint32_t sourceIndex;
         uint32_t screenWidth;
         uint32_t screenHeight;
+        int32_t iterations = 12;
+        float edgeThresholdMin = 0.0312;
+        float edgeThresholdMax = 0.125;
+        float subPixelQuality = 0.75;
+        bool enableFXAA = true;
     } _pushConstants;
 
     void CreatePipeline();

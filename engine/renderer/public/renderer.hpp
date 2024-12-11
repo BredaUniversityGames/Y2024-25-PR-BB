@@ -52,6 +52,7 @@ public:
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
+    FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
 
 private:
     friend class RendererModule;
