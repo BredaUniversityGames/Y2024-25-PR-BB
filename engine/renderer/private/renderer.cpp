@@ -24,6 +24,7 @@
 #include "pipelines/particle_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
+#include "pipelines/ssao_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "pipelines/ui_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -50,6 +51,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeSSAOTarget();
     InitializeTonemappingTarget();
     InitializeUITarget();
     LoadEnvironmentMap();
@@ -94,9 +96,10 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
     _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
+    _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
 
     CreateCommandBuffers();
@@ -116,6 +119,13 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation ssaoPass { *_ssaoPipeline };
+    ssaoPass.SetName("SSAO pass")
+        .SetDebugLabelColor(glm::vec3(0.87f))
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
+
     FrameGraphNodeCreation lightingPass { *_lightingPipeline };
     lightingPass.SetName("Lighting pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f)
@@ -123,6 +133,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
@@ -178,6 +189,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
+        .AddNode(ssaoPass)
         .AddNode(shadowPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
@@ -340,7 +352,18 @@ void Renderer::InitializeUITarget()
 
     _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
 }
+void Renderer::InitializeSSAOTarget()
+{
+    auto size = _swapChain->GetImageSize();
 
+    CPUImage ssaoImageData {};
+    ssaoImageData.SetName("SSAO Target")
+        .SetSize(size.x, size.y)
+        .SetFormat(vk::Format::eR8Unorm)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+
+    _ssaoTarget = _context->Resources()->ImageResourceManager().Create(ssaoImageData);
+}
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;

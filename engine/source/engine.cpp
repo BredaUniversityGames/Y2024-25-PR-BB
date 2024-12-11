@@ -51,8 +51,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         "assets/models/CathedralGLB_GLTF.glb",
         "assets/models/Terrain/scene.gltf",
         "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
-
+        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/Cathedral.glb",
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -66,12 +66,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     for (const auto& model : models)
     {
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy);
+
+        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy, model.first.animation);
         entities.emplace_back(entity);
     }
 
     TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
+
+    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
