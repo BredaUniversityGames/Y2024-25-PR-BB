@@ -48,7 +48,7 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
 
 bool ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
-    for (const DigitalInputAction& input : action.inputs)
+    for (const DigitalInputBinding& input : action.inputs)
     {
         bool result = std::visit([&](auto& arg)
             { return CheckInput(action.name, arg, action.type); }, input);

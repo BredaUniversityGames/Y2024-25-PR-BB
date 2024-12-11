@@ -17,25 +17,22 @@ enum class DigitalActionType : uint8_t
     eReleased,
 };
 
-using DigitalInputAction = std::variant<GamepadButton, KeyboardCode, MouseButton>;
-using AnalogInputAction = GamepadAnalog;
-
-using DigitalInputActionList = std::vector<DigitalInputAction>;
-using AnalogInputActionList = std::vector<AnalogInputAction>;
+using DigitalInputBinding = std::variant<GamepadButton, KeyboardCode, MouseButton>;
+using AnalogInputBinding = GamepadAnalog;
 
 // Action for button inputs.
 struct DigitalAction
 {
     std::string name {};
     DigitalActionType type {};
-    DigitalInputActionList inputs {};
+    std::vector<DigitalInputBinding> inputs {};
 };
 
 // Action for axis inputs.
 struct AnalogAction
 {
     std::string name {};
-    AnalogInputActionList inputs {};
+    std::vector<AnalogInputBinding> inputs {};
 };
 
 // A collection of actions for a game mode. (game mode -> how a player should play in a situation, e.g. main menu or gameplay)

@@ -40,20 +40,20 @@ void SDLActionManager::CheckAnalogInput(const AnalogAction& action, float& x, fl
         return;
     }
 
-    for (const AnalogInputAction& input : action.inputs)
+    for (const AnalogInputBinding& input : action.inputs)
     {
         switch (input)
         {
         // Steam Input allows to use DPAD as analog input, so we do the same for SDL input
-        case AnalogInputAction::eDPAD:
+        case AnalogInputBinding::eDPAD:
         {
             x = -static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_LEFT)) + static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_RIGHT));
             y = -static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_DOWN)) + static_cast<float>(_sdlInputDeviceManager.IsGamepadButtonHeld(GamepadButton::eDPAD_UP));
             break;
         }
 
-        case AnalogInputAction::eAXIS_LEFT:
-        case AnalogInputAction::eAXIS_RIGHT:
+        case AnalogInputBinding::eAXIS_LEFT:
+        case AnalogInputBinding::eAXIS_RIGHT:
         {
             static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING {
                 { GamepadAnalog::eAXIS_LEFT, { GamepadAxis::eLEFTX, GamepadAxis::eLEFTY } },
