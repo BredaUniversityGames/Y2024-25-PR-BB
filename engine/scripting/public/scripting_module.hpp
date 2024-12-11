@@ -48,7 +48,10 @@ public:
         return GetForeignAPI().klass<WrenEngine>("Engine");
     }
 
+    void HotReload(Engine& e);
+
 private:
+    std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
 
     std::unique_ptr<ScriptingContext> _context {};
