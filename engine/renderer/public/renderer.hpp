@@ -52,6 +52,8 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
 
+    void FlushCommands();
+
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;
