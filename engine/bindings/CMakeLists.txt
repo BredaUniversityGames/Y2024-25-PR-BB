@@ -3,6 +3,7 @@ module_default_init(Bindings)
 
 target_link_libraries(Bindings
         PUBLIC Scripting
+        PRIVATE Application
         PRIVATE Utility
         PRIVATE ECS
 )

@@ -6,14 +6,39 @@
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
+#include "application_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "input/input_codes/keys.hpp"
+#include "input/input_codes/mousebuttons.hpp"
+#include "magic_enum.hpp"
 
 namespace bindings
 {
 void BindMath(wren::ForeignModule& module);
 void BindEntity(wren::ForeignModule& module);
+
+template <auto v>
+auto ReturnVal() { return v; }
+
+template <typename T, size_t... Idx>
+void BindEnumSequence(wren::ForeignModule& module, const std::string& enumName, std::index_sequence<Idx...>)
+{
+    constexpr auto names = magic_enum::enum_names<T>();
+    constexpr auto values = magic_enum::enum_values<T>();
+
+    auto& enumClass = module.klass<T>(enumName);
+    ((enumClass.template funcStaticExt<ReturnVal<values[Idx]>>(std::string(names[Idx]))), ...);
+}
+
+template <typename T>
+void BindEnum(wren::ForeignModule& module, const std::string& enumName)
+{
+    constexpr auto enum_size = magic_enum::enum_count<T>();
+    auto index_sequence = std::make_index_sequence<enum_size>();
+    BindEnumSequence<T>(module, enumName, index_sequence);
+}
 
 float TimeModuleGetDeltatime(TimeModule& self)
 {
@@ -91,6 +116,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         auto& engineAPI = module.klass<WrenEngine>("Engine");
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
+        engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
     }
 
     // Time Module
@@ -106,6 +132,14 @@ void BindEngineAPI(wren::ForeignModule& module)
         wren_class.funcExt<bindings::CreateEntity>("NewEntity");
         wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+    }
+
+    // Input
+    {
+        auto& wren_class = module.klass<ApplicationModule>("Input");
+
+        bindings::BindEnum<KeyboardCode>(module, "Keycode");
+        bindings::BindEnum<MouseButton>(module, "Mousebutton");
     }
 
     // Components
