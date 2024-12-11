@@ -38,7 +38,7 @@ private:
         int32_t iterations = 12;
         float edgeThresholdMin = 0.0312;
         float edgeThresholdMax = 0.125;
-        float subPixelQuality = 0.75;
+        float subPixelQuality = 1.2f;
         bool enableFXAA = true;
     } _pushConstants;
 
