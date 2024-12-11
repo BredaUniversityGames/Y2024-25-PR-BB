@@ -6,9 +6,9 @@
 #include <memory>
 
 class GraphicsContext;
+class GBuffers;
 struct GPUImage;
 struct RenderSceneDescription;
-
 class FXAAPipeline final : public FrameGraphRenderPass
 {
 public:
