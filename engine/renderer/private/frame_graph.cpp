@@ -420,10 +420,19 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
 
+    // If the same resource is found as an earlier output, we increase the version of the resource
+    auto itr = _outputResourcesMap.find(resource.name);
+    if (itr != _outputResourcesMap.end())
+    {
+        // Save the newest resource version for fast look up later
+        _newestVersionedResourcesMap[resource.name] = resourceHandle;
+
+        resource.version = _resources[itr->second].version + 1;
+        resource.name += + "_v-" + std::to_string(resource.version);
+    }
+
     if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
     {
-        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource, which is not possible. If you want to change the order of nodes, please use the eReference resource type to reference resources produced by multiple nodes.");
-
         resource.info = creation.info;
         resource.output = resourceHandle;
         resource.producer = producer;
@@ -442,6 +451,13 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
     resource.name = GetResourceName(creation);
+
+    // If the resource has multiple versions, find the newest one and use that one as input instead
+    auto itr = _newestVersionedResourcesMap.find(resource.name);
+    if (itr != _outputResourcesMap.end())
+    {
+        resource.name = itr->second;
+    }
 
     return resourceHandle;
 }

@@ -55,7 +55,7 @@ struct FrameGraphResourceInfo
     {
     }
 
-    std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>> resource;
+    std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>> resource {};
 };
 
 struct FrameGraphResourceCreation
@@ -78,6 +78,7 @@ struct FrameGraphResource
 
     FrameGraphResourceType type = FrameGraphResourceType::eNone;
     FrameGraphResourceInfo info;
+    uint32_t version = 0;
 
     FrameGraphNodeHandle producer = 0;
     FrameGraphResourceHandle output = 0;
@@ -159,7 +160,10 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const SwapChain& _swapChain;
 
+    // Used for fast lookup when linking input to output resources
     std::unordered_map<std::string, FrameGraphResourceHandle> _outputResourcesMap {};
+    // Used for fast lookup when trying to find the newest version of a reused output resource
+    std::unordered_map<std::string, FrameGraphResourceHandle> _newestVersionedResourcesMap {};
 
     std::vector<FrameGraphResource> _resources {};
     std::vector<FrameGraphNode> _nodes {};
