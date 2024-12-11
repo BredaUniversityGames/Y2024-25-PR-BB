@@ -190,7 +190,7 @@ vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, ui
     const float MAX_REFLECTION_LOD = 5.0;
     vec3 R = reflect(viewDir, normal);
     vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(brdfLUTIndex)], vec2(clamp(dot(normal, viewDir), 0.0, 0.99)), roughness).rg;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(brdfLUTIndex)], vec2(clamp(dot(normal, viewDir), 0.0, 0.99), roughness)).rg;
     return prefilteredColor * (F * envBRDF.x + envBRDF.y);
 }
 
