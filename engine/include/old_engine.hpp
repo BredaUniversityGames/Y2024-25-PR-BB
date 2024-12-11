@@ -9,7 +9,6 @@ struct RigidbodyComponent;
 class ECSModule;
 class Renderer;
 class Editor;
-class PhysicsModule;
 
 class OldEngine : public ModuleInterface
 {
