@@ -188,6 +188,13 @@ const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::ent
 
     return worldMatrix._worldMatrix;
 }
+const glm::mat4& TransformHelpers::GetWorldMatrix(const entt::registry& reg, entt::entity entity)
+{
+    assert(reg.valid(entity));
+    const WorldMatrixComponent& worldMatrix = reg.get<WorldMatrixComponent>(entity);
+
+    return worldMatrix._worldMatrix;
+}
 const glm::mat4& TransformHelpers::GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent)
 {
     return worldMatrixComponent._worldMatrix;

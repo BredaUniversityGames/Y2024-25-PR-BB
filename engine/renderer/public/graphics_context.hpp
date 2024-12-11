@@ -16,7 +16,7 @@ struct Sampler;
 struct GPUImage;
 
 constexpr uint32_t MAX_BINDLESS_RESOURCES
-    = 128;
+    = 1024;
 
 class GraphicsContext
 {

@@ -2,14 +2,15 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
-#include "model.hpp"
 #include "swap_chain.hpp"
 
 class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
+class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
@@ -42,12 +43,16 @@ public:
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
-    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
+    BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
+    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
+
+    void FlushCommands();
 
 private:
     friend class RendererModule;
@@ -72,6 +77,7 @@ private:
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -88,11 +94,13 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::shared_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> _skinnedBatchBuffer;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
 
@@ -103,6 +111,7 @@ private:
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
     void InitializeUITarget();
+    void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

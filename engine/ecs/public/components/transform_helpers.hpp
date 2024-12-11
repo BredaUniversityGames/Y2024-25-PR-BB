@@ -30,6 +30,7 @@ public:
     static glm::vec3 GetLocalScale(const TransformComponent& transformComponent);
 
     static glm::mat4 GetLocalMatrix(const entt::registry& reg, entt::entity entity);
+    static const glm::mat4& GetWorldMatrix(const entt::registry& reg, entt::entity entity);
     static const glm::mat4& GetWorldMatrix(entt::registry& reg, entt::entity entity);
     static const glm::mat4& GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent);
 

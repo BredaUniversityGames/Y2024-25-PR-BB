@@ -1,7 +1,9 @@
 #include "editor.hpp"
 
 #include "bloom_settings.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -10,25 +12,19 @@
 #include "ecs_module.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
-#include "graphics_resources.hpp"
 #include "imgui_backend.hpp"
 #include "log.hpp"
-#include "mesh.hpp"
-#include "model_loader.hpp"
-#include "performance_tracker.hpp"
-#include "physics_module.hpp"
-#include "profile_macros.hpp"
+#include "menus/performance_tracker.hpp"
+#include "pipelines/ssao_pipeline.hpp"
 #include "renderer.hpp"
-#include "resource_management/image_resource_manager.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
+#include "vulkan_context.hpp"
+
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-
-// TODO: Editor shouldnt depend on this.
-#include "vulkan_context.hpp"
 #include <vk_mem_alloc.h>
 
 Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
@@ -41,15 +37,14 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<TransformComponent>("Transform");
     _entityEditor.registerComponent<NameComponent>("Name");
     _entityEditor.registerComponent<RelationshipComponent>("Relationship");
-    _entityEditor.registerComponent<WorldMatrixComponent>("WorldMatrix");
+    _entityEditor.registerComponent<WorldMatrixComponent>("World Matrix");
+    _entityEditor.registerComponent<PointLightComponent>("Point Light");
+    _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
-    _imguiBackend->NewFrame();
-    ImGui::NewFrame();
 
-    DrawMainMenuBar();
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -59,7 +54,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
         if (relationship != nullptr && relationship->childrenCount > 0)
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name.c_str());
 
             if (ImGui::IsItemClicked())
             {
@@ -88,7 +83,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<int>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
@@ -148,11 +143,18 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
 
+    ImGui::Begin("SSAO settings");
+    ImGui::DragFloat("AO strength", &_renderer->GetSSAOPipeline().GetAOStrength(), 0.1f, 0.0f, 16.0f);
+    ImGui::DragFloat("Bias", &_renderer->GetSSAOPipeline().GetAOBias(), 0.001f, 0.0f, 0.1f);
+    ImGui::DragFloat("Radius", &_renderer->GetSSAOPipeline().GetAORadius(), 0.05f, 0.0f, 2.0f);
+    ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
+    ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
+    ImGui::End();
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))
     {
-        char* statsJson;
+        char* statsJson {};
         vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
 
         const char* outputFilePath = "vma_stats.json";
@@ -181,30 +183,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
 
     ImGui::End();
-
-    {
-        ZoneNamedN(zone, "ImGui Render", true);
-        ImGui::Render();
-    }
-}
-void Editor::DrawMainMenuBar()
-{
-    if (ImGui::BeginMainMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Load Scene"))
-            {
-                // Todo: Load saved scene.
-            }
-            if (ImGui::MenuItem("Save Scene"))
-            {
-                Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
 }
 
 void Editor::DisplaySelectedEntityDetails()

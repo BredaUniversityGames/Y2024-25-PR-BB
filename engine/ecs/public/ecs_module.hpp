@@ -32,6 +32,7 @@ public:
     NON_MOVABLE(ECSModule);
 
     entt::registry& GetRegistry() { return registry; }
+    const entt::registry& GetRegistry() const { return registry; }
     std::vector<std::unique_ptr<SystemInterface>>& GetSystems() { return systems; }
 
     template <typename T, typename... Args>
@@ -65,8 +66,8 @@ T* ECSModule::GetSystem()
 {
     for (auto& s : systems)
     {
-        T* found = dynamic_cast<T*>(s.get());
-        return found;
+        if (auto* found = dynamic_cast<T*>(s.get()))
+            return found;
     }
     assert(false && "Could not find system");
     return nullptr;
