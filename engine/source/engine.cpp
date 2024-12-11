@@ -1,7 +1,7 @@
 #include "engine.hpp"
 
-#include <glm/glm.hpp>
 #include <implot/implot.h>
+#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
@@ -9,20 +9,20 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
-#include "components/point_light_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "editor.hpp"
+#include "emitter_component.hpp"
+#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particle_interface.hpp"
 #include "particle_module.hpp"
+#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -34,19 +34,12 @@
 #include "ui_main_menu.hpp"
 #include "ui_module.hpp"
 
+#include <time_module.hpp>
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
-
-    ImGui::CreateContext();
-    ImPlot::CreateContext();
-
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
@@ -54,18 +47,20 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
 
+    // modules
+
     std::vector<std::string> modelPaths = {
-        "assets/models/BrainStem.glb",
-        //"assets/models/Cathedral.glb",
+        "assets/models/Cathedral.glb"
+        //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
-        "assets/models/DamagedHelmet.glb",
+        //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb"
     };
 
-    particleModule.GetParticleInterface().LoadEmitterPresets();
+    particleModule.LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
@@ -74,21 +69,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    for (size_t i = 0; i < 5; i++)
-    {
-        for (size_t j = 0; j < 1; j++)
-        {
-            auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
-            entities.emplace_back(entity);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
 
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i, 0.0f, j) * 2.0f);
-        }
-    }
+    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
-    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), env, glm::vec3 { 0.25f });
-
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -108,18 +94,19 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.01f;
+    cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+    // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
+    // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+    //  physics_system->InitializePhysicsColliders();
+
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -167,18 +154,15 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
-    auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
-    _lastFrameTime = currentFrameTime;
-    float deltaTimeMS = deltaTime.count();
+    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
+    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
-
-    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -214,7 +198,7 @@ void OldEngine::Tick(Engine& engine)
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.003f;
+            constexpr float CAM_SPEED = 0.03f;
 
             glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
             glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
@@ -295,6 +279,8 @@ void OldEngine::Tick(Engine& engine)
                         JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
                         physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
                     }
+
+                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
                 }
             }
         }
@@ -305,14 +291,23 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (input.IsKeyPressed(KeyboardCode::eP))
-    {
-        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-    }
-
     if (input.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::e0))
+    {
+        entt::entity entity = _ecs->GetRegistry().create();
+        RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
+
+        NameComponent node;
+        node.name = "Physics Entity";
+        _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
+
+        particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
     }
 
     static uint32_t eventId {};
@@ -330,12 +325,6 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
-
-    rendererModule.GetRenderer()->Render(deltaTimeMS);
-
-    _performanceTracker.Update();
-
     physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
@@ -343,7 +332,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _editor.reset();
 }
 
 OldEngine::OldEngine() = default;

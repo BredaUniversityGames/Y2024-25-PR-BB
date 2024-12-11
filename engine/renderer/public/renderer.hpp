@@ -10,9 +10,11 @@ class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
+class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class FXAAPipeline;
 class UIPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
@@ -49,6 +51,10 @@ public:
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
+    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
+    FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
+
+    void FlushCommands();
 
 private:
     friend class RendererModule;
@@ -67,18 +73,21 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<FXAAPipeline> _fxaaPipeline;
     std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _fxaaTarget;
     ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
@@ -95,6 +104,7 @@ private:
     std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
 
@@ -104,7 +114,9 @@ private:
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
+    void InitializeFXAATarget();
     void InitializeUITarget();
+    void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

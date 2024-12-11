@@ -52,7 +52,7 @@ void main()
         ParticleInstance instance;
         instance.position = particle.position;
         instance.materialIndex = particle.materialIndex;
-        instance.size = particle.size;
+        instance.size = particle.size.xy;
         instance.angle = particle.rotationVelocity.x;
         culledInstances.instances[culledIndex] = instance;
     }
