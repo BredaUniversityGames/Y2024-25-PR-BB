@@ -1,7 +1,5 @@
 #include "viewport.hpp"
 #include "ui_element.hpp"
-
-#include <algorithm>s
 #include <ranges>
 
 void Viewport::Update(InputManager& input)

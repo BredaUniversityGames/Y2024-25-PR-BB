@@ -20,6 +20,8 @@ class UIElement
 {
 public:
     UIElement() = default;
+    virtual ~UIElement() = default;
+    NON_COPYABLE(UIElement)
 
     enum class AnchorPoint
     {
@@ -32,26 +34,15 @@ public:
     } anchorPoint
         = AnchorPoint::eMiddle;
 
-    /**
-     * Whenever this gets called the updateChildrenAbsoluteLocations of the parent needs to get called as well!
-     * @param location the new location relative to the set anchor point of the parent.
-     */
     void SetLocation(const glm::vec2& location) noexcept { _relativeLocation = location; }
 
-    /**
-     * @return the location of the element relative to the set anchorpoint of the parent element.
-     */
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
     NO_DISCARD const glm::vec2& GetAbsoluteLocation() const noexcept { return _absoluteLocation; }
 
-    NO_DISCARD const glm::vec2& GetScale() const noexcept { return _absoluteScale; }
+    NO_DISCARD const glm::vec2& GetAbsoluteScale() const noexcept { return _absoluteScale; }
     NO_DISCARD const glm::vec2& GetRelativeScale() const noexcept { return _relativeScale; }
 
-    void SetScale(const glm::vec2& scale) noexcept
-    {
-        _relativeScale = scale;
-        _absoluteScale = scale;
-    }
+    void SetScale(const glm::vec2& scale) noexcept { _relativeScale = scale; }
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
@@ -86,8 +77,6 @@ public:
     int16_t zLevel = 1;
 
     virtual void UpdateAllChildrenAbsoluteTransform();
-
-    virtual ~UIElement() = default;
 
     /**
      * note: mostly for internal use to calculate the correct screen space position based on it's parents.

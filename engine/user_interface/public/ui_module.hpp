@@ -15,13 +15,13 @@ public:
     NO_DISCARD Viewport& GetViewport() { return *_viewport; };
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
-    // temp location
-    void CreateMainMenu(std::shared_ptr<GraphicsContext> context, std::function<void(void)> onPlayButtonClick, std::function<void(void)> onExitButtonClick);
+    void CreateMainMenu(std::function<void()> onPlayButtonClick, std::function<void()> onExitButtonClick);
 
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
 
     std::unique_ptr<Viewport> _viewport;
+    std::shared_ptr<GraphicsContext> _graphicsContext;
 
     void Tick(MAYBE_UNUSED Engine& engine) final;
     void Shutdown(MAYBE_UNUSED Engine& engine) final { }

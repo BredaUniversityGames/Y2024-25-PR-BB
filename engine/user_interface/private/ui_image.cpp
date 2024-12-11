@@ -12,9 +12,9 @@ void UIImageElement::Update(InputManager& input)
 
         // mouse inside boundary
         if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
-            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetScale().x)
+            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetAbsoluteScale().x)
             && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
-            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetScale().y))
+            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetAbsoluteScale().y))
         {
             input.SetInputConsumed();
         }
@@ -26,7 +26,7 @@ void UIImageElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
         QuadDrawInfo info {
-            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetScale(), 0))),
+            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetAbsoluteScale(), 0))),
             .textureIndex = _image.Index(),
         };
 

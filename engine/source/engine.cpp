@@ -5,6 +5,7 @@
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
+#include "canvas.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -30,8 +31,8 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
-
-#include <ui_module.hpp>
+#include "ui_main_menu.hpp"
+#include "ui_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -133,7 +134,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(bi);
 
     // todo: move this to scripting.
-    constexpr bool createMainMenu = true;
+    constexpr bool createMainMenu = false;
     if (createMainMenu)
     {
         engine.GetModule<ApplicationModule>().SetMouseHidden(false);
@@ -147,7 +148,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
             engine.SetExit(0);
         };
 
-        engine.GetModule<UIModule>().CreateMainMenu(engine.GetModule<RendererModule>().GetRenderer()->GetContext(), onPlayClick, onExitClick);
+        engine.GetModule<UIModule>().CreateMainMenu(onPlayClick, onExitClick);
     }
 
     bblog::info("Successfully initialized engine!");

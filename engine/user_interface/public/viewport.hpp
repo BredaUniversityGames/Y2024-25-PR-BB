@@ -34,6 +34,17 @@ public:
         return static_cast<T&>(addedChild);
     }
 
+    template <typename T>
+        requires(std::derived_from<T, UIElement>)
+    T& AddElement(std::unique_ptr<T> typePtr)
+    {
+        UIElement& addedChild = *_baseElements.emplace_back(std::move(typePtr));
+        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+            { return v1->zLevel < v2->zLevel; });
+
+        return static_cast<T&>(addedChild);
+    }
+
     void ClearViewport()
     {
         _clearAtEndOfFrame = true;

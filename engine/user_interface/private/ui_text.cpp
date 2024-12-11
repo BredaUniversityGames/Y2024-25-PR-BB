@@ -38,8 +38,8 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
     glm::vec2 elementTranslation = GetAbsoluteLocation();
     if (anchorPoint == AnchorPoint::eMiddle)
     {
-        elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetScale().y;
-        elementTranslation.y += GetScale().y / 3.0f;
+        elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
+        elementTranslation.y += GetAbsoluteScale().y / 3.0f;
     }
 
     for (const auto& character : _text)
@@ -56,9 +56,9 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             QuadDrawInfo info;
 
-            glm::vec2 correctedBearing = (glm::vec2(fontChar.bearing) / static_cast<float>(_font->characterHeight)) * GetScale().y;
+            glm::vec2 correctedBearing = (glm::vec2(fontChar.bearing) / static_cast<float>(_font->characterHeight)) * GetAbsoluteScale().y;
             glm::vec3 localTranslation = glm::vec3(elementTranslation + glm::vec2(localOffset + correctedBearing.x, -correctedBearing.y), 0);
-            glm::vec3 localScale = glm::vec3(glm::vec2(fontChar.size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetScale().y, GetScale().y, 0);
+            glm::vec3 localScale = glm::vec3(glm::vec2(fontChar.size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetAbsoluteScale().y, GetAbsoluteScale().y, 0);
 
             info.matrix = glm::scale(glm::translate(glm::mat4(1), localTranslation), localScale);
             info.textureIndex = _font->fontAtlas.Index();
@@ -69,11 +69,11 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             drawList.emplace_back(info);
 
-            localOffset += (float(fontChar.advance >> 6) / _font->characterHeight) * GetScale().y; // Convert advance from 1/64th pixels
+            localOffset += (float(fontChar.advance >> 6) / _font->characterHeight) * GetAbsoluteScale().y; // Convert advance from 1/64th pixels
         }
         else
         {
-            localOffset += (static_cast<int>(GetScale().y)) / 4.0;
+            localOffset += (static_cast<int>(GetAbsoluteScale().y)) / 4.0;
         }
     }
 }

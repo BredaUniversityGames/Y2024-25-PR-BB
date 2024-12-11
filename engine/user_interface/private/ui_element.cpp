@@ -1,7 +1,4 @@
 #include "ui_element.hpp"
-
-#include "log.hpp"
-#include <algorithm>
 #include <ranges>
 
 void UIElement::Update(InputManager& input)
@@ -20,26 +17,27 @@ void UIElement::UpdateAllChildrenAbsoluteTransform()
         glm::vec2 childRelativeLocation = child->GetRelativeLocation();
         glm::vec2 newChildLocation;
         glm::vec2 newChildScale = child->GetRelativeScale();
+
         switch (child->anchorPoint)
         {
         case AnchorPoint::eMiddle:
-            newChildLocation = GetAbsoluteLocation() + (GetScale() / 2.0f) + (childRelativeLocation - child->_relativeScale / 2.0f);
+            newChildLocation = GetAbsoluteLocation() + (GetAbsoluteScale() / 2.0f) + (childRelativeLocation - child->_relativeScale / 2.0f);
             break;
         case AnchorPoint::eTopLeft:
             newChildLocation = { GetAbsoluteLocation() + childRelativeLocation };
             break;
         case AnchorPoint::eTopRight:
-            newChildLocation = { GetAbsoluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + childRelativeLocation.y };
             break;
         case AnchorPoint::eBottomLeft:
-            newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y };
             break;
         case AnchorPoint::eBottomRight:
-            newChildLocation = { GetAbsoluteLocation().x + GetScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetScale().y - childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y };
             break;
         case AnchorPoint::eFill:
             newChildLocation = { GetAbsoluteLocation() };
-            newChildScale = { GetScale() };
+            newChildScale = { GetAbsoluteScale() };
             break;
         }
 

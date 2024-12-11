@@ -16,8 +16,7 @@ public:
         SetScale(size);
     };
 
-
-    void Update(InputManager &input) override;
+    void Update(InputManager& input) override;
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     void SetColor(glm::vec4 color) { _color = std::move(color); };
