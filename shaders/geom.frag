@@ -10,10 +10,10 @@ layout (location = 2) in vec2 texCoord;
 layout (location = 3) in flat int drawID;
 layout (location = 4) in mat3 TBN;
 
-layout (location = 0) out vec4 outAlbedoM;     // RGB: Albedo,   A: Metallic
-layout (location = 1) out vec4 outNormalR;     // RGB: Normal,   A: Roughness
-layout (location = 2) out vec4 outEmissiveAO;  // RGB: Emissive, A: AO
-layout (location = 3) out vec4 outPosition;    // RGB: Position  A: unused
+layout (location = 0) out vec4 outAlbedoM;// RGB: Albedo,   A: Metallic
+layout (location = 1) out vec4 outNormalR;// RGB: Normal,   A: Roughness
+layout (location = 2) out vec4 outEmissiveAO;// RGB: Emissive, A: AO
+layout (location = 3) out vec4 outPosition;// RGB: Position  A: unused
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
@@ -33,7 +33,12 @@ void main()
 
     if (material.useAlbedoMap)
     {
-        albedoSample *= pow(texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord), vec4(2.2));
+        vec4 albedo = texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord);
+        if (albedo.a < 1.0)
+        {
+            discard;
+        }
+        albedoSample *= pow(albedo, vec4(2.2));
     }
     if (material.useMRMap)
     {

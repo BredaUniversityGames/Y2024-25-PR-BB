@@ -28,6 +28,7 @@ public:
     NON_MOVABLE(ScriptingContext);
 
     NO_DISCARD wren::VM& GetVM() { return *_vm; }
+    void Reset();
 
     // Interpret a Wren Script, returns the name identifier of the script on success
     std::optional<std::string> RunScript(const std::string& path);
