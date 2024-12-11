@@ -56,11 +56,11 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-void SteamActionManager::GetAnalogAction(std::string_view actionName, float& x, float& y) const
+glm::vec2 SteamActionManager::GetAnalogAction(std::string_view actionName) const
 {
     if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
     {
-        return;
+        return { 0.0f, 0.0f };
     }
 
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
@@ -69,13 +69,11 @@ void SteamActionManager::GetAnalogAction(std::string_view actionName, float& x, 
     if (itr == actionSetCache.gamepadAnalogActionsCache.end())
     {
         bblog::error("[Input] Failed to find analog action \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
-        return;
+        return { 0.0f, 0.0f };
     }
 
     ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_steamInputDeviceManager.GetGamepadHandle(), itr->second);
-
-    x = _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x);
-    y = _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y);
+    return { _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x), _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y) };
 }
 
 bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const

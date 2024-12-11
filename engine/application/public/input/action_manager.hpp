@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include "input_device_manager.hpp"
+#include <glm/glm.hpp>
 #include <string>
 #include <variant>
 #include <vector>
@@ -64,7 +65,7 @@ public:
     // Button actions.
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
     // Axis actions.
-    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const = 0;
+    virtual glm::vec2 GetAnalogAction(std::string_view actionName) const = 0;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;

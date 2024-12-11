@@ -10,11 +10,11 @@ public:
     SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceManager);
 
     // Axis actions.
-    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const final;
+    virtual glm::vec2 GetAnalogAction(std::string_view actionName) const final;
 
 private:
     const SDLInputDeviceManager& _sdlInputDeviceManager;
 
-    void CheckAnalogInput(const AnalogAction& action, float& x, float& y) const;
+    glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
     [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const final;
 };

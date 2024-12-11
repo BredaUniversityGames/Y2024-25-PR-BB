@@ -13,7 +13,7 @@ public:
     virtual void Update() final;
     virtual void SetGameActions(const GameActions& gameActions) final;
 
-    virtual void GetAnalogAction(std::string_view actionName, float& x, float& y) const final;
+    virtual glm::vec2 GetAnalogAction(std::string_view actionName) const final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;

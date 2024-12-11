@@ -261,9 +261,7 @@ void OldEngine::Tick(Engine& engine)
             glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
             glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
 
-            glm::vec2 lookAnalogAction {};
-            actionManager.GetAnalogAction("Look", lookAnalogAction.x, lookAnalogAction.y);
-
+            glm::vec2 lookAnalogAction = actionManager.GetAnalogAction("Look");
             rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
             rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
 
@@ -304,9 +302,7 @@ void OldEngine::Tick(Engine& engine)
                 movementDir -= RIGHT;
             }
 
-            glm::vec2 moveAnalogAction {};
-            actionManager.GetAnalogAction("Move", moveAnalogAction.x, moveAnalogAction.y);
-
+            glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
             movementDir += RIGHT * moveAnalogAction.x;
             movementDir += FORWARD * moveAnalogAction.y;
 
