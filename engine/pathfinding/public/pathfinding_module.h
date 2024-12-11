@@ -29,6 +29,9 @@ public:
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
 private:
+
+    float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
+
     struct TriangleInfo
     {
         uint32_t indices[3] = {UINT32_MAX, UINT32_MAX, UINT32_MAX};

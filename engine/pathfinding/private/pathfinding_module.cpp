@@ -4,12 +4,17 @@
 #include <model_loader.hpp>
 #include <renderer_module.hpp>
 #include <set>
+#include <queue>
 
 ModuleTickOrder PathfindingModule::Init(Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
     this->SetNavigationMesh("assets/models/NavMesh2.gltf");
+    ComputedPath path = this->FindPath(
+        {0.7f, 0.0f,-0.7f},
+        {-0.7f, 0.0f, 0.7f}
+        );
 
     return ModuleTickOrder::eTick;
 }
@@ -47,28 +52,25 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     // We store all the triangles with their indices and center points
     //
     // We also store the triangles that use an index to find adjacent triangles
-    for(const auto& primitive : navmesh_mesh.primitives)
+    for(size_t i = 0; i < navmesh_mesh.indices.size(); i += 3)
     {
-        for(size_t i = 0; i < primitive.indices.size(); i += 3)
-        {
-            TriangleInfo info{};
-            info.indices[0] = primitive.indices[i];
-            info.indices[1] = primitive.indices[i+1];
-            info.indices[2] = primitive.indices[i+2];
+        TriangleInfo info{};
+        info.indices[0] = navmesh_mesh.indices[i];
+        info.indices[1] = navmesh_mesh.indices[i+1];
+        info.indices[2] = navmesh_mesh.indices[i+2];
 
-            glm::vec3 p0 = primitive.vertices[info.indices[0]].position;
-            glm::vec3 p1 = primitive.vertices[info.indices[1]].position;
-            glm::vec3 p2 = primitive.vertices[info.indices[2]].position;
+        glm::vec3 p0 = navmesh_mesh.vertices[info.indices[0]].position;
+        glm::vec3 p1 = navmesh_mesh.vertices[info.indices[1]].position;
+        glm::vec3 p2 = navmesh_mesh.vertices[info.indices[2]].position;
 
-            info.centre = (p0 + p1 + p2) / 3.0f;
+        info.centre = (p0 + p1 + p2) / 3.0f;
 
-            size_t triangle_idx = _triangles.size();
-            _triangles.push_back(info);
+        size_t triangle_idx = _triangles.size();
+        _triangles.push_back(info);
 
-            indices_to_triangles[info.indices[0]].push_back(triangle_idx);
-            indices_to_triangles[info.indices[1]].push_back(triangle_idx);
-            indices_to_triangles[info.indices[2]].push_back(triangle_idx);
-        }
+        indices_to_triangles[info.indices[0]].push_back(triangle_idx);
+        indices_to_triangles[info.indices[1]].push_back(triangle_idx);
+        indices_to_triangles[info.indices[2]].push_back(triangle_idx);
     }
 
     // Loop over all triangles in the mesh
@@ -133,9 +135,47 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     return 0;
 }
 
-ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos)
+ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 {
+    struct TriangleNode
+    {
+        float totalCost;
+        float estimateToGoal;
+        float totalEstimatedCost;
+        uint32_t triangleIndex;
+    };
+
     ComputedPath path{};
 
+    // Heuristic function
+    float estimated_cost = glm::length(endPos - startPos);
+    std::priority_queue<TriangleNode> openList;
+    std::priority_queue<TriangleNode> closedList;
+
+    float closestTriangleDistance = INFINITY;
+    uint32_t closestTriangleIndex = UINT32_MAX;
+    for(size_t i = 0; i < _triangles.size(); i++)
+    {
+        float distance_to_triangle = glm::distance(startPos, _triangles[i].centre);
+        if(distance_to_triangle < closestTriangleDistance)
+        {
+            closestTriangleDistance = distance_to_triangle;
+            closestTriangleIndex = i;
+        }
+    }
+
+    TriangleNode node{};
+    node.totalCost = 0;
+    node.estimateToGoal = Heuristic(startPos, endPos);
+    node.totalEstimatedCost = node.totalCost + node.estimateToGoal;
+    node.triangleIndex = closestTriangleIndex; // TODO: Easily find closest triangle
+
+    
+
     return path;
+}
+
+float PathfindingModule::Heuristic(glm::vec3 startPos, glm::vec3 endPos)
+{
+    return glm::length(endPos - startPos);
 }
