@@ -54,6 +54,8 @@ public:
     SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
     FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
 
+    void FlushCommands();
+
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;

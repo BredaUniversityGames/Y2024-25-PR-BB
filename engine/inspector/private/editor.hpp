@@ -22,14 +22,11 @@ public:
     void Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings);
 
 private:
-    void DrawMainMenuBar();
-
     ECSModule& _ecs;
     std::shared_ptr<Renderer> _renderer;
     std::shared_ptr<ImGuiBackend> _imguiBackend;
 
     entt::entity _selectedEntity = entt::null;
-
     EnttEditor::EntityEditor<entt::entity> _entityEditor {};
 
     void DisplaySelectedEntityDetails();
