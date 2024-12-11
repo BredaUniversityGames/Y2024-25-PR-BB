@@ -48,11 +48,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/CathedralGLB_GLTF.glb",
-        "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
-        //"assets/models/Cathedral.glb",
+        "assets/models/Cathedral.glb"
+        //"assets/models/BrainStem.glb",
+        //"assets/models/Adventure.glb",
+        //"assets/models/DamagedHelmet.glb",
+        //"assets/models/CathedralGLB_GLTF.glb",
+        // "assets/models/Terrain/scene.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb"
     };
 
     particleModule.GetParticleInterface().LoadEmitterPresets();
@@ -64,25 +67,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    for (const auto& model : models)
-    {
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(model.second), model.first.hierarchy, model.first.animation);
-        entities.emplace_back(entity);
-    }
+    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
-    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
-
-    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
-
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
-
-    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
-
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -102,7 +92,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.01f;
+    cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -111,8 +101,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
-    physics_system->InitializePhysicsColliders();
+    // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
+    // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+    //  physics_system->InitializePhysicsColliders();
 
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
@@ -187,7 +178,7 @@ void OldEngine::Tick(Engine& engine)
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.003f;
+            constexpr float CAM_SPEED = 0.03f;
 
             glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
             glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
