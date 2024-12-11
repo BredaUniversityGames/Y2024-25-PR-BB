@@ -24,6 +24,105 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_map>
 
+DrawBatch::DrawBatch(const std::shared_ptr<GraphicsContext>& context, vk::DescriptorSetLayout drawBatchDescriptorSetLayout, vk::DescriptorSetLayout redirectDescriptorSetLayout)
+    : _context(context)
+    , _drawBatchDescriptorSetLayout(drawBatchDescriptorSetLayout)
+    , _redirectDescriptorSetLayout(redirectDescriptorSetLayout)
+{
+    BufferCreation drawBufferCreation {};
+    drawBufferCreation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(true)
+        .SetName("Indirect draw buffer");
+
+    drawCommandsBuffer = _context->Resources()->BufferResourceManager().Create(drawBufferCreation);
+
+    BufferCreation countBufferCreation {};
+    countBufferCreation.SetSize(sizeof(uint32_t))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(true)
+        .SetName("Draw count buffer");
+
+    countBuffer = _context->Resources()->BufferResourceManager().Create(countBufferCreation);
+
+    BufferCreation redirectBufferCreation {};
+    redirectBufferCreation.SetSize(sizeof(uint32_t) * MAX_INSTANCES)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(true)
+        .SetName("Redirect draw buffer");
+
+    redirectBuffer = _context->Resources()->BufferResourceManager().Create(redirectBufferCreation);
+
+    vk::DescriptorSetAllocateInfo drawCommandsDSAllocateInfo {};
+    drawCommandsDSAllocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
+    drawCommandsDSAllocateInfo.descriptorSetCount = 1;
+    drawCommandsDSAllocateInfo.pSetLayouts = &_drawBatchDescriptorSetLayout;
+
+    drawCommandsDescriptorSet = _context->VulkanContext()->Device().allocateDescriptorSets(drawCommandsDSAllocateInfo).at(0);
+
+    const Buffer* drawCommandsBufferAccess = _context->Resources()->BufferResourceManager().Access(drawCommandsBuffer);
+    const Buffer* countBufferAccess = _context->Resources()->BufferResourceManager().Access(countBuffer);
+
+    vk::DescriptorBufferInfo drawCommandsBufferInfo {};
+    drawCommandsBufferInfo.buffer = drawCommandsBufferAccess->buffer;
+    drawCommandsBufferInfo.offset = 0;
+    drawCommandsBufferInfo.range = vk::WholeSize;
+
+    vk::WriteDescriptorSet drawCommandsWrite {};
+    drawCommandsWrite.dstSet = drawCommandsDescriptorSet;
+    drawCommandsWrite.dstBinding = 0;
+    drawCommandsWrite.dstArrayElement = 0;
+    drawCommandsWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    drawCommandsWrite.descriptorCount = 1;
+    drawCommandsWrite.pBufferInfo = &drawCommandsBufferInfo;
+
+    vk::DescriptorBufferInfo countBufferInfo {};
+    countBufferInfo.buffer = countBufferAccess->buffer;
+    countBufferInfo.offset = 0;
+    countBufferInfo.range = vk::WholeSize;
+
+    vk::WriteDescriptorSet countWrite {};
+    countWrite.dstSet = drawCommandsDescriptorSet;
+    countWrite.dstBinding = 1;
+    countWrite.dstArrayElement = 0;
+    countWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    countWrite.descriptorCount = 1;
+    countWrite.pBufferInfo = &countBufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets({ drawCommandsWrite, countWrite }, {});
+
+    const Buffer* redirectBufferAccess = _context->Resources()->BufferResourceManager().Access(redirectBuffer);
+
+    vk::DescriptorBufferInfo redirectBufferInfo {};
+    redirectBufferInfo.buffer = redirectBufferAccess->buffer;
+    redirectBufferInfo.offset = 0;
+    redirectBufferInfo.range = vk::WholeSize;
+
+    vk::WriteDescriptorSet redirectWrite {};
+    redirectWrite.dstSet = redirectDescriptorSet;
+    redirectWrite.dstBinding = 0;
+    redirectWrite.dstArrayElement = 0;
+    redirectWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    redirectWrite.descriptorCount = 1;
+    redirectWrite.pBufferInfo = &redirectBufferInfo;
+}
+
+DrawBatch::~DrawBatch()
+{
+}
+
+void DrawBatch::Write(const std::vector<DrawIndexedIndirectCommand>& drawCommands)
+{
+    assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(drawCommandsBuffer);
+
+    std::memcpy(buffer->mappedPtr, drawCommands.data(), drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+}
+
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
@@ -38,16 +137,13 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     InitializePointLightBuffer();
     InitializeObjectInstancesBuffers();
     InitializeSkinBuffers();
-
-    InitializeIndirectDrawBuffer();
-    InitializeIndirectDrawDescriptor();
 }
 
 GPUScene::~GPUScene()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
+    vkContext->Device().destroy(_drawBatchDescriptorSetLayout);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
     vkContext->Device().destroy(_skinDescriptorSetLayout);
@@ -638,79 +734,42 @@ void GPUScene::CreateSkinBuffers()
     }
 }
 
-void GPUScene::InitializeIndirectDrawBuffer()
-{
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        BufferCreation creation {};
-        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
-            .SetIsMappable(true)
-            .SetName("Indirect draw buffer");
-
-        _indirectDrawFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
-    }
-}
-
-void GPUScene::InitializeIndirectDrawDescriptor()
+void GPUScene::InitializeDrawBatchesDescriptorSetLayout()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vk::DescriptorSetLayoutBinding layoutBinding {
+    std::vector<vk::DescriptorSetLayoutBinding> drawBatchesBindings(2);
+    drawBatchesBindings[0] = vk::DescriptorSetLayoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
+    drawBatchesBindings[1] = vk::DescriptorSetLayoutBinding {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
+
+    std::vector<vk::DescriptorSetLayoutBinding> redirectBindings(1);
+    drawBatchesBindings[0] = vk::DescriptorSetLayoutBinding {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
+    vk::DescriptorSetLayoutCreateInfo drawBatchesDSLCreateInfo {
+        .bindingCount = static_cast<uint32_t>(drawBatchesBindings.size()),
+        .pBindings = drawBatchesBindings.data(),
     };
 
-    util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+    vk::DescriptorSetLayoutCreateInfo redirectedDSLCreateInfo {
+        .bindingCount = static_cast<uint32_t>(redirectBindings.size()),
+        .pBindings = redirectBindings.data(),
+    };
 
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
-    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _drawBufferDescriptorSetLayout; });
-    vk::DescriptorSetAllocateInfo allocateInfo {};
-    allocateInfo.descriptorPool = vkContext->DescriptorPool();
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-    allocateInfo.pSetLayouts = layouts.data();
-
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-        "Failed allocating descriptor sets!");
-
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
-    {
-        _indirectDrawFrameData[i].descriptorSet = descriptorSets[i];
-
-        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
-
-        vk::DescriptorBufferInfo bufferInfo {};
-        bufferInfo.buffer = buffer->buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = vk::WholeSize;
-
-        vk::WriteDescriptorSet bufferWrite {};
-        bufferWrite.dstSet = _indirectDrawFrameData[i].descriptorSet;
-        bufferWrite.dstBinding = 0;
-        bufferWrite.dstArrayElement = 0;
-        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-        bufferWrite.descriptorCount = 1;
-        bufferWrite.pBufferInfo = &bufferInfo;
-
-        vkContext->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
-    }
-}
-
-void GPUScene::WriteDraws(uint32_t frameIndex)
-{
-    assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
-
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
-
-    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+    _drawBatchDescriptorSetLayout = vkContext->Device().createDescriptorSetLayout(drawBatchesDSLCreateInfo);
+    _redirectDescriptorSetLayout = vkContext->Device().createDescriptorSetLayout(redirectedDSLCreateInfo);
 }

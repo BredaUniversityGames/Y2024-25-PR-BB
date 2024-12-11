@@ -35,14 +35,34 @@ struct RenderSceneDescription
     float deltaTime;
 };
 
-constexpr uint32_t MAX_INSTANCES = 4096 * 10;
-constexpr uint32_t MAX_POINT_LIGHTS = 8192;
-constexpr uint32_t MAX_BONES = 2048;
-
 struct DrawIndexedIndirectCommand
 {
     vk::DrawIndexedIndirectCommand command;
 };
+
+class DrawBatch
+{
+public:
+    DrawBatch(const std::shared_ptr<GraphicsContext>& context, vk::DescriptorSetLayout drawBatchDescriptorSetLayout, vk::DescriptorSetLayout redirectDescriptorSetLayout);
+    ~DrawBatch();
+
+    void Write(const std::vector<DrawIndexedIndirectCommand>& drawCommands);
+
+    ResourceHandle<Buffer> drawCommandsBuffer;
+    ResourceHandle<Buffer> countBuffer;
+    ResourceHandle<Buffer> redirectBuffer;
+    vk::DescriptorSet drawCommandsDescriptorSet;
+    vk::DescriptorSet redirectDescriptorSet;
+
+private:
+    std::shared_ptr<GraphicsContext> _context;
+    vk::DescriptorSetLayout _drawBatchDescriptorSetLayout;
+    vk::DescriptorSetLayout _redirectDescriptorSetLayout;
+};
+
+constexpr uint32_t MAX_INSTANCES = 4096 * 8;
+constexpr uint32_t MAX_POINT_LIGHTS = 8192;
+constexpr uint32_t MAX_BONES = 2048;
 
 class GPUScene
 {
@@ -62,9 +82,8 @@ public:
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDescriptorSetLayout; }
 
-    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
-    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+    const DrawBatch& IndirectDrawBuffer(uint32_t frameIndex) const { return _drawBatches[frameIndex]; }
+    vk::DescriptorSetLayout DrawBatchLayout() const { return _drawBatchDescriptorSetLayout; }
 
     const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
     const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
@@ -155,10 +174,14 @@ private:
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
+
     vk::DescriptorSetLayout _objectInstancesDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
-    vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
+
+    vk::DescriptorSetLayout _drawBatchDescriptorSetLayout;
+    vk::DescriptorSetLayout _redirectDescriptorSetLayout;
+    std::array<DrawBatch, MAX_FRAMES_IN_FLIGHT> _drawBatches;
+
     vk::DescriptorSetLayout _pointLightDescriptorSetLayout;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
@@ -208,8 +231,5 @@ private:
     void CreateObjectInstancesBuffers();
     void CreateSkinBuffers();
 
-    void InitializeIndirectDrawBuffer();
-    void InitializeIndirectDrawDescriptor();
-
-    void WriteDraws(uint32_t frameIndex);
+    void InitializeDrawBatchesDescriptorSetLayout();
 };
