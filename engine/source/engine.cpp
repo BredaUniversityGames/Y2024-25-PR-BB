@@ -274,12 +274,12 @@ void OldEngine::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (input.IsKeyPressed(KeyboardCode::eF1))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
-    if (input.IsKeyPressed(KeyboardCode::e0))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
     {
         entt::entity entity = _ecs->GetRegistry().create();
         RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
