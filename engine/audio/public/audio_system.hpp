@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.hpp"
-#include "ecs_module.hpp"
 #include "system_interface.hpp"
 
 class AudioModule;

@@ -5,6 +5,7 @@
 #include "audio_module.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "ecs_module.hpp"
 #include "fmod_debug.hpp"
 
 #include <fmod.h>
