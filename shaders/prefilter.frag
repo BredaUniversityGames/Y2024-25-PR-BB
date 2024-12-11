@@ -45,7 +45,7 @@ void main()
         float NoL = max(dot(N, L), 0.0);
         if (NoL > 0.0)
         {
-            prefilteredColor += clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, CLAMP_VAL) * NoL;
+            prefilteredColor += clamp(texture(bindless_color_textures[nonuniformEXT(pc.hdriIndex)], SampleSphericalMap(L)).rgb, 0, RADIANCE_CLAMP_VAL) * NoL;
             totalWeight += NoL;
         }
     }
