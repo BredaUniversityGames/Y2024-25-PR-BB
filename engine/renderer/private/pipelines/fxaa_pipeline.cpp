@@ -1,7 +1,5 @@
 ﻿#include "pipelines/fxaa_pipeline.hpp"
 
-#include "camera.hpp"
-#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -9,10 +7,8 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-#include "resource_management/buffer_resource_manager.hpp"
 #include <random>
 #include <resource_management/sampler_resource_manager.hpp>
-#include <single_time_commands.hpp>
 
 FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
     : _pushConstants()
