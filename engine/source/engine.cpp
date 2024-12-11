@@ -80,8 +80,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
     directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+    directionalLightComponent.nearPlane = -110.0f;
+    directionalLightComponent.farPlane = 63.0f;
+    directionalLightComponent.orthographicSize = 75.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
     TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     entt::entity cameraEntity = _ecs->GetRegistry().create();
@@ -93,8 +96,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.fov = 45.0f;
     cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
-
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
+    cameraComponent.reversedZ = true;
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);

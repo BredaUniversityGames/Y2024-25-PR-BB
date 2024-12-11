@@ -1,6 +1,7 @@
 #include "editor.hpp"
 
 #include "bloom_settings.hpp"
+#include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
@@ -16,6 +17,7 @@
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
 #include "model_loader.hpp"
+#include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/ssao_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
@@ -24,7 +26,6 @@
 #include "vertex.hpp"
 #include "vulkan_context.hpp"
 
-#include "pipelines/fxaa_pipeline.hpp"
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -43,6 +44,7 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<WorldMatrixComponent>("World Matrix");
     _entityEditor.registerComponent<PointLightComponent>("Point Light");
     _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
+    _entityEditor.registerComponent<CameraComponent>("Camera");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)

@@ -74,12 +74,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
-
-    vk::RenderingAttachmentInfoKHR stencilAttachmentInfo { depthAttachmentInfo };
-    stencilAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-    stencilAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-    stencilAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
+    depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 0.0f, 0 };
 
     vk::RenderingInfoKHR renderingInfo {};
     glm::uvec2 displaySize = _gBuffers.Size();
@@ -89,7 +84,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     renderingInfo.pColorAttachments = colorAttachmentInfos.data();
     renderingInfo.layerCount = 1;
     renderingInfo.pDepthAttachment = &depthAttachmentInfo;
-    renderingInfo.pStencilAttachment = util::HasStencilComponent(_gBuffers.DepthFormat()) ? &stencilAttachmentInfo : nullptr;
+    renderingInfo.pStencilAttachment = nullptr;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
     if (scene.gpuScene->StaticDrawRange().count > 0)
@@ -163,7 +158,7 @@ void GeometryPipeline::CreateStaticPipeline()
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = true;
     depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreater;
     depthStencilStateCreateInfo.depthBoundsTestEnable = false;
     depthStencilStateCreateInfo.minDepthBounds = 0.0f;
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
@@ -204,7 +199,7 @@ void GeometryPipeline::CreateSkinnedPipeline()
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = true;
     depthStencilStateCreateInfo.depthWriteEnable = true;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
     depthStencilStateCreateInfo.depthBoundsTestEnable = false;
     depthStencilStateCreateInfo.minDepthBounds = 0.0f;
     depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
