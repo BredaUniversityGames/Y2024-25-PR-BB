@@ -15,13 +15,16 @@
 #include "imgui_backend.hpp"
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
+#include "model_loader.hpp"
 #include "pipelines/ssao_pipeline.hpp"
+#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
+#include "vertex.hpp"
 #include "vulkan_context.hpp"
 
-
+#include "pipelines/fxaa_pipeline.hpp"
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -150,6 +153,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
     ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
     ImGui::End();
+
+    ImGui::Begin("FXAA settings");
+    ImGui::Checkbox("Enable FXAA", &_renderer->GetFXAAPipeline().GetEnableFXAA());
+    ImGui::DragFloat("Edge treshold min", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Edge treshold max", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Subpixel quality", &_renderer->GetFXAAPipeline().GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
+    ImGui::DragInt("Iterations", &_renderer->GetFXAAPipeline().GetIterations(), 1, 1, 128);
+
+    ImGui::End();
+
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))
