@@ -10,6 +10,7 @@
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
 #include "time_module.hpp"
+#include "inspector_module.hpp"
 #include "ui_module.hpp"
 
 #include "wren_bindings.hpp"
@@ -20,6 +21,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
     instance
         .AddModule<ScriptingModule>()
+        .AddModule<InspectorModule>()
         .AddModule<ECSModule>()
         .AddModule<TimeModule>()
         .AddModule<SteamModule>()

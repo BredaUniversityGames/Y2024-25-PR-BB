@@ -1,8 +1,8 @@
 #pragma once
 
 #include "module_interface.hpp"
-#include "performance_tracker.hpp"
 
+#include <glm/glm.hpp>
 #include <memory>
 
 struct RigidbodyComponent;
@@ -21,19 +21,16 @@ public:
     OldEngine();
     ~OldEngine() override;
 
+    NON_COPYABLE(OldEngine);
+    NON_MOVABLE(OldEngine);
+
     ECSModule& GetECS() const { return *_ecs; }
 
 private:
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
-    std::unique_ptr<Editor> _editor;
     ECSModule* _ecs;
     glm::ivec2 _lastMousePos {};
-    std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
-    PerformanceTracker _performanceTracker;
-
-    std::unique_ptr<PhysicsModule> _physicsModule;
-
     MAYBE_UNUSED bool _shouldQuit = false;
 };

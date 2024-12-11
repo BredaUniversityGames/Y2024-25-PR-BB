@@ -33,6 +33,7 @@ target_add_module(Engine steam Steam)
 target_add_module(Engine audio Audio)
 target_add_module(Engine user_interface UserInterface)
 target_add_module(Engine bindings Bindings)
+target_add_module(Engine inspector Inspector)
 target_add_module(Engine ecs ECS)
 
 
