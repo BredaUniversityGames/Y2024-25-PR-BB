@@ -74,7 +74,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         {
             emitter.currentEmitDelay = emitter.maxEmitDelay;
         }
-        emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
+        emitter.currentEmitDelay -= std::chrono::duration_cast<std::chrono::seconds>(engine.GetModule<TimeModule>().GetDeltatime()).count();
 
         // update position and velocity
         if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
