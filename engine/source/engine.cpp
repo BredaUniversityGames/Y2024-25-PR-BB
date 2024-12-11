@@ -101,10 +101,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
-
     // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
-    // physics_system->InitializePhysicsColliders();
+    // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+    //  physics_system->InitializePhysicsColliders();
 
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
