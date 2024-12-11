@@ -19,6 +19,7 @@
 #include "graphics_resources.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
+#include "game_actions.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
@@ -129,69 +130,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
 
-    // Setting up game input actions
-    GameActions gameActions {};
-
-    ActionSet& actionSet = gameActions.emplace_back();
-    actionSet.name = "Shooter";
-
-    AnalogAction& moveAction = actionSet.analogActions.emplace_back();
-    moveAction.name = "Move";
-    moveAction.inputs.emplace_back(GamepadAnalog::eAXIS_LEFT);
-    moveAction.inputs.emplace_back(GamepadAnalog::eDPAD);
-
-    AnalogAction& lookAction = actionSet.analogActions.emplace_back();
-    lookAction.name = "Look";
-    lookAction.inputs.emplace_back(GamepadAnalog::eAXIS_RIGHT);
-
-    DigitalAction& menuAction = actionSet.digitalActions.emplace_back();
-    menuAction.name = "Menu";
-    menuAction.type = DigitalActionType::ePressed;
-    menuAction.inputs.emplace_back(GamepadButton::eSTART);
-    menuAction.inputs.emplace_back(GamepadButton::eBACK);
-
-    DigitalAction& slideAction = actionSet.digitalActions.emplace_back();
-    slideAction.name = "Slide";
-    slideAction.type = DigitalActionType::ePressed;
-    slideAction.inputs.emplace_back(GamepadButton::eLEFT_SHOULDER);
-    slideAction.inputs.emplace_back(GamepadButton::eEAST);
-
-    DigitalAction& dashAction = actionSet.digitalActions.emplace_back();
-    dashAction.name = "Dash";
-    dashAction.type = DigitalActionType::ePressed;
-    dashAction.inputs.emplace_back(GamepadButton::eLEFT_TRIGGER);
-
-    DigitalAction& grenadeAction = actionSet.digitalActions.emplace_back();
-    grenadeAction.name = "Grenade";
-    grenadeAction.type = DigitalActionType::ePressed;
-    grenadeAction.inputs.emplace_back(GamepadButton::eRIGHT_SHOULDER);
-
-    DigitalAction& shootAction = actionSet.digitalActions.emplace_back();
-    shootAction.name = "Shoot";
-    shootAction.type = DigitalActionType::eHold;
-    shootAction.inputs.emplace_back(GamepadButton::eRIGHT_TRIGGER);
-
-    DigitalAction& ultimateAction = actionSet.digitalActions.emplace_back();
-    ultimateAction.name = "Ultimate";
-    ultimateAction.type = DigitalActionType::ePressed;
-    ultimateAction.inputs.emplace_back(GamepadButton::eNORTH);
-
-    DigitalAction& reloadAction = actionSet.digitalActions.emplace_back();
-    reloadAction.name = "Reload";
-    reloadAction.type = DigitalActionType::ePressed;
-    reloadAction.inputs.emplace_back(GamepadButton::eWEST);
-
-    DigitalAction& jumpAction = actionSet.digitalActions.emplace_back();
-    jumpAction.name = "Jump";
-    jumpAction.type = DigitalActionType::ePressed;
-    jumpAction.inputs.emplace_back(GamepadButton::eSOUTH);
-
-    DigitalAction& meeleeAction = actionSet.digitalActions.emplace_back();
-    meeleeAction.name = "Melee";
-    meeleeAction.type = DigitalActionType::ePressed;
-    meeleeAction.inputs.emplace_back(GamepadButton::eRIGHT_STICK);
-
-    applicationModule.GetActionManager().SetGameActions(gameActions);
+    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
