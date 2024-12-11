@@ -12,7 +12,6 @@
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
-#include <particle_module.hpp>
 #include <time_module.hpp>
 
 RendererModule::RendererModule()
