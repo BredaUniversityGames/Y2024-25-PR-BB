@@ -97,6 +97,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.fov = 45.0f;
     cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
+    cameraComponent.reversedZ = true;
 
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
