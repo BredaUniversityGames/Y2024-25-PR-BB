@@ -43,19 +43,11 @@ private:
     } _pushConstants;
 
     void CreatePipeline();
-    void CreateBuffers();
-
-    void CreateDescriptorSetLayouts();
-    void CreateDescriptorSets();
-
-    ResourceHandle<Buffer> _sampleKernelBuffer;
-    const GBuffers& _gBuffers;
-    vk::DescriptorSetLayout _descriptorSetLayout;
-    vk::DescriptorSet _descriptorSet;
 
     std::shared_ptr<GraphicsContext> _context;
-    const ResourceHandle<GPUImage> _fxaaTarget;
+    const GBuffers& _gBuffers;
 
+    const ResourceHandle<GPUImage> _fxaaTarget;
     const ResourceHandle<GPUImage>& _source;
 
     vk::PipelineLayout _pipelineLayout;

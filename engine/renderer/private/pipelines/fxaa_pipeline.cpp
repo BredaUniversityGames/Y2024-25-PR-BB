@@ -30,7 +30,7 @@ FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     CreatePipeline();
 }
 
-void FXAAPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void FXAAPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
@@ -70,8 +70,6 @@ FXAAPipeline::~FXAAPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
-    _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
-    _context->Resources()->BufferResourceManager().Destroy(_sampleKernelBuffer);
 }
 
 void FXAAPipeline::CreatePipeline()
@@ -99,13 +97,4 @@ void FXAAPipeline::CreatePipeline()
         .SetColorBlendState(colorBlendStateCreateInfo)
         .SetColorAttachmentFormats(formats)
         .BuildPipeline(_pipeline, _pipelineLayout);
-}
-void FXAAPipeline::CreateBuffers()
-{
-}
-void FXAAPipeline::CreateDescriptorSetLayouts()
-{
-}
-void FXAAPipeline::CreateDescriptorSets()
-{
 }
