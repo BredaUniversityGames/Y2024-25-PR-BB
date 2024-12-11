@@ -1,15 +1,14 @@
 #pragma once
-
 #include "common.hpp"
 #include "enum_utils.hpp"
 #include "resource_manager.hpp"
 #include "swap_chain.hpp"
-
 #include <glm/vec3.hpp>
 #include <memory>
 #include <unordered_map>
 #include <variant>
 #include <vulkan/vulkan.hpp>
+
 struct RenderSceneDescription;
 struct Buffer;
 struct GPUImage;
@@ -55,7 +54,9 @@ struct FrameGraphResourceInfo
     {
     }
 
-    std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>> resource {};
+    using Resource = std::variant<std::monostate, StageBuffer, ResourceHandle<GPUImage>>;
+    Resource resource {};
+    bool allowSimultaneousWrites = false;
 };
 
 struct FrameGraphResourceCreation
@@ -110,8 +111,8 @@ struct FrameGraphNodeCreation
     FrameGraphNodeCreation& AddInput(ResourceHandle<GPUImage> image, FrameGraphResourceType type);
     FrameGraphNodeCreation& AddInput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
 
-    FrameGraphNodeCreation& AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type);
-    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage);
+    FrameGraphNodeCreation& AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type, bool allowSimultaneousWrites = false);
+    FrameGraphNodeCreation& AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage, bool allowSimultaneousWrites = false);
 
     FrameGraphNodeCreation& SetIsEnabled(bool isEnabled);
     FrameGraphNodeCreation& SetName(std::string_view name);
@@ -157,6 +158,15 @@ public:
     FrameGraph& AddNode(const FrameGraphNodeCreation& creation);
 
 private:
+    // Used to track resource states when generating memory barriers.
+    enum class ResourceState : uint8_t
+    {
+        eFirstOuput,
+        eReusedOutputAfterOutput,
+        eReusedOutputAfterInput,
+        eInput,
+    };
+
     std::shared_ptr<GraphicsContext> _context;
     const SwapChain& _swapChain;
 
@@ -174,8 +184,10 @@ private:
     void ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle);
     void ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle);
     void CreateMemoryBarriers();
+    void CreateImageBarrier(const FrameGraphResource& resource, ResourceState state, vk::ImageMemoryBarrier2& barrier) const;
+    void CreateBufferBarrier(const FrameGraphResource& resource, ResourceState state, vk::BufferMemoryBarrier2& barrier) const;
     void SortGraph();
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);
-    std::string GetResourceName(const FrameGraphResourceCreation& creation);
+    std::string GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource);
 };
