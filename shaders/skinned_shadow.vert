@@ -16,11 +16,6 @@ layout (std430, set = 2, binding = 0) readonly buffer SkinningMatrices {
     mat4 skinningMatrices[];
 };
 
-layout (push_constant) uniform PushConstants
-{
-    uint instanceOffset;
-};
-
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec4 inTangent;
@@ -32,7 +27,7 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    Instance instance = instances[gl_DrawID + gl_InstanceIndex];
 
     mat4 skinMatrix =
     inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +

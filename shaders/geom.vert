@@ -25,8 +25,8 @@ layout (location = 4) out mat3 TBN;
 
 void main()
 {
-    mat4 modelTransform = instances[gl_DrawID].model;
-    drawID = gl_DrawID;
+    mat4 modelTransform = instances[gl_DrawID + gl_InstanceIndex].model;
+    drawID = gl_DrawID + gl_InstanceIndex;
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
     normal = normalize((modelTransform * vec4(inNormal, 0.0)).xyz);

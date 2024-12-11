@@ -4,10 +4,10 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
-#include "components/point_light_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -121,7 +121,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .instanceCount = 1,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
+                .firstInstance = _staticDrawRange.start,
             },
         });
 
@@ -155,7 +155,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .instanceCount = 1,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
+                .firstInstance = _skinnedDrawRange.start,
             },
         });
 
