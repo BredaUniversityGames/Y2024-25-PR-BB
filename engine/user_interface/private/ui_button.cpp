@@ -2,9 +2,9 @@
 #include "glm/gtx/transform.hpp"
 #include "pipelines/ui_pipeline.hpp"
 
-#include "input/input_manager.hpp"
+#include "input/input_device_manager.hpp"
 
-void UIButton::Update(const InputManager& input)
+void UIButton::Update(const InputDeviceManager& input)
 {
     if (enabled)
     {
