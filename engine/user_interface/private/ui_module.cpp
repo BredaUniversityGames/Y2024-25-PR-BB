@@ -1,14 +1,8 @@
 #include "ui_module.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
+#include "canvas.hpp"
 #include <application_module.hpp>
-#include <canvas.hpp>
-#include <fonts.hpp>
 #include <renderer.hpp>
 #include <renderer_module.hpp>
-#include <ui_button.hpp>
-#include <ui_text.hpp>
 
 ModuleTickOrder UIModule::Init(Engine& engine)
 {
