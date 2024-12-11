@@ -20,7 +20,6 @@
 #include "input/input_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particle_interface.hpp"
 #include "particle_module.hpp"
 #include "particle_util.hpp"
 #include "physics_module.hpp"
@@ -58,7 +57,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/MetalRoughSpheres.glb"
     };
 
-    particleModule.GetParticleInterface().LoadEmitterPresets();
+    particleModule.LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
@@ -261,6 +260,8 @@ void OldEngine::Tick(Engine& engine)
                         JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
                         physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
                     }
+
+                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
                 }
             }
         }
@@ -271,14 +272,23 @@ void OldEngine::Tick(Engine& engine)
     if (input.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (input.IsKeyPressed(KeyboardCode::eP))
-    {
-        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
-    }
-
     if (input.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
+    }
+
+    if (input.IsKeyPressed(KeyboardCode::e0))
+    {
+        entt::entity entity = _ecs->GetRegistry().create();
+        RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
+
+        NameComponent node;
+        node.name = "Physics Entity";
+        _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
+
+        particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
     }
 
     static uint32_t eventId {};
