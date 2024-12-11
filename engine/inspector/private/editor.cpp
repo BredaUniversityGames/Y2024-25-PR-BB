@@ -24,10 +24,10 @@
 #include "vertex.hpp"
 #include "vulkan_context.hpp"
 
+#include "pipelines/fxaa_pipeline.hpp"
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-#include <pipelines/fxaa_pipeline.hpp>
 #include <vk_mem_alloc.h>
 
 Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)

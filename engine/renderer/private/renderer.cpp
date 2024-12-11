@@ -39,7 +39,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-#include <pipelines/fxaa_pipeline.hpp>
+#include "pipelines/fxaa_pipeline.hpp"
 
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
