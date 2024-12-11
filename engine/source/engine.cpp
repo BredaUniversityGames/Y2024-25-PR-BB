@@ -1,20 +1,20 @@
 #include "engine.hpp"
 
-#include <glm/glm.hpp>
 #include <implot/implot.h>
+#include <stb/stb_image.h>
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
-#include "components/point_light_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "editor.hpp"
+#include "emitter_component.hpp"
+#include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "input/input_manager.hpp"
@@ -22,6 +22,7 @@
 #include "old_engine.hpp"
 #include "particle_interface.hpp"
 #include "particle_module.hpp"
+#include "particle_util.hpp"
 #include "physics_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -31,25 +32,20 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
+#include <time_module.hpp>
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
-
-    ImGui::CreateContext();
-    ImPlot::CreateContext();
-
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
+
+    // modules
 
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb"
@@ -73,7 +69,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
 
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
+    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -98,13 +97,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    _lastFrameTime = std::chrono::high_resolution_clock::now();
-
     glm::ivec2 mousePos;
     applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    //_ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
+
+    auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+  
+    // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
+    // physics_system->InitializePhysicsColliders();
+
     BankInfo masterBank;
     masterBank.path = "assets/sounds/Master.bank";
 
@@ -134,18 +136,15 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
     ZoneNamed(zone, "");
-    auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
-    _lastFrameTime = currentFrameTime;
-    float deltaTimeMS = deltaTime.count();
+    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
+    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+    physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
-
-    physicsModule.debugRenderer->ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -297,12 +296,6 @@ void OldEngine::Tick(Engine& engine)
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
-
-    rendererModule.GetRenderer()->Render(deltaTimeMS);
-
-    _performanceTracker.Update();
-
     physicsModule.debugRenderer->NextFrame();
 
     FrameMark;
@@ -310,7 +303,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _editor.reset();
 }
 
 OldEngine::OldEngine() = default;

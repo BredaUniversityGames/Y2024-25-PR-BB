@@ -53,6 +53,16 @@ ScriptingContext::ScriptingContext(const VMInitConfig& info)
         include_dir = fileIO::CanonicalizePath(include_dir);
     }
 
+    Reset();
+}
+
+ScriptingContext::~ScriptingContext()
+{
+    _vm.reset();
+}
+
+void ScriptingContext::Reset()
+{
     _vm = std::make_unique<wren::VM>(
         _vmInitConfig.includePaths,
         _vmInitConfig.initialHeapSize,
@@ -64,11 +74,6 @@ ScriptingContext::ScriptingContext(const VMInitConfig& info)
 
     _vm->setPathResolveFunc(ScriptLoading::ResolveImport);
     _vm->setLoadFileFunc(ScriptLoading::LoadFile);
-}
-
-ScriptingContext::~ScriptingContext()
-{
-    _vm.reset();
 }
 
 std::optional<std::string> ScriptingContext::RunScript(const std::string& path)

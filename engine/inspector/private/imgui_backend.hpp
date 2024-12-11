@@ -24,7 +24,7 @@ public:
 
     void NewFrame();
 
-    ImTextureID GetTexture(ResourceHandle<GPUImage> image);
+    ImTextureID GetTexture(const ResourceHandle<GPUImage>& image);
 
 private:
     std::shared_ptr<GraphicsContext> _context;
