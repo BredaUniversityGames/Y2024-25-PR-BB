@@ -36,8 +36,8 @@ private:
         uint32_t ssaoNoiseIndex;
         uint32_t screenWidth = 1920; // just for refference
         uint32_t screenHeight = 1080;
-        float aoStrength = 3.0f;
-        float aoBias = 1.0;
+        float aoStrength = 2.0f;
+        float aoBias = 0.2f;
         float aoRadius = 0.5f;
         float minAoDistance = 0.3f;
         float maxAoDistance = 1.0f;
