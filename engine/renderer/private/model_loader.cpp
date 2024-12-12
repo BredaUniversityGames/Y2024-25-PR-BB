@@ -157,9 +157,14 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
             };
         }
 
-        glm::vec4 tangent = CalculateTangent(triangle[0]->position, triangle[1]->position, triangle[2]->position,
-            triangle[0]->texCoord, triangle[1]->texCoord, triangle[2]->texCoord,
-            triangle[0]->normal);
+        glm::vec4 tangent { 1.0f, 0.0f, 0.0f, 1.0f };
+        // Check if all tex coords are different, otherwise just keep default.
+        if (triangle[0]->texCoord != triangle[1]->texCoord && triangle[0]->texCoord != triangle[2]->texCoord && triangle[1]->texCoord != triangle[2]->texCoord)
+        {
+            tangent = CalculateTangent(triangle[0]->position, triangle[1]->position, triangle[2]->position,
+                triangle[0]->texCoord, triangle[1]->texCoord, triangle[2]->texCoord,
+                triangle[0]->normal);
+        }
 
         triangle[0]->tangent += tangent;
         triangle[1]->tangent += tangent;
@@ -171,18 +176,6 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
         glm::vec3 tangent = stagingPrimitive.vertices[i].tangent;
         tangent = glm::normalize(tangent);
         stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
-    }
-
-    // Checks if there are any tangents that are nan. This can happen for some texCoords.
-    if (std::any_of(stagingPrimitive.vertices.begin(), stagingPrimitive.vertices.end(), [](const auto& v)
-            { return std::isnan(v.tangent.x); }))
-    {
-        // In that case we just apply a default tangent, to prevent nan calculation issues.
-        // (Generally if this is the case, there is no normal provided anyway.)
-        for (auto& vertex : stagingPrimitive.vertices)
-        {
-            vertex.tangent = glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f };
-        }
     }
 }
 
@@ -250,6 +243,15 @@ void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Prim
         AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
         AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
         AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+
+        // Make sure tangent is perpendicular to normal.
+        glm::vec3 tangent = glm::vec3 { vertices[i].tangent };
+        if (glm::cross(vertices[i].normal, glm::vec3 { tangent }) == glm::vec3 { 0.0f })
+        {
+            tangent = glm::cross(vertices[i].normal, glm::vec3 { 0.0f, 1.0f, 0.0f });
+
+            vertices[i].tangent = glm::vec4 { tangent, vertices[i].tangent.w };
+        }
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
@@ -350,6 +352,7 @@ CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fast
     const fastgltf::Attribute* texCoordAttribute = gltfPrimitive.findAttribute("TEXCOORD_0");
     if (tangentAttribute == gltfPrimitive.attributes.cend() && texCoordAttribute != gltfPrimitive.attributes.cend())
     {
+        bblog::error("Missing tangents");
         CalculateTangents<T>(mesh);
     }
 
