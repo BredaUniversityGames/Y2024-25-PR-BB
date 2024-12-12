@@ -4,10 +4,10 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
-#include "components/point_light_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -206,6 +206,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .farPlane = directionalLightComponent.farPlane,
             .orthographicSize = directionalLightComponent.orthographicSize,
             .aspectRatio = directionalLightComponent.aspectRatio,
+            .reversedZ = false,
         };
 
         _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);
