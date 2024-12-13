@@ -11,7 +11,7 @@ class Main {
             System.print("Player is online!")
 
             var t = __player.GetTransformComponent()
-            t.translation = Vec3.new(0.0, 5.0, 0.0)
+            t.translation = Vec3.new(4.5, 35.0, 285.0)
         }
     }
 
