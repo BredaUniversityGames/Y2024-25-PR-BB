@@ -19,6 +19,11 @@ struct Hierarchy
 
     struct Node
     {
+        Node() = default;
+        Node(std::string_view name, const glm::mat4& transform, std::pair<MeshType, uint32_t> meshIndex)
+            : name(name), transform(transform), meshIndex(meshIndex)
+        {}
+
         std::string name {};
         glm::mat4 transform { 1.0f };
         std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
