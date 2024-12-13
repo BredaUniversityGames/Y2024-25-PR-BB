@@ -7,6 +7,8 @@
 
 #include "log.hpp"
 
+#include <tracy/Tracy.hpp>
+
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const auto tickOrder = ModuleTickOrder::ePostTick;
@@ -46,6 +48,7 @@ void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 }
 void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    ZoneScoped;
     FMOD_CHECKRESULT(FMOD_Studio_System_Update(_studioSystem));
 
     // Clean up events that have stopped playing

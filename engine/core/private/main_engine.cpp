@@ -1,5 +1,7 @@
 #include "main_engine.hpp"
 
+#include <tracy/Tracy.hpp>
+
 int MainEngine::Run()
 {
     while (!_exitRequested)
@@ -11,6 +13,7 @@ int MainEngine::Run()
 }
 void MainEngine::MainLoopOnce()
 {
+    ZoneScoped;
     for (auto modulePriorityPair : _tickOrder)
     {
         modulePriorityPair.module->Tick(*this);

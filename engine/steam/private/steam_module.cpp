@@ -2,6 +2,8 @@
 #include "log.hpp"
 #include "steam_include.hpp"
 
+#include <tracy/Tracy.hpp>
+
 void DebugCallback(int severity, const char* message)
 {
     // If you're running in the debugger, only warnings (severity >= 1) will be sent
@@ -56,6 +58,7 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
 
 void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    ZoneScoped;
     if (!_steamAvailable)
     {
         return;

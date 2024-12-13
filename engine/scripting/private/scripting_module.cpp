@@ -3,6 +3,8 @@
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
+#include <tracy/Tracy.hpp>
+
 void ScriptingModule::GenerateEngineBindingsFile()
 {
     if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
@@ -37,6 +39,7 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
 
 void ScriptingModule::Tick(Engine& engine)
 {
+    ZoneScoped;
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
 
     if (_mainModule->IsValid())

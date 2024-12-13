@@ -16,6 +16,8 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
 
+#include <tracy/Tracy.hpp>
+
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
     _physics = &engine.GetModule<PhysicsModule>();
@@ -27,6 +29,7 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    ZoneScoped;
     const auto emitterView = _ecs->GetRegistry().view<EmitterComponent, RigidbodyComponent>();
     for (const auto entity : emitterView)
     {

@@ -12,6 +12,8 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 
+#include <tracy/Tracy.hpp>
+
 AnimationSystem::AnimationSystem(RendererModule& rendererModule)
     : _rendererModule(rendererModule)
     , _frameIndex(0)
@@ -22,6 +24,7 @@ AnimationSystem::~AnimationSystem() = default;
 
 void AnimationSystem::Update(ECSModule& ecs, float dt)
 {
+    ZoneScoped;
     const auto view = ecs.GetRegistry().view<TransformComponent, AnimationChannelComponent>();
     for (auto entity : view)
     {
@@ -54,6 +57,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
+    ZoneScoped;
     // Draw skeletons as debug lines
     const auto debugView = ecs.GetRegistry().view<const JointComponent, const RelationshipComponent, const WorldMatrixComponent>();
     for (auto entity : debugView)

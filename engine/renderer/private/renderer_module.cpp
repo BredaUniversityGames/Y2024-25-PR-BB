@@ -43,6 +43,7 @@ void RendererModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    ZoneScoped;
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
     _renderer->Render(dt.count());
 }

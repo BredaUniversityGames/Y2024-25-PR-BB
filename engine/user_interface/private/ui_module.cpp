@@ -1,5 +1,6 @@
 #include "ui_module.hpp"
 #include <application_module.hpp>
+#include <tracy/Tracy.hpp>
 
 ModuleTickOrder UIModule::Init(Engine& engine)
 {
@@ -9,5 +10,6 @@ ModuleTickOrder UIModule::Init(Engine& engine)
 }
 void UIModule::Tick(Engine& engine)
 {
+    ZoneScoped;
     _viewport->Update(engine.GetModule<ApplicationModule>().GetInputDeviceManager());
 }

@@ -14,6 +14,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
+#include <tracy/Tracy.hpp>
 
 ModuleTickOrder ApplicationModule::Init(Engine& engine)
 {
@@ -96,6 +97,7 @@ void ApplicationModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ApplicationModule::Tick(Engine& engine)
 {
+    ZoneScoped;
     _inputDeviceManager->Update();
 
     SDL_Event event;

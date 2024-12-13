@@ -62,6 +62,7 @@ ImGuiBackend::~ImGuiBackend()
 
 void ImGuiBackend::NewFrame()
 {
+    ZoneScoped;
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
 }

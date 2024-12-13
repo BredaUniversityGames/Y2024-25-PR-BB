@@ -51,6 +51,7 @@ void InspectorModule::Shutdown(Engine& engine)
 
 void InspectorModule::Tick(Engine& engine)
 {
+    ZoneScoped;
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
