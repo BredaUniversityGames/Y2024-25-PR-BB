@@ -188,11 +188,11 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     FMOD_CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-EventInstanceID AudioModule::StartOneShotEvent(std::string_view name)
+EventInstanceID AudioModule::StartOneShotEvent(const std::string_view name)
 {
     return StartEvent(name, true);
 }
-NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(std::string_view name)
+NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(const std::string_view name)
 {
     return StartEvent(name, false);
 }

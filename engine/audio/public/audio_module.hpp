@@ -56,7 +56,7 @@ public:
 
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 
-    void UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity = glm::vec3(0.f, 0.f, 0.f));
+    void UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity);
 
     std::vector<glm::vec3>& GetDebugLines() { return _debugLines; }
 

@@ -12,6 +12,8 @@
 #include <fmod.h>
 #include <ranges>
 
+#include <tracy/Tracy.hpp>
+
 AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
     : _ecs(ecs)
     , _audioModule(audioModule)
@@ -19,6 +21,7 @@ AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
 }
 void AudioSystem::Update(ECSModule& ecs, float dt)
 {
+    ZoneScoped;
     const auto& listenerView = ecs.GetRegistry().view<AudioListenerComponent>();
 
     if (!listenerView.empty())
@@ -71,7 +74,7 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
                 }
                 else
                 {
-                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position);
+                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position, glm::vec3(0.f, 0.f, 0.f));
                 }
 
                 _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
