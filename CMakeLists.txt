@@ -53,8 +53,8 @@ endif ()
 add_subdirectory(engine)
 
 # Add game executable (currently just main.cpp)
-add_executable(Game "engine/main.cpp")
-target_link_libraries(Game
+add_executable(CustomTech "engine/main.cpp")
+target_link_libraries(CustomTech
         PRIVATE ProjectSettings
         PRIVATE Engine
 )
@@ -63,5 +63,5 @@ target_link_libraries(Game
 if (COMPILE_SHADERS)
     message(STATUS "### Shaders will be compiled on build")
     add_subdirectory(shaders)
-    add_dependencies(Game Shaders)
+    add_dependencies(CustomTech Shaders)
 endif ()
