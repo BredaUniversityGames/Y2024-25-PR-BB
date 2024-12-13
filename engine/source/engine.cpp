@@ -4,6 +4,7 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
@@ -51,10 +52,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb"
+        //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
-        //"assets/models/DamagedHelmet.glb",
+        "assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -130,11 +131,19 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     musicSi.path = "assets/sounds/music1.wav";
     musicSi.isLoop = true;
+    musicSi.is3D = true;
 
     audioModule.LoadSFX(musicSi);
-    audioModule.PlaySFX(musicSi, 1.0f, false);
+    auto instance = audioModule.PlaySFX(musicSi, 1.0f, false);
 
-    eagleSi.path = "assets/sounds/eagle.mp3";
+    auto audioEmitter = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
+    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
+
+    emitter.ids.emplace_back(instance);
+
+    eagleSi.path
+        = "assets/sounds/eagle.mp3";
 
     audioModule.LoadSFX(eagleSi);
 
@@ -163,6 +172,9 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
+    audioModule.ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())

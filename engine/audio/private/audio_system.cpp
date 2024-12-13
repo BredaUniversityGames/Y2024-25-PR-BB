@@ -3,6 +3,7 @@
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -23,10 +24,29 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
     if (!listenerView.empty())
     {
         const auto entity = listenerView.front();
+
+        glm::vec3 position {};
+        glm::vec3 velocity {};
+        glm::vec3 forward {};
+        glm::vec3 up {};
+
         if (ecs.GetRegistry().all_of<TransformComponent>(entity))
         {
-            _audioModule.SetListener3DAttributes(TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity));
+            position = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
+
+            auto rotation = TransformHelpers::GetWorldRotation(ecs.GetRegistry(), entity);
+
+            forward = glm::normalize(rotation * glm::vec3(0.0f, -1.0f, 0.0f));
+            up = glm::normalize(rotation * glm::vec3(0.0f, 0.0f, 1.0f));
         }
+
+        if (ecs.GetRegistry().all_of<RigidbodyComponent>(entity))
+        {
+            const auto& body = ecs.GetRegistry().get<RigidbodyComponent>(entity);
+            velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(body.bodyID));
+        }
+
+        _audioModule.SetListener3DAttributes(position, velocity, forward, up);
     }
 
     const auto& emitterView = ecs.GetRegistry().view<AudioEmitterComponent, TransformComponent>();
@@ -34,11 +54,30 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
     {
         AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(entity);
 
+        std::erase_if(emitter.ids, [&](const auto& id)
+            { return !_audioModule.IsPlaying(id); });
+
         for (auto soundInstance : emitter.ids)
         {
             if (soundInstance.is3D)
             {
-                _audioModule.Update3DSoundPosition(soundInstance.id, TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity));
+                const glm::vec3 position = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
+
+                if (RigidbodyComponent* rigidBody = ecs.GetRegistry().try_get<RigidbodyComponent>(entity))
+                {
+                    JPH::Vec3 velocity = _audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID);
+
+                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position, ToGLMVec3(velocity));
+                }
+                else
+                {
+                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position);
+                }
+
+                _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), glm::vec3(1.f, 1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), glm::vec3(-1.f, -1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
             }
         }
     }

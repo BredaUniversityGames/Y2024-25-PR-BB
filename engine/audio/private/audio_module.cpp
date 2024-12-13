@@ -8,6 +8,7 @@
 
 #include "audio_system.hpp"
 #include "ecs_module.hpp"
+#include "physics_module.hpp"
 
 #include "log.hpp"
 
@@ -17,6 +18,8 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<AudioSystem>(ecs, *this);
+
+    _physics = &engine.GetModule<PhysicsModule>();
 
     try
     {
@@ -145,6 +148,17 @@ void AudioModule::StopSFX(const SoundInstance instance)
         FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[instance.id]));
     }
 }
+bool AudioModule::IsPlaying(SoundInstance instance)
+{
+    FMOD_BOOL isPlaying = false;
+    if (_channelsActive.contains(instance.id))
+    {
+        FMOD_Channel_IsPlaying(_channelsActive[instance.id], &isPlaying);
+
+        return isPlaying;
+    }
+    return isPlaying;
+}
 void AudioModule::LoadBank(BankInfo& bankInfo)
 {
     const BankID hash = std::hash<std::string_view> {}(bankInfo.path);
@@ -182,10 +196,11 @@ NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(std::string_view name)
 {
     return StartEvent(name, false);
 }
-void AudioModule::Update3DSoundPosition(const ChannelID id, const glm::vec3& position)
+void AudioModule::UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity)
 {
     const auto pos = GLMToFMOD(position);
-    FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, nullptr);
+    const auto vel = GLMToFMOD(velocity);
+    FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, &vel);
 }
 NO_DISCARD EventInstanceID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
 {
@@ -216,8 +231,11 @@ void AudioModule::StopEvent(const EventInstanceID eventId)
     }
 }
 
-void AudioModule::SetListener3DAttributes(const glm::vec3& position) const
+void AudioModule::SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const
 {
     const auto pos = GLMToFMOD(position);
-    FMOD_System_Set3DListenerAttributes(_coreSystem, 0, &pos, nullptr, nullptr, nullptr);
+    const auto vel = GLMToFMOD(velocity);
+    const auto fwd = GLMToFMOD(glm::normalize(forward));
+    const auto u = GLMToFMOD(glm::normalize(up));
+    FMOD_System_Set3DListenerAttributes(_coreSystem, 0, &pos, &vel, &fwd, &u);
 }

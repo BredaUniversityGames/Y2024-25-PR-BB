@@ -7,6 +7,8 @@
 #include <string_view>
 #include <unordered_map>
 
+class PhysicsModule;
+
 class AudioModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
@@ -32,6 +34,8 @@ public:
     // Regular sounds will stop by themselves once they are done
     void StopSFX(SoundInstance instance);
 
+    bool IsPlaying(SoundInstance instance);
+
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well
     void LoadBank(BankInfo& bankInfo);
@@ -50,9 +54,22 @@ public:
     // Stops an event that is
     void StopEvent(EventInstanceID eventId);
 
-    void SetListener3DAttributes(const glm::vec3& position) const;
+    void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 
-    void Update3DSoundPosition(const ChannelID id, const glm::vec3& position);
+    void UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity = glm::vec3(0.f, 0.f, 0.f));
+
+    std::vector<glm::vec3>& GetDebugLines() { return _debugLines; }
+
+    void AddDebugLine(const glm::vec3& start, const glm::vec3& end)
+    {
+        _debugLines.emplace_back(start);
+        _debugLines.emplace_back(end);
+    }
+
+    void ClearLines()
+    {
+        _debugLines.clear();
+    }
 
 private:
     friend class AudioSystem;
@@ -78,4 +95,10 @@ private:
 
     EventInstanceID _nextEventId = 0;
     SoundID _nextSoundId = 0;
+
+    PhysicsModule* _physics;
+
+    // Debug lines
+
+    std::vector<glm::vec3> _debugLines {};
 };
