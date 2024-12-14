@@ -3,6 +3,8 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
 
+#include <tracy/Tracy.hpp>
+
 #include "application_module.hpp"
 #include "constants.hpp"
 #include "gbuffers.hpp"
