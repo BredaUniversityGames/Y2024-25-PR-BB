@@ -4,7 +4,9 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
+#include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
@@ -98,12 +100,14 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawRange.start = 0;
 
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RelationshipComponent>();
 
     for (auto entity : staticMeshView)
     {
-        auto meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
-        auto transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& rel = staticMeshView.get<RelationshipComponent>(entity);
+        const auto& parentName = _ecs.GetRegistry().get<NameComponent>(rel.parent);
 
         auto resources { _context->Resources() };
 
@@ -114,6 +118,11 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         instances[count].materialIndex = mesh->material.Index();
         instances[count].boundingRadius = mesh->boundingRadius;
+
+        if (count == 8038)
+        {
+            int x = 0;
+        }
 
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
