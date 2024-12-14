@@ -49,7 +49,7 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
-    ZoneNamedN(draw, "Editor Draw", true);
+    ZoneNamedN(editorDraw, "Editor Draw", true);
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -103,7 +103,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Begin("World Inspector"))
     {
-        ZoneNamedN(inspector, "World Inspector", true);
+        ZoneNamedN(worldInspector, "World Inspector", true);
         if (ImGui::Button("+ Add entity"))
         {
             entt::entity entity = _ecs.GetRegistry().create();
@@ -144,7 +144,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     // Render systems inspect
 
     {
-        ZoneNamedN(inspect, "System inspect", true);
+        ZoneNamedN(systemInspect, "System inspect", true);
         for (const auto& system : _ecs.GetSystems())
         {
             system->Inspect();
