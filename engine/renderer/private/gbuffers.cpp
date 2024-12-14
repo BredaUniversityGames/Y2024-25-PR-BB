@@ -83,11 +83,11 @@ void GBuffers::CreateShadowMapResources()
 {
     SamplerCreation shadowSamplerInfo {
         .name = "Shadow sampler",
-        .compareEnable = true,
-        .compareOp = vk::CompareOp::eLessOrEqual,
-        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
         .minFilter = vk::Filter::eLinear,
         .magFilter = vk::Filter::eLinear,
+        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
+        .compareEnable = true,
+        .compareOp = vk::CompareOp::eLessOrEqual,
     };
     shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);

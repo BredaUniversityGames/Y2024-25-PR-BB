@@ -22,8 +22,8 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
 
     SamplerCreation createInfo {
         .name = "Gaussian blur sampler",
-        .maxLod = 1.0f,
         .borderColor = vk::BorderColor::eFloatOpaqueBlack,
+        .maxLod = 1.0f,
     };
     createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);

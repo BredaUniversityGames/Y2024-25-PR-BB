@@ -100,14 +100,12 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawRange.start = 0;
 
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RelationshipComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
-        const auto& rel = staticMeshView.get<RelationshipComponent>(entity);
-        const auto& parentName = _ecs.GetRegistry().get<NameComponent>(rel.parent);
 
         auto resources { _context->Resources() };
 
@@ -118,11 +116,6 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         instances[count].materialIndex = mesh->material.Index();
         instances[count].boundingRadius = mesh->boundingRadius;
-
-        if (count == 8038)
-        {
-            int x = 0;
-        }
 
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
