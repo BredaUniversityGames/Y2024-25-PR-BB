@@ -406,12 +406,15 @@ void ParticlePipeline::CreatePipelines()
         GraphicsPipelineBuilder pipelineBuilder { _context };
         pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
         pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-        pipelineBuilder
-            .SetColorBlendState(colorBlendStateCreateInfo)
-            .SetColorAttachmentFormats({ format })
-            .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
-            .SetDepthStencilState(depthStencilStateCreateInfo)
-            .BuildPipeline(_pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
+        auto result = pipelineBuilder
+                          .SetColorBlendState(colorBlendStateCreateInfo)
+                          .SetColorAttachmentFormats({ format })
+                          .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
+                          .SetDepthStencilState(depthStencilStateCreateInfo)
+                          .BuildPipeline();
+
+        _pipelineLayouts.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<0>(result);
+        _pipelines.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<1>(result);
     }
 }
 

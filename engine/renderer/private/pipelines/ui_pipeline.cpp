@@ -54,11 +54,14 @@ void UIPipeline::CreatePipeLine()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
-        .SetDepthAttachmentFormat(vk::Format::eUndefined)
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
+                      .SetDepthAttachmentFormat(vk::Format::eUndefined)
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }
 
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)

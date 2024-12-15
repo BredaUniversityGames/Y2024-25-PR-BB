@@ -658,19 +658,16 @@ void GPUScene::InitializeIndirectDrawDescriptor()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vk::DescriptorSetLayoutBinding layoutBinding {
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    bindings[0] = {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eAll,
     };
+    std::vector<std::string_view> names { "DrawCommands" };
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
-    };
-
-    util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)

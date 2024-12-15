@@ -224,10 +224,13 @@ void IBLPipeline::CreateIrradiancePipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_irradiancePipeline, _irradiancePipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _irradiancePipelineLayout = std::get<0>(result);
+    _irradiancePipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreatePrefilterPipeline()
@@ -251,10 +254,13 @@ void IBLPipeline::CreatePrefilterPipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_prefilterPipeline, _prefilterPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _prefilterPipelineLayout = std::get<0>(result);
+    _prefilterPipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreateBRDFLUTPipeline()
@@ -278,10 +284,13 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_brdfLUTPipeline, _brdfLUTPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _brdfLUTPipelineLayout = std::get<0>(result);
+    _brdfLUTPipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreateIrradianceCubemap()

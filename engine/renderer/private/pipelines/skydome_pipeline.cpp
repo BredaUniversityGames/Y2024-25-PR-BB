@@ -129,10 +129,13 @@ void SkydomePipeline::CreatePipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }

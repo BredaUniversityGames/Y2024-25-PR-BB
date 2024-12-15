@@ -39,11 +39,13 @@ void PipelineBuilder::AddShaderStage(vk::ShaderStageFlagBits stage, const std::v
     });
 }
 
-void PipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
+std::tuple<vk::PipelineLayout, vk::Pipeline> PipelineBuilder::BuildPipeline()
 {
     ReflectShaders();
-    CreatePipelineLayout(pipelineLayout);
-    CreatePipeline(pipeline);
+    _pipelineLayout = CreatePipelineLayout();
+    _pipeline = CreatePipeline();
+
+    return { _pipelineLayout, _pipeline };
 }
 
 vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
@@ -132,10 +134,17 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
             }
             else if (reflectBinding->type_description->type_name != nullptr && reflectBinding->type_description->type_name[0] != '\0')
             {
-                names.emplace_back(reflectBinding->type_description->type_name);
+                std::string_view name { reflectBinding->type_description->type_name };
+                const char* underscorePos = std::strchr(reflectBinding->type_description->type_name, '_');
+                if (underscorePos != nullptr)
+                {
+                    name = std::string_view { reflectBinding->type_description->type_name, static_cast<size_t>(underscorePos - reflectBinding->type_description->type_name) }; // Length up to the underscore
+                }
+                names.emplace_back(name);
             }
             else
             {
+                bblog::warn("Failed reflecting name of descriptor set binding!");
                 names.emplace_back("\0");
             }
         }
@@ -149,10 +158,7 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
 
         if (_cacheDescriptorSetLayouts.find(hash) != _cacheDescriptorSetLayouts.end())
         {
-            if (std::find(_descriptorSetLayouts.begin(), _descriptorSetLayouts.end(), _cacheDescriptorSetLayouts[hash]) == _descriptorSetLayouts.end())
-            {
-                _descriptorSetLayouts[set->set] = _cacheDescriptorSetLayouts[hash];
-            }
+            _descriptorSetLayouts[set->set] = _cacheDescriptorSetLayouts[hash];
         }
         else
         {
@@ -164,12 +170,12 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
             vk::DescriptorSetLayout layout { _context->VulkanContext()->Device().createDescriptorSetLayout(layoutInfo, nullptr) };
 
             _descriptorSetLayouts[set->set] = layout;
-            _cacheDescriptorSetLayouts[hash] = _descriptorSetLayouts.back();
+            _cacheDescriptorSetLayouts[hash] = _descriptorSetLayouts[set->set];
         }
     }
 }
 
-void PipelineBuilder::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
+vk::PipelineLayout PipelineBuilder::CreatePipelineLayout()
 {
     vk::PipelineLayoutCreateInfo createInfo {
         .setLayoutCount = static_cast<uint32_t>(_descriptorSetLayouts.size()),
@@ -178,7 +184,7 @@ void PipelineBuilder::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
         .pPushConstantRanges = _pushConstantRanges.data(),
     };
 
-    pipelineLayout = _pipelineLayout = _context->VulkanContext()->Device().createPipelineLayout(createInfo, nullptr);
+    return _context->VulkanContext()->Device().createPipelineLayout(createInfo, nullptr);
 }
 
 vk::ShaderModule PipelineBuilder::CreateShaderModule(const std::vector<std::byte>& spirvBytes)
@@ -253,9 +259,9 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(const std::shared_ptr<GraphicsC
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() = default;
 
-void GraphicsPipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
+std::tuple<vk::PipelineLayout, vk::Pipeline> GraphicsPipelineBuilder::BuildPipeline()
 {
-    PipelineBuilder::BuildPipeline(pipeline, pipelineLayout);
+    return PipelineBuilder::BuildPipeline();
 }
 
 void GraphicsPipelineBuilder::ReflectShader(const ShaderStage& shaderStage)
@@ -308,7 +314,7 @@ void GraphicsPipelineBuilder::ReflectVertexInput(const ShaderStage& shaderStage)
     }
 }
 
-void GraphicsPipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
+vk::Pipeline GraphicsPipelineBuilder::CreatePipeline()
 {
     if (!_inputAssemblyStateCreateInfo.has_value() || !_viewportStateCreateInfo.has_value() || !_rasterizationStateCreateInfo.has_value() || !_multisampleStateCreateInfo.has_value() || !_depthStencilStateCreateInfo.has_value() || !_colorBlendStateCreateInfo.has_value() || !_dynamicStateCreateInfo.has_value())
     {
@@ -353,5 +359,36 @@ void GraphicsPipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
 
     util::VK_ASSERT(result, "Failed creating graphics pipeline!");
 
-    pipeline = _pipeline = vkPipeline;
+    return vkPipeline;
+}
+
+ComputePipelineBuilder::ComputePipelineBuilder(const std::shared_ptr<GraphicsContext>& context)
+    : PipelineBuilder(context)
+{
+}
+
+ComputePipelineBuilder::~ComputePipelineBuilder() = default;
+
+std::tuple<vk::PipelineLayout, vk::Pipeline> ComputePipelineBuilder::BuildPipeline()
+{
+    return PipelineBuilder::BuildPipeline();
+}
+
+vk::Pipeline ComputePipelineBuilder::CreatePipeline()
+{
+    if (_pipelineShaderStages.size() > 1)
+    {
+        bblog::warn("Created compute pipeline that had more than one shader stages present. First one is used, others are ignored.");
+    }
+
+    vk::ComputePipelineCreateInfo computePipelineCreateInfo {
+        .stage = _pipelineShaderStages.front(),
+        .layout = _pipelineLayout,
+    };
+
+    auto [result, vkPipeline] = _context->VulkanContext()->Device().createComputePipeline(nullptr, computePipelineCreateInfo, nullptr);
+
+    util::VK_ASSERT(result, "Failed creating compute pipeline!");
+
+    return vkPipeline;
 }

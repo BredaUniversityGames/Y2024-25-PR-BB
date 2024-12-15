@@ -7,6 +7,7 @@
 #include <optional>
 #include <spirv_reflect.h>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.hpp>
@@ -24,7 +25,7 @@ public:
     NON_MOVABLE(PipelineBuilder);
 
     void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
-    virtual void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout); // TODO: Change output to tuple.
+    virtual std::tuple<vk::PipelineLayout, vk::Pipeline> BuildPipeline();
 
     static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
 
@@ -57,8 +58,8 @@ protected: // TODO: Review access modifier, right now everything is protected.
     virtual void ReflectShader(MAYBE_UNUSED const ShaderStage& shaderStage) { }
     void ReflectPushConstants(const ShaderStage& shaderStage);
     void ReflectDescriptorLayouts(const ShaderStage& shaderStage);
-    void CreatePipelineLayout(vk::PipelineLayout& pipelineLayout);
-    virtual void CreatePipeline(vk::Pipeline& pipeline) = 0;
+    vk::PipelineLayout CreatePipelineLayout();
+    virtual vk::Pipeline CreatePipeline() = 0;
 
     vk::ShaderModule CreateShaderModule(const std::vector<std::byte>& spirvBytes);
 
@@ -71,7 +72,7 @@ public:
     GraphicsPipelineBuilder(const std::shared_ptr<GraphicsContext>& context);
     ~GraphicsPipelineBuilder() override;
 
-    void BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout) override;
+    std::tuple<vk::PipelineLayout, vk::Pipeline> BuildPipeline() override;
 
     GraphicsPipelineBuilder& SetInputAssemblyState(const vk::PipelineInputAssemblyStateCreateInfo& createInfo)
     {
@@ -125,7 +126,7 @@ public:
 
 protected:
     void ReflectShader(const ShaderStage& shaderStage) override;
-    void CreatePipeline(vk::Pipeline& pipeline) override;
+    vk::Pipeline CreatePipeline() override;
 
 private:
     std::vector<vk::VertexInputAttributeDescription> _attributeDescriptions;
@@ -143,4 +144,18 @@ private:
     vk::Format _depthFormat { vk::Format::eUndefined };
 
     void ReflectVertexInput(const ShaderStage& shaderStage);
+};
+
+class ComputePipelineBuilder : public PipelineBuilder
+{
+public:
+    ComputePipelineBuilder(const std::shared_ptr<GraphicsContext>& context);
+    ~ComputePipelineBuilder() override;
+
+    std::tuple<vk::PipelineLayout, vk::Pipeline> BuildPipeline() override;
+
+protected:
+    vk::Pipeline CreatePipeline() override;
+
+private:
 };

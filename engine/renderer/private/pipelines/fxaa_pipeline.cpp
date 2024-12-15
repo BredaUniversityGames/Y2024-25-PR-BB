@@ -82,8 +82,11 @@ void FXAAPipeline::CreatePipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }

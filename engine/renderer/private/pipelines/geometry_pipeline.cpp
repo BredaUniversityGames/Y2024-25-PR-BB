@@ -174,12 +174,15 @@ void GeometryPipeline::CreateStaticPipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_staticPipeline, _staticPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _staticPipelineLayout = std::get<0>(result);
+    _staticPipeline = std::get<1>(result);
 }
 
 void GeometryPipeline::CreateSkinnedPipeline()
@@ -215,12 +218,15 @@ void GeometryPipeline::CreateSkinnedPipeline()
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
-    pipelineBuilder
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _skinnedPipelineLayout = std::get<0>(result);
+    _skinnedPipeline = std::get<1>(result);
 }
 
 void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)

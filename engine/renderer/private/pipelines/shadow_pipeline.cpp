@@ -139,12 +139,15 @@ void ShadowPipeline::CreateStaticPipeline()
 
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    pipelineBuilder
-        .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats({})
-        .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
-        .BuildPipeline(_staticPipeline, _staticPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats({})
+                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
+                      .BuildPipeline();
+
+    _staticPipelineLayout = std::get<0>(result);
+    _staticPipeline = std::get<1>(result);
 }
 
 void ShadowPipeline::CreateSkinnedPipeline()
@@ -160,12 +163,15 @@ void ShadowPipeline::CreateSkinnedPipeline()
 
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    pipelineBuilder
-        .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats({})
-        .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
-        .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats({})
+                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
+                      .BuildPipeline();
+
+    _skinnedPipelineLayout = std::get<0>(result);
+    _skinnedPipeline = std::get<1>(result);
 }
 
 void ShadowPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
