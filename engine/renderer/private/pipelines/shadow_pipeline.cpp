@@ -137,9 +137,9 @@ void ShadowPipeline::CreateStaticPipeline()
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/shadow.vert.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
         .SetDepthStencilState(depthStencilStateCreateInfo)
         .SetColorAttachmentFormats({})
@@ -158,9 +158,9 @@ void ShadowPipeline::CreateSkinnedPipeline()
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_shadow.vert.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
     pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
         .SetDepthStencilState(depthStencilStateCreateInfo)
         .SetColorAttachmentFormats({})

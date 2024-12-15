@@ -10,44 +10,6 @@ std::unordered_map<size_t, vk::DescriptorSetLayout> PipelineBuilder::_cacheDescr
 PipelineBuilder::PipelineBuilder(const std::shared_ptr<GraphicsContext>& context)
     : _context(context)
 {
-    _inputAssemblyStateCreateInfo = {
-        .topology = vk::PrimitiveTopology::eTriangleList,
-        .primitiveRestartEnable = vk::False,
-    };
-
-    _multisampleStateCreateInfo = {
-        .rasterizationSamples = vk::SampleCountFlagBits::e1,
-        .sampleShadingEnable = vk::False,
-    };
-
-    _viewportStateCreateInfo = {
-        .viewportCount = 1,
-        .scissorCount = 1,
-    };
-
-    _rasterizationStateCreateInfo = {
-        .depthClampEnable = vk::False,
-        .rasterizerDiscardEnable = vk::False,
-        .polygonMode = vk::PolygonMode::eFill,
-        .cullMode = vk::CullModeFlagBits::eBack,
-        .frontFace = vk::FrontFace::eCounterClockwise,
-        .lineWidth = 1.0f,
-    };
-
-    _depthStencilStateCreateInfo = {
-        .depthTestEnable = false,
-        .depthWriteEnable = false,
-    };
-
-    static constexpr std::array<vk::DynamicState, 2> DYNAMIC_STATES = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-
-    _dynamicStateCreateInfo = {
-        .dynamicStateCount = DYNAMIC_STATES.size(),
-        .pDynamicStates = DYNAMIC_STATES.data(),
-    };
 }
 
 PipelineBuilder::~PipelineBuilder()
@@ -59,7 +21,7 @@ PipelineBuilder::~PipelineBuilder()
     }
 }
 
-PipelineBuilder& PipelineBuilder::AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint)
+void PipelineBuilder::AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint)
 {
     // TODO: Handle invalid shader stages; i.e. multiple bits
     SpvReflectShaderModule reflectModule;
@@ -75,8 +37,6 @@ PipelineBuilder& PipelineBuilder::AddShaderStage(vk::ShaderStageFlagBits stage, 
         .reflectModule = reflectModule,
         .shaderModule = shaderModule,
     });
-
-    return *this;
 }
 
 void PipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
@@ -109,10 +69,8 @@ void PipelineBuilder::ReflectShaders()
 {
     for (const auto& shaderStage : _shaderStages)
     {
-        if (shaderStage.stage & vk::ShaderStageFlagBits::eVertex)
-        {
-            ReflectVertexInput(shaderStage);
-        }
+        ReflectShader(shaderStage);
+
         ReflectPushConstants(shaderStage);
         ReflectDescriptorLayouts(shaderStage);
 
@@ -122,48 +80,6 @@ void PipelineBuilder::ReflectShaders()
             .pName = shaderStage.entryPoint.data(),
         };
         _pipelineShaderStages.emplace_back(pipelineShaderStageCreateInfo);
-    }
-}
-
-void PipelineBuilder::ReflectVertexInput(const ShaderStage& shaderStage)
-{
-    uint32_t inputCount { 0 };
-
-    spvReflectEnumerateInputVariables(&shaderStage.reflectModule, &inputCount, nullptr);
-    std::vector<SpvReflectInterfaceVariable*> inputVariables { inputCount };
-    spvReflectEnumerateInputVariables(&shaderStage.reflectModule, &inputCount, inputVariables.data());
-
-    // Makes sure the input variables are sorted by their location.
-    std::sort(inputVariables.begin(), inputVariables.end(), [](const auto a, const auto b)
-        { return a->location < b->location; });
-
-    uint32_t binding { 0 };
-    vk::VertexInputBindingDescription bindingDescription {
-        .binding = binding,
-        .stride = 0,
-        .inputRate = vk::VertexInputRate::eVertex
-    };
-
-    for (const auto* var : inputVariables)
-    {
-        if (var->location == std::numeric_limits<uint32_t>::max())
-            continue;
-
-        vk::VertexInputAttributeDescription attributeDescription {
-            .location = var->location,
-            .binding = binding,
-            .format = static_cast<vk::Format>(var->format),
-            .offset = bindingDescription.stride
-        };
-
-        bindingDescription.stride += util::FormatSize(attributeDescription.format);
-
-        _attributeDescriptions.emplace_back(attributeDescription);
-    }
-
-    if (!_attributeDescriptions.empty())
-    {
-        _bindingDescriptions.emplace_back(bindingDescription);
     }
 }
 
@@ -265,7 +181,134 @@ void PipelineBuilder::CreatePipelineLayout(vk::PipelineLayout& pipelineLayout)
     pipelineLayout = _pipelineLayout = _context->VulkanContext()->Device().createPipelineLayout(createInfo, nullptr);
 }
 
-void PipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
+vk::ShaderModule PipelineBuilder::CreateShaderModule(const std::vector<std::byte>& spirvBytes)
+{
+    vk::ShaderModuleCreateInfo createInfo {
+        .codeSize = spirvBytes.size(),
+        .pCode = reinterpret_cast<const uint32_t*>(spirvBytes.data()),
+    };
+
+    return _context->VulkanContext()->Device().createShaderModule(createInfo, nullptr);
+}
+
+size_t PipelineBuilder::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+{
+    size_t seed = bindings.size();
+    for (const auto& binding : bindings)
+    {
+        seed ^= std::hash<uint32_t> {}(binding.binding) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= std::hash<uint32_t> {}(static_cast<uint32_t>(binding.descriptorType)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= std::hash<uint32_t> {}(binding.descriptorCount) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= std::hash<uint32_t>{}(static_cast<uint32_t>(binding.stageFlags)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    for (const auto& name : names)
+    {
+        seed ^= std::hash<std::string_view> {}(name) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+}
+
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(const std::shared_ptr<GraphicsContext>& context)
+    : PipelineBuilder(context)
+{
+    _inputAssemblyStateCreateInfo = {
+        .topology = vk::PrimitiveTopology::eTriangleList,
+        .primitiveRestartEnable = vk::False,
+    };
+
+    _multisampleStateCreateInfo = {
+        .rasterizationSamples = vk::SampleCountFlagBits::e1,
+        .sampleShadingEnable = vk::False,
+    };
+
+    _viewportStateCreateInfo = {
+        .viewportCount = 1,
+        .scissorCount = 1,
+    };
+
+    _rasterizationStateCreateInfo = {
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eBack,
+        .frontFace = vk::FrontFace::eCounterClockwise,
+        .lineWidth = 1.0f,
+    };
+
+    _depthStencilStateCreateInfo = {
+        .depthTestEnable = false,
+        .depthWriteEnable = false,
+    };
+
+    static constexpr std::array<vk::DynamicState, 2> DYNAMIC_STATES = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
+    };
+
+    _dynamicStateCreateInfo = {
+        .dynamicStateCount = DYNAMIC_STATES.size(),
+        .pDynamicStates = DYNAMIC_STATES.data(),
+    };
+}
+
+GraphicsPipelineBuilder::~GraphicsPipelineBuilder() = default;
+
+void GraphicsPipelineBuilder::BuildPipeline(vk::Pipeline& pipeline, vk::PipelineLayout& pipelineLayout)
+{
+    PipelineBuilder::BuildPipeline(pipeline, pipelineLayout);
+}
+
+void GraphicsPipelineBuilder::ReflectShader(const ShaderStage& shaderStage)
+{
+    if (shaderStage.stage & vk::ShaderStageFlagBits::eVertex)
+    {
+        ReflectVertexInput(shaderStage);
+    }
+}
+
+void GraphicsPipelineBuilder::ReflectVertexInput(const ShaderStage& shaderStage)
+{
+    uint32_t inputCount { 0 };
+
+    spvReflectEnumerateInputVariables(&shaderStage.reflectModule, &inputCount, nullptr);
+    std::vector<SpvReflectInterfaceVariable*> inputVariables { inputCount };
+    spvReflectEnumerateInputVariables(&shaderStage.reflectModule, &inputCount, inputVariables.data());
+
+    // Makes sure the input variables are sorted by their location.
+    std::sort(inputVariables.begin(), inputVariables.end(), [](const auto a, const auto b)
+        { return a->location < b->location; });
+
+    uint32_t binding { 0 };
+    vk::VertexInputBindingDescription bindingDescription {
+        .binding = binding,
+        .stride = 0,
+        .inputRate = vk::VertexInputRate::eVertex
+    };
+
+    for (const auto* var : inputVariables)
+    {
+        if (var->location == std::numeric_limits<uint32_t>::max())
+            continue;
+
+        vk::VertexInputAttributeDescription attributeDescription {
+            .location = var->location,
+            .binding = binding,
+            .format = static_cast<vk::Format>(var->format),
+            .offset = bindingDescription.stride
+        };
+
+        bindingDescription.stride += util::FormatSize(attributeDescription.format);
+
+        _attributeDescriptions.emplace_back(attributeDescription);
+    }
+
+    if (!_attributeDescriptions.empty())
+    {
+        _bindingDescriptions.emplace_back(bindingDescription);
+    }
+}
+
+void GraphicsPipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
 {
     if (!_inputAssemblyStateCreateInfo.has_value() || !_viewportStateCreateInfo.has_value() || !_rasterizationStateCreateInfo.has_value() || !_multisampleStateCreateInfo.has_value() || !_depthStencilStateCreateInfo.has_value() || !_colorBlendStateCreateInfo.has_value() || !_dynamicStateCreateInfo.has_value())
     {
@@ -311,31 +354,4 @@ void PipelineBuilder::CreatePipeline(vk::Pipeline& pipeline)
     util::VK_ASSERT(result, "Failed creating graphics pipeline!");
 
     pipeline = _pipeline = vkPipeline;
-}
-
-vk::ShaderModule PipelineBuilder::CreateShaderModule(const std::vector<std::byte>& spirvBytes)
-{
-    vk::ShaderModuleCreateInfo createInfo {
-        .codeSize = spirvBytes.size(),
-        .pCode = reinterpret_cast<const uint32_t*>(spirvBytes.data()),
-    };
-
-    return _context->VulkanContext()->Device().createShaderModule(createInfo, nullptr);
-}
-
-size_t PipelineBuilder::HashBindings(const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
-{
-    size_t seed = bindings.size();
-    for (const auto& binding : bindings)
-    {
-        seed ^= std::hash<uint32_t> {}(binding.binding) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= std::hash<uint32_t> {}(static_cast<uint32_t>(binding.descriptorType)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        // seed ^= std::hash<uint32_t> {}(binding.descriptorCount) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        // seed ^= std::hash<uint32_t>{}(static_cast<uint32_t>(binding.stageFlags)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    }
-    for (const auto& name : names)
-    {
-        seed ^= std::hash<std::string_view> {}(name) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    }
-    return seed;
 }

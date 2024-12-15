@@ -93,10 +93,10 @@ void SSAOPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/ssao.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
     pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
         .SetColorBlendState(colorBlendStateCreateInfo)
         .SetColorAttachmentFormats({ vk::Format::eR8Unorm })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)

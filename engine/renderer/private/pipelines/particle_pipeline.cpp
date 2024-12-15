@@ -403,10 +403,10 @@ void ParticlePipeline::CreatePipelines()
         std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/billboard.vert.spv");
         std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/particle.frag.spv");
 
-        PipelineBuilder reflector { _context };
-        reflector
-            .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-            .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        GraphicsPipelineBuilder pipelineBuilder { _context };
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+        pipelineBuilder
             .SetColorBlendState(colorBlendStateCreateInfo)
             .SetColorAttachmentFormats({ format })
             .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
