@@ -39,6 +39,7 @@ void main()
 
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
+    flags = instance.flags;
 
     gl_Position = camera.VP * vec4(position, 1.0);
 }

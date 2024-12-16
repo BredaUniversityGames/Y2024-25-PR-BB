@@ -132,6 +132,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
         // +63 so we always dispatch at least once.
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
+    _context->GetDrawStats().SetEmitterCount(_emitters.size());
     _emitters.clear();
 
     vk::MemoryBarrier memoryBarrier {};
@@ -238,6 +239,9 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, cons
 
     CulledInstances* culledData = static_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
     commandBuffer.drawIndexed(6, culledData->count, 0, 0, 0, vkContext->Dldi());
+
+    _context->GetDrawStats().SetParticleCount(culledData->count);
+    _context->GetDrawStats().Draw(6);
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());
     util::EndLabel(commandBuffer, vkContext->Dldi());

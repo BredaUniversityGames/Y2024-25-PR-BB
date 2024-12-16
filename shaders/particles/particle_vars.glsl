@@ -1,8 +1,8 @@
 const uint MAX_PARTICLES = 1024 * 256;
 
 // particle rendering flags
-#define UNLIT       1 << 0
-#define NOSHADOW    1 << 1
+const uint UNLIT = 1 << 0;
+const uint NOSHADOW = 1 << 1;
 
 struct Particle
 {

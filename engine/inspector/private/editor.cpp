@@ -21,7 +21,6 @@
 #include "systems/physics_system.hpp"
 #include "vulkan_context.hpp"
 
-
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -181,6 +180,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
     ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
     ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
+    ImGui::LabelText("Particles after simulation", "%i", _renderer->GetContext()->GetDrawStats().GetParticleCount());
+    ImGui::LabelText("Emitters", "%i", _renderer->GetContext()->GetDrawStats().GetEmitterCount());
 
     ImGui::End();
 }

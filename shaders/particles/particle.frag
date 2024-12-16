@@ -37,19 +37,23 @@ void main()
         discard;
     }
 
-    // directional light shadow calculations
-    vec3 N = normalize(normalIn);
-    vec3 lightDir = scene.directionalLight.direction.xyz;
-    float cosTheta = max(dot(N, lightDir), 0.0);
-    float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
-    float shadow = 0.0;
-    DirectionalShadowMap(position, bias, shadow);
+    float shadow = 1.0;
+    if ((flags & NOSHADOW) != NOSHADOW)
+    {
+        shadow = 0.0;
+        vec3 N = normalize(normalIn);
+        vec3 lightDir = scene.directionalLight.direction.xyz;
+        float cosTheta = max(dot(N, lightDir), 0.0);
+        float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
+        DirectionalShadowMap(position, bias, shadow);
+        // TODO: find solution to temporary avoiding of hard shadows
+        shadow += 0.1;
+    }
 
-    // TODO: find solution to temporary avoiding of hard shadows
-    shadow += 0.1;
-
-    // TODO: can this be done better/different?
-    color *= vec4(scene.directionalLight.color.xyz, 0.0);
+    if ((flags & UNLIT) != UNLIT)
+    {
+        color *= vec4(scene.directionalLight.color.xyz, 0.0);
+    }
 
     outColor = vec4((shadow * color.xyz), 1.0);
 
