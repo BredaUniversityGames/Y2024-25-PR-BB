@@ -135,6 +135,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     musicSi.isLoop = true;
     musicSi.is3D = true;
 
+    // This sound might pop in because it starts playing before the engine is fully initialized
     audioModule.LoadSFX(musicSi);
     auto instance = audioModule.PlaySFX(musicSi, 1.0f, false);
 
