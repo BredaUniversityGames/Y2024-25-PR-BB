@@ -7,7 +7,7 @@
 	"BuildOutput" "..\output\"
 	"Depots"
 	{
-		"3365922" "depot_build_3365922.vdf"
-		"3365923" "depot_build_3365923.vdf"
+		"3365922" "depot_build_dev_windows.vdf"
+		"3365923" "depot_build_dev_linux.vdf"
 	}
 }
