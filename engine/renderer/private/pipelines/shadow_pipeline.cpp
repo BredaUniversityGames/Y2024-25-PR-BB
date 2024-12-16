@@ -136,6 +136,15 @@ void ShadowPipeline::CreateStaticPipeline()
         .depthBoundsTestEnable = vk::False,
     };
 
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eFront,
+        .frontFace = vk::FrontFace::eCounterClockwise,
+        .lineWidth = 1.0f,
+    };
+
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/shadow.vert.spv");
 
     PipelineBuilder pipelineBuilder { _context };
@@ -143,6 +152,7 @@ void ShadowPipeline::CreateStaticPipeline()
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
         .SetDepthStencilState(depthStencilStateCreateInfo)
+        .SetRasterizationState(rasterizationStateCreateInfo)
         .SetColorAttachmentFormats({})
         .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
         .BuildPipeline(_staticPipeline, _staticPipelineLayout);
