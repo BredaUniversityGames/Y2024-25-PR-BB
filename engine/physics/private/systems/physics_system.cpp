@@ -14,6 +14,9 @@
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
+#include <model_loader.hpp>
+#include <renderer.hpp>
+
 PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule)
     : engine(engine)
     , _ecs(ecs)
@@ -24,7 +27,7 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
 void PhysicsSystem::InitializePhysicsColliders()
 {
     const auto view = _ecs.GetRegistry().view<StaticMeshComponent, TransformComponent>();
- 
+
     for (const auto entity : view)
     {
         StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
@@ -65,6 +68,43 @@ void PhysicsSystem::InitializePhysicsColliders()
         _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
     }
 }
+
+void PhysicsSystem::CreateMeshCollision(const std::string& path)
+{
+    const CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+
+    for (auto mesh : models.meshes)
+    {
+        JPH::VertexList vertices;
+        JPH::IndexedTriangleList triangles;
+
+        // set verticies
+        for (auto vertex : mesh.vertices)
+        {
+            vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
+        }
+
+        // set trinagles
+        for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
+        {
+            JPH::IndexedTriangle tri;
+            tri.mIdx[0] = mesh.indices[i + 0];
+            tri.mIdx[1] = mesh.indices[i + 1];
+            tri.mIdx[2] = mesh.indices[i + 2];
+
+            triangles.push_back(tri);
+        }
+
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, glm::vec3(0.0f, 0.0f, 0.0f), vertices, triangles);
+
+        entt::entity entity = _ecs.GetRegistry().create();
+        NameComponent node;
+        node.name = "Mesh collider Entity";
+        _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+    }
+}
+
 void PhysicsSystem::CleanUp()
 {
     const auto toDestroy = _ecs.GetRegistry().view<DeleteTag, RigidbodyComponent>();
@@ -178,6 +218,11 @@ void PhysicsSystem::Inspect()
         node.name = "Plane Entity";
         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, newRigidBody);
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+    }
+
+    if (ImGui::Button("Create mesh collider"))
+    {
+        CreateMeshCollision("assets/models/collision_test.glb");
     }
 
     if (ImGui::Button("Clear Physics Entities"))

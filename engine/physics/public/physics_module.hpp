@@ -11,6 +11,10 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 
 #include "module_interface.hpp"
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+
+
 
 JPH_SUPPRESS_WARNING_PUSH
 

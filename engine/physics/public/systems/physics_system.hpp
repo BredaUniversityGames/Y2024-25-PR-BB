@@ -15,6 +15,8 @@ public:
 
     void InitializePhysicsColliders();
 
+    void CreateMeshCollision(const std::string& path);
+
     void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
     void Render(const ECSModule& ecs) const override;
