@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "3365920"
+	"Desc" "Public Build"
+	"SetLive" "default"
+	"ContentRoot" "..\..\..\..\package\"
+	"BuildOutput" "..\output\"
+	"Depots"
+	{
+		"3365922" "depot_build_public_windows.vdf"
+		"3365923" "depot_build_public_linux.vdf"
+	}
+}
