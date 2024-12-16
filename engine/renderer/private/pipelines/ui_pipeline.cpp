@@ -63,6 +63,8 @@ void UIPipeline::CreatePipeLine()
 
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "UI Pipeline");
+
     const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_inputTarget);
     const auto* ui = _context->Resources()->ImageResourceManager().Access(_outputTarget);
 

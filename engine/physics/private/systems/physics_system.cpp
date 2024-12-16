@@ -14,6 +14,8 @@
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
+#include <tracy/Tracy.hpp>
+
 PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule)
     : engine(engine)
     , _ecs(ecs)
@@ -24,7 +26,7 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
 void PhysicsSystem::InitializePhysicsColliders()
 {
     const auto view = _ecs.GetRegistry().view<StaticMeshComponent, TransformComponent>();
- 
+
     for (const auto entity : view)
     {
         StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
@@ -78,6 +80,7 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
+    ZoneScoped;
     // this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
@@ -128,6 +131,7 @@ void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 }
 void PhysicsSystem::Inspect()
 {
+    ZoneScoped;
     ImGui::Begin("Physics System");
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;

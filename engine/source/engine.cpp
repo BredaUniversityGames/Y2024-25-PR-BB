@@ -137,7 +137,6 @@ void OldEngine::Tick(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
-    ZoneNamed(zone, "");
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
@@ -163,7 +162,7 @@ void OldEngine::Tick(Engine& engine)
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
-        ZoneNamedN(zone, "Update Camera", true);
+        ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 

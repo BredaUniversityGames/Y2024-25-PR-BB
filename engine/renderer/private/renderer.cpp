@@ -211,6 +211,23 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(uiPass)
         .AddNode(debugPass)
         .Build();
+
+    static std::array<std::string, MAX_FRAMES_IN_FLIGHT> contextNames { "Command Buffer 0", "Command Buffer 1", "Command Buffer 2" };
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        _tracyContexts[i] = TracyVkContextCalibrated(
+            //_context->VulkanContext()->Instance(),
+            _context->VulkanContext()->PhysicalDevice(),
+            _context->VulkanContext()->Device(),
+            _context->VulkanContext()->GraphicsQueue(),
+            _commandBuffers[i],
+            reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT")),
+            reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetCalibratedTimestampsEXT")));
+            //reinterpret_cast<PFN_vkGetInstanceProcAddr>(_context->VulkanContext()->Instance().getProcAddr("vkGetInstanceProcAddr")),
+            //reinterpret_cast<PFN_vkGetDeviceProcAddr>(_context->VulkanContext()->Device().getProcAddr("vkGetDeviceProcAddr")));
+        TracyVkContextName(_tracyContexts[i], contextNames[i].c_str(), contextNames[i].size());
+    }
 }
 
 std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
@@ -258,6 +275,11 @@ Renderer::~Renderer()
     }
 
     _swapChain.reset();
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        TracyVkDestroy(_tracyContexts[i]);
+    }
 }
 
 void Renderer::CreateCommandBuffers()
@@ -274,9 +296,7 @@ void Renderer::CreateCommandBuffers()
 void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime)
 {
     ZoneScoped;
-
-    // Since there is only one scene, we can reuse the same gpu buffers
-    _gpuScene->Update(_currentFrame);
+    TracyVkZone(_tracyContexts[_currentFrame], commandBuffer, "Render all");
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
@@ -285,12 +305,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .skinnedBatchBuffer = _skinnedBatchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
         .deltaTime = deltaTime,
+        .tracyContext = _tracyContexts[_currentFrame],
     };
-
-    _context->GetDrawStats().Clear();
-
-    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
-    util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
     // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
@@ -302,7 +318,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
-    commandBuffer.end();
+    TracyVkCollect(_tracyContexts[_currentFrame], commandBuffer);
 }
 
 void Renderer::CreateSyncObjects()
@@ -445,7 +461,17 @@ void Renderer::Render(float deltaTime)
 
     _commandBuffers[_currentFrame].reset();
 
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(_currentFrame);
+
+    _context->GetDrawStats().Clear();
+
+    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
+    util::VK_ASSERT(_commandBuffers[_currentFrame].begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
+
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
+
+    _commandBuffers[_currentFrame].end();
 
     vk::Semaphore waitSemaphore = _imageAvailableSemaphores[_currentFrame];
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;

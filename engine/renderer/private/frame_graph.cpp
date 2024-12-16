@@ -2,8 +2,10 @@
 
 #include <glm/gtc/random.hpp>
 #include <glm/gtx/range.hpp>
+#include <tracy/TracyVulkan.hpp>
 
 #include "gpu_resources.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
@@ -101,8 +103,11 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, vkContext->Dldi());
 
-        // Place memory barriers
-        commandBuffer.pipelineBarrier2(node.dependencyInfo);
+        {
+            TracyVkZoneC(scene.tracyContext, commandBuffer, "Framegraph barrier", tracy::Color::IndianRed);
+            // Place memory barriers
+            commandBuffer.pipelineBarrier2(node.dependencyInfo);
+        }
 
         if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {

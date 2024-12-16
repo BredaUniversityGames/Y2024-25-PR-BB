@@ -49,7 +49,7 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
-
+    ZoneNamedN(editorDraw, "Editor Draw", true);
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -103,6 +103,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Begin("World Inspector"))
     {
+        ZoneNamedN(worldInspector, "World Inspector", true);
         if (ImGui::Button("+ Add entity"))
         {
             entt::entity entity = _ecs.GetRegistry().create();
@@ -126,7 +127,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
+    {
+        ZoneNamedN(entityEditor, "Entity Editor", true);
+        _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
+    }
 
     if (ImGui::Begin("Entity Details"))
     {
@@ -138,9 +142,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs.GetSystems())
+
     {
-        system->Inspect();
+        ZoneNamedN(systemInspect, "System inspect", true);
+        for (const auto& system : _ecs.GetSystems())
+        {
+            system->Inspect();
+        }
     }
 
     static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());

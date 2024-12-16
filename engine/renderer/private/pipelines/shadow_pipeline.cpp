@@ -47,6 +47,7 @@ ShadowPipeline::~ShadowPipeline()
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pipeline");
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
