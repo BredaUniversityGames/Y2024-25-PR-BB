@@ -65,7 +65,7 @@ struct alignas(16) CulledInstances
     ParticleInstance instances[MAX_PARTICLES];
 };
 
-enum class ParticleType
+enum class ParticleType : uint8_t
 {
     eNone = 0,
     eBillboard,

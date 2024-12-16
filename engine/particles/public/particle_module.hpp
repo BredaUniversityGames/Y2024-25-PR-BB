@@ -45,8 +45,8 @@ public:
 
 private:
     std::shared_ptr<GraphicsContext> _context;
-    ECSModule* _ecs;
-    PhysicsModule* _physics;
+    ECSModule* _ecs = nullptr;
+    PhysicsModule* _physics = nullptr;
 
     struct EmitterPreset
     {
