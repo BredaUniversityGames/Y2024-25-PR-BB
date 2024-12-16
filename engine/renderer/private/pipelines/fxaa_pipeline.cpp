@@ -21,6 +21,7 @@ FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, cons
 
 void FXAAPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pipeline");
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
 
