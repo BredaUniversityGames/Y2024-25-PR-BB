@@ -97,7 +97,6 @@ void ApplicationModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ApplicationModule::Tick(Engine& engine)
 {
-    ZoneScoped;
     _inputDeviceManager->Update();
 
     SDL_Event event;

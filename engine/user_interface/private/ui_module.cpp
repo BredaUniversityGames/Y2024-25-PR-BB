@@ -10,6 +10,5 @@ ModuleTickOrder UIModule::Init(Engine& engine)
 }
 void UIModule::Tick(Engine& engine)
 {
-    ZoneScoped;
     _viewport->Update(engine.GetModule<ApplicationModule>().GetInputDeviceManager());
 }

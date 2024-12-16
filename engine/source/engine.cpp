@@ -136,7 +136,6 @@ void OldEngine::Tick(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
-    ZoneNamedN(tick, "OldEngine Tick", true);
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics

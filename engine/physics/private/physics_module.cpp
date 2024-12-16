@@ -87,7 +87,6 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    ZoneScoped;
     // Step the world
     // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);

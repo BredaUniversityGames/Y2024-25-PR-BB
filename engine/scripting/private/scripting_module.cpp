@@ -39,7 +39,6 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
 
 void ScriptingModule::Tick(Engine& engine)
 {
-    ZoneScoped;
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
 
     if (_mainModule->IsValid())

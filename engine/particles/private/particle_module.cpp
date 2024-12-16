@@ -29,7 +29,6 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    ZoneScoped;
     const auto emitterView = _ecs->GetRegistry().view<EmitterComponent, RigidbodyComponent>();
     for (const auto entity : emitterView)
     {

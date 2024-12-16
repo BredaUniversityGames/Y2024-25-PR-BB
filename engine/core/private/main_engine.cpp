@@ -16,6 +16,12 @@ void MainEngine::MainLoopOnce()
     ZoneScoped;
     for (auto modulePriorityPair : _tickOrder)
     {
+        ZoneScoped;
+
+        auto name = std::string(modulePriorityPair.module->GetName()) + " tick";
+
+        ZoneName(name.data(), 32);
+
         modulePriorityPair.module->Tick(*this);
 
         if (_exitRequested)

@@ -24,7 +24,6 @@ void ECSModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void ECSModule::Tick(Engine& engine)
 {
-    ZoneScoped;
     auto dt = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     RemovedDestroyed();

@@ -58,7 +58,6 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
 
 void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    ZoneScoped;
     if (!_steamAvailable)
     {
         return;
