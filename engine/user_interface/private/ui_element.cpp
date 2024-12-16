@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-void UIElement::Update(const InputManager& input)
+void UIElement::Update(const InputDeviceManager& input)
 {
     for (auto& child : _children)
         child->Update(input);

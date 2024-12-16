@@ -17,6 +17,7 @@
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "pipelines/debug_pipeline.hpp"
+#include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
@@ -38,6 +39,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include "pipelines/fxaa_pipeline.hpp"
+
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
@@ -53,6 +56,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeBloomTargets();
     InitializeSSAOTarget();
     InitializeTonemappingTarget();
+    InitializeFXAATarget();
     InitializeUITarget();
     LoadEnvironmentMap();
 
@@ -94,7 +98,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
-    _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
+    _fxaaPipeline = std::make_unique<FXAAPipeline>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, _uiTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
@@ -170,11 +175,17 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation fxaaPass { *_fxaaPipeline };
+    fxaaPass.SetName("FXAA pass")
+        .SetDebugLabelColor(glm::vec3 { 139.0f, 190.0f, 16.0f } / 255.0f)
+        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
+
     // TODO: THIS PASS SHOULD BE DONE LAST.
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
+        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
         .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
@@ -196,6 +207,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
+        .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
         .Build();
@@ -341,6 +353,15 @@ void Renderer::InitializeTonemappingTarget()
     tonemappingCreation.SetName("Tonemapping Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _tonemappingTarget = _context->Resources()->ImageResourceManager().Create(tonemappingCreation);
+}
+void Renderer::InitializeFXAATarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage fxaaCreation {};
+    fxaaCreation.SetName("FXAA Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _fxaaTarget = _context->Resources()->ImageResourceManager().Create(fxaaCreation);
 }
 
 void Renderer::InitializeUITarget()

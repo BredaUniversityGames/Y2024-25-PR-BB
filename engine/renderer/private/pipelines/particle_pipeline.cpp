@@ -406,7 +406,7 @@ void ParticlePipeline::CreatePipelines()
         vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
         depthStencilStateCreateInfo.depthTestEnable = true;
         depthStencilStateCreateInfo.depthWriteEnable = true;
-        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
         depthStencilStateCreateInfo.depthBoundsTestEnable = false;
         depthStencilStateCreateInfo.minDepthBounds = 0.0f;
         depthStencilStateCreateInfo.maxDepthBounds = 1.0f;

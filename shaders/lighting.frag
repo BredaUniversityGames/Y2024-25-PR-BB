@@ -117,7 +117,7 @@ void main()
     float linearDepth = distance(position, camera.cameraPosition);
     float fogFactor = exp(-fogDensity * linearDepth);
 
-    outColor = vec4(litColor, 1.0);//vec4(mix(fogColor, litColor, fogFactor), 1.0);
+    outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);

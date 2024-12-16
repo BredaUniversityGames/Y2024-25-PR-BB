@@ -61,27 +61,27 @@ vec3 MapDirection(vec2 coords, uint faceIndex)
     vec3 direction;
     if (faceIndex == 0)
     { // +X face
-        direction = vec3(1.0, -uvRemapped.y, -uvRemapped.x);
+      direction = vec3(1.0, -uvRemapped.y, -uvRemapped.x);
     }
     else if (faceIndex == 1)
     { // -X face
-        direction = vec3(-1.0, -uvRemapped.y, uvRemapped.x);
+      direction = vec3(-1.0, -uvRemapped.y, uvRemapped.x);
     }
     else if (faceIndex == 2)
     { // +Y face
-        direction = vec3(uvRemapped.x, 1.0, uvRemapped.y);
+      direction = vec3(uvRemapped.x, 1.0, uvRemapped.y);
     }
     else if (faceIndex == 3)
     { // -Y face
-        direction = vec3(uvRemapped.x, -1.0, -uvRemapped.y);
+      direction = vec3(uvRemapped.x, -1.0, -uvRemapped.y);
     }
     else if (faceIndex == 4)
     { // +Z face
-        direction = vec3(uvRemapped.x, -uvRemapped.y, 1.0);
+      direction = vec3(uvRemapped.x, -uvRemapped.y, 1.0);
     }
     else if (faceIndex == 5)
     { // -Z face
-        direction = vec3(-uvRemapped.x, -uvRemapped.y, -1.0);
+      direction = vec3(-uvRemapped.x, -uvRemapped.y, -1.0);
     }
 
     return normalize(direction);
