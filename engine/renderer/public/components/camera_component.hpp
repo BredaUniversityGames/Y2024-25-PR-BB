@@ -23,6 +23,8 @@ struct CameraComponent
     float orthographicSize {};
     float aspectRatio {};
 
+    bool reversedZ { false };
+
     friend class TransformHelpers;
     friend class Editor;
 
