@@ -2,7 +2,7 @@
 {
 	"AppID" "3365920"
 	"Desc" "Developer Build"
-	"SetLive" "" // Branch to set the build on, non if empty
+	"SetLive" "development"
 	"ContentRoot" "..\..\..\..\package\"
 	"BuildOutput" "..\output\"
 	"Depots"
