@@ -43,19 +43,19 @@ foreach (SHADER ${SHADERS})
     compile_shader(${SHADER})
 endforeach ()
 
-set(REFLECTED_HEADER_OUTPUT "${PROJECT_SOURCE_DIR}/engine/renderer/public/reflected_glsl.hpp")
-set(PYTHON_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/reflect.py")
+#set(REFLECTED_HEADER_OUTPUT "${PROJECT_SOURCE_DIR}/engine/renderer/public/reflected_glsl.hpp")
+#set(PYTHON_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/reflect.py")
+#
+#find_package(Python3 REQUIRED)
+#
+#message("${Python3_EXECUTABLE} \"${PYTHON_SCRIPT}\" \"${REFLECTED_HEADER_OUTPUT}\"")
+#
+#add_custom_command(
+#        OUTPUT ${REFLECTED_HEADER_OUTPUT}
+#        COMMAND ${Python3_EXECUTABLE} ${PYTHON_SCRIPT} ${REFLECTED_HEADER_OUTPUT}
+#        DEPENDS ${PYTHON_SCRIPT} ${SHADERS}
+#        COMMENT "Reflecting glsl shaders to c++ header"
+#        VERBATIM
+#)
 
-find_package(Python3 REQUIRED)
-
-message("${Python3_EXECUTABLE} \"${PYTHON_SCRIPT}\" \"${REFLECTED_HEADER_OUTPUT}\"")
-
-add_custom_command(
-        OUTPUT ${REFLECTED_HEADER_OUTPUT}
-        COMMAND ${Python3_EXECUTABLE} ${PYTHON_SCRIPT} ${REFLECTED_HEADER_OUTPUT}
-        DEPENDS ${PYTHON_SCRIPT} ${SHADERS}
-        COMMENT "Reflecting glsl shaders to c++ header"
-        VERBATIM
-)
-
-add_custom_target(Shaders ALL DEPENDS ${SPIRV_SHADERS} ${PYTHON_SCRIPT})
+add_custom_target(Shaders ALL DEPENDS ${SPIRV_SHADERS})# ${PYTHON_SCRIPT})
