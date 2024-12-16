@@ -2,6 +2,8 @@
 #include "log.hpp"
 #include "wren_engine.hpp"
 
+#include <tracy/Tracy.hpp>
+
 void MainScript::SetMainScript(wren::VM& vm, const std::string& module, const std::string& className)
 {
     try
@@ -35,6 +37,7 @@ void MainScript::InitMainScript(Engine* e)
 
 void MainScript::Update(Engine* e, DeltaMS deltatime)
 {
+    ZoneScoped;
     try
     {
         mainUpdate(WrenEngine { e }, deltatime.count());

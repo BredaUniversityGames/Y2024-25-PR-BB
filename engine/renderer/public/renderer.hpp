@@ -6,6 +6,8 @@
 #include "ecs_module.hpp"
 #include "swap_chain.hpp"
 
+#include <tracy/TracyVulkan.hpp>
+
 class UIModule;
 class DebugPipeline;
 class Application;
@@ -107,6 +109,8 @@ private:
     ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
+
+    std::array<TracyVkCtx, MAX_FRAMES_IN_FLIGHT> _tracyContexts;
 
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
