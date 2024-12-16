@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 // temporary values for testing/progress
-static constexpr uint32_t MAX_EMITTERS = 32;
+static constexpr uint32_t MAX_EMITTERS = 256;
 static constexpr int32_t MAX_PARTICLES = 1024 * 256;
 
 enum class ParticleRenderFlagBits : uint8_t
