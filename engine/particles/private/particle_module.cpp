@@ -90,7 +90,7 @@ void ParticleModule::LoadEmitterPresets()
 
     CPUImage creation;
     creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    creation.FromPNG("assets/textures/jeremi.png");
+    creation.FromPNG("assets/textures/yellow_orb_particle.png");
     creation.isHDR = false;
     auto image = _context->Resources()->ImageResourceManager().Create(creation);
     _emitterImages.emplace_back(image);
