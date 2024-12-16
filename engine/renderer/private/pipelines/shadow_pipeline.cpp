@@ -47,6 +47,7 @@ ShadowPipeline::~ShadowPipeline()
 
 void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pipeline");
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
@@ -135,6 +136,15 @@ void ShadowPipeline::CreateStaticPipeline()
         .depthBoundsTestEnable = vk::False,
     };
 
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eFront,
+        .frontFace = vk::FrontFace::eCounterClockwise,
+        .lineWidth = 1.0f,
+    };
+
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/shadow.vert.spv");
 
     GraphicsPipelineBuilder pipelineBuilder { _context };
@@ -142,6 +152,7 @@ void ShadowPipeline::CreateStaticPipeline()
     auto result = pipelineBuilder
                       .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
                       .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetRasterizationState(rasterizationStateCreateInfo)
                       .SetColorAttachmentFormats({})
                       .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
                       .BuildPipeline();
@@ -159,6 +170,15 @@ void ShadowPipeline::CreateSkinnedPipeline()
         .depthBoundsTestEnable = vk::False,
     };
 
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eFront,
+        .frontFace = vk::FrontFace::eCounterClockwise,
+        .lineWidth = 1.0f,
+    };
+
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_shadow.vert.spv");
 
     GraphicsPipelineBuilder pipelineBuilder { _context };
@@ -166,6 +186,7 @@ void ShadowPipeline::CreateSkinnedPipeline()
     auto result = pipelineBuilder
                       .SetColorBlendState(vk::PipelineColorBlendStateCreateInfo {})
                       .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetRasterizationState(rasterizationStateCreateInfo)
                       .SetColorAttachmentFormats({})
                       .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(_gBuffers.Shadow())->format)
                       .BuildPipeline();

@@ -8,6 +8,7 @@
 #include "vulkan_include.hpp"
 
 #include <memory>
+#include <tracy/TracyVulkan.hpp>
 
 class GPUScene;
 class BatchBuffer;
@@ -33,6 +34,7 @@ struct RenderSceneDescription
     std::shared_ptr<BatchBuffer> skinnedBatchBuffer;
     uint32_t targetSwapChainImageIndex;
     float deltaTime;
+    TracyVkCtx& tracyContext;
 };
 
 constexpr uint32_t MAX_INSTANCES = 4096 * 10;

@@ -8,6 +8,8 @@ public:
     UIModule() = default;
     ~UIModule() override = default;
 
+    std::string_view GetName() override { return "UI Module"; }
+
     NON_COPYABLE(UIModule);
     NON_MOVABLE(UIModule);
 

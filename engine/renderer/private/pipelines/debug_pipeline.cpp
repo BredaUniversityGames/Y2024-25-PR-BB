@@ -35,6 +35,8 @@ DebugPipeline::~DebugPipeline()
 
 void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Debug Pipeline");
+
     UpdateVertexData();
 
     const GPUImage* uiTarget = _context->Resources()->ImageResourceManager().Access(_uiTarget);

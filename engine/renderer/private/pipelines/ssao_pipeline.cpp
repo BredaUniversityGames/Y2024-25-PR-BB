@@ -33,6 +33,8 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
 
 void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
+
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
 

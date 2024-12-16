@@ -34,6 +34,7 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
 
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pipeline");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color

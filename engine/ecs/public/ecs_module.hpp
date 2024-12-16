@@ -17,6 +17,7 @@ class ECSModule : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) override;
     void Shutdown(Engine& engine) override;
     void Tick(Engine& engine) override;
+    std::string_view GetName() override { return "ECS Module"; }
 
     void UpdateSystems(float dt);
     void RenderSystems() const;
