@@ -54,7 +54,7 @@ ParticlePipeline::~ParticlePipeline()
     resources->BufferResourceManager().Destroy(_emittersBuffer);
     resources->BufferResourceManager().Destroy(_vertexBuffer);
     resources->BufferResourceManager().Destroy(_indexBuffer);
-    vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
+    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
 
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
