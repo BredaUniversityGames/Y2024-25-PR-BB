@@ -103,8 +103,11 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         util::BeginLabel(commandBuffer, node.name, node.debugLabelColor, vkContext->Dldi());
 
-        // Place memory barriers
-        commandBuffer.pipelineBarrier2(node.dependencyInfo);
+        {
+            TracyVkZoneC(scene.tracyContext, commandBuffer, "Framegraph barrier", tracy::Color::IndianRed);
+            // Place memory barriers
+            commandBuffer.pipelineBarrier2(node.dependencyInfo);
+        }
 
         if (node.queueType == FrameGraphRenderPassType::eGraphics)
         {
