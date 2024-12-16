@@ -21,7 +21,7 @@
 GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
-    , _culler(_context, gpuScene)
+    , _culler(_context)
 {
     CreateStaticPipeline();
     CreateSkinnedPipeline();

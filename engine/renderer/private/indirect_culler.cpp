@@ -10,10 +10,10 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-IndirectCuller::IndirectCuller(const std::shared_ptr<GraphicsContext>& context, const GPUScene& gpuScene)
+IndirectCuller::IndirectCuller(const std::shared_ptr<GraphicsContext>& context)
     : _context(context)
 {
-    CreateCullingPipeline(gpuScene);
+    CreateCullingPipeline();
 }
 
 IndirectCuller::~IndirectCuller()
@@ -53,7 +53,7 @@ void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
 }
 
-void IndirectCuller::CreateCullingPipeline(const GPUScene& gpuScene)
+void IndirectCuller::CreateCullingPipeline()
 {
     std::vector<std::byte> spvBytes = shader::ReadFile("shaders/bin/culling.comp.spv");
 

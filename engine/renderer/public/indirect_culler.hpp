@@ -14,7 +14,7 @@ struct RenderSceneDescription;
 class IndirectCuller // TODO: Convert this to FrameGraphRenderPass
 {
 public:
-    IndirectCuller(const std::shared_ptr<GraphicsContext>& context, const GPUScene& gpuScene);
+    IndirectCuller(const std::shared_ptr<GraphicsContext>& context);
     ~IndirectCuller();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet);
@@ -28,5 +28,5 @@ private:
     vk::PipelineLayout _cullingPipelineLayout;
     vk::Pipeline _cullingPipeline;
 
-    void CreateCullingPipeline(const GPUScene& gpuScene);
+    void CreateCullingPipeline();
 };

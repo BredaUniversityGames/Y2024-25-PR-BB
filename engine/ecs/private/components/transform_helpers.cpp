@@ -2,6 +2,7 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
+#include "log.hpp"
 
 #include <entt/entity/registry.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
