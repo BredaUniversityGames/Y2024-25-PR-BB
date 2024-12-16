@@ -34,7 +34,7 @@ public:
     // Regular sounds will stop by themselves once they are done
     void StopSFX(SoundInstance instance);
 
-    bool IsPlaying(SoundInstance instance);
+    bool IsSoundPlaying(SoundInstance instance);
 
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well
@@ -54,7 +54,7 @@ public:
     // Stops an event that is
     void StopEvent(EventInstanceID eventId);
 
-    bool IsPlaying(EventInstanceID eventId);
+    bool IsEventPlaying(EventInstanceID eventId);
 
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 

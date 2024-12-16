@@ -52,16 +52,21 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
         _audioModule.SetListener3DAttributes(position, velocity, forward, up);
     }
 
-    const auto& emitterView = ecs.GetRegistry().view<AudioEmitterComponent, TransformComponent>();
+    const auto& emitterView = ecs.GetRegistry().view<AudioEmitterComponent>();
     for (const auto entity : emitterView)
     {
         AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(entity);
 
         // Remove sounds and events from the emitter if they are no longer playing
         std::erase_if(emitter._soundIds, [&](const auto& id)
-            { return !_audioModule.IsPlaying(id); });
+            { return !_audioModule.IsSoundPlaying(id); });
         std::erase_if(emitter._eventIds, [&](const auto& id)
-            { return !_audioModule.IsPlaying(id); });
+            { return !_audioModule.IsEventPlaying(id); });
+
+        if (!ecs.GetRegistry().all_of<TransformComponent>(entity))
+        {
+            return;
+        }
 
         // Get 3d attributes of emitter
         const glm::vec3 position = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
@@ -75,7 +80,6 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
         {
             velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID));
         }
-
         // Update 3D position of sounds
         for (auto soundInstance : emitter._soundIds)
         {
@@ -88,7 +92,6 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
                 _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
             }
         }
-
         // Update 3D position of events
         for (auto eventInstance : emitter._eventIds)
         {

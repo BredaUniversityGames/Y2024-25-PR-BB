@@ -327,11 +327,14 @@ void OldEngine::Tick(Engine& engine)
         NameComponent node;
         node.name = "Physics Entity";
         _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<TransformComponent>(entity);
         _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        auto& audioEmitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(entity);
+
         physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
 
         particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-        audioModule.PlaySFX(si, 1.0f, false);
+        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(si, 1.0f, false));
     }
 
     static uint32_t eventId {};

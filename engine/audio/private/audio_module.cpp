@@ -62,22 +62,15 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     FMOD_CHECKRESULT(FMOD_Studio_System_Update(_studioSystem));
 
-    // Clean up events that have stopped playing
-    std::vector<uint32_t> eventsToRemove;
-    for (auto eventInstance : _events)
-    {
+    std::erase_if(_events, [](const auto& pair)
+        {
         FMOD_STUDIO_PLAYBACK_STATE state;
-        FMOD_Studio_EventInstance_GetPlaybackState(eventInstance.second, &state);
+        FMOD_Studio_EventInstance_GetPlaybackState(pair.second, &state);
         if (state == FMOD_STUDIO_PLAYBACK_STOPPED)
         {
-            eventsToRemove.emplace_back(eventInstance.first);
+            return true;
         }
-    }
-
-    for (const auto id : eventsToRemove)
-    {
-        _events.erase(id);
-    }
+        return false; });
 
     std::erase_if(_channelsActive, [](const auto& pair)
         {
@@ -101,7 +94,6 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
     FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
     mode = soundInfo.is3D ? mode |= FMOD_3D : mode;
     FMOD_SOUND* sound = nullptr;
-
     FMOD_CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
 
     _sounds[hash] = sound;
@@ -117,7 +109,6 @@ SoundInfo& AudioModule::GetSFX(const std::string_view path)
             return true;
         }
         return false; });
-
     return *it->second;
 }
 SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, const bool startPaused)
@@ -148,7 +139,7 @@ void AudioModule::StopSFX(const SoundInstance instance)
         FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[instance.id]));
     }
 }
-bool AudioModule::IsPlaying(const SoundInstance instance)
+bool AudioModule::IsSoundPlaying(const SoundInstance instance)
 {
     FMOD_BOOL isPlaying = false;
     if (_channelsActive.contains(instance.id))
@@ -163,16 +154,13 @@ void AudioModule::LoadBank(BankInfo& bankInfo)
 {
     const BankID hash = std::hash<std::string_view> {}(bankInfo.path);
     bankInfo.uid = hash;
-
     if (_banks.contains(hash))
     {
         return;
     }
 
     FMOD_STUDIO_BANK* bank = nullptr;
-
     FMOD_CHECKRESULT(FMOD_Studio_System_LoadBankFile(_studioSystem, bankInfo.path.data(), FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
-
     FMOD_CHECKRESULT(FMOD_Studio_Bank_LoadSampleData(bank));
     FMOD_CHECKRESULT(FMOD_Studio_System_FlushSampleLoading(_studioSystem));
 
@@ -212,7 +200,6 @@ NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, 
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
-
     FMOD_STUDIO_EVENTINSTANCE* evi = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_EventDescription_CreateInstance(eve, &evi));
 
@@ -221,7 +208,6 @@ NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, 
     ++_nextEventId;
 
     FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Start(evi));
-
     if (isOneShot)
     {
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(evi));
@@ -236,7 +222,7 @@ void AudioModule::StopEvent(const EventInstanceID eventId)
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[eventId], FMOD_STUDIO_STOP_ALLOWFADEOUT));
     }
 }
-bool AudioModule::IsPlaying(EventInstanceID eventId)
+bool AudioModule::IsEventPlaying(EventInstanceID eventId)
 {
     if (_events.contains(eventId))
     {
@@ -268,7 +254,6 @@ void AudioModule::SetEvent3DAttributes(EventInstanceID id, const glm::vec3& posi
     }
 
     FMOD_3D_ATTRIBUTES attribs;
-
     attribs.position = GLMToFMOD(position);
     attribs.velocity = GLMToFMOD(velocity);
     attribs.forward = GLMToFMOD(forward);
