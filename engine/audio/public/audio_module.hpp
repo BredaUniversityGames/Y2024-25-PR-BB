@@ -54,11 +54,19 @@ public:
     // Stops an event that is
     void StopEvent(EventInstanceID eventId);
 
+    bool IsPlaying(EventInstanceID eventId);
+
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 
-    void UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity);
+    void UpdateSound3DAttributes(ChannelID id, const glm::vec3& position, const glm::vec3& velocity);
 
-    std::vector<glm::vec3>& GetDebugLines() { return _debugLines; }
+    void SetEvent3DAttributes(EventInstanceID id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
+
+    std::vector<glm::vec3>&
+    GetDebugLines()
+    {
+        return _debugLines;
+    }
 
     void AddDebugLine(const glm::vec3& start, const glm::vec3& end)
     {

@@ -26,6 +26,7 @@
 #include "vertex.hpp"
 #include "vulkan_context.hpp"
 
+#include <audio_emitter_component.hpp>
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -45,6 +46,7 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<PointLightComponent>("Point Light");
     _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
     _entityEditor.registerComponent<CameraComponent>("Camera");
+    _entityEditor.registerComponent<AudioEmitterComponent>("Audio Emitter");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)

@@ -19,7 +19,7 @@ AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
     , _audioModule(audioModule)
 {
 }
-void AudioSystem::Update(ECSModule& ecs, float dt)
+void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 {
     ZoneScoped;
     const auto& listenerView = ecs.GetRegistry().view<AudioListenerComponent>();
@@ -57,31 +57,46 @@ void AudioSystem::Update(ECSModule& ecs, float dt)
     {
         AudioEmitterComponent& emitter = ecs.GetRegistry().get<AudioEmitterComponent>(entity);
 
-        std::erase_if(emitter.ids, [&](const auto& id)
+        // Remove sounds and events from the emitter if they are no longer playing
+        std::erase_if(emitter._soundIds, [&](const auto& id)
+            { return !_audioModule.IsPlaying(id); });
+        std::erase_if(emitter._eventIds, [&](const auto& id)
             { return !_audioModule.IsPlaying(id); });
 
-        for (auto soundInstance : emitter.ids)
+        // Get 3d attributes of emitter
+        const glm::vec3 position = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
+        glm::vec3 velocity = glm::vec3(0.f, 0.f, 0.f);
+
+        const glm::quat rotation = TransformHelpers::GetWorldRotation(ecs.GetRegistry(), entity);
+        const glm::vec3 forward = glm::normalize(rotation * glm::vec3(0.f, -1.f, 0.f));
+        const glm::vec3 up = glm::normalize(rotation * glm::vec3(0.f, 0.f, 1.f));
+
+        if (RigidbodyComponent* rigidBody = ecs.GetRegistry().try_get<RigidbodyComponent>(entity))
+        {
+            velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID));
+        }
+
+        // Update 3D position of sounds
+        for (auto soundInstance : emitter._soundIds)
         {
             if (soundInstance.is3D)
             {
-                const glm::vec3 position = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
-
-                if (RigidbodyComponent* rigidBody = ecs.GetRegistry().try_get<RigidbodyComponent>(entity))
-                {
-                    JPH::Vec3 velocity = _audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID);
-
-                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position, ToGLMVec3(velocity));
-                }
-                else
-                {
-                    _audioModule.UpdateSound3DAttributes(soundInstance.id, position, glm::vec3(0.f, 0.f, 0.f));
-                }
-
+                _audioModule.UpdateSound3DAttributes(soundInstance.id, position, velocity);
                 _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
                 _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), glm::vec3(1.f, 1.f, 1.f));
                 _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), glm::vec3(-1.f, -1.f, 1.f));
                 _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
             }
+        }
+
+        // Update 3D position of events
+        for (auto eventInstance : emitter._eventIds)
+        {
+            _audioModule.SetEvent3DAttributes(eventInstance, position, velocity, forward, up);
+            _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), glm::vec3(1.f, 1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), glm::vec3(-1.f, -1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
         }
     }
 }

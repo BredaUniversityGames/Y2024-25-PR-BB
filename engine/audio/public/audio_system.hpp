@@ -12,7 +12,7 @@ public:
     NON_MOVABLE(AudioSystem);
 
     void Update(ECSModule& ecs, MAYBE_UNUSED float dt) override;
-    void Render(const ECSModule& ecs) const override { }
+    void Render(MAYBE_UNUSED const ECSModule& ecs) const override { }
     void Inspect() override;
 
 private:

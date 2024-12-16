@@ -142,7 +142,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
     auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
 
-    emitter.ids.emplace_back(instance);
+    emitter._soundIds.emplace_back(instance);
 
     eagleSi.path
         = "assets/sounds/eagle.mp3";
@@ -339,6 +339,9 @@ void OldEngine::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
     {
         eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+        auto entity = _ecs->GetRegistry().view<AudioEmitterComponent>().front();
+        auto& emitter = _ecs->GetRegistry().get<AudioEmitterComponent>(entity);
+        emitter._eventIds.emplace_back(eventId);
     }
 
     if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))

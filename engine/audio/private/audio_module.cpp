@@ -148,7 +148,7 @@ void AudioModule::StopSFX(const SoundInstance instance)
         FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[instance.id]));
     }
 }
-bool AudioModule::IsPlaying(SoundInstance instance)
+bool AudioModule::IsPlaying(const SoundInstance instance)
 {
     FMOD_BOOL isPlaying = false;
     if (_channelsActive.contains(instance.id))
@@ -198,11 +198,17 @@ NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(const std::string_view
 }
 void AudioModule::UpdateSound3DAttributes(const ChannelID id, const glm::vec3& position, const glm::vec3& velocity)
 {
+    if (!_channelsActive.contains(id))
+    {
+        bblog::warn("Tried to update 3d attributes of sound that isn't playing");
+        return;
+    }
+
     const auto pos = GLMToFMOD(position);
     const auto vel = GLMToFMOD(velocity);
     FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, &vel);
 }
-NO_DISCARD EventInstanceID AudioModule::StartEvent(std::string_view name, const bool isOneShot)
+NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, const bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
@@ -230,12 +236,43 @@ void AudioModule::StopEvent(const EventInstanceID eventId)
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[eventId], FMOD_STUDIO_STOP_ALLOWFADEOUT));
     }
 }
+bool AudioModule::IsPlaying(EventInstanceID eventId)
+{
+    if (_events.contains(eventId))
+    {
+        FMOD_STUDIO_PLAYBACK_STATE state {};
+        FMOD_Studio_EventInstance_GetPlaybackState(_events[eventId], &state);
+
+        return state != FMOD_STUDIO_PLAYBACK_STOPPED;
+    }
+    return false;
+}
 
 void AudioModule::SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const
 {
-    const auto pos = GLMToFMOD(position);
-    const auto vel = GLMToFMOD(velocity);
-    const auto fwd = GLMToFMOD(glm::normalize(forward));
-    const auto u = GLMToFMOD(glm::normalize(up));
-    FMOD_System_Set3DListenerAttributes(_coreSystem, 0, &pos, &vel, &fwd, &u);
+    FMOD_3D_ATTRIBUTES attribs {};
+    attribs.position = GLMToFMOD(position);
+    attribs.velocity = GLMToFMOD(velocity);
+    attribs.forward = GLMToFMOD(glm::normalize(forward));
+    attribs.up = GLMToFMOD(glm::normalize(up));
+
+    FMOD_Studio_System_SetListenerAttributes(_studioSystem, 0, &attribs, nullptr);
+}
+
+void AudioModule::SetEvent3DAttributes(EventInstanceID id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up)
+{
+    if (!_events.contains(id))
+    {
+        bblog::warn("Tried to update event 3d attributes, of event that isn't playing");
+        return;
+    }
+
+    FMOD_3D_ATTRIBUTES attribs;
+
+    attribs.position = GLMToFMOD(position);
+    attribs.velocity = GLMToFMOD(velocity);
+    attribs.forward = GLMToFMOD(forward);
+    attribs.up = GLMToFMOD(up);
+
+    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Set3DAttributes(_events[id], &attribs));
 }
