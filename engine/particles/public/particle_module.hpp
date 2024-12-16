@@ -4,7 +4,6 @@
 
 #include "common.hpp"
 #include "entt/entity/entity.hpp"
-#include "enum_utils.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
 
@@ -58,6 +57,7 @@ private:
         float emitDelay = 1.0f;
         uint32_t count = 0;
         uint32_t materialIndex = 0;
+        uint32_t flags = 0;
         ParticleType type = ParticleType::eBillboard;
     };
 

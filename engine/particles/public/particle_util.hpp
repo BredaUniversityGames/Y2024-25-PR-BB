@@ -1,11 +1,19 @@
 #pragma once
 
+#include "enum_utils.hpp"
 #include <cstdint>
 #include <glm/glm.hpp>
 
 // temporary values for testing/progress
 static constexpr uint32_t MAX_EMITTERS = 32;
 static constexpr int32_t MAX_PARTICLES = 1024 * 256;
+
+enum class ParticleRenderFlagBits : uint8_t
+{
+    eUnLit = 1 << 0,
+    eNoShadow = 1 << 1
+};
+GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)
 
 // Structs in line with shaders
 struct alignas(16) Emitter
@@ -19,6 +27,7 @@ struct alignas(16) Emitter
     float randomValue = 0.0f;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint32_t materialIndex = 0;
+    uint8_t flags = 0;
 };
 
 struct alignas(16) Particle
@@ -31,6 +40,7 @@ struct alignas(16) Particle
     float life = 5.0f;
     uint32_t materialIndex = 0;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
+    uint8_t flags = 0;
 };
 
 struct alignas(16) ParticleCounters
@@ -46,6 +56,7 @@ struct alignas(16) ParticleInstance
     uint32_t materialIndex = 0;
     glm::vec2 size = { 1.0f, 1.0f };
     float angle = 0.0f;
+    uint8_t flags = 0;
 };
 
 struct alignas(16) CulledInstances

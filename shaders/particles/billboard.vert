@@ -21,6 +21,7 @@ layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
 layout (location = 3) out uint materialIndex;
+layout (location = 4) out uint flags;
 
 void main()
 {

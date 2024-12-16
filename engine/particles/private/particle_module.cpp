@@ -104,6 +104,7 @@ void ParticleModule::LoadEmitterPresets()
     preset.materialIndex = image.Index();
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
+    preset.flags = (uint32_t)ParticleRenderFlagBits::eUnLit;
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,
@@ -122,6 +123,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     emitter.materialIndex = preset.materialIndex;
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
+    emitter.flags = preset.flags;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
