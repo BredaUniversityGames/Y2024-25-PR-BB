@@ -1,5 +1,6 @@
 #include "main_engine.hpp"
 
+#include <string>
 #include <tracy/Tracy.hpp>
 
 int MainEngine::Run()

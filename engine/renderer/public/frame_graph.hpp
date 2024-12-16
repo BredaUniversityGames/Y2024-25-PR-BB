@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vulkan/vulkan.hpp>
+
 struct RenderSceneDescription;
 struct Buffer;
 struct GPUImage;

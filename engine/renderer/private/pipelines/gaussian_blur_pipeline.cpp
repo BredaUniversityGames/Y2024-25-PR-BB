@@ -1,6 +1,7 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 
 #include "../vulkan_helper.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"

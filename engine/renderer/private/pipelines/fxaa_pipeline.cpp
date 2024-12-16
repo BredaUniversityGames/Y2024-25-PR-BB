@@ -1,6 +1,7 @@
 ﻿#include "pipelines/fxaa_pipeline.hpp"
 
 #include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
