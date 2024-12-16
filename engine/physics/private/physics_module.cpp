@@ -2,8 +2,6 @@
 #include "ecs_module.hpp"
 #include "systems/physics_system.hpp"
 
-#include <tracy/Tracy.hpp>
-
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
 

@@ -13,7 +13,6 @@
 #include <implot.h>
 #include <memory>
 #include <time_module.hpp>
-#include <tracy/Tracy.hpp>
 
 RendererModule::RendererModule()
 {

@@ -14,7 +14,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
-#include <tracy/Tracy.hpp>
 
 ModuleTickOrder ApplicationModule::Init(Engine& engine)
 {

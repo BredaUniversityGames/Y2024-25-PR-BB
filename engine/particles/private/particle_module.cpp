@@ -16,8 +16,6 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
 
-#include <tracy/Tracy.hpp>
-
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
     _physics = &engine.GetModule<PhysicsModule>();

@@ -7,8 +7,6 @@
 
 #include "log.hpp"
 
-#include <tracy/Tracy.hpp>
-
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const auto tickOrder = ModuleTickOrder::ePostTick;

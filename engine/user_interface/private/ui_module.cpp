@@ -1,6 +1,5 @@
 #include "ui_module.hpp"
 #include <application_module.hpp>
-#include <tracy/Tracy.hpp>
 
 ModuleTickOrder UIModule::Init(Engine& engine)
 {

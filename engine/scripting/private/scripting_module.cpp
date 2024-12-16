@@ -3,8 +3,6 @@
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
-#include <tracy/Tracy.hpp>
-
 void ScriptingModule::GenerateEngineBindingsFile()
 {
     if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
