@@ -1,9 +1,12 @@
 import subprocess
 import json
+import logging
+import sys
 import vk_map
 import glob
 import os
 
+from vk_map import glsl_to_cpp_map
 
 # Description
 # Traverses all the spv binary files we have in the shader/bin directory and creates json files with reflect
@@ -15,28 +18,6 @@ import os
 # TODO: Make sure to convert Vertex input data to structs
 # TODO: Handle naming between different vertex inputs
 # TODO: Proper errors if shaders cant properly convert to C++ code
-
-class Field:
-    def __init__(self, type, name):
-        self.type = type
-        self.name = name
-
-    type = ""
-    name = ""
-
-
-# Generates the C++ syntax for a struct.d
-def generate_struct(name, fields, file_name):
-    content = f"#pragma once\n\n"
-    content += f"struct {name} {{\n"
-
-    for field in fields:
-        content += f"    {field.type} {field.name};\n"
-
-    content += "};\n"
-
-    print(content)
-
 
 # All spv files to process
 spv_files = glob.glob('../bin' + '/**/*.spv', recursive=True)
@@ -64,14 +45,14 @@ for cmd in commands:
 
     shader_json = json.loads(result.stdout)
 
-    # Generate vertex structs
-    if ".vert" in cmd[1]:
-        if 'inputs' in shader_json.keys():
-            fields = []
-            for input in shader_json['inputs']:
-                fields.append(Field(vk_map.glsl_to_glm_map[input['type']], input['name']))
+    # TODO: Generate vertex structs
+    # if ".vert" in cmd[1]:
+    #    if 'inputs' in shader_json.keys():
+    #        fields = []
+    #        for input in shader_json['inputs']:
+    #            fields.append(Field(vk_map.glsl_to_glm_map[input['type']], input['name']))
 
-            # generate_struct("Vertex", fields, "vertex.hpp")
+    #        # generate_struct("Vertex", fields, "vertex.hpp")
 
     if 'types' in shader_json:
         for index, (key, value) in enumerate(shader_json['types'].items()):
@@ -109,12 +90,45 @@ for cmd in commands:
                 # Check if a member is a reference to a different structure
                 if member['type'].startswith('_') and member['type'][1:].isdigit():
                     # Find type in the reflection data and change the type to the name instead
-                    if any(at[0] == member['type'] for at in enumerate(shader_json['types'].items())):
-                        member['type'] = member['name']
+                    # if any(at[0] == member['type'] for at in enumerate(shader_json['types'].items())):
+                    member['type'] = shader_json['types'][member['type']]['name']
 
             final_types[value['name']] = value
 
 print('\n\n')
 
-for t in final_types:
-    print(t)
+## BEGIN WRITING TYPES TO STRING
+
+content = "#pragma once\n\n"
+content += "#include <glm/glm.hpp>\n"
+content += "#include <cstdint>\n"
+content += "#include <vector>\n"
+content += "#include <array>\n\n"
+
+content += "namespace glsl \n{\n\n"
+
+for t in final_types.values():
+    content += f"struct {t['name']} \n{{\n"
+
+    for member in t['members']:
+        memberType = member['type']
+        if (memberType in glsl_to_cpp_map):
+            memberType = glsl_to_cpp_map[memberType]
+
+        if 'array' in member:
+            if member['array_size_is_literal']:
+                content += f"    std::array<{memberType}, {member['array'][0]}> {member['name']};\n"
+            else:
+                content += f"    std::vector<{memberType}> {member['name']};\n"
+        else:
+            content += f"    {memberType} {member['name']};\n"
+
+    content += "};\n\n"
+
+content += "} // END NAMESPACE glsl"
+
+# print(content)
+
+header_path = sys.argv[1]
+with open(header_path, 'w') as file:
+    file.write(content)
