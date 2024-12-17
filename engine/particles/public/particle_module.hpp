@@ -35,6 +35,7 @@ class ParticleModule final : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override {};
     void Tick(MAYBE_UNUSED Engine& engine) override;
+    std::string_view GetName() override { return "Particle Module"; }
 
 public:
     ParticleModule() = default;

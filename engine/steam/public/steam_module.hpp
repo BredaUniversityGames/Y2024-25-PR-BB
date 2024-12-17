@@ -9,6 +9,8 @@ class SteamModule : public ModuleInterface
     void Tick(MAYBE_UNUSED Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
 
+    std::string_view GetName() override { return "Steam Module"; }
+
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
 

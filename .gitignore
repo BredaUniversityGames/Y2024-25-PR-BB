@@ -413,3 +413,8 @@ compile_commands.json
 imgui.ini
 
 memory-vis/
+
+# Steam Build System
+scripts/build_system/steam/*
+!scripts/build_system/steam/builder/steamcmd.exe
+!scripts/build_system/steam/config

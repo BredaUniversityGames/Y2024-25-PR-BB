@@ -65,6 +65,8 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
+
     UpdateEmitters(commandBuffer);
 
     RecordKickOff(commandBuffer);
