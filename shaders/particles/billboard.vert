@@ -37,6 +37,7 @@ void main()
     quadPos *= mat3(camera.view);
     position = instance.position + quadPos;
 
+    normal = normalize((camera.view * vec4(inNormal, 0.0)).xyz);
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
     flags = instance.flags;
