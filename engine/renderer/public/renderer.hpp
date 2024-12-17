@@ -98,7 +98,6 @@ private:
 
     ResourceHandle<GPUImage> _hdrTarget;
 
-    ResourceHandle<Buffer> _clusterOutputBuffer;
     ResourceHandle<Buffer> _clusterCullingGlobalIndexBuffer;
     ResourceHandle<Buffer> _clusterCullingLightCellsBuffer;
     ResourceHandle<Buffer> _clusterCullingLightIndicesBuffer;
@@ -112,7 +111,6 @@ private:
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
     void InitializeUITarget();
-    void InitializeClusterOutputBuffer();
     void InitializeClusterCullingBuffers();
     void LoadEnvironmentMap();
     void UpdateBindless();

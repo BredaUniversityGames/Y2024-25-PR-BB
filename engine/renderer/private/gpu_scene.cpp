@@ -31,6 +31,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 {
     InitializeSceneBuffers();
     InitializePointLightBuffer();
+    InitializeClusterBuffer();
     InitializeObjectInstancesBuffers();
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
@@ -44,6 +45,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
     vkContext->Device().destroy(_pointLightDescriptorSetLayout);
+    vkContext->Device().destroy(_clusterDescriptorSetLayout);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -219,6 +221,13 @@ void GPUScene::InitializePointLightBuffer()
     CreatePointLightDescriptorSets();
 }
 
+void GPUScene::InitializeClusterBuffer()
+{
+    CreateClusterBuffer();
+    CreateClusterDescriptorSetLayout();
+    CreateClusterDescriptorSet();
+}
+
 void GPUScene::InitializeObjectInstancesBuffers()
 {
     CreateObjectInstancesBuffers();
@@ -255,6 +264,21 @@ void GPUScene::CreatePointLightDescriptorSetLayout()
     std::vector<std::string_view> names { "PointLightSSBO" };
 
     _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateClusterDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
+    descriptorSetLayoutBinding.binding = 0;
+    descriptorSetLayoutBinding.descriptorCount = 1;
+    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+    descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+    std::vector<std::string_view> names { "ClusterData" };
+
+    _clusterDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -313,6 +337,40 @@ void GPUScene::CreatePointLightDescriptorSets()
         _pointLightFrameData[i].descriptorSet = descriptorSets[i];
         UpdatePointLightDescriptorSet(i);
     }
+}
+
+void GPUScene::CreateClusterDescriptorSet()
+{
+    vk::DescriptorSetLayout layout { _clusterDescriptorSetLayout };
+
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layout,
+    };
+
+    vk::DescriptorSet descriptorSet;
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &descriptorSet),
+        "Failed allocating cluster descriptor set!");
+
+    _clusterData.descriptorSet = descriptorSet;
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterData.buffer);
+
+    vk::DescriptorBufferInfo bufferInfo {};
+    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = vk::WholeSize;
+
+    vk::WriteDescriptorSet bufferWrite {};
+    bufferWrite.dstSet = _clusterData.descriptorSet;
+    bufferWrite.dstBinding = 0;
+    bufferWrite.dstArrayElement = 0;
+    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    bufferWrite.descriptorCount = 1;
+    bufferWrite.pBufferInfo = &bufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }
 
 void GPUScene::CreateObjectInstancesDescriptorSets()
@@ -434,6 +492,19 @@ void GPUScene::CreatePointLightBuffer()
 
         _pointLightFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
+}
+
+void GPUScene::CreateClusterBuffer()
+{
+    // TODO: Remove hardcoded values : 16 x 9 x 24 = 3456 clusters
+    BufferCreation createInfo {};
+    createInfo.SetSize(3456 * (sizeof(glm::vec4) * 2))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(true)
+        .SetName("Cluster Buffer");
+
+    _clusterData.buffer = _context->Resources()->BufferResourceManager().Create(createInfo);
 }
 
 void GPUScene::CreateObjectInstancesBuffers()

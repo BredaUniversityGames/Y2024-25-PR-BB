@@ -5,11 +5,12 @@
 class SwapChain;
 class GraphicsContext;
 struct RenderSceneDescription;
+class GPUScene;
 
 class ClusterCullingPipeline final : public FrameGraphRenderPass
 {
 public:
-    ClusterCullingPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain,
+    ClusterCullingPipeline(const std::shared_ptr<GraphicsContext>& context, GPUScene& gpuScene,
         ResourceHandle<Buffer>& clusterBuffer, ResourceHandle<Buffer>& globalIndex,
         ResourceHandle<Buffer>& lightCells, ResourceHandle<Buffer>& lightIndices);
     ~ClusterCullingPipeline() final;
@@ -24,26 +25,15 @@ private:
     void CreateDescriptorSet();
 
     std::shared_ptr<GraphicsContext> _context;
-    const SwapChain& _swapChain;
+    GPUScene& _gpuScene;
 
     ResourceHandle<Buffer> _clusterBuffer;
     ResourceHandle<Buffer> _globalIndex;
     ResourceHandle<Buffer> _lightCells;
     ResourceHandle<Buffer> _lightIndices;
 
-    vk::DescriptorSet _clusterInputDescriptorSet;
-    vk::DescriptorSetLayout _clusterInputDescriptorSetLayout;
-
-    vk::DescriptorSet _globalIndexDescriptorSet;
-    vk::DescriptorSetLayout _globalIndexDescriptorSetLayout;
-
-    vk::DescriptorSet _lightCellsDescriptorSet;
-    vk::DescriptorSetLayout _lightCellsDescriptorSetLayout;
-
-    vk::DescriptorSet _lightIndicesDescriptorSet;
-    vk::DescriptorSetLayout _lightIndicesDescriptorSetLayout;
-
-    vk::DescriptorSet _baseDecsriptorSet;
+    vk::DescriptorSet _cullingDescriptorSet;
+    vk::DescriptorSetLayout _cullingDescriptorSetLayout;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

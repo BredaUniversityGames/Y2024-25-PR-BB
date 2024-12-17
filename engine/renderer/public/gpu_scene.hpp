@@ -48,13 +48,17 @@ public:
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetClusterDescriptorSet() const { return _clusterData.descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetClusterDescriptorSetLayout() const { return _clusterDescriptorSetLayout; }
 
     ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+
+    ResourceHandle<Buffer>& GetClusterBuffer() { return _clusterData.buffer; }
 
     ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
@@ -133,6 +137,12 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
+    struct ClusterData
+    {
+        ResourceHandle<Buffer> buffer;
+        vk::DescriptorSet descriptorSet;
+    };
+
     std::shared_ptr<GraphicsContext> _context;
     ECSModule& _ecs;
 
@@ -144,6 +154,9 @@ private:
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
     vk::DescriptorSetLayout _pointLightDescriptorSetLayout;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
+
+    vk::DescriptorSetLayout _clusterDescriptorSetLayout;
+    ClusterData _clusterData;
 
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
@@ -160,14 +173,17 @@ private:
 
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
+    void InitializeClusterBuffer();
     void InitializeObjectInstancesBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreatePointLightDescriptorSetLayout();
+    void CreateClusterDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
+    void CreateClusterDescriptorSet();
     void CreateObjectInstancesDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
@@ -176,6 +192,7 @@ private:
 
     void CreateSceneBuffers();
     void CreatePointLightBuffer();
+    void CreateClusterBuffer();
     void CreateObjectInstancesBuffers();
 
     void InitializeIndirectDrawBuffer();

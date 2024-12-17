@@ -55,7 +55,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeBloomTargets();
     InitializeTonemappingTarget();
     InitializeUITarget();
-    InitializeClusterOutputBuffer();
     InitializeClusterCullingBuffers();
     LoadEnvironmentMap();
 
@@ -101,8 +100,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
-    _clusteringPipeline = std::make_unique<ClusteringPipeline>(_context, *_gBuffers, *_swapChain, _clusterOutputBuffer);
-    _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_swapChain, _clusterOutputBuffer, _clusterCullingGlobalIndexBuffer, _clusterCullingLightCellsBuffer, _clusterCullingLightIndicesBuffer);
+    _clusteringPipeline = std::make_unique<ClusteringPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
+    _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _clusterCullingGlobalIndexBuffer, _clusterCullingLightCellsBuffer, _clusterCullingLightIndicesBuffer);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -183,7 +182,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation clusteringPass { *_clusteringPipeline, FrameGraphRenderPassType::eCompute };
     clusteringPass.SetName("Clustering pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        .AddOutput(_clusterOutputBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+        .AddOutput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     FrameGraphNodeCreation clusterCullingPass { *_clusterCullingPipeline, FrameGraphRenderPassType::eCompute };
     clusterCullingPass.SetName("Cluster Culling Pass")
@@ -356,19 +355,6 @@ void Renderer::InitializeUITarget()
     uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
-}
-
-void Renderer::InitializeClusterOutputBuffer()
-{
-    // TODO: Remove hardcoded values : 16 x 9 x 24 = 3456 clusters
-    BufferCreation createInfo {};
-    createInfo.SetSize(3456 * (sizeof(glm::vec4) * 2))
-        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
-        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
-        .SetIsMappable(true)
-        .SetName("Clustering Buffer");
-
-    _clusterOutputBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
 }
 void Renderer::InitializeClusterCullingBuffers()
 {
