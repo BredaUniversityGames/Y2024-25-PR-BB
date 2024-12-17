@@ -54,6 +54,7 @@ void main()
         instance.materialIndex = particle.materialIndex;
         instance.size = particle.size.xy;
         instance.angle = particle.rotationVelocity.x;
+        instance.flags = particle.flags;
         culledInstances.instances[culledIndex] = instance;
     }
     else // if dead
