@@ -86,20 +86,20 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
             if (soundInstance.is3D)
             {
                 _audioModule.UpdateSound3DAttributes(soundInstance.id, position, velocity);
-                _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
-                _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), glm::vec3(1.f, 1.f, 1.f));
-                _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), glm::vec3(-1.f, -1.f, 1.f));
-                _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), position + glm::vec3(-1.f, 1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), position + glm::vec3(1.f, 1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), position + glm::vec3(-1.f, -1.f, 1.f));
+                _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), position + glm::vec3(1.f, -1.f, 1.f));
             }
         }
         // Update 3D position of events
         for (auto eventInstance : emitter._eventIds)
         {
             _audioModule.SetEvent3DAttributes(eventInstance, position, velocity, forward, up);
-            _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), glm::vec3(-1.f, 1.f, 1.f));
-            _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), glm::vec3(1.f, 1.f, 1.f));
-            _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), glm::vec3(-1.f, -1.f, 1.f));
-            _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), glm::vec3(1.f, -1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), position + glm::vec3(-1.f, 1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), position + glm::vec3(1.f, 1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), position + glm::vec3(-1.f, -1.f, 1.f));
+            _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), position + glm::vec3(1.f, -1.f, 1.f));
         }
     }
 }
