@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 class PhysicsModule;
 
