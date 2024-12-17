@@ -14,7 +14,6 @@
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-
 #include <components/relationship_component.hpp>
 #include <components/relationship_helpers.hpp>
 #include <model_loader.hpp>
@@ -171,19 +170,40 @@ void PhysicsSystem::CreateMeshCollision(const std::string& path)
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
 }
-void PhysicsSystem::CreateMeshCollision(const CPUModel& model)
+RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo)
 {
-    LoadNodeRecursive(model, _ecs, model.hierarchy.root, model.hierarchy, entt::null, eMESH);
+    JPH::VertexList vertices;
+    JPH::IndexedTriangleList triangles;
+
+    // set verticies
+    for (auto vertex : mesh.vertices)
+    {
+        vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
+    }
+
+    // set trinagles
+    for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
+    {
+        JPH::IndexedTriangle tri;
+        tri.mIdx[0] = mesh.indices[i + 0];
+        tri.mIdx[1] = mesh.indices[i + 1];
+        tri.mIdx[2] = mesh.indices[i + 2];
+
+        triangles.push_back(tri);
+    }
+
+    RigidbodyComponent rb;
+    if (shapeType == eMESH)
+        rb = RigidbodyComponent(*_physicsModule.bodyInterface, entityToAttachTo, glm::vec3(0.0), vertices, triangles);
+    if (shapeType == eCONVEXHULL)
+        rb = RigidbodyComponent(*_physicsModule.bodyInterface, entityToAttachTo, glm::vec3(0.0), vertices);
+    return rb;
 }
 void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
 {
     CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
-}
-void PhysicsSystem::CreateConvexHullCollision(const CPUModel& model)
-{
-    LoadNodeRecursive(model, _ecs, model.hierarchy.root, model.hierarchy, entt::null, eCONVEXHULL);
 }
 
 void PhysicsSystem::CleanUp()
@@ -199,7 +219,46 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-    // this part should be fast because it returns a vector of just ids not whole rigidbodies
+    // return;
+    // let's check priority first between transforms and physics
+    const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated, StaticMeshComponent>();
+    for (auto entity : transformsView)
+    {
+        const TransformComponent& transform = transformsView.get<TransformComponent>(entity);
+        const RigidbodyComponent& rb = transformsView.get<RigidbodyComponent>(entity);
+        StaticMeshComponent& meshComponent = transformsView.get<StaticMeshComponent>(entity);
+
+        // Assume worldMatrix is your 4x4 transformation matrix
+        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
+
+        // Variables to store the decomposed components
+        glm::vec3 scale;
+        glm::quat rotationQuat;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        // Decompose the matrix
+        glm::decompose(
+            worldMatrix,
+            scale,
+            rotationQuat,
+            translation,
+            skew,
+            perspective);
+
+        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(translation.x, translation.y, translation.z), JPH::EActivation::Activate);
+
+        auto result
+            = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
+        if (result.HasError())
+            bblog::error(result.GetError().c_str());
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
+    }
+    // TransformHelpers::ResetAllUpdateTags(ecs.GetRegistry());
+
+    //      this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
 
@@ -212,7 +271,6 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
             _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
         }
     }
-    auto& meshResourceManager = engine.GetModule<RendererModule>().GetGraphicsContext()->Resources()->MeshResourceManager();
 
     //    Update the meshes
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
@@ -228,21 +286,12 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
             _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
 
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
-        auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
 
-        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
-        const auto joltSize = boxShape->GetHalfExtent();
-        const auto oldExtent = (boundingBox.max - boundingBox.min) * 0.5f;
-        glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());
-        const glm::mat4 joltToGLM = ToGLMMat4(joltMatrix);
-        glm::mat4 joltToGlm = glm::scale(joltToGLM, joltBoxSize / oldExtent);
-
-        // account for odd models that dont have the center at 0,0,0
-        const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
-        joltToGlm = glm::translate(joltToGlm, -centerPos);
+        const auto joltToGlm = ToGLMMat4(joltMatrix);
 
         TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);
     }
+    TransformHelpers::ResetAllUpdateTags(ecs.GetRegistry());
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 {

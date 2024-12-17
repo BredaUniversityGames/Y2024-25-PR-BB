@@ -3,10 +3,15 @@
 #include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
 
+struct Vertex;
 struct Hierarchy;
 class PhysicsModule;
 struct RigidbodyComponent;
-class CPUModel;
+struct CPUModel;
+
+template <typename T>
+struct CPUMesh;
+
 enum PhysicsShapes;
 class PhysicsSystem : public SystemInterface
 {
@@ -18,10 +23,9 @@ public:
     void InitializePhysicsColliders();
 
     void CreateMeshCollision(const std::string& path);
-    void CreateMeshCollision(const CPUModel& model);
+    RigidbodyComponent CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo = entt::null);
 
     void CreateConvexHullCollision(const std::string& path);
-    void CreateConvexHullCollision(const CPUModel& model);
 
     void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
@@ -30,7 +34,11 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
+    // for loading mesh data or convex data into the scene with no rendering mesh relation
     entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
+
+    // for loading mesh data or convex data into the scene. returns a vector of rigidbodies
+    std::vector<RigidbodyComponent> LoadBodiesRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
 
     Engine& engine;
     ECSModule& _ecs;

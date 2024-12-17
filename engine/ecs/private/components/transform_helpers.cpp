@@ -228,6 +228,14 @@ void TransformHelpers::UnsubscribeToEvents(entt::registry& reg)
     reg.on_construct<TransformComponent>().disconnect<&OnConstructTransform>();
     reg.on_destroy<TransformComponent>().disconnect<&OnDestroyTransform>();
 }
+void TransformHelpers::ResetAllUpdateTags(entt::registry& reg)
+{
+    auto view = reg.view<ToBeUpdated>();
+    for (auto entity : view)
+    {
+        reg.remove<ToBeUpdated>(entity);
+    }
+}
 void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
@@ -261,4 +269,5 @@ void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entit
             current = reg.get<RelationshipComponent>(current).next;
         }
     }
+    reg.emplace_or_replace<ToBeUpdated>(entity);
 }

@@ -20,7 +20,10 @@ private:
     friend class TransformHelpers;
     friend class Editor;
 };
-
+struct ToBeUpdated
+{
+    int padding {};
+};
 namespace EnttEditor
 {
 template <>

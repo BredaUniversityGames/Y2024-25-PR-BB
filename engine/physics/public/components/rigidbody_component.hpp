@@ -81,7 +81,11 @@ struct RigidbodyComponent
             bblog::error(shapeResult.GetError().c_str());
         }
 
-        bodySettings.mAllowDynamicOrKinematic = false;
+        // lets save thes hape reference
+        shape = bodySettings.GetShape();
+
+        bodySettings.mAllowDynamicOrKinematic
+            = false;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 
         // set the owner entity so we can query it later from physics objects if needed
@@ -119,7 +123,8 @@ struct RigidbodyComponent
             bblog::error(shapeResult.GetError().c_str());
         }
 
-        bodySettings.mAllowDynamicOrKinematic = false;
+        shape = bodySettings.GetShape();
+        bodySettings.mAllowDynamicOrKinematic = true;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 
         // set the owner entity so we can query it later from physics objects if needed
@@ -173,5 +178,6 @@ struct RigidbodyComponent
 
     JPH::BodyID bodyID;
     PhysicsShapes shapeType;
+    JPH::ShapeRefC shape;
     BodyType bodyType;
 };
