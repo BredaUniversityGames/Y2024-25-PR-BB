@@ -15,6 +15,8 @@ class AudioModule final : public ModuleInterface
     void Shutdown(Engine& engine) override;
     void Tick(Engine& engine) override;
 
+    std::string_view GetName() override { return "Audio Module"; }
+
 public:
     AudioModule() = default;
     ~AudioModule() override = default;
