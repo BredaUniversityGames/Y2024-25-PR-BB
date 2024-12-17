@@ -1,5 +1,6 @@
 #include "wren_bindings.hpp"
 
+#include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
@@ -12,33 +13,13 @@
 #include "components/transform_helpers.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
-#include "magic_enum.hpp"
+
+#include <input/action_manager.hpp>
 
 namespace bindings
 {
 void BindMath(wren::ForeignModule& module);
 void BindEntity(wren::ForeignModule& module);
-
-template <auto v>
-auto ReturnVal() { return v; }
-
-template <typename T, size_t... Idx>
-void BindEnumSequence(wren::ForeignModule& module, const std::string& enumName, std::index_sequence<Idx...>)
-{
-    constexpr auto names = magic_enum::enum_names<T>();
-    constexpr auto values = magic_enum::enum_values<T>();
-
-    auto& enumClass = module.klass<T>(enumName);
-    ((enumClass.template funcStaticExt<ReturnVal<values[Idx]>>(std::string(names[Idx]))), ...);
-}
-
-template <typename T>
-void BindEnum(wren::ForeignModule& module, const std::string& enumName)
-{
-    constexpr auto enum_size = magic_enum::enum_count<T>();
-    auto index_sequence = std::make_index_sequence<enum_size>();
-    BindEnumSequence<T>(module, enumName, index_sequence);
-}
 
 float TimeModuleGetDeltatime(TimeModule& self)
 {
@@ -67,6 +48,21 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
+}
+
+bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetDigitalAction(action_name);
+}
+
+glm::vec2 InputGetAnalogAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetAnalogAction(action_name);
+}
+
+bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
+{
+    return self.GetInputDeviceManager().IsKeyPressed(code);
 }
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
@@ -137,9 +133,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Input
     {
         auto& wren_class = module.klass<ApplicationModule>("Input");
+        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
-        bindings::BindEnum<MouseButton>(module, "Mousebutton");
     }
 
     // Components
