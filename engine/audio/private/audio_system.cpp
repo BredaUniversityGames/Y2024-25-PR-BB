@@ -111,7 +111,7 @@ void AudioSystem::Inspect()
     {
         for (const auto& pair : _audioModule._soundInfos)
         {
-            ImGui::Text("--| %s", pair.second->path.data());
+            ImGui::Text("--| %s", pair.second.path.data());
         }
         ImGui::TreePop();
     }

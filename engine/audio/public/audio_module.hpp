@@ -96,7 +96,7 @@ private:
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
-    std::unordered_map<std::string, SoundInfo*> _soundInfos {};
+    std::unordered_map<std::string, SoundInfo> _soundInfos {};
 
     std::unordered_map<SoundID, FMOD_SOUND*> _sounds {};
     std::unordered_map<BankID, FMOD_STUDIO_BANK*> _banks {};

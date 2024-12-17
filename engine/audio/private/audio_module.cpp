@@ -107,7 +107,7 @@ SoundID AudioModule::LoadSFX(SoundInfo& soundInfo)
     FMOD_CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
 
     _sounds[hash] = sound;
-    _soundInfos[soundInfo.path.data()] = &soundInfo;
+    _soundInfos[soundInfo.path.data()] = soundInfo;
 
     return hash;
 }
@@ -115,7 +115,7 @@ SoundID AudioModule::GetSFX(const std::string_view path)
 {
     if (const auto it = _soundInfos.find(path.data()); it != _soundInfos.end())
     {
-        return it->second->uid;
+        return it->second.uid;
     }
     return -1;
 }
