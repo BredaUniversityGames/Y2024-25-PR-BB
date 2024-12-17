@@ -3,8 +3,8 @@
 #include <string_view>
 
 #include "glm/glm.hpp"
+#include <fmod/include/fmod_common.h>
 
-struct FMOD_VECTOR;
 struct FMOD_SYSTEM;
 struct FMOD_STUDIO_SYSTEM;
 struct FMOD_SOUND;
