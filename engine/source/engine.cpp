@@ -53,8 +53,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb"
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb",
+        "assets/models/monkey.gltf"
     };
 
     particleModule.LoadEmitterPresets();

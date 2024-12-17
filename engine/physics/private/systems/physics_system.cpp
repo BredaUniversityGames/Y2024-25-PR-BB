@@ -1,4 +1,5 @@
 ﻿#include "systems/physics_system.hpp"
+#include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/static_mesh_component.hpp"
@@ -116,7 +117,33 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
         const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
         RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
 
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        // Assume worldMatrix is your 4x4 transformation matrix
+        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
+
+        // Variables to store the decomposed components
+        glm::vec3 scale;
+        glm::quat rotationQuat;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        // Decompose the matrix
+        glm::decompose(
+            worldMatrix,
+            scale,
+            rotationQuat,
+            translation,
+            skew,
+            perspective);
+
+        auto result = _physicsModule.bodyInterface->GetShape(rb.bodyID)->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
+        if (result.HasError())
+            bblog::error(result.GetError().c_str());
+
+        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
+        _ecs.GetRegistry()
+            .emplace<RigidbodyComponent>(entity, rb);
     }
 
     for (const auto& nodeIndex : currentNode.children)
@@ -315,12 +342,12 @@ void PhysicsSystem::Inspect()
 
     if (ImGui::Button("Create mesh collider"))
     {
-        CreateMeshCollision("assets/models/ABeautifulGame/ABeautifulGame.gltf");
+        CreateMeshCollision("assets/models/monkey.gltf");
     }
 
     if (ImGui::Button("Create convexhull collider"))
     {
-        CreateConvexHullCollision("assets/models/DamagedHelmet.glb");
+        CreateConvexHullCollision("assets/models/monkey.gltf");
     }
 
     if (ImGui::Button("Clear Physics Entities"))
