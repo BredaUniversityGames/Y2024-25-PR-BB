@@ -2,9 +2,6 @@
 
 #include <string_view>
 
-#include "glm/glm.hpp"
-#include <fmod/include/fmod_common.h>
-
 struct FMOD_SYSTEM;
 struct FMOD_STUDIO_SYSTEM;
 struct FMOD_SOUND;
@@ -21,7 +18,6 @@ using ChannelID = BaseID;
 using BankID = BaseID;
 using EventInstanceID = BaseID;
 using SoundID = BaseID;
-using SoundInfoID = BaseID;
 
 struct SoundInfo
 {
@@ -49,5 +45,3 @@ struct BankInfo
     std::string_view path {};
     BankID uid = -1;
 };
-
-FMOD_VECTOR GLMToFMOD(const glm::vec3& v);

@@ -26,8 +26,7 @@ public:
     void LoadSFX(SoundInfo& soundInfo);
 
     // Return the soundinfo associated with the path
-    // TODO return vec with all infos with this path
-    SoundInfo& GetSFX(std::string_view path);
+    SoundInfo* GetSFX(std::string_view path);
 
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
@@ -96,7 +95,7 @@ private:
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
-    std::unordered_map<SoundInfoID, SoundInfo*> _soundInfos {};
+    std::unordered_map<std::string, SoundInfo*> _soundInfos {};
 
     std::unordered_map<SoundID, FMOD_SOUND*> _sounds {};
     std::unordered_map<BankID, FMOD_STUDIO_BANK*> _banks {};

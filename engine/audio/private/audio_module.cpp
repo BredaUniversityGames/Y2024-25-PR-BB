@@ -12,6 +12,11 @@
 
 #include "log.hpp"
 
+inline FMOD_VECTOR GLMToFMOD(const glm::vec3& v)
+{
+    return FMOD_VECTOR(v.x, v.y, v.z);
+}
+
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 {
     const auto tickOrder = ModuleTickOrder::ePostTick;
@@ -85,7 +90,7 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
     const SoundID hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
-    if (_sounds.contains(hash) && _soundInfos.contains(hash))
+    if (_sounds.contains(hash) && _soundInfos.contains(soundInfo.path.data()))
     {
         bblog::error("Could not load sound, sound already loaded: {0}", soundInfo.path);
         return;
@@ -97,19 +102,15 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
     FMOD_CHECKRESULT(FMOD_System_CreateSound(_coreSystem, soundInfo.path.data(), mode, nullptr, &sound));
 
     _sounds[hash] = sound;
-    _soundInfos[hash] = &soundInfo;
+    _soundInfos[soundInfo.path.data()] = &soundInfo;
 }
-SoundInfo& AudioModule::GetSFX(const std::string_view path)
+SoundInfo* AudioModule::GetSFX(const std::string_view path)
 {
-    const SoundInfoID hash = std::hash<std::string_view> {}(path);
-    const auto it = std::ranges::find_if(_soundInfos, [&](const std::unordered_map<SoundInfoID, SoundInfo*>::value_type& vt)
-        {
-        if (vt.second->uid == hash)
-        {
-            return true;
-        }
-        return false; });
-    return *it->second;
+    if (const auto it = _soundInfos.find(path.data()); it != _soundInfos.end())
+    {
+        return it->second;
+    }
+    return nullptr;
 }
 SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, const bool startPaused)
 {
