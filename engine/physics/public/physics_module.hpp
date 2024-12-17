@@ -58,6 +58,8 @@ enum PhysicsShapes
     eSPHERE,
     eBOX,
     eCUSTOM,
+    eCONVEXHULL,
+    eMESH,
 };
 
 enum BodyType

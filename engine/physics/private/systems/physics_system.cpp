@@ -74,8 +74,14 @@ void PhysicsSystem::InitializePhysicsColliders()
 entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule& ecs,
     uint32_t currentNodeIndex,
     Hierarchy& hierarchy,
-    entt::entity parent)
+    entt::entity parent, PhysicsShapes shape)
 {
+
+    if (shape != eMESH && shape != eCONVEXHULL)
+    {
+        bblog::error("Shape not supported");
+        return entt::null;
+    }
     const entt::entity entity = ecs.GetRegistry().create();
     Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
@@ -115,7 +121,12 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
         }
 
         const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
+        RigidbodyComponent rb;
+        if (shape == eMESH)
+            rb = RigidbodyComponent(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
+
+        if (shape == eCONVEXHULL)
+            rb = RigidbodyComponent(*_physicsModule.bodyInterface, entt::null, position, vertices);
 
         // Assume worldMatrix is your 4x4 transformation matrix
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
@@ -148,7 +159,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
     for (const auto& nodeIndex : currentNode.children)
     {
-        LoadNodeRecursive(models, _ecs, nodeIndex, hierarchy, entity);
+        LoadNodeRecursive(models, _ecs, nodeIndex, hierarchy, entity, shape);
     }
 
     return entity;
@@ -157,56 +168,16 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 void PhysicsSystem::CreateMeshCollision(const std::string& path)
 {
     CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
-    // LoadNodeRecursive(models.hierarchy.root, models.hierarchy, glm::mat4(1.0));
 
-    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null);
-
-    /*for (auto nodes : models.hierarchy.nodes)
-    {
-
-        if (!nodes.meshIndex.has_value())
-            continue;
-
-        entt::entity entity = _ecs.GetRegistry().create();
-        _ecs.GetRegistry().emplace<TransformComponent>(entity);
-        _ecs.GetRegistry().emplace<RelationshipComponent>(entity);
-
-        auto mesh = models.meshes[nodes.meshIndex.value().second];
-
-        JPH::VertexList vertices;
-        JPH::IndexedTriangleList triangles;
-
-        // set verticies
-        for (auto vertex : mesh.vertices)
-        {
-            vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
-        }
-
-        // set trinagles
-        for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
-        {
-            JPH::IndexedTriangle tri;
-            tri.mIdx[0] = mesh.indices[i + 0];
-            tri.mIdx[1] = mesh.indices[i + 1];
-            tri.mIdx[2] = mesh.indices[i + 2];
-
-            triangles.push_back(tri);
-        }
-
-        const glm::vec3 position = nodes.transform[3];
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
-
-        NameComponent node;
-        node.name = "Mesh collider Entity";
-        _ecs.GetRegistry().emplace<NameComponent>(entity, node);
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-    }*/
+    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
 }
 void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
 {
-    const CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+    CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
 
-    for (auto mesh : models.meshes)
+    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
+
+    /*for (auto mesh : models.meshes)
     {
         JPH::VertexList vertices;
         // set verticies
@@ -222,7 +193,7 @@ void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
         node.name = "Convexhull collider Entity";
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-    }
+    }*/
 }
 
 void PhysicsSystem::CleanUp()

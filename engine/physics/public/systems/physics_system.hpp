@@ -7,6 +7,7 @@ struct Hierarchy;
 class PhysicsModule;
 struct RigidbodyComponent;
 class CPUModel;
+enum PhysicsShapes;
 class PhysicsSystem : public SystemInterface
 {
 public:
@@ -26,7 +27,7 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
-    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, Hierarchy& hierarchy, entt::entity parent);
+    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
 
     Engine& engine;
     ECSModule& _ecs;
