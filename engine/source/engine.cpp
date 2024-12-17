@@ -113,6 +113,20 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
+    for (size_t i = 0; i < 25; i++)
+    {
+        entt::entity entity = _ecs->GetRegistry().create();
+        _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");
+        _ecs->GetRegistry().emplace<TransformComponent>(entity);
+
+        PointLightComponent& pointLightComponent = _ecs->GetRegistry().emplace<PointLightComponent>(entity);
+        pointLightComponent.color = glm::vec3(rand() % 255, rand() % 255, rand() % 255) / 255.0f;
+        pointLightComponent.range = 10.0f;
+        pointLightComponent.attenuation = 1.0f;
+
+        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(2.5f * i, 1.0f, 0.0f));
+    }
+
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;

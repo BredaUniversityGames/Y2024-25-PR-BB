@@ -18,7 +18,6 @@ ClusterCullingPipeline::ClusterCullingPipeline(const std::shared_ptr<GraphicsCon
     , _lightCells(lightCells)
     , _lightIndices(lightIndices)
 {
-    CreateDescriptorSet();
     CreatePipeline();
 }
 
@@ -26,15 +25,41 @@ ClusterCullingPipeline::~ClusterCullingPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
-
-    _context->VulkanContext()->Device().destroy(_cullingDescriptorSetLayout);
 }
 
 void ClusterCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    // commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
-    // commandBuffer.dispatch(16, 9, 24);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { _gpuScene.GetClusterDescriptorSet() }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, { _gpuScene.GetPointLightDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, { _gpuScene.GetClusterCullingDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 3, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
+
+    commandBuffer.dispatch(16, 9, 24);
+
+    /*std::array<vk::BufferMemoryBarrier, 2> barriers;
+    barriers[0] = {
+        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer = _context->Resources()->BufferResourceManager().Access(_gpuScene.GetClusterCullingBuffer(0))->buffer,
+        .offset = 0,
+        .size = vk::WholeSize,
+    };
+
+    barriers[1] = {
+        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer = _context->Resources()->BufferResourceManager().Access(_gpuScene.GetClusterCullingBuffer(1))->buffer,
+        .offset = 0,
+        .size = vk::WholeSize,
+    };
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, barriers, {});*/
 }
 
 void ClusterCullingPipeline::CreatePipeline()
@@ -42,7 +67,7 @@ void ClusterCullingPipeline::CreatePipeline()
     std::array<vk::DescriptorSetLayout, 4> layouts {
         _gpuScene.GetClusterDescriptorSetLayout(),
         _gpuScene.GetPointLightDescriptorSetLayout(),
-        _cullingDescriptorSetLayout,
+        _gpuScene.GetClusterCullingDescriptorSetLayout(),
         CameraResource::DescriptorSetLayout(),
     };
 
@@ -70,64 +95,4 @@ void ClusterCullingPipeline::CreatePipeline()
     auto result = _context->VulkanContext()->Device().createComputePipeline(nullptr, pipelineCreateInfo, nullptr);
     _pipeline = result.value;
     _context->VulkanContext()->Device().destroy(computeModule);
-}
-
-void ClusterCullingPipeline::CreateDescriptorSet()
-{
-    std::array<vk::DescriptorSetLayoutBinding, 3> layoutBinding;
-
-    for (size_t i = 0; i < layoutBinding.size(); i++)
-    {
-        layoutBinding.at(i) = {
-            .binding = static_cast<uint32_t>(i),
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eCompute,
-        };
-    }
-
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 3,
-        .pBindings = layoutBinding.data(),
-    };
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_cullingDescriptorSetLayout), "Failed to create descriptor set layout for cluster culling pipeline");
-
-    vk::DescriptorSetLayout layout { _cullingDescriptorSetLayout };
-
-    vk::DescriptorSetAllocateInfo allocateInfo {
-        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-        .descriptorSetCount = 1,
-        .pSetLayouts = &layout,
-    };
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_cullingDescriptorSet), "Failed to allocate descriptor set for cluster culling pipeline");
-
-    std::array<vk::WriteDescriptorSet, 3> writeDescriptorSets;
-
-    std::array buffers = {
-        _context->Resources()->BufferResourceManager().Access(_globalIndex),
-        _context->Resources()->BufferResourceManager().Access(_lightCells),
-        _context->Resources()->BufferResourceManager().Access(_lightIndices),
-    };
-
-    for (size_t i = 0; i < buffers.size(); i++)
-    {
-        vk::DescriptorBufferInfo bufferInfo {
-            .buffer = buffers.at(i)->buffer,
-            .offset = 0,
-            .range = vk::WholeSize,
-        };
-
-        writeDescriptorSets.at(i) = {
-            .dstSet = _cullingDescriptorSet,
-            .dstBinding = static_cast<uint32_t>(i),
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &bufferInfo,
-        };
-    }
-
-    _context->VulkanContext()->Device().updateDescriptorSets(1, writeDescriptorSets.data(), 0, nullptr);
 }

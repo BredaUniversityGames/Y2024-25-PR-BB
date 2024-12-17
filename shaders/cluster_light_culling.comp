@@ -2,7 +2,7 @@
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-#define MAX_LIGHTS_PER_CLUSTER 100
+#define MAX_LIGHTS_PER_CLUSTER 50
 
 #include "scene.glsl"
 
@@ -46,13 +46,12 @@ float SquaredDistancePointAABB(vec3 point, uint tile)
 
 bool TestSphereAABB(uint lightIndex, uint tile)
 {
-    //float lightRadius = lights[lightIndex].radius;
-    //vec4 lightPosition = lights[lightIndex].position;
-    //vec4 positionView = camera.view * lightPosition;
-    //float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
+    float lightRadius = lights.lights[lightIndex].range;
+    vec4 lightPosition = lights.lights[lightIndex].position;
+    vec4 positionView = camera.view * lightPosition;
+    float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
 
-    //return squaredDistance <= (lightRadius * lightRadius);
-    return false;
+    return squaredDistance < (lightRadius * lightRadius);
 }
 
 void main()
@@ -64,10 +63,8 @@ void main()
 
     uint visibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
 
-    uint numLights = lights.count;
-
     uint lightIterator = 0;
-    for (uint i = 0; i < numLights && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)
+    for (uint i = 0; i < lights.count && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)
     {
         if (TestSphereAABB(i, tileIndex)) {
             visibleLightIndices[lightIterator++] = i;

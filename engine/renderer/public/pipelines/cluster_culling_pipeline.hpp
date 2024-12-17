@@ -22,7 +22,6 @@ public:
 
 private:
     void CreatePipeline();
-    void CreateDescriptorSet();
 
     std::shared_ptr<GraphicsContext> _context;
     GPUScene& _gpuScene;
@@ -31,9 +30,6 @@ private:
     ResourceHandle<Buffer> _globalIndex;
     ResourceHandle<Buffer> _lightCells;
     ResourceHandle<Buffer> _lightIndices;
-
-    vk::DescriptorSet _cullingDescriptorSet;
-    vk::DescriptorSetLayout _cullingDescriptorSetLayout;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

@@ -49,16 +49,20 @@ public:
     const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetClusterDescriptorSet() const { return _clusterData.descriptorSet; }
+    const vk::DescriptorSet& GetClusterCullingDescriptorSet(uint32_t frameIndex) const { return _clusterCullingData.descriptorSets.at(frameIndex); }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetClusterDescriptorSetLayout() const { return _clusterDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetClusterCullingDescriptorSetLayout() const { return _clusterCullingDescriptorSetLayout; }
 
     ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
     vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
 
     ResourceHandle<Buffer>& GetClusterBuffer() { return _clusterData.buffer; }
+    ResourceHandle<Buffer>& GetClusterCullingBuffer(uint32_t index) { return _clusterCullingData.buffers.at(index); }
+    ResourceHandle<Buffer>& GetGlobalIndexBuffer(uint32_t index) { return _clusterCullingData.globalIndexBuffers.at(index); }
 
     ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
@@ -143,7 +147,15 @@ private:
         vk::DescriptorSet descriptorSet;
     };
 
-    std::shared_ptr<GraphicsContext> _context;
+    struct ClusterCullingData
+    {
+        std::array<ResourceHandle<Buffer>, 2> buffers;
+        std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> globalIndexBuffers;
+        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+    };
+
+    std::shared_ptr<GraphicsContext>
+        _context;
     ECSModule& _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
@@ -158,6 +170,9 @@ private:
     vk::DescriptorSetLayout _clusterDescriptorSetLayout;
     ClusterData _clusterData;
 
+    vk::DescriptorSetLayout _clusterCullingDescriptorSetLayout;
+    ClusterCullingData _clusterCullingData;
+
     std::vector<vk::DrawIndexedIndirectCommand> _drawCommands;
 
     // TODO: Handle all camera's in one buffer or array to enable better culling
@@ -165,6 +180,7 @@ private:
     CameraResource _directionalLightShadowCamera;
 
     void UpdateSceneData(uint32_t frameIndex);
+    void UpdateGlobalIndexBuffer(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
     void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);
@@ -174,25 +190,30 @@ private:
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
     void InitializeClusterBuffer();
+    void InitializeClusterCullingBuffers();
     void InitializeObjectInstancesBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreatePointLightDescriptorSetLayout();
     void CreateClusterDescriptorSetLayout();
+    void CreateClusterCullingDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
     void CreateClusterDescriptorSet();
+    void CreateClusterCullingDescriptorSet();
     void CreateObjectInstancesDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdatePointLightDescriptorSet(uint32_t frameIndex);
+    void UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
     void CreatePointLightBuffer();
     void CreateClusterBuffer();
+    void CreateClusterCullingBuffers();
     void CreateObjectInstancesBuffers();
 
     void InitializeIndirectDrawBuffer();
