@@ -12,6 +12,7 @@
 
 struct Emitter;
 class CameraResource;
+class BloomSettings;
 struct RenderSceneDescription;
 class ECSModule;
 class GraphicsContext;

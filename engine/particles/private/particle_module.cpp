@@ -104,7 +104,7 @@ void ParticleModule::LoadEmitterPresets()
     preset.materialIndex = image.Index();
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
-    preset.flags = (uint32_t)(ParticleRenderFlagBits::eNoShadow);
+    preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,

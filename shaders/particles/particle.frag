@@ -6,6 +6,11 @@
 #include "../settings.glsl"
 #include "particle_vars.glsl"
 
+layout (set = 2, binding = 0) uniform CameraUBO
+{
+    Camera camera;
+};
+
 layout (set = 3, binding = 0) uniform SceneUBO
 {
     Scene scene;
@@ -55,7 +60,15 @@ void main()
         color *= vec4(scene.directionalLight.color.xyz, 0.0);
     }
 
-    outColor = vec4((shadow * color.xyz), 1.0);
+    vec3 litColor = shadow * color.xyz;
+
+    const float fogDensity = 0.0025;
+    const vec3 fogColor = vec3(0.6, 0.7, 0.9);
+
+    float linearDepth = distance(position, camera.cameraPosition);
+    float fogFactor = exp(-fogDensity * linearDepth);
+
+    outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
 
     // store brightness for bloom
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);

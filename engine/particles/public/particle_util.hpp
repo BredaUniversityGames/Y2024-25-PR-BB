@@ -10,7 +10,7 @@ static constexpr int32_t MAX_PARTICLES = 1024 * 256;
 
 enum class ParticleRenderFlagBits : uint8_t
 {
-    eUnLit = 1 << 0,
+    eUnlit = 1 << 0,
     eNoShadow = 1 << 1
 };
 GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)

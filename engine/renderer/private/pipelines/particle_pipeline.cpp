@@ -1,5 +1,6 @@
 #include "pipelines/particle_pipeline.hpp"
 
+#include "bloom_settings.hpp"
 #include "camera.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
