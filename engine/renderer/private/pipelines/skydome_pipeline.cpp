@@ -36,6 +36,7 @@ SkydomePipeline::~SkydomePipeline()
 
 void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Skydome Pipeline");
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
@@ -110,10 +111,10 @@ void SkydomePipeline::CreatePipeline()
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
     depthStencilStateCreateInfo.depthTestEnable = vk::True;
     depthStencilStateCreateInfo.depthWriteEnable = vk::False;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
     depthStencilStateCreateInfo.depthBoundsTestEnable = vk::True;
-    depthStencilStateCreateInfo.minDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+    depthStencilStateCreateInfo.maxDepthBounds = 0.0f;
     depthStencilStateCreateInfo.stencilTestEnable = vk::False;
 
     vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfoKHR> structureChain;

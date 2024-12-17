@@ -4,10 +4,12 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
+#include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
-#include "components/point_light_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -102,8 +104,8 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     for (auto entity : staticMeshView)
     {
-        auto meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
-        auto transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
 
         auto resources { _context->Resources() };
 
@@ -206,6 +208,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .farPlane = directionalLightComponent.farPlane,
             .orthographicSize = directionalLightComponent.orthographicSize,
             .aspectRatio = directionalLightComponent.aspectRatio,
+            .reversedZ = false,
         };
 
         _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);

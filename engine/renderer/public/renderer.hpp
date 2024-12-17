@@ -6,6 +6,8 @@
 #include "ecs_module.hpp"
 #include "swap_chain.hpp"
 
+#include <tracy/TracyVulkan.hpp>
+
 class UIModule;
 class DebugPipeline;
 class Application;
@@ -14,6 +16,7 @@ class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class FXAAPipeline;
 class UIPipeline;
 class GaussianBlurPipeline;
 class ShadowPipeline;
@@ -51,6 +54,7 @@ public:
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
+    FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
 
     void FlushCommands();
 
@@ -71,6 +75,7 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<FXAAPipeline> _fxaaPipeline;
     std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
@@ -84,6 +89,7 @@ private:
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _fxaaTarget;
     ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
@@ -104,12 +110,15 @@ private:
 
     uint32_t _currentFrame { 0 };
 
+    std::array<TracyVkCtx, MAX_FRAMES_IN_FLIGHT> _tracyContexts;
+
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
     void CreateSyncObjects();
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
+    void InitializeFXAATarget();
     void InitializeUITarget();
     void InitializeSSAOTarget();
     void LoadEnvironmentMap();

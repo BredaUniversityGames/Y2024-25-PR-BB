@@ -2,12 +2,12 @@
 
 #include "camera.hpp"
 #include "ecs_module.hpp"
+#include "emitter_component.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "emitter_component.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
@@ -17,12 +17,11 @@
 
 #include <pipeline_builder.hpp>
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
+ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
-    , _camera(camera)
 {
     srand(time(0));
 
@@ -64,6 +63,8 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
+
     UpdateEmitters(commandBuffer);
 
     RecordKickOff(commandBuffer);
@@ -73,9 +74,9 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         RecordEmit(commandBuffer);
     }
 
-    RecordSimulate(commandBuffer, scene.deltaTime); // TODO: get deltatime again somehow
+    RecordSimulate(commandBuffer, scene.deltaTime);
 
-    RecordRenderIndexed(commandBuffer, currentFrame);
+    RecordRenderIndexed(commandBuffer, scene.gpuScene->MainCamera(), currentFrame);
 
     UpdateAliveLists();
 }
@@ -152,7 +153,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
 
-    _simulatePushConstant.deltaTime = deltaTime * 0.001f;
+    _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
@@ -165,7 +166,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const CameraResource& camera, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -220,7 +221,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, camera.DescriptorSet(currentFrame), {});
 
     vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(_vertexBuffer)->buffer;
     vk::Buffer indexBuffer = resources->BufferResourceManager().Access(_indexBuffer)->buffer;
@@ -239,16 +240,15 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
-        if (component.timesToEmit != 0)
+        if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             _emitters.emplace_back(component.emitter);
-            component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
         }
     }
 
@@ -394,7 +394,7 @@ void ParticlePipeline::CreatePipelines()
         vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
         depthStencilStateCreateInfo.depthTestEnable = true;
         depthStencilStateCreateInfo.depthWriteEnable = true;
-        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
         depthStencilStateCreateInfo.depthBoundsTestEnable = false;
         depthStencilStateCreateInfo.minDepthBounds = 0.0f;
         depthStencilStateCreateInfo.maxDepthBounds = 1.0f;

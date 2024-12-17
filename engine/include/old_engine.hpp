@@ -9,13 +9,14 @@ struct RigidbodyComponent;
 class ECSModule;
 class Renderer;
 class Editor;
-class PhysicsModule;
 
 class OldEngine : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
     void Tick(Engine& engine) override;
     void Shutdown(Engine& engine) override;
+
+    std::string_view GetName() override { return "OldEngine Module"; }
 
 public:
     OldEngine();

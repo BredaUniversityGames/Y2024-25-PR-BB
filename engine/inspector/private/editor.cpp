@@ -1,6 +1,7 @@
 #include "editor.hpp"
 
 #include "bloom_settings.hpp"
+#include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
@@ -15,12 +16,15 @@
 #include "imgui_backend.hpp"
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
+#include "model_loader.hpp"
+#include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/ssao_pipeline.hpp"
+#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
+#include "vertex.hpp"
 #include "vulkan_context.hpp"
-
 
 #include <entt/entity/entity.hpp>
 #include <fstream>
@@ -40,11 +44,12 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<WorldMatrixComponent>("World Matrix");
     _entityEditor.registerComponent<PointLightComponent>("Point Light");
     _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
+    _entityEditor.registerComponent<CameraComponent>("Camera");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
 {
-
+    ZoneNamedN(editorDraw, "Editor Draw", true);
     // Hierarchy panel
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
@@ -98,6 +103,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
     if (ImGui::Begin("World Inspector"))
     {
+        ZoneNamedN(worldInspector, "World Inspector", true);
         if (ImGui::Button("+ Add entity"))
         {
             entt::entity entity = _ecs.GetRegistry().create();
@@ -121,7 +127,10 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     }
     ImGui::End();
 
-    _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
+    {
+        ZoneNamedN(entityEditor, "Entity Editor", true);
+        _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
+    }
 
     if (ImGui::Begin("Entity Details"))
     {
@@ -133,9 +142,13 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     bloomSettings.Render();
 
     // Render systems inspect
-    for (const auto& system : _ecs.GetSystems())
+
     {
-        system->Inspect();
+        ZoneNamedN(systemInspect, "System inspect", true);
+        for (const auto& system : _ecs.GetSystems())
+        {
+            system->Inspect();
+        }
     }
 
     static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
@@ -150,6 +163,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
     ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
     ImGui::End();
+
+    ImGui::Begin("FXAA settings");
+    ImGui::Checkbox("Enable FXAA", &_renderer->GetFXAAPipeline().GetEnableFXAA());
+    ImGui::DragFloat("Edge treshold min", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Edge treshold max", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Subpixel quality", &_renderer->GetFXAAPipeline().GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
+    ImGui::DragInt("Iterations", &_renderer->GetFXAAPipeline().GetIterations(), 1, 1, 128);
+
+    ImGui::End();
+
     ImGui::Begin("Dump VMA stats");
 
     if (ImGui::Button("Dump json"))
