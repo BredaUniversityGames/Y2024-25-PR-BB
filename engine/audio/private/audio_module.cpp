@@ -14,7 +14,12 @@
 
 inline FMOD_VECTOR GLMToFMOD(const glm::vec3& v)
 {
-    return FMOD_VECTOR(v.x, v.y, v.z);
+    FMOD_VECTOR vec;
+    vec.x = v.x;
+    vec.y = v.y;
+    vec.z = v.z;
+
+    return vec;
 }
 
 ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
@@ -86,14 +91,14 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
             }
             return !static_cast<bool>(isPlaying); });
 }
-void AudioModule::LoadSFX(SoundInfo& soundInfo)
+SoundID AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
     const SoundID hash = std::hash<std::string_view> {}(soundInfo.path);
     soundInfo.uid = hash;
     if (_sounds.contains(hash) && _soundInfos.contains(soundInfo.path.data()))
     {
         bblog::error("Could not load sound, sound already loaded: {0}", soundInfo.path);
-        return;
+        return hash;
     }
 
     FMOD_MODE mode = soundInfo.isLoop ? FMOD_LOOP_NORMAL : FMOD_DEFAULT;
@@ -103,14 +108,16 @@ void AudioModule::LoadSFX(SoundInfo& soundInfo)
 
     _sounds[hash] = sound;
     _soundInfos[soundInfo.path.data()] = &soundInfo;
+
+    return hash;
 }
-SoundInfo* AudioModule::GetSFX(const std::string_view path)
+SoundID AudioModule::GetSFX(const std::string_view path)
 {
     if (const auto it = _soundInfos.find(path.data()); it != _soundInfos.end())
     {
-        return it->second;
+        return it->second->uid;
     }
-    return nullptr;
+    return -1;
 }
 SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, const bool startPaused)
 {

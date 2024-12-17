@@ -109,33 +109,33 @@ void AudioSystem::Inspect()
 
     if (ImGui::TreeNode((std::string("Sounds loaded: ") + std::to_string(_audioModule._sounds.size())).c_str()))
     {
-        for (const auto snd : _audioModule._soundInfos | std::views::values)
+        for (const auto& pair : _audioModule._soundInfos)
         {
-            ImGui::Text("--| %s", snd->path.data());
+            ImGui::Text("--| %s", pair.second->path.data());
         }
         ImGui::TreePop();
     }
     if (ImGui::TreeNode((std::string("Sounds playing: ") + std::to_string(_audioModule._channelsActive.size())).c_str()))
     {
-        for (const auto key : _audioModule._channelsActive | std::views::keys)
+        for (const auto& pair : _audioModule._channelsActive)
         {
-            ImGui::Text("--| %u", static_cast<uint32_t>(key));
+            ImGui::Text("--| %u", static_cast<uint32_t>(pair.first));
         }
         ImGui::TreePop();
     }
     if (ImGui::TreeNode((std::string("Banks Loaded: ") + std::to_string(_audioModule._banks.size())).c_str()))
     {
-        for (const auto key : _audioModule._banks | std::views::keys)
+        for (const auto& pair : _audioModule._banks)
         {
-            ImGui::Text("--| %u", static_cast<uint32_t>(key));
+            ImGui::Text("--| %u", static_cast<uint32_t>(pair.first));
         }
         ImGui::TreePop();
     }
     if (ImGui::TreeNode((std::string("Events Playing: ") + std::to_string(_audioModule._events.size())).c_str()))
     {
-        for (const auto key : _audioModule._events | std::views::keys)
+        for (const auto& pair : _audioModule._events)
         {
-            ImGui::Text("--| %u", static_cast<uint32_t>(key));
+            ImGui::Text("--| %u", static_cast<uint32_t>(pair.first));
         }
         ImGui::TreePop();
     }

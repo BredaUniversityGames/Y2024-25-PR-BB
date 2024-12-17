@@ -21,6 +21,7 @@ using SoundID = BaseID;
 
 struct SoundInfo
 {
+    SoundInfo() = default;
     std::string_view path {};
     SoundID uid = -1;
 

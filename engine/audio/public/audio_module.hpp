@@ -23,10 +23,10 @@ public:
     ~AudioModule() override = default;
 
     // Load sound, mp3 or .wav etc
-    void LoadSFX(SoundInfo& soundInfo);
+    SoundID LoadSFX(SoundInfo& soundInfo);
 
     // Return the soundinfo associated with the path
-    SoundInfo* GetSFX(std::string_view path);
+    SoundID GetSFX(std::string_view path);
 
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
