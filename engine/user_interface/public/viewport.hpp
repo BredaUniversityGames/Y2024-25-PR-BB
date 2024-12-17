@@ -23,7 +23,32 @@ public:
      */
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const;
 
-    UIElement& AddElement(std::unique_ptr<UIElement> element);
+    template <typename T, typename... Args>
+        requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
+    T& AddElement(Args&&... args)
+    {
+        UIElement& addedChild = *_baseElements.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+            { return v1->zLevel < v2->zLevel; });
+
+        return static_cast<T&>(addedChild);
+    }
+
+    template <typename T>
+        requires(std::derived_from<T, UIElement>)
+    T& AddElement(std::unique_ptr<T> typePtr)
+    {
+        UIElement& addedChild = *_baseElements.emplace_back(std::move(typePtr));
+        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+            { return v1->zLevel < v2->zLevel; });
+
+        return static_cast<T&>(addedChild);
+    }
+
+    void ClearViewport()
+    {
+        _clearAtEndOfFrame = true;
+    }
 
     NO_DISCARD std::vector<std::unique_ptr<UIElement>>& GetElements() { return _baseElements; }
     NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return _baseElements; }
@@ -37,6 +62,9 @@ public:
 private:
     glm::uvec2 _extend;
     glm::uvec2 _offset;
+
+    // if the viewport should be cleared after the update loop has ran.
+    bool _clearAtEndOfFrame = false;
 
     /**
      * \brief Base elements present in viewport.

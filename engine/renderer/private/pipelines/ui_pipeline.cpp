@@ -43,6 +43,11 @@ void UIPipeline::CreatePipeLine()
         .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
     };
 
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
+    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
+    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
+    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
         .logicOpEnable = vk::False,
         .attachmentCount = 1,
@@ -55,6 +60,7 @@ void UIPipeline::CreatePipeLine()
     pipelineBuilder
         .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
         .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
+        .SetRasterizationState(rasterizationStateCreateInfo)
         .SetColorBlendState(colorBlendStateCreateInfo)
         .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
         .SetDepthAttachmentFormat(vk::Format::eUndefined)

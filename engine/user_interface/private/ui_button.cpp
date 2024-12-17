@@ -6,7 +6,8 @@
 
 void UIButton::Update(const ActionManager& input)
 {
-    if (enabled)
+    if ((visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
+        && !input.HasInputBeenConsumed())
     {
 
         glm::ivec2 mousePos;
@@ -22,16 +23,16 @@ void UIButton::Update(const ActionManager& input)
             switch (state)
             {
             case ButtonState::eNormal:
-
                 state = ButtonState::eHovered;
                 onBeginHoverCallBack();
+                input.SetInputConsumed();
                 [[fallthrough]];
 
             case ButtonState::eHovered:
-
                 if (input.GetDigitalAction("UIPress"))
                 {
                     state = ButtonState::ePressed;
+                    input.SetInputConsumed();
                     onMouseDownCallBack();
                 }
                 break;
@@ -53,9 +54,10 @@ void UIButton::Update(const ActionManager& input)
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    UIElement::ChildrenSubmitDrawInfo(drawList);
-    if (enabled)
+
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
+
         ResourceHandle<GPUImage> image;
         switch (state)
         {
@@ -73,19 +75,20 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         }
 
         QuadDrawInfo info {
-            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetScale(), 0))),
+            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetAbsoluteScale(), 0))),
             .textureIndex = image.Index(),
         };
 
         info.useRedAsAlpha = false;
         drawList.emplace_back(info);
+        UIElement::ChildrenSubmitDrawInfo(drawList);
     }
 }
 
-void UIButton::UpdateAllChildrenAbsoluteLocations()
+void UIButton::UpdateAllChildrenAbsoluteTransform()
 {
     for (const auto& child : GetChildren())
     {
-        child->SetAbsoluteLocation(this->GetAbsoluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
+        child->SetAbsoluteTransform(this->GetAbsoluteLocation() + (GetAbsoluteScale() / 2.f) + child->GetRelativeLocation(), child->GetRelativeScale());
     }
 }

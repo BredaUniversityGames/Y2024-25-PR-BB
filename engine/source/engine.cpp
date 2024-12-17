@@ -5,6 +5,7 @@
 
 #include "application_module.hpp"
 #include "audio_module.hpp"
+#include "canvas.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -30,6 +31,8 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
+#include "ui_main_menu.hpp"
+#include "ui_module.hpp"
 
 #include <time_module.hpp>
 
@@ -120,6 +123,25 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(bi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    // todo: move this to scripting.
+    constexpr bool createMainMenu = true;
+    if (createMainMenu)
+    {
+        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
+        auto onPlayClick = [&]()
+        {
+            // todo: load scene data
+            engine.GetModule<UIModule>().GetViewport().ClearViewport();
+        };
+        auto onExitClick = [&]()
+        {
+            engine.SetExit(0);
+        };
+
+        engine.GetModule<UIModule>().CreateMainMenu(onPlayClick, onExitClick);
+    }
+
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;

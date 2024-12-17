@@ -1,11 +1,5 @@
 #pragma once
 #include "canvas.hpp"
-#include "ui_button.hpp"
 
-struct UIFont;
 class GraphicsContext;
-class MainMenuCanvas : public Canvas
-{
-public:
-    MainMenuCanvas(const glm::vec2& size, std::shared_ptr<GraphicsContext>& context, const std::shared_ptr<UIFont>& font);
-};
+std::unique_ptr<Canvas> CreateMainMenuCanvas(const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext, std::function<void()> onPlayButtonClick, MAYBE_UNUSED std::function<void()> onExitButtonClick);

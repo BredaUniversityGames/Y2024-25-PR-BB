@@ -22,10 +22,6 @@ public:
 
     void Update(const ActionManager& inputManager) override;
 
-    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
-
-    void UpdateAllChildrenAbsoluteLocations() override;
-
     struct ButtonStyle
     {
         ResourceHandle<GPUImage> normalImage = {};
@@ -33,6 +29,18 @@ public:
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
-    std::function<void()> onBeginHoverCallBack {};
-    std::function<void()> onMouseDownCallBack {};
+    UIButton() = default;
+    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
+        : style(aStyle)
+    {
+        SetLocation(location);
+        SetScale(size);
+    }
+
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
+
+    void UpdateAllChildrenAbsoluteTransform() override;
+
+    std::function<void()> onBeginHoverCallBack = []() {};
+    std::function<void()> onMouseDownCallBack = []() {};
 };
