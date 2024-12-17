@@ -18,7 +18,10 @@ public:
     void InitializePhysicsColliders();
 
     void CreateMeshCollision(const std::string& path);
+    void CreateMeshCollision(const CPUModel& model);
+
     void CreateConvexHullCollision(const std::string& path);
+    void CreateConvexHullCollision(const CPUModel& model);
 
     void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
@@ -27,7 +30,7 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
-    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
+    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
 
     Engine& engine;
     ECSModule& _ecs;

@@ -73,7 +73,7 @@ void PhysicsSystem::InitializePhysicsColliders()
 }
 entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule& ecs,
     uint32_t currentNodeIndex,
-    Hierarchy& hierarchy,
+    const Hierarchy& hierarchy,
     entt::entity parent, PhysicsShapes shape)
 {
 
@@ -83,7 +83,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
         return entt::null;
     }
     const entt::entity entity = ecs.GetRegistry().create();
-    Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
+    const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
     ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name + " collider";
     ecs.GetRegistry().emplace<TransformComponent>(entity);
@@ -171,29 +171,19 @@ void PhysicsSystem::CreateMeshCollision(const std::string& path)
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
 }
+void PhysicsSystem::CreateMeshCollision(const CPUModel& model)
+{
+    LoadNodeRecursive(model, _ecs, model.hierarchy.root, model.hierarchy, entt::null, eMESH);
+}
 void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
 {
     CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
-
-    /*for (auto mesh : models.meshes)
-    {
-        JPH::VertexList vertices;
-        // set verticies
-        for (auto vertex : mesh.vertices)
-        {
-            vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
-        }
-
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, glm::vec3(0.0f, 0.0f, 0.0f), vertices);
-
-        entt::entity entity = _ecs.GetRegistry().create();
-        NameComponent node;
-        node.name = "Convexhull collider Entity";
-        _ecs.GetRegistry().emplace<NameComponent>(entity, node);
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-    }*/
+}
+void PhysicsSystem::CreateConvexHullCollision(const CPUModel& model)
+{
+    LoadNodeRecursive(model, _ecs, model.hierarchy.root, model.hierarchy, entt::null, eCONVEXHULL);
 }
 
 void PhysicsSystem::CleanUp()
@@ -341,7 +331,7 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };
     if (ImGui::DragFloat3("Position", pos, 0.1f))
     {
-        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(pos[0], pos[1], pos[2]), JPH::EActivation::Activate);
+        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetPosition(rb.bodyID, JPH::Vec3(pos[0], pos[1], pos[2]), JPH::EActivation::Activate);
     }
 
     const auto joltRotation = _physicsModule.bodyInterface->GetRotation(rb.bodyID).GetEulerAngles();
