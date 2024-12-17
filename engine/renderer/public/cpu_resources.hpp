@@ -20,9 +20,12 @@ struct Hierarchy
     struct Node
     {
         Node() = default;
-        Node(std::string_view name, const glm::mat4& transform, std::pair<MeshType, uint32_t> meshIndex)
-            : name(name), transform(transform), meshIndex(meshIndex)
-        {}
+        Node(std::string_view name, const glm::mat4& transform, std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt)
+            : name(name)
+            , transform(transform)
+            , meshIndex(meshIndex)
+        {
+        }
 
         std::string name {};
         glm::mat4 transform { 1.0f };
@@ -31,11 +34,11 @@ struct Hierarchy
 
         std::optional<AnimationChannelComponent> animationChannel {};
         std::optional<Joint> joint {};
-        bool isSkeletonRoot { false };
         std::optional<uint32_t> skeletonNode {};
     };
 
     uint32_t root {};
+    std::optional<uint32_t> skeletonRoot = std::nullopt;
     std::vector<Node> nodes {};
 };
 

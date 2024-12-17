@@ -31,6 +31,7 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 
+#include <components/relationship_component.hpp>
 #include <time_module.hpp>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
@@ -47,13 +48,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
+        "assets/models/AnimatedRifle.glb",
         "assets/models/Cathedral.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb"
     };
 
@@ -66,7 +68,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
     SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
@@ -91,6 +93,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     entt::entity cameraEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
+    _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+
+    RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;

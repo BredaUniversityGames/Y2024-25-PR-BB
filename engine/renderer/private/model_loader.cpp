@@ -433,9 +433,9 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
     StagingAnimationChannels stagingAnimationChannels {};
 
-    stagingAnimationChannels.animation.name = gltf.animations[0].name;
+    stagingAnimationChannels.animation.name = gltf.animations[4].name;
 
-    for (const auto& channel : gltf.animations[0].channels)
+    for (const auto& channel : gltf.animations[4].channels)
     {
         // If there is no node, the channel is invalid.
         if (!channel.nodeIndex.has_value())
@@ -456,7 +456,7 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
             spline = &stagingAnimationChannels.animationChannels[std::distance(stagingAnimationChannels.nodeIndices.begin(), it)];
         }
 
-        const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
+        const auto& sampler = gltf.animations[4].samplers[channel.samplerIndex];
 
         assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
 
@@ -614,10 +614,6 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     {
         const auto& skin = gltf.skins[i];
 
-        // If this node is not a root, check if it should be.
-        if (!model.hierarchy.nodes[nodeIndex].isSkeletonRoot)
-            model.hierarchy.nodes[nodeIndex].isSkeletonRoot = skin.skeleton == gltfNodeIndex;
-
         // Find whether this node is part of a joint in the skin.
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
         if (it != skin.joints.end())
@@ -713,6 +709,47 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
     }
 
+    for (size_t i = 0; i < gltf.skins.size(); ++i)
+    {
+        const auto& skin = gltf.skins[i];
+
+        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &gltf, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
+        {
+            auto it = std::find_if(skin.joints.begin(), skin.joints.end(), [&nodeLUT, nodeIndex](uint32_t index)
+                { return nodeLUT[index] == nodeIndex; });
+
+            if (it != skin.joints.end())
+            {
+                return true;
+            }
+
+            std::vector<uint32_t> baseJoints {};
+            for (size_t i = 0; i < node.children.size(); ++i)
+            {
+                if (traverse(model.hierarchy.nodes[node.children[i]], node.children[i]))
+                {
+                    baseJoints.emplace_back(node.children[i]);
+                }
+            }
+
+            if (baseJoints.size() > 0)
+            {
+                Hierarchy::Node& skeletonNode = model.hierarchy.nodes.emplace_back();
+                model.hierarchy.skeletonRoot = model.hierarchy.nodes.size() - 1;
+                skeletonNode.name = "Skeleton Node";
+                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.children));
+                std::erase_if(node.children, [&baseJoints](auto index)
+                    { return std::find(baseJoints.begin(), baseJoints.end(), index) != baseJoints.end(); });
+
+                return false;
+            }
+
+            return false;
+        };
+
+        traverse(model.hierarchy.nodes[model.hierarchy.root], model.hierarchy.root);
+    }
+
     // After instantiating hierarchy, we do another pass to apply missing child references.
     // In this case we match all the skeleton indices.
     // Note, that we have to account for expanding the primitives into their own nodes.
@@ -725,14 +762,11 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         if (gltfNode.skinIndex.has_value())
         {
             const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
-            if (skin.skeleton.has_value())
+            // Iterate over all the children of the matched node, since we expanded the primitives.
+            for (auto childIndex : node.children)
             {
-                // Iterate over all the children of the matched node, since we expanded the primitives.
-                for (auto childIndex : node.children)
-                {
-                    // Apply the skeleton node using the node LUT.
-                    model.hierarchy.nodes[childIndex].skeletonNode = nodeLUT[skin.skeleton.value()];
-                }
+                // Apply the skeleton node using the node LUT.
+                model.hierarchy.nodes[childIndex].skeletonNode = model.hierarchy.skeletonRoot;
             }
         }
     }
