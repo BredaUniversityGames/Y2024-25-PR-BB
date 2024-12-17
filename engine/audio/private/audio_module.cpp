@@ -64,7 +64,7 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 
     std::erase_if(_events, [](const auto& pair)
         {
-        FMOD_STUDIO_PLAYBACK_STATE state;
+        FMOD_STUDIO_PLAYBACK_STATE state {};
         FMOD_Studio_EventInstance_GetPlaybackState(pair.second, &state);
         if (state == FMOD_STUDIO_PLAYBACK_STOPPED)
         {

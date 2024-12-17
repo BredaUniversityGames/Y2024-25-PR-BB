@@ -14,7 +14,7 @@ struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
 struct FMOD_DSP;
 
-using BaseID = int32_t;
+using BaseID = size_t;
 
 // using AudioID = BaseID;
 using ChannelID = BaseID;

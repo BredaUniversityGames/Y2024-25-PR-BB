@@ -107,7 +107,7 @@ private:
     EventInstanceID _nextEventId = 0;
     SoundID _nextSoundId = 0;
 
-    PhysicsModule* _physics;
+    PhysicsModule* _physics = nullptr;
 
     // Debug lines
 

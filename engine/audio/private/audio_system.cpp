@@ -119,7 +119,7 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._channelsActive | std::views::keys)
         {
-            ImGui::Text("--| %u", key);
+            ImGui::Text("--| %llu", key);
         }
         ImGui::TreePop();
     }
@@ -127,7 +127,7 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._banks | std::views::keys)
         {
-            ImGui::Text("--| %u", key);
+            ImGui::Text("--| %llu", key);
         }
         ImGui::TreePop();
     }
@@ -135,25 +135,25 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._events | std::views::keys)
         {
-            ImGui::Text("--| %u", key);
+            ImGui::Text("--| %llu", key);
         }
         ImGui::TreePop();
     }
 
     static constexpr int spectrumSize = 128;
-    static float spectrum[spectrumSize];
+    static std::array<float, spectrumSize> spectrum;
 
-    void* data;
+    void* data = nullptr;
     unsigned int length = 0;
 
     FMOD_CHECKRESULT(FMOD_DSP_GetParameterData(_audioModule._fftDSP, FMOD_DSP_FFT_SPECTRUMDATA, &data, &length, nullptr, NULL));
 
     if (const auto fftData = static_cast<FMOD_DSP_PARAMETER_FFT*>(data); fftData && fftData->numchannels > 0)
     {
-        memcpy(spectrum, fftData->spectrum[0], spectrumSize * sizeof(float));
+        memcpy(spectrum.data(), fftData->spectrum[0], spectrumSize * sizeof(float));
     }
 
-    ImGui::PlotLines("##Spectrum", spectrum, spectrumSize, 0, nullptr, 0.0f, 1.0f, ImVec2(0, 100));
+    ImGui::PlotLines("##Spectrum", spectrum.data(), spectrumSize, 0, nullptr, 0.0f, 1.0f, ImVec2(0, 100));
 
     ImGui::End();
 }

@@ -8,6 +8,7 @@ class AudioSystem final : public SystemInterface
 {
 public:
     AudioSystem(ECSModule& ecs, AudioModule& audioModule);
+    ~AudioSystem() override = default;
     NON_COPYABLE(AudioSystem);
     NON_MOVABLE(AudioSystem);
 
