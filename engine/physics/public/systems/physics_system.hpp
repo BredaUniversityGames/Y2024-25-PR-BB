@@ -3,9 +3,10 @@
 #include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
 
+struct Hierarchy;
 class PhysicsModule;
 struct RigidbodyComponent;
-
+class CPUModel;
 class PhysicsSystem : public SystemInterface
 {
 public:
@@ -16,6 +17,7 @@ public:
     void InitializePhysicsColliders();
 
     void CreateMeshCollision(const std::string& path);
+    void CreateConvexHullCollision(const std::string& path);
 
     void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
@@ -24,6 +26,8 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
 private:
+    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, Hierarchy& hierarchy, entt::entity parent);
+
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;

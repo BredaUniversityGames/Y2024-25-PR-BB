@@ -14,6 +14,8 @@
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
+#include <components/relationship_component.hpp>
+#include <components/relationship_helpers.hpp>
 #include <model_loader.hpp>
 #include <renderer.hpp>
 
@@ -68,13 +70,29 @@ void PhysicsSystem::InitializePhysicsColliders()
         _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
     }
 }
-
-void PhysicsSystem::CreateMeshCollision(const std::string& path)
+entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule& ecs,
+    uint32_t currentNodeIndex,
+    Hierarchy& hierarchy,
+    entt::entity parent)
 {
-    const CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+    const entt::entity entity = ecs.GetRegistry().create();
+    Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
-    for (auto mesh : models.meshes)
+    ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name + " collider";
+    ecs.GetRegistry().emplace<TransformComponent>(entity);
+
+    ecs.GetRegistry().emplace<RelationshipComponent>(entity);
+    if (parent != entt::null)
     {
+        RelationshipHelpers::AttachChild(ecs.GetRegistry(), parent, entity);
+    }
+
+    TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
+
+    if (currentNode.meshIndex.has_value())
+    {
+        auto mesh = models.meshes[currentNode.meshIndex.value().second];
+
         JPH::VertexList vertices;
         JPH::IndexedTriangleList triangles;
 
@@ -95,11 +113,86 @@ void PhysicsSystem::CreateMeshCollision(const std::string& path)
             triangles.push_back(tri);
         }
 
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, glm::vec3(0.0f, 0.0f, 0.0f), vertices, triangles);
+        const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
+
+        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+    }
+
+    for (const auto& nodeIndex : currentNode.children)
+    {
+        LoadNodeRecursive(models, _ecs, nodeIndex, hierarchy, entity);
+    }
+
+    return entity;
+}
+
+void PhysicsSystem::CreateMeshCollision(const std::string& path)
+{
+    CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+    // LoadNodeRecursive(models.hierarchy.root, models.hierarchy, glm::mat4(1.0));
+
+    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null);
+
+    /*for (auto nodes : models.hierarchy.nodes)
+    {
+
+        if (!nodes.meshIndex.has_value())
+            continue;
+
+        entt::entity entity = _ecs.GetRegistry().create();
+        _ecs.GetRegistry().emplace<TransformComponent>(entity);
+        _ecs.GetRegistry().emplace<RelationshipComponent>(entity);
+
+        auto mesh = models.meshes[nodes.meshIndex.value().second];
+
+        JPH::VertexList vertices;
+        JPH::IndexedTriangleList triangles;
+
+        // set verticies
+        for (auto vertex : mesh.vertices)
+        {
+            vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
+        }
+
+        // set trinagles
+        for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
+        {
+            JPH::IndexedTriangle tri;
+            tri.mIdx[0] = mesh.indices[i + 0];
+            tri.mIdx[1] = mesh.indices[i + 1];
+            tri.mIdx[2] = mesh.indices[i + 2];
+
+            triangles.push_back(tri);
+        }
+
+        const glm::vec3 position = nodes.transform[3];
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
+
+        NameComponent node;
+        node.name = "Mesh collider Entity";
+        _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+    }*/
+}
+void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
+{
+    const CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+
+    for (auto mesh : models.meshes)
+    {
+        JPH::VertexList vertices;
+        // set verticies
+        for (auto vertex : mesh.vertices)
+        {
+            vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
+        }
+
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, entt::null, glm::vec3(0.0f, 0.0f, 0.0f), vertices);
 
         entt::entity entity = _ecs.GetRegistry().create();
         NameComponent node;
-        node.name = "Mesh collider Entity";
+        node.name = "Convexhull collider Entity";
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
     }
@@ -222,7 +315,12 @@ void PhysicsSystem::Inspect()
 
     if (ImGui::Button("Create mesh collider"))
     {
-        CreateMeshCollision("assets/models/collision_test.glb");
+        CreateMeshCollision("assets/models/ABeautifulGame/ABeautifulGame.gltf");
+    }
+
+    if (ImGui::Button("Create convexhull collider"))
+    {
+        CreateConvexHullCollision("assets/models/DamagedHelmet.glb");
     }
 
     if (ImGui::Button("Clear Physics Entities"))

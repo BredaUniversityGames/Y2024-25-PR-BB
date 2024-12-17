@@ -88,6 +88,44 @@ struct RigidbodyComponent
         bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
     }
 
+    // for convex collisions
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices)
+        : shapeType(eBOX)
+        , bodyType(eSTATIC)
+    {
+        JPH::BodyCreationSettings bodySettings;
+
+        JPH::MeshShapeSettings meshSettings;
+        JPH::ShapeSettings::ShapeResult shapeResult;
+
+        if (bodyType == eSTATIC)
+        {
+            JPH::Array<JPH::Vec3> hull;
+
+            for (auto vert : vertices)
+            {
+                hull.push_back(JPH::Vec3(vert.x, vert.y, vert.z));
+            }
+            bodySettings = JPH::BodyCreationSettings(
+                new JPH::ConvexHullShapeSettings(hull),
+                JPH::Vec3Arg(position.x, position.y, position.z),
+                JPH::QuatArg::sIdentity(),
+                JPH::EMotionType::Static,
+                PhysicsLayers::NON_MOVING);
+        }
+
+        if (shapeResult.HasError())
+        {
+            bblog::error(shapeResult.GetError().c_str());
+        }
+
+        bodySettings.mAllowDynamicOrKinematic = false;
+        bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
+
+        // set the owner entity so we can query it later from physics objects if needed
+        bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
+    }
+
     // for AABB collisions
     RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, Vec3Range boundingBox, BodyType type = eSTATIC)
         : shapeType(eBOX)
