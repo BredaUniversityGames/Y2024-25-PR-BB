@@ -35,9 +35,6 @@
 
 #include <time_module.hpp>
 
-SoundInfo si;
-SoundInfo musicSi;
-SoundInfo eagleSi;
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -127,18 +124,19 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
 
+    SoundInfo si;
     si.path = "assets/sounds/fallback.mp3";
     si.is3D = true;
 
     audioModule.LoadSFX(si);
 
+    SoundInfo musicSi;
     musicSi.path = "assets/sounds/music1.wav";
     musicSi.isLoop = true;
     musicSi.is3D = true;
 
     // This sound might pop in because it starts playing before the engine is fully initialized
-    audioModule.LoadSFX(musicSi);
-    auto instance = audioModule.PlaySFX(musicSi, 1.0f, false);
+    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
 
     auto audioEmitter = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
@@ -146,8 +144,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     emitter._soundIds.emplace_back(instance);
 
-    eagleSi.path
-        = "assets/sounds/eagle.mp3";
+    SoundInfo eagleSi;
+    eagleSi.path = "assets/sounds/eagle.mp3";
 
     audioModule.LoadSFX(eagleSi);
 
@@ -312,7 +310,7 @@ void OldEngine::Tick(Engine& engine)
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eL))
     {
-        audioModule.PlaySFX(eagleSi, 1.5f, false);
+        audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/eagle.mp3"), 1.5f, false);
     }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
@@ -335,7 +333,7 @@ void OldEngine::Tick(Engine& engine)
         physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
 
         particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(si, 1.0f, false));
+        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
     }
 
     static uint32_t eventId {};
