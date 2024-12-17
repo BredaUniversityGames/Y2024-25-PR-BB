@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "module_interface.hpp"
 #include <glm/glm.hpp>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -30,7 +31,7 @@ public:
 
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
-    SoundInstance PlaySFX(SoundInfo& soundInfo, float volume, bool startPaused);
+    SoundInstance PlaySFX(SoundID, float volume, bool startPaused);
 
     // Stops looping sounds
     // Regular sounds will stop by themselves once they are done
@@ -109,6 +110,5 @@ private:
     PhysicsModule* _physics = nullptr;
 
     // Debug lines
-
     std::vector<glm::vec3> _debugLines {};
 };

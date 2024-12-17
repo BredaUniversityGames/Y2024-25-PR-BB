@@ -119,26 +119,28 @@ SoundID AudioModule::GetSFX(const std::string_view path)
     }
     return -1;
 }
-SoundInstance AudioModule::PlaySFX(SoundInfo& soundInfo, const float volume, const bool startPaused)
+SoundInstance AudioModule::PlaySFX(SoundID id, const float volume, const bool startPaused)
 {
-    if (!_sounds.contains(soundInfo.uid))
+    if (!_sounds.contains(id))
     {
-        bblog::error("Could not play sound, sound not loaded: {0}", soundInfo.path);
-        return SoundInstance(-1, soundInfo.is3D);
+        bblog::error("Could not play sound, sound not loaded: {0}", id);
+        return SoundInstance(-1, false);
     }
 
     FMOD_CHANNEL* channel = nullptr;
-    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[soundInfo.uid], _masterGroup, true, &channel));
+    FMOD_MODE mode {};
+    FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[id], _masterGroup, true, &channel));
+    FMOD_CHECKRESULT(FMOD_Sound_GetMode(_sounds[id], &mode));
     FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, volume));
     if (!startPaused)
     {
         FMOD_CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
     }
-    const ChannelID soundId = _nextSoundId;
-    _channelsActive[soundId] = channel;
+    const ChannelID channelID = _nextSoundId;
+    _channelsActive[channelID] = channel;
     ++_nextSoundId;
 
-    return SoundInstance(soundId, soundInfo.is3D);
+    return SoundInstance(channelID, mode | FMOD_3D);
 }
 void AudioModule::StopSFX(const SoundInstance instance)
 {
