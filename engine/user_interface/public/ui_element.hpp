@@ -3,6 +3,8 @@
 #include "common.hpp"
 #include "quad_draw_info.hpp"
 
+#include "input/action_manager.hpp"
+#include "ui_navigation_mappings.hpp"
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <memory>
@@ -19,7 +21,8 @@ class InputDeviceManager;
 class UIElement
 {
 public:
-    UIElement() = default;
+    UIElement(UINavigationMappings::ElementMap elementMap)
+        : mapping(std::move(elementMap)) {};
 
     enum class AnchorPoint
     {
@@ -48,7 +51,7 @@ public:
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
-    virtual void Update(const InputDeviceManager& input);
+    virtual void Update(const ActionManager& input);
 
     UIElement& AddChild(std::unique_ptr<UIElement> child);
 
@@ -70,10 +73,13 @@ public:
      */
     void SetAbsoluteLocation(const glm::vec2& location, bool updateChildren = true) noexcept;
 
+    const UINavigationMappings& GetNavigation() { return mapping; }
+
 protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
 
 private:
+    UINavigationMappings mapping;
     glm::vec2 _absoluteLocation {};
     glm::vec2 _relativeLocation {};
 

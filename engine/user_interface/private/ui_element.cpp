@@ -3,11 +3,16 @@
 
 #include <algorithm>
 
-void UIElement::Update(const InputDeviceManager& input)
+void UIElement::Update(const ActionManager& input)
 {
-    for (auto& child : _children)
-        child->Update(input);
+    auto element = mapping.GetNavigationElement(mapping.GetDirection(input));
+    if (element.has_value())
+    {
+        this->mapping.SetIsFocused(false);
+        element.value().lock()->mapping.SetIsFocused(true);
+    }
 }
+
 UIElement& UIElement::AddChild(std::unique_ptr<UIElement> child)
 {
     _children.emplace_back(std::move(child));

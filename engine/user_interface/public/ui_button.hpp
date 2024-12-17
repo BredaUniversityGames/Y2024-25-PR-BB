@@ -7,7 +7,8 @@
 class UIButton : public UIElement
 {
 public:
-    UIButton()
+    UIButton(UINavigationMappings::ElementMap elementMap)
+        : UIElement(std::move(elementMap))
     {
     }
 
@@ -19,7 +20,7 @@ public:
     } state
         = ButtonState::eNormal;
 
-    void Update(const InputDeviceManager& inputManager) override;
+    void Update(const ActionManager& inputManager) override;
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 

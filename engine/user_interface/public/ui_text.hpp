@@ -10,8 +10,10 @@ struct UIFont;
 class UITextElement : public UIElement
 {
 public:
-    UITextElement(const std::shared_ptr<UIFont>& font)
-        : _font(font)
+    UITextElement(const std::shared_ptr<UIFont>& font, UINavigationMappings::ElementMap elementMap)
+        : UIElement(elementMap)
+        , _font(font)
+
     {
     }
 

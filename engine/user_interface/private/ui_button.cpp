@@ -4,18 +4,20 @@
 
 #include "input/input_device_manager.hpp"
 
-void UIButton::Update(const InputDeviceManager& input)
+void UIButton::Update(const ActionManager& input)
 {
     if (enabled)
     {
+
         glm::ivec2 mousePos;
         input.GetMousePosition(mousePos.x, mousePos.y);
 
         // mouse inside boundary
-        if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
-            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetScale().x)
-            && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
-            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetScale().y))
+        if ((mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
+                && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetScale().x)
+                && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
+                && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetScale().y))
+            || GetNavigation().CurrentlyHasKeyFocus())
         {
             switch (state)
             {
@@ -27,7 +29,7 @@ void UIButton::Update(const InputDeviceManager& input)
 
             case ButtonState::eHovered:
 
-                if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
+                if (input.GetDigitalAction("UIPress"))
                 {
                     state = ButtonState::ePressed;
                     onMouseDownCallBack();
@@ -35,7 +37,7 @@ void UIButton::Update(const InputDeviceManager& input)
                 break;
 
             case ButtonState::ePressed:
-                if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
+                if (!input.GetDigitalAction("UIPress"))
                 {
                     state = ButtonState::eNormal;
                 }

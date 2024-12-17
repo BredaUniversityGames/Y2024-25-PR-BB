@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-void Viewport::Update(const InputDeviceManager& input) const
+void Viewport::Update(const ActionManager& input) const
 {
     for (const auto& element : _baseElements)
     {

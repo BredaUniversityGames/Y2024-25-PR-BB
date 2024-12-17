@@ -15,7 +15,7 @@ public:
         , _offset(offset)
     {
     }
-    void Update(const InputDeviceManager& input) const;
+    void Update(const ActionManager& input) const;
     /**
      * adds all the draw data for the ui to the drawList argument, fynction calls SubmitDrawInfo on all the present uiElements in a hierarchical manner.
      * This drawList gets cleared when the uiPipeline records it's commands and thus this function needs to be called before the commandLists are submitted.
