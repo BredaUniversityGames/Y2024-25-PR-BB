@@ -2,7 +2,7 @@
 {
 	"AppID" "3365920"
 	"Desc" "Public Build"
-	"SetLive" "default"
+	"SetLive" "" // Cannot set live the public branch automatically, must be done via admin panel
 	"ContentRoot" "..\..\..\..\package\"
 	"BuildOutput" "..\output\"
 	"Depots"
