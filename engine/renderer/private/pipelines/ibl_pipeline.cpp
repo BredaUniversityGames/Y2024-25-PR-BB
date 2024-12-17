@@ -221,13 +221,16 @@ void IBLPipeline::CreateIrradiancePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/irradiance.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_irradiancePipeline, _irradiancePipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _irradiancePipelineLayout = std::get<0>(result);
+    _irradiancePipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreatePrefilterPipeline()
@@ -248,13 +251,16 @@ void IBLPipeline::CreatePrefilterPipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/prefilter.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_prefilterPipeline, _prefilterPipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _prefilterPipelineLayout = std::get<0>(result);
+    _prefilterPipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreateBRDFLUTPipeline()
@@ -275,13 +281,16 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/brdf_integration.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_brdfLUTPipeline, _brdfLUTPipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _brdfLUTPipelineLayout = std::get<0>(result);
+    _brdfLUTPipeline = std::get<1>(result);
 }
 
 void IBLPipeline::CreateIrradianceCubemap()

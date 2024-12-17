@@ -21,7 +21,7 @@
 GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
-    , _culler(_context, gpuScene)
+    , _culler(_context)
 {
     CreateStaticPipeline();
     CreateSkinnedPipeline();
@@ -52,6 +52,7 @@ GeometryPipeline::~GeometryPipeline()
 
 void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Geometry Pipeline");
     _culler.RecordCommands(commandBuffer, currentFrame, scene, scene.gpuScene->MainCamera(), _drawBuffer, _drawBufferDescriptorSet);
 
     std::array<vk::RenderingAttachmentInfoKHR, DEFERRED_ATTACHMENT_COUNT> colorAttachmentInfos {};
@@ -171,15 +172,18 @@ void GeometryPipeline::CreateStaticPipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_staticPipeline, _staticPipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _staticPipelineLayout = std::get<0>(result);
+    _staticPipeline = std::get<1>(result);
 }
 
 void GeometryPipeline::CreateSkinnedPipeline()
@@ -212,15 +216,18 @@ void GeometryPipeline::CreateSkinnedPipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_skinnedPipeline, _skinnedPipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _skinnedPipelineLayout = std::get<0>(result);
+    _skinnedPipeline = std::get<1>(result);
 }
 
 void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)

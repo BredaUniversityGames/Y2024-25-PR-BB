@@ -5,6 +5,7 @@
 #include "ecs_module.hpp"
 #include "engine.hpp"
 #include "graphics_context.hpp"
+#include "particle_module.hpp"
 #include "renderer.hpp"
 #include "ui_module.hpp"
 #include "vulkan_context.hpp"

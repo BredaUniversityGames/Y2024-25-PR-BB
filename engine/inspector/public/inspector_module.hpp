@@ -13,6 +13,8 @@ class InspectorModule : public ModuleInterface
     void Shutdown(Engine& engine) override;
     void Tick(Engine& engine) override;
 
+    std::string_view GetName() override { return "Inspector Module"; }
+
 public:
     InspectorModule();
     ~InspectorModule() override;

@@ -47,13 +47,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb"
+        "assets/models/Cathedral.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb"
     };
 
@@ -67,6 +67,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs = &engine.GetModule<ECSModule>();
 
     SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -136,7 +137,6 @@ void OldEngine::Tick(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
-    ZoneNamed(zone, "");
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
@@ -162,7 +162,7 @@ void OldEngine::Tick(Engine& engine)
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
-        ZoneNamedN(zone, "Update Camera", true);
+        ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 

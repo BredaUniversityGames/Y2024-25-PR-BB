@@ -105,7 +105,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -159,8 +159,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
-    // TODO: particle pass should also render to brightness target
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
@@ -211,6 +211,20 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(uiPass)
         .AddNode(debugPass)
         .Build();
+
+    static std::array<std::string, MAX_FRAMES_IN_FLIGHT> contextNames { "Command Buffer 0", "Command Buffer 1", "Command Buffer 2" };
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        _tracyContexts[i] = TracyVkContextCalibrated(
+            _context->VulkanContext()->PhysicalDevice(),
+            _context->VulkanContext()->Device(),
+            _context->VulkanContext()->GraphicsQueue(),
+            _commandBuffers[i],
+            reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT")),
+            reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetCalibratedTimestampsEXT")));
+        TracyVkContextName(_tracyContexts[i], contextNames[i].c_str(), contextNames[i].size());
+    }
 }
 
 std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
@@ -258,6 +272,11 @@ Renderer::~Renderer()
     }
 
     _swapChain.reset();
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        TracyVkDestroy(_tracyContexts[i]);
+    }
 }
 
 void Renderer::CreateCommandBuffers()
@@ -274,9 +293,7 @@ void Renderer::CreateCommandBuffers()
 void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime)
 {
     ZoneScoped;
-
-    // Since there is only one scene, we can reuse the same gpu buffers
-    _gpuScene->Update(_currentFrame);
+    TracyVkZone(_tracyContexts[_currentFrame], commandBuffer, "Render all");
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
@@ -285,12 +302,8 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .skinnedBatchBuffer = _skinnedBatchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
         .deltaTime = deltaTime,
+        .tracyContext = _tracyContexts[_currentFrame],
     };
-
-    _context->GetDrawStats().Clear();
-
-    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
-    util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
 
     // Presenting pass currently not supported by frame graph, so this has to be done manually
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
@@ -302,7 +315,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
     util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
-    commandBuffer.end();
+    TracyVkCollect(_tracyContexts[_currentFrame], commandBuffer);
 }
 
 void Renderer::CreateSyncObjects()
@@ -445,7 +458,17 @@ void Renderer::Render(float deltaTime)
 
     _commandBuffers[_currentFrame].reset();
 
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(_currentFrame);
+
+    _context->GetDrawStats().Clear();
+
+    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
+    util::VK_ASSERT(_commandBuffers[_currentFrame].begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
+
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
+
+    _commandBuffers[_currentFrame].end();
 
     vk::Semaphore waitSemaphore = _imageAvailableSemaphores[_currentFrame];
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;

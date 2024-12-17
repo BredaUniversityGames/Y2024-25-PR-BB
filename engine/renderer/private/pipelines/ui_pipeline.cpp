@@ -51,18 +51,23 @@ void UIPipeline::CreatePipeLine()
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/ui.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/ui.frag.spv");
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
-        .SetDepthAttachmentFormat(vk::Format::eUndefined)
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
+                      .SetDepthAttachmentFormat(vk::Format::eUndefined)
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }
 
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "UI Pipeline");
+
     const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_inputTarget);
     const auto* ui = _context->Resources()->ImageResourceManager().Access(_outputTarget);
 

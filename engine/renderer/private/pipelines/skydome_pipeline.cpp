@@ -36,6 +36,7 @@ SkydomePipeline::~SkydomePipeline()
 
 void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Skydome Pipeline");
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
@@ -126,13 +127,16 @@ void SkydomePipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skydome.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/skydome.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }
