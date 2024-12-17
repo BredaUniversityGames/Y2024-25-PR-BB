@@ -25,6 +25,7 @@ class ApplicationModule : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) override;
     void Shutdown(Engine& engine) override;
     void Tick(Engine& engine) override;
+    std::string_view GetName() override { return "Application Module"; }
 
 public:
     ApplicationModule();

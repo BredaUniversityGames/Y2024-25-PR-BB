@@ -4,7 +4,6 @@
 
 #include "common.hpp"
 #include "entt/entity/entity.hpp"
-#include "enum_utils.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
 
@@ -36,6 +35,7 @@ class ParticleModule final : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override {};
     void Tick(MAYBE_UNUSED Engine& engine) override;
+    std::string_view GetName() override { return "Particle Module"; }
 
 public:
     ParticleModule() = default;
@@ -46,8 +46,8 @@ public:
 
 private:
     std::shared_ptr<GraphicsContext> _context;
-    ECSModule* _ecs;
-    PhysicsModule* _physics;
+    ECSModule* _ecs = nullptr;
+    PhysicsModule* _physics = nullptr;
 
     struct EmitterPreset
     {
@@ -58,6 +58,7 @@ private:
         float emitDelay = 1.0f;
         uint32_t count = 0;
         uint32_t materialIndex = 0;
+        uint32_t flags = 0;
         ParticleType type = ParticleType::eBillboard;
     };
 

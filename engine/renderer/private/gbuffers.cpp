@@ -68,7 +68,7 @@ void GBuffers::CreateGBuffers()
     imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Emissive AO");
     _attachments[2] = resources->ImageResourceManager().Create(imageData);
 
-    imageData.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Position");
+    imageData.SetFormat(vk::Format::eR32G32B32A32Sfloat).SetName("Position");
     _attachments[3] = resources->ImageResourceManager().Create(imageData);
 }
 
@@ -83,10 +83,13 @@ void GBuffers::CreateShadowMapResources()
 {
     SamplerCreation shadowSamplerInfo {
         .name = "Shadow sampler",
+        .minFilter = vk::Filter::eLinear,
+        .magFilter = vk::Filter::eLinear,
+        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
         .compareEnable = true,
         .compareOp = vk::CompareOp::eLessOrEqual,
     };
-    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
     CPUImage shadowCreation {};

@@ -6,6 +6,8 @@
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
 
+#include <tracy/Tracy.hpp>
+
 ModuleTickOrder ECSModule::Init(MAYBE_UNUSED Engine& engine)
 {
     TransformHelpers::SubscribeToEvents(registry);
@@ -31,6 +33,7 @@ void ECSModule::Tick(Engine& engine)
 
 void ECSModule::UpdateSystems(const float dt)
 {
+    ZoneScoped;
     for (auto& system : systems)
     {
         system->Update(*this, dt);
@@ -38,6 +41,7 @@ void ECSModule::UpdateSystems(const float dt)
 }
 void ECSModule::RenderSystems() const
 {
+    ZoneScoped;
     for (const auto& system : systems)
     {
         system->Render(*this);
