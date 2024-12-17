@@ -119,7 +119,7 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._channelsActive | std::views::keys)
         {
-            ImGui::Text("--| %llu", key);
+            ImGui::Text("--| %lu", key);
         }
         ImGui::TreePop();
     }
@@ -127,7 +127,7 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._banks | std::views::keys)
         {
-            ImGui::Text("--| %llu", key);
+            ImGui::Text("--| %lu", key);
         }
         ImGui::TreePop();
     }
@@ -135,7 +135,7 @@ void AudioSystem::Inspect()
     {
         for (const auto key : _audioModule._events | std::views::keys)
         {
-            ImGui::Text("--| %llu", key);
+            ImGui::Text("--| %lu", key);
         }
         ImGui::TreePop();
     }
