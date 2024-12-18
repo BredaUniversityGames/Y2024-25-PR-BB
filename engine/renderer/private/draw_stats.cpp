@@ -15,9 +15,21 @@ void DrawStats::Draw(uint32_t vertexCount)
     _indexCount += vertexCount;
 }
 
+void DrawStats::SetParticleCount(uint32_t particleCount)
+{
+    _particleCount = particleCount;
+}
+
+void DrawStats::SetEmitterCount(uint32_t emitterCount)
+{
+    _emitterCount = emitterCount;
+}
+
 void DrawStats::Clear()
 {
     _drawCalls = 0;
     _indexCount = 0;
     _indirectDrawCommands = 0;
+    _particleCount = 0;
+    _emitterCount = 0;
 }

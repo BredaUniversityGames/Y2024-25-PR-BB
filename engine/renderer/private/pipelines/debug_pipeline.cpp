@@ -135,16 +135,19 @@ void DebugPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/debug.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/debug.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetDepthStencilState(depthStencilStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .SetInputAssemblyState(inputAssemblyStateCreateInfo)
-        .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetDepthStencilState(depthStencilStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .SetInputAssemblyState(inputAssemblyStateCreateInfo)
+                      .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }
 
 void DebugPipeline::CreateVertexBuffer()

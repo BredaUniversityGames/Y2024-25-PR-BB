@@ -2,6 +2,7 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
+#include "log.hpp"
 
 #include <entt/entity/registry.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -65,6 +66,12 @@ void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entit
     glm::vec4 perspective;
 
     glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+    if (std::abs(scale.x) < 0.0001f || std::abs(scale.y) < 0.0001f || std::abs(scale.z) < 0.0001f)
+    {
+        bblog::warn("Too small scale");
+        return;
+    }
 
     SetLocalTransform(reg, entity, translation, orientation, scale);
 }
