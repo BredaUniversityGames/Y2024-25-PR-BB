@@ -33,11 +33,11 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     entt::entity parent, PhysicsShapes shape)
 {
 
-    if (shape != eMESH && shape != eCONVEXHULL)
+    if (const bool validation = shape != eMESH && shape != eCONVEXHULL)
     {
-        bblog::error("Shape not supported");
-        return entt::null;
+        assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
     }
+
     const entt::entity entity = ecs.GetRegistry().create();
     const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
@@ -121,14 +121,14 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     return entity;
 }
 
-void PhysicsSystem::CreateMeshCollision(const std::string& path)
-{
-    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
-
-    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
-}
 RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo)
 {
+    const bool validation = shapeType != eMESH && shapeType != eCONVEXHULL;
+    if (validation)
+    {
+        assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
+    }
+
     JPH::VertexList vertices;
     JPH::IndexedTriangleList triangles;
 
@@ -139,14 +139,17 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
     }
 
     // set trinagles
-    for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
+    if (shapeType == eMESH)
     {
-        JPH::IndexedTriangle tri;
-        tri.mIdx[0] = mesh.indices[i + 0];
-        tri.mIdx[1] = mesh.indices[i + 1];
-        tri.mIdx[2] = mesh.indices[i + 2];
+        for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
+        {
+            JPH::IndexedTriangle tri;
+            tri.mIdx[0] = mesh.indices[i + 0];
+            tri.mIdx[1] = mesh.indices[i + 1];
+            tri.mIdx[2] = mesh.indices[i + 2];
 
-        triangles.push_back(tri);
+            triangles.push_back(tri);
+        }
     }
 
     RigidbodyComponent rb;
@@ -161,6 +164,12 @@ void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
     CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
+}
+void PhysicsSystem::CreateMeshCollision(const std::string& path)
+{
+    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
+
+    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
 }
 
 void PhysicsSystem::CleanUp()
@@ -181,7 +190,6 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated>();
     for (auto entity : transformsView)
     {
-        const TransformComponent& transform = transformsView.get<TransformComponent>(entity);
         const RigidbodyComponent& rb = transformsView.get<RigidbodyComponent>(entity);
 
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
@@ -220,7 +228,6 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     for (const auto entity : view)
     {
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
-        const StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
 
         // if somehow is now not active or is static lets remove the update component
         if (!_physicsModule.bodyInterface->IsActive(rb.bodyID))
@@ -332,9 +339,6 @@ void PhysicsSystem::Inspect()
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
     _physicsModule.bodyInterface->ActivateBody(rb.bodyID);
-    const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(rb.bodyID));
-    /*if (_ecs.GetRegistry().valid(entity))
-        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);*/
 
     ImGui::PushID(&rb.bodyID);
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
