@@ -18,6 +18,28 @@ struct ImageLayoutTransitionState
 void VK_ASSERT(vk::Result result, std::string_view message);
 void VK_ASSERT(VkResult result, std::string_view message);
 void VK_ASSERT(SpvReflectResult result, std::string_view message);
+
+VkResult vmaCreateBuffer(VmaAllocator allocator,
+    const VkBufferCreateInfo* pBufferCreateInfo,
+    const VmaAllocationCreateInfo* pAllocationCreateInfo,
+    VkBuffer* pBuffer,
+    VmaAllocation* pAllocation,
+    VmaAllocationInfo* pAllocationInfo);
+void vmaDestroyBuffer(
+    VmaAllocator allocator,
+    VkBuffer buffer,
+    VmaAllocation allocation);
+VkResult vmaCreateImage(VmaAllocator allocator,
+    const VkImageCreateInfo* pImageCreateInfo,
+    const VmaAllocationCreateInfo* pAllocationCreateInfo,
+    VkImage* pImage,
+    VmaAllocation* pAllocation,
+    VmaAllocationInfo* pAllocationInfo);
+void vmaDestroyImage(
+    VmaAllocator allocator,
+    VkImage image,
+    VmaAllocation allocation);
+
 bool HasStencilComponent(vk::Format format);
 std::optional<vk::Format> FindSupportedFormat(const vk::PhysicalDevice physicalDevice, const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
     vk::FormatFeatureFlags features);
