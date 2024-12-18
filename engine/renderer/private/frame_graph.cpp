@@ -183,9 +183,6 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
 
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
-
-        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
-        // spdlog::info("Linking resource {} from {} to resource {} from {} \n", outputResource.versionedName, parentNode.name.c_str(), inputResource.versionedName, node.name.c_str());
     }
 }
 
@@ -512,7 +509,6 @@ void FrameGraph::SortGraph()
     for (int32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
-        bblog::info("node: {}", _nodes[_sortedNodes.back()].name);
     }
 }
 
@@ -535,7 +531,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
         resource.versionedName += + "_v-" + std::to_string(resource.version);
     }
 
-    // Save the newest resource version for fast look up later, before we add the version to the name
+    // Save the newest resource version for fast look up later
     _newestVersionedResourcesMap[resourceName] = resourceHandle;
 
     resource.info = creation.info;
