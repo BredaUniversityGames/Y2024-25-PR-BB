@@ -9,14 +9,12 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
 #include "graphics_context.hpp"
-#include "graphics_resources.hpp"
 #include "imgui.h"
-#include "physics_module.hpp"
+#include "model_loader.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include <components/relationship_component.hpp>
 #include <components/relationship_helpers.hpp>
-#include <model_loader.hpp>
 #include <renderer.hpp>
 
 #include <tracy/Tracy.hpp>
@@ -27,6 +25,10 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
     , _physicsModule(physicsModule)
 {
     _collisionLoader = std::make_unique<ModelLoader>();
+}
+PhysicsSystem::~PhysicsSystem()
+{
+    _collisionLoader.reset();
 }
 
 entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule& ecs,

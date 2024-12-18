@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
+#include "physics_module.hpp"
 
 struct Vertex;
 struct Hierarchy;
@@ -10,12 +11,12 @@ struct RigidbodyComponent;
 struct CPUModel;
 template <typename T>
 struct CPUMesh;
-enum PhysicsShapes;
 class ModelLoader;
 class PhysicsSystem : public SystemInterface
 {
 public:
     PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule);
+    ~PhysicsSystem();
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 

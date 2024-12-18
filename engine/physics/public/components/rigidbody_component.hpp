@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "physics_module.hpp"
-
 #include <geometric.hpp>
 
 struct UpdateMeshAndPhysics
@@ -64,7 +63,6 @@ struct RigidbodyComponent
         JPH::BodyCreationSettings bodySettings;
 
         JPH::MeshShapeSettings meshSettings;
-        JPH::ShapeSettings::ShapeResult shapeResult;
 
         if (bodyType == eSTATIC)
         {
@@ -74,11 +72,6 @@ struct RigidbodyComponent
                 JPH::QuatArg::sIdentity(),
                 JPH::EMotionType::Static,
                 PhysicsLayers::NON_MOVING);
-        }
-
-        if (shapeResult.HasError())
-        {
-            bblog::error(shapeResult.GetError().c_str());
         }
 
         // lets save thes hape reference
@@ -100,7 +93,6 @@ struct RigidbodyComponent
         JPH::BodyCreationSettings bodySettings;
 
         JPH::MeshShapeSettings meshSettings;
-        JPH::ShapeSettings::ShapeResult shapeResult;
 
         if (bodyType == eSTATIC)
         {
@@ -116,11 +108,6 @@ struct RigidbodyComponent
                 JPH::QuatArg::sIdentity(),
                 JPH::EMotionType::Static,
                 PhysicsLayers::NON_MOVING);
-        }
-
-        if (shapeResult.HasError())
-        {
-            bblog::error(shapeResult.GetError().c_str());
         }
 
         shape = bodySettings.GetShape();
