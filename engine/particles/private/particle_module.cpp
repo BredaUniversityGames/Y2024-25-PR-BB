@@ -90,7 +90,7 @@ void ParticleModule::LoadEmitterPresets()
 
     CPUImage creation;
     creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    creation.FromPNG("assets/textures/jeremi.png");
+    creation.FromPNG("assets/textures/yellow_orb_particle.png");
     creation.isHDR = false;
     auto image = _context->Resources()->ImageResourceManager().Create(creation);
     _emitterImages.emplace_back(image);
@@ -104,6 +104,7 @@ void ParticleModule::LoadEmitterPresets()
     preset.materialIndex = image.Index();
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
+    preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,
@@ -122,6 +123,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     emitter.materialIndex = preset.materialIndex;
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
+    emitter.flags = preset.flags;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))

@@ -105,7 +105,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
     _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -159,8 +159,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
-    // TODO: particle pass should also render to brightness target
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
@@ -217,15 +217,12 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     for (size_t i = 0; i < _tracyContexts.size(); ++i)
     {
         _tracyContexts[i] = TracyVkContextCalibrated(
-            //_context->VulkanContext()->Instance(),
             _context->VulkanContext()->PhysicalDevice(),
             _context->VulkanContext()->Device(),
             _context->VulkanContext()->GraphicsQueue(),
             _commandBuffers[i],
             reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT")),
             reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetCalibratedTimestampsEXT")));
-            //reinterpret_cast<PFN_vkGetInstanceProcAddr>(_context->VulkanContext()->Instance().getProcAddr("vkGetInstanceProcAddr")),
-            //reinterpret_cast<PFN_vkGetDeviceProcAddr>(_context->VulkanContext()->Device().getProcAddr("vkGetDeviceProcAddr")));
         TracyVkContextName(_tracyContexts[i], contextNames[i].c_str(), contextNames[i].size());
     }
 }
