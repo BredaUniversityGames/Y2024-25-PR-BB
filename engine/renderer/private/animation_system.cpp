@@ -5,8 +5,6 @@
 #include "components/joint_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "renderer.hpp"

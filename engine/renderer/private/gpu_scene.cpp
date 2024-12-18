@@ -11,8 +11,6 @@
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"

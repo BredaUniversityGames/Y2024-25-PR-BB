@@ -10,7 +10,6 @@
 #include "application_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
 
@@ -67,17 +66,17 @@ bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
 {
-    return component.component->GetLocalPosition();
+    return component.component->_localPosition;
 }
 
 glm::quat TransformComponentGetRotation(WrenComponent<TransformComponent>& component)
 {
-    return component.component->GetLocalRotation();
+    return component.component->_localRotation;
 }
 
 glm::vec3 TransformComponentGetScale(WrenComponent<TransformComponent>& component)
 {
-    return component.component->GetLocalScale();
+    return component.component->_localScale;
 }
 
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)

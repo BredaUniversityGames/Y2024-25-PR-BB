@@ -1,8 +1,6 @@
 #include "pipelines/geometry_pipeline.hpp"
 
 #include "batch_buffer.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/world_matrix_component.hpp"
 #include "constants.hpp"
 #include "ecs_module.hpp"
 #include "gpu_scene.hpp"
