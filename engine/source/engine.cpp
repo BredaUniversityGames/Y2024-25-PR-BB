@@ -111,18 +111,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
     //  physics_system->InitializePhysicsColliders();
 
-    BankInfo masterBank;
-    masterBank.path = "assets/sounds/Master.bank";
-
-    BankInfo stringBank;
-    stringBank.path = "assets/sounds/Master.strings.bank";
-
-    BankInfo bi;
-    bi.path = "assets/sounds/SFX.bank";
-
-    audioModule.LoadBank(masterBank);
-    audioModule.LoadBank(stringBank);
-    audioModule.LoadBank(bi);
+    // BankInfo masterBank;
+    // masterBank.path = "assets/sounds/Master.bank";
+    //
+    // BankInfo stringBank;
+    // stringBank.path = "assets/sounds/Master.strings.bank";
+    //
+    // BankInfo bi;
+    // bi.path = "assets/sounds/SFX.bank";
+    //
+    // audioModule.LoadBank(masterBank);
+    // audioModule.LoadBank(stringBank);
+    // audioModule.LoadBank(bi);
 
     SoundInfo si;
     si.path = "assets/sounds/fallback.mp3";

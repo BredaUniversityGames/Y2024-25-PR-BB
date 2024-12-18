@@ -156,7 +156,7 @@ void AudioModule::StopSFX(const SoundInstance instance)
         FMOD_CHECKRESULT(FMOD_Channel_Stop(_channelsActive[instance.id]));
     }
 }
-bool AudioModule::IsSoundPlaying(const SoundInstance instance)
+bool AudioModule::IsSFXPlaying(const SoundInstance instance)
 {
     FMOD_BOOL isPlaying = false;
     if (_channelsActive.contains(instance.id))
@@ -166,6 +166,10 @@ bool AudioModule::IsSoundPlaying(const SoundInstance instance)
         return isPlaying;
     }
     return isPlaying;
+}
+bool AudioModule::isSFXLoaded(const std::string_view path) const
+{
+    return _soundInfos.contains(path.data());
 }
 void AudioModule::LoadBank(BankInfo& bankInfo)
 {

@@ -59,7 +59,7 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 
         // Remove sounds and events from the emitter if they are no longer playing
         std::erase_if(emitter._soundIds, [&](const auto& id)
-            { return !_audioModule.IsSoundPlaying(id); });
+            { return !_audioModule.IsSFXPlaying(id); });
         std::erase_if(emitter._eventIds, [&](const auto& id)
             { return !_audioModule.IsEventPlaying(id); });
 

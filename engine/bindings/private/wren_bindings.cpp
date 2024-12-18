@@ -4,6 +4,8 @@
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
+#include "audio/audio_bindings.hpp"
+
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
@@ -14,7 +16,6 @@
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
 
-#include <audio_listener_component.hpp>
 #include <audio_module.hpp>
 #include <input/action_manager.hpp>
 
@@ -101,12 +102,6 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
     return nameComponent.component->name;
 }
-
-void PlayEvent(AudioModule& self, const std::string& path)
-{
-    self.StartOneShotEvent(path);
-}
-
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -150,8 +145,7 @@ void BindEngineAPI(wren::ForeignModule& module)
 
     // Audio
     {
-        auto& wren_class = module.klass<AudioModule>("Audio");
-        wren_class.funcExt<bindings::PlayEvent>("PlayEvent");
+        BindAudioAPI(module);
     }
 
     // Components
@@ -171,8 +165,6 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
-
-        auto& audioListenerClass = module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
     }
 }
 
@@ -260,6 +252,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");

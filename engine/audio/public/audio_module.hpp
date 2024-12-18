@@ -26,6 +26,9 @@ public:
     // Load sound, mp3 or .wav etc
     SoundID LoadSFX(SoundInfo& soundInfo);
 
+    // Checks if the sound is loaded
+    bool isSFXLoaded(std::string_view path) const;
+
     // Return the soundinfo associated with the path
     SoundID GetSFX(std::string_view path);
 
@@ -42,7 +45,7 @@ public:
     // Regular sounds will stop by themselves once they are done
     void StopSFX(SoundInstance instance);
 
-    bool IsSoundPlaying(SoundInstance instance);
+    bool IsSFXPlaying(SoundInstance instance);
 
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well

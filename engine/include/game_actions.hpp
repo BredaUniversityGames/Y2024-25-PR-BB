@@ -44,6 +44,13 @@ const GameActions GAME_ACTIONS {
                 },
             },
             {
+                .name = "ReleaseTrigger",
+                .type = DigitalActionType::eReleased,
+                .inputs = {
+                    GamepadButton::eRIGHT_TRIGGER,
+                },
+            },
+            {
                 .name = "Ultimate",
                 .type = DigitalActionType::ePressed,
                 .inputs = {

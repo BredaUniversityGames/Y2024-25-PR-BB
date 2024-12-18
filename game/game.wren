@@ -3,12 +3,19 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, TransformCom
 class Main {
 
     static Start(engine) {
+        engine.GetAudio().LoadBank("assets/sounds/Master.bank")
+        engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
+        engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        
         __counter = 0
         __frameTimer = 0
+        __shootingInstance = 0
         __player = engine.GetECS().GetEntityByName("Camera")
 
         if (__player) {
             System.print("Player is online!")
+
+            __player.AddAudioEmitterComponent()
 
             var t = __player.GetTransformComponent()
             t.translation = Vec3.new(4.5, 35.0, 285.0)
@@ -27,16 +34,26 @@ class Main {
             __counter = 0
         }
 
+        __player = engine.GetECS().GetEntityByName("Camera")
+        var audioEmitterComponent = __player.GetAudioEmitterComponent()
+        
+
+        if (engine.GetInput().GetDigitalAction("Shoot")) {
+            __shootingInstance = engine.GetAudio().PlayEventLoop("event:/Weapons/Machine Gun")
+            audioEmitterComponent.AddEvent(__shootingInstance)
+            System.print("Playing is shooting")
+        }
+
+        if (engine.GetInput().GetDigitalAction("ReleaseTrigger")) {
+            engine.GetAudio().StopEvent(__shootingInstance)
+            System.print("Player has stopped shooting")
+        }
+
         if (engine.GetInput().GetDigitalAction("Jump")) {
             System.print("Player Jumped!")
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-
-        if (engine.GetInput().GetDigitalAction("Shoot")) {
-            engine.GetAudio().PlayEvent("event:/Weapons/Machine Gun")
-            System.print("Playing is shooting")
-        }
 
         if (movement.length() > 0) {
             System.print("Player is moving")
