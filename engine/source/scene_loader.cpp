@@ -21,17 +21,17 @@
 #include <glm/glm.hpp>
 #include <single_time_commands.hpp>
 
-entt::entity LoadNodeRecursive(ECSModule& ecs,
+void LoadNodeRecursive(ECSModule& ecs,
+    entt::entity entity,
     uint32_t currentNodeIndex,
     const Hierarchy& hierarchy,
     entt::entity parent,
     const GPUModel& model,
-    std::shared_ptr<Animation> animation,
+    AnimationControlComponent* animationControl,
     std::unordered_map<uint32_t, entt::entity>& entityLUT, // Used for looking up from hierarchy node index to entt entity.
     entt::entity skeletonRoot = entt::null,
     bool isSkeletonRoot = false)
 {
-    const entt::entity entity = ecs.GetRegistry().create();
     const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
     entityLUT[currentNodeIndex] = entity;
@@ -62,10 +62,13 @@ entt::entity LoadNodeRecursive(ECSModule& ecs,
         }
     }
 
-    if (currentNode.animationChannel.has_value())
+    if (!currentNode.animationSplines.empty())
     {
-        auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannelComponent>(entity) = currentNode.animationChannel.value();
-        animationChannel.animation = animation;
+        assert(animationControl != nullptr);
+
+        auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannelComponent>(entity);
+        animationChannel.animationSplines = currentNode.animationSplines;
+        animationChannel.animationControl = animationControl;
     }
 
     if (isSkeletonRoot)
@@ -85,27 +88,29 @@ entt::entity LoadNodeRecursive(ECSModule& ecs,
 
     for (const auto& nodeIndex : currentNode.children)
     {
-        LoadNodeRecursive(ecs, nodeIndex, hierarchy, entity, model, animation, entityLUT, skeletonRoot);
+        const entt::entity childEntity = ecs.GetRegistry().create();
+        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, animationControl, entityLUT, skeletonRoot);
     }
-
-    return entity;
 }
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::optional<Animation> animation)
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
 {
-    std::shared_ptr<Animation> animationControl { nullptr };
-    if (animation.has_value())
-    {
-        animationControl = std::make_shared<Animation>(animation.value());
-    }
+    entt::entity rootEntity = ecs.GetRegistry().create();
 
     std::unordered_map<uint32_t, entt::entity> entityLUT;
 
-    entt::entity rootEntity = LoadNodeRecursive(ecs, hierarchy.root, hierarchy, entt::null, gpuModel, animationControl, entityLUT);
+    AnimationControlComponent* animationControl = nullptr;
+    if (!animations.empty())
+    {
+        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, 4); // TODO: default to nullopt instead of 0
+    }
+
+    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, animationControl, entityLUT);
 
     if (hierarchy.skeletonRoot.has_value())
     {
-        entt::entity skeletonEntity = LoadNodeRecursive(ecs, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, animationControl, entityLUT, entt::null, true);
+        entt::entity skeletonEntity = ecs.GetRegistry().create();
+        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, animationControl, entityLUT, entt::null, true);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
 

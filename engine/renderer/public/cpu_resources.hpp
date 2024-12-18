@@ -32,7 +32,7 @@ struct Hierarchy
         std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
         std::vector<uint32_t> children {};
 
-        std::optional<AnimationChannelComponent> animationChannel {};
+        std::unordered_map<uint32_t, TransformAnimationSpline> animationSplines {};
         std::optional<Joint> joint {};
         std::optional<uint32_t> skeletonNode {};
     };
@@ -90,7 +90,7 @@ struct CPUModel
     std::vector<CPUMaterial> materials {};
     std::vector<CPUImage> textures {};
 
-    std::optional<Animation> animation { std::nullopt };
+    std::vector<Animation> animations {};
 };
 
 struct GPUModel

@@ -62,3 +62,9 @@ struct Animation
 private:
     uint32_t _frameIndex { 0 };
 };
+
+struct AnimationControlComponent
+{
+    std::vector<Animation> animations;
+    std::optional<uint32_t> activeAnimation { std::nullopt };
+};

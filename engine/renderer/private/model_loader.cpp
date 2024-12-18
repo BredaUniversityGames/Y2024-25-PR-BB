@@ -434,89 +434,96 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
     StagingAnimationChannels stagingAnimationChannels {};
 
-    stagingAnimationChannels.animation.name = gltf.animations[4].name;
-
-    for (const auto& channel : gltf.animations[4].channels)
+    for (const auto& gltfAnimation : gltf.animations)
     {
-        // If there is no node, the channel is invalid.
-        if (!channel.nodeIndex.has_value())
+        auto& animation = stagingAnimationChannels.animations.emplace_back();
+        auto& indexChannels = stagingAnimationChannels.indexChannels.emplace_back();
+
+        animation.name = gltfAnimation.name;
+
+        for (const auto& channel : gltfAnimation.channels)
         {
-            continue;
-        }
-
-        AnimationChannelComponent* spline { nullptr };
-        const auto it = std::find(stagingAnimationChannels.nodeIndices.begin(), stagingAnimationChannels.nodeIndices.end(), channel.nodeIndex.value());
-
-        if (it == stagingAnimationChannels.nodeIndices.end())
-        {
-            stagingAnimationChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
-            spline = &stagingAnimationChannels.animationChannels.emplace_back();
-        }
-        else
-        {
-            spline = &stagingAnimationChannels.animationChannels[std::distance(stagingAnimationChannels.nodeIndices.begin(), it)];
-        }
-
-        const auto& sampler = gltf.animations[4].samplers[channel.samplerIndex];
-
-        assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
-
-        std::span<const float> timestamps;
-
-        {
-            const auto& accessor = gltf.accessors[sampler.inputAccessor];
-            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
-            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
-            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
-
-            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-            timestamps = std::span<const float> { reinterpret_cast<const float*>(data), accessor.count };
-
-            if (stagingAnimationChannels.animation.duration < timestamps.back())
+            // If there is no node, the channel is invalid.
+            if (!channel.nodeIndex.has_value())
             {
-                stagingAnimationChannels.animation.duration = timestamps.back();
+                continue;
             }
-        }
-        {
-            const auto& accessor = gltf.accessors[sampler.outputAccessor];
-            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
-            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
-            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
 
-            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-            if (channel.path == fastgltf::AnimationPath::Translation)
+            TransformAnimationSpline* spline { nullptr };
+            // Try and find whether we already created an animation channel
+            const auto it = std::find(indexChannels.nodeIndices.begin(), indexChannels.nodeIndices.end(), channel.nodeIndex.value());
+
+            // If not create it
+            if (it == indexChannels.nodeIndices.end())
             {
-                spline->translation = AnimationSpline<Translation> {};
-
-                std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
-
-                spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
-                spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                indexChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
+                spline = &indexChannels.animationChannels.emplace_back();
             }
-            else if (channel.path == fastgltf::AnimationPath::Rotation)
+            else // Else reuse it
             {
-                spline->rotation = AnimationSpline<Rotation> {};
+                spline = &indexChannels.animationChannels[std::distance(indexChannels.nodeIndices.begin(), it)];
+            }
 
-                std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
+            const auto& sampler = gltfAnimation.samplers[channel.samplerIndex];
 
-                spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
-                // Parse quaternions from xyzw -> wxyz.
-                for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
+            assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
+
+            std::span<const float> timestamps;
+            {
+                const auto& accessor = gltf.accessors[sampler.inputAccessor];
+                const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+                const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+                assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+                assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+                const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+                timestamps = std::span<const float> { reinterpret_cast<const float*>(data), accessor.count };
+
+                if (animation.duration < timestamps.back())
                 {
-                    XYZWtoWXYZ(spline->rotation.value().values[i]);
+                    animation.duration = timestamps.back();
                 }
-                spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
             }
-            else if (channel.path == fastgltf::AnimationPath::Scale)
             {
-                spline->scaling = AnimationSpline<Scale> {};
+                const auto& accessor = gltf.accessors[sampler.outputAccessor];
+                const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+                const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+                assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+                assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
 
-                std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+                const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+                if (channel.path == fastgltf::AnimationPath::Translation)
+                {
+                    spline->translation = AnimationSpline<Translation> {};
 
-                spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
-                spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                    std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
+
+                    spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
+                    spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
+                else if (channel.path == fastgltf::AnimationPath::Rotation)
+                {
+                    spline->rotation = AnimationSpline<Rotation> {};
+
+                    std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
+
+                    spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
+                    // Parse quaternions from xyzw -> wxyz.
+                    for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
+                    {
+                        XYZWtoWXYZ(spline->rotation.value().values[i]);
+                    }
+                    spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
+                else if (channel.path == fastgltf::AnimationPath::Scale)
+                {
+                    spline->scaling = AnimationSpline<Scale> {};
+
+                    std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+
+                    spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
+                    spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
             }
         }
     }
@@ -579,7 +586,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     uint32_t gltfNodeIndex,
     CPUModel& model,
     const fastgltf::Asset& gltf,
-    const StagingAnimationChannels& animationChannels,
+    const StagingAnimationChannels& stagingAnimationChannels,
     const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT, // Used for looking up gltf mesh to engine mesh.
     std::unordered_map<uint32_t, uint32_t>& nodeLUT) // Will be populated with gltf node to engine node.
 {
@@ -607,12 +614,16 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     model.hierarchy.nodes[nodeIndex].name = gltfNode.name;
 
     // If we have an animation channel that should be used on this node, we apply it.
-    for (size_t i = 0; i < animationChannels.nodeIndices.size(); i++)
+    for (size_t i = 0; i < stagingAnimationChannels.animations.size(); ++i)
     {
-        if (animationChannels.nodeIndices[i] == gltfNodeIndex)
+        for (size_t j = 0; j < stagingAnimationChannels.indexChannels[i].nodeIndices.size(); j++)
         {
-            model.hierarchy.nodes[nodeIndex].animationChannel = animationChannels.animationChannels[i];
-            break;
+            if (stagingAnimationChannels.indexChannels[i].nodeIndices[j] == gltfNodeIndex)
+            {
+                AnimationChannelComponent animationChannelComponent {};
+                model.hierarchy.nodes[nodeIndex].animationSplines[i] = stagingAnimationChannels.indexChannels[i].animationChannels[j];
+                break;
+            }
         }
     }
 
@@ -638,7 +649,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
 
     for (size_t childNodeIndex : gltfNode.children)
     {
-        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, animationChannels, meshLUT, nodeLUT);
+        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, stagingAnimationChannels, meshLUT, nodeLUT);
         model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
     }
 
@@ -696,7 +707,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     if (!gltf.animations.empty())
     {
         animations = LoadAnimations(gltf);
-        model.animation = animations.animation;
+        model.animations = animations.animations;
     }
 
     model.hierarchy.nodes.emplace_back(Hierarchy::Node {});

@@ -25,30 +25,46 @@ AnimationSystem::~AnimationSystem() = default;
 void AnimationSystem::Update(ECSModule& ecs, float dt)
 {
     ZoneScoped;
+
+    const auto animationControlView = ecs.GetRegistry().view<AnimationControlComponent>();
+    for (auto entity : animationControlView)
+    {
+        auto& animationControl = animationControlView.get<AnimationControlComponent>(entity);
+
+        if (animationControl.activeAnimation.has_value())
+        {
+            Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
+            currentAnimation.Update(dt / 1000.0f, _frameIndex); // TODO: Frame index might not be needed anymore.
+        }
+    }
+
     const auto view = ecs.GetRegistry().view<TransformComponent, AnimationChannelComponent>();
     for (auto entity : view)
     {
-        auto& animation = view.get<AnimationChannelComponent>(entity);
-
-        animation.animation->Update(dt / 1000.0f, _frameIndex);
-
-        if (animation.translation.has_value())
+        auto& animationChannel = view.get<AnimationChannelComponent>(entity);
+        auto* animationControl = animationChannel.animationControl;
+        if (animationControl->activeAnimation.has_value())
         {
-            glm::vec3 position = animation.translation.value().Sample(animation.animation->time);
+            auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
+            float time = animationControl->animations[animationControl->activeAnimation.value()].time;
+            if (activeAnimation.translation.has_value())
+            {
+                glm::vec3 position = activeAnimation.translation.value().Sample(time);
 
-            TransformHelpers::SetLocalPosition(ecs.GetRegistry(), entity, position);
-        }
-        if (animation.rotation.has_value())
-        {
-            glm::quat rotation = animation.rotation.value().Sample(animation.animation->time);
+                TransformHelpers::SetLocalPosition(ecs.GetRegistry(), entity, position);
+            }
+            if (activeAnimation.rotation.has_value())
+            {
+                glm::quat rotation = activeAnimation.rotation.value().Sample(time);
 
-            TransformHelpers::SetLocalRotation(ecs.GetRegistry(), entity, rotation);
-        }
-        if (animation.scaling.has_value())
-        {
-            glm::vec3 scale = animation.scaling.value().Sample(animation.animation->time);
+                TransformHelpers::SetLocalRotation(ecs.GetRegistry(), entity, rotation);
+            }
+            if (activeAnimation.scaling.has_value())
+            {
+                glm::vec3 scale = activeAnimation.scaling.value().Sample(time);
 
-            TransformHelpers::SetLocalScale(ecs.GetRegistry(), entity, scale);
+                TransformHelpers::SetLocalScale(ecs.GetRegistry(), entity, scale);
+            }
         }
     }
 

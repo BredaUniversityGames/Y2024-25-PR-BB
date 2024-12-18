@@ -70,8 +70,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -194,6 +194,12 @@ void OldEngine::Tick(Engine& engine)
 
     int32_t mouseX, mouseY;
     inputDeviceManager.GetMousePosition(mouseX, mouseY);
+
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eR))
+    {
+        AnimationControlComponent& animationControl = _ecs->GetRegistry().get<AnimationControlComponent>(*_ecs->GetRegistry().view<AnimationControlComponent>().begin());
+        animationControl.activeAnimation = ++animationControl.activeAnimation.value() % animationControl.animations.size();
+    }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
