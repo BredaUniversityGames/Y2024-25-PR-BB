@@ -266,7 +266,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     for (auto active_body : activeBodies)
     {
         const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(active_body));
-        if (_ecs.GetRegistry().valid(entity))
+        if (_ecs.GetRegistry().valid(entity) && _physicsModule.bodyInterface->GetMotionType(active_body) != JPH::EMotionType::Static)
         {
             _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
         }
@@ -285,7 +285,22 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         if (_physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
 
-        const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
+        auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
+
+        JPH::BodyLockWrite lock(_physicsModule.physicsSystem->GetBodyLockInterface(), rb.bodyID);
+
+        RelationshipComponent& relationship = _ecs.GetRegistry().get<RelationshipComponent>(entity);
+
+        if (relationship.parent != entt::null)
+            RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship.parent, entity);
+        if (lock.Succeeded())
+        {
+            JPH::Body& body = lock.GetBody();
+            const JPH::ScaledShape* scaled_shape = static_cast<const JPH::ScaledShape*>(body.GetShape());
+
+            const auto joltScale = scaled_shape->GetScale();
+            joltMatrix = joltMatrix.PreScaled(joltScale);
+        }
 
         const auto joltToGlm = ToGLMMat4(joltMatrix);
 
@@ -372,8 +387,8 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
     _physicsModule.bodyInterface->ActivateBody(rb.bodyID);
     const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(rb.bodyID));
-    if (_ecs.GetRegistry().valid(entity))
-        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
+    /*if (_ecs.GetRegistry().valid(entity))
+        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);*/
 
     ImGui::PushID(&rb.bodyID);
     JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
