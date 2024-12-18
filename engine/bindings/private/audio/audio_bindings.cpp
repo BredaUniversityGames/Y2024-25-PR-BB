@@ -81,7 +81,7 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::PlayEventLoop>("PlayEventLoop");
     wren_class.funcExt<bindings::StopEvent>("StopEvent");
 
-    auto& audioListenerComponentClass = module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
+    module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
     auto& audioEmitterComponentClass = module.klass<WrenComponent<AudioEmitterComponent>>("AudioEmitterComponent");
     audioEmitterComponentClass.funcExt<bindings::AddSFX>("AddSFX");
     audioEmitterComponentClass.funcExt<bindings::AddEvent>("AddEvent");
