@@ -321,22 +321,23 @@ void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, Resource
     auto resources { _context->Resources() };
     const GPUImage* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
 
+    if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+    {
+        return CreateDepthImageBarrier(*image, state, barrier);
+    }
+
+    return CreateColorImageBarrier(*image, state, barrier);
+}
+
+void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
     switch (state)
     {
     case ResourceState::eFirstOuput:
     {
-        if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eDepth);
-        }
-        else
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eColor);
-        }
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterOutput:
@@ -346,38 +347,56 @@ void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, Resource
     }
     case ResourceState::eReusedOutputAfterInput:
     {
-        if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eDepth);
-        }
-        else
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eColor);
-        }
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eInput:
     {
-        if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eDepth);
-        }
-        else
-        {
-            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
-                vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eColor);
-        }
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     default:
-        bblog::error("[Frame Graph] Unsupported image resource usage: {}", magic_enum::enum_name(state));
+        bblog::error("[Frame Graph] Unsupported color image resource usage: {}", magic_enum::enum_name(state));
+        break;
+    }
+}
+
+void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
+switch (state)
+    {
+    case ResourceState::eFirstOuput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterOutput:
+    {
+        // TODO: Was not handeled before, but most likely needed
+        break;
+    }
+    case ResourceState::eReusedOutputAfterInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    case ResourceState::eInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    default:
+        bblog::error("[Frame Graph] Unsupported depth image resource usage: {}", magic_enum::enum_name(state));
         break;
     }
 }
