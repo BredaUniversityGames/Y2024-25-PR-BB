@@ -84,7 +84,8 @@ struct FrameGraphResource
     FrameGraphNodeHandle producer = 0;
     FrameGraphResourceHandle output = 0;
 
-    std::string name {};
+    // Includes the name of the resource + "_v-" + version
+    std::string versionedName {};
 };
 
 class FrameGraphRenderPass
@@ -189,5 +190,5 @@ private:
     void SortGraph();
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);
     FrameGraphResourceHandle CreateInputResource(const FrameGraphResourceCreation& creation);
-    std::string GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource);
+    const std::string& GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource) const;
 };

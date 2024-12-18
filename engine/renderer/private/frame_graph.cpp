@@ -173,9 +173,9 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
     {
         FrameGraphResource& inputResource = _resources[node.inputs[i]];
 
-        assert(_outputResourcesMap.find(inputResource.name) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
+        assert(_outputResourcesMap.find(inputResource.versionedName) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
 
-        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[inputResource.name];
+        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[inputResource.versionedName];
         const FrameGraphResource& outputResource = _resources[outputResourceHandle];
 
         inputResource.producer = outputResource.producer;
@@ -376,7 +376,7 @@ void FrameGraph::CreateBufferBarrier(const FrameGraphResource& resource, Resourc
     case ResourceState::eInput:
     {
         // Get the buffer created before here and create barrier based on its stage usage
-        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap.at(resource.name);
+        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap.at(resource.versionedName);
         const FrameGraphResource& outputResource = _resources[outputResourceHandle];
 
         barrier.srcStageMask = std::get<FrameGraphResourceInfo::StageBuffer>(outputResource.info.resource).stageUsage;
@@ -484,17 +484,20 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
-    resource.name = GetResourceName(creation.type, creation.info.resource);
+    resource.versionedName = GetResourceName(creation.type, creation.info.resource);
 
     // If the same resource is found as an earlier output, we increase the version of the resource
-    auto itr = _outputResourcesMap.find(resource.name);
+    auto itr = _outputResourcesMap.find(resource.versionedName);
     if (itr != _outputResourcesMap.end())
     {
-        // Save the newest resource version for fast look up later
-        _newestVersionedResourcesMap[resource.name] = resourceHandle;
+        if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
+        {
+            // Save the newest resource version for fast look up later, before we add the version to the name
+            _newestVersionedResourcesMap[resource.versionedName] = resourceHandle;
+        }
 
         resource.version = _resources[itr->second].version + 1;
-        resource.name += + "_v-" + std::to_string(resource.version);
+        resource.versionedName += + "_v-" + std::to_string(resource.version);
     }
 
     if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
@@ -503,7 +506,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
         resource.output = resourceHandle;
         resource.producer = producer;
 
-        _outputResourcesMap.emplace(resource.name, resourceHandle);
+        _outputResourcesMap.emplace(resource.versionedName, resourceHandle);
     }
 
     return resourceHandle;
@@ -516,19 +519,19 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
-    resource.name = GetResourceName(creation.type, creation.info.resource);
+    resource.versionedName = GetResourceName(creation.type, creation.info.resource);
 
     // If the resource has multiple versions, find the newest one and use that one as input instead
-    auto itr = _newestVersionedResourcesMap.find(resource.name);
-    if (itr != _outputResourcesMap.end())
+    auto itr = _newestVersionedResourcesMap.find(resource.versionedName);
+    if (itr != _newestVersionedResourcesMap.end())
     {
-        resource.name = itr->second;
+        resource.versionedName = _resources[itr->second].versionedName;
     }
 
     return resourceHandle;
 }
 
-std::string FrameGraph::GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource)
+const std::string& FrameGraph::GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource) const
 {
     auto resources { _context->Resources() };
 
@@ -545,5 +548,6 @@ std::string FrameGraph::GetResourceName(FrameGraphResourceType type, const Frame
     }
 
     assert(false && "Unsupported resource type!");
-    return "";
+    static const std::string ERROR_TYPE = "Unsupported resource type!";
+    return ERROR_TYPE;
 }
