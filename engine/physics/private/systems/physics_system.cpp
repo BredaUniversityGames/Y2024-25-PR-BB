@@ -1,6 +1,8 @@
 ﻿#include "systems/physics_system.hpp"
 #include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
+#include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
@@ -11,11 +13,9 @@
 #include "graphics_context.hpp"
 #include "imgui.h"
 #include "model_loader.hpp"
+#include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include <components/relationship_component.hpp>
-#include <components/relationship_helpers.hpp>
-#include <renderer.hpp>
 
 #include <tracy/Tracy.hpp>
 

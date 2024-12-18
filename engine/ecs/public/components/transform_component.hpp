@@ -22,7 +22,6 @@ private:
 };
 struct ToBeUpdated
 {
-    int padding {};
 };
 namespace EnttEditor
 {
