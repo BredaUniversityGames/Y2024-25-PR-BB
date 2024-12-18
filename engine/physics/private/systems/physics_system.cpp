@@ -19,6 +19,8 @@
 #include <model_loader.hpp>
 #include <renderer.hpp>
 
+#include <tracy/Tracy.hpp>
+
 PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule)
     : engine(engine)
     , _ecs(ecs)
@@ -185,6 +187,7 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
+    ZoneScoped;
     // let's check priority first between transforms and physics
     // Here we update jolt transforms based on our transform system since they are static objects and we want hierarchy
     const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated>();
@@ -266,6 +269,7 @@ void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 }
 void PhysicsSystem::Inspect()
 {
+    ZoneScoped;
     ImGui::Begin("Physics System");
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;

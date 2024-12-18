@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, TransformComponent
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, TransformComponent, Input, Keycode
 
 class Main {
 
@@ -25,6 +25,21 @@ class Main {
             System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
+        }
+
+        if (engine.GetInput().GetDigitalAction("Jump")) {
+            System.print("Player Jumped!")
+        }
+
+        var movement = engine.GetInput().GetAnalogAction("Move")
+
+        if (movement.length() > 0) {
+            System.print("Player is moving")
+        }
+
+        var key = Keycode.eA()
+        if (engine.GetInput().DebugGetKey(key)) {
+            System.print("[Debug] Player pressed A!")
         }
     }
 }

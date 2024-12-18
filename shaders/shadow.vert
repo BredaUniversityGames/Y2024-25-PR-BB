@@ -29,5 +29,5 @@ void main()
     Instance instance = instances[gl_DrawID + instanceOffset];
 
     position = (instance.model * vec4(inPosition, 1.0)).xyz;
-    gl_Position = (scene.directionalLight.lightVP) * vec4(position, 1.0);
+    gl_Position = scene.directionalLight.lightVP * vec4(position, 1.0);
 }
