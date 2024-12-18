@@ -37,7 +37,6 @@ class Main {
         __player = engine.GetECS().GetEntityByName("Camera")
         var audioEmitterComponent = __player.GetAudioEmitterComponent()
         
-
         if (engine.GetInput().GetDigitalAction("Shoot")) {
             __shootingInstance = engine.GetAudio().PlayEventLoop("event:/Weapons/Machine Gun")
             audioEmitterComponent.AddEvent(__shootingInstance)
