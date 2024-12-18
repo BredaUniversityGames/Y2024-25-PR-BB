@@ -4,6 +4,8 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
@@ -99,6 +101,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.farPlane = 600.0f;
     cameraComponent.reversedZ = true;
 
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
+
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
@@ -119,6 +123,31 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadBank(masterBank);
     audioModule.LoadBank(stringBank);
     audioModule.LoadBank(bi);
+
+    SoundInfo si;
+    si.path = "assets/sounds/fallback.mp3";
+    si.is3D = true;
+
+    audioModule.LoadSFX(si);
+
+    SoundInfo musicSi;
+    musicSi.path = "assets/sounds/music1.wav";
+    musicSi.isLoop = true;
+    musicSi.is3D = true;
+
+    // This sound might pop in because it starts playing before the engine is fully initialized
+    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
+
+    auto audioEmitter = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
+    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
+
+    emitter._soundIds.emplace_back(instance);
+
+    SoundInfo eagleSi;
+    eagleSi.path = "assets/sounds/eagle.mp3";
+
+    audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
@@ -146,6 +175,9 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
+    audioModule.ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -276,6 +308,11 @@ void OldEngine::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eL))
+    {
+        audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/eagle.mp3"), 1.5f, false);
+    }
+
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
@@ -289,10 +326,14 @@ void OldEngine::Tick(Engine& engine)
         NameComponent node;
         node.name = "Physics Entity";
         _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<TransformComponent>(entity);
         _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        auto& audioEmitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(entity);
+
         physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
 
         particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
+        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
     }
 
     static uint32_t eventId {};
@@ -300,6 +341,9 @@ void OldEngine::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
     {
         eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
+        auto entity = _ecs->GetRegistry().view<AudioEmitterComponent>().front();
+        auto& emitter = _ecs->GetRegistry().get<AudioEmitterComponent>(entity);
+        emitter._eventIds.emplace_back(eventId);
     }
 
     if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))

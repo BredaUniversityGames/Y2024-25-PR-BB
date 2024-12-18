@@ -60,9 +60,7 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Jump",
                 .type = DigitalActionType::ePressed,
-                .inputs = {
-                    GamepadButton::eSOUTH,
-                },
+                .inputs = { GamepadButton::eSOUTH, KeyboardCode::eSPACE },
             },
             {
                 .name = "Melee",
