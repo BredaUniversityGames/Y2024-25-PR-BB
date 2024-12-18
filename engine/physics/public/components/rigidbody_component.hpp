@@ -8,13 +8,13 @@ struct UpdateMeshAndPhysics
 struct RigidbodyComponent
 {
     // default creates a sphere at 0,2,0
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shape = eSPHERE, BodyType type = eDYNAMIC)
-        : shapeType(shape)
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType = eSPHERE, BodyType type = eDYNAMIC)
+        : shapeType(shapeType)
         , bodyType(type)
     {
         JPH::BodyCreationSettings bodySettings;
 
-        if (shape == eSPHERE)
+        if (shapeType == eSPHERE)
         {
             if (bodyType == eDYNAMIC)
             {
@@ -28,7 +28,7 @@ struct RigidbodyComponent
             bodySettings.mAllowDynamicOrKinematic = true;
             bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
         }
-        else if (shape == eBOX)
+        else if (shapeType == eBOX)
         {
             if (bodyType == eDYNAMIC)
             {
@@ -38,6 +38,10 @@ struct RigidbodyComponent
             {
                 bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
             }
+
+            // lets save thes shape reference
+            shape = bodySettings.GetShape();
+
             bodySettings.mAllowDynamicOrKinematic = true;
             bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
         }
@@ -49,6 +53,8 @@ struct RigidbodyComponent
     RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings)
         : shapeType(eCUSTOM)
     {
+        // lets save thes shape reference
+        shape = bodyCreationSettings.GetShape();
         bodyID = bodyInterface.CreateAndAddBody(bodyCreationSettings, JPH::EActivation::Activate);
 
         // set the owner entity so we can querry it later from physics ohbejcts if needed
@@ -74,11 +80,10 @@ struct RigidbodyComponent
                 PhysicsLayers::NON_MOVING);
         }
 
-        // lets save thes hape reference
+        // lets save thes shape reference
         shape = bodySettings.GetShape();
 
-        bodySettings.mAllowDynamicOrKinematic
-            = false;
+        bodySettings.mAllowDynamicOrKinematic = false;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 
         // set the owner entity so we can query it later from physics objects if needed
@@ -110,6 +115,7 @@ struct RigidbodyComponent
                 PhysicsLayers::NON_MOVING);
         }
 
+        // lets save thes shape reference
         shape = bodySettings.GetShape();
         bodySettings.mAllowDynamicOrKinematic = true;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
@@ -144,6 +150,9 @@ struct RigidbodyComponent
                 JPH::EMotionType::Dynamic,
                 PhysicsLayers::MOVING);
         }
+
+        // lets save thes shape reference
+        shape = bodySettings.GetShape();
         bodySettings.mAllowDynamicOrKinematic = true;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 
