@@ -296,6 +296,10 @@ inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 
     return glmMat;
 }
+inline glm::vec3 ToGLMVec3(const JPH::Vec3& vec)
+{
+    return glm::vec3(vec.GetX(), vec.GetY(), vec.GetZ());
+}
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
