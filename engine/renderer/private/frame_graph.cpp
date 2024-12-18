@@ -255,6 +255,11 @@ void FrameGraph::CreateMemoryBarriers()
         {
             const FrameGraphResource& resource = _resources[inputHandle];
 
+            if (HasAnyFlags(resource.type, FrameGraphResourceType::eReference))
+            {
+                continue;
+            }
+
             // If resource was used as an input already, there is no need to make a barrier again
             std::string resourceName = GetResourceName(resource.type, resource.info.resource);
             if (resourceStates[resourceName] == ResourceState::eInput)
@@ -279,6 +284,11 @@ void FrameGraph::CreateMemoryBarriers()
         for (const FrameGraphResourceHandle outputHandle : node.outputs)
         {
             const FrameGraphResource& resource = _resources[outputHandle];
+
+            if (HasAnyFlags(resource.type, FrameGraphResourceType::eReference))
+            {
+                continue;
+            }
 
             std::string resourceName = GetResourceName(resource.type, resource.info.resource);
             auto itr = resourceStates.find(resourceName);
