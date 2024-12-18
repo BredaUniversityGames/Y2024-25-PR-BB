@@ -24,52 +24,9 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
     , _ecs(ecs)
     , _physicsModule(physicsModule)
 {
+    _collisionLoader = std::make_unique<ModelLoader>();
 }
 
-void PhysicsSystem::InitializePhysicsColliders()
-{
-    const auto view = _ecs.GetRegistry().view<StaticMeshComponent, TransformComponent>();
-
-    for (const auto entity : view)
-    {
-        StaticMeshComponent& meshComponent = view.get<StaticMeshComponent>(entity);
-
-        // Assume worldMatrix is your 4x4 transformation matrix
-        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
-
-        // Variables to store the decomposed components
-        glm::vec3 scale;
-        glm::quat rotationQuat;
-        glm::vec3 translation;
-        glm::vec3 skew;
-        glm::vec4 perspective;
-
-        // Decompose the matrix
-        glm::decompose(
-            worldMatrix,
-            scale,
-            rotationQuat,
-            translation,
-            skew,
-            perspective);
-
-        // size and position
-        auto& meshResourceManager = engine.GetModule<RendererModule>().GetGraphicsContext()->Resources()->MeshResourceManager();
-        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
-        boundingBox.min *= scale;
-        boundingBox.max *= scale;
-
-        const glm::vec3 centerPos = (boundingBox.max + boundingBox.min) * 0.5f;
-
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, translation + centerPos, boundingBox, eSTATIC);
-
-        // rotation now
-        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
-
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-        _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
-    }
-}
 entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule& ecs,
     uint32_t currentNodeIndex,
     const Hierarchy& hierarchy,
@@ -166,7 +123,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
 void PhysicsSystem::CreateMeshCollision(const std::string& path)
 {
-    CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
 }
@@ -201,7 +158,7 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
 }
 void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
 {
-    CPUModel models = engine.GetModule<RendererModule>().GetRenderer().get()->GetModelLoader().ExtractModelFromGltfFile(path);
+    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
 
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
 }
@@ -219,46 +176,32 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-    // return;
     // let's check priority first between transforms and physics
-    const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated, StaticMeshComponent>();
+    // Here we update jolt transforms based on our transform system since they are static objects and we want hierarchy
+    const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated>();
     for (auto entity : transformsView)
     {
         const TransformComponent& transform = transformsView.get<TransformComponent>(entity);
         const RigidbodyComponent& rb = transformsView.get<RigidbodyComponent>(entity);
-        StaticMeshComponent& meshComponent = transformsView.get<StaticMeshComponent>(entity);
 
-        // Assume worldMatrix is your 4x4 transformation matrix
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
-
-        // Variables to store the decomposed components
-        glm::vec3 scale;
+        glm::vec3 scale, translation, skew;
         glm::quat rotationQuat;
-        glm::vec3 translation;
-        glm::vec3 skew;
         glm::vec4 perspective;
 
         // Decompose the matrix
-        glm::decompose(
-            worldMatrix,
-            scale,
-            rotationQuat,
-            translation,
-            skew,
-            perspective);
+        glm::decompose(worldMatrix, scale, rotationQuat, translation, skew, perspective);
 
         _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(translation.x, translation.y, translation.z), JPH::EActivation::Activate);
+        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
 
-        auto result
-            = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
+        auto result = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
         if (result.HasError())
             bblog::error(result.GetError().c_str());
-        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
         _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
     }
-    // TransformHelpers::ResetAllUpdateTags(ecs.GetRegistry());
 
-    //      this part should be fast because it returns a vector of just ids not whole rigidbodies
+    // this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
 
@@ -272,7 +215,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         }
     }
 
-    //    Update the meshes
+    // We now update our transform system to match jolt's since the loop bellow us handles the dynamic objects that are being simulated by physics
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
@@ -287,12 +230,13 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
 
         auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
 
-        JPH::BodyLockWrite lock(_physicsModule.physicsSystem->GetBodyLockInterface(), rb.bodyID);
-
+        // We cant support objects simulated by jolt and our hierarchy system at the same time
         RelationshipComponent& relationship = _ecs.GetRegistry().get<RelationshipComponent>(entity);
-
         if (relationship.parent != entt::null)
             RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship.parent, entity);
+
+        // Crazy jolt stuff that I dont like but it works to set the proper scale
+        JPH::BodyLockWrite lock(_physicsModule.physicsSystem->GetBodyLockInterface(), rb.bodyID);
         if (lock.Succeeded())
         {
             JPH::Body& body = lock.GetBody();
@@ -306,6 +250,8 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
 
         TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);
     }
+
+    // Clear the tags, if needed the system will add them back again
     TransformHelpers::ResetAllUpdateTags(ecs.GetRegistry());
 }
 void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const

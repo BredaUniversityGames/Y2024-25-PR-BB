@@ -8,19 +8,16 @@ struct Hierarchy;
 class PhysicsModule;
 struct RigidbodyComponent;
 struct CPUModel;
-
 template <typename T>
 struct CPUMesh;
-
 enum PhysicsShapes;
+class ModelLoader;
 class PhysicsSystem : public SystemInterface
 {
 public:
     PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule);
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
-
-    void InitializePhysicsColliders();
 
     void CreateMeshCollision(const std::string& path);
     RigidbodyComponent CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo = entt::null);
@@ -40,6 +37,7 @@ private:
     // for loading mesh data or convex data into the scene. returns a vector of rigidbodies
     std::vector<RigidbodyComponent> LoadBodiesRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
 
+    std::unique_ptr<ModelLoader> _collisionLoader;
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;
