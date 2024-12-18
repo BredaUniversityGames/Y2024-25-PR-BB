@@ -6,6 +6,8 @@
 #include <audio_emitter_component.hpp>
 #include <audio_listener_component.hpp>
 
+#include "log.hpp"
+
 namespace bindings
 {
 void LoadBank(AudioModule& self, const std::string& path)

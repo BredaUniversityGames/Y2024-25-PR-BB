@@ -10,6 +10,7 @@
 #include "time_module.hpp"
 
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
