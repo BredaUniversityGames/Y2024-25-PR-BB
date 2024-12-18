@@ -146,21 +146,16 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation skyDomePass { *_skydomePipeline };
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
-        // Does nothing internally in this situation, for clarity that it is used here
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Making sure the sky dome pass runs after the lighting pass with a reference
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        // Not needed references, just for clarity this pass also contributes to those targets
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation particlePass { *_particlePipeline };
     particlePass.SetName("Particle pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
@@ -200,11 +195,11 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
-        .AddNode(ssaoPass)
         .AddNode(shadowPass)
+        .AddNode(ssaoPass)
+        .AddNode(lightingPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
-        .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)

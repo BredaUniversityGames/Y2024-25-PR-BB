@@ -107,7 +107,6 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         {
             TracyVkZoneC(scene.tracyContext, commandBuffer, "Framegraph barrier", tracy::Color::IndianRed);
-            // Place memory barriers
             commandBuffer.pipelineBarrier2(node.dependencyInfo);
         }
 
@@ -186,6 +185,7 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
         parentNode.edges.push_back(nodeHandle);
 
         // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+        // spdlog::info("Linking resource {} from {} to resource {} from {} \n", outputResource.versionedName, parentNode.name.c_str(), inputResource.versionedName, node.name.c_str());
     }
 }
 
@@ -221,7 +221,6 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
     {
         const FrameGraphResource& resource = _resources[outputHandle];
 
-        // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
             const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
@@ -285,11 +284,6 @@ void FrameGraph::CreateMemoryBarriers()
         {
             const FrameGraphResource& resource = _resources[outputHandle];
 
-            if (HasAnyFlags(resource.type, FrameGraphResourceType::eReference))
-            {
-                continue;
-            }
-
             std::string resourceName = GetResourceName(resource.type, resource.info.resource);
             auto itr = resourceStates.find(resourceName);
             if (itr != resourceStates.end())
@@ -350,6 +344,22 @@ void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, Resource
         // TODO: Was not handeled before, but most likely needed
         break;
     }
+    case ResourceState::eReusedOutputAfterInput:
+    {
+        if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+        {
+            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
+                vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eDepth);
+        }
+        else
+        {
+            util::InitializeImageMemoryBarrier(barrier, image->image, image->format,
+                vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+                image->layers, 0, image->mips, vk::ImageAspectFlagBits::eColor);
+        }
+        break;
+    }
     case ResourceState::eInput:
     {
         if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
@@ -366,7 +376,6 @@ void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, Resource
         }
         break;
     }
-    case ResourceState::eReusedOutputAfterInput:
     default:
         bblog::error("[Frame Graph] Unsupported image resource usage: {}", magic_enum::enum_name(state));
         break;
@@ -484,40 +493,37 @@ void FrameGraph::SortGraph()
     for (int32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
+        bblog::info("node: {}", _nodes[_sortedNodes.back()].name);
     }
 }
 
 FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer)
 {
-    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
+    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone | FrameGraphResourceType::eReference) && "FrameGraphResource output must have a type and not be a reference.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
-    resource.versionedName = GetResourceName(creation.type, creation.info.resource);
+
+    const std::string& resourceName = GetResourceName(creation.type, creation.info.resource);
+    resource.versionedName = resourceName;
 
     // If the same resource is found as an earlier output, we increase the version of the resource
-    auto itr = _outputResourcesMap.find(resource.versionedName);
-    if (itr != _outputResourcesMap.end())
+    auto itr = _newestVersionedResourcesMap.find(resourceName);
+    if (itr != _newestVersionedResourcesMap.end())
     {
-        if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
-        {
-            // Save the newest resource version for fast look up later, before we add the version to the name
-            _newestVersionedResourcesMap[resource.versionedName] = resourceHandle;
-        }
-
         resource.version = _resources[itr->second].version + 1;
         resource.versionedName += + "_v-" + std::to_string(resource.version);
     }
 
-    if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
-    {
-        resource.info = creation.info;
-        resource.output = resourceHandle;
-        resource.producer = producer;
+    // Save the newest resource version for fast look up later, before we add the version to the name
+    _newestVersionedResourcesMap[resourceName] = resourceHandle;
 
-        _outputResourcesMap.emplace(resource.versionedName, resourceHandle);
-    }
+    resource.info = creation.info;
+    resource.output = resourceHandle;
+    resource.producer = producer;
+
+    _outputResourcesMap.emplace(resource.versionedName, resourceHandle);
 
     return resourceHandle;
 }
@@ -535,7 +541,9 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     auto itr = _newestVersionedResourcesMap.find(resource.versionedName);
     if (itr != _newestVersionedResourcesMap.end())
     {
-        resource.versionedName = _resources[itr->second].versionedName;
+        const FrameGraphResource& newestResource = _resources[itr->second];
+        resource.version = newestResource.version;
+        resource.versionedName = newestResource.versionedName;
     }
 
     return resourceHandle;
