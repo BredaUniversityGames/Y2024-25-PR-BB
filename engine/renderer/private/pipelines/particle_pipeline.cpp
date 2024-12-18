@@ -423,15 +423,18 @@ void ParticlePipeline::CreatePipelines()
         std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/billboard.vert.spv");
         std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/particle.frag.spv");
 
-        PipelineBuilder reflector { _context };
-        reflector
-            .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-            .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-            .SetColorBlendState(colorBlendStateCreateInfo)
-            .SetColorAttachmentFormats(formats)
-            .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
-            .SetDepthStencilState(depthStencilStateCreateInfo)
-            .BuildPipeline(_pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
+        GraphicsPipelineBuilder pipelineBuilder { _context };
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+        auto result = pipelineBuilder
+                          .SetColorBlendState(colorBlendStateCreateInfo)
+                          .SetColorAttachmentFormats(formats)
+                          .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
+                          .SetDepthStencilState(depthStencilStateCreateInfo)
+                          .BuildPipeline();
+
+        _pipelineLayouts.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<0>(result);
+        _pipelines.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<1>(result);
     }
 }
 

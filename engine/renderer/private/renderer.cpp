@@ -217,15 +217,12 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     for (size_t i = 0; i < _tracyContexts.size(); ++i)
     {
         _tracyContexts[i] = TracyVkContextCalibrated(
-            //_context->VulkanContext()->Instance(),
             _context->VulkanContext()->PhysicalDevice(),
             _context->VulkanContext()->Device(),
             _context->VulkanContext()->GraphicsQueue(),
             _commandBuffers[i],
             reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT")),
             reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetCalibratedTimestampsEXT")));
-            //reinterpret_cast<PFN_vkGetInstanceProcAddr>(_context->VulkanContext()->Instance().getProcAddr("vkGetInstanceProcAddr")),
-            //reinterpret_cast<PFN_vkGetDeviceProcAddr>(_context->VulkanContext()->Device().getProcAddr("vkGetDeviceProcAddr")));
         TracyVkContextName(_tracyContexts[i], contextNames[i].c_str(), contextNames[i].size());
     }
 }

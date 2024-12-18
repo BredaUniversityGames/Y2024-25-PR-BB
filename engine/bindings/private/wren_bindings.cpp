@@ -1,14 +1,20 @@
 #include "wren_bindings.hpp"
 
+#include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
+#include "application_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "input/input_codes/keys.hpp"
+#include "input/input_codes/mousebuttons.hpp"
+
+#include <input/action_manager.hpp>
 
 namespace bindings
 {
@@ -42,6 +48,21 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
+}
+
+bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetDigitalAction(action_name);
+}
+
+glm::vec2 InputGetAnalogAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetAnalogAction(action_name);
+}
+
+bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
+{
+    return self.GetInputDeviceManager().IsKeyPressed(code);
 }
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
@@ -91,6 +112,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         auto& engineAPI = module.klass<WrenEngine>("Engine");
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
+        engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
     }
 
     // Time Module
@@ -106,6 +128,16 @@ void BindEngineAPI(wren::ForeignModule& module)
         wren_class.funcExt<bindings::CreateEntity>("NewEntity");
         wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+    }
+
+    // Input
+    {
+        auto& wren_class = module.klass<ApplicationModule>("Input");
+        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+
+        bindings::BindEnum<KeyboardCode>(module, "Keycode");
     }
 
     // Components

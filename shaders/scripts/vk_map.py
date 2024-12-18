@@ -326,20 +326,19 @@ vk_format_map = {
     VkFormat.VK_FORMAT_R64G64B64A64_SFLOAT: "glm::dvec4"  # Four channels, 64-bit float
 }
 
-glsl_to_glm_map = {
-    'float': 'glm::float32',
+glsl_to_cpp_map = {
+    'uint': 'uint32_t',
+    'int': 'int32_t',
+    'float': 'float',
     'vec2': 'glm::vec2',
     'vec3': 'glm::vec3',
     'vec4': 'glm::vec4',
-    'int': 'glm::int32',
     'ivec2': 'glm::ivec2',
     'ivec3': 'glm::ivec3',
     'ivec4': 'glm::ivec4',
-    'uint': 'glm::uint32',
     'uvec2': 'glm::uvec2',
     'uvec3': 'glm::uvec3',
     'uvec4': 'glm::uvec4',
-    'bool': 'bool',
     'bvec2': 'glm::bvec2',
     'bvec3': 'glm::bvec3',
     'bvec4': 'glm::bvec4',

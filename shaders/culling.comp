@@ -11,12 +11,12 @@ struct DrawCommand
     uint firstInstance;
 };
 
-layout (std430, set = 0, binding = 0) readonly buffer DrawCommandsIn
+layout (std430, set = 0, binding = 0) readonly buffer DrawCommands_In
 {
     DrawCommand drawCommandsIn[];
 };
 
-layout (std430, set = 1, binding = 0) buffer DrawCommandsOut
+layout (std430, set = 1, binding = 0) buffer DrawCommands_Out
 {
     DrawCommand drawCommandsOut[];
 };
