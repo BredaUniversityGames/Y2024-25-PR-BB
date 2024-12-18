@@ -6,6 +6,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"
+#include "math_util.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -504,10 +505,7 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
                 // Parse quaternions from xyzw -> wxyz.
                 for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
                 {
-                    glm::quat& quat = spline->rotation.value().values[i];
-                    std::swap(quat.w, quat.z);
-                    std::swap(quat.x, quat.z);
-                    std::swap(quat.y, quat.z);
+                    XYZWtoWXYZ(spline->rotation.value().values[i]);
                 }
                 spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
             }
