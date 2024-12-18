@@ -26,6 +26,8 @@
 #include "vertex.hpp"
 #include "vulkan_context.hpp"
 
+#include <audio_emitter_component.hpp>
+#include <audio_listener_component.hpp>
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -45,6 +47,8 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<PointLightComponent>("Point Light");
     _entityEditor.registerComponent<DirectionalLightComponent>("Directional Light");
     _entityEditor.registerComponent<CameraComponent>("Camera");
+    _entityEditor.registerComponent<AudioEmitterComponent>("Audio Emitter");
+    _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
 }
 
 void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
@@ -204,6 +208,8 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
     ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
     ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
+    ImGui::LabelText("Particles after simulation", "%i", _renderer->GetContext()->GetDrawStats().GetParticleCount());
+    ImGui::LabelText("Emitters", "%i", _renderer->GetContext()->GetDrawStats().GetEmitterCount());
 
     ImGui::End();
 }

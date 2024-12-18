@@ -589,7 +589,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
         for (auto it = range.first; it != range.second; ++it)
         {
-            model.hierarchy.nodes.emplace_back("mesh node", glm::identity<glm::mat4>(), it->second);
+            auto node = Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second };
+            model.hierarchy.nodes.emplace_back(node);
             model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
         }
     }
