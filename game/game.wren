@@ -33,6 +33,11 @@ class Main {
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 
+        if (engine.GetInput().GetDigitalAction("Shoot")) {
+            engine.GetAudio().PlayEvent("event:/Weapons/Machine Gun")
+            System.print("Playing is shooting")
+        }
+
         if (movement.length() > 0) {
             System.print("Player is moving")
         }

@@ -14,6 +14,8 @@
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
 
+#include <audio_listener_component.hpp>
+#include <audio_module.hpp>
 #include <input/action_manager.hpp>
 
 namespace bindings
@@ -100,6 +102,11 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+void PlayEvent(AudioModule& self, const std::string& path)
+{
+    self.StartOneShotEvent(path);
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -113,6 +120,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
+        engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
     }
 
     // Time Module
@@ -140,6 +148,12 @@ void BindEngineAPI(wren::ForeignModule& module)
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
     }
 
+    // Audio
+    {
+        auto& wren_class = module.klass<AudioModule>("Audio");
+        wren_class.funcExt<bindings::PlayEvent>("PlayEvent");
+    }
+
     // Components
     {
         // Name class
@@ -157,6 +171,8 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        auto& audioListenerClass = module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
     }
 }
 
