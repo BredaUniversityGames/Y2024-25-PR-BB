@@ -102,7 +102,7 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     AnimationControlComponent* animationControl = nullptr;
     if (!animations.empty())
     {
-        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, 4); // TODO: default to nullopt instead of 0
+        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
     }
 
     LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, animationControl, entityLUT);

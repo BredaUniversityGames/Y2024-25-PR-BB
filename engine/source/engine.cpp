@@ -52,7 +52,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/AnimatedRifle.glb",
         "assets/models/Cathedral.glb",
-        //"assets/models/BrainStem.glb",
+        "assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
@@ -72,6 +72,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
     SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first.hierarchy, models[2].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -194,27 +195,6 @@ void OldEngine::Tick(Engine& engine)
 
     int32_t mouseX, mouseY;
     inputDeviceManager.GetMousePosition(mouseX, mouseY);
-
-    AnimationControlComponent& animationControl = _ecs->GetRegistry().get<AnimationControlComponent>(*_ecs->GetRegistry().view<AnimationControlComponent>().begin());
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eR))
-    {
-        animationControl.activeAnimation = ++animationControl.activeAnimation.value() % animationControl.animations.size();
-    }
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eT))
-    {
-        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
-        current.playbackOption = current.playbackOption == Animation::PlaybackOptions::ePaused ? Animation::PlaybackOptions::ePlaying : Animation::PlaybackOptions::ePaused;
-    }
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eY))
-    {
-        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
-        current.speed -= 0.1f;
-    }
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eU))
-    {
-        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
-        current.speed += 0.1f;
-    }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());

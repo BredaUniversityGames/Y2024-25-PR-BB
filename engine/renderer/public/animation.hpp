@@ -53,6 +53,7 @@ struct Animation
     float time { 0.0f };
     float speed { 1.0f };
     PlaybackOptions playbackOption;
+    bool looping = false;
 
     void Update(float dt)
     {
@@ -69,7 +70,7 @@ struct Animation
             break;
         }
 
-        if (time > duration)
+        if (time > duration && looping)
         {
             time = 0.0f;
         }

@@ -7,6 +7,7 @@
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
+#include "animation.hpp"
 #include "application_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
@@ -14,6 +15,7 @@
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
 
+#include <cstdint>
 #include <input/action_manager.hpp>
 
 namespace bindings
@@ -96,6 +98,44 @@ void TransformComponentSetScale(WrenComponent<TransformComponent>& component, co
     TransformHelpers::SetLocalScale(*component.entity.registry, component.entity.entity, scale);
 }
 
+std::optional<int32_t> AnimationControlComponentGetActiveAnimation(WrenComponent<AnimationControlComponent>& component)
+{
+    if (component.component->activeAnimation.has_value())
+    {
+        return static_cast<int32_t>(component.component->activeAnimation.value());
+    }
+
+    return std::nullopt;
+}
+
+void AnimationControlComponentSetActiveAnimation(WrenComponent<AnimationControlComponent>& component, std::optional<int32_t> index)
+{
+    if (index.has_value())
+    {
+        component.component->activeAnimation = static_cast<uint32_t>(index.value());
+        component.component->animations[component.component->activeAnimation.value()].time = 0.0;
+    }
+    else
+    {
+        component.component->activeAnimation = std::nullopt;
+    }
+}
+
+int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->animations.size();
+}
+
+std::optional<Animation*> AnimationControlComponentGetAnimationByIndex(WrenComponent<AnimationControlComponent>& component, int32_t index)
+{
+    if (index < 0 || index > component.component->animations.size())
+    {
+        return std::nullopt;
+    }
+
+    return &component.component->animations[index];
+}
+
 std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
     return nameComponent.component->name;
@@ -159,6 +199,21 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        bindings::BindEnum<Animation::PlaybackOptions>(module, "PlaybackOptions");
+
+        auto& animationClass = module.klass<Animation>("Animation");
+        animationClass.varReadonly<&Animation::name>("name");
+        animationClass.varReadonly<&Animation::duration>("duration");
+        animationClass.var<&Animation::time>("time");
+        animationClass.var<&Animation::speed>("speed");
+        animationClass.var<&Animation::playbackOption>("playbackOption");
+        animationClass.var<&Animation::looping>("looping");
+
+        auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
+        animationControlClass.propExt<bindings::AnimationControlComponentGetActiveAnimation, bindings::AnimationControlComponentSetActiveAnimation>("activeAnimation");
+        animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
+        animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationByIndex>("GetAnimation");
     }
 }
 
@@ -284,4 +339,6 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }

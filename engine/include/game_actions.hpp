@@ -32,16 +32,12 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Grenade",
                 .type = DigitalActionType::ePressed,
-                .inputs = {
-                    GamepadButton::eRIGHT_SHOULDER,
-                },
+                .inputs = { GamepadButton::eRIGHT_SHOULDER },
             },
             {
                 .name = "Shoot",
                 .type = DigitalActionType::eHold,
-                .inputs = {
-                    GamepadButton::eRIGHT_TRIGGER,
-                },
+                .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
             },
             {
                 .name = "Ultimate",
@@ -53,9 +49,7 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Reload",
                 .type = DigitalActionType::ePressed,
-                .inputs = {
-                    GamepadButton::eWEST,
-                },
+                .inputs = { GamepadButton::eWEST, KeyboardCode::eR },
             },
             {
                 .name = "Jump",
