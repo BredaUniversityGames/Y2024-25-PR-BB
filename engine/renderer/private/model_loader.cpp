@@ -731,7 +731,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     {
         const auto& skin = gltf.skins[i];
 
-        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &gltf, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
+        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
         {
             auto it = std::find_if(skin.joints.begin(), skin.joints.end(), [&nodeLUT, nodeIndex](uint32_t index)
                 { return nodeLUT[index] == nodeIndex; });

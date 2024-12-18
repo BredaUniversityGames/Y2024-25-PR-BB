@@ -16,7 +16,6 @@
 
 AnimationSystem::AnimationSystem(RendererModule& rendererModule)
     : _rendererModule(rendererModule)
-    , _frameIndex(0)
 {
 }
 
@@ -34,7 +33,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         if (animationControl.activeAnimation.has_value())
         {
             Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
-            currentAnimation.Update(dt / 1000.0f, _frameIndex); // TODO: Frame index might not be needed anymore.
+            currentAnimation.Update(dt / 1000.0f); // TODO: Frame index might not be needed anymore.
         }
     }
 
@@ -67,8 +66,6 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
             }
         }
     }
-
-    ++_frameIndex;
 }
 
 void AnimationSystem::Render(const ECSModule& ecs) const

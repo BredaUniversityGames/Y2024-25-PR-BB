@@ -41,26 +41,39 @@ struct AnimationSpline
 
 struct Animation
 {
+    enum class PlaybackOptions
+    {
+        ePlaying,
+        ePaused,
+        eStopped,
+    };
+
     std::string name { "" };
     float duration { 0.0f };
     float time { 0.0f };
+    float speed { 1.0f };
+    PlaybackOptions playbackOption;
 
-    void Update(float dt, uint32_t frameIndex)
+    void Update(float dt)
     {
-        if (_frameIndex != frameIndex)
+        switch (playbackOption)
         {
-            _frameIndex = frameIndex;
-            time += dt;
+        case PlaybackOptions::ePlaying:
+            time += dt * speed;
+            break;
+        case PlaybackOptions::ePaused:
+            // Do nothing.
+            break;
+        case PlaybackOptions::eStopped:
+            time = 0.0f;
+            break;
+        }
 
-            if (time > duration)
-            {
-                time = 0.0f;
-            }
+        if (time > duration)
+        {
+            time = 0.0f;
         }
     }
-
-private:
-    uint32_t _frameIndex { 0 };
 };
 
 struct AnimationControlComponent

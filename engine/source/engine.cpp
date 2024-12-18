@@ -195,10 +195,25 @@ void OldEngine::Tick(Engine& engine)
     int32_t mouseX, mouseY;
     inputDeviceManager.GetMousePosition(mouseX, mouseY);
 
+    AnimationControlComponent& animationControl = _ecs->GetRegistry().get<AnimationControlComponent>(*_ecs->GetRegistry().view<AnimationControlComponent>().begin());
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eR))
     {
-        AnimationControlComponent& animationControl = _ecs->GetRegistry().get<AnimationControlComponent>(*_ecs->GetRegistry().view<AnimationControlComponent>().begin());
         animationControl.activeAnimation = ++animationControl.activeAnimation.value() % animationControl.animations.size();
+    }
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eT))
+    {
+        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
+        current.playbackOption = current.playbackOption == Animation::PlaybackOptions::ePaused ? Animation::PlaybackOptions::ePlaying : Animation::PlaybackOptions::ePaused;
+    }
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eY))
+    {
+        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
+        current.speed -= 0.1f;
+    }
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eU))
+    {
+        Animation& current = animationControl.animations[animationControl.activeAnimation.value()];
+        current.speed += 0.1f;
     }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
