@@ -501,6 +501,14 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
                 std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
 
                 spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
+                // Parse quaternions from xyzw -> wxyz.
+                for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
+                {
+                    glm::quat& quat = spline->rotation.value().values[i];
+                    std::swap(quat.w, quat.z);
+                    std::swap(quat.x, quat.z);
+                    std::swap(quat.y, quat.z);
+                }
                 spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
             }
             else if (channel.path == fastgltf::AnimationPath::Scale)

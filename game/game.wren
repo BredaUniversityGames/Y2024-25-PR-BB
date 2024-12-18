@@ -1,32 +1,39 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, TransformComponent, Input, Keycode
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, MathUtil, TransformComponent, Input, Keycode
 
 class Main {
 
     static Start(engine) {
         __counter = 0
         __frameTimer = 0
+        __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
+        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
 
         if (__player) {
             System.print("Player is online!")
 
-            var t = __player.GetTransformComponent()
-            t.translation = Vec3.new(4.5, 35.0, 285.0)
+            var playerTransform = __player.GetTransformComponent()
+            playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+
+            var gunTransform = __gun.GetTransformComponent()
+            gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
+            gunTransform.rotation = MathUtil.ToQuat(Vec3.new(0.0, -MathUtil.PI(), 0.0))
         }
     }
 
     static Update(engine, dt) {
         __counter = __counter + 1
 
-        var deltatime = engine.GetTime().GetDeltatime()
+        var deltaTime = engine.GetTime().GetDeltatime()
         __frameTimer = __frameTimer + dt
+        __timer = __timer + dt
 
         if (__frameTimer > 1000.0) {
             System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
-
+        
         if (engine.GetInput().GetDigitalAction("Jump")) {
             System.print("Player Jumped!")
         }
