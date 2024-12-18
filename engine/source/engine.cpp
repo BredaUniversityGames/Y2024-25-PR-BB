@@ -336,21 +336,6 @@ void OldEngine::Tick(Engine& engine)
         audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
     }
 
-    static uint32_t eventId {};
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
-    {
-        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
-        auto entity = _ecs->GetRegistry().view<AudioEmitterComponent>().front();
-        auto& emitter = _ecs->GetRegistry().get<AudioEmitterComponent>(entity);
-        emitter._eventIds.emplace_back(eventId);
-    }
-
-    if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))
-    {
-        audioModule.StopEvent(eventId);
-    }
-
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
