@@ -779,7 +779,6 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         // Skins and meshes come together, we can assume here there is also a skinned mesh.
         if (gltfNode.skinIndex.has_value())
         {
-            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
             // Iterate over all the children of the matched node, since we expanded the primitives.
             for (auto childIndex : node.children)
             {

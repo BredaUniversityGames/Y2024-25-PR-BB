@@ -98,47 +98,50 @@ void TransformComponentSetScale(WrenComponent<TransformComponent>& component, co
     TransformHelpers::SetLocalScale(*component.entity.registry, component.entity.entity, scale);
 }
 
-std::optional<int32_t> AnimationControlComponentGetActiveAnimation(WrenComponent<AnimationControlComponent>& component)
+std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
-    if (component.component->activeAnimation.has_value())
-    {
-        return static_cast<int32_t>(component.component->activeAnimation.value());
-    }
-
-    return std::nullopt;
-}
-
-void AnimationControlComponentSetActiveAnimation(WrenComponent<AnimationControlComponent>& component, std::optional<int32_t> index)
-{
-    if (index.has_value())
-    {
-        component.component->activeAnimation = static_cast<uint32_t>(index.value());
-        component.component->animations[component.component->activeAnimation.value()].time = 0.0;
-    }
-    else
-    {
-        component.component->activeAnimation = std::nullopt;
-    }
+    return nameComponent.component->name;
 }
 
 int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationControlComponent>& component)
 {
     return component.component->animations.size();
 }
-
-std::optional<Animation*> AnimationControlComponentGetAnimationByIndex(WrenComponent<AnimationControlComponent>& component, int32_t index)
+void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
 {
-    if (index < 0 || index > component.component->animations.size())
-    {
-        return std::nullopt;
-    }
-
-    return &component.component->animations[index];
+    component.component->Play(name, speed, looping);
 }
-
-std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
+void AnimationControlComponentPlayByIndex(WrenComponent<AnimationControlComponent>& component, uint32_t index, float speed, bool looping)
 {
-    return nameComponent.component->name;
+    component.component->PlayByIndex(index, speed, looping);
+}
+void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Stop();
+}
+void AnimationControlComponentPause(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Pause();
+}
+void AnimationControlComponentResume(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Resume();
+}
+Animation::PlaybackOptions AnimationControlComponentCurrentPlayback(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentPlayback();
+}
+std::optional<uint32_t> AnimationControlComponentCurrentAnimationIndex(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentAnimationIndex();
+}
+std::optional<std::string> AnimationControlComponentCurrentAnimationName(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentAnimationName();
+}
+bool AnimationControlComponentAnimationFinished(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->AnimationFinished();
 }
 
 }
@@ -166,18 +169,18 @@ void BindEngineAPI(wren::ForeignModule& module)
     // ECS module
     {
         // ECS class
-        auto& wren_class = module.klass<ECSModule>("ECS");
-        wren_class.funcExt<bindings::CreateEntity>("NewEntity");
-        wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
-        wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+        auto& wrenClass = module.klass<ECSModule>("ECS");
+        wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
+        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
+        wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
     }
 
     // Input
     {
-        auto& wren_class = module.klass<ApplicationModule>("Input");
-        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
-        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
-        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+        auto& wrenClass = module.klass<ApplicationModule>("Input");
+        wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
     }
@@ -202,18 +205,17 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         bindings::BindEnum<Animation::PlaybackOptions>(module, "PlaybackOptions");
 
-        auto& animationClass = module.klass<Animation>("Animation");
-        animationClass.varReadonly<&Animation::name>("name");
-        animationClass.varReadonly<&Animation::duration>("duration");
-        animationClass.var<&Animation::time>("time");
-        animationClass.var<&Animation::speed>("speed");
-        animationClass.var<&Animation::playbackOption>("playbackOption");
-        animationClass.var<&Animation::looping>("looping");
-
         auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
-        animationControlClass.propExt<bindings::AnimationControlComponentGetActiveAnimation, bindings::AnimationControlComponentSetActiveAnimation>("activeAnimation");
         animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
-        animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationByIndex>("GetAnimation");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPlay>("Play");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPlayByIndex>("PlayByIndex");
+        animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
+        animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentPlayback>("CurrentPlayback");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationIndex>("CurrentAnimationIndex");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationName>("CurrentAnimationName");
+        animationControlClass.funcExt<bindings::AnimationControlComponentAnimationFinished>("AnimationFinished");
     }
 }
 

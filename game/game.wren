@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, MathUtil, AnimationControlComponent, Animation, TransformComponent, Input, Keycode
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, MathUtil, AnimationControlComponent, TransformComponent, Input, Keycode
 
 class Main {
 
@@ -8,7 +8,6 @@ class Main {
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
-        __firstShot = true
 
         if (__player) {
             System.print("Player is online!")
@@ -41,28 +40,14 @@ class Main {
         }
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload")) {
-            gunAnimations.activeAnimation = 3
+        if(engine.GetInput().GetDigitalAction("Reload") && gunAnimations.AnimationFinished()) {
+            gunAnimations.PlayByIndex(3, 1.0, false)
         }
-        var shootAnim = gunAnimations.GetAnimation(4)
         if(engine.GetInput().GetDigitalAction("Shoot")) {
-            if(gunAnimations.activeAnimation != 4) {
-                gunAnimations.activeAnimation = 4
+            if(gunAnimations.AnimationFinished()) {
+                gunAnimations.PlayByIndex(4, 2.0, false)
             }
-            shootAnim.looping = true
-
-            if(__firstShot) {
-                shootAnim.time = 0.0
-            }
-
-            __firstShot = false
-        } else {
-            __firstShot = true
-            if(gunAnimations.activeAnimation == 4) {
-                var shootAnim = gunAnimations.GetAnimation(4)
-                shootAnim.looping = false
-            }
-        }
+        } 
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 
