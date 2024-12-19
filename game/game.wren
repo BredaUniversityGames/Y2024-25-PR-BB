@@ -9,7 +9,6 @@ class Main {
         
         __counter = 0
         __frameTimer = 0
-        __shootingInstance = 0
         __player = engine.GetECS().GetEntityByName("Camera")
 
         if (__player) {
@@ -33,19 +32,13 @@ class Main {
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
-
-        __player = engine.GetECS().GetEntityByName("Camera")
-        var audioEmitterComponent = __player.GetAudioEmitterComponent()
         
         if (engine.GetInput().GetDigitalAction("Shoot")) {
-            __shootingInstance = engine.GetAudio().PlayEventLoop("event:/Weapons/Machine Gun")
-            audioEmitterComponent.AddEvent(__shootingInstance)
-            System.print("Playing is shooting")
-        }
+            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
+            var audioEmitter = __player.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(shootingInstance)
 
-        if (engine.GetInput().GetDigitalAction("ReleaseTrigger")) {
-            engine.GetAudio().StopEvent(__shootingInstance)
-            System.print("Player has stopped shooting")
+            System.print("Playing is shooting")
         }
 
         if (engine.GetInput().GetDigitalAction("Jump")) {

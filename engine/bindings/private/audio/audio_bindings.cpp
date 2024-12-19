@@ -29,11 +29,12 @@ void LoadSFX(AudioModule& self, const std::string& path, const bool is3D, const 
     self.LoadSFX(si);
 }
 
-SoundInstance PlaySFX(AudioModule& self, const std::string& path, const float volume)
+std::optional<SoundInstance> PlaySFX(AudioModule& self, const std::string& path, const float volume)
 {
     if (!self.isSFXLoaded(path))
     {
         bblog::error("Tried to play a sound that was not loaded: {0}", path);
+        return std::nullopt;
     }
 
     return self.PlaySFX(self.GetSFX(path), volume, false);
@@ -44,9 +45,9 @@ bool IsSFXPlaying(AudioModule& self, const SoundInstance instance)
     return self.IsSFXPlaying(instance);
 }
 
-void PlayEventOnce(AudioModule& self, const std::string& path)
+EventInstanceID PlayEventOnce(AudioModule& self, const std::string& path)
 {
-    self.StartOneShotEvent(path);
+    return self.StartOneShotEvent(path);
 }
 
 EventInstanceID PlayEventLoop(AudioModule& self, const std::string& path)

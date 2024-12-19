@@ -39,9 +39,7 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Shoot",
                 .type = DigitalActionType::ePressed,
-                .inputs = {
-                    GamepadButton::eRIGHT_TRIGGER,
-                },
+                .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
             },
             {
                 .name = "ReleaseTrigger",
