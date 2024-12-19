@@ -31,6 +31,10 @@ ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& conte
     CreateBuffers();
     CreateDescriptorSets();
     CreatePipelines();
+
+    _simulatePushConstant.positionIndex = _gBuffers.Attachments()[3].Index();
+    _simulatePushConstant.screenHeight = static_cast<float>(_context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[3])->height);
+    _simulatePushConstant.screenWidth = static_cast<float>(_context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[3])->width);
 }
 
 ParticlePipeline::~ParticlePipeline()
@@ -153,6 +157,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, const Cam
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eSimulate)]);
 
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});

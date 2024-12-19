@@ -1,6 +1,9 @@
 #version 460
-#include "particle_binds.glsl"
+#extension GL_EXT_nonuniform_qualifier: enable
+
 #include "../scene.glsl"
+#include "../bindless.glsl"
+#include "particle_binds.glsl"
 
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
@@ -12,14 +15,18 @@ layout (set = 3, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (push_constant) uniform DeltaTime
+layout (push_constant) uniform PushConstants
 {
     float deltaTime;
+    float screenWidth;
+    float screenHeight;
+    uint positionIndex;
 };
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 bool IsVisible(vec3 position, float size);
+bool CollidesWithDepth(vec3 position, float size);
 
 void main()
 {
@@ -41,22 +48,30 @@ void main()
         particle.velocity.y -= particle.mass * deltaTime;
         particle.position += particle.velocity * deltaTime;
 
-        // TODO: kill particle on depth collision and break
+        // TODO: simulate size
+        float biggestSize = max(particle.size.x, particle.size.y);
+
+        // kill particle on depth collision
+        if (CollidesWithDepth(particle.position, biggestSize))
+        {
+            // add to dead buffer
+            uint deadIndex = atomicAdd(particleCounters.deadCount, 1);
+            deadBuffer[deadIndex] = particleIndex;
+            return;
+        }
 
         // simulate angle
         particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
 
-        // TODO: simulate size
-
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
 
-        // add to new alive list:
+        // add to new alive list
         uint newAliveIndex = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // only visible particles go into the rendering buffer after frustum culling
-        if (IsVisible(particle.position, max(particle.size.x, particle.size.y)))
+        if (IsVisible(particle.position, biggestSize))
         {
             uint culledIndex = atomicAdd(culledInstances.count, 1);
             ParticleInstance instance;
@@ -105,4 +120,27 @@ bool IsVisible(vec3 position, float size)
     visible = visible && camera.cullingEnabled != 0;
 
     return visible;
+}
+
+bool CollidesWithDepth(vec3 position, float size)
+{
+    bool collides = false;
+
+    vec4 position2D = (camera.VP) * vec4(position, 1.0);
+    position2D.xyz /= position2D.w;
+
+    if (position2D.x > -1 && position2D.x < 1 && position2D.y > -1 && position2D.y < 1)
+    {
+        vec2 uv;
+        uv.x = ((position2D.x + 1.0) * 0.5 * screenWidth) / screenWidth;
+        uv.y = ((1.0 - position2D.y) * 0.5 * screenHeight) / screenHeight;
+        vec4 testPosition = texture(bindless_color_textures[nonuniformEXT(positionIndex)], uv);
+
+        if (length(position - testPosition.xyz) <= (size * 2.0))// doubling since otherwise it's too small to check with lol
+        {
+            collides = true;
+        }
+    }
+
+    return collides;
 }

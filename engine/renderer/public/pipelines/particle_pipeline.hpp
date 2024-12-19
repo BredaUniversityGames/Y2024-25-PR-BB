@@ -51,6 +51,9 @@ private:
     struct SimulatePushConstant
     {
         float deltaTime;
+        float screenWidth;
+        float screenHeight;
+        uint32_t positionIndex;
     } _simulatePushConstant;
     struct EmitPushConstant
     {
