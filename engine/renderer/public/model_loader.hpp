@@ -14,9 +14,14 @@ class GraphicsContext;
 
 struct StagingAnimationChannels
 {
-    Animation animation;
-    std::vector<AnimationChannelComponent> animationChannels;
-    std::vector<uint32_t> nodeIndices;
+    std::vector<Animation> animations;
+
+    struct IndexChannel
+    {
+        std::vector<TransformAnimationSpline> animationChannels;
+        std::vector<uint32_t> nodeIndices;
+    };
+    std::vector<IndexChannel> indexChannels;
 };
 
 class ModelLoader

@@ -9,6 +9,7 @@
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
+#include "animation.hpp"
 #include "application_module.hpp"
 #include "audio_emitter_component.hpp"
 #include "components/name_component.hpp"
@@ -16,13 +17,15 @@
 #include "components/transform_helpers.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "audio_module.hpp"
 
-#include <audio_module.hpp>
+#include <cstdint>
 #include <input/action_manager.hpp>
 
 namespace bindings
 {
 void BindMath(wren::ForeignModule& module);
+void BindMathHelper(wren::ForeignModule& module);
 void BindEntity(wren::ForeignModule& module);
 
 float TimeModuleGetDeltatime(TimeModule& self)
@@ -103,11 +106,54 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
     return nameComponent.component->name;
 }
+
+int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->animations.size();
+}
+void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
+{
+    component.component->Play(name, speed, looping);
+}
+void AnimationControlComponentPlayByIndex(WrenComponent<AnimationControlComponent>& component, uint32_t index, float speed, bool looping)
+{
+    component.component->PlayByIndex(index, speed, looping);
+}
+void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Stop();
+}
+void AnimationControlComponentPause(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Pause();
+}
+void AnimationControlComponentResume(WrenComponent<AnimationControlComponent>& component)
+{
+    component.component->Resume();
+}
+Animation::PlaybackOptions AnimationControlComponentCurrentPlayback(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentPlayback();
+}
+std::optional<uint32_t> AnimationControlComponentCurrentAnimationIndex(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentAnimationIndex();
+}
+std::optional<std::string> AnimationControlComponentCurrentAnimationName(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->CurrentAnimationName();
+}
+bool AnimationControlComponentAnimationFinished(WrenComponent<AnimationControlComponent>& component)
+{
+    return component.component->AnimationFinished();
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
 {
     bindings::BindMath(module);
+    bindings::BindMathHelper(module);
     bindings::BindEntity(module);
 
     // Add modules here to expose them in scripting
@@ -128,18 +174,18 @@ void BindEngineAPI(wren::ForeignModule& module)
     // ECS module
     {
         // ECS class
-        auto& wren_class = module.klass<ECSModule>("ECS");
-        wren_class.funcExt<bindings::CreateEntity>("NewEntity");
-        wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
-        wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+        auto& wrenClass = module.klass<ECSModule>("ECS");
+        wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
+        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
+        wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
     }
 
     // Input
     {
-        auto& wren_class = module.klass<ApplicationModule>("Input");
-        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
-        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
-        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+        auto& wrenClass = module.klass<ApplicationModule>("Input");
+        wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
     }
@@ -166,6 +212,20 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        bindings::BindEnum<Animation::PlaybackOptions>(module, "PlaybackOptions");
+
+        auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
+        animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPlay>("Play");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPlayByIndex>("PlayByIndex");
+        animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
+        animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
+        animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentPlayback>("CurrentPlayback");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationIndex>("CurrentAnimationIndex");
+        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationName>("CurrentAnimationName");
+        animationControlClass.funcExt<bindings::AnimationControlComponentAnimationFinished>("AnimationFinished");
     }
 }
 
@@ -200,6 +260,31 @@ static T Normalized(T& v) { return glm::normalize(v); }
 template <typename T>
 static float Length(T& v) { return glm::length(v); }
 
+};
+
+class MathUtil
+{
+public:
+    static glm::vec3 ToEuler(glm::quat quat)
+    {
+        return glm::eulerAngles(quat);
+    }
+    static glm::quat ToQuat(glm::vec3 euler)
+    {
+        return glm::quat { euler };
+    }
+    static float PI()
+    {
+        return glm::pi<float>();
+    }
+    static float TwoPI()
+    {
+        return glm::two_pi<float>();
+    }
+    static float HalfPI()
+    {
+        return glm::half_pi<float>();
+    }
 };
 
 template <typename T>
@@ -246,6 +331,16 @@ void bindings::BindMath(wren::ForeignModule& module)
     }
 }
 
+void bindings::BindMathHelper(wren::ForeignModule& module)
+{
+    auto& mathUtilClass = module.klass<MathUtil>("MathUtil");
+    mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
+    mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
+    mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+    mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
+    mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
+}
+
 void bindings::BindEntity(wren::ForeignModule& module)
 {
     // Entity class
@@ -259,4 +354,6 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }
