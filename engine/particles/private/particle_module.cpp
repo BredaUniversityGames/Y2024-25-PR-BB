@@ -140,14 +140,15 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
     }
+    else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+    {
+        emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+        emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
+    }
     else
     {
         emitter.position = glm::vec3(0.0f, 0.0f, 0.0f);
         emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
-    }
-    if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
-    {
-        emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
     }
 
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomPosition))
