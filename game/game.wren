@@ -12,6 +12,9 @@ class Main {
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gunAnimations = __gun.GetAnimationControlComponent()
+        gunAnimations.PlayByIndex(4, 1.0, false)
+        gunAnimations.Stop()
 
         if (__player) {
             System.print("Player is online!")
