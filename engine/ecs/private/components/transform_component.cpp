@@ -276,13 +276,12 @@ glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat&
 
     return translationMatrix * rotationMatrix * scaleMatrix;
 }
-void TransformHelpers::OnConstructTransform(entt::registry& reg, entt::entity entity)
+void OnConstructTransform(entt::registry& reg, entt::entity entity)
 {
     reg.emplace<WorldMatrixComponent>(entity);
-
-    UpdateWorldMatrix(reg, entity);
+    // TransformHelpers::UpdateWorldMatrix(reg, entity);
 }
-void TransformHelpers::OnDestroyTransform(entt::registry& reg, entt::entity entity)
+void OnDestroyTransform(entt::registry& reg, entt::entity entity)
 {
     reg.remove<WorldMatrixComponent>(entity);
 }
@@ -296,6 +295,7 @@ void TransformHelpers::UnsubscribeToEvents(entt::registry& reg)
     reg.on_construct<TransformComponent>().disconnect<&OnConstructTransform>();
     reg.on_destroy<TransformComponent>().disconnect<&OnDestroyTransform>();
 }
+
 void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));

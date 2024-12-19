@@ -1,5 +1,4 @@
 #include "ecs_module.hpp"
-#include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "scripting_module.hpp"

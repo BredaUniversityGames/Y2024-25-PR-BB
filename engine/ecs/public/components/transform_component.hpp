@@ -20,6 +20,10 @@ struct WorldMatrixComponent
     void Inspect();
 };
 
+struct DirtyTransform
+{
+};
+
 class TransformHelpers
 {
 public:
@@ -52,9 +56,6 @@ public:
     static glm::vec3 GetWorldScale(entt::registry& reg, entt::entity entity);
 
     static glm::mat4 ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
-
-    static void OnConstructTransform(entt::registry& reg, entt::entity entity);
-    static void OnDestroyTransform(entt::registry& reg, entt::entity entity);
 
     static void SubscribeToEvents(entt::registry& reg);
     static void UnsubscribeToEvents(entt::registry& reg);

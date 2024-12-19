@@ -22,13 +22,13 @@ void RelationshipHelpers::SetParent(entt::registry& reg, entt::entity entity, en
     RelationshipComponent* parentRelationship = reg.try_get<RelationshipComponent>(parent);
     RelationshipComponent* childRelationship = reg.try_get<RelationshipComponent>(entity);
 
-    // TODO: maybe add some debug or assert for these conditions
+    // TODO: maybe add some debug log or assert for these conditions
     if (childRelationship == nullptr)
         return;
     if (parentRelationship == childRelationship)
         return;
 
-    DetachChild(reg, childRelationship->parent, entity);
+    Unparent(reg, entity);
 
     if (parentRelationship)
     {
@@ -38,109 +38,77 @@ void RelationshipHelpers::SetParent(entt::registry& reg, entt::entity entity, en
             childRelationship->nextSibling = parentRelationship->firstChild;
             parentRelationship->firstChild = entity;
         }
+
         childRelationship->parent = parent;
         parentRelationship->firstChild = entity;
+        childRelationship->layer = parentRelationship->layer + 1;
     }
 }
-// void RelationshipHelpers::AttachChild(entt::registry& reg, entt::entity entity, entt::entity child)
-// {
-//     RelationshipComponent& parentRelationship = reg.get<RelationshipComponent>(entity);
-//     RelationshipComponent& childRelationship = reg.get<RelationshipComponent>(child);
-//
-//     if (childRelationship.parent != entt::null)
-//     {
-//         DetachChild(reg, childRelationship.parent, child);
-//     }
-//
-//     if (parentRelationship.childrenCount == 0)
-//     {
-//         parentRelationship.first = child;
-//     }
-//     else
-//     {
-//         RelationshipComponent& firstChild = reg.get<RelationshipComponent>(parentRelationship.first);
-//
-//         firstChild.prev = child;
-//         childRelationship.next = parentRelationship.first;
-//         parentRelationship.first = child;
-//     }
-//
-//     childRelationship.parent = entity;
-//     ++parentRelationship.childrenCount;
-// }
-void RelationshipHelpers::DetachChild(entt::registry& reg, entt::entity parent, entt::entity child)
-{
-    RelationshipComponent* parentRelationship = reg.try_get<RelationshipComponent>(parent);
-    RelationshipComponent* childRelationship = reg.try_get<RelationshipComponent>(child);
 
-    if (parentRelationship == nullptr)
-        return;
+void RelationshipHelpers::Unparent(entt::registry& reg, entt::entity entity)
+{
+    RelationshipComponent* childRelationship = reg.try_get<RelationshipComponent>(entity);
+
     if (childRelationship == nullptr)
         return;
 
-    auto* prev_sibling = reg.try_get<RelationshipComponent>(childRelationship->prevSibling);
-    auto* next_sibling = reg.try_get<RelationshipComponent>(childRelationship->nextSibling);
+    RelationshipComponent* parentRelationship = reg.try_get<RelationshipComponent>(childRelationship->parent);
 
-    if (parentRelationship->firstChild == child)
+    if (parentRelationship == nullptr)
+        return;
+
+    auto* prevSibling = reg.try_get<RelationshipComponent>(childRelationship->prevSibling);
+    auto* nextSibling = reg.try_get<RelationshipComponent>(childRelationship->nextSibling);
+
+    if (parentRelationship->firstChild == entity)
     {
         parentRelationship->firstChild = childRelationship->nextSibling;
     }
 
-    if (prev_sibling)
+    if (prevSibling)
     {
-        prev_sibling->prevSibling = childRelationship->prevSibling;
+        prevSibling->nextSibling = childRelationship->nextSibling;
     }
 
-    if (next_sibling)
+    if (nextSibling)
     {
-        next_sibling->nextSibling = childRelationship->nextSibling;
+        nextSibling->prevSibling = childRelationship->prevSibling;
     }
 
+    childRelationship->prevSibling = entt::null;
+    childRelationship->nextSibling = entt::null;
+    childRelationship->layer = 0;
     childRelationship->parent = entt::null;
 }
 
-void RelationshipHelpers::OnDestroyRelationship(entt::registry& reg, entt::entity entity)
+void OnDestroyRelationship(entt::registry& reg, entt::entity entity)
 {
     RelationshipComponent& relationship = reg.get<RelationshipComponent>(entity);
-    DetachChild(reg, entity, relationship.parent);
+    RelationshipHelpers::Unparent(reg, entity);
 
-    for (auto e : relationship.IterateChildren(reg))
+    auto f = relationship.IterateChildren(reg);
+    for (auto it = f.begin(); it != f.end();)
     {
-        DetachChild(reg, e, entity);
-    }
+        entt::entity child = *it;
+        ++it;
 
-    // // Siblings
-    // if (relationship.prev != entt::null)
-    // {
-    //     RelationshipComponent& prev = reg.get<RelationshipComponent>(relationship.prev);
-    //
-    //     prev.next = relationship.next;
-    // }
-    //
-    // if (relationship.next != entt::null)
-    // {
-    //     RelationshipComponent& next = reg.get<RelationshipComponent>(relationship.next);
-    //
-    //     next.prev = relationship.prev;
-    // }
-    //
-    // if (relationship.childrenCount > 0)
-    // {
-    //     entt::entity current = relationship.first;
-    //     // Don't decrement this relationship components child counter or the loop would end early
-    //     for (size_t i {}; i < relationship.childrenCount; ++i)
-    //     {
-    //         RelationshipComponent& childRelationship = reg.get<RelationshipComponent>(current);
-    //
-    //         current = childRelationship.next;
-    //
-    //         // Parent has been removed so siblings should no longer be connected
-    //         childRelationship.parent = entt::null;
-    //         childRelationship.prev = entt::null;
-    //         childRelationship.next = entt::null;
-    //     }
-    // }
+        auto& name = reg.get<NameComponent>(child);
+        bblog::info("{}", name.name);
+
+        reg.destroy(child);
+    }
 }
+
+void RelationshipHelpers::SortRegistryHierarchy(entt::registry& reg)
+{
+    auto sort = [](const RelationshipComponent& lhs, const RelationshipComponent& rhs)
+    {
+        return lhs.layer < rhs.layer;
+    };
+
+    reg.sort<RelationshipComponent>(sort);
+}
+
 void RelationshipHelpers::SubscribeToEvents(entt::registry& reg)
 {
     reg.on_destroy<RelationshipComponent>().connect<&OnDestroyRelationship>();
