@@ -113,7 +113,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    for (size_t i = 0; i < 25; i++)
+    for (size_t i = 0; i < 5000; i++)
     {
         entt::entity entity = _ecs->GetRegistry().create();
         _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");
@@ -124,7 +124,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         pointLightComponent.range = 10.0f;
         pointLightComponent.attenuation = 1.0f;
 
-        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(2.5f * i, 1.0f, 0.0f));
+        // Spawn point lights in a grid
+        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i % 100 * 2.0f, 1.0f, i / 100 * 2.0f));
     }
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();

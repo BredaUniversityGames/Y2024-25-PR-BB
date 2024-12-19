@@ -23,6 +23,7 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.screenSize = glm::vec2 { _gBuffers.Size().x, _gBuffers.Size().y };
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
@@ -68,6 +69,7 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetPointLightDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 5, { scene.gpuScene->GetClusterCullingDescriptorSet(currentFrame) }, {});
 
     commandBuffer.draw(3, 1, 0, 0);
 

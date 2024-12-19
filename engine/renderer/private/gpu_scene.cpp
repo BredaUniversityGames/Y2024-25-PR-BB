@@ -307,7 +307,7 @@ void GPUScene::CreateClusterCullingDescriptorSetLayout()
             .binding = static_cast<uint32_t>(i),
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eCompute,
+            .stageFlags = vk::ShaderStageFlagBits::eAll,
         };
     }
 

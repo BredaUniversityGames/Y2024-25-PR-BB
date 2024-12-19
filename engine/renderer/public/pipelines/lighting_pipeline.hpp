@@ -30,6 +30,7 @@ private:
         uint32_t normalRIndex;
         uint32_t emissiveAOIndex;
         uint32_t positionIndex;
+        glm::vec2 screenSize;
     } _pushConstants;
 
     void CreatePipeline();

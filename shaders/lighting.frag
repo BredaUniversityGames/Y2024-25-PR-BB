@@ -4,6 +4,7 @@
 #include "bindless.glsl"
 #include "scene.glsl"
 #include "settings.glsl"
+#include "clusters.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -11,6 +12,7 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
+    vec2 screenSize;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -32,6 +34,10 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
     BloomSettings bloomSettings;
 };
 
+layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
+layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
+layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -51,8 +57,40 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
+// stackoverflow.com/questions/51108596/linearize-depth
+float LinearDepth(float z, float near, float far)
+{
+    return near * far / (far + z * (near - far));
+}
+
 void main()
 {
+    float zFloat = 24;
+    float log2FarDivNear = log2(camera.zFar / camera.zNear);
+    float log2Near = log2(camera.zNear);
+
+    float sliceScaling = zFloat / log2FarDivNear;
+    float sliceBias = -(zFloat * log2Near / log2FarDivNear);
+
+    float linearDepth = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
+    uint zIndex = uint(max(log2(linearDepth) * sliceScaling + sliceBias, 0.0));
+    vec2 tileSize =
+    vec2(pushConstants.screenSize.x / float(16),
+    pushConstants.screenSize.y / float(9));
+
+    uvec3 cluster = uvec3(
+    gl_FragCoord.x / tileSize.x,
+    gl_FragCoord.y / tileSize.y,
+    zIndex);
+
+    uint clusterIndex =
+    cluster.x +
+    cluster.y * 16 +
+    cluster.z * 16 * 9;
+
+    uint lightCount = lightCells[clusterIndex].count;
+    uint lightIndexOffset = lightCells[clusterIndex].offset;
+
     vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.albedoMIndex)], texCoords);
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
     vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.emissiveAOIndex)], texCoords);
@@ -88,7 +126,20 @@ void main()
     float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
     Lo += CalculateBRDF(N, V, lightDir, albedo, F0, metallic, roughness, scene.directionalLight.color.rgb);
 
-    // Point Light Calculations
+    for (int i = 0; i < lightCount; i++)
+    {
+        uint lightIndex = lightIndices[i + lightIndexOffset];
+        PointLight light = pointLights.lights[lightIndex];
+
+        vec3 lightPos = light.position.xyz;
+        vec3 L = normalize(lightPos - position);
+        float attenuation = CalculateAttenuation(lightPos, position, light.range);
+        vec3 lightColor = light.color.rgb * attenuation;
+
+        Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
+    }
+
+/*// Point Light Calculations
     for (int i = 0; i < pointLights.count; i++) {
         PointLight light = pointLights.lights[i];
         vec3 lightPos = light.position.xyz;
@@ -97,7 +148,7 @@ void main()
         vec3 lightColor = light.color.rgb * attenuation;
 
         Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
-    }
+    }*/
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
