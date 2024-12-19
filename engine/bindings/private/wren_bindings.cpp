@@ -1,14 +1,24 @@
 #include "wren_bindings.hpp"
 
+#include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
+
+#include "audio/audio_bindings.hpp"
 
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
+#include "application_module.hpp"
+#include "audio_emitter_component.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "input/input_codes/keys.hpp"
+#include "input/input_codes/mousebuttons.hpp"
+
+#include <audio_module.hpp>
+#include <input/action_manager.hpp>
 
 namespace bindings
 {
@@ -42,6 +52,21 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
+}
+
+bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetDigitalAction(action_name);
+}
+
+glm::vec2 InputGetAnalogAction(ApplicationModule& self, const std::string& action_name)
+{
+    return self.GetActionManager().GetAnalogAction(action_name);
+}
+
+bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
+{
+    return self.GetInputDeviceManager().IsKeyPressed(code);
 }
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
@@ -78,7 +103,6 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
     return nameComponent.component->name;
 }
-
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -91,6 +115,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         auto& engineAPI = module.klass<WrenEngine>("Engine");
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
+        engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
+        engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
     }
 
     // Time Module
@@ -106,6 +132,21 @@ void BindEngineAPI(wren::ForeignModule& module)
         wren_class.funcExt<bindings::CreateEntity>("NewEntity");
         wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+    }
+
+    // Input
+    {
+        auto& wren_class = module.klass<ApplicationModule>("Input");
+        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+
+        bindings::BindEnum<KeyboardCode>(module, "Keycode");
+    }
+
+    // Audio
+    {
+        BindAudioAPI(module);
     }
 
     // Components
@@ -212,6 +253,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");

@@ -38,7 +38,12 @@ const GameActions GAME_ACTIONS {
             },
             {
                 .name = "Shoot",
-                .type = DigitalActionType::eHold,
+                .type = DigitalActionType::ePressed,
+                .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
+            },
+            {
+                .name = "ReleaseTrigger",
+                .type = DigitalActionType::eReleased,
                 .inputs = {
                     GamepadButton::eRIGHT_TRIGGER,
                 },
@@ -60,9 +65,7 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Jump",
                 .type = DigitalActionType::ePressed,
-                .inputs = {
-                    GamepadButton::eSOUTH,
-                },
+                .inputs = { GamepadButton::eSOUTH, KeyboardCode::eSPACE },
             },
             {
                 .name = "Melee",
