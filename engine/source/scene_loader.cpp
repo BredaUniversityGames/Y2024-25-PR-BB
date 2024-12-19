@@ -39,7 +39,7 @@ entt::entity LoadNodeRecursive(ECSModule& ecs,
     ecs.GetRegistry().emplace<RelationshipComponent>(entity);
     if (parent != entt::null)
     {
-        RelationshipHelpers::AttachChild(ecs.GetRegistry(), parent, entity);
+        RelationshipHelpers::SetParent(ecs.GetRegistry(), entity, parent);
     }
 
     TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);

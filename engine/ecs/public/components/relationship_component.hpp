@@ -3,32 +3,71 @@
 #include <entt/entity/registry.hpp>
 #include <imgui_entt_entity_editor.hpp>
 
-// #define RELATIONSHIP_USE_VECTOR
-
-#if defined(RELATIONSHIP_USE_VECTOR)
 struct RelationshipComponent
 {
     size_t layer = 0;
-    std::vector<entt::entity> entities;
-};
-#else
-struct RelationshipComponent
-{
-    size_t layer = 0;
-    size_t childrenCount = 0;
 
-    entt::entity first = entt::null; // First child if any
-    entt::entity prev = entt::null; // Previous sibling
-    entt::entity next = entt::null; // Next sibling
+    entt::entity firstChild = entt::null; // Last child
+    entt::entity prevSibling = entt::null; // Previous sibling
+    entt::entity nextSibling = entt::null; // Next sibling
     entt::entity parent = entt::null;
+
+    struct RelationshipIterator
+    {
+        RelationshipIterator(entt::registry& reg, entt::entity current)
+            : reg(reg)
+            , current(current)
+        {
+        }
+
+        bool operator!=(const RelationshipIterator& other) const
+        {
+            return current != other.current;
+        }
+
+        RelationshipIterator& operator++()
+        {
+            current = reg.get<RelationshipComponent>(current).nextSibling;
+            return *this;
+        }
+
+        entt::entity operator*() const
+        {
+            return current;
+        }
+
+    private:
+        entt::registry& reg;
+        entt::entity current;
+    };
+
+    struct RelationShipIterFacade
+    {
+        RelationShipIterFacade(const RelationshipComponent& comp, entt::registry& reg)
+            : comp(comp)
+            , reg(reg)
+        {
+        }
+
+        RelationshipIterator begin() const { return { reg, comp.firstChild }; }
+        RelationshipIterator end() const { return { reg, entt::null }; }
+
+    private:
+        const RelationshipComponent& comp;
+        entt::registry& reg;
+    };
+
+    RelationShipIterFacade IterateChildren(entt::registry& registry) const
+    {
+        return { *this, registry };
+    }
 };
-#endif
 
 namespace RelationshipHelpers
 {
 void SetParent(entt::registry& reg, entt::entity entity, entt::entity parent);
 
-void AttachChild(entt::registry& reg, entt::entity entity, entt::entity child);
+// void AttachChild(entt::registry& reg, entt::entity entity, entt::entity child);
 void DetachChild(entt::registry& reg, entt::entity entity, entt::entity child);
 
 void OnDestroyRelationship(entt::registry& reg, entt::entity entity);

@@ -59,7 +59,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         const std::string name = std::string(NameComponent::GetDisplayName(_ecs.GetRegistry(), entity));
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-        if (relationship != nullptr && relationship->childrenCount > 0)
+        if (relationship != nullptr && relationship->firstChild != entt::null)
         {
             const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name.c_str());
 
@@ -75,13 +75,12 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
             if (nodeOpen)
             {
-                entt::entity current = relationship->first;
-                for (size_t i {}; i < relationship->childrenCount; ++i)
+                auto& reg = _ecs.GetRegistry();
+                for (auto e : relationship->IterateChildren(reg))
                 {
-                    if (_ecs.GetRegistry().valid(current))
+                    if (reg.valid(e))
                     {
-                        self(self, current);
-                        current = _ecs.GetRegistry().get<RelationshipComponent>(current).next;
+                        self(self, e);
                     }
                 }
 
