@@ -3,6 +3,10 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, MathUt
 class Main {
 
     static Start(engine) {
+        engine.GetAudio().LoadBank("assets/sounds/Master.bank")
+        engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
+        engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+
         __counter = 0
         __frameTimer = 0
         __timer = 0
@@ -14,6 +18,8 @@ class Main {
 
             var playerTransform = __player.GetTransformComponent()
             playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+
+            __player.AddAudioEmitterComponent()
 
             var gunTransform = __gun.GetTransformComponent()
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
@@ -33,7 +39,15 @@ class Main {
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
-        
+
+        if (engine.GetInput().GetDigitalAction("Shoot")) {
+            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
+            var audioEmitter = __player.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(shootingInstance)
+
+            System.print("Playing is shooting")
+        }
+
         if (engine.GetInput().GetDigitalAction("Jump")) {
             System.print("Player Jumped!")
 
@@ -47,7 +61,7 @@ class Main {
             if(gunAnimations.AnimationFinished()) {
                 gunAnimations.PlayByIndex(4, 2.0, false)
             }
-        } 
+        }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 

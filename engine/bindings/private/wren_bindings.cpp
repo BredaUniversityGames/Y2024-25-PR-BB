@@ -4,16 +4,20 @@
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
+#include "audio/audio_bindings.hpp"
+
 #include "ecs_module.hpp"
 #include "time_module.hpp"
 
 #include "animation.hpp"
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "audio_module.hpp"
 
 #include <cstdint>
 #include <input/action_manager.hpp>
@@ -158,6 +162,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
+        engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
     }
 
     // Time Module
@@ -183,6 +188,11 @@ void BindEngineAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
+    }
+
+    // Audio
+    {
+        BindAudioAPI(module);
     }
 
     // Components
@@ -338,6 +348,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");

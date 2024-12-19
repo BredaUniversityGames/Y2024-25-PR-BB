@@ -36,7 +36,7 @@ const GameActions GAME_ACTIONS {
             },
             {
                 .name = "Shoot",
-                .type = DigitalActionType::eHold,
+                .type = DigitalActionType::ePressed,
                 .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
             },
             {
