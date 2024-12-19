@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
+#include <unordered_map>
 #include <vector>
 
 struct Hierarchy
