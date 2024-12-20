@@ -111,18 +111,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
     //  physics_system->InitializePhysicsColliders();
 
-    BankInfo masterBank;
-    masterBank.path = "assets/sounds/Master.bank";
-
-    BankInfo stringBank;
-    stringBank.path = "assets/sounds/Master.strings.bank";
-
-    BankInfo bi;
-    bi.path = "assets/sounds/SFX.bank";
-
-    audioModule.LoadBank(masterBank);
-    audioModule.LoadBank(stringBank);
-    audioModule.LoadBank(bi);
+    // BankInfo masterBank;
+    // masterBank.path = "assets/sounds/Master.bank";
+    //
+    // BankInfo stringBank;
+    // stringBank.path = "assets/sounds/Master.strings.bank";
+    //
+    // BankInfo bi;
+    // bi.path = "assets/sounds/SFX.bank";
+    //
+    // audioModule.LoadBank(masterBank);
+    // audioModule.LoadBank(stringBank);
+    // audioModule.LoadBank(bi);
 
     SoundInfo si;
     si.path = "assets/sounds/fallback.mp3";
@@ -334,21 +334,6 @@ void OldEngine::Tick(Engine& engine)
 
         particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
         audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
-    }
-
-    static uint32_t eventId {};
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
-    {
-        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
-        auto entity = _ecs->GetRegistry().view<AudioEmitterComponent>().front();
-        auto& emitter = _ecs->GetRegistry().get<AudioEmitterComponent>(entity);
-        emitter._eventIds.emplace_back(eventId);
-    }
-
-    if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))
-    {
-        audioModule.StopEvent(eventId);
     }
 
     JPH::BodyManager::DrawSettings drawSettings;
