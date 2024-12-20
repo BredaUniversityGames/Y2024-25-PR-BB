@@ -57,7 +57,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeSSAOTarget();
     InitializeTonemappingTarget();
     InitializeFXAATarget();
-    InitializeUITarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
@@ -99,11 +98,11 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
     _fxaaPipeline = std::make_unique<FXAAPipeline>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
-    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, _uiTarget, *_swapChain);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
 
@@ -180,17 +179,12 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
-        .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
-        .AddInput(_uiTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Reference to make sure it runs at the end
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment);
 
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
@@ -370,16 +364,6 @@ void Renderer::InitializeFXAATarget()
     fxaaCreation.SetName("FXAA Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _fxaaTarget = _context->Resources()->ImageResourceManager().Create(fxaaCreation);
-}
-
-void Renderer::InitializeUITarget()
-{
-    auto size = _swapChain->GetImageSize();
-
-    CPUImage uiCreation {};
-    uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
-
-    _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
 }
 void Renderer::InitializeSSAOTarget()
 {

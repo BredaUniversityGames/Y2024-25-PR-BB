@@ -90,7 +90,6 @@ private:
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
     ResourceHandle<GPUImage> _fxaaTarget;
-    ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -119,7 +118,6 @@ private:
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
     void InitializeFXAATarget();
-    void InitializeUITarget();
     void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();

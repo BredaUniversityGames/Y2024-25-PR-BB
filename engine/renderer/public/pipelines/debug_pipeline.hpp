@@ -14,7 +14,7 @@ class GraphicsContext;
 class DebugPipeline final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain);
+    DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain);
     ~DebugPipeline() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
@@ -53,7 +53,6 @@ private:
 
     std::vector<glm::vec3> _linesData;
     ResourceHandle<Buffer> _vertexBuffer;
-    ResourceHandle<GPUImage> _uiTarget;
 
     void CreatePipeline();
     void CreateVertexBuffer();
