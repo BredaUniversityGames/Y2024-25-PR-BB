@@ -339,7 +339,9 @@ void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState st
     }
     case ResourceState::eReusedOutputAfterOutput:
     {
-        // TODO: Was not handeled before, but most likely needed
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:

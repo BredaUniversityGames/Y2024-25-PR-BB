@@ -154,8 +154,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     particlePass.SetName("Particle pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
