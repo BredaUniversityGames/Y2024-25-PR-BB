@@ -377,7 +377,9 @@ switch (state)
     }
     case ResourceState::eReusedOutputAfterOutput:
     {
-        // TODO: Was not handeled before, but most likely needed
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:
