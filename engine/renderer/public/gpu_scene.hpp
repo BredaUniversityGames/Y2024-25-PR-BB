@@ -97,6 +97,9 @@ public:
     ResourceHandle<GPUImage> brdfLUTMap;
     ResourceHandle<GPUImage> directionalShadowMap;
 
+    glm::vec3 fogColor{0.5,0.6,0.7};
+    float fogDensity{0.04f};
+
 private:
     struct alignas(16) DirectionalLightData
     {
@@ -129,6 +132,9 @@ private:
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
         uint32_t shadowMapIndex;
+
+        glm::vec3 fogColor;
+        float fogDensity;
     };
 
     struct alignas(16) InstanceData

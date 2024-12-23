@@ -55,6 +55,7 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
     FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
+    GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();
 

@@ -77,6 +77,9 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
     sceneData.shadowMapIndex = directionalShadowMap.Index();
 
+    sceneData.fogColor = fogColor;
+    sceneData.fogDensity = fogDensity;
+
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
 }

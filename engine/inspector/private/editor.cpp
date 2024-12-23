@@ -30,6 +30,7 @@
 #include <audio_listener_component.hpp>
 #include <entt/entity/entity.hpp>
 #include <fstream>
+#include <gpu_scene.hpp>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <vk_mem_alloc.h>
 
@@ -128,6 +129,9 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
             }
         }
         ImGui::EndChild();
+
+        ImGui::ColorPicker3("Fog Color", &_renderer->GetGPUScene().fogColor.x);
+        ImGui::DragFloat("Fog Density", &_renderer->GetGPUScene().fogDensity);
     }
     ImGui::End();
 
