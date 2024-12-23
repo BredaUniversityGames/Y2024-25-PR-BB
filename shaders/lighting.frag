@@ -115,6 +115,7 @@ void main()
 
     vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
 
+    float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, scene.directionalLight.direction.xyz), 1.0);
 
     // We store brightness for bloom later on
