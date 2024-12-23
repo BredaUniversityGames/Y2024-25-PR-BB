@@ -98,7 +98,8 @@ public:
     ResourceHandle<GPUImage> directionalShadowMap;
 
     glm::vec3 fogColor{0.5,0.6,0.7};
-    float fogDensity{0.04f};
+    float fogDensity{0.2f};
+    float fogHeight{0.3f};
 
 private:
     struct alignas(16) DirectionalLightData
@@ -135,6 +136,7 @@ private:
 
         glm::vec3 fogColor;
         float fogDensity;
+        float fogHeight;
     };
 
     struct alignas(16) InstanceData

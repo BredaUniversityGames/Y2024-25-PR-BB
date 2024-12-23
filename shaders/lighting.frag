@@ -52,10 +52,12 @@ float CalculateShadowBias(float cosTheta, float baseBias);
 vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
-vec3 applyFog(in vec3  col,   // color of pixel
-in float t,     // distance to point
-in vec3  rd,    // camera to point
-in vec3  lig);  // sun direction
+
+vec3 applyFog( in vec3  col,  // color of pixel
+in float t,    // distnace to point
+in vec3  ro,   // camera position
+in vec3  rd,   // camera to point vector
+in vec3 lig);  // light position
 
 void main()
 {
@@ -116,7 +118,8 @@ void main()
     vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
 
     float linearDepth = distance(position, camera.cameraPosition);
-    outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, scene.directionalLight.direction.xyz), 1.0);
+    //outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, scene.directionalLight.direction.xyz), 1.0);
+    outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
@@ -125,18 +128,20 @@ void main()
     outBrightness = vec4(brightnessColor, 1.0);
 }
 
-vec3 applyFog(in vec3  col,   // color of pixel
-    in float t,     // distance to point
-    in vec3  rd,    // camera to point
-    in vec3  lig)  // sun direction
+vec3 applyFog( in vec3  col,  // color of pixel
+in float t,    // distnace to point
+in vec3  ro,   // camera position
+in vec3  rd,   // camera to point vector
+in vec3 lig)   // light position
 {
+    float a = scene.fogHeight;
     float b = scene.fogDensity;
-    float fogAmount = 1.0 - exp(-t*b);
+    float fogAmount = (a/b) * exp(-ro.y*b) * (1.0-exp(-t*rd.y*b))/rd.y;
     float sunAmount = max( dot(rd, lig), 0.0 );
-    vec3  fogColor  = mix( scene.fogColor, // blue
-                           scene.directionalLight.color.rgb, // yellow
+    vec3  fogColor  = mix( scene.fogColor,
+                           scene.directionalLight.color.rgb,
                            pow(sunAmount,8.0) );
-    return mix( col, fogColor, fogAmount );
+    return mix( col, fogColor, clamp(fogAmount, 0.0, 0.5) );
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)

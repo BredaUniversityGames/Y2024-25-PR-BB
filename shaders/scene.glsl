@@ -51,6 +51,7 @@ struct Scene
 
     vec3 fogColor;
     float fogDensity;
+    float fogHeight;
 };
 
 struct Instance

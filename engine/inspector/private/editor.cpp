@@ -132,6 +132,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
 
         ImGui::ColorPicker3("Fog Color", &_renderer->GetGPUScene().fogColor.x);
         ImGui::DragFloat("Fog Density", &_renderer->GetGPUScene().fogDensity);
+        ImGui::DragFloat("Fog Height", &_renderer->GetGPUScene().fogHeight);
     }
     ImGui::End();
 
