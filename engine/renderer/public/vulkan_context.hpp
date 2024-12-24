@@ -32,11 +32,8 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
 
 enum class BindlessBinding : std::uint8_t
 {
-    eColor = 0,
-    eDepth,
-    eCubemap,
-    eShadowmap,
-    eMaterial,
+    eImage = 0,
+    eStorageBuffer,
     eNone,
 };
 

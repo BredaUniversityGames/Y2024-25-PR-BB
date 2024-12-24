@@ -1,7 +1,7 @@
 layout (set = 0, binding = 0) uniform sampler2D bindless_color_textures[];
-layout (set = 0, binding = 1) uniform sampler2D bindless_depth_textures[];
-layout (set = 0, binding = 2) uniform samplerCube bindless_cubemap_textures[];
-layout (set = 0, binding = 3) uniform sampler2DShadow bindless_shadowmap_textures[];
+layout (set = 0, binding = 0) uniform sampler2D bindless_depth_textures[];
+layout (set = 0, binding = 0) uniform samplerCube bindless_cubemap_textures[];
+layout (set = 0, binding = 0) uniform sampler2DShadow bindless_shadowmap_textures[];
 
 struct Material
 {
@@ -25,7 +25,7 @@ struct Material
     uint occlusionMapIndex;
     uint emissiveMapIndex;
 };
-layout (std140, set = 0, binding = 4) buffer Materials
+layout (std140, set = 0, binding = 1) buffer Materials
 {
     Material bindless_materials[];
 };
