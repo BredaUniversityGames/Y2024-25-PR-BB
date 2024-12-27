@@ -16,24 +16,36 @@ layout (std430, set = 0, binding = 0) readonly buffer DrawCommands_In
     DrawCommand drawCommandsIn[];
 };
 
-layout (std430, set = 1, binding = 0) buffer DrawCommands_Out
+layout (std430, set = 1, binding = 0) writeonly buffer DrawCommands_Out
 {
     DrawCommand drawCommandsOut[];
 };
 
-layout (std430, set = 2, binding = 0) buffer InstanceData
+layout (std430, set = 2, binding = 0) readonly buffer InstanceData
 {
     Instance instances[];
 };
 
-layout (set = 3, binding = 0) uniform CameraUBO
+layout (set = 3, binding = 0) readonly uniform CameraUBO
 {
     Camera camera;
 };
 
+layout (set = 4, binding = 0) buffer VisibilityBuffer
+{
+    bool visibility[];
+};
+
 layout (local_size_x = 64) in;
 
-bool IsVisible(uint objectIndex);
+layout (push_constant) uniform PushConstants
+{
+    uint isPrepass;
+} pushConstants;
+
+bool Prepass_IsVisible(uint objectIndex);
+bool SecondPass_IsVisible(uint objectIndex);
+bool VisibleInFrustum(in vec3 center, in float radius);
 
 void main()
 {
@@ -41,16 +53,29 @@ void main()
 
     if (gId < drawCommandsIn.length())
     {
-        drawCommandsOut[gId] = drawCommandsIn[gId];
-        if (!IsVisible(gId))
+        if (bool(pushConstants.isPrepass))
         {
-            drawCommandsOut[gId].instanceCount = 0;
+            drawCommandsOut[gId] = drawCommandsIn[gId];
+            if (!Prepass_IsVisible(gId))
+            {
+                drawCommandsOut[gId].instanceCount = 0;
+            }
+        }
+        else
+        {
+
         }
     }
 }
 
-bool IsVisible(uint objectIndex)
+bool Prepass_IsVisible(uint objectIndex)
 {
+    // For the prepass we only care if it was visible in the previous frame.
+    if (!visibility[objectIndex])
+    {
+        //return false;
+    }
+
     // Grab position from world matrix and convert it into view space.
     vec3 center = instances[objectIndex].model[3].xyz;
     center = (camera.view * vec4(center, 1.f)).xyz;
@@ -60,6 +85,16 @@ bool IsVisible(uint objectIndex)
     r *= instances[objectIndex].model;
     float radius = length(r);
 
+    return VisibleInFrustum(center, radius);
+}
+
+bool SecondPass_IsVisible(uint objectIndex)
+{
+    return false;
+}
+
+bool VisibleInFrustum(in vec3 center, in float radius)
+{
     bool visible = true;
 
     // Test against frustum.
@@ -82,7 +117,5 @@ bool IsVisible(uint objectIndex)
         visible = visible && -center.z + radius > camera.zNear && -center.z - radius < camera.zFar;
     }
 
-    visible = visible && camera.cullingEnabled != 0;
-
-    return visible;
+    return visible && camera.cullingEnabled != 0;
 }

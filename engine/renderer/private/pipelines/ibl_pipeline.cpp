@@ -59,7 +59,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     for (size_t i = 0; i < 6; ++i)
     {
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-            .imageView = irradianceMap.views[i],
+            .imageView = irradianceMap.layerViews[i].view,
             .imageLayout = vk::ImageLayout::eAttachmentOptimal,
             .loadOp = vk::AttachmentLoadOp::eClear,
             .storeOp = vk::AttachmentStoreOp::eStore,
@@ -164,7 +164,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     util::TransitionImageLayout(commandBuffer, brdfLUT->image, brdfLUT->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_brdfLUT)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_brdfLUT)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,

@@ -35,7 +35,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pipeline");
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,

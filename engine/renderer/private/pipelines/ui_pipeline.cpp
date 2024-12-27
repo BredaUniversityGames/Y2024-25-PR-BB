@@ -81,7 +81,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,

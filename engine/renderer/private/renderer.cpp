@@ -91,11 +91,27 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
+    uint16_t hzbSize = std::max(application.DisplaySize().x, application.DisplaySize().y); // TODO: Test with smaller sizes.
+    CPUImage hzbImage {
+        .initialData = {},
+        .width = hzbSize,
+        .height = hzbSize,
+        .depth = 1,
+        .layers = 1,
+        .mips = static_cast<uint8_t>(std::log2(hzbSize)),
+        .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+        .isHDR = false,
+        .format = vk::Format::eR16Sfloat,
+        .type = ImageType::eDepth,
+        .name = "HZB Image"
+    };
+    _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage);
+
     // temporary location
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
-    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
+    // viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
 
-    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
+    _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, _hzbImage, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
     _fxaaPipeline = std::make_unique<FXAAPipeline>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);

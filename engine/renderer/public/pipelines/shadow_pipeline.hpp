@@ -31,7 +31,7 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
 
-    IndirectCuller _culler;
+    std::unique_ptr<IndirectCuller> _culler;
 
     vk::PipelineLayout _staticPipelineLayout;
     vk::Pipeline _staticPipeline;

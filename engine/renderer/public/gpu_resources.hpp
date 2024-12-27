@@ -104,8 +104,14 @@ struct GPUImage
 
     NON_COPYABLE(GPUImage);
 
+    struct Layer
+    {
+        vk::ImageView view;
+        std::vector<vk::ImageView> mipViews {};
+    };
+
     vk::Image image {};
-    std::vector<vk::ImageView> views {};
+    std::vector<Layer> layerViews {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     VmaAllocation allocation {};
     ResourceHandle<Sampler> sampler {};

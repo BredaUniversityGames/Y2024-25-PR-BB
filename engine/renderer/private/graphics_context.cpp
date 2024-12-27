@@ -43,7 +43,8 @@ GraphicsContext::~GraphicsContext()
 
 void GraphicsContext::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 5> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 6> poolSizes = {
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
@@ -58,14 +59,20 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(_vulkanContext->Device().createDescriptorPool(&poolCreateInfo, nullptr, &_bindlessPool), "Failed creating bindless pool!");
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
     combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eImage);
     combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
-    vk::DescriptorSetLayoutBinding& materialBinding = bindings[1];
+    vk::DescriptorSetLayoutBinding& storageImage = bindings[1];
+    storageImage.descriptorType = vk::DescriptorType::eStorageImage;
+    storageImage.descriptorCount = MAX_BINDLESS_RESOURCES;
+    storageImage.binding = static_cast<uint32_t>(BindlessBinding::eStorageImage);
+    storageImage.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
+
+    vk::DescriptorSetLayoutBinding& materialBinding = bindings[2];
     materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
     materialBinding.descriptorCount = 1;
     materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorageBuffer);
@@ -87,7 +94,7 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
-    std::vector<std::string_view> names { "bindless_color_textures", "Materials" };
+    std::vector<std::string_view> names { "bindless_color_textures", "bindless_storage_image_r16f", "Materials" };
 
     _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*_vulkanContext, bindings, names, layoutCreateInfo);
 
@@ -129,13 +136,15 @@ void GraphicsContext::UpdateBindlessImages()
 
         // If it can't be sampled, use the fallback.
         if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
+        {
             image = imageResourceManager.Access(_fallbackImage);
+        }
 
         if (_sampler.IsNull())
         {
             SamplerCreation createInfo {
                 .name = "Graphics context sampler",
-                .maxLod = std::floor(std::log2(2048.0f)),
+                .maxLod = static_cast<float>(image->mips),
             };
 
             _sampler = _graphicsResources->SamplerResourceManager().Create(createInfo);

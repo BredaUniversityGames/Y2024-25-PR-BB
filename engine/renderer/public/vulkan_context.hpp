@@ -33,6 +33,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS =
 enum class BindlessBinding : std::uint8_t
 {
     eImage = 0,
+    eStorageImage,
     eStorageBuffer,
     eNone,
 };
@@ -94,6 +95,7 @@ private:
         VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
         VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME,
         VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
+        VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
     };
 
     void PickPhysicalDevice();

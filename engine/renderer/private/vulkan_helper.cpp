@@ -210,6 +210,9 @@ util::ImageLayoutTransitionState util::GetImageLayoutTransitionSourceState(vk::I
         { vk::ImageLayout::eDepthStencilAttachmentOptimal,
             { .pipelineStage = vk::PipelineStageFlagBits2::eLateFragmentTests,
                 .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentWrite } },
+        { vk::ImageLayout::eGeneral,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eAllCommands,
+                .accessFlags = vk::AccessFlagBits2::eShaderRead | vk::AccessFlagBits2::eShaderWrite | vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite } }
     };
 
     auto it = sourceStateMap.find(sourceLayout);
@@ -245,7 +248,10 @@ util::ImageLayoutTransitionState util::GetImageLayoutTransitionDestinationState(
                 .accessFlags = vk::AccessFlags2 { 0 } } },
         { vk::ImageLayout::eDepthStencilReadOnlyOptimal,
             { .pipelineStage = vk::PipelineStageFlagBits2::eEarlyFragmentTests,
-                .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentRead } }
+                .accessFlags = vk::AccessFlagBits2::eDepthStencilAttachmentRead } },
+        { vk::ImageLayout::eGeneral,
+            { .pipelineStage = vk::PipelineStageFlagBits2::eAllCommands,
+                .accessFlags = vk::AccessFlagBits2::eShaderRead | vk::AccessFlagBits2::eShaderWrite | vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite } }
     };
 
     auto it = destinationStateMap.find(destinationLayout);

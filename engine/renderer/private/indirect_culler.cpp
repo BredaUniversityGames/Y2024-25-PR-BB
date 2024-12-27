@@ -10,8 +10,13 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-IndirectCuller::IndirectCuller(const std::shared_ptr<GraphicsContext>& context)
+IndirectCuller::IndirectCuller(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet, ResourceHandle<Buffer> visibilityBuffer, vk::DescriptorSet visibilityDescriptorSet)
     : _context(context)
+    , _camera(camera)
+    , _targetBuffer(targetBuffer)
+    , _targetDescriptorSet(targetDescriptorSet)
+    , _visibilityBuffer(visibilityBuffer)
+    , _visibilityDescriptorSet(visibilityDescriptorSet)
 {
     CreateCullingPipeline();
 }
@@ -22,35 +27,45 @@ IndirectCuller::~IndirectCuller()
     _context->VulkanContext()->Device().destroy(_cullingPipelineLayout);
 }
 
-void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet)
+void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, bool isPrepass)
 {
-    const uint32_t localSize = 64;
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { targetDescriptorSet }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { camera.DescriptorSet(currentFrame) }, {});
-    commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
+    if (isPrepass)
+    {
+        const uint32_t localSize = 64;
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { _targetDescriptorSet }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { _camera.DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 4, { _visibilityDescriptorSet }, {});
 
-    vk::Buffer inDrawBuffer = _context->Resources()->BufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
-    vk::Buffer outDrawBuffer = _context->Resources()->BufferResourceManager().Access(targetBuffer)->buffer;
+        commandBuffer.pushConstants<uint32_t>(_cullingPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { isPrepass });
 
-    std::array<vk::BufferMemoryBarrier, 2> barriers;
+        commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
-    barriers[0] = {
-        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
-        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = inDrawBuffer,
-        .offset = 0,
-        .size = vk::WholeSize,
-    };
+        vk::Buffer inDrawBuffer = _context->Resources()->BufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
+        vk::Buffer outDrawBuffer = _context->Resources()->BufferResourceManager().Access(_targetBuffer)->buffer;
 
-    barriers[1] = barriers[0];
-    barriers[1].buffer = outDrawBuffer;
+        std::array<vk::BufferMemoryBarrier, 2> barriers;
 
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
+        barriers[0] = {
+            .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+            .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+            .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+            .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+            .buffer = inDrawBuffer,
+            .offset = 0,
+            .size = vk::WholeSize,
+        };
+
+        barriers[1] = barriers[0];
+        barriers[1].buffer = outDrawBuffer;
+
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
+    }
+    else
+    {
+    }
 }
 
 void IndirectCuller::CreateCullingPipeline()

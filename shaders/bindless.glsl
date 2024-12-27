@@ -3,6 +3,8 @@ layout (set = 0, binding = 0) uniform sampler2D bindless_depth_textures[];
 layout (set = 0, binding = 0) uniform samplerCube bindless_cubemap_textures[];
 layout (set = 0, binding = 0) uniform sampler2DShadow bindless_shadowmap_textures[];
 
+layout (set = 0, binding = 1, r16f) writeonly uniform image2D bindless_storage_image_r16f;
+
 struct Material
 {
     vec4 albedoFactor;
@@ -25,7 +27,7 @@ struct Material
     uint occlusionMapIndex;
     uint emissiveMapIndex;
 };
-layout (std140, set = 0, binding = 1) buffer Materials
+layout (std140, set = 0, binding = 2) buffer Materials
 {
     Material bindless_materials[];
 };
