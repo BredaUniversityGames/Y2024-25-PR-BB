@@ -38,6 +38,7 @@ void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     };
     if (isPrepass)
     {
+        TracyVkZone(scene.tracyContext, commandBuffer, "Prepass cull");
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
@@ -77,6 +78,8 @@ void IndirectCuller::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     }
     else
     {
+        TracyVkZone(scene.tracyContext, commandBuffer, "Second pass cull");
+
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { _targetDescriptorSet }, {});

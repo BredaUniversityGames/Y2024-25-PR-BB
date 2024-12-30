@@ -77,10 +77,7 @@ void main()
         {
             bool visible = SecondPass_IsVisible(gId);
             bool shouldDraw = visible && !visibility[gId];
-            if (shouldDraw)
-            {
-                drawCommandsOut[gId].instanceCount = 1;
-            }
+            drawCommandsOut[gId].instanceCount = shouldDraw ? 1 : 0;
 
             visibility[gId] = visible;
         }
@@ -119,6 +116,7 @@ bool SecondPass_IsVisible(uint objectIndex)
     float radius = length(r);
 
     bool frustumVisible = VisibleInFrustum(center, radius);
+    bool projectionVisible = false;
     bool occlusionVisible = false;
 
     if (frustumVisible)
@@ -128,7 +126,8 @@ bool SecondPass_IsVisible(uint objectIndex)
         float zNear = camera.proj[3][2];
 
         vec4 AABB;
-        if (TryCalculateSphereBounds(center, radius, zNear, P00, P11, AABB))
+        projectionVisible = TryCalculateSphereBounds(center, radius, zNear, P00, P11, AABB);
+        if (projectionVisible)
         {
             float boundsWidth = (AABB.x - AABB.z) * pushConstants.hzbSize;
             float boundsHeight = (AABB.w - AABB.y) * pushConstants.hzbSize;
@@ -141,7 +140,10 @@ bool SecondPass_IsVisible(uint objectIndex)
         }
     }
 
-    bool visible = frustumVisible && occlusionVisible;
+    // The draw has to be visible inside the frustum.
+    // If we can't project the draw, we assum to draw it (handles cases where you are inside the mesh).
+    // If it is visible during the occlusion cull, we draw it.
+    bool visible = frustumVisible && (occlusionVisible || !projectionVisible);
 
     return visible;
 }

@@ -49,10 +49,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/Cathedral.glb",
+        "assets/models/Cathedral.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
-        "assets/models/DamagedHelmet.glb",
+        //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         // "assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
@@ -68,10 +68,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    auto ent0 = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
-    auto ent1 = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
-    TransformHelpers::SetLocalTransform(_ecs->GetRegistry(), ent1, glm::vec3 { 0.0f, 0.0f, -5.0f }, glm::quat {}, glm::vec3 { 1.0f });
-    TransformHelpers::SetLocalTransform(_ecs->GetRegistry(), ent0, glm::vec3 { 0.0f, 0.0f, -10.0f }, glm::quat {}, glm::vec3 { 0.1f });
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
     // SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animation);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
@@ -216,7 +213,7 @@ void OldEngine::Tick(Engine& engine)
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.003f;
+            constexpr float CAM_SPEED = 0.03f;
 
             glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
             glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
