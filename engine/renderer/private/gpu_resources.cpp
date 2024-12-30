@@ -17,12 +17,16 @@ SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode ad
 Sampler::Sampler(const SamplerCreation& creation, const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
-    vk::SamplerCreateInfo createInfo {};
+    vk::StructureChain<vk::SamplerCreateInfo, vk::SamplerReductionModeCreateInfo> structureChain {};
+    vk::SamplerCreateInfo& createInfo { structureChain.get<vk::SamplerCreateInfo>() };
     if (creation.useMaxAnisotropy)
     {
         auto properties = _context->PhysicalDevice().getProperties();
         createInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
     }
+
+    vk::SamplerReductionModeCreateInfo& reductionModeCreateInfo { structureChain.get<vk::SamplerReductionModeCreateInfo>() };
+    reductionModeCreateInfo.reductionMode = creation.reductionMode;
 
     createInfo.addressModeU = creation.addressModeU;
     createInfo.addressModeV = creation.addressModeV;

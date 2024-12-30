@@ -288,6 +288,19 @@ void GeometryPipeline::CreateSkinnedPipeline()
 
 void GeometryPipeline::CreatBuildHzbPipeline()
 {
+    SamplerCreation samplerCreation {
+        .name = "HZB Sampler",
+        .minFilter = vk::Filter::eLinear,
+        .magFilter = vk::Filter::eLinear,
+        .anisotropyEnable = false,
+        .reductionMode = vk::SamplerReductionMode::eMin,
+        .minLod = 0.0f,
+        .maxLod = 0.0f,
+    };
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+
+    _hzbSampler = _context->Resources()->SamplerResourceManager().Create(samplerCreation);
+
     const auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
     std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
     bindings[0] = {
@@ -295,7 +308,7 @@ void GeometryPipeline::CreatBuildHzbPipeline()
         .descriptorCount = 1,
         .descriptorType = vk::DescriptorType::eCombinedImageSampler,
         .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
-        .pImmutableSamplers = &samplerResourceManager.Access(samplerResourceManager.GetDefaultSamplerHandle())->sampler,
+        .pImmutableSamplers = &samplerResourceManager.Access(_hzbSampler)->sampler,
 
     };
     bindings[1] = {
@@ -398,17 +411,16 @@ void GeometryPipeline::BuildHzb(const RenderSceneDescription& scene, vk::Command
     {
         uint32_t mipSize = hzb->width >> i;
 
-        vk::ImageView inputTexture = depth->view; // i == 0 ? depth->view : hzb->layerViews[0].mipViews[i - 1];
+        vk::ImageView inputTexture = i == 0 ? depth->view : hzb->layerViews[0].mipViews[i - 1];
         vk::ImageView outputTexture = hzb->layerViews[0].mipViews[i];
 
         if (i > 0)
         {
-            // util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i - 1, 1);
+            util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i - 1, 1);
         }
         util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
 
         vk::DescriptorImageInfo inputImageInfo {
-            //.sampler = samplerResourceManager.Access(samplerResourceManager.GetDefaultSamplerHandle())->sampler,
             .imageView = inputTexture,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };

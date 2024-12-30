@@ -48,6 +48,8 @@ private:
     vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSet _visibilityDescriptorSet;
 
+    ResourceHandle<Sampler> _hzbSampler;
+
     void CreateStaticPipeline();
     void CreateSkinnedPipeline();
     void CreatBuildHzbPipeline();

@@ -37,6 +37,7 @@ struct SamplerCreation
     float mipLodBias { 0.0f };
     float minLod { 0.0f };
     float maxLod { 1.0f };
+    vk::SamplerReductionMode reductionMode { vk::SamplerReductionMode::eWeightedAverage };
 };
 
 struct Sampler
