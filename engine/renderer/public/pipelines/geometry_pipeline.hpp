@@ -55,5 +55,7 @@ private:
     void CreatBuildHzbPipeline();
     void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 
+    void DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, bool prepass);
+
     void BuildHzb(const RenderSceneDescription& scene, vk::CommandBuffer commandBuffer);
 };

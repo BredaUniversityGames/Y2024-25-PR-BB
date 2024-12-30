@@ -14,7 +14,7 @@ struct RenderSceneDescription;
 class IndirectCuller // TODO: Convert this to FrameGraphRenderPass
 {
 public:
-    IndirectCuller(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet, ResourceHandle<Buffer> visibilityBuffer, vk::DescriptorSet visibilityDescriptorSet);
+    IndirectCuller(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, ResourceHandle<Buffer> targetBuffer, vk::DescriptorSet targetDescriptorSet, ResourceHandle<Buffer> visibilityBuffer, vk::DescriptorSet visibilityDescriptorSet, ResourceHandle<GPUImage> hzb);
     ~IndirectCuller();
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene, bool isPrepass);
@@ -33,6 +33,15 @@ private:
     vk::DescriptorSet _targetDescriptorSet;
     ResourceHandle<Buffer> _visibilityBuffer;
     vk::DescriptorSet _visibilityDescriptorSet;
+
+    ResourceHandle<GPUImage> _hzb;
+
+    struct PushConstants
+    {
+        uint32_t isPrepass;
+        float mipSize;
+        uint32_t hzbIndex;
+    } _pushConstants;
 
     void CreateCullingPipeline();
 };

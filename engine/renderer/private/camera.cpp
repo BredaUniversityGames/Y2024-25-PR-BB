@@ -112,7 +112,7 @@ void CameraResource::CreateDescriptorSets()
 
 glm::vec4 normalizePlane(glm::vec4 p)
 {
-    return p / length(glm::vec3(p));
+    return p / glm::length(glm::vec3(p));
 }
 
 void CameraResource::Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera)

@@ -98,6 +98,7 @@ private:
     std::unique_ptr<GBuffers> _gBuffers;
 
     ResourceHandle<GPUImage> _hzbImage;
+    ResourceHandle<Sampler> _hzbSampler;
 
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _imageAvailableSemaphores;
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;

@@ -1,6 +1,9 @@
 #version 460
 
+#extension GL_EXT_nonuniform_qualifier: enable
+
 #include "scene.glsl"
+#include "bindless.glsl"
 
 struct DrawCommand
 {
@@ -11,41 +14,50 @@ struct DrawCommand
     uint firstInstance;
 };
 
-layout (std430, set = 0, binding = 0) readonly buffer DrawCommands_In
+layout (std430, set = 1, binding = 0) readonly buffer DrawCommands_In
 {
     DrawCommand drawCommandsIn[];
 };
 
-layout (std430, set = 1, binding = 0) writeonly buffer DrawCommands_Out
+layout (std430, set = 2, binding = 0) writeonly buffer DrawCommands_Out
 {
     DrawCommand drawCommandsOut[];
 };
 
-layout (std430, set = 2, binding = 0) readonly buffer InstanceData
+layout (std430, set = 3, binding = 0) readonly buffer InstanceData
 {
     Instance instances[];
 };
 
-layout (set = 3, binding = 0) readonly uniform CameraUBO
+layout (set = 4, binding = 0) readonly uniform CameraUBO
 {
     Camera camera;
 };
 
-layout (set = 4, binding = 0) buffer VisibilityBuffer
+layout (set = 5, binding = 0) buffer VisibilityBuffer
 {
     bool visibility[];
 };
 
-layout (local_size_x = 64) in;
-
 layout (push_constant) uniform PushConstants
 {
     uint isPrepass;
+    float hzbSize;
+    uint hzbIndex;
 } pushConstants;
+
+layout (local_size_x = 64) in;
 
 bool Prepass_IsVisible(uint objectIndex);
 bool SecondPass_IsVisible(uint objectIndex);
 bool VisibleInFrustum(in vec3 center, in float radius);
+bool TryCalculateSphereBounds(
+    vec3 _center,
+    float _radius,
+    float _zNear,
+    float _P00,
+    float _P11,
+out vec4 _AABB);
 
 void main()
 {
@@ -56,14 +68,21 @@ void main()
         if (bool(pushConstants.isPrepass))
         {
             drawCommandsOut[gId] = drawCommandsIn[gId];
-            if (!Prepass_IsVisible(gId))
+            if (Prepass_IsVisible(gId))
             {
-                drawCommandsOut[gId].instanceCount = 0;
+                drawCommandsOut[gId].instanceCount = 1;
             }
         }
         else
         {
+            bool visible = SecondPass_IsVisible(gId);
+            bool shouldDraw = visible && !visibility[gId];
+            if (shouldDraw)
+            {
+                drawCommandsOut[gId].instanceCount = 1;
+            }
 
+            visibility[gId] = visible;
         }
     }
 }
@@ -73,7 +92,7 @@ bool Prepass_IsVisible(uint objectIndex)
     // For the prepass we only care if it was visible in the previous frame.
     if (!visibility[objectIndex])
     {
-        //return false;
+        return false;
     }
 
     // Grab position from world matrix and convert it into view space.
@@ -81,8 +100,8 @@ bool Prepass_IsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.f)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
-    r *= instances[objectIndex].model;
+    vec3 r = vec3(instances[objectIndex].boundingRadius, 0.0f, 0.0f);
+    r *= mat3(instances[objectIndex].model);
     float radius = length(r);
 
     return VisibleInFrustum(center, radius);
@@ -90,7 +109,41 @@ bool Prepass_IsVisible(uint objectIndex)
 
 bool SecondPass_IsVisible(uint objectIndex)
 {
-    return false;
+    // Grab position from world matrix and convert it into view space.
+    vec3 center = instances[objectIndex].model[3].xyz;
+    center = (camera.view * vec4(center, 1.0)).xyz;
+
+    // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
+    vec3 r = vec3(instances[objectIndex].boundingRadius, 0.0f, 0.0f);
+    r *= mat3(instances[objectIndex].model);
+    float radius = length(r);
+
+    bool frustumVisible = VisibleInFrustum(center, radius);
+    bool occlusionVisible = false;
+
+    if (frustumVisible)
+    {
+        float P00 = camera.proj[0][0];
+        float P11 = camera.proj[1][1];
+        float zNear = camera.proj[3][2];
+
+        vec4 AABB;
+        if (TryCalculateSphereBounds(center, radius, zNear, P00, P11, AABB))
+        {
+            float boundsWidth = (AABB.x - AABB.z) * pushConstants.hzbSize;
+            float boundsHeight = (AABB.w - AABB.y) * pushConstants.hzbSize;
+            float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
+
+            float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), 0.5 * (AABB.xy + AABB.zw), mipIndex).x;
+            float nearestBoundsDepth = zNear / (-center.z - radius);
+
+            occlusionVisible = occluderDepth < nearestBoundsDepth;
+        }
+    }
+
+    bool visible = frustumVisible && occlusionVisible;
+
+    return visible;
 }
 
 bool VisibleInFrustum(in vec3 center, in float radius)
@@ -118,4 +171,36 @@ bool VisibleInFrustum(in vec3 center, in float radius)
     }
 
     return visible && camera.cullingEnabled != 0;
+}
+
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere
+// https://jcgt.org/published/0002/02/05/
+bool TryCalculateSphereBounds(
+    vec3 _center,
+    float _radius,
+    float _zNear,
+    float _P00,
+    float _P11,
+out vec4 _AABB)
+{
+    if (-_center.z < _radius + _zNear)
+    {
+        return false;
+    }
+
+    vec2 centerXZ = -_center.xz;
+    vec2 vX = vec2(sqrt(dot(centerXZ, centerXZ) - _radius * _radius), _radius);
+    vec2 minX = mat2(vX.x, vX.y, -vX.y, vX.x) * centerXZ;
+    vec2 maxX = mat2(vX.x, -vX.y, vX.y, vX.x) * centerXZ;
+
+    vec2 centerYZ = -_center.yz;
+    vec2 vY = vec2(sqrt(dot(centerYZ, centerYZ) - _radius * _radius), _radius);
+    vec2 minY = mat2(vY.x, vY.y, -vY.y, vY.x) * centerYZ;
+    vec2 maxY = mat2(vY.x, -vY.y, vY.y, vY.x) * centerYZ;
+
+    _AABB = 0.5 - 0.5 * vec4(
+    minX.x / minX.y * _P00, minY.x / minY.y * _P11,
+    maxX.x / maxX.y * _P00, maxY.x / maxY.y * _P11);
+
+    return true;
 }

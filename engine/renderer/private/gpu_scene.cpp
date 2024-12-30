@@ -124,7 +124,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
                 .indexCount = mesh->count,
-                .instanceCount = 1,
+                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
@@ -158,7 +158,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         _drawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
                 .indexCount = mesh->count,
-                .instanceCount = 1,
+                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,

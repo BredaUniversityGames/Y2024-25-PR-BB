@@ -32,14 +32,13 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "ui_main_menu.hpp"
 #include "ui_module.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-
-#include "pipelines/fxaa_pipeline.hpp"
 
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
@@ -92,6 +91,20 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
     uint16_t hzbSize = std::max(application.DisplaySize().x, application.DisplaySize().y); // TODO: Test with smaller sizes.
+    SamplerCreation samplerCreation {
+        .name = "HZB Sampler",
+        .minFilter = vk::Filter::eLinear,
+        .magFilter = vk::Filter::eLinear,
+        .anisotropyEnable = false,
+        .mipmapMode = vk::SamplerMipmapMode::eNearest,
+        .reductionMode = vk::SamplerReductionMode::eMin,
+        .minLod = 0.0f,
+        .maxLod = std::floorf(std::log2f(hzbSize)),
+    };
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+
+    _hzbSampler = _context->Resources()->SamplerResourceManager().Create(samplerCreation);
+
     CPUImage hzbImage {
         .initialData = {},
         .width = hzbSize,
@@ -103,9 +116,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .isHDR = false,
         .format = vk::Format::eR16Sfloat,
         .type = ImageType::eDepth,
-        .name = "HZB Image"
+        .name = "HZB Image",
     };
-    _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage);
+    _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage, _hzbSampler);
 
     // temporary location
     auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
