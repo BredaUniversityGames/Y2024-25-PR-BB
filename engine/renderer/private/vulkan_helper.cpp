@@ -43,8 +43,8 @@ std::unordered_multimap<VmaAllocation, vk::MemoryPropertyFlagBits> allocationMem
 
 VkResult util::vmaCreateBuffer(VmaAllocator allocator, const VkBufferCreateInfo* pBufferCreateInfo, const VmaAllocationCreateInfo* pAllocationCreateInfo, VkBuffer* pBuffer, VmaAllocation* pAllocation, VmaAllocationInfo* pAllocationInfo)
 {
-#ifdef TRACY_ENABLE
     VmaAllocationInfo allocInfo;
+#ifdef TRACY_ENABLE
     if (pAllocationInfo == nullptr)
     {
         pAllocationInfo = &allocInfo;

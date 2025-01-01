@@ -274,10 +274,16 @@ void FrameGraph::CreateMemoryBarriers()
                         vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
                         texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
                 }
-                else
+                else if (texture->flags & vk::ImageUsageFlagBits::eColorAttachment)
                 {
                     util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
                         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
+                }
+                else
+                {
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
                         texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
                 }
             }
@@ -326,6 +332,30 @@ void FrameGraph::CreateMemoryBarriers()
                     util::InitializeImageMemoryBarrier(barrier, attachment->image, attachment->format,
                         vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
                         attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eColor);
+                }
+            }
+            else if (resource.type == FrameGraphResourceType::eTexture)
+            {
+                const GPUImage* texture = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
+                vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
+
+                if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+                {
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
+                }
+                else if (texture->flags & vk::ImageUsageFlagBits::eColorAttachment)
+                {
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
+                }
+                else
+                {
+                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
+                        vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
                 }
             }
         }

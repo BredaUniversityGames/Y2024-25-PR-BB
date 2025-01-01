@@ -2,7 +2,7 @@
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
-#include "indirect_culler.hpp"
+#include "generate_draws_pipeline.hpp"
 
 #include <memory>
 
@@ -31,7 +31,7 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
 
-    std::unique_ptr<IndirectCuller> _culler;
+    std::unique_ptr<GenerateDrawsPipeline> _culler;
 
     vk::PipelineLayout _staticPipelineLayout;
     vk::Pipeline _staticPipeline;

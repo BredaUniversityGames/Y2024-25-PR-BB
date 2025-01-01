@@ -14,6 +14,7 @@ class GPUScene;
 class BatchBuffer;
 class ECSModule;
 class GraphicsContext;
+class CameraBatch;
 
 struct GPUSceneCreation
 {
@@ -24,6 +25,9 @@ struct GPUSceneCreation
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
     ResourceHandle<GPUImage> directionalShadowMap;
+    ResourceHandle<GPUImage> depthImage;
+
+    glm::uvec2 displaySize;
 };
 
 struct RenderSceneDescription
@@ -90,6 +94,8 @@ public:
     }
 
     const CameraResource& MainCamera() const { return _mainCamera; }
+    CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
+
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
 
     ResourceHandle<GPUImage> irradianceMap;
@@ -97,9 +103,9 @@ public:
     ResourceHandle<GPUImage> brdfLUTMap;
     ResourceHandle<GPUImage> directionalShadowMap;
 
-    glm::vec3 fogColor{0.5,0.6,0.7};
-    float fogDensity{0.2f};
-    float fogHeight{0.3f};
+    glm::vec3 fogColor { 0.5, 0.6, 0.7 };
+    float fogDensity { 0.2f };
+    float fogHeight { 0.3f };
 
 private:
     struct alignas(16) DirectionalLightData
@@ -180,6 +186,8 @@ private:
     // TODO: Handle all camera's in one buffer or array to enable better culling
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
+
+    std::unique_ptr<CameraBatch> _mainCameraBatch;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;

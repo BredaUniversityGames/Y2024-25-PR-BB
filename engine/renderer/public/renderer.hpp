@@ -8,6 +8,8 @@
 
 #include <tracy/TracyVulkan.hpp>
 
+class BuildHzbPipeline;
+class GenerateDrawsPipeline;
 class UIModule;
 class DebugPipeline;
 class Application;
@@ -72,6 +74,8 @@ private:
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
+    std::unique_ptr<GenerateDrawsPipeline> _generateDrawsPipeline;
+    std::unique_ptr<BuildHzbPipeline> _buildHzbPipeline;
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
@@ -96,9 +100,6 @@ private:
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
-
-    ResourceHandle<GPUImage> _hzbImage;
-    ResourceHandle<Sampler> _hzbSampler;
 
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _imageAvailableSemaphores;
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;

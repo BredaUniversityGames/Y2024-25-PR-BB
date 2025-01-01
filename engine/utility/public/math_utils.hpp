@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-uint32_t DivideRoundingUp(
-	uint32_t _dividend,
-	uint32_t _divisor)
+inline uint32_t DivideRoundingUp(
+    uint32_t _dividend,
+    uint32_t _divisor)
 {
-	return (_dividend + _divisor - 1) / _divisor;
+    return (_dividend + _divisor - 1) / _divisor;
 }

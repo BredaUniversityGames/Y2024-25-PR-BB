@@ -1,6 +1,7 @@
 #include "gpu_scene.hpp"
 
 #include "batch_buffer.hpp"
+#include "camera_batch.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
@@ -43,6 +44,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
+
+    _mainCameraBatch = std::make_unique<CameraBatch>(_context, _mainCamera, creation.depthImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, creation.displaySize);
 }
 
 GPUScene::~GPUScene()
