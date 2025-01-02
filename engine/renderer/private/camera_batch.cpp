@@ -29,7 +29,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
     CreateDrawBufferDescriptorSet(drawDSL);
 
     BufferCreation visibilityCreation {
-        .size = sizeof(uint32_t) * MAX_INSTANCES, // TODO: Can be packed into multiple bits
+        .size = MAX_INSTANCES / 8,
         .usage = vk::BufferUsageFlagBits::eStorageBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,

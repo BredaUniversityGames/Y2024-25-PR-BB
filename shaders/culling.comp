@@ -36,7 +36,7 @@ layout (set = 4, binding = 0) readonly uniform CameraUBO
 
 layout (set = 5, binding = 0) buffer VisibilityBuffer
 {
-    bool visibility[];
+    uint visibility[];
 };
 
 layout (push_constant) uniform PushConstants
@@ -58,6 +58,8 @@ bool TryCalculateSphereBounds(
     float _P00,
     float _P11,
 out vec4 _AABB);
+bool GetVisibility(uint objectIndex);
+void SetVisibility(uint objectIndex, bool value);
 
 void main()
 {
@@ -76,10 +78,10 @@ void main()
         else
         {
             bool visible = SecondPass_IsVisible(gId);
-            bool shouldDraw = visible && !visibility[gId];
+            bool shouldDraw = visible && !GetVisibility(gId);
             drawCommandsOut[gId].instanceCount = shouldDraw ? 1 : 0;
 
-            visibility[gId] = visible;
+            SetVisibility(gId, visible);
         }
     }
 }
@@ -87,7 +89,7 @@ void main()
 bool Prepass_IsVisible(uint objectIndex)
 {
     // For the prepass we only care if it was visible in the previous frame.
-    if (!visibility[objectIndex])
+    if (!GetVisibility(objectIndex))
     {
         return false;
     }
@@ -206,3 +208,27 @@ out vec4 _AABB)
 
     return true;
 }
+
+bool GetVisibility(uint objectIndex)
+{
+    uint index = objectIndex / 32;
+    uint remainder = objectIndex % 32;
+    return bool((visibility[index] >> remainder) & 1u);
+}
+
+void SetVisibility(uint objectIndex, bool value)
+{
+    uint remainder = objectIndex % 32;
+    uint index = objectIndex / 32;
+    uint mask = 1u << remainder;
+
+    if (value)
+    {
+        atomicOr(visibility[index], mask); // Atomically set the bit
+    }
+    else
+    {
+        atomicAnd(visibility[index], ~mask); // Atomically clear the bit
+    }
+}
+
