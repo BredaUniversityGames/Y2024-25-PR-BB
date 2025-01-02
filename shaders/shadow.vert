@@ -12,6 +12,12 @@ layout (set = 1, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
+layout (set = 2, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
+};
+
 layout (push_constant) uniform PushConstants
 {
     uint instanceOffset;
@@ -26,7 +32,7 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    Instance instance = instances[redirect[gl_DrawID + instanceOffset]]; // TODO: verify how to use redirect with instance offset for skinned animations.
 
     position = (instance.model * vec4(inPosition, 1.0)).xyz;
     gl_Position = scene.directionalLight.lightVP * vec4(position, 1.0);

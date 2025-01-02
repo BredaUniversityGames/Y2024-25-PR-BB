@@ -12,6 +12,12 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
+layout (set = 3, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
+};
+
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec4 inTangent;
@@ -20,13 +26,13 @@ layout (location = 3) in vec2 inTexCoord;
 layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
-layout (location = 3) out flat int drawID;
+layout (location = 3) out flat uint drawID;
 layout (location = 4) out mat3 TBN;
 
 void main()
 {
-    mat4 modelTransform = instances[gl_DrawID].model;
-    drawID = gl_DrawID;
+    mat4 modelTransform = instances[redirect[gl_DrawID]].model;
+    drawID = redirect[gl_DrawID];
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
     normal = normalize((modelTransform * vec4(inNormal, 0.0)).xyz);

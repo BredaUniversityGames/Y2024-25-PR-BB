@@ -39,11 +39,18 @@ layout (set = 5, binding = 0) buffer VisibilityBuffer
     uint visibility[];
 };
 
+layout (set = 6, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
+};
+
 layout (push_constant) uniform PushConstants
 {
     uint isPrepass;
     float hzbSize;
     uint hzbIndex;
+    uint drawCommandsCount;
 } pushConstants;
 
 layout (local_size_x = 64) in;
@@ -65,21 +72,30 @@ void main()
 {
     uint gId = gl_GlobalInvocationID.x;
 
-    if (gId < drawCommandsIn.length())
+    if (gId < pushConstants.drawCommandsCount)
     {
         if (bool(pushConstants.isPrepass))
         {
-            drawCommandsOut[gId] = drawCommandsIn[gId];
             if (Prepass_IsVisible(gId))
             {
-                drawCommandsOut[gId].instanceCount = 1;
+                uint newIndex = atomicAdd(count, 1);
+                redirect[newIndex] = gId;
+                drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                drawCommandsOut[newIndex].instanceCount = 1;
             }
         }
         else
         {
             bool visible = SecondPass_IsVisible(gId);
             bool shouldDraw = visible && !GetVisibility(gId);
-            drawCommandsOut[gId].instanceCount = shouldDraw ? 1 : 0;
+
+            if (shouldDraw)
+            {
+                uint newIndex = atomicAdd(count, 1);
+                redirect[newIndex] = gId;
+                drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                drawCommandsOut[newIndex].instanceCount = 1;
+            }
 
             SetVisibility(gId, visible);
         }

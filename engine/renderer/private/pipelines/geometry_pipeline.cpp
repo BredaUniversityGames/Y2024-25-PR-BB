@@ -181,16 +181,20 @@ void GeometryPipeline::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t cu
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 3, { scene.gpuScene->MainCameraBatch().RedirectBufferDescriptorSet() }, {});
 
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
         vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
+        vk::Buffer countBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.RedirectBuffer())->buffer;
 
         commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
         commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
-        commandBuffer.drawIndexedIndirect(
+        commandBuffer.drawIndexedIndirectCountKHR(
             indirectDrawBuffer,
             scene.gpuScene->StaticDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            countBuffer,
+            0,
             scene.gpuScene->StaticDrawRange().count,
             sizeof(DrawIndexedIndirectCommand),
             _context->VulkanContext()->Dldi());
@@ -210,14 +214,17 @@ void GeometryPipeline::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t cu
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
         vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
+        vk::Buffer countBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.RedirectBuffer())->buffer;
 
         commandBuffer.pushConstants<uint32_t>(_skinnedPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { scene.gpuScene->SkinnedDrawRange().start });
 
         commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
         commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
-        commandBuffer.drawIndexedIndirect(
+        commandBuffer.drawIndexedIndirectCountKHR(
             indirectDrawBuffer,
             scene.gpuScene->SkinnedDrawRange().start * sizeof(DrawIndexedIndirectCommand),
+            countBuffer,
+            0,
             scene.gpuScene->SkinnedDrawRange().count,
             sizeof(DrawIndexedIndirectCommand),
             _context->VulkanContext()->Dldi());

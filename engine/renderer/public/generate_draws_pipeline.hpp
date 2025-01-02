@@ -37,6 +37,7 @@ private:
         uint32_t isPrepass;
         float mipSize;
         uint32_t hzbIndex;
+        uint32_t drawCommandsCount;
     } _pushConstants;
 
     void CreateCullingPipeline();

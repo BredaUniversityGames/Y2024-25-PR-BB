@@ -48,31 +48,43 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
 
     CreateShadowMapResources();
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings {
+    std::vector<vk::DescriptorSetLayoutBinding> bindingsVisibility {
         vk::DescriptorSetLayoutBinding {
             .binding = 0,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
     };
-    std::vector<std::string_view> names { "VisibilityBuffer" };
+    std::vector<std::string_view> namesVisibility { "VisibilityBuffer" };
 
-    _visibilityDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _visibilityDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsVisibility, namesVisibility);
 
-    _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Bach", _mainCamera, creation.depthImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, _visibilityDSL);
-    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, _visibilityDSL);
+    std::vector<vk::DescriptorSetLayoutBinding> bindingsRedirect {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
+    };
+    std::vector<std::string_view> namesRedirect { "RedirectBuffer" };
+
+    _redirectDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsRedirect, namesRedirect);
+
+    _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Bach", _mainCamera, creation.depthImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
+    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
 }
 
 GPUScene::~GPUScene()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
+    vkContext->Device().destroy(_drawBufferDSL);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
-    vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_objectInstancesDSL);
     vkContext->Device().destroy(_skinDescriptorSetLayout);
-    vkContext->Device().destroy(_pointLightDescriptorSetLayout);
+    vkContext->Device().destroy(_pointLightDSL);
     vkContext->Device().destroy(_visibilityDSL);
+    vkContext->Device().destroy(_redirectDSL);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -389,7 +401,7 @@ void GPUScene::CreatePointLightDescriptorSetLayout()
 
     std::vector<std::string_view> names { "PointLightSSBO" };
 
-    _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _pointLightDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -406,7 +418,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<std::string_view> names { "InstanceData" };
 
-    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _objectInstancesDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSkinDescriptorSetLayout()
@@ -448,7 +460,7 @@ void GPUScene::CreatePointLightDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _pointLightDescriptorSetLayout; });
+        { l = _pointLightDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
@@ -468,7 +480,7 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _objectInstancesDescriptorSetLayout; });
+        { l = _objectInstancesDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
@@ -670,7 +682,7 @@ void GPUScene::InitializeIndirectDrawBuffer()
     {
         BufferCreation creation {};
         creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
             .SetIsMappable(true)
             .SetName("Indirect draw buffer");
@@ -692,11 +704,11 @@ void GPUScene::InitializeIndirectDrawDescriptor()
     };
     std::vector<std::string_view> names { "DrawCommands" };
 
-    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
+    _drawBufferDSL = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _drawBufferDescriptorSetLayout; });
+        { l = _drawBufferDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = vkContext->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;

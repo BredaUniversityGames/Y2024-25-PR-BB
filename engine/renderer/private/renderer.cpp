@@ -206,7 +206,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
-        .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
+        //.AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
@@ -280,7 +280,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(generateShadowDrawsSecondPass)
         .AddNode(geometrySecondPass)
         .AddNode(shadowSecondPass)
-        .AddNode(ssaoPass)
+        //.AddNode(ssaoPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
         .AddNode(lightingPass)
