@@ -40,7 +40,7 @@ struct RenderSceneDescription
     TracyVkCtx& tracyContext;
 };
 
-constexpr uint32_t MAX_INSTANCES = 1 << 15;
+constexpr uint32_t MAX_INSTANCES = 1 << 14;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
 constexpr uint32_t MAX_BONES = 1 << 11;
 

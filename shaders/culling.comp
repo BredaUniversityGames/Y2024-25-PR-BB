@@ -99,7 +99,7 @@ bool Prepass_IsVisible(uint objectIndex)
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
     vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
     r *= instances[objectIndex].model;
-    float radius = length(r);
+    float radius = length(r.xyz);
 
     return VisibleInFrustum(center, radius);
 }
@@ -113,7 +113,7 @@ bool SecondPass_IsVisible(uint objectIndex)
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
     vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
     r *= instances[objectIndex].model;
-    float radius = length(r);
+    float radius = length(r.xyz);
 
     bool frustumVisible = VisibleInFrustum(center, radius);
     bool projectionVisible = false;

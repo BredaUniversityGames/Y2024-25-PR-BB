@@ -29,7 +29,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
     CreateDrawBufferDescriptorSet(drawDSL);
 
     BufferCreation visibilityCreation {
-        .size = sizeof(bool) * MAX_INSTANCES, // TODO: Can be packed into multiple bits
+        .size = sizeof(uint32_t) * MAX_INSTANCES, // TODO: Can be packed into multiple bits
         .usage = vk::BufferUsageFlagBits::eStorageBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,
@@ -85,7 +85,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .anisotropyEnable = false,
         .mipmapMode = vk::SamplerMipmapMode::eNearest,
         .minLod = 0.0f,
-        .maxLod = std::floorf(std::log2f(hzbSize)),
+        .maxLod = static_cast<float>(std::floor(std::log2(hzbSize))),
         .reductionMode = vk::SamplerReductionMode::eMin,
     };
     samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
