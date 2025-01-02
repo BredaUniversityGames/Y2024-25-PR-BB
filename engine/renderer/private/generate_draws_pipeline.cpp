@@ -20,40 +20,36 @@ GenerateDrawsPipeline::GenerateDrawsPipeline(const std::shared_ptr<GraphicsConte
 
 GenerateDrawsPipeline::~GenerateDrawsPipeline()
 {
-    _context->VulkanContext()->Device().destroy(_cullingPipeline);
-    _context->VulkanContext()->Device().destroy(_cullingPipelineLayout);
+    _context->VulkanContext()->Device().destroy(_generateDrawsPipeline);
+    _context->VulkanContext()->Device().destroy(_generateDrawsPipelineLayout);
 }
 
 void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    static bool isPrepass = true;
-
     const auto& imageResourceManager = _context->Resources()->ImageResourceManager();
     const auto* depthImage = imageResourceManager.Access(_cameraBatch.DepthImage());
 
     const uint32_t localSize = 64;
     PushConstants pc {
-        .isPrepass = isPrepass,
+        .isPrepass = _isPrepass,
         .mipSize = std::fmax(static_cast<float>(depthImage->width), static_cast<float>(depthImage->height)),
         .hzbIndex = _cameraBatch.HZBImage().Index(),
     };
-    if (isPrepass)
+    if (_isPrepass)
     {
-        TracyVkZone(scene.tracyContext, commandBuffer, "Prepass cull");
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { _context->BindlessSet() }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { _cameraBatch.DrawBufferDescriptorSet() }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 4, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 5, { _cameraBatch.VisibilityBufferDescriptorSet() }, {});
+        TracyVkZone(scene.tracyContext, commandBuffer, "Prepass generate draws");
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _generateDrawsPipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 1, { scene.gpuScene->DrawBufferDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 2, { _cameraBatch.DrawBufferDescriptorSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 3, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 4, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 5, { _cameraBatch.VisibilityBufferDescriptorSet() }, {});
 
-        commandBuffer.pushConstants<PushConstants>(_cullingPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pc });
+        commandBuffer.pushConstants<PushConstants>(_generateDrawsPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pc });
 
         commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
-        vk::Buffer inDrawBuffer = _context->Resources()->BufferResourceManager().Access(scene.gpuScene->IndirectDrawBuffer(currentFrame))->buffer;
-        vk::Buffer outDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
         vk::Buffer visibilityBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.VisibilityBuffer())->buffer;
 
         std::array<vk::BufferMemoryBarrier, 1> barriers;
@@ -72,21 +68,20 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
     }
     else
     {
-        TracyVkZone(scene.tracyContext, commandBuffer, "Second pass cull");
+        TracyVkZone(scene.tracyContext, commandBuffer, "Second pass generate draws");
 
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _cullingPipeline);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 0, { _context->BindlessSet() }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 1, { _cameraBatch.DrawBufferDescriptorSet() }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 2, { _cameraBatch.DrawBufferDescriptorSet() }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 3, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 4, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _cullingPipelineLayout, 5, { _cameraBatch.VisibilityBufferDescriptorSet() }, {});
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _generateDrawsPipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 1, { _cameraBatch.DrawBufferDescriptorSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 2, { _cameraBatch.DrawBufferDescriptorSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 3, { scene.gpuScene->GetObjectInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 4, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _generateDrawsPipelineLayout, 5, { _cameraBatch.VisibilityBufferDescriptorSet() }, {});
 
-        commandBuffer.pushConstants<PushConstants>(_cullingPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pc });
+        commandBuffer.pushConstants<PushConstants>(_generateDrawsPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pc });
 
         commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
-        vk::Buffer drawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
         vk::Buffer visibilityBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.VisibilityBuffer())->buffer;
 
         std::array<vk::BufferMemoryBarrier, 1> barriers;
@@ -104,7 +99,7 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
     }
 
-    isPrepass = !isPrepass;
+    _isPrepass = !_isPrepass;
 }
 
 void GenerateDrawsPipeline::CreateCullingPipeline()
@@ -115,6 +110,6 @@ void GenerateDrawsPipeline::CreateCullingPipeline()
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eCompute, spvBytes);
     auto result = pipelineBuilder.BuildPipeline();
 
-    _cullingPipelineLayout = std::get<0>(result);
-    _cullingPipeline = std::get<1>(result);
+    _generateDrawsPipelineLayout = std::get<0>(result);
+    _generateDrawsPipeline = std::get<1>(result);
 }

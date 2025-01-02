@@ -24,7 +24,6 @@ struct GPUSceneCreation
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
-    ResourceHandle<GPUImage> directionalShadowMap;
     ResourceHandle<GPUImage> depthImage;
 
     glm::uvec2 displaySize;
@@ -41,9 +40,9 @@ struct RenderSceneDescription
     TracyVkCtx& tracyContext;
 };
 
-constexpr uint32_t MAX_INSTANCES = 4096 * 10;
-constexpr uint32_t MAX_POINT_LIGHTS = 8192;
-constexpr uint32_t MAX_BONES = 2048;
+constexpr uint32_t MAX_INSTANCES = 1 << 15;
+constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
+constexpr uint32_t MAX_BONES = 1 << 11;
 
 struct DrawIndexedIndirectCommand
 {
@@ -96,12 +95,14 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
 
+    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
+
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
+    CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
 
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
-    ResourceHandle<GPUImage> directionalShadowMap;
 
     glm::vec3 fogColor { 0.5, 0.6, 0.7 };
     float fogDensity { 0.2f };
@@ -183,15 +184,20 @@ private:
     Range _staticDrawRange;
     Range _skinnedDrawRange;
 
-    // TODO: Handle all camera's in one buffer or array to enable better culling
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
 
     std::unique_ptr<CameraBatch> _mainCameraBatch;
+    std::unique_ptr<CameraBatch> _shadowCameraBatch;
+
+    ResourceHandle<GPUImage> _shadowImage;
+    ResourceHandle<Sampler> _shadowSampler;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
+
+    vk::DescriptorSetLayout _visibilityDSL;
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
@@ -230,4 +236,6 @@ private:
     void InitializeIndirectDrawDescriptor();
 
     void WriteDraws(uint32_t frameIndex);
+
+    void CreateShadowMapResources();
 };

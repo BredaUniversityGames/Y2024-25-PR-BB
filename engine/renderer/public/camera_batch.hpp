@@ -13,12 +13,12 @@ class CameraResource;
 class CameraBatch
 {
 public:
-    CameraBatch(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, ResourceHandle<Buffer> drawBuffer, vk::DescriptorSetLayout drawDSL, glm::uvec2 displaySize);
+    CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, ResourceHandle<Buffer> drawBuffer, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL);
     ~CameraBatch();
 
     const CameraResource& Camera() const { return _camera; }
     ResourceHandle<GPUImage> HZBImage() const { return _hzbImage; }
-    ResourceHandle<GPUImage> DepthImage() const { return _depthImage; } // TODO
+    ResourceHandle<GPUImage> DepthImage() const { return _depthImage; }
     ResourceHandle<Buffer> DrawBuffer() const { return _drawBuffer; }
     vk::DescriptorSet DrawBufferDescriptorSet() const { return _drawBufferDescriptorSet; }
     ResourceHandle<Buffer> OrderingBuffer(uint32_t index) const { return _orderingBuffers[index]; }
@@ -41,7 +41,6 @@ private:
     std::array<ResourceHandle<Buffer>, 2> _orderingBuffers;
 
     ResourceHandle<Buffer> _visibilityBuffer;
-    vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSet _visibilityDescriptorSet;
 
     void CreateDrawBufferDescriptorSet(vk::DescriptorSetLayout drawDSL);

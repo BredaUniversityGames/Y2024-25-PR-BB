@@ -160,7 +160,7 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
     }
 
-    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
+    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGPUScene().Shadow());
     ImGui::Begin("Directional Light Shadow Map View");
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();

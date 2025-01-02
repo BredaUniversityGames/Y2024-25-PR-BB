@@ -10,7 +10,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, ResourceHandle<Buffer> drawBuffer, vk::DescriptorSetLayout drawDSL, glm::uvec2 displaySize)
+CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, ResourceHandle<Buffer> drawBuffer, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL)
     : _context(context)
     , _camera(camera)
     , _depthImage(depthImage)
@@ -22,18 +22,18 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .usage = mainDrawBuffer->usage,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-        .name = "Geometry draw buffer",
+        .name = name + " draw buffer",
     };
 
     _drawBuffer = _context->Resources()->BufferResourceManager().Create(creation);
     CreateDrawBufferDescriptorSet(drawDSL);
 
     BufferCreation visibilityCreation {
-        .size = sizeof(uint32_t) * MAX_INSTANCES, // TODO: Can be packed into multiple bits
+        .size = sizeof(bool) * MAX_INSTANCES, // TODO: Can be packed into multiple bits
         .usage = vk::BufferUsageFlagBits::eStorageBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,
-        .name = "Visibility Buffer"
+        .name = name + " Visibility Buffer"
     };
     _visibilityBuffer = _context->Resources()->BufferResourceManager().Create(visibilityCreation);
 
@@ -45,24 +45,14 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
     };
     for (size_t i = 0; i < _orderingBuffers.size(); ++i)
     {
-        orderingBufferCreation.name = "Ordering buffer " + std::to_string(i);
+        orderingBufferCreation.name = name + " Ordering buffer " + std::to_string(i);
         _orderingBuffers[i] = _context->Resources()->BufferResourceManager().Create(orderingBufferCreation);
     }
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings {
-        vk::DescriptorSetLayoutBinding {
-            .binding = 0,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
-    };
-    std::vector<std::string_view> names { "VisibilityBuffer" };
-
-    _visibilityDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
     vk::DescriptorSetAllocateInfo allocateInfo {
         .descriptorPool = _context->VulkanContext()->DescriptorPool(),
         .descriptorSetCount = 1,
-        .pSetLayouts = &_visibilityDSL,
+        .pSetLayouts = &visibilityDSL,
     };
     _visibilityDescriptorSet = _context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo).front();
 
@@ -85,9 +75,11 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
 
     _context->VulkanContext()->Device().updateDescriptorSets({ bufferWrite }, {});
 
-    uint16_t hzbSize = std::max(displaySize.x, displaySize.y);
+    const auto* depthImageAccess = _context->Resources()->ImageResourceManager().Access(_depthImage);
+
+    uint16_t hzbSize = std::max(depthImageAccess->width, depthImageAccess->height);
     SamplerCreation samplerCreation {
-        .name = "HZB Sampler",
+        .name = name + " HZB Sampler",
         .minFilter = vk::Filter::eLinear,
         .magFilter = vk::Filter::eLinear,
         .anisotropyEnable = false,
@@ -111,17 +103,12 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .isHDR = false,
         .format = vk::Format::eR16Sfloat,
         .type = ImageType::eDepth, // TODO: should probably be color
-        .name = "HZB Image",
+        .name = name + " HZB Image",
     };
     _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage, _hzbSampler);
 }
 
-CameraBatch::~CameraBatch()
-{
-    const auto& vkContext = _context->VulkanContext();
-
-    vkContext->Device().destroy(_visibilityDSL);
-}
+CameraBatch::~CameraBatch() = default;
 
 void CameraBatch::CreateDrawBufferDescriptorSet(vk::DescriptorSetLayout drawDSL)
 {

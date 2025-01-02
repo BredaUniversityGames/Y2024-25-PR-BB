@@ -74,8 +74,10 @@ private:
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
-    std::unique_ptr<GenerateDrawsPipeline> _generateDrawsPipeline;
-    std::unique_ptr<BuildHzbPipeline> _buildHzbPipeline;
+    std::unique_ptr<GenerateDrawsPipeline> _generateMainDrawsPipeline;
+    std::unique_ptr<GenerateDrawsPipeline> _generateShadowDrawsPipeline;
+    std::unique_ptr<BuildHzbPipeline> _buildMainHzbPipeline;
+    std::unique_ptr<BuildHzbPipeline> _buildShadowHzbPipeline;
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;

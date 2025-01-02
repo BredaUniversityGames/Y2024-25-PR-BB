@@ -2,6 +2,7 @@
 
 #include "camera_batch.hpp"
 #include "gpu_resources.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "math_utils.hpp"
@@ -50,8 +51,7 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
         vk::ImageView inputTexture = i == 0 ? depth->view : hzb->layerViews[0].mipViews[i - 1];
         vk::ImageView outputTexture = hzb->layerViews[0].mipViews[i];
 
-        // TODO: perhaps not needed
-        // util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
+        util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
 
         vk::DescriptorImageInfo inputImageInfo {
             .imageView = inputTexture,

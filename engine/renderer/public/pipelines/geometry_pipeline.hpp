@@ -15,7 +15,7 @@ struct RenderSceneDescription;
 class GeometryPipeline final : public FrameGraphRenderPass
 {
 public:
-    GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraBatch& _cameraBatch);
+    GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const CameraBatch& cameraBatch);
     ~GeometryPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;

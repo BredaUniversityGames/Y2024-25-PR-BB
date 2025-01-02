@@ -19,8 +19,10 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -31,7 +33,6 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
-    , directionalShadowMap(creation.directionalShadowMap)
     , _context(creation.context)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context)
@@ -45,7 +46,21 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
 
-    _mainCameraBatch = std::make_unique<CameraBatch>(_context, _mainCamera, creation.depthImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, creation.displaySize);
+    CreateShadowMapResources();
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindings {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
+    };
+    std::vector<std::string_view> names { "VisibilityBuffer" };
+
+    _visibilityDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+
+    _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Bach", _mainCamera, creation.depthImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, _visibilityDSL);
+    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, IndirectDrawBuffer(0), _drawBufferDescriptorSetLayout, _visibilityDSL);
 }
 
 GPUScene::~GPUScene()
@@ -57,6 +72,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
     vkContext->Device().destroy(_skinDescriptorSetLayout);
     vkContext->Device().destroy(_pointLightDescriptorSetLayout);
+    vkContext->Device().destroy(_visibilityDSL);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -78,7 +94,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.shadowMapIndex = directionalShadowMap.Index();
+    sceneData.shadowMapIndex = _shadowImage.Index();
 
     sceneData.fogColor = fogColor;
     sceneData.fogDensity = fogDensity;
@@ -720,4 +736,27 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
 
     std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+}
+
+void GPUScene::CreateShadowMapResources()
+{
+    SamplerCreation shadowSamplerInfo {
+        .name = "Shadow sampler",
+        .minFilter = vk::Filter::eLinear,
+        .magFilter = vk::Filter::eLinear,
+        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
+        .compareEnable = true,
+        .compareOp = vk::CompareOp::eLessOrEqual,
+    };
+    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
+
+    CPUImage shadowCreation {};
+    shadowCreation
+        .SetFormat(vk::Format::eD32Sfloat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(4096, 4096)
+        .SetName("Shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }

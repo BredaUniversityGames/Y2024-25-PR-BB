@@ -25,8 +25,10 @@ public:
 private:
     std::shared_ptr<GraphicsContext> _context;
 
-    vk::PipelineLayout _cullingPipelineLayout;
-    vk::Pipeline _cullingPipeline;
+    vk::PipelineLayout _generateDrawsPipelineLayout;
+    vk::Pipeline _generateDrawsPipeline;
+
+    bool _isPrepass = true;
 
     const CameraBatch& _cameraBatch;
 
