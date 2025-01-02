@@ -43,8 +43,6 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
     const auto* hzb = imageResourceManager.Access(_cameraBatch.HZBImage());
     const auto* depth = imageResourceManager.Access(_cameraBatch.DepthImage());
 
-    // util::TransitionImageLayout(commandBuffer, depth->image, depth->format, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
-
     for (size_t i = 0; i < hzb->mips; ++i)
     {
         uint32_t mipSize = hzb->width >> i;
@@ -53,7 +51,7 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
         vk::ImageView outputTexture = hzb->layerViews[0].mipViews[i];
 
         // TODO: perhaps not needed
-        util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
+        // util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
 
         vk::DescriptorImageInfo inputImageInfo {
             .imageView = inputTexture,
@@ -77,8 +75,6 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
     }
 
     util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral, 1, 0, hzb->mips);
-
-    // util::TransitionImageLayout(commandBuffer, depth->image, depth->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1, 0, 1, vk::ImageAspectFlagBits::eDepth);
 
     util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }

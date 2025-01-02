@@ -56,24 +56,17 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         vk::Buffer outDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
         vk::Buffer visibilityBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.VisibilityBuffer())->buffer;
 
-        std::array<vk::BufferMemoryBarrier, 3> barriers;
+        std::array<vk::BufferMemoryBarrier, 1> barriers;
 
         barriers[0] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+            .srcAccessMask = vk::AccessFlagBits::eShaderRead,
             .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
             .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
             .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .buffer = inDrawBuffer,
+            .buffer = visibilityBuffer,
             .offset = 0,
             .size = vk::WholeSize,
         };
-
-        barriers[1] = barriers[0];
-        barriers[1].buffer = outDrawBuffer;
-
-        barriers[2] = barriers[0];
-        barriers[2].buffer = visibilityBuffer;
-        // barriers[2].srcAccessMask = vk::AccessFlagBits::eShaderRead;
 
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
     }
@@ -96,20 +89,17 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         vk::Buffer drawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.DrawBuffer())->buffer;
         vk::Buffer visibilityBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.VisibilityBuffer())->buffer;
 
-        std::array<vk::BufferMemoryBarrier, 2> barriers;
+        std::array<vk::BufferMemoryBarrier, 1> barriers;
 
         barriers[0] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+            .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
             .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
             .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
             .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .buffer = drawBuffer,
+            .buffer = visibilityBuffer,
             .offset = 0,
             .size = vk::WholeSize,
         };
-
-        barriers[1] = barriers[0];
-        barriers[1].buffer = visibilityBuffer;
 
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
     }
