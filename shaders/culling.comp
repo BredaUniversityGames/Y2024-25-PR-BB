@@ -97,8 +97,8 @@ bool Prepass_IsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.f)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    vec3 r = vec3(instances[objectIndex].boundingRadius, 0.0f, 0.0f);
-    r *= mat3(instances[objectIndex].model);
+    vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
+    r *= instances[objectIndex].model;
     float radius = length(r);
 
     return VisibleInFrustum(center, radius);
@@ -111,8 +111,8 @@ bool SecondPass_IsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.0)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    vec3 r = vec3(instances[objectIndex].boundingRadius, 0.0f, 0.0f);
-    r *= mat3(instances[objectIndex].model);
+    vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
+    r *= instances[objectIndex].model;
     float radius = length(r);
 
     bool frustumVisible = VisibleInFrustum(center, radius);
