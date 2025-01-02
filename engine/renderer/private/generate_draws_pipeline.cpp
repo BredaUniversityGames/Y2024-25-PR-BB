@@ -59,8 +59,8 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         std::array<vk::BufferMemoryBarrier, 3> barriers;
 
         barriers[0] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-            .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+            .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+            .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
             .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
             .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
             .buffer = inDrawBuffer,
@@ -73,9 +73,9 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
 
         barriers[2] = barriers[0];
         barriers[2].buffer = visibilityBuffer;
-        barriers[2].srcAccessMask = vk::AccessFlagBits::eShaderRead;
+        // barriers[2].srcAccessMask = vk::AccessFlagBits::eShaderRead;
 
-        // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
     }
     else
     {
@@ -99,8 +99,8 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         std::array<vk::BufferMemoryBarrier, 2> barriers;
 
         barriers[0] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-            .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+            .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+            .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
             .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
             .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
             .buffer = drawBuffer,
@@ -111,7 +111,7 @@ void GenerateDrawsPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint
         barriers[1] = barriers[0];
         barriers[1].buffer = visibilityBuffer;
 
-        // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers, {});
     }
 
     isPrepass = !isPrepass;

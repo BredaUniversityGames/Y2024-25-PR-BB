@@ -41,7 +41,9 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Geometry Pipeline");
 
-    DrawGeometry(commandBuffer, currentFrame, scene, true);
+    static bool isPrepass = true;
+    DrawGeometry(commandBuffer, currentFrame, scene, isPrepass);
+    isPrepass = !isPrepass;
 }
 
 void GeometryPipeline::CreateStaticPipeline()
