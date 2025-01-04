@@ -102,6 +102,23 @@ void main()
     }
 }
 
+float GetScaledRadius(float radius, mat4 transform) {
+    // Extract the scale vectors from the transformation matrix
+    vec3 scaleX = vec3(transform[0][0], transform[1][0], transform[2][0]); // X-axis scale
+    vec3 scaleY = vec3(transform[0][1], transform[1][1], transform[2][1]); // Y-axis scale
+    vec3 scaleZ = vec3(transform[0][2], transform[1][2], transform[2][2]); // Z-axis scale
+
+    // Compute the scale factors (length of the axis vectors)
+    float scaleFactorX = length(scaleX);
+    float scaleFactorY = length(scaleY);
+    float scaleFactorZ = length(scaleZ);
+
+    // Use the largest scale factor to scale the radius
+    float maxScaleFactor = max(scaleFactorX, max(scaleFactorY, scaleFactorZ));
+
+    return radius * maxScaleFactor;
+}
+
 bool Prepass_IsVisible(uint objectIndex)
 {
     // For the prepass we only care if it was visible in the previous frame.
@@ -115,9 +132,7 @@ bool Prepass_IsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.f)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
-    r *= instances[objectIndex].model;
-    float radius = length(r.xyz);
+    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model);//length(r.xyz);
 
     return VisibleInFrustum(center, radius);
 }
@@ -129,9 +144,7 @@ bool SecondPass_IsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.0)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    vec4 r = vec4(instances[objectIndex].boundingRadius, 0.0f, 0.0f, 0.0f);
-    r *= instances[objectIndex].model;
-    float radius = length(r.xyz);
+    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model);
 
     bool frustumVisible = VisibleInFrustum(center, radius);
     bool projectionVisible = false;

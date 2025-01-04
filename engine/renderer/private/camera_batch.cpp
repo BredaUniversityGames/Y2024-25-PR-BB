@@ -10,6 +10,30 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
+uint32_t roundUpToPowerOfTwo(uint32_t n)
+{
+    if (n == 0)
+    {
+        return 1; // Special case: smallest power of two is 1
+    }
+
+    // If n is already a power of two, return it
+    if ((n & (n - 1)) == 0)
+    {
+        return n;
+    }
+
+    // Round up to the next power of two
+    n--; // Subtract 1 to handle exact powers of two correctly
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+
+    return n + 1;
+}
+
 CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL)
     : _context(context)
     , _camera(camera)
@@ -115,7 +139,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
 
     const auto* depthImageAccess = _context->Resources()->ImageResourceManager().Access(_depthImage);
 
-    uint16_t hzbSize = std::max(depthImageAccess->width, depthImageAccess->height);
+    uint16_t hzbSize = roundUpToPowerOfTwo(std::max(depthImageAccess->width, depthImageAccess->height));
     SamplerCreation samplerCreation {
         .name = name + " HZB Sampler",
         .minFilter = vk::Filter::eLinear,
