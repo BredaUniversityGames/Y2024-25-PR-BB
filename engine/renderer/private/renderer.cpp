@@ -100,8 +100,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _generateMainDrawsPipeline = std::make_unique<GenerateDrawsPipeline>(_context, _gpuScene->MainCameraBatch());
     _generateShadowDrawsPipeline = std::make_unique<GenerateDrawsPipeline>(_context, _gpuScene->ShadowCameraBatch());
-    _buildMainHzbPipeline = std::make_unique<BuildHzbPipeline>(_context, _gpuScene->MainCameraBatch());
-    _buildShadowHzbPipeline = std::make_unique<BuildHzbPipeline>(_context, _gpuScene->ShadowCameraBatch());
+    _buildMainHzbPipeline = std::make_unique<BuildHzbPipeline>(_context, _gpuScene->MainCameraBatch(), true);
+    _buildShadowHzbPipeline = std::make_unique<BuildHzbPipeline>(_context, _gpuScene->ShadowCameraBatch(), false);
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);

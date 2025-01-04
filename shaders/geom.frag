@@ -24,31 +24,30 @@ void main()
 {
     Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
 
-    vec4 albedoSample = pow(material.albedoFactor, vec4(2.2));
-    vec4 mrSample = vec4(1.0, material.roughnessFactor, material.metallicFactor, 1.0);
-    vec4 occlusionSample = vec4(material.occlusionStrength);
-    vec4 emissiveSample = pow(vec4(material.emissiveFactor, 0.0), vec4(2.2));
+    vec4 albedoSample;
+    vec4 mrSample;
+    vec4 occlusionSample;
+    vec4 emissiveSample;
+    vec4 normalSample = vec4(normalIn, 0.0);
 
     vec3 normal = normalIn;
 
     if (material.useAlbedoMap)
     {
-        vec4 albedo = texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord);
-        if (albedo.a < 1.0)
+        albedoSample = pow(texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord), vec4(2.2));
+        //if (albedo.a < 1.0)
         {
-            discard;
+            //discard;
         }
-        albedoSample *= pow(albedo, vec4(2.2));
+        //albedoSample *= pow(albedo, vec4(2.2));
     }
     if (material.useMRMap)
     {
-        mrSample *= texture(bindless_color_textures[nonuniformEXT(material.mrMapIndex)], texCoord);
+        mrSample = texture(bindless_color_textures[nonuniformEXT(material.mrMapIndex)], texCoord);
     }
     if (material.useNormalMap)
     {
-        vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(material.normalMapIndex)], texCoord) * material.normalScale;
-        normal = normalSample.xyz * 2.0 - 1.0;
-        normal = normalize(TBN * normal);
+        normalSample = texture(bindless_color_textures[nonuniformEXT(material.normalMapIndex)], texCoord) * material.normalScale;
     }
     if (material.useOcclusionMap)
     {
@@ -57,6 +56,17 @@ void main()
     if (material.useEmissiveMap)
     {
         emissiveSample *= pow(texture(bindless_color_textures[nonuniformEXT(material.emissiveMapIndex)], texCoord), vec4(2.2));
+    }
+
+    albedoSample *= pow(material.albedoFactor, vec4(2.2));
+    mrSample *= vec4(1.0, material.roughnessFactor, material.metallicFactor, 1.0);
+    occlusionSample *= vec4(material.occlusionStrength);
+    emissiveSample *= pow(vec4(material.emissiveFactor, 0.0), vec4(2.2));
+
+    if (material.useNormalMap)
+    {
+        normal = normalSample.xyz * 2.0 - 1.0;
+        normal = normalize(TBN * normal);
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);

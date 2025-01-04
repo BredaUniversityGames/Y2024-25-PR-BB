@@ -8,7 +8,7 @@ struct Sampler;
 class BuildHzbPipeline final : public FrameGraphRenderPass
 {
 public:
-    BuildHzbPipeline(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch);
+    BuildHzbPipeline(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch, bool useReverseZ);
     ~BuildHzbPipeline() final;
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
@@ -23,7 +23,7 @@ private:
 
     ResourceHandle<Sampler> _hzbSampler;
 
-    void CreateSampler();
+    void CreateSampler(bool useReverseZ);
     void CreateDSL();
     void CreatPipeline();
     void CreateUpdateTemplate();

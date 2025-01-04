@@ -27,8 +27,8 @@ struct Material
     uint occlusionMapIndex;
     uint emissiveMapIndex;
 };
-layout (std140, set = 0, binding = 2) buffer Materials
+layout (std140, set = 0, binding = 2) uniform Materials
 {
-    Material bindless_materials[];
+    Material bindless_materials[64];
 };
 

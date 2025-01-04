@@ -15,11 +15,11 @@
 
 #include <tracy/TracyVulkan.hpp>
 
-BuildHzbPipeline::BuildHzbPipeline(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch)
+BuildHzbPipeline::BuildHzbPipeline(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch, bool useReverseZ)
     : _context(context)
     , _cameraBatch(cameraBatch)
 {
-    CreateSampler();
+    CreateSampler(useReverseZ);
     CreateDSL();
     CreatPipeline();
     CreateUpdateTemplate();
@@ -79,7 +79,7 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
     util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
-void BuildHzbPipeline::CreateSampler()
+void BuildHzbPipeline::CreateSampler(bool useReverseZ)
 {
     auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
     SamplerCreation samplerCreation {
@@ -89,7 +89,7 @@ void BuildHzbPipeline::CreateSampler()
         .anisotropyEnable = false,
         .minLod = 0.0f,
         .maxLod = 0.0f,
-        .reductionMode = vk::SamplerReductionMode::eMin,
+        .reductionMode = useReverseZ ? vk::SamplerReductionMode::eMin : vk::SamplerReductionMode::eMax,
     };
     samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 

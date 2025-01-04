@@ -73,7 +73,7 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     storageImage.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::DescriptorSetLayoutBinding& materialBinding = bindings[2];
-    materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    materialBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
     materialBinding.descriptorCount = 1;
     materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorageBuffer);
     materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
@@ -85,9 +85,10 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    std::array<vk::DescriptorBindingFlagsEXT, 2> bindingFlags = {
+    std::array<vk::DescriptorBindingFlagsEXT, 3> bindingFlags = {
         vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
-        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind
+        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
+        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
     };
 
     auto& extInfo = structureChain.get<vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT>();
@@ -112,7 +113,7 @@ void GraphicsContext::CreateBindlessMaterialBuffer()
 {
     BufferCreation creation {};
     creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(GPUMaterial::GPUInfo))
-        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
         .SetName("Bindless material uniform buffer");
 
     _bindlessMaterialBuffer = _graphicsResources->BufferResourceManager().Create(creation);
@@ -196,7 +197,7 @@ void GraphicsContext::UpdateBindlessMaterials()
     _bindlessMaterialWrite.dstSet = _bindlessSet;
     _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eStorageBuffer);
     _bindlessMaterialWrite.dstArrayElement = 0;
-    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
     _bindlessMaterialWrite.descriptorCount = 1;
     _bindlessMaterialWrite.pBufferInfo = &_bindlessMaterialInfo;
 
