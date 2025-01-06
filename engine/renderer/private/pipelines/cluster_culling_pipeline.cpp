@@ -29,6 +29,7 @@ ClusterCullingPipeline::~ClusterCullingPipeline()
 
 void ClusterCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Cluster Light Culling Pipeline");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { _gpuScene.GetClusterDescriptorSet() }, {});
@@ -37,29 +38,6 @@ void ClusterCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uin
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 3, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
 
     commandBuffer.dispatch(16, 9, 24);
-
-    /*std::array<vk::BufferMemoryBarrier, 2> barriers;
-    barriers[0] = {
-        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
-        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = _context->Resources()->BufferResourceManager().Access(_gpuScene.GetClusterCullingBuffer(0))->buffer,
-        .offset = 0,
-        .size = vk::WholeSize,
-    };
-
-    barriers[1] = {
-        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
-        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = _context->Resources()->BufferResourceManager().Access(_gpuScene.GetClusterCullingBuffer(1))->buffer,
-        .offset = 0,
-        .size = vk::WholeSize,
-    };
-
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, barriers, {});*/
 }
 
 void ClusterCullingPipeline::CreatePipeline()

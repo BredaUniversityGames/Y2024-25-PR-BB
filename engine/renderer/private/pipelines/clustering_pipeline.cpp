@@ -31,6 +31,7 @@ ClusteringPipeline::~ClusteringPipeline()
 
 void ClusteringPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Cluster AABB Generation");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
     _pushConstants.screenSize = glm::vec2(_swapChain.GetExtent().width, _swapChain.GetExtent().height);
