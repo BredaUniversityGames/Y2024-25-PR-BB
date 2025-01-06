@@ -10,6 +10,7 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -32,9 +33,7 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
-
-#include <components/relationship_component.hpp>
-#include <time_module.hpp>
+#include "time_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -50,9 +49,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/AnimatedRifle.glb",
         "assets/models/Cathedral.glb",
-        "assets/models/BrainStem.glb",
+        "assets/models/AnimatedRifle.glb",
+        //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
@@ -70,9 +69,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first.hierarchy, models[2].first.animations);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
