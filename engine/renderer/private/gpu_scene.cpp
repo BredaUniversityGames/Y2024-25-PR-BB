@@ -24,6 +24,7 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <tracy/Tracy.hpp>
 #include <unordered_map>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
@@ -58,6 +59,7 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
+    ZoneScoped;
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateCameraData(frameIndex);

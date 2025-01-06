@@ -56,7 +56,7 @@ ParticlePipeline::~ParticlePipeline()
     resources->BufferResourceManager().Destroy(_emittersBuffer);
     resources->BufferResourceManager().Destroy(_vertexBuffer);
     resources->BufferResourceManager().Destroy(_indexBuffer);
-    vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
+    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
 
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
@@ -76,7 +76,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         RecordEmit(commandBuffer);
     }
 
-    RecordSimulate(commandBuffer, scene.deltaTime);
+    RecordSimulate(commandBuffer, scene.gpuScene->MainCamera(), scene.deltaTime, currentFrame);
 
     RecordRenderIndexed(commandBuffer, scene, currentFrame);
 
@@ -145,7 +145,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime)
+void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -155,6 +155,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
 
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
@@ -358,7 +359,7 @@ void ParticlePipeline::CreatePipelines()
 
     { // simulate
         vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        std::array<vk::DescriptorSetLayout, 3> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout };
+        std::array<vk::DescriptorSetLayout, 4> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout, CameraResource::DescriptorSetLayout() };
         pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 

@@ -23,6 +23,7 @@
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
 #include "pipelines/particle_pipeline.hpp"
+#include "pipelines/presentation_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
 #include "pipelines/ssao_pipeline.hpp"
@@ -57,7 +58,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeSSAOTarget();
     InitializeTonemappingTarget();
     InitializeFXAATarget();
-    InitializeUITarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
@@ -91,21 +91,18 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    // temporary location
-    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
-    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
-
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
     _fxaaPipeline = std::make_unique<FXAAPipeline>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
-    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, _uiTarget, *_swapChain);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -146,21 +143,16 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation skyDomePass { *_skydomePipeline };
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
-        // Does nothing internally in this situation, for clarity that it is used here
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Making sure the sky dome pass runs after the lighting pass with a reference
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        // Not needed references, just for clarity this pass also contributes to those targets
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation particlePass { *_particlePipeline };
     particlePass.SetName("Particle pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
@@ -185,31 +177,34 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
-        .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
-        .AddInput(_uiTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Reference to make sure it runs at the end
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation presentationPass { *_presentationPipeline };
+    presentationPass.SetName("Presentation pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 0.0f })
+        // No support for presentation targets in frame graph, so we'll have to this for now
+        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
-        .AddNode(ssaoPass)
         .AddNode(shadowPass)
+        .AddNode(ssaoPass)
+        .AddNode(lightingPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
-        .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
+        .AddNode(presentationPass)
         .Build();
 
     static std::array<std::string, MAX_FRAMES_IN_FLIGHT> contextNames { "Command Buffer 0", "Command Buffer 1", "Command Buffer 2" };
@@ -305,15 +300,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .tracyContext = _tracyContexts[_currentFrame],
     };
 
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
-
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     TracyVkCollect(_tracyContexts[_currentFrame], commandBuffer);
 }
@@ -375,16 +362,6 @@ void Renderer::InitializeFXAATarget()
     fxaaCreation.SetName("FXAA Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _fxaaTarget = _context->Resources()->ImageResourceManager().Create(fxaaCreation);
-}
-
-void Renderer::InitializeUITarget()
-{
-    auto size = _swapChain->GetImageSize();
-
-    CPUImage uiCreation {};
-    uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
-
-    _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
 }
 void Renderer::InitializeSSAOTarget()
 {

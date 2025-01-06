@@ -31,6 +31,7 @@
 				"Dash"		"#Action_Dash"
 				"Grenade"		"#Action_Grenade"
 				"Shoot"		"#Action_Shoot"
+				"ReleaseTrigger"     "#Action_ReleaseTrigger"
 				"Ultimate"		"#Action_Ultimate"
 				"Reload"		"#Action_Reload"
 				"Jump"		"#Action_Jump"
