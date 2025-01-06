@@ -3,13 +3,78 @@
 #include "module_interface.hpp"
 #include "renderer.hpp"
 #include <glm/glm.hpp>
+#include <queue>
+#include <unordered_map>
+
+struct PathNode
+{
+    glm::vec3 centre;
+};
 
 struct ComputedPath
 {
     ComputedPath() = default;
     ~ComputedPath() = default;
 
-    std::vector<glm::vec3> waypoints;
+    std::vector<PathNode> waypoints;
+};
+
+struct TriangleNode
+{
+    float totalCost;
+    float estimateToGoal;
+    float totalEstimatedCost;
+    uint32_t triangleIndex;
+    uint32_t parentTriangleIndex;
+
+    bool operator<(const TriangleNode& rhs)
+    {
+        return this->totalCost < rhs.totalCost;
+    }
+    bool operator>(const TriangleNode& rhs)
+    {
+        return this->totalCost > rhs.totalCost;
+    }
+
+    bool operator==(const TriangleNode& rhs)
+    {
+        return this->triangleIndex == rhs.triangleIndex;
+    }
+};
+
+inline bool operator<(const TriangleNode& lhs, const TriangleNode& rhs)
+{
+    return lhs.totalCost < rhs.totalCost;
+}
+
+inline bool operator>(const TriangleNode& lhs, const TriangleNode& rhs)
+{
+    return lhs.totalCost > rhs.totalCost;
+}
+
+inline bool operator==(const TriangleNode& lhs, const TriangleNode& rhs)
+{
+    return lhs.triangleIndex == rhs.triangleIndex;
+}
+
+template <class _Ty, class _Container = std::vector<_Ty>, class _Pr = std::less<typename _Container::value_type>>
+struct IterablePriorityQueue : public std::priority_queue<_Ty, _Container, _Pr>
+{
+public:
+    std::vector<_Ty>::iterator begin()
+    {
+        return this->c.begin();
+    }
+
+    std::vector<_Ty>::iterator end()
+    {
+        return this->c.end();
+    }
+
+    _Container::iterator find(const _Ty& item)
+    {
+        return std::find(this->c.begin(), this->c.end(), item);
+    }
 };
 
 class PathfindingModule : public ModuleInterface
@@ -17,6 +82,7 @@ class PathfindingModule : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) final;
     void Shutdown(Engine& engine) final;
     void Tick(Engine& engine) final;
+    std::string_view GetName() final { return "Pathfinding"; };
 
 public:
     PathfindingModule();
@@ -31,6 +97,7 @@ public:
 private:
 
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
+    ComputedPath ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes);
 
     struct TriangleInfo
     {

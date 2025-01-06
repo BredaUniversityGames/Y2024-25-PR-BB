@@ -4,7 +4,6 @@
 #include <model_loader.hpp>
 #include <renderer_module.hpp>
 #include <set>
-#include <queue>
 
 ModuleTickOrder PathfindingModule::Init(Engine& engine)
 {
@@ -15,6 +14,7 @@ ModuleTickOrder PathfindingModule::Init(Engine& engine)
         {0.7f, 0.0f,-0.7f},
         {-0.7f, 0.0f, 0.7f}
         );
+
 
     return ModuleTickOrder::eTick;
 }
@@ -137,30 +137,35 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
 ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 {
-    struct TriangleNode
-    {
-        float totalCost;
-        float estimateToGoal;
-        float totalEstimatedCost;
-        uint32_t triangleIndex;
-    };
-
-    ComputedPath path{};
+    // Reference: https://app.datacamp.com/learn/tutorials/a-star-algorithm?dc_referrer=https%3A%2F%2Fwww.google.com%2F
+    // Legend:
+    // G = totalCost
+    // H = estimateToGoal
+    // F = totalEstimatedCost
 
     // Heuristic function
     float estimated_cost = glm::length(endPos - startPos);
-    std::priority_queue<TriangleNode> openList;
-    std::priority_queue<TriangleNode> closedList;
+    IterablePriorityQueue<TriangleNode, std::vector<TriangleNode>, std::greater<TriangleNode>> openList;
+    std::unordered_map<uint32_t, TriangleNode> closedList;
 
-    float closestTriangleDistance = INFINITY;
-    uint32_t closestTriangleIndex = UINT32_MAX;
+    // Find closest triangle // TODO: More efficient way of finding closes triangle
+    float closestStartTriangleDistance = INFINITY, closestDestinationTriangleDistance = INFINITY;
+    uint32_t closestStartTriangleIndex = UINT32_MAX, closestDestinationTriangleIndex = UINT32_MAX;
     for(size_t i = 0; i < _triangles.size(); i++)
     {
-        float distance_to_triangle = glm::distance(startPos, _triangles[i].centre);
-        if(distance_to_triangle < closestTriangleDistance)
+        float distance_to_start_triangle = glm::distance(startPos, _triangles[i].centre);
+        float distance_to_finish_triangle = glm::distance(endPos, _triangles[i].centre);
+
+        if(distance_to_start_triangle < closestStartTriangleDistance)
         {
-            closestTriangleDistance = distance_to_triangle;
-            closestTriangleIndex = i;
+            closestStartTriangleDistance = distance_to_start_triangle;
+            closestStartTriangleIndex = i;
+        }
+
+        if(distance_to_finish_triangle < closestDestinationTriangleDistance)
+        {
+            closestDestinationTriangleDistance = distance_to_finish_triangle;
+            closestDestinationTriangleIndex = i;
         }
     }
 
@@ -168,14 +173,92 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     node.totalCost = 0;
     node.estimateToGoal = Heuristic(startPos, endPos);
     node.totalEstimatedCost = node.totalCost + node.estimateToGoal;
-    node.triangleIndex = closestTriangleIndex; // TODO: Easily find closest triangle
+    node.triangleIndex = closestStartTriangleIndex;
+    node.parentTriangleIndex = UINT32_MAX;
 
-    
+    openList.push(node);
 
-    return path;
+    while(!openList.empty())
+    {
+        TriangleNode topNode = openList.top();
+        if(topNode.triangleIndex == closestDestinationTriangleIndex) // If we reached our goal
+        {
+            closedList[topNode.triangleIndex] = topNode;
+            return ReconstructPath(topNode.triangleIndex, closedList);
+            break;
+        }
+
+        // Move current from open to closed list
+        closedList[topNode.triangleIndex] = topNode;
+        openList.pop();
+
+        const TriangleInfo& triangleInfo = _triangles[topNode.triangleIndex];
+
+        // For all this triangle's neighbours
+        for(uint32_t i = 0; i < triangleInfo.adjacentTriangleCount; i++)
+        {
+            // Skip already evaluated nodes
+            if(closedList.contains(triangleInfo.adjacentTriangleIndices[i]))
+                continue;
+
+            const TriangleInfo& neighbourTriangleInfo = _triangles[triangleInfo.adjacentTriangleIndices[i]];
+
+            float tentative_cost_from_start = topNode.totalCost + glm::distance(triangleInfo.centre, neighbourTriangleInfo.centre);
+
+            TriangleNode tempNode{};
+            tempNode.triangleIndex = triangleInfo.adjacentTriangleIndices[i];
+            auto it = openList.find(tempNode);
+            if(it == openList.end())
+            {
+                openList.push(tempNode);
+                it = openList.find(tempNode);
+                it->totalCost = INFINITY;
+            }
+
+            TriangleNode& neighbourNode = *it;
+
+            if(tentative_cost_from_start < neighbourNode.totalCost)
+            {
+                neighbourNode.totalCost = tentative_cost_from_start;
+                neighbourNode.estimateToGoal = Heuristic(neighbourTriangleInfo.centre, endPos);
+                neighbourNode.parentTriangleIndex = topNode.triangleIndex;
+                neighbourNode.totalEstimatedCost = neighbourNode.totalCost + neighbourNode.estimateToGoal;
+            }
+        }
+    }
+
+    return {};
 }
 
 float PathfindingModule::Heuristic(glm::vec3 startPos, glm::vec3 endPos)
 {
     return glm::length(endPos - startPos);
+}
+
+ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes)
+{
+    ComputedPath path = {};
+
+    PathNode pathNode{};
+
+    const TriangleNode& finalTriangleNode = nodes[finalTriangleIndex];
+
+    pathNode.centre = _triangles[finalTriangleIndex].centre;
+    path.waypoints.push_back(pathNode);
+
+    uint32_t parentTriangleIndex = finalTriangleNode.parentTriangleIndex;
+
+    while(true)
+    {
+        if(parentTriangleIndex == UINT32_MAX)
+            break;
+
+        const TriangleNode& node = nodes[parentTriangleIndex];
+        pathNode.centre = _triangles[parentTriangleIndex].centre;
+        path.waypoints.push_back(pathNode);
+
+        parentTriangleIndex = node.parentTriangleIndex;
+    }
+
+    return path;
 }
