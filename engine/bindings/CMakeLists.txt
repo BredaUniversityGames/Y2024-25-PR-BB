@@ -7,6 +7,7 @@ target_link_libraries(Bindings
         PRIVATE Utility
         PRIVATE ECS
         PRIVATE Audio
+        PRIVATE Renderer
 )
 
 target_include_directories(Renderer

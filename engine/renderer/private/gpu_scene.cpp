@@ -24,8 +24,8 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <unordered_map>
 #include <tracy/Tracy.hpp>
+#include <unordered_map>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
