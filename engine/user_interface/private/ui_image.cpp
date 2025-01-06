@@ -1,27 +1,25 @@
 #include "ui_image.hpp"
+#include "ui_input.hpp"
 #include "ui_module.hpp"
 
 void UIImageElement::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
+    UIElement::Update(inputManagers, inputContext);
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
     {
-        if (!inputContext.HasInputBeenConsumed())
+        if (inputContext.HasInputBeenConsumed() == false)
         {
             glm::ivec2 mousePos;
             inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
 
-            // mouse inside boundary
-            if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
-                && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetAbsoluteScale().x)
-                && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
-                && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetAbsoluteScale().y))
+            if (IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale()))
             {
                 inputContext.ConsumeInput();
             }
         }
-        UIElement::Update(inputManagers, inputContext);
     }
 }
+
 void UIImageElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
