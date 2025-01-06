@@ -48,7 +48,7 @@ void main()
 
 
     //lets make the positions to view space now
-    vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
     gl_Position = (camera.VP) * vec4(position, 1.0);
+    vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
     position = viewPos;
 }
