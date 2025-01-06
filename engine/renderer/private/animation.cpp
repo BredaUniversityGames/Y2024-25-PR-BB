@@ -81,12 +81,7 @@ std::optional<std::string> AnimationControlComponent::CurrentAnimationName()
 
 std::optional<uint32_t> AnimationControlComponent::CurrentAnimationIndex()
 {
-    if (!activeAnimation.has_value())
-    {
-        return std::nullopt;
-    }
-
-    return activeAnimation.value();
+    return activeAnimation;
 }
 
 bool AnimationControlComponent::AnimationFinished()
