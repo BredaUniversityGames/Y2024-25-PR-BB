@@ -615,10 +615,10 @@ void GPUScene::CreateClusterCullingBuffers()
         _clusterCullingData.globalIndexBuffers.at(i) = _context->Resources()->BufferResourceManager().Create(createInfo);
     }
 
-    constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 50;
+    constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 128;
 
     createInfo = {};
-    createInfo.SetSize(3456 * MAX_LIGHTS_PER_CLUSTER * sizeof(uint32_t))
+    createInfo.SetSize(3456 * (sizeof(uint32_t) * 2))
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
         .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
         .SetName("ClusterCullingLightCells Buffer");
@@ -626,7 +626,7 @@ void GPUScene::CreateClusterCullingBuffers()
     _clusterCullingData.buffers.at(0) = _context->Resources()->BufferResourceManager().Create(createInfo);
 
     createInfo = {};
-    createInfo.SetSize(3456 * 2 * sizeof(uint32_t))
+    createInfo.SetSize(3456 * MAX_LIGHTS_PER_CLUSTER * sizeof(uint32_t))
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
         .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
         .SetName("ClusterCullingLightIndices Buffer");

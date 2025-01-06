@@ -2,7 +2,7 @@
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-#define MAX_LIGHTS_PER_CLUSTER 50
+#define MAX_LIGHTS_PER_CLUSTER 128
 
 #include "scene.glsl"
 #include "clusters.glsl"
@@ -23,11 +23,15 @@ float SquaredDistancePointAABB(vec3 point, uint tile)
 
     for (uint i = 0; i < 3; ++i) {
         float v = point[i];
-        if (v < currentCell.min[i]) {
-            squaredDistance += (currentCell.min[i] - v) * (currentCell.min[i] - v);
+        if (v < currentCell.min[i])
+        {
+            float diff = currentCell.min[i] - v;
+            squaredDistance += (diff * diff);
         }
-        if (v > currentCell.max[i]) {
-            squaredDistance += (v - currentCell.max[i]) * (v - currentCell.max[i]);
+        if (v > currentCell.max[i])
+        {
+            float diff = v - currentCell.max[i];
+            squaredDistance += (diff * diff);
         }
     }
     return squaredDistance;

@@ -124,8 +124,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         pointLightComponent.range = 10.0f;
         pointLightComponent.attenuation = 1.0f;
 
-        // Spawn point lights in a grid
-        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(i % 100 * 2.0f, 1.0f, i / 100 * 2.0f));
+        // Spawn point lights in a 3D grid/box with an offset of 2 units between each light on each axis
+        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3((i % 50) * 2.0f, (i / 50) * 2.0f, (i / 250) * 2.0f));
     }
 
     _lastFrameTime = std::chrono::high_resolution_clock::now();

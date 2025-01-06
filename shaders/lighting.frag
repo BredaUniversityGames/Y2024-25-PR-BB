@@ -134,7 +134,7 @@ void main()
         vec3 lightPos = light.position.xyz;
         vec3 L = normalize(lightPos - position);
         float attenuation = CalculateAttenuation(lightPos, position, light.range);
-        vec3 lightColor = light.color.rgb * attenuation;
+        vec3 lightColor = light.color.rgb * attenuation * light.color.w;
 
         Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }
@@ -214,7 +214,7 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
     float distance = length(lightPos - position);
-    return clamp(1.0 - (distance / range), 0.0, 1.0);
+    return max(1.0 - (distance / range), 0.0) / (distance * distance);
 }
 
 float CalculateShadowBias(float cosTheta, float baseBias) {
