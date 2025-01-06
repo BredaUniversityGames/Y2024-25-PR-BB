@@ -10,6 +10,7 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
@@ -122,8 +123,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         // Spawn point lights in a 3D grid/box with an offset of 2 units between each light on each axis
         TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3((i % 50) * 2.0f, (i / 50) * 2.0f, (i / 250) * 2.0f));
     }
-
-    _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);

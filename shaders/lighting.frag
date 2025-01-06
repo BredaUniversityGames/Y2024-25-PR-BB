@@ -67,11 +67,7 @@ float LinearDepth(float z, float near, float far)
 
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
-    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
+
     float zFloat = 24;
     float log2FarDivNear = log2(camera.zFar / camera.zNear);
     float log2Near = log2(camera.zNear);
@@ -79,8 +75,8 @@ void main()
     float sliceScaling = zFloat / log2FarDivNear;
     float sliceBias = -(zFloat * log2Near / log2FarDivNear);
 
-    float linearDepth = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
-    uint zIndex = uint(max(log2(linearDepth) * sliceScaling + sliceBias, 0.0));
+    float linearDepthCulling = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
+    uint zIndex = uint(max(log2(linearDepthCulling) * sliceScaling + sliceBias, 0.0));
     vec2 tileSize =
     vec2(pushConstants.screenSize.x / float(16),
     pushConstants.screenSize.y / float(9));
@@ -98,10 +94,11 @@ void main()
     uint lightCount = lightCells[clusterIndex].count;
     uint lightIndexOffset = lightCells[clusterIndex].offset;
 
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords);
+    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
@@ -141,20 +138,10 @@ void main()
         vec3 lightPos = light.position.xyz;
         vec3 L = normalize(lightPos - position);
         float attenuation = CalculateAttenuation(lightPos, position, light.range);
-        vec3 lightColor = light.color.rgb * attenuation * light.color.w;
+        vec3 lightColor = light.color.rgb * attenuation;
 
         Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }
-
-/*// Point Light Calculations
-    for (int i = 0; i < pointLights.count; i++) {
-        PointLight light = pointLights.lights[i];
-        vec3 L = normalize(light.position - position);
-        float attenuation = CalculateAttenuation(light.position, position, light.range);
-        vec3 lightColor = light.color * attenuation;
-
-        Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
-    }*/
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);

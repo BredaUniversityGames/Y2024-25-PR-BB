@@ -40,7 +40,7 @@ float SquaredDistancePointAABB(vec3 point, uint tile)
 bool TestSphereAABB(uint lightIndex, uint tile)
 {
     float lightRadius = lights.lights[lightIndex].range;
-    vec4 lightPosition = lights.lights[lightIndex].position;
+    vec4 lightPosition = vec4(lights.lights[lightIndex].position, 1.0);
     vec4 positionView = camera.view * lightPosition;
     float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
 
