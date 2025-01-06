@@ -114,7 +114,7 @@ void SSAOPipeline::CreateBuffers()
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator;
     std::vector<glm::vec4> ssaoKernel;
-    for (uint32_t i = 0; i < 64; ++i)
+    for (uint32_t i = 0; i < 32; ++i)
     {
         glm::vec4 sample(
             randomFloats(generator) * 2.0 - 1.0,
@@ -125,7 +125,7 @@ void SSAOPipeline::CreateBuffers()
         sample *= randomFloats(generator);
 
         // scale magic to be more cluster near the actual fragment.
-        float scale = static_cast<float>(i) / 64.0;
+        float scale = static_cast<float>(i) / 32.0;
         scale = glm::mix(0.1f, 1.0f, scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
@@ -181,7 +181,7 @@ void SSAOPipeline::CreateBuffers()
     noiseImage.isHDR = true;
 
     SamplerCreation noiseSampler {};
-    noiseSampler.name = "FastNoiseSampler";
+    noiseSampler.name = "SSAO_Noise_Sampler";
     noiseSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
     noiseSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
     noiseSampler.addressModeW = vk::SamplerAddressMode::eRepeat;

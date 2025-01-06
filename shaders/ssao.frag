@@ -28,7 +28,7 @@ layout (set = 1, binding = 0) uniform SampleKernel { vec4 samples[64]; } uSample
 layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
-const int kernelSize = 64;
+const int kernelSize = 32;
 
 void main()
 {
