@@ -40,7 +40,7 @@ void main()
     const vec3 normal = normalRSample.rgb;
     const vec3 position = positionSample.rgb;
 
-    const vec3 screenSpacePosition = (camera.view * vec4(position.xyz, 1.0)).xyz;
+    const vec3 screenSpacePosition = positionSample.xyz;
     const vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 0.0)).xyz;
 
     const vec3 randomVec = texture(bindless_color_textures[nonuniformEXT (pushConstants.noiseIndex)], texCoords * noiseScale).xyz;
@@ -77,7 +77,7 @@ void main()
         }
 
         vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
-        occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
+        // occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
 
         //check distance to avoid ao on objects that are far away from each other
         const float rangeCheck = smoothstep(0.0, 1.0, adaptiveAoRadius / length(screenSpacePosition - occluderPosition));
