@@ -44,7 +44,7 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<GPUImag
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage,  bool allowSimultaneousWrites)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage, bool allowSimultaneousWrites)
 {
     FrameGraphResourceCreation& creation = outputs.emplace_back(FrameGraphResourceInfo::StageBuffer { .handle = buffer, .stageUsage = stageUsage });
     creation.type = type;
@@ -366,7 +366,7 @@ void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState st
 
 void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
 {
-switch (state)
+    switch (state)
     {
     case ResourceState::eFirstOuput:
     {
@@ -532,7 +532,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     if (itr != _newestVersionedResourcesMap.end())
     {
         resource.version = _resources[itr->second].version + 1;
-        resource.versionedName += + "_v-" + std::to_string(resource.version);
+        resource.versionedName += +"_v-" + std::to_string(resource.version);
     }
 
     // Save the newest resource version for fast look up later
