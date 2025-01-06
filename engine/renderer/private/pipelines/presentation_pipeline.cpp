@@ -1,4 +1,10 @@
 #include "pipelines/presentation_pipeline.hpp"
+#include "gpu_scene.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "swap_chain.hpp"
+#include "vulkan_helper.hpp"
 
 PresentationPipeline::PresentationPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, ResourceHandle<GPUImage> input)
     : _context(context)
