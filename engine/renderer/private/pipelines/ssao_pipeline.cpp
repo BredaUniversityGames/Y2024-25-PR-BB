@@ -11,6 +11,7 @@
 
 #include "resource_management/buffer_resource_manager.hpp"
 #include <random>
+#include <resource_management/sampler_resource_manager.hpp>
 #include <single_time_commands.hpp>
 
 SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
@@ -179,7 +180,28 @@ void SSAOPipeline::CreateBuffers()
         .SetFormat(vk::Format::eR32G32B32A32Sfloat);
     noiseImage.isHDR = true;
 
-    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage);
+    SamplerCreation noiseSampler {};
+    noiseSampler.name = "FastNoiseSampler";
+    noiseSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
+    noiseSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
+    noiseSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
+
+    noiseSampler.minFilter = vk::Filter::eNearest;
+    noiseSampler.magFilter = vk::Filter::eNearest;
+    noiseSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
+
+    noiseSampler.useMaxAnisotropy = false;
+    noiseSampler.anisotropyEnable = false;
+    noiseSampler.minLod = 0.0f;
+    noiseSampler.maxLod = 0.0f; // No mipmaps
+
+    noiseSampler.compareEnable = false;
+    noiseSampler.compareOp = vk::CompareOp::eAlways;
+    noiseSampler.unnormalizedCoordinates = false;
+    noiseSampler.borderColor = vk::BorderColor::eIntOpaqueBlack;
+
+    _noiseSampler = _context->Resources()->SamplerResourceManager().Create(noiseSampler);
+    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage, _noiseSampler);
     _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
 }
 void SSAOPipeline::CreateDescriptorSetLayouts()
