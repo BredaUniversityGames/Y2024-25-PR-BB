@@ -26,7 +26,7 @@ class Main {
 
             var gunTransform = __gun.GetTransformComponent()
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-            gunTransform.rotation = MathUtil.ToQuat(Vec3.new(0.0, -MathUtil.PI(), 0.0))
+            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
     }
 

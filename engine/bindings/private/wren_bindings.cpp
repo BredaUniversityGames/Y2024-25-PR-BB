@@ -1,26 +1,23 @@
 #include "wren_bindings.hpp"
 
-#include "utility/enum_bind.hpp"
-#include "utility/wren_entity.hpp"
-#include "wren_engine.hpp"
-
-#include "audio/audio_bindings.hpp"
-
-#include "ecs_module.hpp"
-#include "time_module.hpp"
-
-#include "animation.hpp"
 #include "application_module.hpp"
+#include "audio/audio_bindings.hpp"
 #include "audio_emitter_component.hpp"
 #include "audio_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "ecs_module.hpp"
+#include "input/action_manager.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "renderer/animation_bindings.hpp"
+#include "time_module.hpp"
+#include "utility/enum_bind.hpp"
+#include "utility/wren_entity.hpp"
+#include "wren_engine.hpp"
 
 #include <cstdint>
-#include <input/action_manager.hpp>
 
 namespace bindings
 {
@@ -107,43 +104,6 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
-int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationControlComponent>& component)
-{
-    return component.component->animations.size();
-}
-void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
-{
-    component.component->Play(name, speed, looping);
-}
-void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
-{
-    component.component->Stop();
-}
-void AnimationControlComponentPause(WrenComponent<AnimationControlComponent>& component)
-{
-    component.component->Pause();
-}
-void AnimationControlComponentResume(WrenComponent<AnimationControlComponent>& component)
-{
-    component.component->Resume();
-}
-Animation::PlaybackOptions AnimationControlComponentCurrentPlayback(WrenComponent<AnimationControlComponent>& component)
-{
-    return component.component->CurrentPlayback();
-}
-std::optional<uint32_t> AnimationControlComponentCurrentAnimationIndex(WrenComponent<AnimationControlComponent>& component)
-{
-    return component.component->CurrentAnimationIndex();
-}
-std::optional<std::string> AnimationControlComponentCurrentAnimationName(WrenComponent<AnimationControlComponent>& component)
-{
-    return component.component->CurrentAnimationName();
-}
-bool AnimationControlComponentAnimationFinished(WrenComponent<AnimationControlComponent>& component)
-{
-    return component.component->AnimationFinished();
-}
-
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -191,6 +151,11 @@ void BindEngineAPI(wren::ForeignModule& module)
         BindAudioAPI(module);
     }
 
+    // Animations
+    {
+        BindAnimationAPI(module);
+    }
+
     // Components
     {
         // Name class
@@ -208,19 +173,6 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
-
-        bindings::BindEnum<Animation::PlaybackOptions>(module, "PlaybackOptions");
-
-        auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
-        animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
-        animationControlClass.funcExt<bindings::AnimationControlComponentPlay>("Play");
-        animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
-        animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
-        animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
-        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentPlayback>("CurrentPlayback");
-        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationIndex>("CurrentAnimationIndex");
-        animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationName>("CurrentAnimationName");
-        animationControlClass.funcExt<bindings::AnimationControlComponentAnimationFinished>("AnimationFinished");
     }
 }
 
