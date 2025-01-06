@@ -68,7 +68,7 @@ void BuildHzbPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
 
         commandBuffer.pushConstants<uint32_t>(_buildHzbPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { mipSize });
 
-        uint32_t groupSize = DivideRoundingUp(mipSize, 32);
+        uint32_t groupSize = DivideRoundingUp(mipSize, 8);
         commandBuffer.dispatch(groupSize, groupSize, 1);
 
         util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i, 1);

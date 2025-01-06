@@ -35,11 +35,10 @@ void main()
     if (material.useAlbedoMap)
     {
         albedoSample = pow(texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord), vec4(2.2));
-        //if (albedo.a < 1.0)
+        if (albedo.a < 1.0)
         {
-            //discard;
+            discard;
         }
-        //albedoSample *= pow(albedo, vec4(2.2));
     }
     if (material.useMRMap)
     {
@@ -47,15 +46,15 @@ void main()
     }
     if (material.useNormalMap)
     {
-        normalSample = texture(bindless_color_textures[nonuniformEXT(material.normalMapIndex)], texCoord) * material.normalScale;
+        normalSample = texture(bindless_color_textures[nonuniformEXT(material.normalMapIndex)], texCoord);
     }
     if (material.useOcclusionMap)
     {
-        occlusionSample *= texture(bindless_color_textures[nonuniformEXT(material.occlusionMapIndex)], texCoord);
+        occlusionSample = texture(bindless_color_textures[nonuniformEXT(material.occlusionMapIndex)], texCoord);
     }
     if (material.useEmissiveMap)
     {
-        emissiveSample *= pow(texture(bindless_color_textures[nonuniformEXT(material.emissiveMapIndex)], texCoord), vec4(2.2));
+        //emissiveSample = pow(texture(bindless_color_textures[nonuniformEXT(material.emissiveMapIndex)], texCoord), vec4(2.2));
     }
 
     albedoSample *= pow(material.albedoFactor, vec4(2.2));
@@ -66,7 +65,7 @@ void main()
     if (material.useNormalMap)
     {
         normal = normalSample.xyz * 2.0 - 1.0;
-        normal = normalize(TBN * normal);
+        normal = normalize(TBN * normal) * material.normalScale;
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
