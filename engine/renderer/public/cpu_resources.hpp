@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
+#include <unordered_map>
 #include <vector>
 
 struct Hierarchy
@@ -20,22 +21,25 @@ struct Hierarchy
     struct Node
     {
         Node() = default;
-        Node(std::string_view name, const glm::mat4& transform, std::pair<MeshType, uint32_t> meshIndex)
-            : name(name), transform(transform), meshIndex(meshIndex)
-        {}
+        Node(std::string_view name, const glm::mat4& transform, std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt)
+            : name(name)
+            , transform(transform)
+            , meshIndex(meshIndex)
+        {
+        }
 
         std::string name {};
         glm::mat4 transform { 1.0f };
         std::optional<std::pair<MeshType, uint32_t>> meshIndex = std::nullopt;
         std::vector<uint32_t> children {};
 
-        std::optional<AnimationChannelComponent> animationChannel {};
+        std::unordered_map<uint32_t, TransformAnimationSpline> animationSplines {};
         std::optional<Joint> joint {};
-        bool isSkeletonRoot { false };
         std::optional<uint32_t> skeletonNode {};
     };
 
     uint32_t root {};
+    std::optional<uint32_t> skeletonRoot = std::nullopt;
     std::vector<Node> nodes {};
 };
 
@@ -87,7 +91,7 @@ struct CPUModel
     std::vector<CPUMaterial> materials {};
     std::vector<CPUImage> textures {};
 
-    std::optional<Animation> animation { std::nullopt };
+    std::vector<Animation> animations {};
 };
 
 struct GPUModel
