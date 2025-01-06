@@ -36,8 +36,8 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
 
-    _pushConstants.screenWidth = _gBuffers.Size().x;
-    _pushConstants.screenHeight = _gBuffers.Size().y;
+    _pushConstants.screenWidth = _gBuffers.Size().x / 2;
+    _pushConstants.screenHeight = _gBuffers.Size().y / 2;
 
     vk::RenderingAttachmentInfoKHR ssaoColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_ssaoTarget)->view,
@@ -48,7 +48,7 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     };
 
     vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
+    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x / 2, _gBuffers.Size().y / 2 };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &ssaoColorAttachmentInfo;
