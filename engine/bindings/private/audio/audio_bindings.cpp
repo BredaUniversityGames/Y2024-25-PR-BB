@@ -1,12 +1,10 @@
 #include "audio_bindings.hpp"
 
+#include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
-#include "utility/wren_entity.hpp"
-
-#include <audio_emitter_component.hpp>
-#include <audio_listener_component.hpp>
-
 #include "log.hpp"
+#include "utility/wren_entity.hpp"
 
 namespace bindings
 {

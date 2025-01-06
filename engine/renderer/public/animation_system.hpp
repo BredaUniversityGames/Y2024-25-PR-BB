@@ -18,5 +18,4 @@ public:
 
 private:
     RendererModule& _rendererModule;
-    uint32_t _frameIndex;
 };

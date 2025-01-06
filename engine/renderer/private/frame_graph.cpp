@@ -35,18 +35,20 @@ FrameGraphNodeCreation& FrameGraphNodeCreation::AddInput(ResourceHandle<Buffer> 
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<GPUImage> image, FrameGraphResourceType type, bool allowSimultaneousWrites)
 {
     FrameGraphResourceCreation& creation = outputs.emplace_back(image);
     creation.type = type;
+    creation.info.allowSimultaneousWrites = allowSimultaneousWrites;
 
     return *this;
 }
 
-FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage)
+FrameGraphNodeCreation& FrameGraphNodeCreation::AddOutput(ResourceHandle<Buffer> buffer, FrameGraphResourceType type, vk::PipelineStageFlags2 stageUsage, bool allowSimultaneousWrites)
 {
     FrameGraphResourceCreation& creation = outputs.emplace_back(FrameGraphResourceInfo::StageBuffer { .handle = buffer, .stageUsage = stageUsage });
     creation.type = type;
+    creation.info.allowSimultaneousWrites = allowSimultaneousWrites;
 
     return *this;
 }
@@ -105,7 +107,6 @@ void FrameGraph::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
 
         {
             TracyVkZoneC(scene.tracyContext, commandBuffer, "Framegraph barrier", tracy::Color::IndianRed);
-            // Place memory barriers
             commandBuffer.pipelineBarrier2(node.dependencyInfo);
         }
 
@@ -171,9 +172,9 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
     {
         FrameGraphResource& inputResource = _resources[node.inputs[i]];
 
-        assert(_outputResourcesMap.find(inputResource.name) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
+        assert(_outputResourcesMap.find(inputResource.versionedName) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
 
-        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[inputResource.name];
+        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[inputResource.versionedName];
         const FrameGraphResource& outputResource = _resources[outputResourceHandle];
 
         inputResource.producer = outputResource.producer;
@@ -182,8 +183,6 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
 
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
-
-        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
     }
 }
 
@@ -219,7 +218,6 @@ void FrameGraph::ComputeNodeViewportAndScissor(FrameGraphNodeHandle nodeHandle)
     {
         const FrameGraphResource& resource = _resources[outputHandle];
 
-        // No references allowed, because output references shouldn't contribute to the pass
         if (resource.type == FrameGraphResourceType::eAttachment)
         {
             const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
@@ -239,8 +237,7 @@ void FrameGraph::CreateMemoryBarriers()
 {
     auto resources { _context->Resources() };
 
-    // Describes if an output has already been used as an input
-    std::unordered_map<FrameGraphResourceHandle, bool> outputResourceStates {};
+    std::unordered_map<std::string, ResourceState> resourceStates {};
 
     for (const FrameGraphNodeHandle nodeHandle : _sortedNodes)
     {
@@ -254,53 +251,28 @@ void FrameGraph::CreateMemoryBarriers()
         {
             const FrameGraphResource& resource = _resources[inputHandle];
 
-            // If the resource was already used as an input, we know it has to be in the correct state to be used as an input again,
-            // as switching resource types is not possible in the inputs. So no memory barrier is needed and we can skip to the next resource
-            if (outputResourceStates[resource.output])
+            if (HasAnyFlags(resource.type, FrameGraphResourceType::eReference))
             {
                 continue;
             }
 
-            outputResourceStates[resource.output] = true;
+            // If resource was used as an input already, there is no need to make a barrier again
+            std::string resourceName = GetResourceName(resource.type, resource.info.resource);
+            if (resourceStates[resourceName] == ResourceState::eInput)
+            {
+                continue;
+            }
+            resourceStates[resourceName] = ResourceState::eInput;
 
             if (resource.type == FrameGraphResourceType::eTexture)
             {
-                const GPUImage* texture = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
-
-                if (texture->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-                {
-                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
-                        vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eDepth);
-                }
-                else
-                {
-                    util::InitializeImageMemoryBarrier(barrier, texture->image, texture->format,
-                        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
-                        texture->layers, 0, texture->mips, vk::ImageAspectFlagBits::eColor);
-                }
+                CreateImageBarrier(resource, resourceStates[resourceName], barrier);
             }
             else if (resource.type == FrameGraphResourceType::eBuffer)
             {
-                auto stageBuffer = std::get<FrameGraphResourceInfo::StageBuffer>(resource.info.resource);
-                const Buffer* buffer = resources->BufferResourceManager().Access(stageBuffer.handle);
                 vk::BufferMemoryBarrier2& barrier = node.bufferMemoryBarriers.emplace_back();
-
-                // Get the buffer created before here and create barrier based on its stage usage
-                const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap[resource.name];
-                const FrameGraphResource& outputResource = _resources[outputResourceHandle];
-
-                barrier.srcStageMask = std::get<FrameGraphResourceInfo::StageBuffer>(outputResource.info.resource).stageUsage;
-                barrier.dstStageMask = stageBuffer.stageUsage;
-
-                barrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
-                barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
-                barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-                barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-                barrier.buffer = buffer->buffer;
-                barrier.offset = 0;
-                barrier.size = vk::WholeSize;
+                CreateBufferBarrier(resource, resourceStates[resourceName], barrier);
             }
         }
 
@@ -308,25 +280,28 @@ void FrameGraph::CreateMemoryBarriers()
         for (const FrameGraphResourceHandle outputHandle : node.outputs)
         {
             const FrameGraphResource& resource = _resources[outputHandle];
-            outputResourceStates[outputHandle] = false;
+
+            std::string resourceName = GetResourceName(resource.type, resource.info.resource);
+            auto itr = resourceStates.find(resourceName);
+            if (itr != resourceStates.end())
+            {
+                resourceStates[resourceName] = itr->second == ResourceState::eInput ? ResourceState::eReusedOutputAfterInput : ResourceState::eReusedOutputAfterOutput;
+            }
+            else
+            {
+                resourceStates[resourceName] = ResourceState::eFirstOuput;
+            }
+
+            // We allow the user to force not having a barrier when he wants to write to a resource at the same time during multiple passes
+            if (resourceStates[resourceName] == ResourceState::eReusedOutputAfterOutput && resource.info.allowSimultaneousWrites)
+            {
+                continue;
+            }
 
             if (resource.type == FrameGraphResourceType::eAttachment)
             {
-                const GPUImage* attachment = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
                 vk::ImageMemoryBarrier2& barrier = node.imageMemoryBarriers.emplace_back();
-
-                if (attachment->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-                {
-                    util::InitializeImageMemoryBarrier(barrier, attachment->image, attachment->format,
-                        vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                        attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eDepth);
-                }
-                else
-                {
-                    util::InitializeImageMemoryBarrier(barrier, attachment->image, attachment->format,
-                        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-                        attachment->layers, 0, attachment->mips, vk::ImageAspectFlagBits::eColor);
-                }
+                CreateImageBarrier(resource, resourceStates[resourceName], barrier);
             }
         }
 
@@ -335,6 +310,131 @@ void FrameGraph::CreateMemoryBarriers()
             .setPImageMemoryBarriers(node.imageMemoryBarriers.data())
             .setBufferMemoryBarrierCount(node.bufferMemoryBarriers.size())
             .setPBufferMemoryBarriers(node.bufferMemoryBarriers.data());
+    }
+}
+
+void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
+    auto resources { _context->Resources() };
+    const GPUImage* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource.info.resource));
+
+    if (image->flags & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+    {
+        return CreateDepthImageBarrier(*image, state, barrier);
+    }
+
+    return CreateColorImageBarrier(*image, state, barrier);
+}
+
+void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
+    switch (state)
+    {
+    case ResourceState::eFirstOuput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterOutput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    default:
+        bblog::error("[Frame Graph] Unsupported color image resource usage: {}", magic_enum::enum_name(state));
+        break;
+    }
+}
+
+void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
+    switch (state)
+    {
+    case ResourceState::eFirstOuput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterOutput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    case ResourceState::eInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    default:
+        bblog::error("[Frame Graph] Unsupported depth image resource usage: {}", magic_enum::enum_name(state));
+        break;
+    }
+}
+
+void FrameGraph::CreateBufferBarrier(const FrameGraphResource& resource, ResourceState state, vk::BufferMemoryBarrier2& barrier) const
+{
+    auto resources { _context->Resources() };
+    auto stageBuffer = std::get<FrameGraphResourceInfo::StageBuffer>(resource.info.resource);
+    const Buffer* buffer = resources->BufferResourceManager().Access(stageBuffer.handle);
+
+    switch (state)
+    {
+    case ResourceState::eFirstOuput:
+        break;
+    case ResourceState::eInput:
+    {
+        // Get the buffer created before here and create barrier based on its stage usage
+        const FrameGraphResourceHandle outputResourceHandle = _outputResourcesMap.at(resource.versionedName);
+        const FrameGraphResource& outputResource = _resources[outputResourceHandle];
+
+        barrier.srcStageMask = std::get<FrameGraphResourceInfo::StageBuffer>(outputResource.info.resource).stageUsage;
+        barrier.dstStageMask = stageBuffer.stageUsage;
+
+        barrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
+        barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+        barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+        barrier.buffer = buffer->buffer;
+        barrier.offset = 0;
+        barrier.size = vk::WholeSize;
+        break;
+    }
+    case ResourceState::eReusedOutputAfterOutput:
+    case ResourceState::eReusedOutputAfterInput:
+    default:
+        bblog::error("[Frame Graph] Unsupported buffer resource usage: {}", magic_enum::enum_name(state));
+        break;
     }
 }
 
@@ -418,23 +518,31 @@ void FrameGraph::SortGraph()
 
 FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer)
 {
-    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone) && "FrameGraphResource must have a type.");
+    assert(!HasAnyFlags(creation.type, FrameGraphResourceType::eNone | FrameGraphResourceType::eReference) && "FrameGraphResource output must have a type and not be a reference.");
 
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
-    resource.name = GetResourceName(creation);
 
-    if (!HasAnyFlags(creation.type, FrameGraphResourceType::eReference))
+    const std::string& resourceName = GetResourceName(creation.type, creation.info.resource);
+    resource.versionedName = resourceName;
+
+    // If the same resource is found as an earlier output, we increase the version of the resource
+    auto itr = _newestVersionedResourcesMap.find(resourceName);
+    if (itr != _newestVersionedResourcesMap.end())
     {
-        assert(_outputResourcesMap.find(GetResourceName(creation)) == _outputResourcesMap.end() && "Multiple nodes produce the same resource, which is not possible. If you want to change the order of nodes, please use the eReference resource type to reference resources produced by multiple nodes.");
-
-        resource.info = creation.info;
-        resource.output = resourceHandle;
-        resource.producer = producer;
-
-        _outputResourcesMap.emplace(resource.name, resourceHandle);
+        resource.version = _resources[itr->second].version + 1;
+        resource.versionedName += +"_v-" + std::to_string(resource.version);
     }
+
+    // Save the newest resource version for fast look up later
+    _newestVersionedResourcesMap[resourceName] = resourceHandle;
+
+    resource.info = creation.info;
+    resource.output = resourceHandle;
+    resource.producer = producer;
+
+    _outputResourcesMap.emplace(resource.versionedName, resourceHandle);
 
     return resourceHandle;
 }
@@ -446,27 +554,37 @@ FrameGraphResourceHandle FrameGraph::CreateInputResource(const FrameGraphResourc
     const FrameGraphResourceHandle resourceHandle = _resources.size();
     FrameGraphResource& resource = _resources.emplace_back(std::variant<std::monostate, FrameGraphResourceInfo::StageBuffer, ResourceHandle<GPUImage>> {});
     resource.type = creation.type;
-    resource.name = GetResourceName(creation);
+    resource.versionedName = GetResourceName(creation.type, creation.info.resource);
+
+    // If the resource has multiple versions, find the newest one and use that one as input instead
+    auto itr = _newestVersionedResourcesMap.find(resource.versionedName);
+    if (itr != _newestVersionedResourcesMap.end())
+    {
+        const FrameGraphResource& newestResource = _resources[itr->second];
+        resource.version = newestResource.version;
+        resource.versionedName = newestResource.versionedName;
+    }
 
     return resourceHandle;
 }
 
-std::string FrameGraph::GetResourceName(const FrameGraphResourceCreation& creation)
+const std::string& FrameGraph::GetResourceName(FrameGraphResourceType type, const FrameGraphResourceInfo::Resource& resource) const
 {
     auto resources { _context->Resources() };
 
-    if (HasAnyFlags(creation.type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
+    if (HasAnyFlags(type, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eTexture))
     {
-        const GPUImage* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(creation.info.resource));
+        const GPUImage* image = resources->ImageResourceManager().Access(std::get<ResourceHandle<GPUImage>>(resource));
         return image->name;
     }
 
-    if (HasAnyFlags(creation.type, FrameGraphResourceType::eBuffer))
+    if (HasAnyFlags(type, FrameGraphResourceType::eBuffer))
     {
-        const Buffer* buffer = resources->BufferResourceManager().Access(std::get<FrameGraphResourceInfo::StageBuffer>(creation.info.resource).handle);
+        const Buffer* buffer = resources->BufferResourceManager().Access(std::get<FrameGraphResourceInfo::StageBuffer>(resource).handle);
         return buffer->name;
     }
 
     assert(false && "Unsupported resource type!");
-    return "";
+    static const std::string ERROR_TYPE = "Unsupported resource type!";
+    return ERROR_TYPE;
 }
