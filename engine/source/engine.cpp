@@ -89,7 +89,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
     TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    cameraEntity = _ecs->GetRegistry().create();
+    entt::entity cameraEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
 
@@ -99,6 +99,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
     cameraComponent.reversedZ = true;
+
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
@@ -120,6 +122,31 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // audioModule.LoadBank(masterBank);
     // audioModule.LoadBank(stringBank);
     // audioModule.LoadBank(bi);
+
+    SoundInfo si;
+    si.path = "assets/sounds/fallback.mp3";
+    si.is3D = true;
+
+    audioModule.LoadSFX(si);
+
+    SoundInfo musicSi;
+    musicSi.path = "assets/sounds/music1.wav";
+    musicSi.isLoop = true;
+    musicSi.is3D = true;
+
+    // This sound might pop in because it starts playing before the engine is fully initialized
+    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
+
+    auto audioEmitter = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
+    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
+
+    emitter._soundIds.emplace_back(instance);
+
+    SoundInfo eagleSi;
+    eagleSi.path = "assets/sounds/eagle.mp3";
+
+    audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
@@ -322,34 +349,3 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 
 OldEngine::OldEngine() = default;
 OldEngine::~OldEngine() = default;
-
-void OldEngine::InitAudioTest(Engine& e)
-{
-    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
-
-    auto& audioModule = e.GetModule<AudioModule>();
-    SoundInfo si;
-    si.path = "assets/sounds/fallback.mp3";
-    si.is3D = true;
-
-    audioModule.LoadSFX(si);
-
-    SoundInfo musicSi;
-    musicSi.path = "assets/sounds/music1.wav";
-    musicSi.isLoop = true;
-    musicSi.is3D = true;
-
-    // This sound might pop in because it starts playing before the engine is fully initialized
-    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
-
-    auto audioEmitter = _ecs->GetRegistry().create();
-    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
-    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
-
-    emitter._soundIds.emplace_back(instance);
-
-    SoundInfo eagleSi;
-    eagleSi.path = "assets/sounds/eagle.mp3";
-
-    audioModule.LoadSFX(eagleSi);
-}
