@@ -11,8 +11,8 @@
 #include <vulkan/vulkan.hpp>
 
 struct Emitter;
-
 class CameraResource;
+class BloomSettings;
 struct RenderSceneDescription;
 class ECSModule;
 class GraphicsContext;
@@ -21,7 +21,7 @@ struct Buffer;
 class ParticlePipeline final : public FrameGraphRenderPass
 {
 public:
-    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera);
+    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
     ~ParticlePipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -61,7 +61,8 @@ private:
     ECSModule& _ecs;
     const GBuffers& _gBuffers;
     const ResourceHandle<GPUImage> _hdrTarget;
-    const CameraResource& _camera;
+    const ResourceHandle<GPUImage> _brightnessTarget;
+    const BloomSettings& _bloomSettings;
 
     std::vector<Emitter> _emitters;
 
@@ -89,8 +90,8 @@ private:
 
     void RecordKickOff(vk::CommandBuffer commandBuffer);
     void RecordEmit(vk::CommandBuffer commandBuffer);
-    void RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime);
-    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
+    void RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame);
+    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
 
     void UpdateEmitters(vk::CommandBuffer commandBuffer);
 

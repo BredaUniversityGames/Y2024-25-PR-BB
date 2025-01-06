@@ -1,7 +1,8 @@
 #pragma once
 
-#include "mesh.hpp"
-#include "model.hpp"
+#include "components/animation_channel_component.hpp"
+#include "cpu_resources.hpp"
+#include "vertex.hpp"
 
 #include <include_fastgltf.hpp>
 #include <memory>
@@ -10,6 +11,18 @@
 class SingleTimeCommands;
 class BatchBuffer;
 class GraphicsContext;
+
+struct StagingAnimationChannels
+{
+    std::vector<Animation> animations;
+
+    struct IndexChannel
+    {
+        std::vector<TransformAnimationSpline> animationChannels;
+        std::vector<uint32_t> nodeIndices;
+    };
+    std::vector<IndexChannel> indexChannels;
+};
 
 class ModelLoader
 {

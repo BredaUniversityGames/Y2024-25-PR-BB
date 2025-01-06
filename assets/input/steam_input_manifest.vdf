@@ -1,0 +1,64 @@
+"Action Manifest"
+{
+	"configurations"
+	{
+		"controller_generic"
+		{
+			"0"
+			{
+				"path" "steam_controller_generic.vdf"
+			}
+		}
+	}
+	"actions"
+	{
+		"Shooter"
+		{
+			"title"					"#Set_Shooter"
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"			"#Action_Move"
+					"input_mode"	"joystick_move"
+				}
+				"Look"
+				{
+					"title"			"#Action_Look"
+					"input_mode"	"joystick_move"
+				}
+			}
+			"Button"
+			{
+				"Menu"				"#Action_Menu"
+				"Slide"				"#Action_Slide"
+				"Dash"				"#Action_Dash"
+				"Grenade"			"#Action_Grenade"
+				"Shoot"				"#Action_Shoot"
+				"ReleaseTrigger"	"#Action_ReleaseTrigger"
+				"Ultimate"			"#Action_Ultimate"
+				"Reload"			"#Action_Reload"
+				"Jump"				"#Action_Jump"
+				"Melee"				"#Action_Melee"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_Shooter"			"Shooter Controls Set"
+			"Action_Move"			"Movement"
+			"Action_Look"			"Looking Around"
+			"Action_Menu"			"Open Menu"
+			"Action_Slide"			"Slide"
+			"Action_Dash"			"Dash"
+			"Action_Grenade"		"Throw Grenade"
+			"Action_Shoot"			"Shoot Weapon"
+			"Action_Ultimate"		"Ultimate"
+			"Action_Reload"			"Reload Weapon"
+			"Action_Jump"			"Jump"
+			"Action_Melee"			"Melee Attack"
+		}
+	}
+}

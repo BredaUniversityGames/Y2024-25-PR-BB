@@ -1,6 +1,7 @@
 #include "pipelines/gaussian_blur_pipeline.hpp"
 
 #include "../vulkan_helper.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -22,8 +23,10 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
 
     SamplerCreation createInfo {
         .name = "Gaussian blur sampler",
-        .maxLod = 1.0f
+        .borderColor = vk::BorderColor::eFloatOpaqueBlack,
+        .maxLod = 1.0f,
     };
+    createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
     CreatePipeline();
     CreateDescriptorSets();
@@ -38,7 +41,8 @@ GaussianBlurPipeline::~GaussianBlurPipeline()
 
 void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    // The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
+    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian blur Pipeline");
+    //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
     const GPUImage* verticalTarget = _context->Resources()->ImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
@@ -122,13 +126,16 @@ void GaussianBlurPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/gaussian_blur.frag.spv");
 
-    PipelineBuilder pipelineBuilder { _context };
-    pipelineBuilder
-        .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-        .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-        .SetColorBlendState(colorBlendStateCreateInfo)
-        .SetColorAttachmentFormats(formats)
-        .BuildPipeline(_pipeline, _pipelineLayout);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
+
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 
     _descriptorSetLayout = pipelineBuilder.GetDescriptorSetLayouts()[0];
 }

@@ -15,9 +15,9 @@ def copy_file(file, dest_folder):
 def main():
     parser = argparse.ArgumentParser(description='Packages the project to /package/')
     parser.add_argument('-o', '--output', help="Output directory", type=str, required=True)
-    parser.add_argument('-e', '--executables', help='Files to copy over', type=str, nargs='*')
+    parser.add_argument('-e', '--executables', help='Execulatble to copy over', type=str, nargs='*')
     parser.add_argument('-a', '--assets', help='Asset folders to copy over', type=str, nargs='*')
-    parser.add_argument('-f', '--dlls', help='Files in directory to copy over', type=str, nargs='*')
+    parser.add_argument('-f', '--files', help='Extra files to copy over', type=str, nargs='*')
 
     args = parser.parse_args()
     output_dir = str(args.output)
@@ -29,12 +29,12 @@ def main():
             copy_dir(dir, output_dir + "/" + dir)
 
     if args.executables:
-        for file in args.executables:
-            copy_file(file, output_dir)
+        for executable in args.executables:
+            copy_file(executable, output_dir)
 
-    if args.dlls:
-        for dir in args.dlls:
-            copy_dir(dir, output_dir)
+    if args.files:
+        for file in args.files:
+            copy_file(file, output_dir)
 
 
 if __name__ == "__main__":

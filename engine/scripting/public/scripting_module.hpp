@@ -13,6 +13,7 @@ class ScriptingModule : public ModuleInterface
     ModuleTickOrder Init(Engine& engine) override;
     void Tick(Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    std::string_view GetName() override { return "Scripting Module"; }
 
 public:
     NON_COPYABLE(ScriptingModule);
@@ -48,7 +49,10 @@ public:
         return GetForeignAPI().klass<WrenEngine>("Engine");
     }
 
+    void HotReload(Engine& e);
+
 private:
+    std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
 
     std::unique_ptr<ScriptingContext> _context {};

@@ -9,5 +9,5 @@ ModuleTickOrder UIModule::Init(Engine& engine)
 }
 void UIModule::Tick(Engine& engine)
 {
-    _viewport->Update(engine.GetModule<ApplicationModule>().GetInputManager());
+    _viewport->Update(engine.GetModule<ApplicationModule>().GetInputDeviceManager());
 }

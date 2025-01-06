@@ -14,6 +14,7 @@ BatchBuffer::BatchBuffer(const std::shared_ptr<GraphicsContext>& context, uint32
     , _indexType(vk::IndexType::eUint32)
     , _topology(vk::PrimitiveTopology::eTriangleList)
 {
+
     auto resources { _context->Resources() };
 
     BufferCreation vertexBufferCreation {};
@@ -38,21 +39,6 @@ BatchBuffer::BatchBuffer(const std::shared_ptr<GraphicsContext>& context, uint32
 BatchBuffer::~BatchBuffer()
 {
     auto resources { _context->Resources() };
-}
-
-uint32_t BatchBuffer::AppendVertices(const std::vector<Vertex>& vertices, SingleTimeCommands& commandBuffer)
-{
-    auto resources { _context->Resources() };
-
-    assert((_vertexOffset + vertices.size()) * sizeof(Vertex) < _vertexBufferSize);
-    uint32_t originalOffset = _vertexOffset;
-
-    const Buffer* buffer = resources->BufferResourceManager().Access(_vertexBuffer);
-    commandBuffer.CopyIntoLocalBuffer(vertices, _vertexOffset, buffer->buffer);
-
-    _vertexOffset += vertices.size();
-
-    return originalOffset;
 }
 
 uint32_t BatchBuffer::AppendIndices(const std::vector<uint32_t>& indices, SingleTimeCommands& commandBuffer)

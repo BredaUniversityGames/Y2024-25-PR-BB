@@ -2,7 +2,7 @@
 #include "particle_vars.glsl"
 #include "../scene.glsl"
 
-layout(set = 1, binding = 0) buffer CulledInstancesSSB
+layout (set = 1, binding = 0) buffer CulledInstancesSSB
 {
     CulledInstances culledInstances;
 };
@@ -21,6 +21,7 @@ layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
 layout (location = 3) out uint materialIndex;
+layout (location = 4) out uint flags;
 
 void main()
 {
@@ -28,16 +29,18 @@ void main()
 
     vec3 quadPos = inPosition;
     mat2 rot = mat2(
-        cos(instance.angle), -sin(instance.angle),
-        sin(instance.angle), cos(instance.angle)
+    cos(instance.angle), -sin(instance.angle),
+    sin(instance.angle), cos(instance.angle)
     );
     quadPos.xy *= rot;
     quadPos.xy *= instance.size;
     quadPos *= mat3(camera.view);
     position = instance.position + quadPos;
 
+    normal = normalize((camera.view * vec4(inNormal, 0.0)).xyz);
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
+    flags = instance.flags;
 
     gl_Position = camera.VP * vec4(position, 1.0);
 }

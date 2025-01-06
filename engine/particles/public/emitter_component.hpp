@@ -2,9 +2,15 @@
 
 #include "particle_util.hpp"
 
+struct ActiveEmitterTag
+{
+};
+
 struct EmitterComponent
 {
-    Emitter emitter;
+    bool emitOnce = true;
+    float maxEmitDelay = 1.0f;
+    float currentEmitDelay = 1.0f;
     ParticleType type = ParticleType::eBillboard;
-    uint32_t timesToEmit = 0;
+    Emitter emitter;
 };

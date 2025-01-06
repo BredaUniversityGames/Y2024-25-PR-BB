@@ -12,6 +12,8 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint emissiveAOIndex;
     uint positionIndex;
+    uint ssaoIndex;
+    uint depthIndex;
     vec2 screenSize;
 } pushConstants;
 
@@ -65,6 +67,11 @@ float LinearDepth(float z, float near, float far)
 
 void main()
 {
+    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
     float zFloat = 24;
     float log2FarDivNear = log2(camera.zFar / camera.zNear);
     float log2Near = log2(camera.zNear);
@@ -115,7 +122,7 @@ void main()
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
-    vec3 F = FresnelSchlick(max(dot(N, V), 0.0), F0);
+    vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kS = F;
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
@@ -142,23 +149,30 @@ void main()
 /*// Point Light Calculations
     for (int i = 0; i < pointLights.count; i++) {
         PointLight light = pointLights.lights[i];
-        vec3 lightPos = light.position.xyz;
-        vec3 L = normalize(lightPos - position);
-        float attenuation = CalculateAttenuation(lightPos, position, light.range);
-        vec3 lightColor = light.color.rgb * attenuation;
+        vec3 L = normalize(light.position - position);
+        float attenuation = CalculateAttenuation(light.position, position, light.range);
+        vec3 lightColor = light.color * attenuation;
 
         Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }*/
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
-    vec3 specularIBL = CalculateSpecularIBL(N, -V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
-    vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
+    vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
+    vec3 ambient = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
 
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
 
-    outColor = vec4((Lo * shadow) + ambient + emissive, 1.0);
+    vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
+
+    const float fogDensity = 0.0025;
+    const vec3 fogColor = vec3(0.6, 0.7, 0.9);
+
+    float linearDepth = distance(position, camera.cameraPosition);
+    float fogFactor = exp(-fogDensity * linearDepth);
+
+    outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
@@ -228,10 +242,10 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex) {
 }
 
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex) {
-    const float MAX_REFLECTION_LOD = 2.0;
-    vec3 R = reflect(-viewDir, normal);
+    const float MAX_REFLECTION_LOD = 5.0;
+    vec3 R = reflect(viewDir, normal);
     vec3 prefilteredColor = textureLod(bindless_cubemap_textures[nonuniformEXT(prefilterIndex)], R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(brdfLUTIndex)], vec2(max(dot(normal, viewDir), 0.0), roughness)).rg;
+    vec2 envBRDF = texture(bindless_color_textures[nonuniformEXT(brdfLUTIndex)], vec2(clamp(dot(normal, viewDir), 0.0, 0.99), roughness)).rg;
     return prefilteredColor * (F * envBRDF.x + envBRDF.y);
 }
 
@@ -239,7 +253,7 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
     vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
     vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (4096 * 1.6); // Assuming a 4096x4096 shadow map
+    const float offset = 1.0 / (4096 * 1.6);// Assuming a 4096x4096 shadow map
 
     float visibility = 1.0;
     float depthFactor = testCoord.z - bias;
@@ -247,10 +261,11 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
     shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
-    shadow *= 0.25; // Average the samples
+    shadow *= 0.25;// Average the samples
 }
 
-vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor) {
+vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor)
+{
     vec3 H = normalize(view + lightDir);
     vec3 F = FresnelSchlick(max(dot(H, view), 0.0), F0);
     float NDF = DistributionGGX(normal, H, roughness);

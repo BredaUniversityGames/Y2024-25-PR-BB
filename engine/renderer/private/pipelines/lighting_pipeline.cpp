@@ -11,7 +11,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
+LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -23,6 +23,8 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.ssaoIndex = ssaoTarget.Index();
+    _pushConstants.depthIndex = _gBuffers.Depth().Index();
     _pushConstants.screenSize = glm::vec2 { _gBuffers.Size().x, _gBuffers.Size().y };
 
     vk::PhysicalDeviceProperties properties {};
@@ -33,6 +35,7 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
 
 void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pipeline");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
@@ -104,12 +107,14 @@ void LightingPipeline::CreatePipeline()
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/lighting.frag.spv");
 
-    PipelineBuilder reflector { _context };
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
-    reflector.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    GraphicsPipelineBuilder pipelineBuilder { _context };
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+    pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+    auto result = pipelineBuilder
+                      .SetColorBlendState(colorBlendStateCreateInfo)
+                      .SetColorAttachmentFormats(formats)
+                      .BuildPipeline();
 
-    reflector.SetColorBlendState(colorBlendStateCreateInfo);
-    reflector.SetColorAttachmentFormats(formats);
-
-    reflector.BuildPipeline(_pipeline, _pipelineLayout);
+    _pipelineLayout = std::get<0>(result);
+    _pipeline = std::get<1>(result);
 }

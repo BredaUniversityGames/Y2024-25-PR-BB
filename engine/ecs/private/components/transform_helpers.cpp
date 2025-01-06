@@ -2,10 +2,11 @@
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/world_matrix_component.hpp"
+#include "log.hpp"
 
+#include <entt/entity/registry.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <entt/entity/registry.hpp>
 
 void TransformHelpers::SetLocalPosition(entt::registry& reg, entt::entity entity, const glm::vec3& position)
 {
@@ -65,6 +66,12 @@ void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entit
     glm::vec4 perspective;
 
     glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+    if (std::abs(scale.x) < 0.0001f || std::abs(scale.y) < 0.0001f || std::abs(scale.z) < 0.0001f)
+    {
+        bblog::warn("Too small scale");
+        return;
+    }
 
     SetLocalTransform(reg, entity, translation, orientation, scale);
 }
@@ -188,9 +195,42 @@ const glm::mat4& TransformHelpers::GetWorldMatrix(entt::registry& reg, entt::ent
 
     return worldMatrix._worldMatrix;
 }
+const glm::mat4& TransformHelpers::GetWorldMatrix(const entt::registry& reg, entt::entity entity)
+{
+    assert(reg.valid(entity));
+    const WorldMatrixComponent& worldMatrix = reg.get<WorldMatrixComponent>(entity);
+
+    return worldMatrix._worldMatrix;
+}
 const glm::mat4& TransformHelpers::GetWorldMatrix(const WorldMatrixComponent& worldMatrixComponent)
 {
     return worldMatrixComponent._worldMatrix;
+}
+
+glm::vec3 TransformHelpers::GetWorldPosition(entt::registry& reg, entt::entity entity)
+{
+    assert(reg.valid(entity));
+    auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
+
+    return glm::vec3(m[3][0], m[3][1], m[3][2]);
+}
+glm::quat TransformHelpers::GetWorldRotation(entt::registry& reg, entt::entity entity)
+{
+    assert(reg.valid(entity));
+    auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
+
+    return glm::quat_cast(m);
+}
+glm::vec3 TransformHelpers::GetWorldScale(entt::registry& reg, entt::entity entity)
+{
+    assert(reg.valid(entity));
+    auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
+
+    glm::vec3 col0 = glm::vec3(m[0][0], m[0][1], m[0][2]);
+    glm::vec3 col1 = glm::vec3(m[1][0], m[1][1], m[1][2]);
+    glm::vec3 col2 = glm::vec3(m[2][0], m[2][1], m[2][2]);
+
+    return glm::vec3(glm::length(col0), glm::length(col1), glm::length(col2));
 }
 glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {

@@ -3,7 +3,13 @@
 #include "batch_buffer.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/joint_component.hpp"
+#include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
+#include "components/skeleton_component.hpp"
+#include "components/skinned_mesh_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
@@ -18,6 +24,8 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <tracy/Tracy.hpp>
+#include <unordered_map>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
@@ -34,6 +42,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     InitializeClusterBuffer();
     InitializeClusterCullingBuffers();
     InitializeObjectInstancesBuffers();
+    InitializeSkinBuffers();
+
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
 }
@@ -45,6 +55,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
     vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_skinDescriptorSetLayout);
     vkContext->Device().destroy(_pointLightDescriptorSetLayout);
     vkContext->Device().destroy(_clusterDescriptorSetLayout);
     vkContext->Device().destroy(_clusterCullingDescriptorSetLayout);
@@ -52,11 +63,13 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
+    ZoneScoped;
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateGlobalIndexBuffer(frameIndex);
     UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
+    UpdateSkinBuffers(frameIndex);
     WriteDraws(frameIndex);
 }
 
@@ -74,6 +87,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
 }
+
 void GPUScene::UpdatePointLightArray(uint32_t frameIndex)
 {
     PointLightArray pointLightArray {};
@@ -93,36 +107,78 @@ void GPUScene::UpdateGlobalIndexBuffer(uint32_t frameIndex)
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 {
-    std::array<InstanceData, MAX_MESHES> instances {};
+    static std::vector<InstanceData> instances { MAX_INSTANCES };
     uint32_t count = 0;
 
     _drawCommands.clear();
 
-    auto meshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
+    _staticDrawRange.start = 0;
 
-    meshView.each([this, &instances, &count](const auto meshComponent, const auto transformComponent)
-        {
-            auto resources{ _context->Resources() };
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
-            auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
-            for (const auto& primitive : mesh->primitives)
-            {
-                assert(count < MAX_MESHES && "Reached the limit of instance data available for the meshes");
-                assert(resources->MaterialResourceManager().IsValid(primitive.material) && "There should always be a material available");
+    for (auto entity : staticMeshView)
+    {
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
 
-                instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-                instances[count].materialIndex = primitive.material.Index();
-                instances[count].boundingRadius = primitive.boundingRadius;
+        auto resources { _context->Resources() };
 
-                _drawCommands.emplace_back(vk::DrawIndexedIndirectCommand {
-                    .indexCount = primitive.count,
-                    .instanceCount = 1,
-                    .firstIndex = primitive.indexOffset,
-                    .vertexOffset = static_cast<int32_t>(primitive.vertexOffset),
-                    .firstInstance = 0 });
+        auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
+        assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+        assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
 
-                count++;
-            } });
+        instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+        instances[count].materialIndex = mesh->material.Index();
+        instances[count].boundingRadius = mesh->boundingRadius;
+
+        _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+            .command = {
+                .indexCount = mesh->count,
+                .instanceCount = 1,
+                .firstIndex = mesh->indexOffset,
+                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                .firstInstance = 0,
+            },
+        });
+
+        count++;
+    }
+
+    _staticDrawRange.count = count;
+    _skinnedDrawRange.start = count;
+
+    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
+
+    for (auto entity : skinnedMeshView)
+    {
+        SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
+        auto transformComponent = skinnedMeshView.get<WorldMatrixComponent>(entity);
+
+        auto resources { _context->Resources() };
+
+        auto mesh = resources->MeshResourceManager().Access(skinnedMeshComponent.mesh);
+        assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+        assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
+
+        instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+        instances[count].materialIndex = mesh->material.Index();
+        instances[count].boundingRadius = mesh->boundingRadius;
+        instances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+
+        _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+            .command = {
+                .indexCount = mesh->count,
+                .instanceCount = 1,
+                .firstIndex = mesh->indexOffset,
+                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                .firstInstance = 0,
+            },
+        });
+
+        count++;
+    }
+
+    _skinnedDrawRange.count = count - _staticDrawRange.count;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
@@ -166,6 +222,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .farPlane = directionalLightComponent.farPlane,
             .orthographicSize = directionalLightComponent.orthographicSize,
             .aspectRatio = directionalLightComponent.aspectRatio,
+            .reversedZ = false,
         };
 
         _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);
@@ -173,6 +230,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightIsSet = true;
     }
 }
+
 void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUSED uint32_t frameIndex)
 {
     auto pointLightView = _ecs.GetRegistry().view<PointLightComponent, TransformComponent>();
@@ -217,6 +275,55 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
     }
 }
 
+void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
+{
+    auto jointView = _ecs.GetRegistry().view<JointComponent, WorldMatrixComponent>();
+    static std::array<glm::mat4, MAX_BONES> skinMatrices {};
+    static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
+    skeletonBoneOffset.clear();
+
+    // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
+    _ecs.GetRegistry().sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
+        { return a.skeletonEntity < b.skeletonEntity; });
+
+    // While traversing all joints we keep track of skeleton we're on, this helps for determining when we switch to another skeleton.
+    entt::entity lastSkeleton = entt::null;
+    // We track the offset that we need for each skeleton, so the bones are set properly in the buffer.
+    uint32_t offset = 0;
+    // The highest index is used to determine what the count of joints is, so we can use that for our offset.
+    uint32_t highestIndex = 0;
+    for (entt::entity entity : jointView)
+    {
+        const auto& joint = jointView.get<JointComponent>(entity);
+        const auto& matrixComponent = jointView.get<WorldMatrixComponent>(entity);
+        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrixComponent);
+
+        if (lastSkeleton != joint.skeletonEntity)
+        {
+            lastSkeleton = joint.skeletonEntity;
+            offset += highestIndex + 1;
+
+            skeletonBoneOffset[lastSkeleton] = offset;
+            highestIndex = 0;
+        }
+
+        highestIndex = glm::max(highestIndex, joint.jointIndex);
+
+        skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
+    }
+
+    // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
+    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent>();
+    for (auto [entity, offset] : skeletonBoneOffset)
+    {
+        auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
+        skeleton.boneOffset = offset;
+    }
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat4) * skinMatrices.size());
+}
+
 void GPUScene::InitializeSceneBuffers()
 {
     CreateSceneBuffers();
@@ -250,6 +357,13 @@ void GPUScene::InitializeObjectInstancesBuffers()
     CreateObjectInstancesBuffers();
     CreateObjectInstanceDescriptorSetLayout();
     CreateObjectInstancesDescriptorSets();
+}
+
+void GPUScene::InitializeSkinBuffers()
+{
+    CreateSkinBuffers();
+    CreateSkinDescriptorSetLayout();
+    CreateSkinDescriptorSets();
 }
 
 void GPUScene::CreateSceneDescriptorSetLayout()
@@ -331,6 +445,20 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
     std::vector<std::string_view> names { "InstanceData" };
 
     _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateSkinDescriptorSetLayout()
+{
+    vk::DescriptorSetLayoutBinding binding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute,
+    };
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
+    std::vector<std::string_view> names { "SkinningMatrices" };
+    _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -454,6 +582,22 @@ void GPUScene::CreateObjectInstancesDescriptorSets()
     }
 }
 
+void GPUScene::CreateSkinDescriptorSets()
+{
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { _skinDescriptorSetLayout, _skinDescriptorSetLayout, _skinDescriptorSetLayout };
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+        .pSetLayouts = layouts.data(),
+    };
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, _skinDescriptorSets.data()),
+        "Failed allocating object instance descriptor sets!");
+    for (size_t i = 0; i < _skinDescriptorSets.size(); ++i)
+    {
+        UpdateSkinDescriptorSet(i);
+    }
+}
+
 void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
 {
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
@@ -550,6 +694,28 @@ void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
     bufferWrite.pBufferInfo = &bufferInfo;
 
     _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
+void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
+{
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = _skinDescriptorSets[frameIndex],
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
+
+    _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }
 
 void GPUScene::CreateSceneBuffers()
@@ -653,20 +819,40 @@ void GPUScene::CreateObjectInstancesBuffers()
         _objectInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
+void GPUScene::CreateSkinBuffers()
+{
+    for (uint32_t i = 0; i < _skinBuffers.size(); ++i)
+    {
+        BufferCreation creation {
+            .size = sizeof(glm::mat4) * MAX_BONES,
+            .usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
+            .isMappable = true,
+            .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+            .name = "Skin matrices buffer",
+        };
+        _skinBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+
+        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+        for (uint32_t j = 0; j < MAX_BONES; ++j)
+        {
+            glm::mat4 data { 1.0f };
+            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+        }
+    }
+}
 
 void GPUScene::InitializeIndirectDrawBuffer()
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         BufferCreation creation {};
-        creation.SetSize(sizeof(vk::DrawIndexedIndirectCommand) * MAX_MESHES + sizeof(uint32_t))
+        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
             .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
             .SetIsMappable(true)
             .SetName("Indirect draw buffer");
 
         _indirectDrawFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
-        bblog::info("Indirect draw buffer index: {}", _indirectDrawFrameData[i].buffer.Index());
     }
 }
 
@@ -674,19 +860,16 @@ void GPUScene::InitializeIndirectDrawDescriptor()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vk::DescriptorSetLayoutBinding layoutBinding {
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    bindings[0] = {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eAll,
     };
+    std::vector<std::string_view> names { "DrawCommands" };
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
-    };
-
-    util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
@@ -729,10 +912,5 @@ void GPUScene::WriteDraws(uint32_t frameIndex)
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
 
-    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(vk::DrawIndexedIndirectCommand));
-
-    // Write draw count in the final 4 bytes of the indirect draw buffer.
-    uint32_t drawCount = _drawCommands.size();
-    std::byte* ptr = static_cast<std::byte*>(buffer->mappedPtr);
-    std::memcpy(ptr + IndirectCountOffset(), &drawCount, sizeof(uint32_t));
+    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
 }

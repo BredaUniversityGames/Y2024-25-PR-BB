@@ -1,13 +1,13 @@
 #include "pipelines/particle_pipeline.hpp"
 
+#include "bloom_settings.hpp"
 #include "camera.hpp"
 #include "ecs_module.hpp"
+#include "emitter_component.hpp"
 #include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "emitter_component.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
@@ -17,12 +17,13 @@
 
 #include <pipeline_builder.hpp>
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const CameraResource& camera)
+ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
-    , _camera(camera)
+    , _brightnessTarget(brightnessTarget)
+    , _bloomSettings(bloomSettings)
 {
     srand(time(0));
 
@@ -55,7 +56,7 @@ ParticlePipeline::~ParticlePipeline()
     resources->BufferResourceManager().Destroy(_emittersBuffer);
     resources->BufferResourceManager().Destroy(_vertexBuffer);
     resources->BufferResourceManager().Destroy(_indexBuffer);
-    vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
+    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
 
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
@@ -64,6 +65,8 @@ ParticlePipeline::~ParticlePipeline()
 
 void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
+
     UpdateEmitters(commandBuffer);
 
     RecordKickOff(commandBuffer);
@@ -73,9 +76,9 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         RecordEmit(commandBuffer);
     }
 
-    RecordSimulate(commandBuffer, scene.deltaTime); // TODO: get deltatime again somehow
+    RecordSimulate(commandBuffer, scene.gpuScene->MainCamera(), scene.deltaTime, currentFrame);
 
-    RecordRenderIndexed(commandBuffer, currentFrame);
+    RecordRenderIndexed(commandBuffer, scene, currentFrame);
 
     UpdateAliveLists();
 }
@@ -131,6 +134,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
         // +63 so we always dispatch at least once.
         commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
+    _context->GetDrawStats().SetEmitterCount(_emitters.size());
     _emitters.clear();
 
     vk::MemoryBarrier memoryBarrier {};
@@ -141,7 +145,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float deltaTime)
+void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -151,8 +155,9 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
 
-    _simulatePushConstant.deltaTime = deltaTime * 0.001f;
+    _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
@@ -165,7 +170,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, float del
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
+void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -180,7 +185,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     culledIndicesBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
     commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eHost, vk::DependencyFlags { 0 }, {}, culledIndicesBarrier, {});
 
-    std::array<vk::RenderingAttachmentInfoKHR, 1> colorAttachmentInfos {};
+    std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
     colorAttachmentInfos[0].imageView = resources->ImageResourceManager().Access(_hdrTarget)->views[0];
@@ -188,6 +193,12 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
+
+    // HDR brightness for bloom
+    colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
+    colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
+    colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
 
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = resources->ImageResourceManager().Access(_gBuffers.Depth())->view;
@@ -220,7 +231,9 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 1, _instancesDescriptorSet, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, _camera.DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 2, scene.gpuScene->MainCamera().DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 3, scene.gpuScene->GetSceneDescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], 4, _bloomSettings.GetDescriptorSetData(currentFrame), {});
 
     vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(_vertexBuffer)->buffer;
     vk::Buffer indexBuffer = resources->BufferResourceManager().Access(_indexBuffer)->buffer;
@@ -229,6 +242,9 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, uint
 
     CulledInstances* culledData = static_cast<CulledInstances*>(culledIndicesBuffer->mappedPtr);
     commandBuffer.drawIndexed(6, culledData->count, 0, 0, 0, vkContext->Dldi());
+
+    _context->GetDrawStats().SetParticleCount(culledData->count);
+    _context->GetDrawStats().Draw(6);
 
     commandBuffer.endRenderingKHR(vkContext->Dldi());
     util::EndLabel(commandBuffer, vkContext->Dldi());
@@ -239,16 +255,15 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent>();
+    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
         auto& component = view.get<EmitterComponent>(entity);
-        if (component.timesToEmit != 0)
+        if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             _emitters.emplace_back(component.emitter);
-            component.timesToEmit--; // TODO: possibly move the updating of emitters to the GPU
         }
     }
 
@@ -344,7 +359,7 @@ void ParticlePipeline::CreatePipelines()
 
     { // simulate
         vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        std::array<vk::DescriptorSetLayout, 3> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout };
+        std::array<vk::DescriptorSetLayout, 4> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout, CameraResource::DescriptorSetLayout() };
         pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -382,38 +397,45 @@ void ParticlePipeline::CreatePipelines()
     }
 
     { // instanced rendering (billboard)
-        vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
-        colorBlendAttachmentState.blendEnable = vk::False;
-        colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        std::array<vk::PipelineColorBlendAttachmentState, 2> colorBlendAttachmentState {};
+        colorBlendAttachmentState[0].blendEnable = vk::False;
+        colorBlendAttachmentState[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        memcpy(&colorBlendAttachmentState[1], &colorBlendAttachmentState[0], sizeof(vk::PipelineColorBlendAttachmentState));
 
         vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
         colorBlendStateCreateInfo.logicOpEnable = vk::False;
-        colorBlendStateCreateInfo.attachmentCount = 1;
-        colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
+        colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentState.size();
+        colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
         vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {};
         depthStencilStateCreateInfo.depthTestEnable = true;
         depthStencilStateCreateInfo.depthWriteEnable = true;
-        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+        depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
         depthStencilStateCreateInfo.depthBoundsTestEnable = false;
         depthStencilStateCreateInfo.minDepthBounds = 0.0f;
         depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
         depthStencilStateCreateInfo.stencilTestEnable = false;
 
-        vk::Format format = resources->ImageResourceManager().Access(_hdrTarget)->format;
+        std::vector<vk::Format> formats = {
+            resources->ImageResourceManager().Access(_hdrTarget)->format,
+            resources->ImageResourceManager().Access(_brightnessTarget)->format
+        };
 
         std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/billboard.vert.spv");
         std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/particle.frag.spv");
 
-        PipelineBuilder reflector { _context };
-        reflector
-            .AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv)
-            .AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv)
-            .SetColorBlendState(colorBlendStateCreateInfo)
-            .SetColorAttachmentFormats({ format })
-            .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
-            .SetDepthStencilState(depthStencilStateCreateInfo)
-            .BuildPipeline(_pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstanced)], _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstanced)]);
+        GraphicsPipelineBuilder pipelineBuilder { _context };
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);
+        pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
+        auto result = pipelineBuilder
+                          .SetColorBlendState(colorBlendStateCreateInfo)
+                          .SetColorAttachmentFormats(formats)
+                          .SetDepthAttachmentFormat(resources->ImageResourceManager().Access(_gBuffers.Depth())->format)
+                          .SetDepthStencilState(depthStencilStateCreateInfo)
+                          .BuildPipeline();
+
+        _pipelineLayouts.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<0>(result);
+        _pipelines.at(static_cast<uint32_t>(ShaderStages::eRenderInstanced)) = std::get<1>(result);
     }
 }
 

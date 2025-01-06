@@ -19,13 +19,16 @@
 #include "pipelines/cluster_culling_pipeline.hpp"
 #include "pipelines/clustering_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
+#include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ibl_pipeline.hpp"
 #include "pipelines/lighting_pipeline.hpp"
 #include "pipelines/particle_pipeline.hpp"
+#include "pipelines/presentation_pipeline.hpp"
 #include "pipelines/shadow_pipeline.hpp"
 #include "pipelines/skydome_pipeline.hpp"
+#include "pipelines/ssao_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "pipelines/ui_pipeline.hpp"
 #include "profile_macros.hpp"
@@ -53,16 +56,19 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     InitializeHDRTarget();
     InitializeBloomTargets();
+    InitializeSSAOTarget();
     InitializeTonemappingTarget();
-    InitializeUITarget();
+    InitializeFXAATarget();
     LoadEnvironmentMap();
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    _batchBuffer = std::make_shared<BatchBuffer>(_context, 256 * 1024 * 1024, 256 * 1024 * 1024);
+    const uint32_t mb128 = 128 * 1024 * 1024;
+    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
+    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_batchBuffer);
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
@@ -86,19 +92,18 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    // temporary location
-    auto font = LoadFromFile("assets/fonts/JosyWine-G33rg.ttf", 48, _context);
-    viewport.AddElement(std::make_unique<MainMenuCanvas>(_viewport.GetExtend(), _context, font));
-
     _geometryPipeline = std::make_unique<GeometryPipeline>(_context, *_gBuffers, *_gpuScene);
     _skydomePipeline = std::make_unique<SkydomePipeline>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPipeline = std::make_unique<TonemappingPipeline>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
-    _uiPipeline = std::make_unique<UIPipeline>(_context, _tonemappingTarget, _uiTarget, *_swapChain);
+    _fxaaPipeline = std::make_unique<FXAAPipeline>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
+    _uiPipeline = std::make_unique<UIPipeline>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
+    _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, _uiTarget, *_swapChain);
-    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
-    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _gpuScene->MainCamera());
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
+    _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
+    _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
     _clusteringPipeline = std::make_unique<ClusteringPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
     _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
@@ -119,6 +124,13 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation ssaoPass { *_ssaoPipeline };
+    ssaoPass.SetName("SSAO pass")
+        .SetDebugLabelColor(glm::vec3(0.87f))
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
+
     FrameGraphNodeCreation lightingPass { *_lightingPipeline };
     lightingPass.SetName("Lighting pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f)
@@ -126,6 +138,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
@@ -133,21 +146,16 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation skyDomePass { *_skydomePipeline };
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
-        // Does nothing internally in this situation, for clarity that it is used here
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Making sure the sky dome pass runs after the lighting pass with a reference
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        // Not needed references, just for clarity this pass also contributes to those targets
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation particlePass { *_particlePipeline };
     particlePass.SetName("Particle pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        .AddInput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference)
-        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment | FrameGraphResourceType::eReference);
-    // TODO: particle pass should also render to brightness target
+        .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
+        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPipeline };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
@@ -162,21 +170,29 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation fxaaPass { *_fxaaPipeline };
+    fxaaPass.SetName("FXAA pass")
+        .SetDebugLabelColor(glm::vec3 { 139.0f, 190.0f, 16.0f } / 255.0f)
+        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
+
     // TODO: THIS PASS SHOULD BE DONE LAST.
     FrameGraphNodeCreation uiPass { *_uiPipeline };
     uiPass.SetName("UI pass")
         .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
-        .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference)
-        .AddOutput(_uiTarget, FrameGraphResourceType::eAttachment);
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        // Does nothing internally in this situation, used for clarity that the debug pass uses the depth buffer
-        .AddInput(_uiTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
-        // Reference to make sure it runs at the end
-        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation presentationPass { *_presentationPipeline };
+    presentationPass.SetName("Presentation pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 0.0f })
+        // No support for presentation targets in frame graph, so we'll have to this for now
+        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     FrameGraphNodeCreation clusteringPass { *_clusteringPipeline, FrameGraphRenderPassType::eCompute };
     clusteringPass.SetName("Clustering pass")
@@ -197,16 +213,33 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph.AddNode(geometryPass)
         .AddNode(shadowPass)
+        .AddNode(ssaoPass)
+        .AddNode(lightingPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
-        .AddNode(lightingPass)
         .AddNode(bloomBlurPass)
         .AddNode(toneMappingPass)
+        .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
         .AddNode(clusteringPass)
         .AddNode(clusterCullingPass)
+        .AddNode(presentationPass)
         .Build();
+
+    static std::array<std::string, MAX_FRAMES_IN_FLIGHT> contextNames { "Command Buffer 0", "Command Buffer 1", "Command Buffer 2" };
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        _tracyContexts[i] = TracyVkContextCalibrated(
+            _context->VulkanContext()->PhysicalDevice(),
+            _context->VulkanContext()->Device(),
+            _context->VulkanContext()->GraphicsQueue(),
+            _commandBuffers[i],
+            reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT")),
+            reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(_context->VulkanContext()->Instance().getProcAddr("vkGetCalibratedTimestampsEXT")));
+        TracyVkContextName(_tracyContexts[i], contextNames[i].c_str(), contextNames[i].size());
+    }
 }
 
 std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
@@ -228,13 +261,16 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     SingleTimeCommands commands { _context->VulkanContext() };
     for (const auto& path : modelPaths)
     {
-
         auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_batchBuffer);
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
         models.emplace_back(std::move(cpu), std::move(gpu));
     }
 
     return models;
+}
+void Renderer::FlushCommands()
+{
+    GetContext()->VulkanContext()->Device().waitIdle();
 }
 
 Renderer::~Renderer()
@@ -251,6 +287,11 @@ Renderer::~Renderer()
     }
 
     _swapChain.reset();
+
+    for (size_t i = 0; i < _tracyContexts.size(); ++i)
+    {
+        TracyVkDestroy(_tracyContexts[i]);
+    }
 }
 
 void Renderer::CreateCommandBuffers()
@@ -267,34 +308,21 @@ void Renderer::CreateCommandBuffers()
 void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime)
 {
     ZoneScoped;
-
-    // Since there is only one scene, we can reuse the same gpu buffers
-    _gpuScene->Update(_currentFrame);
+    TracyVkZone(_tracyContexts[_currentFrame], commandBuffer, "Render all");
 
     const RenderSceneDescription sceneDescription {
         .gpuScene = _gpuScene,
         .ecs = _ecs,
-        .batchBuffer = _batchBuffer,
+        .staticBatchBuffer = _staticBatchBuffer,
+        .skinnedBatchBuffer = _skinnedBatchBuffer,
         .targetSwapChainImageIndex = swapChainImageIndex,
-        .deltaTime = deltaTime
+        .deltaTime = deltaTime,
+        .tracyContext = _tracyContexts[_currentFrame],
     };
-
-    _context->GetDrawStats().Clear();
-
-    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
-    util::VK_ASSERT(commandBuffer.begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
-
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
 
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
-
-    commandBuffer.end();
+    TracyVkCollect(_tracyContexts[_currentFrame], commandBuffer);
 }
 
 void Renderer::CreateSyncObjects()
@@ -346,17 +374,27 @@ void Renderer::InitializeTonemappingTarget()
 
     _tonemappingTarget = _context->Resources()->ImageResourceManager().Create(tonemappingCreation);
 }
-
-void Renderer::InitializeUITarget()
+void Renderer::InitializeFXAATarget()
 {
     auto size = _swapChain->GetImageSize();
 
-    CPUImage uiCreation {};
-    uiCreation.SetName("UI Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+    CPUImage fxaaCreation {};
+    fxaaCreation.SetName("FXAA Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
-    _uiTarget = _context->Resources()->ImageResourceManager().Create(uiCreation);
+    _fxaaTarget = _context->Resources()->ImageResourceManager().Create(fxaaCreation);
 }
+void Renderer::InitializeSSAOTarget()
+{
+    auto size = _swapChain->GetImageSize();
 
+    CPUImage ssaoImageData {};
+    ssaoImageData.SetName("SSAO Target")
+        .SetSize(size.x, size.y)
+        .SetFormat(vk::Format::eR8Unorm)
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+
+    _ssaoTarget = _context->Resources()->ImageResourceManager().Create(ssaoImageData);
+}
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
@@ -415,14 +453,19 @@ void Renderer::Render(float deltaTime)
 
     util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
 
-    {
-        ZoneNamedN(zz, "ImGui Render", true);
-        ImGui::Render();
-    }
-
     _commandBuffers[_currentFrame].reset();
 
+    // Since there is only one scene, we can reuse the same gpu buffers
+    _gpuScene->Update(_currentFrame);
+
+    _context->GetDrawStats().Clear();
+
+    vk::CommandBufferBeginInfo commandBufferBeginInfo {};
+    util::VK_ASSERT(_commandBuffers[_currentFrame].begin(&commandBufferBeginInfo), "Failed to begin recording command buffer!");
+
     RecordCommandBuffer(_commandBuffers[_currentFrame], imageIndex, deltaTime);
+
+    _commandBuffers[_currentFrame].end();
 
     vk::Semaphore waitSemaphore = _imageAvailableSemaphores[_currentFrame];
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;

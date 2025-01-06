@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include <cstdint>
+#include <string_view>
 
 class Engine;
 class MainEngine;
@@ -40,4 +41,6 @@ private:
 
     // Modules are shutdown in the order they are initialized
     virtual void Shutdown(Engine& engine) = 0;
+
+    virtual std::string_view GetName() = 0;
 };

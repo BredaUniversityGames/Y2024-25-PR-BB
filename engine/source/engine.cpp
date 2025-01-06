@@ -4,25 +4,25 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
-#include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "editor.hpp"
-#include "emitter_component.hpp"
-#include "gbuffers.hpp"
+#include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "input/input_manager.hpp"
+#include "input/action_manager.hpp"
+#include "input/input_device_manager.hpp"
 #include "model_loader.hpp"
 #include "old_engine.hpp"
-#include "particle_interface.hpp"
 #include "particle_module.hpp"
 #include "particle_util.hpp"
 #include "physics_module.hpp"
@@ -33,20 +33,12 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
+#include "time_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
-
-    ImGui::CreateContext();
-    ImPlot::CreateContext();
-
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
@@ -57,14 +49,18 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/CathedralGLB_GLTF.glb",
-        "assets/models/Terrain/scene.gltf",
-        "assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb"
-
+        "assets/models/Cathedral.glb",
+        "assets/models/AnimatedRifle.glb",
+        //"assets/models/BrainStem.glb",
+        //"assets/models/Adventure.glb",
+        //"assets/models/DamagedHelmet.glb",
+        //"assets/models/CathedralGLB_GLTF.glb",
+        // "assets/models/Terrain/scene.gltf",
+        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+        //"assets/models/MetalRoughSpheres.glb"
     };
 
-    particleModule.GetParticleInterface().LoadEmitterPresets();
+    particleModule.LoadEmitterPresets();
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
@@ -73,22 +69,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    for (const auto& model : models)
-    {
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
 
-        auto entity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, model.first, *modelResourceManager.Access(model.second), model.first.hierarchy);
-        entities.emplace_back(entity);
-    }
+    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
-    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entities[0], glm::angleAxis(glm::radians(45.0f), glm::vec3 { 0.0f, 1.0f, 0.0f }));
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[0], glm::vec3 { 10.0f, 0.0f, 10.f });
-
-    TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
-
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
-
-    _editor = std::make_unique<Editor>(*_ecs, rendererModule.GetRenderer(), rendererModule.GetImGuiBackend());
+    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -97,20 +84,28 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
     directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+    directionalLightComponent.nearPlane = -110.0f;
+    directionalLightComponent.farPlane = 63.0f;
+    directionalLightComponent.orthographicSize = 75.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(7.3f, 1.25f, 4.75f));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
     TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     entt::entity cameraEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
+    _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+
+    RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
     cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.01f;
+    cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
+    cameraComponent.reversedZ = true;
 
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
     for (size_t i = 0; i < 5000; i++)
@@ -131,22 +126,52 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastFrameTime = std::chrono::high_resolution_clock::now();
 
     glm::ivec2 mousePos;
-    applicationModule.GetInputManager().GetMousePosition(mousePos.x, mousePos.y);
+    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    _ecs->GetSystem<PhysicsSystem>()->InitializePhysicsColliders();
-    BankInfo masterBank;
-    masterBank.path = "assets/sounds/Master.bank";
+    // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
+    // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
+    //  physics_system->InitializePhysicsColliders();
 
-    BankInfo stringBank;
-    stringBank.path = "assets/sounds/Master.strings.bank";
+    // BankInfo masterBank;
+    // masterBank.path = "assets/sounds/Master.bank";
+    //
+    // BankInfo stringBank;
+    // stringBank.path = "assets/sounds/Master.strings.bank";
+    //
+    // BankInfo bi;
+    // bi.path = "assets/sounds/SFX.bank";
+    //
+    // audioModule.LoadBank(masterBank);
+    // audioModule.LoadBank(stringBank);
+    // audioModule.LoadBank(bi);
 
-    BankInfo bi;
-    bi.path = "assets/sounds/SFX.bank";
+    SoundInfo si;
+    si.path = "assets/sounds/fallback.mp3";
+    si.is3D = true;
 
-    audioModule.LoadBank(masterBank);
-    audioModule.LoadBank(stringBank);
-    audioModule.LoadBank(bi);
+    audioModule.LoadSFX(si);
+
+    SoundInfo musicSi;
+    musicSi.path = "assets/sounds/music1.wav";
+    musicSi.isLoop = true;
+    musicSi.is3D = true;
+
+    // This sound might pop in because it starts playing before the engine is fully initialized
+    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
+
+    auto audioEmitter = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
+    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
+
+    emitter._soundIds.emplace_back(instance);
+
+    SoundInfo eagleSi;
+    eagleSi.path = "assets/sounds/eagle.mp3";
+
+    audioModule.LoadSFX(eagleSi);
+
+    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;
@@ -154,20 +179,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
 void OldEngine::Tick(Engine& engine)
 {
-    // update input
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& input = applicationModule.GetInputManager();
+    auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
+    auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
-    ZoneNamed(zone, "");
-    auto currentFrameTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> deltaTime = currentFrameTime - _lastFrameTime;
-    _lastFrameTime = currentFrameTime;
-    float deltaTimeMS = deltaTime.count();
+    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
@@ -176,6 +197,9 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
+    audioModule.ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -186,13 +210,13 @@ void OldEngine::Tick(Engine& engine)
     }
 
     int32_t mouseX, mouseY;
-    input.GetMousePosition(mouseX, mouseY);
+    inputDeviceManager.GetMousePosition(mouseX, mouseY);
 
-    if (input.IsKeyPressed(KeyboardCode::eH))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
-        ZoneNamedN(zone, "Update Camera", true);
+        ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 
@@ -211,17 +235,18 @@ void OldEngine::Tick(Engine& engine)
 
             constexpr float MOUSE_SENSITIVITY = 0.003f;
             constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.003f;
+            constexpr float CAM_SPEED = 0.03f;
 
-            glm::ivec2 mouseDelta = glm::ivec2 { mouseX, mouseY } - _lastMousePos;
-            glm::vec2 rotationDelta = { mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
+            glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
+            glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
 
-            rotationDelta.x += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTX) * GAMEPAD_LOOK_SENSITIVITY;
-            rotationDelta.y += input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_RIGHTY) * GAMEPAD_LOOK_SENSITIVITY;
+            glm::vec2 lookAnalogAction = actionManager.GetAnalogAction("Look");
+            rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
+            rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
 
             glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
             glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x -= rotationDelta.y;
+            eulerRotation.x += rotationDelta.y;
 
             // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
             // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
@@ -236,28 +261,29 @@ void OldEngine::Tick(Engine& engine)
             TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
 
             glm::vec3 movementDir {};
-            if (input.IsKeyHeld(KeyboardCode::eW))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eW))
             {
                 movementDir += FORWARD;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eS))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eS))
             {
                 movementDir -= FORWARD;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eD))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
             {
                 movementDir += RIGHT;
             }
 
-            if (input.IsKeyHeld(KeyboardCode::eA))
+            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eA))
             {
                 movementDir -= RIGHT;
             }
 
-            movementDir += RIGHT * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTX);
-            movementDir -= FORWARD * input.GetGamepadAxis(GamepadAxis::eGAMEPAD_AXIS_LEFTY);
+            glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
+            movementDir += RIGHT * moveAnalogAction.x;
+            movementDir += FORWARD * moveAnalogAction.y;
 
             if (glm::length(movementDir) != 0.0f)
             {
@@ -272,7 +298,7 @@ void OldEngine::Tick(Engine& engine)
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
 
             // shoot rays
-            if (ImGui::IsKeyPressed(ImGuiKey_Space))
+            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
             {
                 const glm::vec3 cameraDir = (rotation * FORWARD);
                 const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
@@ -292,6 +318,8 @@ void OldEngine::Tick(Engine& engine)
                         JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
                         physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
                     }
+
+                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
                 }
             }
         }
@@ -299,39 +327,39 @@ void OldEngine::Tick(Engine& engine)
 
     _lastMousePos = { mouseX, mouseY };
 
-    if (input.IsKeyPressed(KeyboardCode::eESCAPE))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
-    if (input.IsKeyPressed(KeyboardCode::eP))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eL))
     {
-        particleModule.GetParticleInterface().SpawnEmitter(ParticleInterface::EmitterPreset::eTest);
+        audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/eagle.mp3"), 1.5f, false);
     }
 
-    if (input.IsKeyPressed(KeyboardCode::eF1))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
     }
 
-    static uint32_t eventId {};
-
-    if (input.IsKeyPressed(KeyboardCode::eO))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
     {
-        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
-    }
+        entt::entity entity = _ecs->GetRegistry().create();
+        RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
 
-    if (input.IsKeyReleased(KeyboardCode::eO))
-    {
-        audioModule.StopEvent(eventId);
+        NameComponent node;
+        node.name = "Physics Entity";
+        _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<TransformComponent>(entity);
+        _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        auto& audioEmitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(entity);
+
+        physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
+
+        particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
+        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
     }
 
     JPH::BodyManager::DrawSettings drawSettings;
     physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
-
-    _editor->Draw(_performanceTracker, rendererModule.GetRenderer()->GetBloomSettings());
-
-    rendererModule.GetRenderer()->Render(deltaTimeMS);
-
-    _performanceTracker.Update();
 
     physicsModule.debugRenderer->NextFrame();
 
@@ -340,7 +368,6 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    _editor.reset();
 }
 
 OldEngine::OldEngine() = default;

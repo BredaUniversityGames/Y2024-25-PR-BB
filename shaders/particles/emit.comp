@@ -11,11 +11,12 @@ struct Emitter
     vec2 rotationVelocity;
     float maxLife;
     float randomValue;
-    vec2 size;
+    vec3 size;
     uint materialIndex;
+    uint flags;
 };
 
-const uint MAX_EMITTERS = 64;
+const uint MAX_EMITTERS = 256;
 
 layout(set = 2, binding = 0) uniform EmitterUBO
 {
@@ -27,14 +28,14 @@ layout(push_constant) uniform BufferOffset
     uint bufferOffset;
 };
 
-layout ( local_size_x = 64, local_size_y = 1, local_size_z = 1 ) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
     Emitter emitter = emitters[bufferOffset];
     uint index = gl_GlobalInvocationID.x;
-    if(index >= emitter.count)
-        return;
+    if (index >= emitter.count)
+    return;
 
     vec2 rng = hash_simplex_2D(vec2(float(index), emitter.randomValue));
 
@@ -42,17 +43,18 @@ void main()
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = vec3(rng.x, emitter.velocity.y, rng.y); // TODO: add something to make this more random?
+    particle.velocity = vec3(rng.x, emitter.velocity.y, rng.y);// TODO: add something to make this more random?
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
     particle.materialIndex = emitter.materialIndex;
     particle.size = emitter.size;
+    particle.flags = emitter.flags;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);
-    if(deadCount < 1)
-        return;
+    if (deadCount < 1)
+    return;
 
     uint newParticleIndex = deadBuffer[deadCount - 1];
 

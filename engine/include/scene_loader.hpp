@@ -1,14 +1,18 @@
 #pragma once
 
-#include "model.hpp"
+#include "animation.hpp"
+#include "cpu_resources.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <memory>
+#include <optional>
 
 class GraphicsContext;
 class ECSModule;
 
+struct Animation;
+
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const CPUModel& cpuModel, const GPUModel& modelResources, const Hierarchy& hierarchy);
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations = {});
 };

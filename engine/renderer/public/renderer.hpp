@@ -2,17 +2,21 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
-#include "model.hpp"
 #include "swap_chain.hpp"
+
+#include <tracy/TracyVulkan.hpp>
 
 class UIModule;
 class DebugPipeline;
 class Application;
 class GeometryPipeline;
+class SSAOPipeline;
 class LightingPipeline;
 class SkydomePipeline;
 class TonemappingPipeline;
+class FXAAPipeline;
 class UIPipeline;
 class GaussianBlurPipeline;
 class ClusteringPipeline;
@@ -20,6 +24,7 @@ class ClusterCullingPipeline;
 class ShadowPipeline;
 class IBLPipeline;
 class ParticlePipeline;
+class PresentationPipeline;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
@@ -44,12 +49,17 @@ public:
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
-    BatchBuffer& GetBatchBuffer() const { return *_batchBuffer; }
+    BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
+    BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
     DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
+    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
+    FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
+
+    void FlushCommands();
 
 private:
     friend class RendererModule;
@@ -68,12 +78,15 @@ private:
     std::unique_ptr<LightingPipeline> _lightingPipeline;
     std::unique_ptr<SkydomePipeline> _skydomePipeline;
     std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
+    std::unique_ptr<FXAAPipeline> _fxaaPipeline;
     std::unique_ptr<UIPipeline> _uiPipeline;
     std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
     std::unique_ptr<ShadowPipeline> _shadowPipeline;
     std::unique_ptr<DebugPipeline> _debugPipeline;
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
+    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
+    std::unique_ptr<PresentationPipeline> _presentationPipeline;
     std::unique_ptr<ClusteringPipeline> _clusteringPipeline;
     std::unique_ptr<ClusterCullingPipeline> _clusterCullingPipeline;
 
@@ -82,7 +95,7 @@ private:
     ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
-    ResourceHandle<GPUImage> _uiTarget;
+    ResourceHandle<GPUImage> _fxaaTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -92,13 +105,17 @@ private:
     std::array<vk::Semaphore, MAX_FRAMES_IN_FLIGHT> _renderFinishedSemaphores;
     std::array<vk::Fence, MAX_FRAMES_IN_FLIGHT> _inFlightFences;
 
-    std::shared_ptr<BatchBuffer> _batchBuffer;
+    std::shared_ptr<BatchBuffer> _staticBatchBuffer;
+    std::shared_ptr<BatchBuffer> _skinnedBatchBuffer;
 
     std::unique_ptr<BloomSettings> _bloomSettings;
 
     ResourceHandle<GPUImage> _hdrTarget;
+    ResourceHandle<GPUImage> _ssaoTarget;
 
     uint32_t _currentFrame { 0 };
+
+    std::array<TracyVkCtx, MAX_FRAMES_IN_FLIGHT> _tracyContexts;
 
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
@@ -106,7 +123,8 @@ private:
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
-    void InitializeUITarget();
+    void InitializeFXAATarget();
+    void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();
 };

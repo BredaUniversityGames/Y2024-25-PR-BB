@@ -128,7 +128,15 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     {
     case CameraComponent::Projection::ePerspective:
     {
-        cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.nearPlane, camera.farPlane);
+        if (camera.reversedZ)
+        {
+            // Swapped far and near plane, since reverse Z is used.
+            cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.farPlane, camera.nearPlane);
+        }
+        else
+        {
+            cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.nearPlane, camera.farPlane);
+        }
 
         glm::mat4 projT = glm::transpose(cameraBuffer.proj);
 
@@ -147,7 +155,16 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
         float right = camera.orthographicSize;
         float bottom = -camera.orthographicSize;
         float top = camera.orthographicSize;
-        cameraBuffer.proj = glm::ortho<float>(left, right, bottom, top, camera.nearPlane, camera.farPlane);
+
+        if (camera.reversedZ)
+        {
+            // Swapped far and near plane, since reverse Z is used.
+            cameraBuffer.proj = glm::ortho<float>(left, right, bottom, top, camera.farPlane, camera.nearPlane);
+        }
+        else
+        {
+            cameraBuffer.proj = glm::ortho<float>(left, right, bottom, top, camera.nearPlane, camera.farPlane);
+        }
 
         cameraBuffer.frustum[0] = left;
         cameraBuffer.frustum[1] = right;

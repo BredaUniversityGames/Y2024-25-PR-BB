@@ -1,5 +1,9 @@
 const uint MAX_PARTICLES = 1024 * 256;
 
+// particle rendering flags
+const uint UNLIT = 1 << 0;
+const uint NOSHADOW = 1 << 1;
+
 struct Particle
 {
     vec3 position;
@@ -9,7 +13,8 @@ struct Particle
     vec2 rotationVelocity;
     float life;
     uint materialIndex;
-    vec2 size;
+    vec3 size;
+    uint flags;
 };
 
 struct ParticleCounters
@@ -25,6 +30,7 @@ struct ParticleInstance
     uint materialIndex;
     vec2 size;
     float angle;
+    uint flags;
 };
 
 struct CulledInstances

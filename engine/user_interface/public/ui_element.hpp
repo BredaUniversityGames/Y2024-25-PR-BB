@@ -9,7 +9,7 @@
 #include <optional>
 #include <vector>
 
-class InputManager;
+class InputDeviceManager;
 
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
@@ -48,7 +48,7 @@ public:
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
-    virtual void Update(const InputManager& input);
+    virtual void Update(const InputDeviceManager& input);
 
     UIElement& AddChild(std::unique_ptr<UIElement> child);
 
