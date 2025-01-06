@@ -49,6 +49,12 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
             continue;
         }
+
+        // update position and velocity
+        if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+        {
+            emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
+        }
         if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
@@ -74,12 +80,6 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             emitter.currentEmitDelay = emitter.maxEmitDelay;
         }
         emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
-
-        // update position and velocity
-        if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
-        {
-            emitter.emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
-        }
     }
 }
 
@@ -142,7 +142,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     }
     else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
     {
-        emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
+        emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
         emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     }
     else
