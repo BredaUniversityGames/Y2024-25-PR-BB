@@ -12,12 +12,12 @@
 #include "animation.hpp"
 #include "application_module.hpp"
 #include "audio_emitter_component.hpp"
+#include "audio_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
-#include "audio_module.hpp"
 
 #include <cstdint>
 #include <input/action_manager.hpp>
@@ -114,10 +114,6 @@ int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationContro
 void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
 {
     component.component->Play(name, speed, looping);
-}
-void AnimationControlComponentPlayByIndex(WrenComponent<AnimationControlComponent>& component, uint32_t index, float speed, bool looping)
-{
-    component.component->PlayByIndex(index, speed, looping);
 }
 void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
 {
@@ -218,7 +214,6 @@ void BindEngineAPI(wren::ForeignModule& module)
         auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
         animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
         animationControlClass.funcExt<bindings::AnimationControlComponentPlay>("Play");
-        animationControlClass.funcExt<bindings::AnimationControlComponentPlayByIndex>("PlayByIndex");
         animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
         animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
         animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
@@ -333,7 +328,7 @@ void bindings::BindMath(wren::ForeignModule& module)
 
 void bindings::BindMathHelper(wren::ForeignModule& module)
 {
-    auto& mathUtilClass = module.klass<MathUtil>("MathUtil");
+    auto& mathUtilClass = module.klass<MathUtil>("Math");
     mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");

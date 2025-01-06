@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, MathUtil, AnimationControlComponent, TransformComponent, Input, Keycode
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode
 
 class Main {
 
@@ -13,7 +13,7 @@ class Main {
         __player = engine.GetECS().GetEntityByName("Camera")
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.PlayByIndex(4, 1.0, false)
+        gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         gunAnimations.Stop()
 
         if (__player) {
@@ -58,11 +58,11 @@ class Main {
 
         var gunAnimations = __gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload") && gunAnimations.AnimationFinished()) {
-            gunAnimations.PlayByIndex(3, 1.0, false)
+            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         }
         if(engine.GetInput().GetDigitalAction("Shoot")) {
             if(gunAnimations.AnimationFinished()) {
-                gunAnimations.PlayByIndex(4, 2.0, false)
+                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
             }
         }
 
