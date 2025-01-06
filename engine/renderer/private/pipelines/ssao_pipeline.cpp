@@ -150,8 +150,8 @@ void SSAOPipeline::CreateBuffers()
         creation.SetName("Sample Kernel")
             .SetSize(ssaoKernel.size() * sizeof(glm::vec4))
             .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
         _sampleKernelBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(ssaoKernel, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->buffer);
@@ -187,7 +187,7 @@ void SSAOPipeline::CreateDescriptorSetLayouts()
     std::vector<vk::DescriptorSetLayoutBinding> bindings = {
         vk::DescriptorSetLayoutBinding {
             .binding = 0,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
             .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
             .pImmutableSamplers = nullptr }
@@ -220,7 +220,7 @@ void SSAOPipeline::CreateDescriptorSets()
             .dstBinding = 0,
             .dstArrayElement = 0,
             .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
             .pBufferInfo = &sampleKernelBufferInfo }
     };
 

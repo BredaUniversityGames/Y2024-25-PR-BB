@@ -23,7 +23,7 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (set = 1, binding = 0) buffer SampleKernel { vec4 samples[]; } uSampleKernel;
+layout (set = 1, binding = 0) uniform SampleKernel { vec4 samples[64]; } uSampleKernel;
 
 layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
