@@ -51,10 +51,6 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         }
 
         // update position and velocity
-        if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
-        {
-            emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
-        }
         if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
@@ -72,6 +68,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
                 JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
                 emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             }
+        }
+        else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+        {
+            emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
         }
 
         // update timers

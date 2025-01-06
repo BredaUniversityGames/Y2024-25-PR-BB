@@ -10,7 +10,6 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
-#include "emitter_component.hpp"
 #include "ecs_module.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
@@ -24,7 +23,6 @@
 #include "renderer.hpp"
 #include "serialization.hpp"
 #include "systems/physics_system.hpp"
-#include "vertex.hpp"
 #include "vulkan_context.hpp"
 
 #include <audio_emitter_component.hpp>
