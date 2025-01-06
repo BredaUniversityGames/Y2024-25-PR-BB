@@ -25,6 +25,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_map>
+#include <tracy/Tracy.hpp>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
@@ -58,6 +59,7 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
+    ZoneScoped;
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateCameraData(frameIndex);
