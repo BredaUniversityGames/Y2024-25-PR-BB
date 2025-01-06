@@ -35,13 +35,9 @@ void main()
     const vec2 noiseScale = vec2(pushConstants.screenWidth / 4.0, pushConstants.screenHeight / 4.0); // scale noise to screen size
 
     const vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
-    const vec4 positionSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords);
+    const vec3 screenSpacePosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords).xyz;
 
-    const vec3 normal = normalRSample.rgb;
-    const vec3 position = positionSample.rgb;
-
-    const vec3 screenSpacePosition = positionSample.xyz;
-    const vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 0.0)).xyz;
+    const vec3 screenSpaceNormals = (camera.view * vec4(normalRSample.rgb, 0.0)).xyz;
 
     const vec3 randomVec = texture(bindless_color_textures[nonuniformEXT (pushConstants.noiseIndex)], texCoords * noiseScale).xyz;
 
@@ -76,7 +72,7 @@ void main()
             continue;
         }
 
-        vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
+        const vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
         // occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
 
         //check distance to avoid ao on objects that are far away from each other
