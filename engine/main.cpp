@@ -1,6 +1,7 @@
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
+#include "inspector_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
 #include "particle_module.hpp"
@@ -9,7 +10,6 @@
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
 #include "time_module.hpp"
-#include "inspector_module.hpp"
 #include "ui_module.hpp"
 
 #include "wren_bindings.hpp"
@@ -37,6 +37,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     BindEngineAPI(scripting.GetForeignAPI());
     scripting.GenerateEngineBindingsFile();
     scripting.SetMainScript(instance, "game/game.wren");
+
+    instance.GetModule<OldEngine>().InitAudioTest(instance);
 
     return instance.Run();
 }

@@ -27,11 +27,14 @@ public:
 
     ECSModule& GetECS() const { return *_ecs; }
 
+    void InitAudioTest(Engine& e);
+
 private:
     // std::unique_ptr<ThreadPool> _threadPool;
     // std::unique_ptr<AssetManager> _AssetManager;
 
     ECSModule* _ecs;
+    entt::entity cameraEntity = entt::null;
     glm::ivec2 _lastMousePos {};
     MAYBE_UNUSED bool _shouldQuit = false;
 };
