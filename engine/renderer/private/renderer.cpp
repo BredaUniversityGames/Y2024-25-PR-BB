@@ -28,6 +28,7 @@
 #include "pipelines/ssao_pipeline.hpp"
 #include "pipelines/tonemapping_pipeline.hpp"
 #include "pipelines/ui_pipeline.hpp"
+#include "pipelines/presentation_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
@@ -102,9 +103,10 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _bloomBlurPipeline = std::make_unique<GaussianBlurPipeline>(_context, _brightnessTarget, _bloomTarget);
     _ssaoPipeline = std::make_unique<SSAOPipeline>(_context, *_gBuffers, _ssaoTarget);
     _shadowPipeline = std::make_unique<ShadowPipeline>(_context, *_gBuffers, *_gpuScene);
-    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_gBuffers, *_swapChain);
+    _debugPipeline = std::make_unique<DebugPipeline>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -184,7 +186,14 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation debugPass { *_debugPipeline };
     debugPass.SetName("Debug pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment);
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation presentationPass { *_presentationPipeline };
+    presentationPass.SetName("Presentation pass")
+        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 0.0f })
+        // No support for presentation targets in frame graph, so we'll have to this for now
+        .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
@@ -199,6 +208,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
+        .AddNode(presentationPass)
         .Build();
 
     static std::array<std::string, MAX_FRAMES_IN_FLIGHT> contextNames { "Command Buffer 0", "Command Buffer 1", "Command Buffer 2" };
@@ -294,15 +304,7 @@ void Renderer::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint3
         .tracyContext = _tracyContexts[_currentFrame],
     };
 
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
     _frameGraph->RecordCommands(commandBuffer, _currentFrame, sceneDescription);
-
-    // Presenting pass currently not supported by frame graph, so this has to be done manually
-    util::TransitionImageLayout(commandBuffer, _swapChain->GetImage(swapChainImageIndex), _swapChain->GetFormat(),
-        vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     TracyVkCollect(_tracyContexts[_currentFrame], commandBuffer);
 }

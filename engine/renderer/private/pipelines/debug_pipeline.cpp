@@ -16,10 +16,11 @@
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment)
     : _context(context)
-    , _gBuffers(gBuffers)
     , _swapChain(swapChain)
+    , _gBuffers(gBuffers)
+    , _attachment(attachment)
 {
     _linesData.reserve(2048);
     CreateVertexBuffer();
@@ -39,7 +40,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex),
+        .imageView = _context->Resources()->ImageResourceManager().Access(_attachment)->views[0],
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -115,7 +116,7 @@ void DebugPipeline::CreatePipeline()
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    std::vector<vk::Format> formats { _swapChain.GetFormat() };
+    std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_attachment)->format };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {
         .topology = vk::PrimitiveTopology::eLineList,
