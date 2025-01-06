@@ -1,5 +1,6 @@
 #include "wren_bindings.hpp"
 
+#include "animation.hpp"
 #include "application_module.hpp"
 #include "audio/audio_bindings.hpp"
 #include "audio_emitter_component.hpp"
