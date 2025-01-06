@@ -37,9 +37,9 @@ private:
         uint32_t screenWidth = 1920; // just for refference
         uint32_t screenHeight = 1080;
         float aoStrength = 2.0f;
-        float aoBias = 0.02f;
-        float aoRadius = 0.45f;
-        float minAoDistance = 0.3f;
+        float aoBias = 0.01f;
+        float aoRadius = 0.2f;
+        float minAoDistance = 1.0f;
         float maxAoDistance = 3.0f;
     } _pushConstants;
 

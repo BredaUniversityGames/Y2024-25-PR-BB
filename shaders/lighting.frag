@@ -121,7 +121,6 @@ void main()
     float fogFactor = exp(-fogDensity * linearDepth);
 
     outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
-    //outColor = vec4(ambientOcclusion.xxx, 1.0);
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
     vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);
