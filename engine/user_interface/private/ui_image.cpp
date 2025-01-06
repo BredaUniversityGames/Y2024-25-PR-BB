@@ -1,25 +1,26 @@
 #include "ui_image.hpp"
+#include "ui_module.hpp"
 
-#include <input/input_manager.hpp>
-
-void UIImageElement::Update(InputManager& input)
+void UIImageElement::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
-    if ((visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
-        && !input.HasInputBeenConsumed())
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
     {
-        glm::ivec2 mousePos;
-        input.GetMousePosition(mousePos.x, mousePos.y);
-
-        // mouse inside boundary
-        if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
-            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetAbsoluteScale().x)
-            && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
-            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetAbsoluteScale().y))
+        if (!inputContext.HasInputBeenConsumed())
         {
-            input.SetInputConsumed();
+            glm::ivec2 mousePos;
+            inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
+
+            // mouse inside boundary
+            if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
+                && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetAbsoluteScale().x)
+                && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
+                && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetAbsoluteScale().y))
+            {
+                inputContext.ConsumeInput();
+            }
         }
+        UIElement::Update(inputManagers, inputContext);
     }
-    UIElement::Update(input);
 }
 void UIImageElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {

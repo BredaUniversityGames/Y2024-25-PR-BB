@@ -1,21 +1,40 @@
 #include "ui_element.hpp"
-#include <ranges>
+#include "ui_module.hpp"
 #include <algorithm>
+#include <ranges>
 
-void UIElement::Update(const ActionManager& input)
+void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInputContext)
 {
-    auto element = mapping.GetNavigationElement(mapping.GetDirection(input));
-    if (element.has_value())
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
     {
-        this->mapping.SetIsFocused(false);
-        element.value().lock()->mapping.SetIsFocused(true);
+        // update navigation.
+        if (uiInputContext.GamepadHasFocus() == true && uiInputContext.HasInputBeenConsumed() == false)
+        {
+            if (auto locked = uiInputContext.focusedUIElement.lock(); locked.get() == this)
+            {
+                UINavigationMappings::Direction inputDirection = uiInputContext.GetDirection(inputManagers.actionManager);
+                std::optional<std::weak_ptr<UIElement>> navElement = mapping.GetNavigationElement(inputDirection);
+
+                if (navElement.has_value())
+                {
+                    if (std::shared_ptr<UIElement> locked = navElement->lock(); locked != nullptr)
+                    {
+                        uiInputContext.focusedUIElement = locked;
+                    }
+                }
+            }
+        }
+        auto rev = std::views::reverse(_children);
+        for (auto& child : rev)
+        {
+            child->Update(inputManagers, uiInputContext);
+        }
     }
 }
 
-
 void UIElement::UpdateAllChildrenAbsoluteTransform()
 {
-    for (const auto& child : GetChildren())
+    for (const auto& child : _children)
     {
         glm::vec2 childRelativeLocation = child->GetRelativeLocation();
         glm::vec2 newChildLocation;

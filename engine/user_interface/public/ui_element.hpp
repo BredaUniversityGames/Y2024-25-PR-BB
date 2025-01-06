@@ -11,7 +11,8 @@
 #include <optional>
 #include <vector>
 
-class InputDeviceManager;
+class UIInputContext;
+struct InputManagers;
 
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
@@ -21,12 +22,10 @@ class InputDeviceManager;
 class UIElement
 {
 public:
-
     UIElement(UINavigationMappings::ElementMap elementMap)
         : mapping(std::move(elementMap)) {};
     virtual ~UIElement() = default;
     NON_COPYABLE(UIElement)
-
 
     enum class AnchorPoint
     {
@@ -51,21 +50,22 @@ public:
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
-    virtual void Update(const ActionManager& input);
+    virtual void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext);
 
     template <typename T, typename... Args>
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
-    T& AddChild(Args&&... args)
+    std::weak_ptr<T> AddChild(Args&&... args) // Note: Removed & from return type
     {
-        UIElement& addedChild = *_children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-        std::sort(_children.begin(), _children.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+        std::shared_ptr<UIElement>& addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+        std::sort(_children.begin(), _children.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
         UpdateAllChildrenAbsoluteTransform();
-        return static_cast<T&>(addedChild);
+
+        return std::static_pointer_cast<T>(addedChild);
     }
 
-    NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetChildren() const
+    NO_DISCARD const std::vector<std::shared_ptr<UIElement>>& GetChildren() const
     {
         return _children;
     }
@@ -92,6 +92,11 @@ public:
 
     const UINavigationMappings& GetNavigation() { return mapping; }
 
+    void SetNavigationMappings(UINavigationMappings::ElementMap elementMap)
+    {
+        mapping = UINavigationMappings(std::move(elementMap));
+    }
+
 protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
 
@@ -103,5 +108,5 @@ private:
     glm::vec2 _relativeScale {};
     glm::vec2 _absoluteScale {};
 
-    std::vector<std::unique_ptr<UIElement>> _children {};
+    std::vector<std::shared_ptr<UIElement>> _children {};
 };

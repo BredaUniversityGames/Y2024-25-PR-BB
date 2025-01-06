@@ -7,7 +7,7 @@
 class UIButton : public UIElement
 {
 public:
-    UIButton(UINavigationMappings::ElementMap elementMap)
+    UIButton(UINavigationMappings::ElementMap elementMap = {})
         : UIElement(std::move(elementMap))
     {
     }
@@ -20,7 +20,7 @@ public:
     } state
         = ButtonState::eNormal;
 
-    void Update(const ActionManager& inputManager) override;
+    void Update(const InputManagers& inputManagers, UIInputContext& inputContext) override;
 
     struct ButtonStyle
     {
@@ -30,8 +30,9 @@ public:
     } style {};
 
     UIButton() = default;
-    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
+    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size, UINavigationMappings::ElementMap elementMap = {})
         : style(aStyle)
+        , UIElement(std::move(elementMap))
     {
         SetLocation(location);
         SetScale(size);
@@ -43,4 +44,7 @@ public:
 
     std::function<void()> onBeginHoverCallBack = []() {};
     std::function<void()> onMouseDownCallBack = []() {};
+
+private:
+    void SwitchState(bool inputActionPressed, bool inputActionReleased);
 };

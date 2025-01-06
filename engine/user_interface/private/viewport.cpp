@@ -1,13 +1,13 @@
 #include "viewport.hpp"
 #include "ui_element.hpp"
-#include <ranges>
 #include <algorithm>
+#include <ranges>
 
-void Viewport::Update(const ActionManager& input) const
+void Viewport::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
-    for (const auto& element : _baseElements | std::views::reverse)
+    for (auto& element : _baseElements | std::views::reverse)
     {
-        element->Update(input);
+        element->Update(inputManagers, inputContext);
     }
 
     if (_clearAtEndOfFrame)

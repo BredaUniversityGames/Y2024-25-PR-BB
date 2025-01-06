@@ -7,11 +7,11 @@ std::optional<std::weak_ptr<UIElement>> UINavigationMappings::GetNavigationEleme
     case Direction::eUp:
         return _elementMap.up;
     case Direction::eDown:
-        return _elementMap.up;
+        return _elementMap.down;
     case Direction::eLeft:
-        return _elementMap.up;
+        return _elementMap.left;
     case Direction::eRight:
-        return _elementMap.up;
+        return _elementMap.right;
     case Direction::eNone:
         return std::nullopt;
     }
@@ -20,6 +20,7 @@ std::optional<std::weak_ptr<UIElement>> UINavigationMappings::GetNavigationEleme
 UINavigationMappings::Direction UINavigationMappings::GetDirection(const ActionManager& actionManager) const noexcept
 {
     glm::vec2 actionValue = actionManager.GetAnalogAction(_analogNavigationActionName);
+
     glm::vec2 absActionValue = glm::abs(actionValue);
 
     if (absActionValue.x > absActionValue.y && actionValue.x > 0.1f)

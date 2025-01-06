@@ -57,8 +57,9 @@ void InputDeviceManager::UpdateEvent(const SDL_Event& event)
     }
     case SDL_EVENT_MOUSE_MOTION:
     {
-        _mouse.positionX += event.motion.xrel;
-        _mouse.positionY += event.motion.yrel;
+        _mouse.positionX = event.motion.x;
+        _mouse.positionY = event.motion.y;
+
         break;
     }
 

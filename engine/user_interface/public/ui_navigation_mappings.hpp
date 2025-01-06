@@ -29,12 +29,15 @@ public:
     }
 
     UINavigationMappings(ElementMap elements, std::string_view _analogNavigationActionName)
-        : _analogNavigationActionName(_analogNavigationActionName)
-        , _elementMap(std::move(elements))
+        : _elementMap(std::move(elements))
+        , _analogNavigationActionName(_analogNavigationActionName)
+
     {
     }
 
+    // gets the direction for the navigation from the mapped input action.
     NO_DISCARD Direction GetDirection(const ActionManager& actionManager) const noexcept;
+
     NO_DISCARD std::optional<std::weak_ptr<UIElement>> GetNavigationElement(Direction direction);
 
     bool CurrentlyHasKeyFocus() const noexcept
@@ -48,5 +51,5 @@ private:
     bool _currenthasKeyFocus = false;
 
     ElementMap _elementMap;
-    std::string _analogNavigationActionName = "defaultUINavigation";
+    std::string _analogNavigationActionName = "Look";
 };

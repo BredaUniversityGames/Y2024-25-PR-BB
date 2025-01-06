@@ -7,16 +7,18 @@ class UIImageElement : public UIElement
 {
 public:
     UIImageElement(ResourceHandle<GPUImage> image)
-        : _image(image) {};
+        : UIElement(UINavigationMappings::ElementMap())
+        , _image(image) {};
 
     UIImageElement(ResourceHandle<GPUImage> image, const glm::vec2& position, const glm::vec2& size)
-        : _image(image)
+        : UIElement(UINavigationMappings::ElementMap())
+        , _image(image)
     {
         SetLocation(position);
         SetScale(size);
     };
 
-    void Update(InputManager& input) override;
+    void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext) override;
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
     void SetColor(glm::vec4 color) { _color = std::move(color); };
