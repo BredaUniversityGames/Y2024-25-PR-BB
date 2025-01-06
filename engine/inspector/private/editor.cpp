@@ -1,5 +1,7 @@
 #include "editor.hpp"
 
+#include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "bloom_settings.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
@@ -11,6 +13,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
+#include "emitter_component.hpp"
 #include "gbuffers.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
@@ -25,9 +28,6 @@
 #include "systems/physics_system.hpp"
 #include "vulkan_context.hpp"
 
-#include <audio_emitter_component.hpp>
-#include <audio_listener_component.hpp>
-#include <emitter_component.hpp>
 #include <entt/entity/entity.hpp>
 #include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
