@@ -90,6 +90,14 @@ void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
                 FMOD_Channel_IsPlaying(pair.second, &isPlaying);
             }
             return !static_cast<bool>(isPlaying); });
+
+    while (soundsToPlay.size())
+    {
+        auto sound = soundsToPlay.front();
+        soundsToPlay.pop();
+
+        FMOD_CHECKRESULT(FMOD_Channel_SetPaused(_channelsActive[sound], false));
+    }
 }
 SoundID AudioModule::LoadSFX(SoundInfo& soundInfo)
 {
@@ -132,21 +140,27 @@ SoundInstance AudioModule::PlaySFX(SoundID id, const float volume, const bool st
     FMOD_CHECKRESULT(FMOD_System_PlaySound(_coreSystem, _sounds[id], _masterGroup, true, &channel));
     FMOD_CHECKRESULT(FMOD_Sound_GetMode(_sounds[id], &mode));
     FMOD_CHECKRESULT(FMOD_Channel_SetVolume(channel, volume));
-    if (!startPaused)
-    {
-        FMOD_CHECKRESULT(FMOD_Channel_SetPaused(channel, false));
-    }
+
     const ChannelID channelID = _nextSoundId;
     _channelsActive[channelID] = channel;
     ++_nextSoundId;
 
+    SetPaused(channelID, startPaused);
+
     return SoundInstance(channelID, mode | FMOD_3D);
 }
-void AudioModule::SetPaused(const SoundInstance instance, const bool paused)
+void AudioModule::SetPaused(ChannelID channelId, const bool paused)
 {
-    if (_channelsActive.contains(instance.id))
+    if (_channelsActive.contains(channelId))
     {
-        FMOD_CHECKRESULT(FMOD_Channel_SetPaused(_channelsActive[instance.id], paused));
+        if (paused)
+        {
+            FMOD_CHECKRESULT(FMOD_Channel_SetPaused(_channelsActive[channelId], true));
+        }
+        else
+        {
+            soundsToPlay.emplace(channelId);
+        }
     }
 }
 void AudioModule::StopSFX(const SoundInstance instance)
@@ -229,6 +243,7 @@ NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, 
     ++_nextEventId;
 
     FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Start(evi));
+
     if (isOneShot)
     {
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(evi, FMOD_STUDIO_STOP_ALLOWFADEOUT));
