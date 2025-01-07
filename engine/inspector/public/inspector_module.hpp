@@ -26,4 +26,6 @@ private:
     std::unique_ptr<Editor> _editor;
     std::unique_ptr<PerformanceTracker> _performanceTracker;
     std::shared_ptr<ImGuiBackend> _imguiBackend;
+
+    std::unordered_map<std::string, bool> _openWindows;
 };

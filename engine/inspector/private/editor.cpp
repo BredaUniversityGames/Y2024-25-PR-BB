@@ -33,10 +33,8 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <vk_mem_alloc.h>
 
-Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
+Editor::Editor(ECSModule& ecs)
     : _ecs(ecs)
-    , _renderer(renderer)
-    , _imguiBackend(imguiBackend)
 {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -52,10 +50,12 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
+void Editor::Draw()
 {
     ZoneNamedN(editorDraw, "Editor Draw", true);
-    // Hierarchy panel
+}
+void Editor::DrawHierarchy()
+{
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
         RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
@@ -141,77 +141,6 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
     {
         DisplaySelectedEntityDetails();
     }
-    ImGui::End();
-
-    performanceTracker.Render();
-    bloomSettings.Render();
-
-    // Render systems inspect
-
-    {
-        ZoneNamedN(systemInspect, "System inspect", true);
-        for (const auto& system : _ecs.GetSystems())
-        {
-            system->Inspect();
-        }
-    }
-
-    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
-    ImGui::Begin("Directional Light Shadow Map View");
-    ImGui::Image(textureID, ImVec2(512, 512));
-    ImGui::End();
-
-    ImGui::Begin("SSAO settings");
-    ImGui::DragFloat("AO strength", &_renderer->GetSSAOPipeline().GetAOStrength(), 0.1f, 0.0f, 16.0f);
-    ImGui::DragFloat("Bias", &_renderer->GetSSAOPipeline().GetAOBias(), 0.001f, 0.0f, 0.1f);
-    ImGui::DragFloat("Radius", &_renderer->GetSSAOPipeline().GetAORadius(), 0.05f, 0.0f, 2.0f);
-    ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
-    ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
-    ImGui::End();
-
-    ImGui::Begin("FXAA settings");
-    ImGui::Checkbox("Enable FXAA", &_renderer->GetFXAAPipeline().GetEnableFXAA());
-    ImGui::DragFloat("Edge treshold min", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Edge treshold max", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Subpixel quality", &_renderer->GetFXAAPipeline().GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
-    ImGui::DragInt("Iterations", &_renderer->GetFXAAPipeline().GetIterations(), 1, 1, 128);
-
-    ImGui::End();
-
-    ImGui::Begin("Dump VMA stats");
-
-    if (ImGui::Button("Dump json"))
-    {
-        char* statsJson {};
-        vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
-
-        const char* outputFilePath = "vma_stats.json";
-
-        std::ofstream file { outputFilePath };
-        if (file.is_open())
-        {
-            file << statsJson;
-
-            file.close();
-        }
-        else
-        {
-            bblog::error("Failed writing VMA stats to file!");
-        }
-
-        vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
-    }
-
-    ImGui::End();
-
-    ImGui::Begin("Renderer Stats");
-
-    ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
-    ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
-    ImGui::LabelText("Particles after simulation", "%i", _renderer->GetContext()->GetDrawStats().GetParticleCount());
-    ImGui::LabelText("Emitters", "%i", _renderer->GetContext()->GetDrawStats().GetEmitterCount());
-
     ImGui::End();
 }
 

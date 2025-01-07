@@ -16,6 +16,7 @@ public:
     virtual void Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float dt) {};
     virtual void Render(MAYBE_UNUSED const ECSModule& ecs) const {};
     virtual void Inspect() {};
+    virtual std::string_view GetName() = 0;
 };
 
 template <typename T>
