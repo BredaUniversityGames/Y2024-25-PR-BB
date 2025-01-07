@@ -29,10 +29,12 @@ public:
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
-    UIButton() = default;
+    UIButton() = delete;
+
     UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size, UINavigationMappings::ElementMap elementMap = {})
-        : style(aStyle)
-        , UIElement(std::move(elementMap))
+        : UIElement(std::move(elementMap))
+        , style(aStyle)
+
     {
         SetLocation(location);
         SetScale(size);

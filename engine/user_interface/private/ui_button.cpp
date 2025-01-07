@@ -2,6 +2,8 @@
 #include "input/input_device_manager.hpp"
 #include "ui_module.hpp"
 
+#include <ui_input.hpp>
+
 void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
 {
     switch (state)
@@ -49,15 +51,20 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
                 }
                 SwitchState(inputManagers.actionManager.GetDigitalAction("Shoot"), !inputManagers.actionManager.GetDigitalAction("Shoot"));
                 inputContext.ConsumeInput();
-                return;
             }
-
-            glm::ivec2 mousePos;
-            inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
-            if (IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale()))
+            else // Mouse controls
             {
-                SwitchState(inputManagers.inputDeviceManager.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT), inputManagers.inputDeviceManager.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT));
-                inputContext.ConsumeInput();
+                glm::ivec2 mousePos;
+                inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
+                if (IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale()))
+                {
+                    SwitchState(inputManagers.inputDeviceManager.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT), inputManagers.inputDeviceManager.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT));
+                    inputContext.ConsumeInput();
+                }
+                else
+                {
+                    state = ButtonState::eNormal;
+                }
             }
         }
     }

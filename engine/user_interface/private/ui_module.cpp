@@ -17,8 +17,8 @@ void UIModule::Tick(Engine& engine)
     _uiInputContext._gamepadHasFocus = engine.GetModule<ApplicationModule>().GetInputDeviceManager().IsGamepadAvailable();
 
     InputManagers inputManagers = {
-        .actionManager = engine.GetModule<ApplicationModule>().GetActionManager(),
-        .inputDeviceManager = engine.GetModule<ApplicationModule>().GetInputDeviceManager()
+        .inputDeviceManager = engine.GetModule<ApplicationModule>().GetInputDeviceManager(),
+        .actionManager = engine.GetModule<ApplicationModule>().GetActionManager()
     };
 
     _viewport->Update(inputManagers, _uiInputContext);

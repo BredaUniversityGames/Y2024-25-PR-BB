@@ -7,7 +7,7 @@
 			"title"					"#Set_Shooter"
 			"StickPadGyro"
 			{
-				"Move"
+				"Move"7
 				{
 					"title"			"#Action_Move"
 					"input_mode"	"joystick_move"

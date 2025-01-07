@@ -35,6 +35,7 @@ void CreateQuitModal(Canvas& canvas, ResourceHandle<GPUImage> backgroundImage, U
 
 std::unique_ptr<Canvas> CreateMainMenuCanvas(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext, std::function<void()> onPlayButtonClick, MAYBE_UNUSED std::function<void()> onExitButtonClick)
 {
+
     std::shared_ptr<UIFont> mainMenuFont = LoadFromFile("assets/fonts/Rooters.ttf", 48, graphicsContext);
 
     // common image data.

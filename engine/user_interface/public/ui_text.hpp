@@ -20,8 +20,9 @@ public:
     }
 
     UITextElement(const std::shared_ptr<UIFont>& font, std::string text, const glm::vec2& location, float textSize, UINavigationMappings::ElementMap elementMap = {})
-        : _font(font)
-        , UIElement(elementMap)
+        : UIElement(elementMap)
+        , _font(font)
+
     {
         SetLocation(location);
         SetScale(glm::vec2(0, textSize));
