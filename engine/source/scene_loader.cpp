@@ -99,7 +99,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     for (const auto& nodeIndex : currentNode.children)
     {
         const entt::entity childEntity = ecs.GetRegistry().create();
-        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, cpuModel,animationControl, entityLUT, skeletonRoot);
+        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, cpuModel, animationControl, entityLUT, skeletonRoot);
     }
 }
 
@@ -115,12 +115,12 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
         animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
     }
 
-    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel,cpuModel, animationControl, entityLUT);
+    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT);
 
     if (hierarchy.skeletonRoot.has_value())
     {
         entt::entity skeletonEntity = ecs.GetRegistry().create();
-        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel,cpuModel, animationControl, entityLUT, entt::null, true);
+        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, true);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
 
