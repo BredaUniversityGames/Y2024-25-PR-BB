@@ -26,7 +26,7 @@ public:
 
     std::weak_ptr<UIElement> focusedUIElement = {};
 
-    UINavigationMappings::Direction GetDirection(const ActionManager& actionManager);
+    UINavigationDirection GetDirection(const ActionManager& actionManager);
 
 private:
     friend class UIModule;
@@ -37,7 +37,7 @@ private:
     bool _hasInputBeenConsumed = false;
 
     std::string _navigationActionName = "Look";
-    UINavigationMappings::Direction _previousNavigationDirection {};
+    UINavigationDirection _previousNavigationDirection {};
 };
 
 inline bool IsMouseInsideBoundary(const glm::vec2& mousePos, const glm::vec2& location, const glm::vec2& scale)

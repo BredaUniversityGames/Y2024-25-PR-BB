@@ -50,6 +50,10 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
                     return;
                 }
                 SwitchState(inputManagers.actionManager.GetDigitalAction("Shoot"), !inputManagers.actionManager.GetDigitalAction("Shoot"));
+                if (state == ButtonState::ePressed)
+                {
+                    inputContext.focusedUIElement = _mapping.GetNavigationElement(UINavigationMappings::Direction::eForward).value_or(std::weak_ptr<UIElement>());
+                }
                 inputContext.ConsumeInput();
             }
             else // Mouse controls

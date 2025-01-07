@@ -8,7 +8,8 @@
 #include "ui_text.hpp"
 #include <resource_management/image_resource_manager.hpp>
 // todo: move to scripting
-void CreateQuitModal(Canvas& canvas, ResourceHandle<GPUImage> backgroundImage, UIButton::ButtonStyle buttonStyle, std::shared_ptr<UIFont>& font, std::function<void(void)> onExitButtonClick, std::function<void(void)> onReturnButtonClick)
+
+void CreateQuitModal(Canvas& canvas, ResourceHandle<GPUImage> backgroundImage, UIButton::ButtonStyle buttonStyle, std::shared_ptr<UIFont>& font, std::function<void(void)> onExitButtonClick, std::function<void(void)> onReturnButtonClick, std::weak_ptr<UIElement> openQuitModalButton)
 {
     canvas.visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
 
@@ -23,7 +24,7 @@ void CreateQuitModal(Canvas& canvas, ResourceHandle<GPUImage> backgroundImage, U
 
     UINavigationMappings::ElementMap elementMapReturnButton = {};
     elementMapReturnButton.left = yesButton;
-
+    elementMapReturnButton.forward = openQuitModalButton;
     auto returnButton = canvas.AddChild<UIButton>(buttonStyle, glm::vec2(100, 0), glm::vec2(150, 60), elementMapReturnButton);
     returnButton.lock()->AddChild<UITextElement>(font, "no");
     returnButton.lock()->onMouseDownCallBack = onReturnButtonClick;
@@ -35,7 +36,6 @@ void CreateQuitModal(Canvas& canvas, ResourceHandle<GPUImage> backgroundImage, U
 
 std::unique_ptr<Canvas> CreateMainMenuCanvas(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext, std::function<void()> onPlayButtonClick, MAYBE_UNUSED std::function<void()> onExitButtonClick)
 {
-
     std::shared_ptr<UIFont> mainMenuFont = LoadFromFile("assets/fonts/Rooters.ttf", 48, graphicsContext);
 
     // common image data.
@@ -76,24 +76,28 @@ std::unique_ptr<Canvas> CreateMainMenuCanvas(UIInputContext& uiInputContext, con
     auto openQuitModalButton = canvas->AddChild<UIButton>(buttonStyle, glm::vec2(0, 85), glm::vec2(239, 36) * 2.0f);
     openQuitModalButton.lock()->AddChild<UITextElement>(mainMenuFont, "quit");
 
-    UINavigationMappings::ElementMap OpenQuitModalButtonNavigationTargets = {};
-    OpenQuitModalButtonNavigationTargets.up = playButton;
-    OpenQuitModalButtonNavigationTargets.down = playButton;
-    openQuitModalButton.lock()->SetNavigationMappings(OpenQuitModalButtonNavigationTargets);
-
     UINavigationMappings::ElementMap playButtonNavigationTargets = {};
     playButtonNavigationTargets.down = openQuitModalButton;
     playButtonNavigationTargets.up = openQuitModalButton;
     playButton.lock()->SetNavigationMappings(playButtonNavigationTargets);
 
     auto modal = canvas->AddChild<Canvas>(glm::vec2(500, 300));
-    CreateQuitModal(*modal.lock(), modalBackgroundImage, buttonStyle, mainMenuFont, onExitButtonClick, [modal, openQuitModalButton]()
-        { modal.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble; });
+    CreateQuitModal(*modal.lock(), modalBackgroundImage, buttonStyle, mainMenuFont, onExitButtonClick, [modal, openQuitModalButton, &uiInputContext]() mutable
+        { modal.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble; }, openQuitModalButton);
+
+    UINavigationMappings::ElementMap OpenQuitModalButtonNavigationTargets = {};
+    OpenQuitModalButtonNavigationTargets.up = playButton;
+    OpenQuitModalButtonNavigationTargets.down = playButton;
+    OpenQuitModalButtonNavigationTargets.forward = modal.lock()->GetChildren()[3];
+
+    openQuitModalButton.lock()->SetNavigationMappings(OpenQuitModalButtonNavigationTargets);
 
     auto modelnoButton = modal.lock()->GetChildren()[3];
-    openQuitModalButton.lock()->onMouseDownCallBack = [modal, modelnoButton, openQuitModalButton]()
+    openQuitModalButton.lock()->onMouseDownCallBack = [modal, modelnoButton, openQuitModalButton]() mutable
     {
-        modal.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        modal.lock()
+            ->visibility
+            = UIElement::VisibilityState::eUpdatedAndVisible;
     };
 
     graphicsContext->UpdateBindlessSet();

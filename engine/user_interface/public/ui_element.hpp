@@ -23,7 +23,7 @@ class UIElement
 {
 public:
     UIElement(UINavigationMappings::ElementMap elementMap)
-        : mapping(std::move(elementMap)) {};
+        : _mapping(std::move(elementMap)) {};
     virtual ~UIElement() = default;
     NON_COPYABLE(UIElement)
 
@@ -65,7 +65,7 @@ public:
         return std::static_pointer_cast<T>(addedChild);
     }
 
-    NO_DISCARD const std::vector<std::shared_ptr<UIElement>>& GetChildren() const
+    NO_DISCARD std::vector<std::shared_ptr<UIElement>>& GetChildren()
     {
         return _children;
     }
@@ -90,18 +90,18 @@ public:
      */
     void SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren = true) noexcept;
 
-    const UINavigationMappings& GetNavigation() { return mapping; }
+    const UINavigationMappings& GetNavigation() { return _mapping; }
 
     void SetNavigationMappings(UINavigationMappings::ElementMap elementMap)
     {
-        mapping = UINavigationMappings(std::move(elementMap));
+        _mapping = UINavigationMappings(std::move(elementMap));
     }
 
 protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
+    UINavigationMappings _mapping;
 
 private:
-    UINavigationMappings mapping;
     glm::vec2 _absoluteLocation {};
     glm::vec2 _relativeLocation {};
 
