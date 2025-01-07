@@ -49,6 +49,8 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
             continue;
         }
+
+        // update position and velocity
         if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
@@ -67,6 +69,10 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
                 emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             }
         }
+        else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+        {
+            emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
+        }
 
         // update timers
         if (emitter.currentEmitDelay < 0.0f)
@@ -74,12 +80,6 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             emitter.currentEmitDelay = emitter.maxEmitDelay;
         }
         emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
-
-        // update position and velocity
-        if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
-        {
-            emitter.emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
-        }
     }
 }
 
@@ -140,14 +140,15 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
     }
+    else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
+    {
+        emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
+        emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
+    }
     else
     {
         emitter.position = glm::vec3(0.0f, 0.0f, 0.0f);
         emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
-    }
-    if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
-    {
-        emitter.position = TransformHelpers::GetWorldMatrix(_ecs->GetRegistry().get<WorldMatrixComponent>(entity))[3];
     }
 
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomPosition))

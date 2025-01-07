@@ -14,5 +14,5 @@ struct Animation;
 
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::optional<Animation> animation = std::nullopt);
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel,const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations = {});
 };

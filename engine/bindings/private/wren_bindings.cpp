@@ -1,24 +1,29 @@
 #include "wren_bindings.hpp"
 
+#include "animation.hpp"
+#include "application_module.hpp"
+#include "audio/audio_bindings.hpp"
+#include "audio_emitter_component.hpp"
+#include "audio_module.hpp"
+#include "components/name_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+#include "ecs_module.hpp"
+#include "input/action_manager.hpp"
+#include "input/input_codes/keys.hpp"
+#include "input/input_codes/mousebuttons.hpp"
+#include "renderer/animation_bindings.hpp"
+#include "time_module.hpp"
 #include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
-#include "ecs_module.hpp"
-#include "time_module.hpp"
-
-#include "application_module.hpp"
-#include "components/name_component.hpp"
-#include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
-#include "input/input_codes/keys.hpp"
-#include "input/input_codes/mousebuttons.hpp"
-
-#include <input/action_manager.hpp>
+#include <cstdint>
 
 namespace bindings
 {
 void BindMath(wren::ForeignModule& module);
+void BindMathHelper(wren::ForeignModule& module);
 void BindEntity(wren::ForeignModule& module);
 
 float TimeModuleGetDeltatime(TimeModule& self)
@@ -105,6 +110,7 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 void BindEngineAPI(wren::ForeignModule& module)
 {
     bindings::BindMath(module);
+    bindings::BindMathHelper(module);
     bindings::BindEntity(module);
 
     // Add modules here to expose them in scripting
@@ -113,6 +119,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<TimeModule>>("GetTime");
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
+        engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
     }
 
     // Time Module
@@ -124,20 +131,30 @@ void BindEngineAPI(wren::ForeignModule& module)
     // ECS module
     {
         // ECS class
-        auto& wren_class = module.klass<ECSModule>("ECS");
-        wren_class.funcExt<bindings::CreateEntity>("NewEntity");
-        wren_class.funcExt<bindings::GetEntityByName>("GetEntityByName");
-        wren_class.funcExt<bindings::FreeEntity>("DestroyEntity");
+        auto& wrenClass = module.klass<ECSModule>("ECS");
+        wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
+        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
+        wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
     }
 
     // Input
     {
-        auto& wren_class = module.klass<ApplicationModule>("Input");
-        wren_class.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
-        wren_class.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
-        wren_class.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+        auto& wrenClass = module.klass<ApplicationModule>("Input");
+        wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
+        wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
+        wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
+    }
+
+    // Audio
+    {
+        BindAudioAPI(module);
+    }
+
+    // Animations
+    {
+        BindAnimationAPI(module);
     }
 
     // Components
@@ -193,6 +210,31 @@ static float Length(T& v) { return glm::length(v); }
 
 };
 
+class MathUtil
+{
+public:
+    static glm::vec3 ToEuler(glm::quat quat)
+    {
+        return glm::eulerAngles(quat);
+    }
+    static glm::quat ToQuat(glm::vec3 euler)
+    {
+        return glm::quat { euler };
+    }
+    static float PI()
+    {
+        return glm::pi<float>();
+    }
+    static float TwoPI()
+    {
+        return glm::two_pi<float>();
+    }
+    static float HalfPI()
+    {
+        return glm::half_pi<float>();
+    }
+};
+
 template <typename T>
 void BindVectorTypeOperations(wren::ForeignKlassImpl<T>& klass)
 {
@@ -237,6 +279,16 @@ void bindings::BindMath(wren::ForeignModule& module)
     }
 }
 
+void bindings::BindMathHelper(wren::ForeignModule& module)
+{
+    auto& mathUtilClass = module.klass<MathUtil>("Math");
+    mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
+    mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
+    mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+    mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
+    mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
+}
+
 void bindings::BindEntity(wren::ForeignModule& module)
 {
     // Entity class
@@ -245,6 +297,11 @@ void bindings::BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
 
+    entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
+
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }
