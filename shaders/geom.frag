@@ -24,10 +24,10 @@ void main()
 {
     Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
 
-    vec4 albedoSample;
-    vec4 mrSample;
-    vec4 occlusionSample;
-    vec4 emissiveSample;
+    vec4 albedoSample = vec4(1.0);
+    vec4 mrSample = vec4(0.0);
+    vec4 occlusionSample = vec4(0.0);
+    vec4 emissiveSample = vec4(0.0);
     vec4 normalSample = vec4(normalIn, 0.0);
 
     vec3 normal = normalIn;
@@ -35,7 +35,7 @@ void main()
     if (material.useAlbedoMap)
     {
         albedoSample = pow(texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord), vec4(2.2));
-        if (albedo.a < 1.0)
+        if (albedoSample.a < 1.0)
         {
             discard;
         }
@@ -54,7 +54,7 @@ void main()
     }
     if (material.useEmissiveMap)
     {
-        //emissiveSample = pow(texture(bindless_color_textures[nonuniformEXT(material.emissiveMapIndex)], texCoord), vec4(2.2));
+        emissiveSample = pow(texture(bindless_color_textures[nonuniformEXT(material.emissiveMapIndex)], texCoord), vec4(2.2));
     }
 
     albedoSample *= pow(material.albedoFactor, vec4(2.2));
