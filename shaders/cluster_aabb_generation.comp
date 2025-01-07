@@ -9,6 +9,7 @@ layout (push_constant) uniform PushConstants
 {
     uvec4 tileSizes;
     vec2 screenSize;
+    vec2 normPerTileSize;
 } pushConstants;
 
 layout (set = 0, binding = 0) buffer AABBs { AABB clusters[]; };
@@ -39,13 +40,12 @@ void main()
     const vec3 eyePos = vec3(0.0, 0.0, 0.0);
     const float zNear = camera.zNear;
     const float zFar = camera.zFar;
+    const vec2 normPerTileSize = pushConstants.normPerTileSize;
 
     uint tileIndex =
     gl_WorkGroupID.x +
     gl_WorkGroupID.y * gl_NumWorkGroups.x +
     gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y;
-
-    vec2 normPerTileSize = vec2(1.0 / pushConstants.tileSizes.x, 1.0 / pushConstants.tileSizes.y);
 
     vec4 maxScreen = vec4(
     (gl_WorkGroupID.x + 1.0) * normPerTileSize.x,

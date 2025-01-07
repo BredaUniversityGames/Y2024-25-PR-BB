@@ -17,7 +17,7 @@
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
 #include "pipelines/cluster_culling_pipeline.hpp"
-#include "pipelines/clustering_pipeline.hpp"
+#include "pipelines/cluster_generation_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
@@ -104,7 +104,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
-    _clusteringPipeline = std::make_unique<ClusteringPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
+    _clusteringPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
     _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();

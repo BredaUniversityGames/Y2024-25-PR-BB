@@ -1,4 +1,4 @@
-#include "pipelines/clustering_pipeline.hpp"
+#include "pipelines/cluster_generation_pipeline.hpp"
 
 #include "gpu_scene.hpp"
 
@@ -10,7 +10,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ClusteringPipeline::ClusteringPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer)
+ClusterGenerationPipeline::ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -21,7 +21,7 @@ ClusteringPipeline::ClusteringPipeline(const std::shared_ptr<GraphicsContext>& c
     CreatePipeline();
 }
 
-ClusteringPipeline::~ClusteringPipeline()
+ClusterGenerationPipeline::~ClusterGenerationPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
@@ -29,7 +29,7 @@ ClusteringPipeline::~ClusteringPipeline()
     _context->VulkanContext()->Device().destroy(_outputBufferDescriptorSetLayout);
 }
 
-void ClusteringPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ClusterGenerationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Cluster AABB Generation");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
@@ -37,6 +37,7 @@ void ClusteringPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_
     _pushConstants.screenSize = glm::vec2(_swapChain.GetExtent().width, _swapChain.GetExtent().height);
     _numTilesX = static_cast<uint32_t>(std::ceil(_pushConstants.screenSize.x / _clusterSizeX));
     _pushConstants.tileSizes = glm::uvec4(_clusterSizeX, _clusterSizeY, _clusterSizeZ, _numTilesX);
+    _pushConstants.normPerTileSize = glm::vec2(1.0f / _pushConstants.tileSizes.x, 1.0f / _pushConstants.tileSizes.y);
 
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, _pushConstants);
 
@@ -47,7 +48,7 @@ void ClusteringPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_
     commandBuffer.dispatch(_clusterSizeX, _clusterSizeY, _clusterSizeZ);
 }
 
-void ClusteringPipeline::CreatePipeline()
+void ClusterGenerationPipeline::CreatePipeline()
 {
     vk::PushConstantRange pushConstantRange {
         .stageFlags = vk::ShaderStageFlagBits::eCompute,
@@ -92,7 +93,7 @@ void ClusteringPipeline::CreatePipeline()
     _context->VulkanContext()->Device().destroy(computeModule);
 }
 
-void ClusteringPipeline::CreateDescriptorSet()
+void ClusterGenerationPipeline::CreateDescriptorSet()
 {
     vk::DescriptorSetLayoutBinding layoutBinding {
         .binding = 0,

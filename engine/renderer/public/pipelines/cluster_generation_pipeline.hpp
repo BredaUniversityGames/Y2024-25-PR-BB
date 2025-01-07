@@ -7,23 +7,23 @@ class SwapChain;
 class GraphicsContext;
 struct RenderSceneDescription;
 
-class ClusteringPipeline final : public FrameGraphRenderPass
+class ClusterGenerationPipeline final : public FrameGraphRenderPass
 {
 public:
-    ClusteringPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer);
-    ~ClusteringPipeline() final;
+    ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer);
+    ~ClusterGenerationPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_MOVABLE(ClusteringPipeline);
-    NON_COPYABLE(ClusteringPipeline);
+    NON_MOVABLE(ClusterGenerationPipeline);
+    NON_COPYABLE(ClusterGenerationPipeline);
 
 private:
     struct PushConstants
     {
         glm::uvec4 tileSizes;
         glm::vec2 screenSize;
-        glm::vec2 padding;
+        glm::vec2 normPerTileSize;
     } _pushConstants;
 
     const uint32_t _clusterSizeX = 16;
