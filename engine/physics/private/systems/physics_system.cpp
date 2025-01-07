@@ -40,6 +40,8 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     if (const bool validation = shape != eMESH && shape != eCONVEXHULL)
     {
         assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
+        bblog::error("Shape is not supported, please use eMESH or eCONVEXHULL");
+        return entt::null;
     }
 
     const entt::entity entity = ecs.GetRegistry().create();
