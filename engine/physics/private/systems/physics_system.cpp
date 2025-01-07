@@ -320,16 +320,6 @@ void PhysicsSystem::Inspect()
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
     }
 
-    if (ImGui::Button("Create mesh collider"))
-    {
-        CreateCollision("assets/models/monkey.gltf", eMESH);
-    }
-
-    if (ImGui::Button("Create convexhull collider"))
-    {
-        CreateCollision("assets/models/monkey.gltf", eCONVEXHULL);
-    }
-
     if (ImGui::Button("Clear Physics Entities"))
     {
         _ecs.GetRegistry().view<RigidbodyComponent>().each([&](auto entity, auto&)
