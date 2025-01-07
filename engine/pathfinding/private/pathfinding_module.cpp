@@ -15,7 +15,6 @@ ModuleTickOrder PathfindingModule::Init(Engine& engine)
         {-0.7f, 0.0f, 0.7f}
         );
 
-
     return ModuleTickOrder::eTick;
 }
 
@@ -144,7 +143,6 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     // F = totalEstimatedCost
 
     // Heuristic function
-    float estimated_cost = glm::length(endPos - startPos);
     IterablePriorityQueue<TriangleNode, std::vector<TriangleNode>, std::greater<TriangleNode>> openList;
     std::unordered_map<uint32_t, TriangleNode> closedList;
 
