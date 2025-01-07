@@ -71,12 +71,12 @@ public:
     const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
     const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
 
-    const Range& StaticDrawRange() const { return _staticDrawRange; }
-    const Range& SkinnedDrawRange() const { return _skinnedDrawRange; }
+    const math::URange& StaticDrawRange() const { return _staticDrawRange; }
+    const math::URange& SkinnedDrawRange() const { return _skinnedDrawRange; }
 
     uint32_t DrawCount() const { return _drawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
-    uint32_t DrawCommandIndexCount(const Range& range) const
+    uint32_t DrawCommandIndexCount(const math::URange& range) const
     {
         assert(range.count <= _drawCommands.size());
 
@@ -166,8 +166,8 @@ private:
 
     std::vector<DrawIndexedIndirectCommand> _drawCommands;
 
-    Range _staticDrawRange;
-    Range _skinnedDrawRange;
+    math::URange _staticDrawRange;
+    math::URange _skinnedDrawRange;
 
     // TODO: Handle all camera's in one buffer or array to enable better culling
     CameraResource _mainCamera;

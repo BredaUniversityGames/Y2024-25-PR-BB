@@ -52,7 +52,7 @@ void PhysicsSystem::InitializePhysicsColliders()
 
         // size and position
         auto& meshResourceManager = engine.GetModule<RendererModule>().GetGraphicsContext()->Resources()->MeshResourceManager();
-        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
+        math::Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
         boundingBox.min *= scale;
         boundingBox.max *= scale;
 
@@ -112,7 +112,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         const auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(_physicsModule.bodyInterface->GetShape(rb.bodyID));
 
-        Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
+        math::Vec3Range boundingBox = meshResourceManager.Access(meshComponent.mesh)->boundingBox; // * scale;
         const auto joltSize = boxShape->GetHalfExtent();
         const auto oldExtent = (boundingBox.max - boundingBox.min) * 0.5f;
         glm::vec3 joltBoxSize = glm::vec3(joltSize.GetX(), joltSize.GetY(), joltSize.GetZ());

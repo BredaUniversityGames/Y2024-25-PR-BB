@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "physics_module.hpp"
-
-#include <geometric.hpp>
+#include "math_util.hpp"
 
 struct UpdateMeshAndPhysics
 {
@@ -57,7 +56,7 @@ struct RigidbodyComponent
     }
 
     // for AABB collisions
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, Vec3Range boundingBox, BodyType type = eSTATIC)
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type = eSTATIC)
         : shapeType(eBOX)
         , bodyType(type)
     {

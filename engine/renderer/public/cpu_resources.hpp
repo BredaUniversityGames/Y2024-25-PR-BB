@@ -2,7 +2,7 @@
 
 #include "animation.hpp"
 #include "components/animation_channel_component.hpp"
-#include "geometric.hpp"
+#include "math_util.hpp"
 #include "vertex.hpp"
 
 #include <glm/glm.hpp>
@@ -50,7 +50,7 @@ struct CPUMesh
     std::vector<uint32_t> indices;
     uint32_t materialIndex { 0 };
 
-    Vec3Range boundingBox;
+    math::Vec3Range boundingBox;
     float boundingRadius;
 };
 
