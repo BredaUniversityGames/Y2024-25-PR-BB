@@ -21,7 +21,6 @@ public:
     ResourceHandle<GPUImage> DepthImage() const { return _depthImage; }
     ResourceHandle<Buffer> DrawBuffer() const { return _drawBuffer; }
     vk::DescriptorSet DrawBufferDescriptorSet() const { return _drawBufferDescriptorSet; }
-    ResourceHandle<Buffer> OrderingBuffer(uint32_t index) const { return _orderingBuffers[index]; }
     ResourceHandle<Buffer> VisibilityBuffer() const { return _visibilityBuffer; }
     vk::DescriptorSet VisibilityBufferDescriptorSet() const { return _visibilityDescriptorSet; }
     ResourceHandle<Buffer> RedirectBuffer() const { return _redirectBuffer; }
@@ -41,8 +40,6 @@ private:
     ResourceHandle<Buffer> _redirectBuffer;
     vk::DescriptorSet _drawBufferDescriptorSet;
     vk::DescriptorSet _redirectBufferDescriptorSet;
-
-    std::array<ResourceHandle<Buffer>, 2> _orderingBuffers;
 
     ResourceHandle<Buffer> _visibilityBuffer;
     vk::DescriptorSet _visibilityDescriptorSet;

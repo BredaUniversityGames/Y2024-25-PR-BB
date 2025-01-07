@@ -24,6 +24,7 @@ class GaussianBlurPipeline;
 class ShadowPipeline;
 class IBLPipeline;
 class ParticlePipeline;
+class PresentationPipeline;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
@@ -90,6 +91,7 @@ private:
     std::unique_ptr<IBLPipeline> _iblPipeline;
     std::unique_ptr<ParticlePipeline> _particlePipeline;
     std::unique_ptr<SSAOPipeline> _ssaoPipeline;
+    std::unique_ptr<PresentationPipeline> _presentationPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
@@ -97,7 +99,6 @@ private:
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
     ResourceHandle<GPUImage> _fxaaTarget;
-    ResourceHandle<GPUImage> _uiTarget;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
@@ -126,7 +127,6 @@ private:
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
     void InitializeFXAATarget();
-    void InitializeUITarget();
     void InitializeSSAOTarget();
     void LoadEnvironmentMap();
     void UpdateBindless();

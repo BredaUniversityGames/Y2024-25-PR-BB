@@ -13,9 +13,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& inputTarget, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
+UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
-    , _inputTarget(inputTarget)
     , _outputTarget(outputTarget)
     , _swapChain(swapChain)
 {
@@ -56,7 +55,7 @@ void UIPipeline::CreatePipeLine()
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eFragment, fragSpv);
     auto result = pipelineBuilder
                       .SetColorBlendState(colorBlendStateCreateInfo)
-                      .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_inputTarget)->format })
+                      .SetColorAttachmentFormats({ _context->Resources()->ImageResourceManager().Access(_outputTarget)->format })
                       .SetDepthAttachmentFormat(vk::Format::eUndefined)
                       .BuildPipeline();
 
@@ -67,18 +66,6 @@ void UIPipeline::CreatePipeLine()
 void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "UI Pipeline");
-
-    const auto* toneMapping = _context->Resources()->ImageResourceManager().Access(_inputTarget);
-    const auto* ui = _context->Resources()->ImageResourceManager().Access(_outputTarget);
-
-    util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
-    util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
-
-    util::CopyImageToImage(commandBuffer, toneMapping->image, ui->image,
-        vk::Extent2D { .width = toneMapping->width, .height = toneMapping->height }, vk::Extent2D { .width = ui->width, .height = ui->height });
-
-    util::TransitionImageLayout(commandBuffer, toneMapping->image, toneMapping->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
-    util::TransitionImageLayout(commandBuffer, ui->image, ui->format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,

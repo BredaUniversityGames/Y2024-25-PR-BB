@@ -29,15 +29,26 @@ layout (location = 2) out vec2 texCoord;
 layout (location = 3) out flat uint drawID;
 layout (location = 4) out mat3 TBN;
 
+mat3 Adjoint(in mat4 m)
+{
+    return mat3(
+    cross(m[1].xyz, m[2].xyz),
+    cross(m[2].xyz, m[0].xyz),
+    cross(m[0].xyz, m[1].xyz)
+    );
+}
+
 void main()
 {
     mat4 modelTransform = instances[redirect[gl_DrawID]].model;
     drawID = redirect[gl_DrawID];
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
-    normal = normalize((modelTransform * vec4(inNormal, 0.0)).xyz);
-    vec3 tangent = normalize((modelTransform * vec4(inTangent.xyz, 0.0)).xyz);
-    vec3 bitangent = normalize((modelTransform * vec4(inTangent.w * cross(inNormal, inTangent.xyz), 0.0)).xyz);
+
+    mat3 normalTransform = Adjoint(modelTransform);
+    normal = normalize(normalTransform * inNormal);
+    vec3 tangent = normalize(normalTransform * inTangent.xyz);
+    vec3 bitangent = normalize(normalTransform * (inTangent.w * cross(inNormal, inTangent.xyz)));
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 

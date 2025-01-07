@@ -43,7 +43,7 @@ void MainScript::Update(Engine* e, DeltaMS deltatime)
         mainUpdate(WrenEngine { e }, deltatime.count());
         valid = true;
     }
-    catch (wren::NotFound& ex)
+    catch (wren::Exception& ex)
     {
         bblog::error(ex.what());
         valid = false;

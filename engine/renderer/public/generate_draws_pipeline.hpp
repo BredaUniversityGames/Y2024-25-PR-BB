@@ -9,6 +9,7 @@
 
 class GPUScene;
 class GraphicsContext;
+class CameraBatch;
 struct RenderSceneDescription;
 
 class GenerateDrawsPipeline final : public FrameGraphRenderPass

@@ -16,11 +16,11 @@
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, ResourceHandle<GPUImage> uiTarget, const SwapChain& swapChain)
+DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment)
     : _context(context)
-    , _gBuffers(gBuffers)
     , _swapChain(swapChain)
-    , _uiTarget(uiTarget)
+    , _gBuffers(gBuffers)
+    , _attachment(attachment)
 {
     _linesData.reserve(2048);
     CreateVertexBuffer();
@@ -39,18 +39,8 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
 
     UpdateVertexData();
 
-    const GPUImage* uiTarget = _context->Resources()->ImageResourceManager().Access(_uiTarget);
-    const vk::Image swapChainImage = _swapChain.GetImage(scene.targetSwapChainImageIndex);
-    util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(), vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
-    util::TransitionImageLayout(commandBuffer, uiTarget->image, uiTarget->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
-
-    util::CopyImageToImage(commandBuffer, uiTarget->image, _swapChain.GetImage(scene.targetSwapChainImageIndex), vk::Extent2D { uiTarget->width, uiTarget->height }, _swapChain.GetExtent());
-
-    util::TransitionImageLayout(commandBuffer, uiTarget->image, uiTarget->format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, 1);
-    util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, 1);
-
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _swapChain.GetImageView(scene.targetSwapChainImageIndex),
+        .imageView = _context->Resources()->ImageResourceManager().Access(_attachment)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -126,7 +116,7 @@ void DebugPipeline::CreatePipeline()
         .pAttachments = &colorBlendAttachmentState,
     };
 
-    std::vector<vk::Format> formats { _swapChain.GetFormat() };
+    std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_attachment)->format };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {
         .topology = vk::PrimitiveTopology::eLineList,

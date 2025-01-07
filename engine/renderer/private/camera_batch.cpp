@@ -70,18 +70,6 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
     };
     _visibilityBuffer = _context->Resources()->BufferResourceManager().Create(visibilityCreation);
 
-    BufferCreation orderingBufferCreation {
-        .size = 1,
-        .usage = vk::BufferUsageFlagBits::eStorageBuffer,
-        .isMappable = false,
-        .memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY,
-    };
-    for (size_t i = 0; i < _orderingBuffers.size(); ++i)
-    {
-        orderingBufferCreation.name = name + " Ordering buffer " + std::to_string(i);
-        _orderingBuffers[i] = _context->Resources()->BufferResourceManager().Create(orderingBufferCreation);
-    }
-
     {
         vk::DescriptorSetAllocateInfo allocateInfo {
             .descriptorPool = _context->VulkanContext()->DescriptorPool(),
