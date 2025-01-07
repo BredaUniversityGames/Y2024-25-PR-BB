@@ -168,9 +168,9 @@ void FrameGraph::ProcessNodes()
 
 void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle)
 {
-    for (uint32_t i = 0; i < node.inputs.size(); ++i)
+    for (FrameGraphResourceHandle resourceHandle : node.inputs)
     {
-        FrameGraphResource& inputResource = _resources[node.inputs[i]];
+        FrameGraphResource& inputResource = _resources[resourceHandle];
 
         assert(_outputResourcesMap.find(inputResource.versionedName) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
 
@@ -184,7 +184,29 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
         parentNode.edges.push_back(nodeHandle);
 
-        spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+    }
+
+    // We also make edges based on reused resources
+    for (FrameGraphResourceHandle resourceHandle : node.outputs)
+    {
+        FrameGraphResource& outputResource = _resources[resourceHandle];
+
+        if (outputResource.version == 0)
+        {
+            continue;
+        }
+
+        std::string resourceName = GetResourceName(outputResource.type, outputResource.info.resource);
+        if (outputResource.version > 1)
+        {
+            resourceName += "_v-" + std::to_string(outputResource.version - 1);
+        }
+
+        const FrameGraphResourceHandle producerResourceHandle = _outputResourcesMap[resourceName];
+        const FrameGraphResource& producerResource = _resources[producerResourceHandle];
+        FrameGraphNode& parentNode = _nodes[producerResource.producer];
+        parentNode.edges.push_back(nodeHandle);
     }
 }
 
@@ -577,7 +599,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     if (itr != _newestVersionedResourcesMap.end())
     {
         resource.version = _resources[itr->second].version + 1;
-        resource.versionedName += +"_v-" + std::to_string(resource.version);
+        resource.versionedName += "_v-" + std::to_string(resource.version);
     }
 
     // Save the newest resource version for fast look up later
