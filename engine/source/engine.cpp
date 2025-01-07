@@ -4,11 +4,14 @@
 #include <stb/stb_image.h>
 
 #include "application_module.hpp"
+#include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "canvas.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -33,8 +36,7 @@
 #include "systems/physics_system.hpp"
 #include "ui_main_menu.hpp"
 #include "ui_module.hpp"
-
-#include <time_module.hpp>
+#include "time_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -50,7 +52,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb"
+        "assets/models/Cathedral.glb",
+        "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
@@ -69,7 +72,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animation);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -93,6 +97,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     entt::entity cameraEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
+    _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+
+    RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
@@ -100,6 +107,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     cameraComponent.nearPlane = 0.5f;
     cameraComponent.farPlane = 600.0f;
     cameraComponent.reversedZ = true;
+
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
@@ -109,18 +118,43 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
     //  physics_system->InitializePhysicsColliders();
 
-    BankInfo masterBank;
-    masterBank.path = "assets/sounds/Master.bank";
+    // BankInfo masterBank;
+    // masterBank.path = "assets/sounds/Master.bank";
+    //
+    // BankInfo stringBank;
+    // stringBank.path = "assets/sounds/Master.strings.bank";
+    //
+    // BankInfo bi;
+    // bi.path = "assets/sounds/SFX.bank";
+    //
+    // audioModule.LoadBank(masterBank);
+    // audioModule.LoadBank(stringBank);
+    // audioModule.LoadBank(bi);
 
-    BankInfo stringBank;
-    stringBank.path = "assets/sounds/Master.strings.bank";
+    SoundInfo si;
+    si.path = "assets/sounds/fallback.mp3";
+    si.is3D = true;
 
-    BankInfo bi;
-    bi.path = "assets/sounds/SFX.bank";
+    audioModule.LoadSFX(si);
 
-    audioModule.LoadBank(masterBank);
-    audioModule.LoadBank(stringBank);
-    audioModule.LoadBank(bi);
+    SoundInfo musicSi;
+    musicSi.path = "assets/sounds/music1.wav";
+    musicSi.isLoop = true;
+    musicSi.is3D = true;
+
+    // This sound might pop in because it starts playing before the engine is fully initialized
+    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
+
+    auto audioEmitter = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
+    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
+
+    emitter._soundIds.emplace_back(instance);
+
+    SoundInfo eagleSi;
+    eagleSi.path = "assets/sounds/eagle.mp3";
+
+    audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
@@ -158,7 +192,6 @@ void OldEngine::Tick(Engine& engine)
     auto& audioModule = engine.GetModule<AudioModule>();
     physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
 
-    ZoneNamed(zone, "");
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // update physics
@@ -168,6 +201,9 @@ void OldEngine::Tick(Engine& engine)
     physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
+    audioModule.ClearLines();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -184,7 +220,7 @@ void OldEngine::Tick(Engine& engine)
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
-        ZoneNamedN(zone, "Update Camera", true);
+        ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 
@@ -298,6 +334,11 @@ void OldEngine::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eL))
+    {
+        audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/eagle.mp3"), 1.5f, false);
+    }
+
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
@@ -311,22 +352,14 @@ void OldEngine::Tick(Engine& engine)
         NameComponent node;
         node.name = "Physics Entity";
         _ecs->GetRegistry().emplace<NameComponent>(entity, node);
+        _ecs->GetRegistry().emplace<TransformComponent>(entity);
         _ecs->GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+        auto& audioEmitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(entity);
+
         physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
 
         particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-    }
-
-    static uint32_t eventId {};
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
-    {
-        eventId = audioModule.StartLoopingEvent("event:/Weapons/Machine Gun");
-    }
-
-    if (inputDeviceManager.IsKeyReleased(KeyboardCode::eO))
-    {
-        audioModule.StopEvent(eventId);
+        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
     }
 
     JPH::BodyManager::DrawSettings drawSettings;

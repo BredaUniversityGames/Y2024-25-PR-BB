@@ -232,7 +232,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     VmaAllocationCreateInfo allocCreateInfo {};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(_context->MemoryAllocator(), (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
+    util::vmaCreateImage(_context->MemoryAllocator(), (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
     std::string allocName = creation.name + " texture allocation";
     vmaSetAllocationName(_context->MemoryAllocator(), allocation, allocName.c_str());
 
@@ -331,7 +331,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
         util::EndSingleTimeCommands(_context, commandBuffer);
 
-        vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
+        util::vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     if (!creation.name.empty())
@@ -370,7 +370,7 @@ GPUImage::~GPUImage()
         return;
     }
 
-    vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
+    util::vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
     for (auto& aView : views)
         _context->Device().destroy(aView);
     if (type == ImageType::eCubeMap)
@@ -533,7 +533,7 @@ Buffer::~Buffer()
         vmaUnmapMemory(_context->MemoryAllocator(), allocation);
     }
 
-    vmaDestroyBuffer(_context->MemoryAllocator(), buffer, allocation);
+    util::vmaDestroyBuffer(_context->MemoryAllocator(), buffer, allocation);
 }
 
 Buffer::Buffer(Buffer&& other) noexcept

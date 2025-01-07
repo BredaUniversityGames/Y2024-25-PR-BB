@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -41,24 +43,54 @@ struct AnimationSpline
 
 struct Animation
 {
+    enum class PlaybackOptions
+    {
+        ePlaying,
+        ePaused,
+        eStopped,
+    };
+
     std::string name { "" };
     float duration { 0.0f };
     float time { 0.0f };
+    float speed { 1.0f };
+    PlaybackOptions playbackOption { Animation::PlaybackOptions::eStopped };
+    bool looping = false;
 
-    void Update(float dt, uint32_t frameIndex)
+    void Update(float dt)
     {
-        if (_frameIndex != frameIndex)
+        switch (playbackOption)
         {
-            _frameIndex = frameIndex;
-            time += dt;
+        case PlaybackOptions::ePlaying:
+            time += dt * speed;
+            break;
+        case PlaybackOptions::ePaused:
+            // Do nothing.
+            break;
+        case PlaybackOptions::eStopped:
+            time = 0.0f;
+            break;
+        }
 
-            if (time > duration)
-            {
-                time = 0.0f;
-            }
+        if (time > duration && looping)
+        {
+            time = 0.0f;
         }
     }
+};
 
-private:
-    uint32_t _frameIndex { 0 };
+struct AnimationControlComponent
+{
+    std::vector<Animation> animations;
+    std::optional<uint32_t> activeAnimation { std::nullopt };
+
+    void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false);
+    void Play(const std::string& name, float speed = 1.0f, bool looping = false);
+    void Stop();
+    void Pause();
+    void Resume();
+    Animation::PlaybackOptions CurrentPlayback();
+    std::optional<std::string> CurrentAnimationName();
+    std::optional<uint32_t> CurrentAnimationIndex();
+    bool AnimationFinished();
 };

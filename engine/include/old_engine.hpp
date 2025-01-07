@@ -16,6 +16,8 @@ class OldEngine : public ModuleInterface
     void Tick(Engine& engine) override;
     void Shutdown(Engine& engine) override;
 
+    std::string_view GetName() override { return "OldEngine Module"; }
+
 public:
     OldEngine();
     ~OldEngine() override;

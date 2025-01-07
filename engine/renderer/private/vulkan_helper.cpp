@@ -1,5 +1,9 @@
 #include "vulkan_helper.hpp"
 
+#include "tracy/Tracy.hpp"
+#include "vk_mem_alloc.h"
+#include "vulkan_include.hpp"
+
 void util::VK_ASSERT(vk::Result result, std::string_view message)
 {
     if (result == vk::Result::eSuccess)
@@ -33,6 +37,74 @@ void util::VK_ASSERT(SpvReflectResult result, std::string_view message)
     completeMessage.insert(completeMessage.size(), message);
 
     throw std::runtime_error(completeMessage.c_str());
+}
+
+std::unordered_multimap<VmaAllocation, vk::MemoryPropertyFlagBits> allocationMemoryTypeMap {};
+
+VkResult util::vmaCreateBuffer(VmaAllocator allocator, const VkBufferCreateInfo* pBufferCreateInfo, const VmaAllocationCreateInfo* pAllocationCreateInfo, VkBuffer* pBuffer, VmaAllocation* pAllocation, VmaAllocationInfo* pAllocationInfo)
+{
+#ifdef TRACY_ENABLE
+    VmaAllocationInfo allocInfo;
+    if (pAllocationInfo == nullptr)
+    {
+        pAllocationInfo = &allocInfo;
+    }
+#endif
+
+    auto result = ::vmaCreateBuffer(allocator, pBufferCreateInfo, pAllocationCreateInfo, pBuffer, pAllocation, pAllocationInfo);
+
+#ifdef TRACY_ENABLE
+    if (result == VK_SUCCESS)
+    {
+        TracyAllocN(*pAllocation, pAllocationInfo->size, "GPU Memory usage");
+        TracyAllocN(*pAllocation, pAllocationInfo->size, "GPU Memory usage (Buffer)");
+    }
+#endif
+
+    return result;
+}
+
+void util::vmaDestroyBuffer(VmaAllocator allocator, VkBuffer buffer, VmaAllocation allocation)
+{
+#ifdef TRACY_ENABLE
+    TracyFreeN(allocation, "GPU Memory usage");
+    TracyFreeN(allocation, "GPU Memory usage (Buffer)");
+#endif
+
+    ::vmaDestroyBuffer(allocator, buffer, allocation);
+}
+
+VkResult util::vmaCreateImage(VmaAllocator allocator, const VkImageCreateInfo* pImageCreateInfo, const VmaAllocationCreateInfo* pAllocationCreateInfo, VkImage* pImage, VmaAllocation* pAllocation, VmaAllocationInfo* pAllocationInfo)
+{
+#ifdef TRACY_ENABLE
+    VmaAllocationInfo allocInfo;
+    if (pAllocationInfo == nullptr)
+    {
+        pAllocationInfo = &allocInfo;
+    }
+#endif
+
+    auto result = ::vmaCreateImage(allocator, pImageCreateInfo, pAllocationCreateInfo, pImage, pAllocation, pAllocationInfo);
+
+#ifdef TRACY_ENABLE
+    if (result == VK_SUCCESS)
+    {
+        TracyAllocN(*pAllocation, pAllocationInfo->size, "GPU Memory usage");
+        TracyAllocN(*pAllocation, pAllocationInfo->size, "GPU Memory usage (Image)");
+    }
+#endif
+
+    return result;
+}
+
+void util::vmaDestroyImage(VmaAllocator allocator, VkImage image, VmaAllocation allocation)
+{
+#ifdef TRACY_ENABLE
+    TracyFreeN(allocation, "GPU Memory usage");
+    TracyFreeN(allocation, "GPU Memory usage (Image)");
+#endif
+
+    ::vmaDestroyImage(allocator, image, allocation);
 }
 
 bool util::HasStencilComponent(vk::Format format)
@@ -71,7 +143,7 @@ void util::CreateBuffer(std::shared_ptr<VulkanContext> context, vk::DeviceSize s
     if (mappable)
         allocationInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
-    util::VK_ASSERT(vmaCreateBuffer(context->MemoryAllocator(), reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
+    util::VK_ASSERT(util::vmaCreateBuffer(context->MemoryAllocator(), reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocationInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation, nullptr), "Failed creating buffer!");
     vmaSetAllocationName(context->MemoryAllocator(), allocation, name.data());
     util::NameObject(buffer, name, context);
 }

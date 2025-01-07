@@ -1,32 +1,16 @@
 #pragma once
 
+#include "audio_common.hpp"
 #include "common.hpp"
 #include "module_interface.hpp"
+#include <glm/glm.hpp>
+#include <queue>
+#include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
-struct FMOD_SYSTEM;
-struct FMOD_STUDIO_SYSTEM;
-struct FMOD_SOUND;
-struct FMOD_STUDIO_BANK;
-struct FMOD_STUDIO_EVENTINSTANCE;
-struct FMOD_CHANNELGROUP;
-struct FMOD_CHANNEL;
-
-struct SoundInfo
-{
-    std::string_view path {};
-    uint32_t uid = 0;
-
-    float volume = 1.0f;
-    bool isLoop = false;
-};
-
-struct BankInfo
-{
-    std::string_view path {};
-    uint32_t uid = 0;
-};
+class PhysicsModule;
 
 class AudioModule final : public ModuleInterface
 {
@@ -34,20 +18,35 @@ class AudioModule final : public ModuleInterface
     void Shutdown(Engine& engine) override;
     void Tick(Engine& engine) override;
 
+    std::string_view GetName() override { return "Audio Module"; }
+
 public:
     AudioModule() = default;
     ~AudioModule() override = default;
 
     // Load sound, mp3 or .wav etc
-    void LoadSFX(SoundInfo& soundInfo);
+    SoundID LoadSFX(SoundInfo& soundInfo);
+
+    // Checks if the sound is loaded
+    bool isSFXLoaded(std::string_view path) const;
+
+    // Return the soundinfo associated with the path
+    SoundID GetSFX(std::string_view path);
 
     // Play sound
     // PlaySound(...) is already used by a MinGW macro 💀
-    void PlaySFX(SoundInfo& soundInfo);
+    SoundInstance PlaySFX(SoundID, float volume, bool startPaused);
+
+    // Set paused or unpaused
+    void SetPaused(ChannelID instance, bool paused);
+
+    // Set variables can be added in the future if needed
 
     // Stops looping sounds
     // Regular sounds will stop by themselves once they are done
-    void StopSFX(const SoundInfo& soundInfo);
+    void StopSFX(SoundInstance instance);
+
+    bool IsSFXPlaying(SoundInstance instance);
 
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well
@@ -58,17 +57,44 @@ public:
 
     // Play an event once
     // Events started through this will stop on their own
-    uint32_t StartOneShotEvent(std::string_view name);
+    EventInstanceID StartOneShotEvent(std::string_view name);
 
     // Start an event that should play at least once
     // Store the returned id and later call StopEvent(id), it might not stop otherwise
-    NO_DISCARD uint32_t StartLoopingEvent(std::string_view name);
+    NO_DISCARD EventInstanceID StartLoopingEvent(std::string_view name);
 
     // Stops an event that is
-    void StopEvent(uint32_t eventId);
+    void StopEvent(EventInstanceID eventId);
+
+    bool IsEventPlaying(EventInstanceID eventId);
+
+    void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
+
+    void UpdateSound3DAttributes(ChannelID id, const glm::vec3& position, const glm::vec3& velocity);
+
+    void SetEvent3DAttributes(EventInstanceID id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
+
+    std::vector<glm::vec3>&
+    GetDebugLines()
+    {
+        return _debugLines;
+    }
+
+    void AddDebugLine(const glm::vec3& start, const glm::vec3& end)
+    {
+        _debugLines.emplace_back(start);
+        _debugLines.emplace_back(end);
+    }
+
+    void ClearLines()
+    {
+        _debugLines.clear();
+    }
 
 private:
-    NO_DISCARD uint32_t StartEvent(std::string_view name, bool isOneShot);
+    friend class AudioSystem;
+    NO_DISCARD EventInstanceID
+    StartEvent(std::string_view name, bool isOneShot);
 
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
@@ -77,12 +103,23 @@ private:
 
     // All sounds go through this eventually
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
+    FMOD_DSP* _fftDSP = nullptr;
 
-    std::unordered_map<uint32_t, FMOD_SOUND*> _sounds {};
-    std::unordered_map<uint32_t, FMOD_STUDIO_BANK*> _banks {};
-    std::unordered_map<uint32_t, FMOD_STUDIO_EVENTINSTANCE*> _events {};
+    std::unordered_map<std::string, SoundInfo> _soundInfos {};
 
-    std::unordered_map<uint32_t, FMOD_CHANNEL*> _channelsLooping {};
+    std::unordered_map<SoundID, FMOD_SOUND*> _sounds {};
+    std::unordered_map<BankID, FMOD_STUDIO_BANK*> _banks {};
+    std::unordered_map<EventInstanceID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
-    uint32_t _nextEventId = 0;
+    std::unordered_map<ChannelID, FMOD_CHANNEL*> _channelsActive {};
+
+    std::queue<ChannelID> soundsToPlay {};
+
+    EventInstanceID _nextEventId = 0;
+    SoundID _nextSoundId = 0;
+
+    PhysicsModule* _physics = nullptr;
+
+    // Debug lines
+    std::vector<glm::vec3> _debugLines {};
 };

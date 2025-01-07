@@ -4,7 +4,9 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
+#include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
@@ -22,6 +24,7 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <tracy/Tracy.hpp>
 #include <unordered_map>
 
 GPUScene::GPUScene(const GPUSceneCreation& creation)
@@ -56,6 +59,7 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
+    ZoneScoped;
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateCameraData(frameIndex);
@@ -102,8 +106,8 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     for (auto entity : staticMeshView)
     {
-        auto meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
-        auto transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
 
         auto resources { _context->Resources() };
 
@@ -658,19 +662,16 @@ void GPUScene::InitializeIndirectDrawDescriptor()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vk::DescriptorSetLayoutBinding layoutBinding {
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    bindings[0] = {
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eAll,
     };
+    std::vector<std::string_view> names { "DrawCommands" };
 
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
-    };
-
-    util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_drawBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
+    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)

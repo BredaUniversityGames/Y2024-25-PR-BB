@@ -6,6 +6,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "log.hpp"
+#include "math_util.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -157,9 +158,14 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
             };
         }
 
-        glm::vec4 tangent = CalculateTangent(triangle[0]->position, triangle[1]->position, triangle[2]->position,
-            triangle[0]->texCoord, triangle[1]->texCoord, triangle[2]->texCoord,
-            triangle[0]->normal);
+        glm::vec4 tangent { 1.0f, 0.0f, 0.0f, 1.0f };
+        // Check if all tex coords are different, otherwise just keep default.
+        if (triangle[0]->texCoord != triangle[1]->texCoord && triangle[0]->texCoord != triangle[2]->texCoord && triangle[1]->texCoord != triangle[2]->texCoord)
+        {
+            tangent = CalculateTangent(triangle[0]->position, triangle[1]->position, triangle[2]->position,
+                triangle[0]->texCoord, triangle[1]->texCoord, triangle[2]->texCoord,
+                triangle[0]->normal);
+        }
 
         triangle[0]->tangent += tangent;
         triangle[1]->tangent += tangent;
@@ -171,18 +177,6 @@ void CalculateTangents(CPUMesh<T>& stagingPrimitive)
         glm::vec3 tangent = stagingPrimitive.vertices[i].tangent;
         tangent = glm::normalize(tangent);
         stagingPrimitive.vertices[i].tangent = glm::vec4 { tangent.x, tangent.y, tangent.z, stagingPrimitive.vertices[i].tangent.w };
-    }
-
-    // Checks if there are any tangents that are nan. This can happen for some texCoords.
-    if (std::any_of(stagingPrimitive.vertices.begin(), stagingPrimitive.vertices.end(), [](const auto& v)
-            { return std::isnan(v.tangent.x); }))
-    {
-        // In that case we just apply a default tangent, to prevent nan calculation issues.
-        // (Generally if this is the case, there is no normal provided anyway.)
-        for (auto& vertex : stagingPrimitive.vertices)
-        {
-            vertex.tangent = glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f };
-        }
     }
 }
 
@@ -250,6 +244,15 @@ void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Prim
         AssignAttribute<glm::vec3, fastgltf::math::fvec3>(vertices[i].normal, i, normalAttribute, gltfPrimitive, gltf);
         AssignAttribute<glm::vec4, fastgltf::math::fvec4>(vertices[i].tangent, i, tangentAttribute, gltfPrimitive, gltf);
         AssignAttribute<glm::vec2, fastgltf::math::fvec2>(vertices[i].texCoord, i, texCoordAttribute, gltfPrimitive, gltf);
+
+        // Make sure tangent is perpendicular to normal.
+        glm::vec3 tangent = glm::vec3 { vertices[i].tangent };
+        if (glm::cross(vertices[i].normal, glm::vec3 { tangent }) == glm::vec3 { 0.0f })
+        {
+            tangent = glm::cross(vertices[i].normal, glm::vec3 { 0.0f, 1.0f, 0.0f });
+
+            vertices[i].tangent = glm::vec4 { tangent, vertices[i].tangent.w };
+        }
 
         boundingBox.min = glm::min(boundingBox.min, vertices[i].position);
         boundingBox.max = glm::max(boundingBox.max, vertices[i].position);
@@ -431,84 +434,96 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
     StagingAnimationChannels stagingAnimationChannels {};
 
-    stagingAnimationChannels.animation.name = gltf.animations[0].name;
-
-    for (const auto& channel : gltf.animations[0].channels)
+    for (const auto& gltfAnimation : gltf.animations)
     {
-        // If there is no node, the channel is invalid.
-        if (!channel.nodeIndex.has_value())
+        auto& animation = stagingAnimationChannels.animations.emplace_back();
+        auto& indexChannels = stagingAnimationChannels.indexChannels.emplace_back();
+
+        animation.name = gltfAnimation.name;
+
+        for (const auto& channel : gltfAnimation.channels)
         {
-            continue;
-        }
-
-        AnimationChannelComponent* spline { nullptr };
-        const auto it = std::find(stagingAnimationChannels.nodeIndices.begin(), stagingAnimationChannels.nodeIndices.end(), channel.nodeIndex.value());
-
-        if (it == stagingAnimationChannels.nodeIndices.end())
-        {
-            stagingAnimationChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
-            spline = &stagingAnimationChannels.animationChannels.emplace_back();
-        }
-        else
-        {
-            spline = &stagingAnimationChannels.animationChannels[std::distance(stagingAnimationChannels.nodeIndices.begin(), it)];
-        }
-
-        const auto& sampler = gltf.animations[0].samplers[channel.samplerIndex];
-
-        assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
-
-        std::span<const float> timestamps;
-
-        {
-            const auto& accessor = gltf.accessors[sampler.inputAccessor];
-            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
-            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
-            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
-
-            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-            timestamps = std::span<const float> { reinterpret_cast<const float*>(data), accessor.count };
-
-            if (stagingAnimationChannels.animation.duration < timestamps.back())
+            // If there is no node, the channel is invalid.
+            if (!channel.nodeIndex.has_value())
             {
-                stagingAnimationChannels.animation.duration = timestamps.back();
+                continue;
             }
-        }
-        {
-            const auto& accessor = gltf.accessors[sampler.outputAccessor];
-            const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
-            const auto& buffer = gltf.buffers[bufferView.bufferIndex];
-            assert(!accessor.sparse.has_value() && "No support for sparse accesses");
-            assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
 
-            const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
-            if (channel.path == fastgltf::AnimationPath::Translation)
+            TransformAnimationSpline* spline { nullptr };
+            // Try and find whether we already created an animation channel
+            const auto it = std::find(indexChannels.nodeIndices.begin(), indexChannels.nodeIndices.end(), channel.nodeIndex.value());
+
+            // If not create it
+            if (it == indexChannels.nodeIndices.end())
             {
-                spline->translation = AnimationSpline<Translation> {};
-
-                std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
-
-                spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
-                spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                indexChannels.nodeIndices.emplace_back(channel.nodeIndex.value());
+                spline = &indexChannels.animationChannels.emplace_back();
             }
-            else if (channel.path == fastgltf::AnimationPath::Rotation)
+            else // Else reuse it
             {
-                spline->rotation = AnimationSpline<Rotation> {};
-
-                std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
-
-                spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
-                spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                spline = &indexChannels.animationChannels[std::distance(indexChannels.nodeIndices.begin(), it)];
             }
-            else if (channel.path == fastgltf::AnimationPath::Scale)
+
+            const auto& sampler = gltfAnimation.samplers[channel.samplerIndex];
+
+            assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
+
+            std::span<const float> timestamps;
             {
-                spline->scaling = AnimationSpline<Scale> {};
+                const auto& accessor = gltf.accessors[sampler.inputAccessor];
+                const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+                const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+                assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+                assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
 
-                std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+                const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+                timestamps = std::span<const float> { reinterpret_cast<const float*>(data), accessor.count };
 
-                spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
-                spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                if (animation.duration < timestamps.back())
+                {
+                    animation.duration = timestamps.back();
+                }
+            }
+            {
+                const auto& accessor = gltf.accessors[sampler.outputAccessor];
+                const auto& bufferView = gltf.bufferViews[accessor.bufferViewIndex.value()];
+                const auto& buffer = gltf.buffers[bufferView.bufferIndex];
+                assert(!accessor.sparse.has_value() && "No support for sparse accesses");
+                assert(!bufferView.byteStride.has_value() && "No support for byte stride view");
+
+                const std::byte* data = std::get<fastgltf::sources::Array>(buffer.data).bytes.data() + bufferView.byteOffset + accessor.byteOffset;
+                if (channel.path == fastgltf::AnimationPath::Translation)
+                {
+                    spline->translation = AnimationSpline<Translation> {};
+
+                    std::span<const Translation> output { reinterpret_cast<const Translation*>(data), accessor.count };
+
+                    spline->translation.value().values = std::vector<Translation> { output.begin(), output.end() };
+                    spline->translation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
+                else if (channel.path == fastgltf::AnimationPath::Rotation)
+                {
+                    spline->rotation = AnimationSpline<Rotation> {};
+
+                    std::span<const Rotation> output { reinterpret_cast<const Rotation*>(data), bufferView.byteLength / sizeof(Rotation) };
+
+                    spline->rotation.value().values = std::vector<Rotation> { output.begin(), output.end() };
+                    // Parse quaternions from xyzw -> wxyz.
+                    for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
+                    {
+                        XYZWtoWXYZ(spline->rotation.value().values[i]);
+                    }
+                    spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
+                else if (channel.path == fastgltf::AnimationPath::Scale)
+                {
+                    spline->scaling = AnimationSpline<Scale> {};
+
+                    std::span<const Scale> output { reinterpret_cast<const Scale*>(data), accessor.count };
+
+                    spline->scaling.value().values = std::vector<Scale> { output.begin(), output.end() };
+                    spline->scaling.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
+                }
             }
         }
     }
@@ -571,7 +586,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     uint32_t gltfNodeIndex,
     CPUModel& model,
     const fastgltf::Asset& gltf,
-    const StagingAnimationChannels& animationChannels,
+    const StagingAnimationChannels& stagingAnimationChannels,
     const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT, // Used for looking up gltf mesh to engine mesh.
     std::unordered_map<uint32_t, uint32_t>& nodeLUT) // Will be populated with gltf node to engine node.
 {
@@ -587,7 +602,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
         for (auto it = range.first; it != range.second; ++it)
         {
-            model.hierarchy.nodes.emplace_back("mesh node", glm::identity<glm::mat4>(), it->second);
+            auto node = Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second };
+            model.hierarchy.nodes.emplace_back(node);
             model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
         }
     }
@@ -598,12 +614,16 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     model.hierarchy.nodes[nodeIndex].name = gltfNode.name;
 
     // If we have an animation channel that should be used on this node, we apply it.
-    for (size_t i = 0; i < animationChannels.nodeIndices.size(); i++)
+    for (size_t i = 0; i < stagingAnimationChannels.animations.size(); ++i)
     {
-        if (animationChannels.nodeIndices[i] == gltfNodeIndex)
+        for (size_t j = 0; j < stagingAnimationChannels.indexChannels[i].nodeIndices.size(); j++)
         {
-            model.hierarchy.nodes[nodeIndex].animationChannel = animationChannels.animationChannels[i];
-            break;
+            if (stagingAnimationChannels.indexChannels[i].nodeIndices[j] == gltfNodeIndex)
+            {
+                AnimationChannelComponent animationChannelComponent {};
+                model.hierarchy.nodes[nodeIndex].animationSplines[i] = stagingAnimationChannels.indexChannels[i].animationChannels[j];
+                break;
+            }
         }
     }
 
@@ -611,10 +631,6 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     for (size_t i = 0; i < gltf.skins.size(); ++i)
     {
         const auto& skin = gltf.skins[i];
-
-        // If this node is not a root, check if it should be.
-        if (!model.hierarchy.nodes[nodeIndex].isSkeletonRoot)
-            model.hierarchy.nodes[nodeIndex].isSkeletonRoot = skin.skeleton == gltfNodeIndex;
 
         // Find whether this node is part of a joint in the skin.
         auto it = std::find(skin.joints.begin(), skin.joints.end(), gltfNodeIndex);
@@ -633,7 +649,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
 
     for (size_t childNodeIndex : gltfNode.children)
     {
-        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, animationChannels, meshLUT, nodeLUT);
+        uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, stagingAnimationChannels, meshLUT, nodeLUT);
         model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
     }
 
@@ -691,7 +707,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     if (!gltf.animations.empty())
     {
         animations = LoadAnimations(gltf);
-        model.animation = animations.animation;
+        model.animations = animations.animations;
     }
 
     model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
@@ -711,6 +727,47 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
     }
 
+    for (size_t i = 0; i < gltf.skins.size(); ++i)
+    {
+        const auto& skin = gltf.skins[i];
+
+        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
+        {
+            auto it = std::find_if(skin.joints.begin(), skin.joints.end(), [&nodeLUT, nodeIndex](uint32_t index)
+                { return nodeLUT[index] == nodeIndex; });
+
+            if (it != skin.joints.end())
+            {
+                return true;
+            }
+
+            std::vector<uint32_t> baseJoints {};
+            for (size_t i = 0; i < node.children.size(); ++i)
+            {
+                if (traverse(model.hierarchy.nodes[node.children[i]], node.children[i]))
+                {
+                    baseJoints.emplace_back(node.children[i]);
+                }
+            }
+
+            if (baseJoints.size() > 0)
+            {
+                Hierarchy::Node& skeletonNode = model.hierarchy.nodes.emplace_back();
+                model.hierarchy.skeletonRoot = model.hierarchy.nodes.size() - 1;
+                skeletonNode.name = "Skeleton Node";
+                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.children));
+                std::erase_if(node.children, [&baseJoints](auto index)
+                    { return std::find(baseJoints.begin(), baseJoints.end(), index) != baseJoints.end(); });
+
+                return false;
+            }
+
+            return false;
+        };
+
+        traverse(model.hierarchy.nodes[model.hierarchy.root], model.hierarchy.root);
+    }
+
     // After instantiating hierarchy, we do another pass to apply missing child references.
     // In this case we match all the skeleton indices.
     // Note, that we have to account for expanding the primitives into their own nodes.
@@ -722,15 +779,11 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         // Skins and meshes come together, we can assume here there is also a skinned mesh.
         if (gltfNode.skinIndex.has_value())
         {
-            const auto& skin = gltf.skins[gltfNode.skinIndex.value()];
-            if (skin.skeleton.has_value())
+            // Iterate over all the children of the matched node, since we expanded the primitives.
+            for (auto childIndex : node.children)
             {
-                // Iterate over all the children of the matched node, since we expanded the primitives.
-                for (auto childIndex : node.children)
-                {
-                    // Apply the skeleton node using the node LUT.
-                    model.hierarchy.nodes[childIndex].skeletonNode = nodeLUT[skin.skeleton.value()];
-                }
+                // Apply the skeleton node using the node LUT.
+                model.hierarchy.nodes[childIndex].skeletonNode = model.hierarchy.skeletonRoot;
             }
         }
     }
