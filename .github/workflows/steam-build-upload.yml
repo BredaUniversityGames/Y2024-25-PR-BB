@@ -42,10 +42,21 @@ jobs:
           vulkan-components: Vulkan-Headers, Vulkan-Loader
           vulkan-use-cache: true
 
-      # Configure, Build and Test
+      # Configure and Build
 
       - name: Configure Project
         run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} ${{ env.OPTION_ARGS }}
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      # Package project
+      - name: Package Windows Project
+        if: matrix.platform == `windows-latest`
+        run: |
+          scripts/build_system/package_dist_windows.bat
+
+      - name: Package Linux Project
+        if: matrix.platform == `ubuntu-latest`
+        run: |
+          scripts/build_system/package_dist_linux.bat
