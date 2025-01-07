@@ -168,9 +168,9 @@ void FrameGraph::ProcessNodes()
 
 void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHandle nodeHandle)
 {
-    for (uint32_t i = 0; i < node.inputs.size(); ++i)
+    for (FrameGraphResourceHandle resourceHandle : node.inputs)
     {
-        FrameGraphResource& inputResource = _resources[node.inputs[i]];
+        FrameGraphResource& inputResource = _resources[resourceHandle];
 
         assert(_outputResourcesMap.find(inputResource.versionedName) != _outputResourcesMap.end() && "Requested resource is not produced by any node.");
 
@@ -182,6 +182,30 @@ void FrameGraph::ComputeNodeEdges(const FrameGraphNode& node, FrameGraphNodeHand
         inputResource.output = outputResource.output;
 
         FrameGraphNode& parentNode = _nodes[inputResource.producer];
+        parentNode.edges.push_back(nodeHandle);
+
+        // spdlog::info("Adding edge from {} [{}] to {} [{}]\n", parentNode.name.c_str(), inputResource.producer, node.name.c_str(), nodeHandle);
+    }
+
+    // We also make edges based on reused resources
+    for (FrameGraphResourceHandle resourceHandle : node.outputs)
+    {
+        FrameGraphResource& outputResource = _resources[resourceHandle];
+
+        if (outputResource.version == 0)
+        {
+            continue;
+        }
+
+        std::string resourceName = GetResourceName(outputResource.type, outputResource.info.resource);
+        if (outputResource.version > 1)
+        {
+            resourceName += "_v-" + std::to_string(outputResource.version - 1);
+        }
+
+        const FrameGraphResourceHandle producerResourceHandle = _outputResourcesMap[resourceName];
+        const FrameGraphResource& producerResource = _resources[producerResourceHandle];
+        FrameGraphNode& parentNode = _nodes[producerResource.producer];
         parentNode.edges.push_back(nodeHandle);
     }
 }
@@ -322,8 +346,12 @@ void FrameGraph::CreateImageBarrier(const FrameGraphResource& resource, Resource
     {
         return CreateDepthImageBarrier(*image, state, barrier);
     }
+    if (image->flags & vk::ImageUsageFlagBits::eColorAttachment)
+    {
+        return CreateColorImageBarrier(*image, state, barrier);
+    }
 
-    return CreateColorImageBarrier(*image, state, barrier);
+    return CreateGeneralImageBarrier(*image, state, barrier);
 }
 
 void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
@@ -379,7 +407,7 @@ void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState st
     {
         util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
             vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:
@@ -394,6 +422,44 @@ void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState st
         util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
             vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
+        break;
+    }
+    default:
+        bblog::error("[Frame Graph] Unsupported depth image resource usage: {}", magic_enum::enum_name(state));
+        break;
+    }
+}
+
+void FrameGraph::CreateGeneralImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const
+{
+    switch (state)
+    {
+    case ResourceState::eFirstOuput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterOutput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eReusedOutputAfterInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
+        break;
+    }
+    case ResourceState::eInput:
+    {
+        util::InitializeImageMemoryBarrier(barrier, image.image, image.format,
+            vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+            image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     default:
@@ -513,6 +579,7 @@ void FrameGraph::SortGraph()
     for (int32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
+        bblog::info(_nodes[_sortedNodes.back()].name);
     }
 }
 
@@ -532,7 +599,7 @@ FrameGraphResourceHandle FrameGraph::CreateOutputResource(const FrameGraphResour
     if (itr != _newestVersionedResourcesMap.end())
     {
         resource.version = _resources[itr->second].version + 1;
-        resource.versionedName += +"_v-" + std::to_string(resource.version);
+        resource.versionedName += "_v-" + std::to_string(resource.version);
     }
 
     // Save the newest resource version for fast look up later
