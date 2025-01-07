@@ -109,7 +109,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    for (size_t i = 0; i < 5000; i++)
+    /*for (size_t i = 0; i < 5000; i++)
     {
         entt::entity entity = _ecs->GetRegistry().create();
         _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");
@@ -122,7 +122,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
         // Spawn point lights in a 3D grid/box with an offset of 2 units between each light on each axis
         TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3((i % 50) * 2.0f, (i / 50) * 2.0f, (i / 250) * 2.0f));
-    }
+    }*/
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);

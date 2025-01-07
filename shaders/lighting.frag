@@ -138,7 +138,7 @@ void main()
         vec3 lightPos = light.position.xyz;
         vec3 L = normalize(lightPos - position);
         float attenuation = CalculateAttenuation(lightPos, position, light.range);
-        vec3 lightColor = light.color.rgb * attenuation;
+        vec3 lightColor = light.color.rgb * attenuation * 50;
 
         Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }

@@ -55,9 +55,14 @@ void main()
     gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y;
 
     uint visibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
+    for (uint i = 0; i < MAX_LIGHTS_PER_CLUSTER; ++i) {
+        visibleLightIndices[i] = 0;
+    }
+
+    uint lightCount = lights.lights.length();
 
     uint lightIterator = 0;
-    for (uint i = 0; i < lights.count && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)
+    for (uint i = 0; i < lightCount && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)
     {
         if (TestSphereAABB(i, tileIndex)) {
             visibleLightIndices[lightIterator++] = i;
