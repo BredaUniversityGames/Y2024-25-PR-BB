@@ -67,6 +67,14 @@ float LinearDepth(float z, float near, float far)
 
 void main()
 {
+    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
+    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
+    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
+    float depth = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
+
+    float linearDepthCulling = LinearDepth(1.0 - depth, camera.zNear, camera.zFar);
 
     float zFloat = 24;
     float log2FarDivNear = log2(camera.zFar / camera.zNear);
@@ -75,7 +83,7 @@ void main()
     float sliceScaling = zFloat / log2FarDivNear;
     float sliceBias = -(zFloat * log2Near / log2FarDivNear);
 
-    float linearDepthCulling = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
+    //float linearDepthCulling = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
     uint zIndex = uint(max(log2(linearDepthCulling) * sliceScaling + sliceBias, 0.0));
     vec2 tileSize =
     vec2(pushConstants.screenSize.x / float(16),
@@ -93,13 +101,6 @@ void main()
 
     uint lightCount = lightCells[clusterIndex].count;
     uint lightIndexOffset = lightCells[clusterIndex].offset;
-
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
-    float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
-
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
     vec3 normal = normalRSample.rgb;

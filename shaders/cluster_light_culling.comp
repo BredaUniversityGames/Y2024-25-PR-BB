@@ -30,7 +30,7 @@ float SquaredDistancePointAABB(vec3 point, uint tile)
         }
         if (v > currentCell.max[i])
         {
-            float diff = v - currentCell.max[i];
+            float diff = currentCell.max[i] - v;
             squaredDistance += (diff * diff);
         }
     }
@@ -55,11 +55,7 @@ void main()
     gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y;
 
     uint visibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
-    for (uint i = 0; i < MAX_LIGHTS_PER_CLUSTER; ++i) {
-        visibleLightIndices[i] = 0;
-    }
-
-    uint lightCount = lights.lights.length();
+    uint lightCount = lights.count;
 
     uint lightIterator = 0;
     for (uint i = 0; i < lightCount && lightIterator < MAX_LIGHTS_PER_CLUSTER; ++i)
