@@ -1,9 +1,16 @@
 #version 460
+
+#include "../scene.glsl"
 #include "particle_binds.glsl"
 
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
     CulledInstances culledInstances;
+};
+
+layout (set = 3, binding = 0) uniform CameraUBO
+{
+    Camera camera;
 };
 
 layout (push_constant) uniform DeltaTime
@@ -12,6 +19,8 @@ layout (push_constant) uniform DeltaTime
 };
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+bool IsVisible(vec3 position, float size);
 
 void main()
 {
@@ -33,7 +42,8 @@ void main()
         particle.velocity.y -= particle.mass * deltaTime;
         particle.position += particle.velocity * deltaTime;
 
-        // TODO: kill particle on depth collision and break
+        // TODO: simulate size
+        float biggestSize = max(particle.size.x, particle.size.y);
 
         // simulate angle
         particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
@@ -41,21 +51,22 @@ void main()
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
 
-        // add to new alive list:
+        // add to new alive list
         uint newAliveIndex = atomicAdd(particleCounters.aliveCountAfterSimulation, 1);
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
-        // TODO: frustum culling
-
-        // for now add all to culled list:
-        uint culledIndex = atomicAdd(culledInstances.count, 1);
-        ParticleInstance instance;
-        instance.position = particle.position;
-        instance.materialIndex = particle.materialIndex;
-        instance.size = particle.size.xy;
-        instance.angle = particle.rotationVelocity.x;
-        instance.flags = particle.flags;
-        culledInstances.instances[culledIndex] = instance;
+        // only visible particles go into the rendering buffer after frustum culling
+        if (IsVisible(particle.position, biggestSize))
+        {
+            uint culledIndex = atomicAdd(culledInstances.count, 1);
+            ParticleInstance instance;
+            instance.position = particle.position;
+            instance.materialIndex = particle.materialIndex;
+            instance.size = particle.size.xy;
+            instance.angle = particle.rotationVelocity.x;
+            instance.flags = particle.flags;
+            culledInstances.instances[culledIndex] = instance;
+        }
     }
     else // if dead
     {
@@ -63,4 +74,35 @@ void main()
         uint deadIndex = atomicAdd(particleCounters.deadCount, 1);
         deadBuffer[deadIndex] = particleIndex;
     }
+}
+
+bool IsVisible(vec3 position, float size)
+{
+    vec3 center = (camera.view * vec4(position, 1.f)).xyz;
+    float radius = size;
+    bool visible = true;
+
+    // Test against frustum.
+    if (camera.projectionType == 0)
+    {
+        visible = visible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
+        visible = visible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
+    }
+    else if (camera.projectionType == 1)
+    {
+        visible = visible && center.x + radius > camera.frustum[0];// Left plane
+        visible = visible && center.x - radius < camera.frustum[1];// Right plane
+        visible = visible && center.y + radius > camera.frustum[2];// Bottom plane
+        visible = visible && center.y - radius < camera.frustum[3];// Top plane
+    }
+
+    if (camera.distanceCullingEnabled != 0)
+    {
+        // Test against near and far plane.
+        visible = visible && -center.z + radius > camera.zNear && -center.z - radius < camera.zFar;
+    }
+
+    visible = visible && camera.cullingEnabled != 0;
+
+    return visible;
 }

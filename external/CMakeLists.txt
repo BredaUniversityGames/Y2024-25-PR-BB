@@ -155,7 +155,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(GLM)
 
 # Guarantees GLM follows the same perspective convention as Vulkan
-target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL PUBLIC GLM_FORCE_QUAT_DATA_WXYZ)
 
 # Jolt
 

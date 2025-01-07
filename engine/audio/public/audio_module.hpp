@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "module_interface.hpp"
 #include <glm/glm.hpp>
+#include <queue>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -37,7 +38,7 @@ public:
     SoundInstance PlaySFX(SoundID, float volume, bool startPaused);
 
     // Set paused or unpaused
-    void SetPaused(SoundInstance instance, bool paused);
+    void SetPaused(ChannelID instance, bool paused);
 
     // Set variables can be added in the future if needed
 
@@ -111,6 +112,8 @@ private:
     std::unordered_map<EventInstanceID, FMOD_STUDIO_EVENTINSTANCE*> _events {};
 
     std::unordered_map<ChannelID, FMOD_CHANNEL*> _channelsActive {};
+
+    std::queue<ChannelID> soundsToPlay {};
 
     EventInstanceID _nextEventId = 0;
     SoundID _nextSoundId = 0;

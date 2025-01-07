@@ -28,7 +28,7 @@ function(compile_shader shader)
 
     add_custom_command(
             OUTPUT ${SPIRV_OUTPUT}
-            COMMAND "${GLSLC}" ${shader} -o ${SPIRV_OUTPUT}
+            COMMAND "${GLSLC}" ${shader} -o ${SPIRV_OUTPUT} -g
             COMMAND_EXPAND_LISTS
             COMMENT "Compiling ${shader} to SPIR-V"
             DEPENDS ${shader} ${GLSL_SHADERS}
