@@ -10,8 +10,8 @@
 #include "vulkan_context.hpp"
 
 #include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include <random>
-#include <resource_management/sampler_resource_manager.hpp>
 #include <single_time_commands.hpp>
 
 SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
@@ -36,8 +36,8 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
 
-    _pushConstants.screenWidth = _gBuffers.Size().x / 2;
-    _pushConstants.screenHeight = _gBuffers.Size().y / 2;
+    _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
+    _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;
 
     vk::RenderingAttachmentInfoKHR ssaoColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_ssaoTarget)->view,

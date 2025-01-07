@@ -9,8 +9,8 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint positionIndex;
     uint noiseIndex;
-    uint screenWidth;
-    uint screenHeight;
+    uint ssaoRenderTargetWidth;
+    uint ssaoRenderTargetHeight;
     float aoStrength;
     float aoBias;
     float aoRadius;
@@ -32,7 +32,7 @@ const int kernelSize = 32;
 
 void main()
 {
-    const vec2 noiseScale = vec2(pushConstants.screenWidth / 4.0, pushConstants.screenHeight / 4.0); // scale noise to screen size
+    const vec2 noiseScale = vec2(pushConstants.ssaoRenderTargetWidth / 4.0, pushConstants.ssaoRenderTargetHeight / 4.0); // scale noise to screen size
 
     const vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
     const vec3 screenSpacePosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords).xyz;
@@ -73,7 +73,6 @@ void main()
         }
 
         const vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
-        // occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
 
         //check distance to avoid ao on objects that are far away from each other
         const float rangeCheck = smoothstep(0.0, 1.0, adaptiveAoRadius / length(screenSpacePosition - occluderPosition));

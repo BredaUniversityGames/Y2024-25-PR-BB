@@ -34,8 +34,8 @@ private:
         uint32_t normalRIndex;
         uint32_t positionIndex;
         uint32_t ssaoNoiseIndex;
-        uint32_t screenWidth = 1920; // just for refference
-        uint32_t screenHeight = 1080;
+        uint32_t ssaoRenderTargetWidth = 1920 / 2; // just for refference
+        uint32_t ssaoRenderTargetHeight = 1080 / 2;
         float aoStrength = 2.0f;
         float aoBias = 0.01f;
         float aoRadius = 0.2f;

@@ -46,9 +46,7 @@ void main()
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 
-
-    //lets make the positions to view space now
     gl_Position = (camera.VP) * vec4(position, 1.0);
     vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
-    position = viewPos;
+    position = viewPos; // position is in view space
 }
