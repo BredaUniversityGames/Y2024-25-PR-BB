@@ -22,8 +22,7 @@ public:
 
     RigidbodyComponent CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo = entt::null);
 
-    void CreateConvexHullCollision(const std::string& path);
-    void CreateMeshCollision(const std::string& path);
+    void CreateCollision(const std::string& path, const PhysicsShapes shapeType);
 
     void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;

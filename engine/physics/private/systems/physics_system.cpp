@@ -163,17 +163,11 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
         rb = RigidbodyComponent(*_physicsModule.bodyInterface, entityToAttachTo, glm::vec3(0.0), vertices);
     return rb;
 }
-void PhysicsSystem::CreateConvexHullCollision(const std::string& path)
+
+void PhysicsSystem::CreateCollision(const std::string& path, const PhysicsShapes shapeType)
 {
     CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
-
-    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eCONVEXHULL);
-}
-void PhysicsSystem::CreateMeshCollision(const std::string& path)
-{
-    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
-
-    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, eMESH);
+    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, shapeType);
 }
 
 void PhysicsSystem::CleanUp()
@@ -326,12 +320,12 @@ void PhysicsSystem::Inspect()
 
     if (ImGui::Button("Create mesh collider"))
     {
-        CreateMeshCollision("assets/models/monkey.gltf");
+        CreateCollision("assets/models/monkey.gltf", eMESH);
     }
 
     if (ImGui::Button("Create convexhull collider"))
     {
-        CreateConvexHullCollision("assets/models/monkey.gltf");
+        CreateCollision("assets/models/monkey.gltf", eCONVEXHULL);
     }
 
     if (ImGui::Button("Clear Physics Entities"))
