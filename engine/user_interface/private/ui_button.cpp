@@ -1,8 +1,7 @@
 #include "ui_button.hpp"
 #include "input/input_device_manager.hpp"
+#include "ui_input.hpp"
 #include "ui_module.hpp"
-
-#include <ui_input.hpp>
 
 void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
 {

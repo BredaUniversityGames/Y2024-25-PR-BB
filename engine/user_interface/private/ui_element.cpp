@@ -1,6 +1,4 @@
 #include "ui_element.hpp"
-#include "ui_module.hpp"
-#include <algorithm>
 #include <ranges>
 
 void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInputContext)
@@ -24,8 +22,8 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
                 }
             }
         }
-        auto rev = std::views::reverse(_children);
-        for (auto& child : rev)
+
+        for (auto& child : _children | std::views::reverse)
         {
             child->Update(inputManagers, uiInputContext);
         }
@@ -33,6 +31,7 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
 }
 
 void UIElement::UpdateAllChildrenAbsoluteTransform()
+
 {
     for (const auto& child : _children)
     {

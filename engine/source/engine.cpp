@@ -35,7 +35,6 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
-#include "ui_main_menu.hpp"
 #include "ui_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)

@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <memory>
-#include <optional>
 #include <vector>
 
 class UIInputContext;

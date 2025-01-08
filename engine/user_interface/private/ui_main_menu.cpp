@@ -1,4 +1,4 @@
-#include "ui_main_menu.hpp"
+#include "ui_menus.hpp"
 
 #include "fonts.hpp"
 #include "graphics_context.hpp"
@@ -8,7 +8,7 @@
 #include "ui_text.hpp"
 #include <resource_management/image_resource_manager.hpp>
 
-std::unique_ptr<Canvas> CreateNavigationTestCanvas(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext)
+std::unique_ptr<Canvas> CreateNavigationTestMenu(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext)
 {
     // resource loading.
     auto loadButtonStyle = [&graphicsContext]()

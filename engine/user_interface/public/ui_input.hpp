@@ -1,6 +1,7 @@
 #pragma once
 #include "ui_navigation.hpp"
 
+class InputDeviceManager;
 class UIElement;
 
 struct InputManagers
