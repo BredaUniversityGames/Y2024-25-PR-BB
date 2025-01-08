@@ -51,6 +51,13 @@ jobs:
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
 
+      # Setup python for packaging script
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
       # Package project
       
       - name: Package Windows Project
@@ -61,7 +68,7 @@ jobs:
       - name: Package Linux Project
         if: matrix.platform == 'ubuntu-latest'
         run: |
-          scripts/build_system/package_dist_linux.bat
+          python scripts/python/package.py -o "package/linux-dist" -e "build/WSL-Release/CustomTech" -a "assets" "shaders/bin" "game" -f "build/WSL-Release/libsteam_api.so" "build/WSL-Release/libfmod.so.14" "build/WSL-Release/libfmodstudio.so.14"
 
       # Save build as artifact for upload job
 
