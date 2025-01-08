@@ -7,7 +7,7 @@ namespace math
 {
 
 constexpr glm::vec3 WORLD_UP { 0.0f, 1.0f, 0.0f };
-constexpr glm::vec3 WORLD_RIGHT { 0.0f, 1.0f, 0.0f };
+constexpr glm::vec3 WORLD_RIGHT { 1.0f, 0.0f, 0.0f };
 constexpr glm::vec3 WORLD_FORWARD { 0.0f, 0.0f, -1.0f };
 
 inline void QuatXYZWtoWXYZ(glm::quat& quat)

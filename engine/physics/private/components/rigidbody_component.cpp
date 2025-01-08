@@ -107,7 +107,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 }
 
 // for AABB collisions
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, Vec3Range boundingBox, BodyType type)
+RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type)
     : shapeType(eBOX)
     , bodyType(type)
 {
@@ -143,7 +143,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 }
 
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings)
-        : shapeType(eCUSTOM)
+    : shapeType(eCUSTOM)
 {
     // lets save thes shape reference
     shape = bodyCreationSettings.GetShape();
