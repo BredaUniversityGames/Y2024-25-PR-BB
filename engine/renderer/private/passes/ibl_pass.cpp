@@ -1,4 +1,4 @@
-#include "pipelines/ibl_pipeline.hpp"
+#include "passes/ibl_pass.hpp"
 
 #include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
@@ -10,7 +10,7 @@
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 
-IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap)
+IBLPass::IBLPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap)
     : _context(context)
     , _environmentMap(environmentMap)
 {
@@ -31,7 +31,7 @@ IBLPipeline::IBLPipeline(const std::shared_ptr<GraphicsContext>& context, Resour
     CreateBRDFLUTPipeline();
 }
 
-IBLPipeline::~IBLPipeline()
+IBLPass::~IBLPass()
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -47,7 +47,7 @@ IBLPipeline::~IBLPipeline()
     vkContext->Device().destroy(_brdfLUTPipelineLayout);
 }
 
-void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
+void IBLPass::RecordCommands(vk::CommandBuffer commandBuffer)
 {
     const GPUImage& irradianceMap = *_context->Resources()->ImageResourceManager().Access(_irradianceMap);
     const GPUImage& prefilterMap = *_context->Resources()->ImageResourceManager().Access(_prefilterMap);
@@ -203,7 +203,7 @@ void IBLPipeline::RecordCommands(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
-void IBLPipeline::CreateIrradiancePipeline()
+void IBLPass::CreateIrradiancePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -233,7 +233,7 @@ void IBLPipeline::CreateIrradiancePipeline()
     _irradiancePipeline = std::get<1>(result);
 }
 
-void IBLPipeline::CreatePrefilterPipeline()
+void IBLPass::CreatePrefilterPipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -263,7 +263,7 @@ void IBLPipeline::CreatePrefilterPipeline()
     _prefilterPipeline = std::get<1>(result);
 }
 
-void IBLPipeline::CreateBRDFLUTPipeline()
+void IBLPass::CreateBRDFLUTPipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -293,7 +293,7 @@ void IBLPipeline::CreateBRDFLUTPipeline()
     _brdfLUTPipeline = std::get<1>(result);
 }
 
-void IBLPipeline::CreateIrradianceCubemap()
+void IBLPass::CreateIrradianceCubemap()
 {
     CPUImage ImageData {};
     ImageData
@@ -306,7 +306,7 @@ void IBLPipeline::CreateIrradianceCubemap()
     _irradianceMap = _context->Resources()->ImageResourceManager().Create(ImageData);
 }
 
-void IBLPipeline::CreatePrefilterCubemap()
+void IBLPass::CreatePrefilterCubemap()
 {
     CPUImage creation {};
     creation
@@ -339,7 +339,7 @@ void IBLPipeline::CreatePrefilterCubemap()
     }
 }
 
-void IBLPipeline::CreateBRDFLUT()
+void IBLPass::CreateBRDFLUT()
 {
     CPUImage creation {};
     creation

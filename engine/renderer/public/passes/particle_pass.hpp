@@ -10,24 +10,25 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
-struct Emitter;
 class CameraResource;
 class BloomSettings;
-struct RenderSceneDescription;
 class ECSModule;
 class GraphicsContext;
-struct Buffer;
 
-class ParticlePipeline final : public FrameGraphRenderPass
+struct Buffer;
+struct Emitter;
+struct RenderSceneDescription;
+
+class ParticlePass final : public FrameGraphRenderPass
 {
 public:
-    ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
-    ~ParticlePipeline() final;
+    ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
+    ~ParticlePass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_COPYABLE(ParticlePipeline);
-    NON_MOVABLE(ParticlePipeline);
+    NON_COPYABLE(ParticlePass);
+    NON_MOVABLE(ParticlePass);
 
 private:
     enum class ParticleBufferUsage

@@ -10,16 +10,16 @@
 class GraphicsContext;
 struct Sampler;
 
-class GaussianBlurPipeline final : public FrameGraphRenderPass
+class GaussianBlurPass final : public FrameGraphRenderPass
 {
 public:
-    GaussianBlurPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> source, ResourceHandle<GPUImage> target);
-    ~GaussianBlurPipeline() final;
+    GaussianBlurPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> source, ResourceHandle<GPUImage> target);
+    ~GaussianBlurPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene) final;
 
-    NON_COPYABLE(GaussianBlurPipeline);
-    NON_MOVABLE(GaussianBlurPipeline);
+    NON_COPYABLE(GaussianBlurPass);
+    NON_MOVABLE(GaussianBlurPass);
 
 private:
     std::shared_ptr<GraphicsContext> _context;

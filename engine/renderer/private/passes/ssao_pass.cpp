@@ -1,4 +1,4 @@
-﻿#include "pipelines/ssao_pipeline.hpp"
+﻿#include "passes/ssao_pass.hpp"
 
 #include "camera.hpp"
 #include "gpu_scene.hpp"
@@ -14,7 +14,7 @@
 #include <random>
 #include <single_time_commands.hpp>
 
-SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
+SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -32,7 +32,7 @@ SSAOPipeline::SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     CreatePipeline();
 }
 
-void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void SSAOPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
 
@@ -72,7 +72,7 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-SSAOPipeline::~SSAOPipeline()
+SSAOPass::~SSAOPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
@@ -80,7 +80,7 @@ SSAOPipeline::~SSAOPipeline()
     _context->Resources()->BufferResourceManager().Destroy(_sampleKernelBuffer);
 }
 
-void SSAOPipeline::CreatePipeline()
+void SSAOPass::CreatePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -108,7 +108,7 @@ void SSAOPipeline::CreatePipeline()
     _pipelineLayout = std::get<0>(result);
     _pipeline = std::get<1>(result);
 }
-void SSAOPipeline::CreateBuffers()
+void SSAOPass::CreateBuffers()
 {
     // c++ side first
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
@@ -204,7 +204,7 @@ void SSAOPipeline::CreateBuffers()
     _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage, _noiseSampler);
     _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
 }
-void SSAOPipeline::CreateDescriptorSetLayouts()
+void SSAOPass::CreateDescriptorSetLayouts()
 {
     std::vector<vk::DescriptorSetLayoutBinding> bindings = {
         vk::DescriptorSetLayoutBinding {
@@ -217,7 +217,7 @@ void SSAOPipeline::CreateDescriptorSetLayouts()
 
     _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uSampleKernel" });
 }
-void SSAOPipeline::CreateDescriptorSets()
+void SSAOPass::CreateDescriptorSets()
 {
     vk::DescriptorSetAllocateInfo allocInfo {
         .descriptorPool = _context->VulkanContext()->DescriptorPool(),

@@ -1,4 +1,4 @@
-#include "pipelines/tonemapping_pipeline.hpp"
+#include "passes/tonemapping_pass.hpp"
 
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
@@ -10,7 +10,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)
@@ -24,13 +24,13 @@ TonemappingPipeline::TonemappingPipeline(const std::shared_ptr<GraphicsContext>&
     _pushConstants.bloomTargetIndex = bloomTarget.Index();
 }
 
-TonemappingPipeline::~TonemappingPipeline()
+TonemappingPass::~TonemappingPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pipeline");
 
@@ -72,7 +72,7 @@ void TonemappingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-void TonemappingPipeline::CreatePipeline()
+void TonemappingPass::CreatePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,

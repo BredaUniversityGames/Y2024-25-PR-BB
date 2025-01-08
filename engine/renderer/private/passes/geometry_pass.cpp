@@ -1,4 +1,4 @@
-#include "pipelines/geometry_pipeline.hpp"
+#include "passes/geometry_pass.hpp"
 
 #include "batch_buffer.hpp"
 #include "components/transform_helpers.hpp"
@@ -18,7 +18,7 @@
 
 #include <entt/entt.hpp>
 
-GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
+GeometryPass::GeometryPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
     , _culler(_context)
@@ -42,7 +42,7 @@ GeometryPipeline::GeometryPipeline(const std::shared_ptr<GraphicsContext>& conte
     CreateDrawBufferDescriptorSet(gpuScene);
 }
 
-GeometryPipeline::~GeometryPipeline()
+GeometryPass::~GeometryPass()
 {
     _context->VulkanContext()->Device().destroy(_staticPipeline);
     _context->VulkanContext()->Device().destroy(_staticPipelineLayout);
@@ -50,7 +50,7 @@ GeometryPipeline::~GeometryPipeline()
     _context->VulkanContext()->Device().destroy(_skinnedPipelineLayout);
 }
 
-void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void GeometryPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Geometry Pipeline");
     _culler.RecordCommands(commandBuffer, currentFrame, scene, scene.gpuScene->MainCamera(), _drawBuffer, _drawBufferDescriptorSet);
@@ -142,7 +142,7 @@ void GeometryPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-void GeometryPipeline::CreateStaticPipeline()
+void GeometryPass::CreateStaticPipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
     for (auto& blendAttachmentState : colorBlendAttachmentStates)
@@ -186,7 +186,7 @@ void GeometryPipeline::CreateStaticPipeline()
     _staticPipeline = std::get<1>(result);
 }
 
-void GeometryPipeline::CreateSkinnedPipeline()
+void GeometryPass::CreateSkinnedPipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, DEFERRED_ATTACHMENT_COUNT> colorBlendAttachmentStates {};
     for (auto& blendAttachmentState : colorBlendAttachmentStates)
@@ -230,7 +230,7 @@ void GeometryPipeline::CreateSkinnedPipeline()
     _skinnedPipeline = std::get<1>(result);
 }
 
-void GeometryPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
+void GeometryPass::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
 {
     vk::DescriptorSetLayout layout = gpuScene.DrawBufferLayout();
     vk::DescriptorSetAllocateInfo allocateInfo {

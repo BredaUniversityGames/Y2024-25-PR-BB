@@ -8,7 +8,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
-#include "pipelines/debug_pipeline.hpp"
+#include "passes/debug_pass.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 

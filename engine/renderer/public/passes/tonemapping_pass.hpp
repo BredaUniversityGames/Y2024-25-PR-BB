@@ -3,22 +3,22 @@
 #include "frame_graph.hpp"
 #include "swap_chain.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 class BloomSettings;
 class GraphicsContext;
 
-class TonemappingPipeline final : public FrameGraphRenderPass
+class TonemappingPass final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
-    ~TonemappingPipeline() final;
+    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
+    ~TonemappingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_COPYABLE(TonemappingPipeline);
-    NON_MOVABLE(TonemappingPipeline);
+    NON_COPYABLE(TonemappingPass);
+    NON_MOVABLE(TonemappingPass);
 
 private:
     struct PushConstants
