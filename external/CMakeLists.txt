@@ -66,6 +66,7 @@ FetchContent_Declare(
 )
 
 # FreeType
+set(FT_DISABLE_HARFBUZZ ON)
 add_subdirectory(freetype)
 
 # FMOD (no git to fetch content)
