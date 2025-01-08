@@ -174,6 +174,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     for (auto entity : skinnedMeshView)
     {
+        break;
         SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto transformComponent = skinnedMeshView.get<WorldMatrixComponent>(entity);
 

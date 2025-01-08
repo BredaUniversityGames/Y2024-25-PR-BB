@@ -202,7 +202,7 @@ void GeometryPipeline::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t cu
         _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawRange().count, scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawRange()));
     }
 
-    if (scene.gpuScene->SkinnedDrawRange().count > 0)
+    if (scene.gpuScene->SkinnedDrawRange().count > 0 && false)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
 
