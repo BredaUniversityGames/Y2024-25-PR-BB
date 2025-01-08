@@ -170,6 +170,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     }
 
     bblog::info("Successfully initialized engine!");
+
     return ModuleTickOrder::eTick;
 }
 

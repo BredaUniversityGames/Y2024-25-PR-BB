@@ -225,10 +225,10 @@ void AssignAttribute(T& vertexAttribute, uint32_t index, const fastgltf::Attribu
 }
 
 template <typename T>
-void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius);
+void ProcessVertices(std::vector<T>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, math::Vec3Range& boundingBox, float& boundingRadius);
 
 template <>
-void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
+void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, math::Vec3Range& boundingBox, float& boundingRadius)
 {
     uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
     vertices = std::vector<Vertex>(vertexCount);
@@ -263,7 +263,7 @@ void ProcessVertices<Vertex>(std::vector<Vertex>& vertices, const fastgltf::Prim
 }
 
 template <>
-void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, Vec3Range& boundingBox, float& boundingRadius)
+void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf, math::Vec3Range& boundingBox, float& boundingRadius)
 {
     uint32_t vertexCount = gltf.accessors[gltfPrimitive.findAttribute("POSITION")->accessorIndex].count;
     vertices = std::vector<SkinnedVertex>(vertexCount);
@@ -511,7 +511,7 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
                     // Parse quaternions from xyzw -> wxyz.
                     for (size_t i = 0; i < spline->rotation.value().values.size(); ++i)
                     {
-                        XYZWtoWXYZ(spline->rotation.value().values[i]);
+                        math::QuatXYZWtoWXYZ(spline->rotation.value().values[i]);
                     }
                     spline->rotation.value().timestamps = std::vector<float> { timestamps.begin(), timestamps.end() };
                 }

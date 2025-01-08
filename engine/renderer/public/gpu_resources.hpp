@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometric.hpp"
+#include "math_util.hpp"
 #include "resource_manager.hpp"
 #include "vulkan_include.hpp"
 
@@ -241,7 +241,7 @@ struct GPUMesh
     uint32_t vertexOffset { 0 };
     uint32_t indexOffset { 0 };
     float boundingRadius;
-    Vec3Range boundingBox;
+    math::Vec3Range boundingBox;
 
     MeshType type;
     ResourceHandle<GPUMaterial> material;
