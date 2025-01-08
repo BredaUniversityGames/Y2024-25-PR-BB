@@ -77,11 +77,17 @@ void PerformanceTracker::Render()
     if (_timePoints.empty())
         return;
 
-    ImGui::Begin("Performance metrics");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
 
-    if (ImPlot::BeginPlot("FPS"))
+    ImGui::Begin("Performance metrics", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize);
+
+    ImPlotFlags flags = ImPlotFlags_NoLegend;
+
+    ImVec2 wpos = { 250.f, 400.f };
+
+    if (ImPlot::BeginPlot("FPS", ImVec2(wpos.x, wpos.y * 0.5f), flags))
     {
-        ImPlot::SetupAxes("Time (s)", "Value", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+        ImPlot::SetupAxes("Time (s)", "Value", ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_AutoFit);
         ImPlot::SetupAxisLimits(ImAxis_X1, _timePoints.front(), _timePoints.back(), ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, 0, _highestFps * 1.05f, ImGuiCond_Always);
 
@@ -91,9 +97,9 @@ void PerformanceTracker::Render()
 
         ImPlot::EndPlot();
     }
-    if (ImPlot::BeginPlot("Frame Duration"))
+    if (ImPlot::BeginPlot("Frame Duration", ImVec2(wpos.x, wpos.y * 0.5f), flags))
     {
-        ImPlot::SetupAxes("Time (s)", "Value (ms)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+        ImPlot::SetupAxes("Time (s)", "Value (ms)", ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_AutoFit);
         ImPlot::SetupAxisLimits(ImAxis_X1, _timePoints.front(), _timePoints.back(), ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, 0, _highestFrameDuration * 1.05f, ImGuiCond_Always);
 
