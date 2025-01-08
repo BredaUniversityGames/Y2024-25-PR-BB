@@ -1,6 +1,5 @@
 #include "ui_text.hpp"
 #include "fonts.hpp"
-#include "pipelines/ui_pipeline.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

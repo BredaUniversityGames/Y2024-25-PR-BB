@@ -123,6 +123,7 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, TransformHelpers::GetLocalPosition(transform));
 
     cameraBuffer.view = glm::inverse(cameraTranslation * cameraRotation);
+    cameraBuffer.inverseView = glm::inverse(cameraBuffer.view);
 
     switch (camera.projection)
     {
