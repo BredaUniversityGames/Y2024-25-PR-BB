@@ -50,36 +50,28 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
 }
 
-void Editor::Draw()
-{
-    ZoneNamedN(editorDraw, "Editor Draw", true);
-}
 void Editor::DrawHierarchy()
 {
+    ZoneNamedN(displayHierarchy, "World DisplayHierarchy", true);
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
         RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs.GetRegistry(), entity));
+        const char* name = NameComponent::GetDisplayName(_ecs.GetRegistry(), entity).data();
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name);
 
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
             }
 
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
-            {
-                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
-            }
-
             if (nodeOpen)
             {
                 entt::entity current = relationship->first;
-                for (size_t i {}; i < relationship->childrenCount; ++i)
+                for (size_t i = 0; i < relationship->childrenCount; ++i)
                 {
                     if (_ecs.GetRegistry().valid(current))
                     {
@@ -93,22 +85,16 @@ void Editor::DrawHierarchy()
         }
         else
         {
-            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name);
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
-            }
-
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
-            {
-                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
             }
         }
     };
 
     if (ImGui::Begin("World Inspector"))
     {
-        ZoneNamedN(worldInspector, "World Inspector", true);
         if (ImGui::Button("+ Add entity"))
         {
             entt::entity entity = _ecs.GetRegistry().create();
@@ -131,11 +117,12 @@ void Editor::DrawHierarchy()
         ImGui::EndChild();
     }
     ImGui::End();
+}
 
-    {
-        ZoneNamedN(entityEditor, "Entity Editor", true);
-        _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
-    }
+void Editor::DrawEntityEditor()
+{
+    ZoneNamedN(entityEditor, "Entity Editor", true);
+    _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
 
     if (ImGui::Begin("Entity Details"))
     {

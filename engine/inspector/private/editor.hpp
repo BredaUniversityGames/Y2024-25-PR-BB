@@ -19,9 +19,9 @@ public:
     NON_MOVABLE(Editor);
     NON_COPYABLE(Editor);
 
-    void Draw();
-
     void DrawHierarchy();
+
+    void DrawEntityEditor();
 
 private:
     ECSModule& _ecs;
