@@ -56,7 +56,7 @@ void BloomSettings::CreateDescriptorSetLayout()
     });
     std::vector<std::string_view> names { "BloomSettingsUBO" };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "Bloom settings DSL");
     util::NameObject(_descriptorSetLayout, "Bloom settings DSL", vkContext);
 }
 

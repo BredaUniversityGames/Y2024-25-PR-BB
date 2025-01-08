@@ -104,7 +104,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
-    _clusterGenerationPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
+    _clusterGenerationPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, *_gpuScene);
     _clusterLightCullingPipeline = std::make_unique<ClusterLightCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();

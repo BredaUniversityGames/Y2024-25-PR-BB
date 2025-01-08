@@ -10,14 +10,14 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ClusterGenerationPipeline::ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer)
+ClusterGenerationPipeline::ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
     , _swapChain(swapChain)
-    , _outputBuffer(outputBuffer)
+    , _gpuScene(gpuScene)
+
 {
-    CreateDescriptorSet();
     CreatePipeline();
 }
 
@@ -25,8 +25,6 @@ ClusterGenerationPipeline::~ClusterGenerationPipeline()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
-
-    _context->VulkanContext()->Device().destroy(_outputBufferDescriptorSetLayout);
 }
 
 void ClusterGenerationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -42,7 +40,7 @@ void ClusterGenerationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, 
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, _pushConstants);
 
     // TODO: Bind Writing buffer.
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { _outputBufferDescriptorSet }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { scene.gpuScene->GetClusterDescriptorSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
 
     commandBuffer.dispatch(_clusterSizeX, _clusterSizeY, _clusterSizeZ);
@@ -57,7 +55,7 @@ void ClusterGenerationPipeline::CreatePipeline()
     };
 
     std::array<vk::DescriptorSetLayout, 2> layouts {
-        _outputBufferDescriptorSetLayout,
+        _gpuScene.GetClusterDescriptorSetLayout(),
         CameraResource::DescriptorSetLayout(),
     };
 
@@ -91,48 +89,4 @@ void ClusterGenerationPipeline::CreatePipeline()
     auto result = _context->VulkanContext()->Device().createComputePipeline(nullptr, pipelineCreateInfo, nullptr);
     _pipeline = result.value;
     _context->VulkanContext()->Device().destroy(computeModule);
-}
-
-void ClusterGenerationPipeline::CreateDescriptorSet()
-{
-    vk::DescriptorSetLayoutBinding layoutBinding {
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
-
-    vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &layoutBinding,
-    };
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, nullptr, &_outputBufferDescriptorSetLayout), "Failed creating descriptor set layout!");
-
-    vk::DescriptorSetAllocateInfo allocateInfo {
-        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-        .descriptorSetCount = 1,
-        .pSetLayouts = &_outputBufferDescriptorSetLayout,
-    };
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_outputBufferDescriptorSet), "Failed to allocate descriptor set for clustering pipeline!");
-
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_outputBuffer);
-
-    vk::DescriptorBufferInfo bufferInfo {
-        .buffer = buffer->buffer,
-        .offset = 0,
-        .range = vk::WholeSize,
-    };
-
-    vk::WriteDescriptorSet bufferWrite {
-        .dstSet = _outputBufferDescriptorSet,
-        .dstBinding = 0,
-        .dstArrayElement = 0,
-        .descriptorCount = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .pBufferInfo = &bufferInfo,
-    };
-
-    _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
 }

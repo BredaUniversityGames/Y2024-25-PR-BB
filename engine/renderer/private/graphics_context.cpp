@@ -110,7 +110,7 @@ void GraphicsContext::CreateBindlessDescriptorSet()
 
     std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
 
-    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*_vulkanContext, bindings, names);
+    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(_vulkanContext, bindings, names, "Bindless DS Layout");
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = _bindlessPool;

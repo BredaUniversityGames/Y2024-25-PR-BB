@@ -48,7 +48,7 @@ std::tuple<vk::PipelineLayout, vk::Pipeline> PipelineBuilder::BuildPipeline()
     return { _pipelineLayout, _pipeline };
 }
 
-vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const std::shared_ptr<VulkanContext>& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names, const std::string name)
 {
     size_t hash = HashBindings(bindings, names);
 
@@ -59,9 +59,11 @@ vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanCo
             .pBindings = bindings.data(),
         };
 
-        vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(layoutInfo, nullptr) };
+        vk::DescriptorSetLayout layout { context->Device().createDescriptorSetLayout(layoutInfo, nullptr) };
 
         _cacheDescriptorSetLayouts[hash] = layout;
+
+        util::NameObject(layout, name, context);
     }
 
     return _cacheDescriptorSetLayouts[hash];

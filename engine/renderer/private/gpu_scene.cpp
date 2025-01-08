@@ -379,7 +379,7 @@ void GPUScene::CreateSceneDescriptorSetLayout()
 
     std::vector<std::string_view> names { "SceneUBO" };
 
-    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _sceneDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "SceneDescriptorSetLayout");
 }
 
 void GPUScene::CreatePointLightDescriptorSetLayout()
@@ -394,7 +394,7 @@ void GPUScene::CreatePointLightDescriptorSetLayout()
 
     std::vector<std::string_view> names { "PointLightSSBO" };
 
-    _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "PointLightDescriptorSetLayout");
 }
 
 void GPUScene::CreateClusterDescriptorSetLayout()
@@ -409,7 +409,7 @@ void GPUScene::CreateClusterDescriptorSetLayout()
 
     std::vector<std::string_view> names { "ClusterData" };
 
-    _clusterDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _clusterDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "ClusterDescriptorSetLayout");
 }
 
 void GPUScene::CreateClusterCullingDescriptorSetLayout()
@@ -427,7 +427,7 @@ void GPUScene::CreateClusterCullingDescriptorSetLayout()
 
     std::vector<std::string_view> names { "GlobalIndex", "LightCells", "LightIndices" };
 
-    _clusterCullingDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _clusterCullingDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "ClusterCullingDescriptorSetLayout");
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -444,7 +444,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<std::string_view> names { "InstanceData" };
 
-    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "ObjectInstancesDescriptorSetLayout");
 }
 
 void GPUScene::CreateSkinDescriptorSetLayout()
@@ -458,7 +458,7 @@ void GPUScene::CreateSkinDescriptorSetLayout()
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
     std::vector<std::string_view> names { "SkinningMatrices" };
-    _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, names, "SkinDescriptorSetLayout");
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -869,7 +869,7 @@ void GPUScene::InitializeIndirectDrawDescriptor()
     };
     std::vector<std::string_view> names { "DrawCommands" };
 
-    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
+    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(vkContext, bindings, names, "DrawBufferDescriptorSetLayout");
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)

@@ -6,11 +6,12 @@
 class SwapChain;
 class GraphicsContext;
 struct RenderSceneDescription;
+class GPUScene;
 
 class ClusterGenerationPipeline final : public FrameGraphRenderPass
 {
 public:
-    ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, ResourceHandle<Buffer>& outputBuffer);
+    ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene);
     ~ClusterGenerationPipeline() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -38,10 +39,7 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
     const SwapChain& _swapChain;
-
-    ResourceHandle<Buffer> _outputBuffer;
-    vk::DescriptorSet _outputBufferDescriptorSet;
-    vk::DescriptorSetLayout _outputBufferDescriptorSetLayout;
+    const GPUScene& _gpuScene;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

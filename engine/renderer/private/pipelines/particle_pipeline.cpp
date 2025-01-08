@@ -500,7 +500,7 @@ void ParticlePipeline::CreateDescriptorSetLayouts()
         descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eVertex;
         descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
-        _instancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, { "CulledInstancesSSB" });
+        _instancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(vkContext, bindings, { "CulledInstancesSSB" }, "CulledInstancesSSB");
     }
 }
 
