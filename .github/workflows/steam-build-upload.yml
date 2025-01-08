@@ -54,26 +54,26 @@ jobs:
       # Package project
       
       - name: Package Windows Project
-        if: matrix.platform == `windows-latest`
+        if: matrix.platform == 'windows-latest'
         run: |
           scripts/build_system/package_dist_windows.bat
 
       - name: Package Linux Project
-        if: matrix.platform == `ubuntu-latest`
+        if: matrix.platform == 'ubuntu-latest'
         run: |
           scripts/build_system/package_dist_linux.bat
 
       # Save build as artifact for upload job
 
       - name: Upload Windows Build Artifacts
-        if: matrix.platform == `windows-latest`
+        if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: windows-dist
           path: package/windows-dist/
 
       - name: Upload Linux Build Artifacts
-        if: matrix.platform == `ubuntu-latest`
+        if: matrix.platform == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: linux-dist
@@ -111,6 +111,7 @@ jobs:
           "${{ env.STEAM_CONFIG }}" | base64 -d > "scripts/build_system/steam/builder/config/config.vdf"
 
       # Upload to Steam
+      
       - name: Upload Build
         run: |
           scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf
