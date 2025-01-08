@@ -1,7 +1,7 @@
 #include "ui_navigation.hpp"
 #include "ui_element.hpp"
 
-std::weak_ptr<UIElement> GetUINavigationElement(const UINavigationTargets& navigationTargets, UINavigationDirection direction)
+std::weak_ptr<UIElement> GetUINavigationTarget(const UINavigationTargets& navigationTargets, UINavigationDirection direction)
 {
     switch (direction)
     {

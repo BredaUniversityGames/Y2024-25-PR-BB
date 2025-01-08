@@ -35,7 +35,7 @@ private:
 
     // If the input has been consumed this frame.
     bool _hasInputBeenConsumed = false;
-
+    float _inputDeadZone = 0.2f;
     std::string _navigationActionName = "Look";
     UINavigationDirection _previousNavigationDirection {};
 };

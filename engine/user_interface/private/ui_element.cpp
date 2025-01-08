@@ -13,7 +13,7 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
             if (auto locked = uiInputContext.focusedUIElement.lock(); locked.get() == this)
             {
                 UINavigationDirection direction = uiInputContext.GetDirection(inputManagers.actionManager);
-                std::optional<std::weak_ptr<UIElement>> navElement = GetUINavigationElement(navigationTargets, direction);
+                std::optional<std::weak_ptr<UIElement>> navElement = GetUINavigationTarget(navigationTargets, direction);
 
                 if (navElement.has_value())
                 {

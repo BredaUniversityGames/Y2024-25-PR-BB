@@ -52,7 +52,8 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
                 SwitchState(inputManagers.actionManager.GetDigitalAction("Shoot"), !inputManagers.actionManager.GetDigitalAction("Shoot"));
                 if (state == ButtonState::ePressed)
                 {
-                    inputContext.focusedUIElement = GetUINavigationElement(navigationTargets, UINavigationDirection::eForward);
+                    std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
+                    inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
                 }
                 inputContext.ConsumeInput();
             }
