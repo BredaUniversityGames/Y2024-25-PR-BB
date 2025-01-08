@@ -50,5 +50,5 @@ std::unique_ptr<Canvas> CreateNavigationTestMenu(UIInputContext& uiInputContext,
     graphicsContext->UpdateBindlessSet();
 
     uiInputContext.focusedUIElement = button1;
-    return std::move(canvas);
+    return canvas;
 }

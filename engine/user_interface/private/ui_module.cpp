@@ -1,8 +1,9 @@
 #include "ui_module.hpp"
+#include "application_module.hpp"
 #include "canvas.hpp"
-#include <application_module.hpp>
-#include <renderer.hpp>
-#include <renderer_module.hpp>
+#include "renderer.hpp"
+#include "renderer_module.hpp"
+#include "ui_menus.hpp"
 
 ModuleTickOrder UIModule::Init(Engine& engine)
 {

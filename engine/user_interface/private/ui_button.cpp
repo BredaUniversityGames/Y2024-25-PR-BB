@@ -2,7 +2,7 @@
 #include "input/input_device_manager.hpp"
 #include "ui_input.hpp"
 #include "ui_module.hpp"
-#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
 {
@@ -96,8 +96,11 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             break;
         }
 
+        glm::mat4 matrix = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+        matrix = glm::scale(matrix, glm::vec3(GetAbsoluteScale(), 0));
+
         QuadDrawInfo info {
-            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetAbsoluteScale(), 0))),
+            .matrix = matrix,
             .textureIndex = image.Index(),
         };
 
