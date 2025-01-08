@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
@@ -7,27 +7,23 @@
 #include <memory>
 
 class BatchBuffer;
+class GPUScene;
 class GraphicsContext;
 
 struct RenderSceneDescription;
 
-class ShadowPipeline final : public FrameGraphRenderPass
+class GeometryPass final : public FrameGraphRenderPass
 {
 public:
-    ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
-    ~ShadowPipeline() final;
+    GeometryPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene);
+    ~GeometryPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_MOVABLE(ShadowPipeline);
-    NON_COPYABLE(ShadowPipeline);
+    NON_MOVABLE(GeometryPass);
+    NON_COPYABLE(GeometryPass);
 
 private:
-    void CreateStaticPipeline();
-    void CreateSkinnedPipeline();
-
-    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
-
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
 
@@ -41,4 +37,8 @@ private:
 
     ResourceHandle<Buffer> _drawBuffer;
     vk::DescriptorSet _drawBufferDescriptorSet;
+
+    void CreateStaticPipeline();
+    void CreateSkinnedPipeline();
+    void CreateDrawBufferDescriptorSet(const GPUScene& gpuScene);
 };

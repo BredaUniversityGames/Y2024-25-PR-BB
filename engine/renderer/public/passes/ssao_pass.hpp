@@ -12,11 +12,11 @@ class CameraResource;
 struct GPUImage;
 struct RenderSceneDescription;
 
-class SSAOPipeline final : public FrameGraphRenderPass
+class SSAOPass final : public FrameGraphRenderPass
 {
 public:
-    SSAOPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget);
-    ~SSAOPipeline() final;
+    SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget);
+    ~SSAOPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
@@ -25,8 +25,8 @@ public:
     float& GetAORadius() { return _pushConstants.aoRadius; }
     float& GetMinAODistance() { return _pushConstants.minAoDistance; }
     float& GetMaxAODistance() { return _pushConstants.maxAoDistance; }
-    NON_MOVABLE(SSAOPipeline);
-    NON_COPYABLE(SSAOPipeline);
+    NON_MOVABLE(SSAOPass);
+    NON_COPYABLE(SSAOPass);
 
 private:
     struct PushConstants

@@ -12,16 +12,16 @@ class CameraResource;
 struct GPUImage;
 struct RenderSceneDescription;
 
-class LightingPipeline final : public FrameGraphRenderPass
+class LightingPass final : public FrameGraphRenderPass
 {
 public:
-    LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
-    ~LightingPipeline() final;
+    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
+    ~LightingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_MOVABLE(LightingPipeline);
-    NON_COPYABLE(LightingPipeline);
+    NON_MOVABLE(LightingPass);
+    NON_COPYABLE(LightingPass);
 
 private:
     struct PushConstants

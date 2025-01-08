@@ -3,26 +3,25 @@
 #include "bloom_settings.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
-#include "vertex.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 class BloomSettings;
 class GraphicsContext;
 struct RenderSceneDescription;
 
-class SkydomePipeline final : public FrameGraphRenderPass
+class SkydomePass final : public FrameGraphRenderPass
 {
 public:
-    SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
+    SkydomePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
         ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& _gBuffers, const BloomSettings& bloomSettings);
-    ~SkydomePipeline() final;
+    ~SkydomePass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_COPYABLE(SkydomePipeline);
-    NON_MOVABLE(SkydomePipeline);
+    NON_COPYABLE(SkydomePass);
+    NON_MOVABLE(SkydomePass);
 
 private:
     struct PushConstants

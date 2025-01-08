@@ -1,4 +1,4 @@
-#include "pipelines/presentation_pipeline.hpp"
+#include "passes/presentation_pass.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -6,14 +6,14 @@
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
 
-PresentationPipeline::PresentationPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, ResourceHandle<GPUImage> input)
+PresentationPass::PresentationPass(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, ResourceHandle<GPUImage> input)
     : _context(context)
     , _swapChain(swapChain)
     , _input(input)
 {
 }
 
-void PresentationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene)
+void PresentationPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Presentation Pipeline");
 

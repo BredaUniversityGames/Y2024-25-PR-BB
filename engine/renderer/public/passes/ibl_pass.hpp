@@ -7,19 +7,19 @@
 class GraphicsContext;
 struct Sampler;
 
-class IBLPipeline
+class IBLPass
 {
 public:
-    IBLPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap);
-    ~IBLPipeline();
+    IBLPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap);
+    ~IBLPass();
 
     void RecordCommands(vk::CommandBuffer commandBuffer);
     ResourceHandle<GPUImage> IrradianceMap() const { return _irradianceMap; }
     ResourceHandle<GPUImage> PrefilterMap() const { return _prefilterMap; }
     ResourceHandle<GPUImage> BRDFLUTMap() const { return _brdfLUT; }
 
-    NON_MOVABLE(IBLPipeline);
-    NON_COPYABLE(IBLPipeline);
+    NON_MOVABLE(IBLPass);
+    NON_COPYABLE(IBLPass);
 
 private:
     struct PrefilterPushConstant

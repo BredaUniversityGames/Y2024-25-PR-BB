@@ -1,4 +1,4 @@
-﻿#include "pipelines/shadow_pipeline.hpp"
+﻿#include "passes/shadow_pass.hpp"
 
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
@@ -13,7 +13,7 @@
 
 #include <vector>
 
-ShadowPipeline::ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
+ShadowPass::ShadowPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const GPUScene& gpuScene)
     : _context(context)
     , _gBuffers(gBuffers)
     , _culler(_context)
@@ -37,7 +37,7 @@ ShadowPipeline::ShadowPipeline(const std::shared_ptr<GraphicsContext>& context, 
     CreateDrawBufferDescriptorSet(gpuScene);
 }
 
-ShadowPipeline::~ShadowPipeline()
+ShadowPass::~ShadowPass()
 {
     _context->VulkanContext()->Device().destroy(_staticPipeline);
     _context->VulkanContext()->Device().destroy(_staticPipelineLayout);
@@ -45,7 +45,7 @@ ShadowPipeline::~ShadowPipeline()
     _context->VulkanContext()->Device().destroy(_skinnedPipelineLayout);
 }
 
-void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ShadowPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pipeline");
     auto vkContext { _context->VulkanContext() };
@@ -127,7 +127,7 @@ void ShadowPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.endRenderingKHR(vkContext->Dldi());
 }
 
-void ShadowPipeline::CreateStaticPipeline()
+void ShadowPass::CreateStaticPipeline()
 {
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {
         .depthTestEnable = vk::True,
@@ -161,7 +161,7 @@ void ShadowPipeline::CreateStaticPipeline()
     _staticPipeline = std::get<1>(result);
 }
 
-void ShadowPipeline::CreateSkinnedPipeline()
+void ShadowPass::CreateSkinnedPipeline()
 {
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {
         .depthTestEnable = vk::True,
@@ -195,7 +195,7 @@ void ShadowPipeline::CreateSkinnedPipeline()
     _skinnedPipeline = std::get<1>(result);
 }
 
-void ShadowPipeline::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
+void ShadowPass::CreateDrawBufferDescriptorSet(const GPUScene& gpuScene)
 {
     auto vkContext { _context->VulkanContext() };
 
