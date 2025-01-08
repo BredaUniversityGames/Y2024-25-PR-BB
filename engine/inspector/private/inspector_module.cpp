@@ -185,7 +185,8 @@ void DrawRenderStats(Engine& engine)
 {
     const auto stats = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->GetDrawStats();
 
-    ImGui::Begin("Renderer Stats");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Renderer Stats", nullptr, ImGuiWindowFlags_NoResize);
 
     ImGui::LabelText("Draw calls", "%i", stats.DrawCalls());
     ImGui::LabelText("Triangles", "%i", stats.IndexCount() / 3);
@@ -220,7 +221,8 @@ void DrawSSAOSettings(Engine& engine)
 {
     auto& ssao = engine.GetModule<RendererModule>().GetRenderer()->GetSSAOPipeline();
 
-    ImGui::Begin("SSAO settings");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("SSAO settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::DragFloat("AO strength", &ssao.GetAOStrength(), 0.1f, 0.0f, 16.0f);
     ImGui::DragFloat("Bias", &ssao.GetAOBias(), 0.001f, 0.0f, 0.1f);
     ImGui::DragFloat("Radius", &ssao.GetAORadius(), 0.05f, 0.0f, 2.0f);
@@ -233,7 +235,8 @@ void DrawFXAASettings(Engine& engine)
 {
     auto& fxaa = engine.GetModule<RendererModule>().GetRenderer()->GetFXAAPipeline();
 
-    ImGui::Begin("FXAA settings");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("FXAA settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Checkbox("Enable FXAA", &fxaa.GetEnableFXAA());
     ImGui::DragFloat("Edge treshold min", &fxaa.GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
     ImGui::DragFloat("Edge treshold max", &fxaa.GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
@@ -245,7 +248,8 @@ void DrawFXAASettings(Engine& engine)
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
 {
     static ImTextureID textureID = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGBuffers().Shadow());
-    ImGui::Begin("Directional Light Shadow Map View");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::End();
 }
