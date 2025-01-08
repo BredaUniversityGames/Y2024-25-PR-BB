@@ -9,6 +9,7 @@
 
 class BloomSettings;
 class GraphicsContext;
+struct GPUMesh;
 struct RenderSceneDescription;
 
 class SkydomePass final : public FrameGraphRenderPass
