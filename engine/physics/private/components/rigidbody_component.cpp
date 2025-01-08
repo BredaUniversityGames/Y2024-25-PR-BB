@@ -45,7 +45,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 
 // for mesh collisions
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices, JPH::IndexedTriangleList& triangles)
-    : shapeType(eBOX)
+    : shapeType(eMESH)
     , bodyType(eSTATIC)
 {
     JPH::BodyCreationSettings bodySettings;
@@ -62,19 +62,22 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             PhysicsLayers::NON_MOVING);
     }
 
+    JPH::MassProperties msp;
+    msp.ScaleToMass(10.0f); // actual mass in kg
+    bodySettings.mMassPropertiesOverride = msp;
+    bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
     // lets save thes shape reference
     shape = bodySettings.GetShape();
 
     bodySettings.mAllowDynamicOrKinematic = false;
     bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-
     // set the owner entity so we can query it later from physics objects if needed
     bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
 }
 
 // for convex collisions
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices)
-    : shapeType(eBOX)
+    : shapeType(eCONVEXHULL)
     , bodyType(eSTATIC)
 {
     JPH::BodyCreationSettings bodySettings;
@@ -96,6 +99,10 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::EMotionType::Static,
             PhysicsLayers::NON_MOVING);
     }
+    JPH::MassProperties msp;
+    msp.ScaleToMass(10.0f); // actual mass in kg
+    bodySettings.mMassPropertiesOverride = msp;
+    bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
 
     // lets save thes shape reference
     shape = bodySettings.GetShape();

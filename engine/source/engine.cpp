@@ -25,8 +25,8 @@
 #include "old_engine.hpp"
 #include "particle_module.hpp"
 #include "particle_util.hpp"
+#include "passes/debug_pass.hpp"
 #include "physics_module.hpp"
-#include "pipelines/debug_pipeline.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
@@ -159,6 +159,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
+
     return ModuleTickOrder::eTick;
 }
 
