@@ -44,7 +44,9 @@ jobs:
 
       - name: Install X11
         if: matrix.platform == 'ubuntu-latest'
-        run: sudo apt install libx11-dev
+        run: |
+          sudo apt install libx11-dev
+          sudo apt install libxext-dev
 
       # Configure and Build
 
