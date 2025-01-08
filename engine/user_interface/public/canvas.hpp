@@ -6,8 +6,8 @@ struct QuadDrawInfo;
 class Canvas : public UIElement
 {
 public:
-    Canvas(const glm::vec2& size, UINavigationMappings::ElementMap elementMap = {})
-        : UIElement(std::move(elementMap))
+    Canvas(const glm::vec2& size)
+        : UIElement()
     {
         SetScale(size);
     }

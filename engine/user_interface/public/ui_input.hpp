@@ -1,5 +1,5 @@
 #pragma once
-#include "ui_navigation_mappings.hpp"
+#include "ui_navigation.hpp"
 
 class UIElement;
 
@@ -40,10 +40,15 @@ private:
     UINavigationDirection _previousNavigationDirection {};
 };
 
-inline bool IsMouseInsideBoundary(const glm::vec2& mousePos, const glm::vec2& location, const glm::vec2& scale)
+/**
+ * @param boundaryLocation Topleft location of the boundary
+ * @param boundaryScale Scale of the boundary from the Topleft location.
+ * @return
+ */
+inline bool IsMouseInsideBoundary(const glm::vec2& mousePos, const glm::vec2& boundaryLocation, const glm::vec2& boundaryScale)
 {
-    return mousePos.x > location.x
-        && mousePos.x < location.x + scale.x
-        && mousePos.y > location.y
-        && mousePos.y < location.y + scale.y;
+    return mousePos.x > boundaryLocation.x
+        && mousePos.x < boundaryLocation.x + boundaryScale.x
+        && mousePos.y > boundaryLocation.y
+        && mousePos.y < boundaryLocation.y + boundaryScale.y;
 }

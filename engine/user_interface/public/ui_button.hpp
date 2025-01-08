@@ -7,8 +7,7 @@
 class UIButton : public UIElement
 {
 public:
-    UIButton(UINavigationMappings::ElementMap elementMap = {})
-        : UIElement(std::move(elementMap))
+    UIButton()
     {
     }
 
@@ -29,11 +28,8 @@ public:
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
-    UIButton() = delete;
-
-    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size, UINavigationMappings::ElementMap elementMap = {})
-        : UIElement(std::move(elementMap))
-        , style(aStyle)
+    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
+        : style(aStyle)
 
     {
         SetLocation(location);
@@ -41,8 +37,6 @@ public:
     }
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
-
-    void UpdateAllChildrenAbsoluteTransform() override;
 
     std::function<void()> onBeginHoverCallBack = []() {};
     std::function<void()> onMouseDownCallBack = []() {};

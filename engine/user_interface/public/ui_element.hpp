@@ -4,7 +4,7 @@
 #include "quad_draw_info.hpp"
 
 #include "input/action_manager.hpp"
-#include "ui_navigation_mappings.hpp"
+#include "ui_navigation.hpp"
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <memory>
@@ -22,8 +22,7 @@ struct InputManagers;
 class UIElement
 {
 public:
-    UIElement(UINavigationMappings::ElementMap elementMap)
-        : _mapping(std::move(elementMap)) {};
+    UIElement() = default;
     virtual ~UIElement() = default;
     NON_COPYABLE(UIElement)
 
@@ -37,9 +36,12 @@ public:
         eFill
     } anchorPoint
         = AnchorPoint::eMiddle;
+    UINavigationTargets navigationTargets = {};
+    int16_t zLevel = 1;
 
     void SetLocation(const glm::vec2& location) noexcept { _relativeLocation = location; }
 
+    // todo: move transform functionality into its own class
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
     NO_DISCARD const glm::vec2& GetAbsoluteLocation() const noexcept { return _absoluteLocation; }
 
@@ -54,16 +56,7 @@ public:
 
     template <typename T, typename... Args>
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
-    std::weak_ptr<T> AddChild(Args&&... args) // Note: Removed & from return type
-    {
-        std::shared_ptr<UIElement>& addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-        std::sort(_children.begin(), _children.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
-            { return v1->zLevel < v2->zLevel; });
-
-        UpdateAllChildrenAbsoluteTransform();
-
-        return std::static_pointer_cast<T>(addedChild);
-    }
+    std::weak_ptr<T> AddChild(Args&&... args);
 
     NO_DISCARD std::vector<std::shared_ptr<UIElement>>& GetChildren()
     {
@@ -79,27 +72,14 @@ public:
     } visibility
         = VisibilityState::eUpdatedAndVisible;
 
-    int16_t zLevel = 1;
-
     virtual void UpdateAllChildrenAbsoluteTransform();
 
-    /**
-     * note: mostly for internal use to calculate the correct screen space position based on it's parents.
-     * @param location new location
-     * @param scale
-     */
+    //  note: Mostly for internal use to calculate the correct screen space position based on it's parents.
+    //  warning: does not update the local transform!
     void SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren = true) noexcept;
-
-    const UINavigationMappings& GetNavigation() { return _mapping; }
-
-    void SetNavigationMappings(UINavigationMappings::ElementMap elementMap)
-    {
-        _mapping = UINavigationMappings(std::move(elementMap));
-    }
 
 protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
-    UINavigationMappings _mapping;
 
 private:
     glm::vec2 _absoluteLocation {};
@@ -110,3 +90,16 @@ private:
 
     std::vector<std::shared_ptr<UIElement>> _children {};
 };
+
+template <typename T, typename... Args>
+    requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
+std::weak_ptr<T> UIElement::AddChild(Args&&... args)
+{
+    std::shared_ptr<UIElement>& addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    std::sort(_children.begin(), _children.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
+        { return v1->zLevel < v2->zLevel; });
+
+    UpdateAllChildrenAbsoluteTransform();
+
+    return std::static_pointer_cast<T>(addedChild);
+}

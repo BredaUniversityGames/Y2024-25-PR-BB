@@ -7,12 +7,10 @@ class UIImageElement : public UIElement
 {
 public:
     UIImageElement(ResourceHandle<GPUImage> image)
-        : UIElement(UINavigationMappings::ElementMap())
-        , _image(image) {};
+        : _image(image) {};
 
     UIImageElement(ResourceHandle<GPUImage> image, const glm::vec2& position, const glm::vec2& size)
-        : UIElement(UINavigationMappings::ElementMap())
-        , _image(image)
+        : _image(image)
     {
         SetLocation(position);
         SetScale(size);

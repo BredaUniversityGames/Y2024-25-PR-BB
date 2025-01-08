@@ -10,19 +10,16 @@ struct UIFont;
 class UITextElement : public UIElement
 {
 public:
-    UITextElement(const std::shared_ptr<UIFont>& font, std::string text, UINavigationMappings::ElementMap elementMap = {})
-        : UIElement(elementMap)
-        , _font(font)
+    UITextElement(const std::shared_ptr<UIFont>& font, std::string text)
+        : _font(font)
     {
         SetLocation(glm::vec2(0));
         SetScale(glm::vec2(0, 50));
         SetText(std::move(text));
     }
 
-    UITextElement(const std::shared_ptr<UIFont>& font, std::string text, const glm::vec2& location, float textSize, UINavigationMappings::ElementMap elementMap = {})
-        : UIElement(elementMap)
-        , _font(font)
-
+    UITextElement(const std::shared_ptr<UIFont>& font, std::string text, const glm::vec2& location, float textSize)
+        : _font(font)
     {
         SetLocation(location);
         SetScale(glm::vec2(0, textSize));
