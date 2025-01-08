@@ -16,8 +16,8 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "pipelines/cluster_culling_pipeline.hpp"
 #include "pipelines/cluster_generation_pipeline.hpp"
+#include "pipelines/cluster_lightculling_pipeline.hpp"
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/fxaa_pipeline.hpp"
 #include "pipelines/gaussian_blur_pipeline.hpp"
@@ -105,7 +105,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
     _clusterGenerationPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
-    _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
+    _clusterLightCullingPipeline = std::make_unique<ClusterLightCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -195,18 +195,14 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     FrameGraphNodeCreation clusterGenerationPass { *_clusterGenerationPipeline, FrameGraphRenderPassType::eCompute };
-    clusterGenerationPass.SetName("Clustering pass")
+    clusterGenerationPass.SetName("Cluster Generation pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
-    FrameGraphNodeCreation clusterCullingPass { *_clusterCullingPipeline, FrameGraphRenderPassType::eCompute };
-    clusterCullingPass.SetName("Cluster Culling Pass")
+    FrameGraphNodeCreation clusterCullingPass { *_clusterLightCullingPipeline, FrameGraphRenderPassType::eCompute };
+    clusterCullingPass.SetName("Cluster Light Culling pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddInput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
-    //.AddInput(_clusterOutputBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-    //.AddOutput(_clusterCullingGlobalIndexBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-    //.AddOutput(_clusterCullingLightCellsBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-    //.AddOutput(_clusterCullingLightIndicesBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     _frameGraph
         = std::make_unique<FrameGraph>(_context, *_swapChain);

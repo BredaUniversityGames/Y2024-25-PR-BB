@@ -20,7 +20,7 @@ class FXAAPipeline;
 class UIPipeline;
 class GaussianBlurPipeline;
 class ClusterGenerationPipeline;
-class ClusterCullingPipeline;
+class ClusterLightCullingPipeline;
 class ShadowPipeline;
 class IBLPipeline;
 class ParticlePipeline;
@@ -88,7 +88,7 @@ private:
     std::unique_ptr<SSAOPipeline> _ssaoPipeline;
     std::unique_ptr<PresentationPipeline> _presentationPipeline;
     std::unique_ptr<ClusterGenerationPipeline> _clusterGenerationPipeline;
-    std::unique_ptr<ClusterCullingPipeline> _clusterCullingPipeline;
+    std::unique_ptr<ClusterLightCullingPipeline> _clusterLightCullingPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
