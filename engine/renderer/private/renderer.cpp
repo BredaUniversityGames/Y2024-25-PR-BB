@@ -369,7 +369,7 @@ void Renderer::InitializeSSAOTarget()
 
     CPUImage ssaoImageData {};
     ssaoImageData.SetName("SSAO Target")
-        .SetSize(size.x, size.y)
+        .SetSize(size.x / 2, size.y / 2) // lets work with it at half resolution
         .SetFormat(vk::Format::eR8Unorm)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 

@@ -207,7 +207,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         auto result = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
         if (result.HasError())
             bblog::error(result.GetError().c_str());
-        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
+        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), false, JPH::EActivation::Activate);
     }
 
     // this part should be fast because it returns a vector of just ids not whole rigidbodies
