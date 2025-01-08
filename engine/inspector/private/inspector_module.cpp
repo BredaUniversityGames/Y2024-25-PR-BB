@@ -1,11 +1,16 @@
 #include "inspector_module.hpp"
 #include "editor.hpp"
+#include "gbuffers.hpp"
+#include "graphics_context.hpp"
 #include "imgui_backend.hpp"
 #include "implot/implot.h"
 #include "menus/performance_tracker.hpp"
+#include "passes/fxaa_pass.hpp"
+#include "passes/ssao_pass.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "vulkan_context.hpp"
 
 #include <scripting_module.hpp>
 

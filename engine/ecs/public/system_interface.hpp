@@ -1,5 +1,6 @@
 #pragma once
 #include "common.hpp"
+#include <string_view>
 #include <type_traits>
 
 class ECSModule;
