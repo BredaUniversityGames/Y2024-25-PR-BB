@@ -1,10 +1,11 @@
 #pragma once
 
 #include "common.hpp"
-#include "quad_draw_info.hpp"
-
 #include "input/action_manager.hpp"
+#include "quad_draw_info.hpp"
 #include "ui_navigation.hpp"
+
+#include <algorithm>
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <memory>

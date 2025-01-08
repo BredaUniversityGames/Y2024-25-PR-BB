@@ -1,6 +1,7 @@
 #pragma once
 #include "ui_navigation.hpp"
-
+#include <glm/vec2.hpp>
+#include <string>
 class InputDeviceManager;
 class UIElement;
 

@@ -1,4 +1,6 @@
 #include "ui_element.hpp"
+#include "ui_input.hpp"
+
 #include <ranges>
 
 void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInputContext)
@@ -11,14 +13,11 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
             if (auto locked = uiInputContext.focusedUIElement.lock(); locked.get() == this)
             {
                 UINavigationDirection direction = uiInputContext.GetDirection(inputManagers.actionManager);
-                std::optional<std::weak_ptr<UIElement>> navElement = GetUINavigationTarget(navigationTargets, direction);
+                std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, direction);
 
-                if (navElement.has_value())
+                if (std::shared_ptr<UIElement> locked = navTarget.lock(); locked != nullptr)
                 {
-                    if (std::shared_ptr<UIElement> locked = navElement->lock(); locked != nullptr)
-                    {
-                        uiInputContext.focusedUIElement = locked;
-                    }
+                    uiInputContext.focusedUIElement = locked;
                 }
             }
         }
