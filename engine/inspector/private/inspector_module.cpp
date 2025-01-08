@@ -15,13 +15,10 @@ InspectorModule::~InspectorModule()
 {
 }
 
-namespace InspectInternal
-{
 void DumpVMAStats(Engine& engine);
 void DrawRenderStats(Engine& engine);
 void DrawSSAOSettings(Engine& engine);
 void DrawFXAASettings(Engine& engine);
-}
 
 ModuleTickOrder InspectorModule::Init(Engine& engine)
 {
@@ -83,7 +80,7 @@ void InspectorModule::Tick(Engine& engine)
             }
             if (ImGui::MenuItem("Dump VMA stats to json"))
             {
-                InspectInternal::DumpVMAStats(engine);
+                DumpVMAStats(engine);
             }
             ImGui::EndMenu();
         }
@@ -122,12 +119,12 @@ void InspectorModule::Tick(Engine& engine)
 
     if (_openWindows["RenderStats"])
     {
-        _performanceTracker->Render();
+        DrawRenderStats(engine);
     }
 
     if (_openWindows["Performance"])
     {
-        InspectInternal::DrawRenderStats(engine);
+        _performanceTracker->Render();
     }
 
     if (_openWindows["Bloom Settings"])
@@ -137,12 +134,12 @@ void InspectorModule::Tick(Engine& engine)
 
     if (_openWindows["SSAO"])
     {
-        InspectInternal::DrawSSAOSettings(engine);
+        DrawSSAOSettings(engine);
     }
 
     if (_openWindows["FXAA"])
     {
-        InspectInternal::DrawFXAASettings(engine);
+        DrawFXAASettings(engine);
     }
 
     {
@@ -164,8 +161,6 @@ void InspectorModule::Tick(Engine& engine)
     }
 }
 
-namespace InspectInternal
-{
 void DrawRenderStats(Engine& engine)
 {
     const auto stats = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->GetDrawStats();
@@ -225,5 +220,4 @@ void DrawFXAASettings(Engine& engine)
     ImGui::DragFloat("Subpixel quality", &fxaa.GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
     ImGui::DragInt("Iterations", &fxaa.GetIterations(), 1, 1, 128);
     ImGui::End();
-}
 }
