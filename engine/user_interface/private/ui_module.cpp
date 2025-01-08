@@ -16,7 +16,7 @@ void UIModule::Tick(Engine& engine)
 {
     _uiInputContext._gamepadHasFocus = engine.GetModule<ApplicationModule>().GetInputDeviceManager().IsGamepadAvailable();
 
-    InputManagers inputManagers = {
+    InputManagers inputManagers {
         .inputDeviceManager = engine.GetModule<ApplicationModule>().GetInputDeviceManager(),
         .actionManager = engine.GetModule<ApplicationModule>().GetActionManager()
     };
@@ -25,7 +25,7 @@ void UIModule::Tick(Engine& engine)
     _uiInputContext._hasInputBeenConsumed = false;
 }
 
-void UIModule::CreateMainMenu(std::function<void()> onPlayButtonClick, std::function<void()> onExitButtonClick)
+void UIModule::CreateNavigationTest()
 {
-    GetViewport().AddElement<Canvas>(CreateMainMenuCanvas(_uiInputContext, _viewport->GetExtend(), _graphicsContext, onPlayButtonClick, onExitButtonClick));
+    GetViewport().AddElement<Canvas>(CreateNavigationTestCanvas(_uiInputContext, _viewport->GetExtend(), _graphicsContext));
 }

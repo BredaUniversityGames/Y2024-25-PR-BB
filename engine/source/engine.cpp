@@ -34,9 +34,9 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
+#include "time_module.hpp"
 #include "ui_main_menu.hpp"
 #include "ui_module.hpp"
-#include "time_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -159,23 +159,13 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     // todo: move this to scripting.
-    constexpr bool createMainMenu = true;
-    if (createMainMenu)
+    constexpr bool createTestCanvas = true;
+    if (createTestCanvas)
     {
         engine.GetModule<ApplicationModule>().SetMouseHidden(false);
-        auto onPlayClick = [&]()
-        {
-            // todo: load scene data
-            engine.GetModule<UIModule>().GetViewport().ClearViewport();
-        };
-        auto onExitClick = [&]()
-        {
-            engine.SetExit(0);
-        };
 
-        engine.GetModule<UIModule>().CreateMainMenu(onPlayClick, onExitClick);
+        engine.GetModule<UIModule>().CreateNavigationTest();
     }
-
 
     bblog::info("Successfully initialized engine!");
     return ModuleTickOrder::eTick;

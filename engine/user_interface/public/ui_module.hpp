@@ -17,7 +17,7 @@ public:
     NO_DISCARD Viewport& GetViewport() { return *_viewport; };
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
-    void CreateMainMenu(std::function<void()> onPlayButtonClick, std::function<void()> onExitButtonClick);
+    void UIModule::CreateNavigationTest();
 
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
