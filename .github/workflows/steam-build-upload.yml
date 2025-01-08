@@ -42,6 +42,10 @@ jobs:
           version: latest
           cache: true
 
+      - name: Install X11
+        if: matrix.platform == 'ubuntu-latest'
+        run: sudo apt install libx11-dev
+
       # Configure and Build
 
       - name: Configure Project
