@@ -16,24 +16,12 @@ void SpawnEmitter(ParticleModule& self, WrenEntity& entity, EmitterPresetID emit
 }
 }
 
-class ParticleFlagUtil
-{
-public:
-    static uint8_t GetSpawnEmitterFlagBits(SpawnEmitterFlagBits flag)
-    {
-        return static_cast<uint8_t>(flag);
-    }
-};
-
 void BindParticleAPI(wren::ForeignModule& module)
 {
     bindings::BindEnum<EmitterPresetID>(module, "EmitterPresetID");
-    bindings::BindEnum<SpawnEmitterFlagBits>(module, "SpawnEmitterFlagBits");
+    bindings::BindBitflagEnum<SpawnEmitterFlagBits>(module, "SpawnEmitterFlagBits");
 
     auto& wren_class = module.klass<ParticleModule>("Particles");
     wren_class.funcExt<bindings::LoadEmitterPresets>("LoadEmitterPresets");
     wren_class.funcExt<bindings::SpawnEmitter>("SpawnEmitter");
-
-    auto& particleUtilClass = module.klass<ParticleFlagUtil>("ParticleFlagUtil");
-    particleUtilClass.funcStatic<&ParticleFlagUtil::GetSpawnEmitterFlagBits>("GetSpawnEmitterFlagBits");
 }

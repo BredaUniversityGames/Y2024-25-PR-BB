@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, ParticleFlagUtil
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 
 class Main {
 
@@ -24,7 +24,7 @@ class Main {
 
             __player.AddAudioEmitterComponent()
 
-            var emitterFlags = ParticleFlagUtil.GetSpawnEmitterFlagBits(SpawnEmitterFlagBits.eIsActive()) | ParticleFlagUtil.GetSpawnEmitterFlagBits(SpawnEmitterFlagBits.eSetCustomVelocity())
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
             engine.GetParticles().SpawnEmitter(__player, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
 
             var gunTransform = __gun.GetTransformComponent()
