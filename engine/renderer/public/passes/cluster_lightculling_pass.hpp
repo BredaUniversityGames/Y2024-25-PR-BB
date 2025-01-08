@@ -7,18 +7,18 @@ class GraphicsContext;
 struct RenderSceneDescription;
 class GPUScene;
 
-class ClusterLightCullingPipeline final : public FrameGraphRenderPass
+class ClusterLightCullingPass final : public FrameGraphRenderPass
 {
 public:
-    ClusterLightCullingPipeline(const std::shared_ptr<GraphicsContext>& context, GPUScene& gpuScene,
+    ClusterLightCullingPass(const std::shared_ptr<GraphicsContext>& context, GPUScene& gpuScene,
         ResourceHandle<Buffer>& clusterBuffer, ResourceHandle<Buffer>& globalIndex,
         ResourceHandle<Buffer>& lightCells, ResourceHandle<Buffer>& lightIndices);
-    ~ClusterLightCullingPipeline() final;
+    ~ClusterLightCullingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_MOVABLE(ClusterLightCullingPipeline);
-    NON_COPYABLE(ClusterLightCullingPipeline);
+    NON_MOVABLE(ClusterLightCullingPass);
+    NON_COPYABLE(ClusterLightCullingPass);
 
 private:
     void CreatePipeline();

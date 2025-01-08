@@ -1,4 +1,4 @@
-#include "pipelines/cluster_lightculling_pipeline.hpp"
+#include "passes/cluster_lightculling_pass.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -8,7 +8,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ClusterLightCullingPipeline::ClusterLightCullingPipeline(const std::shared_ptr<GraphicsContext>& context, GPUScene& gpuScene,
+ClusterLightCullingPass::ClusterLightCullingPass(const std::shared_ptr<GraphicsContext>& context, GPUScene& gpuScene,
     ResourceHandle<Buffer>& clusterBuffer, ResourceHandle<Buffer>& globalIndex,
     ResourceHandle<Buffer>& lightCells, ResourceHandle<Buffer>& lightIndices)
     : _context(context)
@@ -21,13 +21,13 @@ ClusterLightCullingPipeline::ClusterLightCullingPipeline(const std::shared_ptr<G
     CreatePipeline();
 }
 
-ClusterLightCullingPipeline::~ClusterLightCullingPipeline()
+ClusterLightCullingPass::~ClusterLightCullingPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void ClusterLightCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ClusterLightCullingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Cluster Light Culling Pipeline");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
@@ -40,7 +40,7 @@ void ClusterLightCullingPipeline::RecordCommands(vk::CommandBuffer commandBuffer
     commandBuffer.dispatch(16, 9, 24);
 }
 
-void ClusterLightCullingPipeline::CreatePipeline()
+void ClusterLightCullingPass::CreatePipeline()
 {
     std::array<vk::DescriptorSetLayout, 4> layouts {
         _gpuScene.GetClusterDescriptorSetLayout(),

@@ -1,4 +1,4 @@
-#include "pipelines/cluster_generation_pipeline.hpp"
+#include "passes/cluster_generation_pass.hpp"
 
 #include "gpu_scene.hpp"
 
@@ -10,7 +10,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-ClusterGenerationPipeline::ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene)
+ClusterGenerationPass::ClusterGenerationPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -21,13 +21,13 @@ ClusterGenerationPipeline::ClusterGenerationPipeline(const std::shared_ptr<Graph
     CreatePipeline();
 }
 
-ClusterGenerationPipeline::~ClusterGenerationPipeline()
+ClusterGenerationPass::~ClusterGenerationPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void ClusterGenerationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ClusterGenerationPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Cluster AABB Generation");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
@@ -46,7 +46,7 @@ void ClusterGenerationPipeline::RecordCommands(vk::CommandBuffer commandBuffer, 
     commandBuffer.dispatch(_clusterSizeX, _clusterSizeY, _clusterSizeZ);
 }
 
-void ClusterGenerationPipeline::CreatePipeline()
+void ClusterGenerationPass::CreatePipeline()
 {
     vk::PushConstantRange pushConstantRange {
         .stageFlags = vk::ShaderStageFlagBits::eCompute,

@@ -8,16 +8,16 @@ class GraphicsContext;
 struct RenderSceneDescription;
 class GPUScene;
 
-class ClusterGenerationPipeline final : public FrameGraphRenderPass
+class ClusterGenerationPass final : public FrameGraphRenderPass
 {
 public:
-    ClusterGenerationPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene);
-    ~ClusterGenerationPipeline() final;
+    ClusterGenerationPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const SwapChain& swapChain, GPUScene& gpuScene);
+    ~ClusterGenerationPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    NON_MOVABLE(ClusterGenerationPipeline);
-    NON_COPYABLE(ClusterGenerationPipeline);
+    NON_MOVABLE(ClusterGenerationPass);
+    NON_COPYABLE(ClusterGenerationPass);
 
 private:
     struct PushConstants

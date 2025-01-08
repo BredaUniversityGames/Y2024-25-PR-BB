@@ -16,8 +16,8 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
-#include "pipelines/cluster_generation_pipeline.hpp"
-#include "pipelines/cluster_lightculling_pipeline.hpp
+#include "passes/cluster_generation_pass.hpp"
+#include "passes/cluster_lightculling_pass.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
 #include "passes/gaussian_blur_pass.hpp"
@@ -42,8 +42,6 @@
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
-
-#include "pipelines/fxaa_pipeline.hpp"
 
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
@@ -106,8 +104,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _lightingPass = std::make_unique<LightingPass>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
-    _clusterGenerationPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, *_gpuScene);
-    _clusterLightCullingPipeline = std::make_unique<ClusterLightCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
+    _clusterGenerationPass = std::make_unique<ClusterGenerationPass>(_context, *_gBuffers, *_swapChain, *_gpuScene);
+    _clusterLightCullingPass = std::make_unique<ClusterLightCullingPass>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -196,12 +194,12 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         // No support for presentation targets in frame graph, so we'll have to this for now
         .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
-    FrameGraphNodeCreation clusterGenerationPass { *_clusterGenerationPipeline, FrameGraphRenderPassType::eCompute };
+    FrameGraphNodeCreation clusterGenerationPass { *_clusterGenerationPass, FrameGraphRenderPassType::eCompute };
     clusterGenerationPass.SetName("Cluster Generation pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
-    FrameGraphNodeCreation clusterCullingPass { *_clusterLightCullingPipeline, FrameGraphRenderPassType::eCompute };
+    FrameGraphNodeCreation clusterCullingPass { *_clusterLightCullingPass, FrameGraphRenderPassType::eCompute };
     clusterCullingPass.SetName("Cluster Light Culling pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddInput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);

@@ -20,8 +20,8 @@ class FXAAPass;
 class UIPass;
 class GaussianBlurPass;
 class ShadowPass;
-class ClusterGenerationPipeline;
-class ClusterLightCullingPipeline;
+class ClusterGenerationPass;
+class ClusterLightCullingPass;
 class IBLPass;
 class ParticlePass;
 class PresentationPass;
@@ -87,8 +87,8 @@ private:
     std::unique_ptr<ParticlePass> _particlePass;
     std::unique_ptr<SSAOPass> _ssaoPass;
     std::unique_ptr<PresentationPass> _presentationPass;
-    std::unique_ptr<ClusterGenerationPipeline> _clusterGenerationPipeline;
-    std::unique_ptr<ClusterLightCullingPipeline> _clusterLightCullingPipeline;
+    std::unique_ptr<ClusterGenerationPass> _clusterGenerationPass;
+    std::unique_ptr<ClusterLightCullingPass> _clusterLightCullingPass;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
