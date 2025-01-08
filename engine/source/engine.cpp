@@ -161,7 +161,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     // todo: move this to scripting.
-    constexpr bool createTestCanvas = true;
+    constexpr bool createTestCanvas = false;
     if (createTestCanvas)
     {
         engine.GetModule<ApplicationModule>().SetMouseHidden(false);
