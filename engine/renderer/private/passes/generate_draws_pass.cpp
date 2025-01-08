@@ -71,9 +71,8 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
         vk::Buffer visibilityBuffer = bufferResourceManager.Access(_cameraBatch.VisibilityBuffer())->buffer;
-        vk::Buffer redirectBuffer = bufferResourceManager.Access(_cameraBatch.RedirectBuffer())->buffer;
 
-        std::array<vk::BufferMemoryBarrier, 2> barriers;
+        std::array<vk::BufferMemoryBarrier, 1> barriers;
 
         barriers[0] = {
             .srcAccessMask = vk::AccessFlagBits::eShaderRead,
@@ -85,18 +84,7 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
             .size = vk::WholeSize,
         };
 
-        barriers[1] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eMemoryWrite,
-            .dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eMemoryRead,
-            .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .buffer = redirectBuffer,
-            .offset = 0,
-            .size = vk::WholeSize,
-        };
-
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers[0], {});
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader, {}, {}, barriers[1], {});
     }
     else
     {
@@ -116,9 +104,8 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         commandBuffer.dispatch((scene.gpuScene->DrawCount() + localSize - 1) / localSize, 1, 1);
 
         vk::Buffer visibilityBuffer = bufferResourceManager.Access(_cameraBatch.VisibilityBuffer())->buffer;
-        vk::Buffer redirectBuffer = bufferResourceManager.Access(_cameraBatch.RedirectBuffer())->buffer;
 
-        std::array<vk::BufferMemoryBarrier, 2> barriers;
+        std::array<vk::BufferMemoryBarrier, 1> barriers;
 
         barriers[0] = {
             .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
@@ -130,18 +117,7 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
             .size = vk::WholeSize,
         };
 
-        barriers[1] = {
-            .srcAccessMask = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eMemoryWrite,
-            .dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eMemoryRead,
-            .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-            .buffer = redirectBuffer,
-            .offset = 0,
-            .size = vk::WholeSize,
-        };
-
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {}, barriers[0], {});
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader, {}, {}, barriers[1], {});
     }
 
     _isPrepass = !_isPrepass;
@@ -149,7 +125,7 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
 
 void GenerateDrawsPass::CreateCullingPipeline()
 {
-    std::vector<std::byte> spvBytes = shader::ReadFile("shaders/bin/culling.comp.spv");
+    std::vector<std::byte> spvBytes = shader::ReadFile("shaders/bin/generate_draws.comp.spv");
 
     ComputePipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eCompute, spvBytes);
