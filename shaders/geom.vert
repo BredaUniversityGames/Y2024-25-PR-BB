@@ -47,4 +47,6 @@ void main()
     texCoord = inTexCoord;
 
     gl_Position = (camera.VP) * vec4(position, 1.0);
+    vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
+    position = viewPos; // position is in view space
 }
