@@ -36,34 +36,34 @@ PathfindingModule::~PathfindingModule()
 int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 {
     CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
-    CPUMesh navmesh_mesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
+    CPUMesh navmeshMesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
 
     _triangles.clear();
 
-    std::unordered_map<uint32_t, std::vector<uint32_t>> indices_to_triangles;
+    std::unordered_map<uint32_t, std::vector<uint32_t>> indicesToTriangles;
 
     // We store all the triangles with their indices and center points
     //
     // We also store the triangles that use an index to find adjacent triangles
-    for (size_t i = 0; i < navmesh_mesh.indices.size(); i += 3)
+    for (size_t i = 0; i < navmeshMesh.indices.size(); i += 3)
     {
         TriangleInfo info {};
-        info.indices[0] = navmesh_mesh.indices[i];
-        info.indices[1] = navmesh_mesh.indices[i + 1];
-        info.indices[2] = navmesh_mesh.indices[i + 2];
+        info.indices[0] = navmeshMesh.indices[i];
+        info.indices[1] = navmeshMesh.indices[i + 1];
+        info.indices[2] = navmeshMesh.indices[i + 2];
 
-        glm::vec3 p0 = navmesh_mesh.vertices[info.indices[0]].position;
-        glm::vec3 p1 = navmesh_mesh.vertices[info.indices[1]].position;
-        glm::vec3 p2 = navmesh_mesh.vertices[info.indices[2]].position;
+        glm::vec3 p0 = navmeshMesh.vertices[info.indices[0]].position;
+        glm::vec3 p1 = navmeshMesh.vertices[info.indices[1]].position;
+        glm::vec3 p2 = navmeshMesh.vertices[info.indices[2]].position;
 
         info.centre = (p0 + p1 + p2) / 3.0f;
 
-        size_t triangle_idx = _triangles.size();
+        size_t triangleIdx = _triangles.size();
         _triangles.push_back(info);
 
-        indices_to_triangles[info.indices[0]].push_back(triangle_idx);
-        indices_to_triangles[info.indices[1]].push_back(triangle_idx);
-        indices_to_triangles[info.indices[2]].push_back(triangle_idx);
+        indicesToTriangles[info.indices[0]].push_back(triangleIdx);
+        indicesToTriangles[info.indices[1]].push_back(triangleIdx);
+        indicesToTriangles[info.indices[2]].push_back(triangleIdx);
     }
 
     // Loop over all triangles in the mesh
@@ -73,42 +73,42 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
         // We store all triangles that share indices with the current triangle
         // If a triangle shares two indices with the current triangle, it's adjacent to the current triangle
-        std::unordered_multiset<uint32_t> shared_triangles;
+        std::unordered_multiset<uint32_t> sharedTriangles;
 
         // For each index in the current triangle
         for (uint32_t j = 0; j < 3; j++)
         {
             // Get all triangles that use this index
-            const std::vector<uint32_t>& index_triangles = indices_to_triangles[triangle.indices[j]];
+            const std::vector<uint32_t>& index_triangles = indicesToTriangles[triangle.indices[j]];
 
             // Loop over every triangle that shares this index
-            for (uint32_t triangle_idx : index_triangles)
+            for (uint32_t triangleIdx : index_triangles)
             {
                 // Don't add current triangle to list, obviously
-                if (triangle_idx == i)
+                if (triangleIdx == i)
                     continue;
 
-                shared_triangles.insert(triangle_idx);
+                sharedTriangles.insert(triangleIdx);
             }
         }
 
         // Loop over all triangles that share indices with the current triangle
-        for (const uint32_t& triangle_idx : shared_triangles)
+        for (const uint32_t& triangleIdx : sharedTriangles)
         {
-            if (shared_triangles.count(triangle_idx) > 1)
+            if (sharedTriangles.count(triangleIdx) > 1)
             {
                 bool insert = true;
                 // We share more than 2 indices now so we're adjacent to the current triangle
                 for (uint32_t k = 0; k < triangle.adjacentTriangleCount; k++)
                 {
-                    if (triangle.adjacentTriangleIndices[k] == triangle_idx)
+                    if (triangle.adjacentTriangleIndices[k] == triangleIdx)
                     {
                         insert = false;
                     }
                 }
                 if (insert)
                 {
-                    triangle.adjacentTriangleIndices[triangle.adjacentTriangleCount++] = triangle_idx;
+                    triangle.adjacentTriangleIndices[triangle.adjacentTriangleCount++] = triangleIdx;
                 }
             }
         }
@@ -121,7 +121,7 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
         for (size_t j = 0; j < info.adjacentTriangleCount; j++)
         {
-            _triangles_to_neighbours[i][j] = info.adjacentTriangleIndices[j];
+            _trianglesToNeighbours[i][j] = info.adjacentTriangleIndices[j];
         }
     }
 
@@ -197,7 +197,7 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 
             const TriangleInfo& neighbourTriangleInfo = _triangles[triangleInfo.adjacentTriangleIndices[i]];
 
-            float tentative_cost_from_start = topNode.totalCost + glm::distance(triangleInfo.centre, neighbourTriangleInfo.centre);
+            float tentativeCostFromStart = topNode.totalCost + glm::distance(triangleInfo.centre, neighbourTriangleInfo.centre);
 
             TriangleNode tempNode {};
             tempNode.triangleIndex = triangleInfo.adjacentTriangleIndices[i];
@@ -211,9 +211,9 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 
             TriangleNode& neighbourNode = *it;
 
-            if (tentative_cost_from_start < neighbourNode.totalCost)
+            if (tentativeCostFromStart < neighbourNode.totalCost)
             {
-                neighbourNode.totalCost = tentative_cost_from_start;
+                neighbourNode.totalCost = tentativeCostFromStart;
                 neighbourNode.estimateToGoal = Heuristic(neighbourTriangleInfo.centre, endPos);
                 neighbourNode.parentTriangleIndex = topNode.triangleIndex;
                 neighbourNode.totalEstimatedCost = neighbourNode.totalCost + neighbourNode.estimateToGoal;

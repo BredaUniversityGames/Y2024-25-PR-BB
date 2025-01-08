@@ -110,5 +110,5 @@ private:
     std::shared_ptr<Renderer> _renderer;
 
     std::vector<TriangleInfo> _triangles;
-    std::unordered_map<uint32_t, uint32_t[3]> _triangles_to_neighbours;
+    std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
 };
