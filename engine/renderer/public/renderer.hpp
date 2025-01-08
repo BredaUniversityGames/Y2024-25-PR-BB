@@ -87,7 +87,7 @@ private:
     std::unique_ptr<ParticlePipeline> _particlePipeline;
     std::unique_ptr<SSAOPipeline> _ssaoPipeline;
     std::unique_ptr<PresentationPipeline> _presentationPipeline;
-    std::unique_ptr<ClusterGenerationPipeline> _clusteringPipeline;
+    std::unique_ptr<ClusterGenerationPipeline> _clusterGenerationPipeline;
     std::unique_ptr<ClusterCullingPipeline> _clusterCullingPipeline;
 
     std::shared_ptr<GPUScene> _gpuScene;

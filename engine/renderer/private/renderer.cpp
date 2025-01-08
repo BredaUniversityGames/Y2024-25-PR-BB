@@ -104,7 +104,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _lightingPipeline = std::make_unique<LightingPipeline>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePipeline = std::make_unique<ParticlePipeline>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPipeline = std::make_unique<PresentationPipeline>(_context, *_swapChain, _fxaaTarget);
-    _clusteringPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
+    _clusterGenerationPipeline = std::make_unique<ClusterGenerationPipeline>(_context, *_gBuffers, *_swapChain, _gpuScene->GetClusterBuffer());
     _clusterCullingPipeline = std::make_unique<ClusterCullingPipeline>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(_currentFrame), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();
@@ -194,8 +194,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         // No support for presentation targets in frame graph, so we'll have to this for now
         .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
-    FrameGraphNodeCreation clusteringPass { *_clusteringPipeline, FrameGraphRenderPassType::eCompute };
-    clusteringPass.SetName("Clustering pass")
+    FrameGraphNodeCreation clusterGenerationPass { *_clusterGenerationPipeline, FrameGraphRenderPassType::eCompute };
+    clusterGenerationPass.SetName("Clustering pass")
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddOutput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
@@ -222,7 +222,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
-        .AddNode(clusteringPass)
+        .AddNode(clusterGenerationPass)
         .AddNode(clusterCullingPass)
         .AddNode(presentationPass)
         .Build();

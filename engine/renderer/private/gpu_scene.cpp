@@ -249,7 +249,7 @@ void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUS
         pointLightData.color
             = glm::vec4(pointLightComponent.color, 1.0f);
         pointLightData.range = pointLightComponent.range;
-        pointLightData.attenuation = pointLightComponent.attenuation;
+        pointLightData.intensity = pointLightComponent.intensity;
 
         pointLightCount++;
     }

@@ -122,7 +122,7 @@ private:
         glm::vec3 position;
         float range;
         glm::vec3 color;
-        float attenuation;
+        float intensity;
     };
 
     struct alignas(16) PointLightArray
