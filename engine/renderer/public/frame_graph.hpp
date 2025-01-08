@@ -188,6 +188,7 @@ private:
     void CreateImageBarrier(const FrameGraphResource& resource, ResourceState state, vk::ImageMemoryBarrier2& barrier) const;
     void CreateColorImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const;
     void CreateDepthImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const;
+    void CreateGeneralImageBarrier(const GPUImage& image, ResourceState state, vk::ImageMemoryBarrier2& barrier) const;
     void CreateBufferBarrier(const FrameGraphResource& resource, ResourceState state, vk::BufferMemoryBarrier2& barrier) const;
     void SortGraph();
     FrameGraphResourceHandle CreateOutputResource(const FrameGraphResourceCreation& creation, FrameGraphNodeHandle producer);

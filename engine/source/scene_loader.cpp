@@ -15,6 +15,8 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+
+#include "systems/physics_system.hpp"
 #include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
@@ -27,6 +29,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     const Hierarchy& hierarchy,
     entt::entity parent,
     const GPUModel& model,
+    const CPUModel& cpuModel,
     AnimationControlComponent* animationControl,
     std::unordered_map<uint32_t, entt::entity>& entityLUT, // Used for looking up from hierarchy node index to entt entity.
     entt::entity skeletonRoot = entt::null,
@@ -53,6 +56,13 @@ void LoadNodeRecursive(ECSModule& ecs,
         {
         case MeshType::eSTATIC:
             ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
+
+            // check if it should have collider
+
+            ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
+
+            // add collider recursively
+
             break;
         case MeshType::eSKINNED:
             ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);
@@ -89,11 +99,11 @@ void LoadNodeRecursive(ECSModule& ecs,
     for (const auto& nodeIndex : currentNode.children)
     {
         const entt::entity childEntity = ecs.GetRegistry().create();
-        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, animationControl, entityLUT, skeletonRoot);
+        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, cpuModel, animationControl, entityLUT, skeletonRoot);
     }
 }
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
 {
     entt::entity rootEntity = ecs.GetRegistry().create();
 
@@ -105,12 +115,12 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
         animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
     }
 
-    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, animationControl, entityLUT);
+    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT);
 
     if (hierarchy.skeletonRoot.has_value())
     {
         entt::entity skeletonEntity = ecs.GetRegistry().create();
-        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, animationControl, entityLUT, entt::null, true);
+        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, true);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
 

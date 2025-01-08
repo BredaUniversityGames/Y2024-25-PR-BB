@@ -105,6 +105,9 @@ void main()
     float metallic = albedoMSample.a;
     vec3 normal = normalRSample.rgb;
     vec3 position = positionSample.rgb;
+    //convert position to world space now
+    vec4 worldPos = camera.inverseView * vec4(position, 1.0);
+    position = worldPos.xyz / worldPos.w;
 
     float roughness = normalRSample.a;
     vec3 emissive = emissiveAOSample.rgb;
@@ -161,7 +164,6 @@ void main()
     float fogFactor = exp(-fogDensity * linearDepth);
 
     outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
-
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
     vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);

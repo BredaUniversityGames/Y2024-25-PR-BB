@@ -9,22 +9,22 @@
 #include <tracy/TracyVulkan.hpp>
 
 class UIModule;
-class DebugPipeline;
+class DebugPass;
 class Application;
-class GeometryPipeline;
-class SSAOPipeline;
-class LightingPipeline;
-class SkydomePipeline;
-class TonemappingPipeline;
-class FXAAPipeline;
-class UIPipeline;
-class GaussianBlurPipeline;
+class GeometryPass;
+class SSAOPass;
+class LightingPass;
+class SkydomePass;
+class TonemappingPass;
+class FXAAPass;
+class UIPass;
+class GaussianBlurPass;
+class ShadowPass;
 class ClusterGenerationPipeline;
 class ClusterLightCullingPipeline;
-class ShadowPipeline;
-class IBLPipeline;
-class ParticlePipeline;
-class PresentationPipeline;
+class IBLPass;
+class ParticlePass;
+class PresentationPass;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
@@ -54,10 +54,10 @@ public:
     SwapChain& GetSwapChain() const { return *_swapChain; }
     GBuffers& GetGBuffers() const { return *_gBuffers; }
     std::shared_ptr<GraphicsContext> GetContext() const { return _context; }
-    DebugPipeline& GetDebugPipeline() const { return *_debugPipeline; }
+    DebugPass& GetDebugPipeline() const { return *_debugPass; }
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
-    SSAOPipeline& GetSSAOPipeline() const { return *_ssaoPipeline; }
-    FXAAPipeline& GetFXAAPipeline() const { return *_fxaaPipeline; }
+    SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
+    FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
 
     void FlushCommands();
 
@@ -74,19 +74,19 @@ private:
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
-    std::unique_ptr<GeometryPipeline> _geometryPipeline;
-    std::unique_ptr<LightingPipeline> _lightingPipeline;
-    std::unique_ptr<SkydomePipeline> _skydomePipeline;
-    std::unique_ptr<TonemappingPipeline> _tonemappingPipeline;
-    std::unique_ptr<FXAAPipeline> _fxaaPipeline;
-    std::unique_ptr<UIPipeline> _uiPipeline;
-    std::unique_ptr<GaussianBlurPipeline> _bloomBlurPipeline;
-    std::unique_ptr<ShadowPipeline> _shadowPipeline;
-    std::unique_ptr<DebugPipeline> _debugPipeline;
-    std::unique_ptr<IBLPipeline> _iblPipeline;
-    std::unique_ptr<ParticlePipeline> _particlePipeline;
-    std::unique_ptr<SSAOPipeline> _ssaoPipeline;
-    std::unique_ptr<PresentationPipeline> _presentationPipeline;
+    std::unique_ptr<GeometryPass> _geometryPass;
+    std::unique_ptr<LightingPass> _lightingPass;
+    std::unique_ptr<SkydomePass> _skydomePass;
+    std::unique_ptr<TonemappingPass> _tonemappingPass;
+    std::unique_ptr<FXAAPass> _fxaaPass;
+    std::unique_ptr<UIPass> _uiPass;
+    std::unique_ptr<GaussianBlurPass> _bloomBlurPass;
+    std::unique_ptr<ShadowPass> _shadowPass;
+    std::unique_ptr<DebugPass> _debugPass;
+    std::unique_ptr<IBLPass> _iblPass;
+    std::unique_ptr<ParticlePass> _particlePass;
+    std::unique_ptr<SSAOPass> _ssaoPass;
+    std::unique_ptr<PresentationPass> _presentationPass;
     std::unique_ptr<ClusterGenerationPipeline> _clusterGenerationPipeline;
     std::unique_ptr<ClusterLightCullingPipeline> _clusterLightCullingPipeline;
 

@@ -1,6 +1,5 @@
 #include "ui_button.hpp"
 #include "glm/gtx/transform.hpp"
-#include "pipelines/ui_pipeline.hpp"
 
 #include "input/input_device_manager.hpp"
 
