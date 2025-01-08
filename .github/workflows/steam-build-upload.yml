@@ -6,8 +6,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build--and-upload-project:
-    name: Build and Upload Project
+  build-and-package-project:
+    name: Build and Package Project
 
     strategy:
       fail-fast: true
@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'true'
+          lfs: 'true'
 
       # Install all dependencies
 
@@ -51,6 +52,7 @@ jobs:
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
 
       # Package project
+      
       - name: Package Windows Project
         if: matrix.platform == `windows-latest`
         run: |
@@ -60,3 +62,65 @@ jobs:
         if: matrix.platform == `ubuntu-latest`
         run: |
           scripts/build_system/package_dist_linux.bat
+
+      # Save build as artifact for upload job
+
+      - name: Upload Windows Build Artifacts
+        if: matrix.platform == `windows-latest`
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-dist
+          path: package/windows-dist/
+
+      - name: Upload Linux Build Artifacts
+        if: matrix.platform == `ubuntu-latest`
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: package/linux-dist/
+
+  upload-project:
+    name: Upload Project
+    needs: build-and-package-project
+    runs-on: windows-latest
+
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_CONFIG: ${{ secrets.STEAM_CONFIG }}
+
+    steps:
+      # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4
+    
+      # Download build artifacts from previous job
+
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: |
+            windows-dist
+            linux-dist
+
+      # Create steam config to avoid 2FA
+
+      - name: Create Steam Config
+        shell: bash
+        run: |
+          "${{ env.STEAM_CONFIG }}" | base64 -d > "scripts/build_system/steam/builder/config/config.vdf"
+
+      # Upload to Steam
+      - name: Upload Build
+        run: |
+          scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf
+
+      # Delete artifacts after use
+
+      - name: Delete Artifacts
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            windows-dist
+            linux-dist
+            
