@@ -159,6 +159,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
+
     return ModuleTickOrder::eTick;
 }
 

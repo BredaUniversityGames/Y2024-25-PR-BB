@@ -5,6 +5,7 @@
 #include "main_engine.hpp"
 #include "old_engine.hpp"
 #include "particle_module.hpp"
+#include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
@@ -28,6 +29,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<PhysicsModule>()
         .AddModule<OldEngine>()
         .AddModule<RendererModule>()
+        .AddModule<PathfindingModule>()
         .AddModule<AudioModule>()
         .AddModule<UIModule>()
         .AddModule<ParticleModule>();
