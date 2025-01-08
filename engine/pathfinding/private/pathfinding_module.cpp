@@ -1,11 +1,11 @@
-#include "pathfinding_module.h"
+#include "pathfinding_module.hpp"
 
-#include <engine.hpp>
-#include <model_loader.hpp>
-#include <renderer_module.hpp>
+#include "engine.hpp"
+#include "model_loader.hpp"
+#include "renderer_module.hpp"
 #include <set>
 
-ModuleTickOrder PathfindingModule::Init(Engine& engine)
+ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
@@ -17,14 +17,12 @@ ModuleTickOrder PathfindingModule::Init(Engine& engine)
     return ModuleTickOrder::eTick;
 }
 
-void PathfindingModule::Tick(Engine& engine)
+void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    (void)engine;
 }
 
-void PathfindingModule::Shutdown(Engine& engine)
+void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
-    (void)engine;
 }
 
 PathfindingModule::PathfindingModule()
@@ -35,7 +33,7 @@ PathfindingModule::~PathfindingModule()
 {
 }
 
-int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
+int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 {
     CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
     CPUMesh navmesh_mesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
@@ -75,7 +73,7 @@ int PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
         // We store all triangles that share indices with the current triangle
         // If a triangle shares two indices with the current triangle, it's adjacent to the current triangle
-        std::multiset<uint32_t> shared_triangles;
+        std::unordered_multiset<uint32_t> shared_triangles;
 
         // For each index in the current triangle
         for (uint32_t j = 0; j < 3; j++)
@@ -143,8 +141,10 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     std::unordered_map<uint32_t, TriangleNode> closedList;
 
     // Find closest triangle // TODO: More efficient way of finding closes triangle
-    float closestStartTriangleDistance = INFINITY, closestDestinationTriangleDistance = INFINITY;
-    uint32_t closestStartTriangleIndex = UINT32_MAX, closestDestinationTriangleIndex = UINT32_MAX;
+    float closestStartTriangleDistance = std::numeric_limits<float>::infinity(),
+          closestDestinationTriangleDistance = std::numeric_limits<float>::infinity();
+    uint32_t closestStartTriangleIndex = std::numeric_limits<uint32_t>::max(),
+             closestDestinationTriangleIndex = std::numeric_limits<uint32_t>::max();
     for (size_t i = 0; i < _triangles.size(); i++)
     {
         float distance_to_start_triangle = glm::distance(startPos, _triangles[i].centre);
@@ -168,7 +168,7 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     node.estimateToGoal = Heuristic(startPos, endPos);
     node.totalEstimatedCost = node.totalCost + node.estimateToGoal;
     node.triangleIndex = closestStartTriangleIndex;
-    node.parentTriangleIndex = UINT32_MAX;
+    node.parentTriangleIndex = std::numeric_limits<uint32_t>::max();
 
     openList.push(node);
 
@@ -244,7 +244,7 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
 
     while (true)
     {
-        if (parentTriangleIndex == UINT32_MAX)
+        if (parentTriangleIndex == std::numeric_limits<uint32_t>::max())
             break;
 
         const TriangleNode& node = nodes[parentTriangleIndex];

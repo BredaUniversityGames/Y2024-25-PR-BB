@@ -1,5 +1,4 @@
-add_library(Pathfinding
-        private/pathfinding_module.cpp)
+add_library(Pathfinding)
 module_default_init(Pathfinding)
 
 target_link_libraries(Pathfinding

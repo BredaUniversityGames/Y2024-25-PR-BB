@@ -5,7 +5,7 @@
 #include "main_engine.hpp"
 #include "old_engine.hpp"
 #include "particle_module.hpp"
-#include "pathfinding_module.h"
+#include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"

@@ -91,7 +91,7 @@ public:
     NON_COPYABLE(PathfindingModule)
     NON_MOVABLE(PathfindingModule)
 
-    int SetNavigationMesh(const std::string& mesh);
+    int32_t SetNavigationMesh(const std::string& mesh);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
 private:

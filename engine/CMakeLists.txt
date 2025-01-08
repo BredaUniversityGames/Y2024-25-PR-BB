@@ -1,5 +1,4 @@
-add_library(Engine INTERFACE
-        pathfinding/public/pathfinding_module.h)
+add_library(Engine INTERFACE)
 
 if (ENABLE_PCH)
     add_subdirectory(pch)
