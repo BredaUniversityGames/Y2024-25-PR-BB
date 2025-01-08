@@ -9,11 +9,12 @@ class GraphicsContext;
 class GBuffers;
 struct GPUImage;
 struct RenderSceneDescription;
-class FXAAPipeline final : public FrameGraphRenderPass
+
+class FXAAPass final : public FrameGraphRenderPass
 {
 public:
-    FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget);
-    ~FXAAPipeline() override;
+    FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget);
+    ~FXAAPass() override;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) override;
 
@@ -23,8 +24,8 @@ public:
     int32_t& GetIterations() { return _pushConstants.iterations; }
     bool& GetEnableFXAA() { return _pushConstants.enableFXAA; }
 
-    NON_MOVABLE(FXAAPipeline);
-    NON_COPYABLE(FXAAPipeline);
+    NON_MOVABLE(FXAAPass);
+    NON_COPYABLE(FXAAPass);
 
 private:
     struct PushConstants

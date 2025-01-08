@@ -1,4 +1,4 @@
-#include "pipelines/skydome_pipeline.hpp"
+#include "passes/skydome_pass.hpp"
 
 #include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
@@ -13,7 +13,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
+SkydomePass::SkydomePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
     ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
     , _hdrTarget(hdrTarget)
@@ -28,13 +28,13 @@ SkydomePipeline::SkydomePipeline(const std::shared_ptr<GraphicsContext>& context
     _pushConstants.hdriIndex = environmentMap.Index();
 }
 
-SkydomePipeline::~SkydomePipeline()
+SkydomePass::~SkydomePass()
 {
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
     _context->VulkanContext()->Device().destroy(_pipeline);
 }
 
-void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void SkydomePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Skydome Pipeline");
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
@@ -96,7 +96,7 @@ void SkydomePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-void SkydomePipeline::CreatePipeline()
+void SkydomePass::CreatePipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;

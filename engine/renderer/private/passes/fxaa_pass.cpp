@@ -1,4 +1,4 @@
-﻿#include "pipelines/fxaa_pipeline.hpp"
+﻿#include "passes/fxaa_pass.hpp"
 
 #include "gbuffers.hpp"
 #include "gpu_scene.hpp"
@@ -9,7 +9,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
+FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -20,7 +20,7 @@ FXAAPipeline::FXAAPipeline(const std::shared_ptr<GraphicsContext>& context, cons
     CreatePipeline();
 }
 
-void FXAAPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void FXAAPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pipeline");
     _pushConstants.screenWidth = _gBuffers.Size().x;
@@ -57,13 +57,13 @@ void FXAAPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-FXAAPipeline::~FXAAPipeline()
+FXAAPass::~FXAAPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void FXAAPipeline::CreatePipeline()
+void FXAAPass::CreatePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,

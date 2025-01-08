@@ -2,7 +2,6 @@
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
-#include "geometry_pipeline.hpp"
 #include "vertex.hpp"
 
 #include <memory>
@@ -11,11 +10,11 @@ class SwapChain;
 class BatchBuffer;
 class GraphicsContext;
 
-class DebugPipeline final : public FrameGraphRenderPass
+class DebugPass final : public FrameGraphRenderPass
 {
 public:
-    DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment);
-    ~DebugPipeline() final;
+    DebugPass(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment);
+    ~DebugPass() final;
 
     void AddLines(const std::vector<glm::vec3>& linesData)
     {
@@ -39,8 +38,8 @@ public:
     void SetState(const bool newState) { _isEnabled = newState; }
     bool GetState() const { return _isEnabled; }
 
-    NON_MOVABLE(DebugPipeline);
-    NON_COPYABLE(DebugPipeline);
+    NON_MOVABLE(DebugPass);
+    NON_COPYABLE(DebugPass);
 
 private:
     std::shared_ptr<GraphicsContext> _context;

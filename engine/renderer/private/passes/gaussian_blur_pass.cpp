@@ -1,4 +1,4 @@
-#include "pipelines/gaussian_blur_pipeline.hpp"
+#include "passes/gaussian_blur_pass.hpp"
 
 #include "../vulkan_helper.hpp"
 #include "gpu_scene.hpp"
@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> source, ResourceHandle<GPUImage> target)
+GaussianBlurPass::GaussianBlurPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> source, ResourceHandle<GPUImage> target)
     : _context(context)
     , _source(source)
 {
@@ -32,14 +32,14 @@ GaussianBlurPipeline::GaussianBlurPipeline(const std::shared_ptr<GraphicsContext
     CreateDescriptorSets();
 }
 
-GaussianBlurPipeline::~GaussianBlurPipeline()
+GaussianBlurPass::~GaussianBlurPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
     _context->VulkanContext()->Device().destroy(_descriptorSetLayout);
 }
 
-void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian blur Pipeline");
     //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
@@ -108,7 +108,7 @@ void GaussianBlurPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint3
     }
 }
 
-void GaussianBlurPipeline::CreatePipeline()
+void GaussianBlurPass::CreatePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -140,7 +140,7 @@ void GaussianBlurPipeline::CreatePipeline()
     _descriptorSetLayout = pipelineBuilder.GetDescriptorSetLayouts()[0];
 }
 
-void GaussianBlurPipeline::CreateDescriptorSetLayout()
+void GaussianBlurPass::CreateDescriptorSetLayout()
 {
     std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
 
@@ -159,7 +159,7 @@ void GaussianBlurPipeline::CreateDescriptorSetLayout()
         "Failed creating gaussian blur descriptor set layout!");
 }
 
-void GaussianBlurPipeline::CreateDescriptorSets()
+void GaussianBlurPass::CreateDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
@@ -218,7 +218,7 @@ void GaussianBlurPipeline::CreateDescriptorSets()
     }
 }
 
-void GaussianBlurPipeline::CreateVerticalTarget()
+void GaussianBlurPass::CreateVerticalTarget()
 {
     const GPUImage* horizontalTargetAccess = _context->Resources()->ImageResourceManager().Access(_targets[1]);
     std::string verticalTargetName = std::string(horizontalTargetAccess->name + " | vertical");
