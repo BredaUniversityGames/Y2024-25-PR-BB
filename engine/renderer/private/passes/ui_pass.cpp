@@ -1,4 +1,4 @@
-#include "pipelines/ui_pipeline.hpp"
+#include "passes/ui_pass.hpp"
 
 #include "fastgltf/types.hpp"
 #include "glm/gtx/string_cast.hpp"
@@ -13,7 +13,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
+UIPass::UIPass(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
     , _outputTarget(outputTarget)
     , _swapChain(swapChain)
@@ -23,13 +23,13 @@ UIPipeline::UIPipeline(const std::shared_ptr<GraphicsContext>& context, const Re
     SetProjectionMatrix(glm::vec2(_swapChain.GetExtent().width, _swapChain.GetExtent().height), glm::vec2(0));
 }
 
-UIPipeline::~UIPipeline()
+UIPass::~UIPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void UIPipeline::CreatePipeLine()
+void UIPass::CreatePipeLine()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::True,
@@ -63,7 +63,7 @@ void UIPipeline::CreatePipeLine()
     _pipeline = std::get<1>(result);
 }
 
-void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
+void UIPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "UI Pipeline");
 
@@ -104,7 +104,7 @@ void UIPipeline::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED ui
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
     _drawList.clear();
 }
-void UIPipeline::SetProjectionMatrix(const glm::vec2& size, const glm::vec2& offset)
+void UIPass::SetProjectionMatrix(const glm::vec2& size, const glm::vec2& offset)
 {
     _projectionMatrix = glm::ortho<float>(offset.x, offset.x + size.x, offset.y, offset.y + size.y);
 }

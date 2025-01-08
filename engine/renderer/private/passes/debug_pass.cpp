@@ -1,4 +1,4 @@
-﻿#include "pipelines/debug_pipeline.hpp"
+﻿#include "passes/debug_pass.hpp"
 
 #include "batch_buffer.hpp"
 #include "gpu_scene.hpp"
@@ -10,13 +10,13 @@
 #include "shaders/shader_loader.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_context.hpp"
-#include <vulkan_helper.hpp>
+#include "vulkan_helper.hpp"
 
 #include <array>
 #include <imgui_impl_vulkan.h>
 #include <vector>
 
-DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment)
+DebugPass::DebugPass(const std::shared_ptr<GraphicsContext>& context, const SwapChain& swapChain, const GBuffers& gBuffers, ResourceHandle<GPUImage> attachment)
     : _context(context)
     , _swapChain(swapChain)
     , _gBuffers(gBuffers)
@@ -27,13 +27,13 @@ DebugPipeline::DebugPipeline(const std::shared_ptr<GraphicsContext>& context, co
     CreatePipeline();
 }
 
-DebugPipeline::~DebugPipeline()
+DebugPass::~DebugPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void DebugPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Debug Pipeline");
 
@@ -96,7 +96,7 @@ void DebugPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cur
     ClearLines();
 }
 
-void DebugPipeline::CreatePipeline()
+void DebugPass::CreatePipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -140,7 +140,7 @@ void DebugPipeline::CreatePipeline()
     _pipeline = std::get<1>(result);
 }
 
-void DebugPipeline::CreateVertexBuffer()
+void DebugPass::CreateVertexBuffer()
 {
     const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // TODO: Remove magic number.
     BufferCreation vertexBufferCreation {};
@@ -153,7 +153,7 @@ void DebugPipeline::CreateVertexBuffer()
     _vertexBuffer = _context->Resources()->BufferResourceManager().Create(vertexBufferCreation);
 }
 
-void DebugPipeline::UpdateVertexData()
+void DebugPass::UpdateVertexData()
 {
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_vertexBuffer);
     std::memcpy(buffer->mappedPtr, _linesData.data(), _linesData.size() * sizeof(glm::vec3));

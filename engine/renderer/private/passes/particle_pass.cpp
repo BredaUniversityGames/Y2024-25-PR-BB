@@ -1,4 +1,4 @@
-#include "pipelines/particle_pipeline.hpp"
+#include "passes/particle_pass.hpp"
 
 #include "bloom_settings.hpp"
 #include "camera.hpp"
@@ -17,7 +17,7 @@
 
 #include <pipeline_builder.hpp>
 
-ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
+ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
@@ -33,7 +33,7 @@ ParticlePipeline::ParticlePipeline(const std::shared_ptr<GraphicsContext>& conte
     CreatePipelines();
 }
 
-ParticlePipeline::~ParticlePipeline()
+ParticlePass::~ParticlePass()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -63,7 +63,7 @@ ParticlePipeline::~ParticlePipeline()
     vkContext->Device().destroy(_instancesDescriptorSetLayout);
 }
 
-void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void ParticlePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
 
@@ -83,7 +83,7 @@ void ParticlePipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     UpdateAliveLists();
 }
 
-void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
+void ParticlePass::RecordKickOff(vk::CommandBuffer commandBuffer)
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -104,7 +104,7 @@ void ParticlePipeline::RecordKickOff(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
+void ParticlePass::RecordEmit(vk::CommandBuffer commandBuffer)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -145,7 +145,7 @@ void ParticlePipeline::RecordEmit(vk::CommandBuffer commandBuffer)
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame)
+void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -170,7 +170,7 @@ void ParticlePipeline::RecordSimulate(vk::CommandBuffer commandBuffer, const Cam
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame)
+void ParticlePass::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -250,7 +250,7 @@ void ParticlePipeline::RecordRenderIndexed(vk::CommandBuffer commandBuffer, cons
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
+void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -276,13 +276,13 @@ void ParticlePipeline::UpdateEmitters(vk::CommandBuffer commandBuffer)
     }
 }
 
-void ParticlePipeline::UpdateAliveLists()
+void ParticlePass::UpdateAliveLists()
 {
     std::swap(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveNew)], _particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eAliveCurrent)]);
     UpdateParticleBuffersDescriptorSets();
 }
 
-void ParticlePipeline::CreatePipelines()
+void ParticlePass::CreatePipelines()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -439,7 +439,7 @@ void ParticlePipeline::CreatePipelines()
     }
 }
 
-void ParticlePipeline::CreateDescriptorSetLayouts()
+void ParticlePass::CreateDescriptorSetLayouts()
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -504,7 +504,7 @@ void ParticlePipeline::CreateDescriptorSetLayouts()
     }
 }
 
-void ParticlePipeline::CreateDescriptorSets()
+void ParticlePass::CreateDescriptorSets()
 {
     auto vkContext { _context->VulkanContext() };
 
@@ -552,7 +552,7 @@ void ParticlePipeline::CreateDescriptorSets()
     }
 }
 
-void ParticlePipeline::UpdateParticleBuffersDescriptorSets()
+void ParticlePass::UpdateParticleBuffersDescriptorSets()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -632,7 +632,7 @@ void ParticlePipeline::UpdateParticleBuffersDescriptorSets()
     vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
-void ParticlePipeline::UpdateParticleInstancesBufferDescriptorSet()
+void ParticlePass::UpdateParticleInstancesBufferDescriptorSet()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -655,7 +655,7 @@ void ParticlePipeline::UpdateParticleInstancesBufferDescriptorSet()
     vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
-void ParticlePipeline::UpdateEmittersBuffersDescriptorSets()
+void ParticlePass::UpdateEmittersBuffersDescriptorSets()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -678,7 +678,7 @@ void ParticlePipeline::UpdateEmittersBuffersDescriptorSets()
     vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
-void ParticlePipeline::CreateBuffers()
+void ParticlePass::CreateBuffers()
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };

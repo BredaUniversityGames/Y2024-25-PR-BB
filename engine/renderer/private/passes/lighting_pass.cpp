@@ -1,4 +1,4 @@
-#include "pipelines/lighting_pipeline.hpp"
+#include "passes/lighting_pass.hpp"
 
 #include "../vulkan_helper.hpp"
 #include "bloom_settings.hpp"
@@ -11,7 +11,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
+LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -32,7 +32,7 @@ LightingPipeline::LightingPipeline(const std::shared_ptr<GraphicsContext>& conte
     CreatePipeline();
 }
 
-void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pipeline");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
@@ -79,13 +79,13 @@ void LightingPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 }
 
-LightingPipeline::~LightingPipeline()
+LightingPass::~LightingPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void LightingPipeline::CreatePipeline()
+void LightingPass::CreatePipeline()
 {
     std::array<vk::PipelineColorBlendAttachmentState, 2> blendAttachments {};
     blendAttachments[0].blendEnable = vk::False;
