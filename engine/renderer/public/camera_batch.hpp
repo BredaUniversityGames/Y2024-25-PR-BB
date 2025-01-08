@@ -13,18 +13,29 @@ class CameraResource;
 class CameraBatch
 {
 public:
+    struct Draw
+    {
+        Draw(const std::shared_ptr<GraphicsContext>& context, const std::string& name, uint32_t instanceCount, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL);
+
+        ResourceHandle<Buffer> drawBuffer;
+        ResourceHandle<Buffer> redirectBuffer;
+        ResourceHandle<Buffer> visibilityBuffer;
+        vk::DescriptorSet drawDescriptor;
+        vk::DescriptorSet redirectDescriptor;
+        vk::DescriptorSet visibilityDescriptor;
+
+    private:
+        vk::DescriptorSet CreateDescriptor(const std::shared_ptr<GraphicsContext>& context, vk::DescriptorSetLayout dsl, ResourceHandle<Buffer> buffer);
+    };
+
     CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL);
     ~CameraBatch();
 
     const CameraResource& Camera() const { return _camera; }
     ResourceHandle<GPUImage> HZBImage() const { return _hzbImage; }
     ResourceHandle<GPUImage> DepthImage() const { return _depthImage; }
-    ResourceHandle<Buffer> DrawBuffer() const { return _drawBuffer; }
-    vk::DescriptorSet DrawBufferDescriptorSet() const { return _drawBufferDescriptorSet; }
-    ResourceHandle<Buffer> VisibilityBuffer() const { return _visibilityBuffer; }
-    vk::DescriptorSet VisibilityBufferDescriptorSet() const { return _visibilityDescriptorSet; }
-    ResourceHandle<Buffer> RedirectBuffer() const { return _redirectBuffer; }
-    vk::DescriptorSet RedirectBufferDescriptorSet() const { return _redirectBufferDescriptorSet; }
+    Draw StaticDraw() const { return _staticDraw; }
+    Draw SkinnedDraw() const { return _skinnedDraw; }
 
 private:
     std::shared_ptr<GraphicsContext> _context;
@@ -36,13 +47,6 @@ private:
 
     ResourceHandle<GPUImage> _depthImage;
 
-    ResourceHandle<Buffer> _drawBuffer;
-    ResourceHandle<Buffer> _redirectBuffer;
-    vk::DescriptorSet _drawBufferDescriptorSet;
-    vk::DescriptorSet _redirectBufferDescriptorSet;
-
-    ResourceHandle<Buffer> _visibilityBuffer;
-    vk::DescriptorSet _visibilityDescriptorSet;
-
-    void CreateDrawBufferDescriptorSet(vk::DescriptorSetLayout drawDSL);
+    Draw _staticDraw;
+    Draw _skinnedDraw;
 };

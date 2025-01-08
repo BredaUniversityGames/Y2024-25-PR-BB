@@ -118,15 +118,19 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation generateMainDrawsPrepass { *_generateMainDrawsPass, FrameGraphRenderPassType::eCompute };
     generateMainDrawsPrepass.SetName("Generate main draws prepass")
         .SetDebugLabelColor(GetColor(ColorType::Crimson))
-        .AddOutput(_gpuScene->MainCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-        .AddOutput(_gpuScene->MainCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     FrameGraphNodeCreation generateMainDrawsSecondPass { *_generateMainDrawsPass, FrameGraphRenderPassType::eCompute };
     generateMainDrawsSecondPass.SetName("Generate main draws second pass")
         .SetDebugLabelColor(GetColor(ColorType::Crimson))
         .AddInput(_gpuScene->MainCameraBatch().HZBImage(), FrameGraphResourceType::eTexture)
-        .AddOutput(_gpuScene->MainCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-        .AddOutput(_gpuScene->MainCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     FrameGraphNodeCreation buildMainHZBPass { *_buildMainHzbPass, FrameGraphRenderPassType::eCompute };
     buildMainHZBPass.SetName("Build main HZB pass")
@@ -137,15 +141,19 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation generateShadowDrawsPrepass { *_generateShadowDrawsPass, FrameGraphRenderPassType::eCompute };
     generateShadowDrawsPrepass.SetName("Generate shadow draws prepass")
         .SetDebugLabelColor(GetColor(ColorType::Goldenrod))
-        .AddOutput(_gpuScene->ShadowCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-        .AddOutput(_gpuScene->ShadowCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     FrameGraphNodeCreation generateShadowDrawsSecondPass { *_generateShadowDrawsPass, FrameGraphRenderPassType::eCompute };
     generateShadowDrawsSecondPass.SetName("Generate shadow draws second pass")
         .SetDebugLabelColor(GetColor(ColorType::Goldenrod))
         .AddInput(_gpuScene->ShadowCameraBatch().HZBImage(), FrameGraphResourceType::eTexture)
-        .AddOutput(_gpuScene->ShadowCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
-        .AddOutput(_gpuScene->ShadowCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
     FrameGraphNodeCreation buildShadowHZBPass { *_buildShadowHzbPass, FrameGraphRenderPassType::eCompute };
     buildShadowHZBPass.SetName("Build shadow HZB pass")
@@ -156,8 +164,10 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation geometryPrepass { *_geometryPass };
     geometryPrepass.SetName("Geometry prepass")
         .SetDebugLabelColor(GetColor(ColorType::Cyan))
-        .AddInput(_gpuScene->MainCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
@@ -167,8 +177,10 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation geometrySecondPass { *_geometryPass };
     geometrySecondPass.SetName("Geometry second pass")
         .SetDebugLabelColor(GetColor(ColorType::Cyan))
-        .AddInput(_gpuScene->MainCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
@@ -178,15 +190,19 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     FrameGraphNodeCreation shadowPrepass { *_shadowPass };
     shadowPrepass.SetName("Shadow prepass")
         .SetDebugLabelColor(GetColor(ColorType::Orange))
-        .AddInput(_gpuScene->ShadowCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
         .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowSecondPass { *_shadowPass };
     shadowSecondPass.SetName("Shadow second pass")
         .SetDebugLabelColor(GetColor(ColorType::Orange))
-        .AddInput(_gpuScene->ShadowCameraBatch().DrawBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().RedirectBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
         .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation ssaoPass { *_ssaoPass };

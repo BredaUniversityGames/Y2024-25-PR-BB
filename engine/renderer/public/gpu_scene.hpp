@@ -40,7 +40,8 @@ struct RenderSceneDescription
     TracyVkCtx& tracyContext;
 };
 
-constexpr uint32_t MAX_INSTANCES = 1 << 14;
+constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
+constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 10;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
 constexpr uint32_t MAX_BONES = 1 << 11;
 
@@ -61,32 +62,33 @@ public:
     void Update(uint32_t frameIndex);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
-    const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetSkinnedInstancesDescriptorSet(uint32_t frameIndex) const { return _skinnedInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
 
-    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDSL; }
-    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+    ResourceHandle<Buffer> StaticDrawBuffer(uint32_t frameIndex) const { return _staticDraws[frameIndex].buffer; }
+    vk::DescriptorSet StaticDrawDescriptorSet(uint32_t frameIndex) const { return _staticDraws[frameIndex].descriptorSet; }
+    ResourceHandle<Buffer> SkinnedDrawBuffer(uint32_t frameIndex) const { return _skinnedDraws[frameIndex].buffer; }
+    vk::DescriptorSet SkinnedDrawDescriptorSet(uint32_t frameIndex) const { return _skinnedDraws[frameIndex].descriptorSet; }
 
     const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
     const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
 
-    const Range& StaticDrawRange() const { return _staticDrawRange; }
-    const Range& SkinnedDrawRange() const { return _skinnedDrawRange; }
+    uint32_t StaticDrawCount() const { return _staticDrawCommands.size(); };
+    const std::vector<DrawIndexedIndirectCommand>& StaticDrawCommands() const { return _staticDrawCommands; }
 
-    uint32_t DrawCount() const { return _drawCommands.size(); };
-    const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
-    uint32_t DrawCommandIndexCount(const Range& range) const
+    uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
+    const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
+    uint32_t DrawCommandIndexCount(std::vector<DrawIndexedIndirectCommand> commands) const
     {
-        assert(range.count <= _drawCommands.size());
-
         uint32_t count { 0 };
-        for (size_t i = range.start; i < range.count; ++i)
+        for (size_t i = 0; i < commands.size(); ++i)
         {
-            const auto& command = _drawCommands[i];
+            const auto& command = commands[i];
             count += command.command.indexCount;
         }
         return count;
@@ -173,16 +175,16 @@ private:
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
     vk::DescriptorSetLayout _objectInstancesDSL;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _staticInstancesFrameData;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _skinnedInstancesFrameData;
     vk::DescriptorSetLayout _drawBufferDSL;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _staticDraws;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _skinnedDraws;
     vk::DescriptorSetLayout _pointLightDSL;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
-    std::vector<DrawIndexedIndirectCommand> _drawCommands;
-
-    Range _staticDrawRange;
-    Range _skinnedDrawRange;
+    std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
+    std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
 
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;

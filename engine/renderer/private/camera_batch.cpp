@@ -34,97 +34,77 @@ uint32_t roundUpToPowerOfTwo(uint32_t n)
     return n + 1;
 }
 
-CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL)
-    : _context(context)
-    , _camera(camera)
-    , _depthImage(depthImage)
+CameraBatch::Draw::Draw(const std::shared_ptr<GraphicsContext>& context, const std::string& name, uint32_t instanceCount, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL)
 {
     BufferCreation drawBufferCreation {
-        .size = MAX_INSTANCES * sizeof(DrawIndexedIndirectCommand),
+        .size = instanceCount * sizeof(DrawIndexedIndirectCommand),
         .usage = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
         .name = name + " draw buffer",
     };
 
-    _drawBuffer = _context->Resources()->BufferResourceManager().Create(drawBufferCreation);
-
-    CreateDrawBufferDescriptorSet(drawDSL);
-
     BufferCreation redirectBufferCreation {
-        .size = sizeof(uint32_t) + MAX_INSTANCES * sizeof(uint32_t),
+        .size = sizeof(uint32_t) + instanceCount * sizeof(uint32_t),
         .usage = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndirectBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
         .name = name + " redirect buffer",
     };
 
-    _redirectBuffer = _context->Resources()->BufferResourceManager().Create(redirectBufferCreation);
-
     BufferCreation visibilityCreation {
-        .size = MAX_INSTANCES / 8,
+        .size = instanceCount / 8,
         .usage = vk::BufferUsageFlagBits::eStorageBuffer,
         .isMappable = false,
         .memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,
-        .name = name + " Visibility Buffer"
+        .name = name + " visibility buffer"
     };
-    _visibilityBuffer = _context->Resources()->BufferResourceManager().Create(visibilityCreation);
 
-    {
-        vk::DescriptorSetAllocateInfo allocateInfo {
-            .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-            .descriptorSetCount = 1,
-            .pSetLayouts = &visibilityDSL,
-        };
-        _visibilityDescriptorSet = _context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo).front();
+    drawBuffer = context->Resources()->BufferResourceManager().Create(drawBufferCreation);
+    redirectBuffer = context->Resources()->BufferResourceManager().Create(redirectBufferCreation);
+    visibilityBuffer = context->Resources()->BufferResourceManager().Create(visibilityCreation);
 
-        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_visibilityBuffer);
+    drawDescriptor = CreateDescriptor(context, drawDSL, drawBuffer);
+    redirectDescriptor = CreateDescriptor(context, redirectDSL, redirectBuffer);
+    visibilityDescriptor = CreateDescriptor(context, visibilityDSL, visibilityBuffer);
+}
 
-        vk::DescriptorBufferInfo bufferInfo {
-            .buffer = buffer->buffer,
-            .offset = 0,
-            .range = vk::WholeSize,
-        };
+vk::DescriptorSet CameraBatch::Draw::CreateDescriptor(const std::shared_ptr<GraphicsContext>& context, vk::DescriptorSetLayout dsl, ResourceHandle<Buffer> buffer)
+{
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = 1,
+        .pSetLayouts = &dsl,
+    };
+    vk::DescriptorSet descriptor = context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo).front();
 
-        vk::WriteDescriptorSet bufferWrite {
-            .dstSet = _visibilityDescriptorSet,
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &bufferInfo,
-        };
+    vk::DescriptorBufferInfo bufferInfo {
+        .buffer = context->Resources()->BufferResourceManager().Access(buffer)->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
 
-        _context->VulkanContext()->Device().updateDescriptorSets({ bufferWrite }, {});
-    }
-    {
-        vk::DescriptorSetAllocateInfo allocateInfo {
-            .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-            .descriptorSetCount = 1,
-            .pSetLayouts = &redirectDSL,
-        };
-        _redirectBufferDescriptorSet = _context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo).front();
+    vk::WriteDescriptorSet bufferWrite {
+        .dstSet = descriptor,
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .pBufferInfo = &bufferInfo,
+    };
 
-        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_redirectBuffer);
+    context->VulkanContext()->Device().updateDescriptorSets({ bufferWrite }, {});
 
-        vk::DescriptorBufferInfo bufferInfo {
-            .buffer = buffer->buffer,
-            .offset = 0,
-            .range = vk::WholeSize,
-        };
+    return descriptor;
+}
 
-        vk::WriteDescriptorSet bufferWrite {
-            .dstSet = _redirectBufferDescriptorSet,
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &bufferInfo,
-        };
-
-        _context->VulkanContext()->Device().updateDescriptorSets({ bufferWrite }, {});
-    }
-
+CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const std::string& name, const CameraResource& camera, ResourceHandle<GPUImage> depthImage, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL)
+    : _context(context)
+    , _camera(camera)
+    , _depthImage(depthImage)
+    , _staticDraw(context, "Static " + name, MAX_STATIC_INSTANCES, drawDSL, visibilityDSL, redirectDSL)
+    , _skinnedDraw(context, "Skinned" + name, MAX_SKINNED_INSTANCES, drawDSL, visibilityDSL, redirectDSL)
+{
     const auto* depthImageAccess = _context->Resources()->ImageResourceManager().Access(_depthImage);
 
     uint16_t hzbSize = roundUpToPowerOfTwo(std::max(depthImageAccess->width, depthImageAccess->height));
@@ -159,33 +139,3 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
 }
 
 CameraBatch::~CameraBatch() = default;
-
-void CameraBatch::CreateDrawBufferDescriptorSet(vk::DescriptorSetLayout drawDSL)
-{
-    vk::DescriptorSetLayout layout = drawDSL;
-    vk::DescriptorSetAllocateInfo allocateInfo {
-        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-        .descriptorSetCount = 1,
-        .pSetLayouts = &layout,
-    };
-    _drawBufferDescriptorSet = _context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo).front();
-
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_drawBuffer);
-
-    vk::DescriptorBufferInfo bufferInfo {
-        .buffer = buffer->buffer,
-        .offset = 0,
-        .range = vk::WholeSize,
-    };
-
-    vk::WriteDescriptorSet bufferWrite {
-        .dstSet = _drawBufferDescriptorSet,
-        .dstBinding = 0,
-        .dstArrayElement = 0,
-        .descriptorCount = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .pBufferInfo = &bufferInfo,
-    };
-
-    _context->VulkanContext()->Device().updateDescriptorSets({ bufferWrite }, {});
-}

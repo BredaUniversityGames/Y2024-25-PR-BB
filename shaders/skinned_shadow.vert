@@ -12,13 +12,15 @@ layout (set = 1, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
-layout (std430, set = 2, binding = 0) readonly buffer SkinningMatrices {
-    mat4 skinningMatrices[];
+layout (set = 2, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
 };
 
-layout (push_constant) uniform PushConstants
+layout (std430, set = 3, binding = 0) readonly buffer SkinningMatrices
 {
-    uint instanceOffset;
+    mat4 skinningMatrices[];
 };
 
 layout (location = 0) in vec3 inPosition;
@@ -32,7 +34,7 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    Instance instance = instances[redirect[gl_DrawID]];
 
     mat4 skinMatrix =
     inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
