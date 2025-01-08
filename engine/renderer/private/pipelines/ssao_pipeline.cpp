@@ -10,6 +10,7 @@
 #include "vulkan_context.hpp"
 
 #include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include <random>
 #include <single_time_commands.hpp>
 
@@ -35,8 +36,8 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
 
-    _pushConstants.screenWidth = _gBuffers.Size().x;
-    _pushConstants.screenHeight = _gBuffers.Size().y;
+    _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
+    _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;
 
     vk::RenderingAttachmentInfoKHR ssaoColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_ssaoTarget)->view,
@@ -47,7 +48,7 @@ void SSAOPipeline::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     };
 
     vk::RenderingInfoKHR renderingInfo {};
-    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x, _gBuffers.Size().y };
+    renderingInfo.renderArea.extent = vk::Extent2D { _gBuffers.Size().x / 2, _gBuffers.Size().y / 2 };
     renderingInfo.renderArea.offset = vk::Offset2D { 0, 0 };
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &ssaoColorAttachmentInfo;
@@ -113,7 +114,7 @@ void SSAOPipeline::CreateBuffers()
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator;
     std::vector<glm::vec4> ssaoKernel;
-    for (uint32_t i = 0; i < 64; ++i)
+    for (uint32_t i = 0; i < 32; ++i)
     {
         glm::vec4 sample(
             randomFloats(generator) * 2.0 - 1.0,
@@ -124,7 +125,7 @@ void SSAOPipeline::CreateBuffers()
         sample *= randomFloats(generator);
 
         // scale magic to be more cluster near the actual fragment.
-        float scale = static_cast<float>(i) / 64.0;
+        float scale = static_cast<float>(i) / 32.0;
         scale = glm::mix(0.1f, 1.0f, scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
@@ -150,8 +151,8 @@ void SSAOPipeline::CreateBuffers()
         creation.SetName("Sample Kernel")
             .SetSize(ssaoKernel.size() * sizeof(glm::vec4))
             .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
         _sampleKernelBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(ssaoKernel, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->buffer);
@@ -179,7 +180,28 @@ void SSAOPipeline::CreateBuffers()
         .SetFormat(vk::Format::eR32G32B32A32Sfloat);
     noiseImage.isHDR = true;
 
-    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage);
+    SamplerCreation noiseSampler {};
+    noiseSampler.name = "SSAO_Noise_Sampler";
+    noiseSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
+    noiseSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
+    noiseSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
+
+    noiseSampler.minFilter = vk::Filter::eNearest;
+    noiseSampler.magFilter = vk::Filter::eNearest;
+    noiseSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
+
+    noiseSampler.useMaxAnisotropy = false;
+    noiseSampler.anisotropyEnable = false;
+    noiseSampler.minLod = 0.0f;
+    noiseSampler.maxLod = 0.0f; // No mipmaps
+
+    noiseSampler.compareEnable = false;
+    noiseSampler.compareOp = vk::CompareOp::eAlways;
+    noiseSampler.unnormalizedCoordinates = false;
+    noiseSampler.borderColor = vk::BorderColor::eIntOpaqueBlack;
+
+    _noiseSampler = _context->Resources()->SamplerResourceManager().Create(noiseSampler);
+    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage, _noiseSampler);
     _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
 }
 void SSAOPipeline::CreateDescriptorSetLayouts()
@@ -187,7 +209,7 @@ void SSAOPipeline::CreateDescriptorSetLayouts()
     std::vector<vk::DescriptorSetLayoutBinding> bindings = {
         vk::DescriptorSetLayoutBinding {
             .binding = 0,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
             .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
             .pImmutableSamplers = nullptr }
@@ -220,7 +242,7 @@ void SSAOPipeline::CreateDescriptorSets()
             .dstBinding = 0,
             .dstArrayElement = 0,
             .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
             .pBufferInfo = &sampleKernelBufferInfo }
     };
 

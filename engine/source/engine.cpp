@@ -51,13 +51,16 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
+        //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
-        // "assets/models/Terrain/scene.gltf",
+        //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb"
+        //"assets/models/MetalRoughSpheres.glb",
+        //"assets/models/monkey.gltf",
+
     };
 
     particleModule.LoadEmitterPresets();
@@ -69,8 +72,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first.hierarchy, models[0].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first.hierarchy, models[1].first.animations);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -341,7 +344,9 @@ void OldEngine::Tick(Engine& engine)
     }
 
     JPH::BodyManager::DrawSettings drawSettings;
-    physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
+
+    if (physicsModule.debugRenderer->GetState())
+        physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
 
     physicsModule.debugRenderer->NextFrame();
 

@@ -6,6 +6,7 @@ struct Camera
     mat4 view;
     mat4 proj;
     mat4 skydomeMVP;
+    mat4 inverseView;
     vec3 cameraPosition;
     int distanceCullingEnabled;
     vec4 frustum;

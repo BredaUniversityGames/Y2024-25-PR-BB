@@ -46,6 +46,8 @@ public:
     static void SubscribeToEvents(entt::registry& reg);
     static void UnsubscribeToEvents(entt::registry& reg);
 
+    static void ResetAllUpdateTags(entt::registry& reg);
+
 private:
     friend class Editor;
     friend struct TransformComponent;

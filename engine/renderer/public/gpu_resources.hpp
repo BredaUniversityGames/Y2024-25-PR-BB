@@ -260,6 +260,7 @@ struct alignas(16) GPUCamera
     glm::mat4 view;
     glm::mat4 proj;
     glm::mat4 skydomeMVP; // TODO: remove this
+    glm::mat4 inverseView;
 
     glm::vec3 cameraPosition;
     bool distanceCullingEnabled;

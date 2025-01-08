@@ -463,7 +463,7 @@ void FrameGraph::CreateGeneralImageBarrier(const GPUImage& image, ResourceState 
         break;
     }
     default:
-        bblog::error("[Frame Graph] Unsupported depth image resource usage: {}", magic_enum::enum_name(state));
+        bblog::error("[Frame Graph] Unsupported general image resource usage: {}", magic_enum::enum_name(state));
         break;
     }
 }
@@ -579,7 +579,6 @@ void FrameGraph::SortGraph()
     for (int32_t i = reverseSortedNodes.size() - 1; i >= 0; --i)
     {
         _sortedNodes.push_back(reverseSortedNodes[i]);
-        bblog::info(_nodes[_sortedNodes.back()].name);
     }
 }
 

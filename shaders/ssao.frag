@@ -9,8 +9,8 @@ layout (push_constant) uniform PushConstants
     uint normalRIndex;
     uint positionIndex;
     uint noiseIndex;
-    uint screenWidth;
-    uint screenHeight;
+    uint ssaoRenderTargetWidth;
+    uint ssaoRenderTargetHeight;
     float aoStrength;
     float aoBias;
     float aoRadius;
@@ -23,25 +23,21 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (set = 1, binding = 0) buffer SampleKernel { vec4 samples[]; } uSampleKernel;
+layout (set = 1, binding = 0) uniform SampleKernel { vec4 samples[32]; } uSampleKernel;
 
 layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
-const int kernelSize = 64;
+const int kernelSize = 32;
 
 void main()
 {
-    const vec2 noiseScale = vec2(pushConstants.screenWidth / 4.0, pushConstants.screenHeight / 4.0); // scale noise to screen size
+    const vec2 noiseScale = vec2(pushConstants.ssaoRenderTargetWidth / 4.0, pushConstants.ssaoRenderTargetHeight / 4.0); // scale noise to screen size
 
     const vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
-    const vec4 positionSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords);
+    const vec3 screenSpacePosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords).xyz;
 
-    const vec3 normal = normalRSample.rgb;
-    const vec3 position = positionSample.rgb;
-
-    const vec3 screenSpacePosition = (camera.view * vec4(position.xyz, 1.0)).xyz;
-    const vec3 screenSpaceNormals = (camera.view * vec4(normal.xyz, 0.0)).xyz;
+    const vec3 screenSpaceNormals = (camera.view * vec4(normalRSample.rgb, 0.0)).xyz;
 
     const vec3 randomVec = texture(bindless_color_textures[nonuniformEXT (pushConstants.noiseIndex)], texCoords * noiseScale).xyz;
 
@@ -76,8 +72,7 @@ void main()
             continue;
         }
 
-        vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
-        occluderPosition = (camera.view * vec4(occluderPosition.xyz, 1.0)).xyz; // convert to view space
+        const vec3 occluderPosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], offset.xy).xyz;
 
         //check distance to avoid ao on objects that are far away from each other
         const float rangeCheck = smoothstep(0.0, 1.0, adaptiveAoRadius / length(screenSpacePosition - occluderPosition));
