@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "engine.hpp"
 #include <memory>
+#include <string>
 
 class Editor;
 class ImGuiBackend;
