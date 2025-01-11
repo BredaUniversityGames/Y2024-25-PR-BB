@@ -740,42 +740,53 @@ void GPUScene::InitializeIndirectDrawDescriptor()
 
     _drawBufferDSL = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT * 2> layouts {};
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
         { l = _drawBufferDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = vkContext->DescriptorPool();
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT * 2;
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
     std::vector<vk::DescriptorSet> descriptorSets = vkContext->Device().allocateDescriptorSets(allocateInfo);
 
-    std::array<vk::WriteDescriptorSet, MAX_FRAMES_IN_FLIGHT * 2> bufferWrites;
+    std::array<vk::DescriptorBufferInfo, MAX_FRAMES_IN_FLIGHT> bufferInfos;
+    std::array<vk::WriteDescriptorSet, MAX_FRAMES_IN_FLIGHT> bufferWrites;
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _staticDraws[i].descriptorSet = descriptorSets[i * 2];
-        _skinnedDraws[i].descriptorSet = descriptorSets[i * 2 + 1];
+        _staticDraws[i].descriptorSet = descriptorSets[i];
 
-        vk::DescriptorBufferInfo staticBufferInfo {};
+        vk::DescriptorBufferInfo& staticBufferInfo { bufferInfos[i] };
         staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticDraws[i].buffer)->buffer;
         staticBufferInfo.offset = 0;
         staticBufferInfo.range = vk::WholeSize;
 
-        vk::DescriptorBufferInfo skinnedBufferInfo {};
+        bufferWrites[i].dstSet = _staticDraws[i].descriptorSet;
+        bufferWrites[i].dstBinding = 0;
+        bufferWrites[i].dstArrayElement = 0;
+        bufferWrites[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrites[i].descriptorCount = 1;
+        bufferWrites[i].pBufferInfo = &staticBufferInfo;
+    }
+
+    vkContext->Device().updateDescriptorSets(bufferWrites, {});
+
+    descriptorSets = vkContext->Device().allocateDescriptorSets(allocateInfo);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        _skinnedDraws[i].descriptorSet = descriptorSets[i];
+
+        vk::DescriptorBufferInfo& skinnedBufferInfo { bufferInfos[i] };
         skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedDraws[i].buffer)->buffer;
         skinnedBufferInfo.offset = 0;
         skinnedBufferInfo.range = vk::WholeSize;
 
-        bufferWrites[i * 2].dstSet = _staticDraws[i].descriptorSet;
-        bufferWrites[i * 2].dstBinding = 0;
-        bufferWrites[i * 2].dstArrayElement = 0;
-        bufferWrites[i * 2].descriptorType = vk::DescriptorType::eStorageBuffer;
-        bufferWrites[i * 2].descriptorCount = 1;
-        bufferWrites[i * 2].pBufferInfo = &staticBufferInfo;
-
-        bufferWrites[i * 2 + 1] = bufferWrites[i];
-        bufferWrites[i * 2 + 1].dstSet = _skinnedDraws[i].descriptorSet;
-        bufferWrites[i * 2 + 1].pBufferInfo = &skinnedBufferInfo;
+        bufferWrites[i].dstSet = _skinnedDraws[i].descriptorSet;
+        bufferWrites[i].dstBinding = 0;
+        bufferWrites[i].dstArrayElement = 0;
+        bufferWrites[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrites[i].descriptorCount = 1;
+        bufferWrites[i].pBufferInfo = &skinnedBufferInfo;
     }
 
     vkContext->Device().updateDescriptorSets(bufferWrites, {});

@@ -7,6 +7,7 @@
 
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
+#include "bytes.hpp"
 #include "camera_batch.hpp"
 #include "colors.hpp"
 #include "ecs_module.hpp"
@@ -65,9 +66,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    const uint32_t mb128 = 128 * 1024 * 1024;
-    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
-    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
+    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
     ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
@@ -165,9 +165,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     geometryPrepass.SetName("Geometry prepass")
         .SetDebugLabelColor(GetColor(ColorType::Cyan))
         .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
@@ -178,9 +178,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     geometrySecondPass.SetName("Geometry second pass")
         .SetDebugLabelColor(GetColor(ColorType::Cyan))
         .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
@@ -191,18 +191,18 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     shadowPrepass.SetName("Shadow prepass")
         .SetDebugLabelColor(GetColor(ColorType::Orange))
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowSecondPass { *_shadowPass };
     shadowSecondPass.SetName("Shadow second pass")
         .SetDebugLabelColor(GetColor(ColorType::Orange))
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eVertexShader)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation ssaoPass { *_ssaoPass };
