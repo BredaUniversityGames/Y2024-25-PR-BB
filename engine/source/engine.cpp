@@ -114,48 +114,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
 
-    // COMMEMTED OUT TEMPORARELY BECAUSE OF PROBLEMS WITH THE COLLIDDER LOADING
-    // auto* physics_system = _ecs->GetSystem<PhysicsSystem>();
-    //  physics_system->InitializePhysicsColliders();
-
-    // BankInfo masterBank;
-    // masterBank.path = "assets/sounds/Master.bank";
-    //
-    // BankInfo stringBank;
-    // stringBank.path = "assets/sounds/Master.strings.bank";
-    //
-    // BankInfo bi;
-    // bi.path = "assets/sounds/SFX.bank";
-    //
-    // audioModule.LoadBank(masterBank);
-    // audioModule.LoadBank(stringBank);
-    // audioModule.LoadBank(bi);
-
-    SoundInfo si;
-    si.path = "assets/sounds/fallback.mp3";
-    si.is3D = true;
-
-    audioModule.LoadSFX(si);
-
-    SoundInfo musicSi;
-    musicSi.path = "assets/sounds/music1.wav";
-    musicSi.isLoop = true;
-    musicSi.is3D = true;
-
-    // This sound might pop in because it starts playing before the engine is fully initialized
-    // auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
-
-    auto audioEmitter = _ecs->GetRegistry().create();
-    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
-    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
-
-    // emitter._soundIds.emplace_back(instance);
-
-    SoundInfo eagleSi;
-    eagleSi.path = "assets/sounds/eagle.mp3";
-
-    audioModule.LoadSFX(eagleSi);
-
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
@@ -314,11 +272,6 @@ void OldEngine::Tick(Engine& engine)
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eL))
-    {
-        audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/eagle.mp3"), 1.5f, false);
-    }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
