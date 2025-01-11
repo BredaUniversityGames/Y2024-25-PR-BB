@@ -12,6 +12,8 @@
 #include "input/action_manager.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "particle_module.hpp"
+#include "particles/particle_bindings.hpp"
 #include "renderer/animation_bindings.hpp"
 #include "time_module.hpp"
 #include "utility/enum_bind.hpp"
@@ -120,6 +122,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<ECSModule>>("GetECS");
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
+        engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
     }
 
     // Time Module
@@ -155,6 +158,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Animations
     {
         BindAnimationAPI(module);
+    }
+
+    // Particles
+    {
+        BindParticleAPI(module);
     }
 
     // Components

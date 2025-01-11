@@ -3,7 +3,6 @@
 #include "camera.hpp"
 #include "constants.hpp"
 #include "gpu_resources.hpp"
-#include "range.hpp"
 #include "resource_manager.hpp"
 #include "vulkan_include.hpp"
 

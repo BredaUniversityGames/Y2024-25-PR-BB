@@ -114,7 +114,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 }
 
 // for AABB collisions
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, Vec3Range boundingBox, BodyType type)
+RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type)
     : shapeType(eBOX)
     , bodyType(type)
 {
