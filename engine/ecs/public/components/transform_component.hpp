@@ -20,7 +20,9 @@ private:
     friend class TransformHelpers;
     friend class Editor;
 };
-
+struct ToBeUpdated
+{
+};
 namespace EnttEditor
 {
 template <>

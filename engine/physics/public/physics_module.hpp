@@ -11,6 +11,9 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 
 #include "module_interface.hpp"
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 JPH_SUPPRESS_WARNING_PUSH
 
@@ -55,6 +58,8 @@ enum PhysicsShapes
     eSPHERE,
     eBOX,
     eCUSTOM,
+    eCONVEXHULL,
+    eMESH,
 };
 
 enum BodyType
@@ -321,7 +326,7 @@ public:
 private:
     // This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
     // Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
-    const JPH::uint _maxBodies = 16384;
+    const JPH::uint _maxBodies = 65536; // Old: 16384
 
     // This determines how many mutexes to allocate to protect rigid bodies from concurrent access. Set it to 0 for the default settings.
     const JPH::uint _numBodyMutexes = 0;
@@ -330,12 +335,12 @@ private:
     // body pairs based on their bounding boxes and will insert them into a queue for the narrowphase). If you make this buffer
     // too small the queue will fill up and the broad phase jobs will start to do narrow phase work. This is slightly less efficient.
     // Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
-    const JPH::uint _maxBodyPairs = 16384;
+    const JPH::uint _maxBodyPairs = 65536; // old: 16384
 
     // This is the maximum size of the contact constraint buffer. If more contacts (collisions between bodies) are detected than this
     // number then these contacts will be ignored and bodies will start interpenetrating / fall through the world.
     // Note: This value is low because this is a simple test. For a real project use something in the order of 10240.
-    const JPH::uint _maxContactConstraints = 8192;
+    const JPH::uint _maxContactConstraints = 10240; // Old: 8192
 
     // If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
     const int _collisionSteps = 1;
