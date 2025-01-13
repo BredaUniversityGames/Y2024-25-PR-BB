@@ -49,8 +49,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        // "assets/models/Cathedral.glb",
-        "assets/models/DamagedHelmet.glb",
+        //"assets/models/Cathedral.glb",
+        "assets/models/parcour_test1.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
@@ -77,12 +77,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+    //  TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+    //  TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
     // TODO: Once level saving is done, this should be deleted
-    entt::entity lightEntity = _ecs->GetRegistry().create();
+    entt::entity lightEntity
+        = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
     _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
 
@@ -376,6 +378,9 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     JPH::BodyID bodyID = ecs.GetRegistry().get<RigidbodyComponent>(playerEntity).bodyID;
     JPH::Vec3 velocity = physicsModule.bodyInterface->GetLinearVelocity(bodyID);
 
+    if (velocity.Length() > 0.0f)
+        bblog::info("Speed info before: {}", velocity.Length());
+
     auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
     glm::quat cameraRotation;
 
@@ -388,10 +393,9 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     // Modified forward vector calculation to prevent camera pitch from affecting movement
     glm::vec3 forward = glm::normalize(glm::vec3(cameraRotation * glm::vec3(0.0f, 0.0f, -1.0f)) * glm::vec3(1.0f, 0.0f, 1.0f));
     forward.y = 0.0f; // Prevent vertical influence
-    forward = glm::normalize(forward);
+    // forward = glm::normalize(forward);
 
     glm::vec3 right = glm::normalize(cameraRotation * glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 
     // lets test for ground here
     glm::vec3 playerPos = glm::vec3(physicsModule.bodyInterface->GetPosition(bodyID).GetX(),
@@ -399,10 +403,18 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
         physicsModule.bodyInterface->GetPosition(bodyID).GetZ());
     glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
     float rayLength = 2.0f;
-    playerPos.y -= 2.2f;
+
     RayHitInfo groundCheckRay = physicsModule.ShootRay(playerPos, rayDirection, rayLength);
 
-    bool isGrounded = groundCheckRay.hasHit && groundCheckRay.hitEntities[0] != playerEntity;
+    bool isGrounded = false;
+    for (auto hit : groundCheckRay.hitEntities)
+    {
+        if (hit != playerEntity && groundCheckRay.hasHit)
+        {
+            isGrounded = true;
+            break;
+        }
+    }
 
     glm::vec3 moveInputDir = glm::vec3(0.0f);
     if (inputDeviceManager.IsKeyHeld(KeyboardCode::eW))
@@ -413,25 +425,24 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
         moveInputDir -= right;
     if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
         moveInputDir += right;
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE) && isGrounded)
     {
-        moveInputDir += up;
-        isGrounded = false;
+        velocity += JPH::Vec3(0.0f, 8.20f, 0.0f);
     }
 
-    if (glm::length(moveInputDir) > 0.0f)
-        moveInputDir = glm::normalize(moveInputDir);
+    /*if (glm::length(moveInputDir) > 0.0f)
+        moveInputDir = glm::normalize(moveInputDir);*/
 
-    const float maxSpeed = 3.80f;
-    const float sv_accelerate = 0.1f;
+    const float maxSpeed = 6.80f;
+    const float sv_accelerate = 10.0f;
     const float frameTime = deltaTime;
 
     glm::vec3 wishVel = moveInputDir * maxSpeed;
 
     if (isGrounded)
     {
-        physicsModule.bodyInterface->SetFriction(bodyID, 1.0f);
-        float currentSpeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), glm::normalize(wishVel));
+        physicsModule.bodyInterface->SetFriction(bodyID, 12.0f);
+        float currentSpeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), moveInputDir);
 
         float addSpeed = maxSpeed - currentSpeed;
         if (addSpeed > 0)
@@ -440,19 +451,21 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
             if (accelSpeed > addSpeed)
                 accelSpeed = addSpeed;
 
-            velocity += accelSpeed * JPH::Vec3(wishVel.x, wishVel.y, wishVel.z);
+            velocity += accelSpeed * JPH::Vec3(moveInputDir.x, moveInputDir.y, moveInputDir.z);
         }
     }
     else
     {
-        // physicsModule.bodyInterface->SetFriction(bodyID, 0.1f);
+        // to fix the normalize and length shit form id tech
+        // physicsModule.bodyInterface->SetFriction(bodyID, 0.0f);
 
         // Air acceleration
         float wishspeed = glm::length(wishVel);
-        if (wishspeed > 30.0f)
-            wishspeed = 30.0f;
+        wishVel = glm::normalize(wishVel);
+        if (wishspeed > 3.0f)
+            wishspeed = 3.0f;
 
-        float currentspeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), glm::normalize(wishVel));
+        float currentspeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), wishVel);
         float addspeed = wishspeed - currentspeed;
         if (addspeed > 0)
         {
@@ -469,12 +482,15 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     glm::vec3 pos = glm::vec3(physicsModule.bodyInterface->GetPosition(bodyID).GetX(),
         physicsModule.bodyInterface->GetPosition(bodyID).GetY(),
         physicsModule.bodyInterface->GetPosition(bodyID).GetZ());
-    pos.y += 5.0f;
+    pos.y += 0.5f;
 
     for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
     {
         TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, pos);
     }
+
+    if (velocity.Length() > 0.0f)
+        bblog::info("Speed info after: {}", velocity.Length());
 }
 
 OldEngine::OldEngine() = default;
