@@ -9,9 +9,11 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "game/game_bindings.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
 #include "physics/physics_bindings.hpp"
@@ -172,6 +174,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     {
         BindPhysicsAPI(module);
     }
+
+    {
+        BindGameAPI(module);
+    }
+
     // Components
     {
         // Name class
@@ -322,6 +329,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
+    entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }

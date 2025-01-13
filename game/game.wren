@@ -62,6 +62,13 @@ class Main {
 
             if (rayHitInfo.hasHit) {
                 engine.GetAudio().PlaySFX("assets/sounds/hit.ogg", 1.0)
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = rayHitInfo.position
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 1000.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
             }
 
         }
