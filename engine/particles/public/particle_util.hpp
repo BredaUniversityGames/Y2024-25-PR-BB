@@ -67,7 +67,7 @@ struct alignas(16) CulledInstances
 
 enum class ParticleType : uint8_t
 {
-    eNone = 0,
-    eBillboard,
-    eRibbon
+    eBillboard = 0,
+    eRibbon,
+    eMax
 };

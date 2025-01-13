@@ -24,8 +24,11 @@ class Main {
 
             __player.AddAudioEmitterComponent()
 
-            //var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
-            //engine.GetParticles().SpawnEmitter(__player, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
+            __emitter = engine.GetECS().NewEntity()
+            var emitterTransform = __emitter.AddTransformComponent()
+            emitterTransform.translation = Vec3.new(4.5, 35.0, 300.0)
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
+            engine.GetParticles().SpawnEmitter(__emitter, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, 10.0, -5.0))
 
             var gunTransform = __gun.GetTransformComponent()
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
