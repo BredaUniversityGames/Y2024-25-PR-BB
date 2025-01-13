@@ -105,7 +105,8 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 }
 void AudioSystem::Inspect()
 {
-    ImGui::Begin("AudioSystem");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("AudioSystem", nullptr, ImGuiWindowFlags_NoResize);
 
     if (ImGui::TreeNode((std::string("Sounds loaded: ") + std::to_string(_audioModule._sounds.size())).c_str()))
     {
