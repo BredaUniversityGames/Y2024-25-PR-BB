@@ -1,5 +1,7 @@
 #include "components/relationship_helpers.hpp"
 #include "components/relationship_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 
 #include <entt/entity/registry.hpp>
 
@@ -35,6 +37,11 @@ void RelationshipHelpers::AttachChild(entt::registry& reg, entt::entity entity, 
 
     childRelationship.parent = entity;
     ++parentRelationship.childrenCount;
+
+    if (reg.all_of<TransformComponent>(child))
+    {
+        TransformHelpers::UpdateWorldMatrix(reg, child);
+    }
 }
 void RelationshipHelpers::DetachChild(entt::registry& reg, entt::entity entity, entt::entity child)
 {
