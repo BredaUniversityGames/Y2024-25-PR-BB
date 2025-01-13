@@ -1,9 +1,9 @@
 ### Reviewer steps
 
-- [ ] I have reviewed the files in the pull request
 - [ ] I can build the project locally
 - [ ] I have tested and approved the features from this pull request
 - [ ] I have checked and approved the test criteria
+- [ ] I have reviewed the files in the pull request
 
 ### Test criteria
 
