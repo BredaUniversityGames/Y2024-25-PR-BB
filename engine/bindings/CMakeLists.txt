@@ -8,6 +8,7 @@ target_link_libraries(Bindings
         PRIVATE ECS
         PRIVATE Audio
         PRIVATE Renderer
+        PRIVATE Particles
 )
 
 target_include_directories(Renderer

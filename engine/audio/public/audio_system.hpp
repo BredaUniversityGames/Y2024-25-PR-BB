@@ -16,6 +16,8 @@ public:
     void Render(MAYBE_UNUSED const ECSModule& ecs) const override { }
     void Inspect() override;
 
+    std::string_view GetName() override { return "AudioSystem"; }
+
 private:
     ECSModule& _ecs;
     AudioModule& _audioModule;

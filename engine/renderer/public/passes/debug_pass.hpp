@@ -46,7 +46,7 @@ private:
     const SwapChain& _swapChain;
     const GBuffers& _gBuffers;
     ResourceHandle<GPUImage> _attachment;
-    bool _isEnabled = true;
+    bool _isEnabled = false;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
