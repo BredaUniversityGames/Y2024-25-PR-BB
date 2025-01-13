@@ -34,7 +34,7 @@ public:
             correctedIndex = 0;
         }
 
-        const ResourceHandle<GPUMaterial> material = materials.at(correctedIndex);
+        const ResourceHandle<GPUMaterial> material = materials.empty() ? ResourceHandle<GPUMaterial>::Null() : materials.at(correctedIndex);
 
         GPUMesh gpuMesh = CreateMesh(cpuMesh, material, batchBuffer);
         return ResourceManager::Create(std::move(gpuMesh));

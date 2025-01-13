@@ -3,6 +3,11 @@
 #include "engine.hpp"
 #include "model_loader.hpp"
 #include "renderer_module.hpp"
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "scene_loader.hpp"
+#include "resource_management/model_resource_manager.hpp"
+
 #include <set>
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
@@ -13,6 +18,16 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
     ComputedPath path = this->FindPath(
         { 0.7f, 0.0f, -0.7f },
         { -0.7f, 0.0f, 0.7f });
+
+    auto models = _renderer->FrontLoadModels({"assets/models/NavmeshTest/NavMesh.gltf"});
+    auto& ecs = engine.GetModule<ECSModule>();
+    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
+    entt::entity e = SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
+        *modelResourceManager.Access(models[0].second),
+        models[0].first,
+        models[0].first.hierarchy,
+        models[0].first.animations
+    );
 
     return ModuleTickOrder::eTick;
 }
