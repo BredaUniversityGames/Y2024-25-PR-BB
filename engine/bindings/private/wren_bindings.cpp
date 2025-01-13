@@ -14,6 +14,8 @@
 #include "input/input_codes/mousebuttons.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "physics/physics_bindings.hpp"
+#include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
 #include "time_module.hpp"
 #include "utility/enum_bind.hpp"
@@ -123,6 +125,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
+        engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
     }
 
     // Time Module
@@ -165,6 +168,10 @@ void BindEngineAPI(wren::ForeignModule& module)
         BindParticleAPI(module);
     }
 
+    // Physics
+    {
+        BindPhysicsAPI(module);
+    }
     // Components
     {
         // Name class
@@ -229,6 +236,10 @@ public:
     {
         return glm::quat { euler };
     }
+    static glm::vec3 ToDirectionVector(glm::quat quat)
+    {
+        return quat * glm::vec3(0.0f, 0.0f, -1.0f);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -291,6 +302,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
 {
     auto& mathUtilClass = module.klass<MathUtil>("Math");
     mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
+    mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");

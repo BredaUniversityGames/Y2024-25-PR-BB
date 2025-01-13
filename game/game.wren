@@ -6,6 +6,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        engine.GetAudio().LoadSFX("assets/sounds/hit.ogg", false, false)
 
         __counter = 0
         __frameTimer = 0
@@ -52,6 +53,17 @@ class Main {
             audioEmitter.AddEvent(shootingInstance)
 
             System.print("Playing is shooting")
+        }
+
+        if (engine.GetInput().GetDigitalAction("Shoot")) {
+            var playerTransform = __player.GetTransformComponent()
+
+            var rayHitInfo = engine.GetPhysics().ShootRay(playerTransform.translation, Math.ToVector(playerTransform.rotation), 1000.0)
+
+            if (rayHitInfo.hasHit) {
+                engine.GetAudio().PlaySFX("assets/sounds/hit.ogg", 1.0)
+            }
+
         }
 
         if (engine.GetInput().GetDigitalAction("Jump")) {
