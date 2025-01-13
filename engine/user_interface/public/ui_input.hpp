@@ -30,6 +30,8 @@ public:
 
     UINavigationDirection GetDirection(const ActionManager& actionManager);
 
+    std::string_view GetPressActionName() { return _pressActionName; }
+
 private:
     friend class UIModule;
 
@@ -38,7 +40,8 @@ private:
     // If the input has been consumed this frame.
     bool _hasInputBeenConsumed = false;
     float _inputDeadZone = 0.2f;
-    std::string _navigationActionName = "Look";
+    std::string _pressActionName = "Jump";
+    std::string _navigationActionName = "Move";
     UINavigationDirection _previousNavigationDirection {};
 };
 
