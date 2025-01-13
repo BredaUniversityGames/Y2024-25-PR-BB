@@ -247,6 +247,10 @@ public:
     {
         return quat * glm::vec3(0.0f, 0.0f, -1.0f);
     }
+    static glm::vec3 Mix(glm::vec3 start, glm::vec3 end, float t)
+    {
+        return glm::mix(start, end, t);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -311,6 +315,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
     mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
+    mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
