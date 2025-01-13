@@ -49,7 +49,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
+        // "assets/models/Cathedral.glb",
+        "assets/models/DamagedHelmet.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
@@ -203,7 +204,6 @@ void OldEngine::Tick(Engine& engine)
 
     {
         ZoneNamedN(updateCamera, "Update Camera", true);
-
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
 
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
@@ -278,13 +278,17 @@ void OldEngine::Tick(Engine& engine)
 
             glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
+
+            glm::vec3 wishDir = rotation * movementDir * deltaTimeMS * CAM_SPEED;
+            TestPlayerMovement(engine, deltaTimeMS, wishDir);
+
+            // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
 
             // shoot rays
-            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
+            /*if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
             {
                 const glm::vec3 cameraDir = (rotation * FORWARD);
                 const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
@@ -307,7 +311,7 @@ void OldEngine::Tick(Engine& engine)
 
                     particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
                 }
-            }
+            }*/
         }
     }
 
@@ -356,6 +360,121 @@ void OldEngine::Tick(Engine& engine)
 
 void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+}
+void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 inputDir)
+{
+    entt::entity playerEntity = _ecs->GetSystem<PhysicsSystem>()->_playerEntity;
+    if (playerEntity == entt::null)
+        return;
+
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
+    auto& physicsModule = engine.GetModule<PhysicsModule>();
+    auto& ecs = engine.GetModule<ECSModule>();
+    auto& actionManager = applicationModule.GetActionManager();
+
+    JPH::BodyID bodyID = ecs.GetRegistry().get<RigidbodyComponent>(playerEntity).bodyID;
+    JPH::Vec3 velocity = physicsModule.bodyInterface->GetLinearVelocity(bodyID);
+
+    auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
+    glm::quat cameraRotation;
+
+    for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
+    {
+        cameraRotation = TransformHelpers::GetLocalRotation(transformComponent);
+        break;
+    }
+
+    // Modified forward vector calculation to prevent camera pitch from affecting movement
+    glm::vec3 forward = glm::normalize(glm::vec3(cameraRotation * glm::vec3(0.0f, 0.0f, -1.0f)) * glm::vec3(1.0f, 0.0f, 1.0f));
+    forward.y = 0.0f; // Prevent vertical influence
+    forward = glm::normalize(forward);
+
+    glm::vec3 right = glm::normalize(cameraRotation * glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    // lets test for ground here
+    glm::vec3 playerPos = glm::vec3(physicsModule.bodyInterface->GetPosition(bodyID).GetX(),
+        physicsModule.bodyInterface->GetPosition(bodyID).GetY(),
+        physicsModule.bodyInterface->GetPosition(bodyID).GetZ());
+    glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+    float rayLength = 2.0f;
+    playerPos.y -= 2.2f;
+    RayHitInfo groundCheckRay = physicsModule.ShootRay(playerPos, rayDirection, rayLength);
+
+    bool isGrounded = groundCheckRay.hasHit && groundCheckRay.hitEntities[0] != playerEntity;
+
+    glm::vec3 moveInputDir = glm::vec3(0.0f);
+    if (inputDeviceManager.IsKeyHeld(KeyboardCode::eW))
+        moveInputDir += forward;
+    if (inputDeviceManager.IsKeyHeld(KeyboardCode::eS))
+        moveInputDir -= forward;
+    if (inputDeviceManager.IsKeyHeld(KeyboardCode::eA))
+        moveInputDir -= right;
+    if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
+        moveInputDir += right;
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
+    {
+        moveInputDir += up;
+        isGrounded = false;
+    }
+
+    if (glm::length(moveInputDir) > 0.0f)
+        moveInputDir = glm::normalize(moveInputDir);
+
+    const float maxSpeed = 3.80f;
+    const float sv_accelerate = 0.1f;
+    const float frameTime = deltaTime;
+
+    glm::vec3 wishVel = moveInputDir * maxSpeed;
+
+    if (isGrounded)
+    {
+        physicsModule.bodyInterface->SetFriction(bodyID, 1.0f);
+        float currentSpeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), glm::normalize(wishVel));
+
+        float addSpeed = maxSpeed - currentSpeed;
+        if (addSpeed > 0)
+        {
+            float accelSpeed = sv_accelerate * frameTime * maxSpeed;
+            if (accelSpeed > addSpeed)
+                accelSpeed = addSpeed;
+
+            velocity += accelSpeed * JPH::Vec3(wishVel.x, wishVel.y, wishVel.z);
+        }
+    }
+    else
+    {
+        // physicsModule.bodyInterface->SetFriction(bodyID, 0.1f);
+
+        // Air acceleration
+        float wishspeed = glm::length(wishVel);
+        if (wishspeed > 30.0f)
+            wishspeed = 30.0f;
+
+        float currentspeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), glm::normalize(wishVel));
+        float addspeed = wishspeed - currentspeed;
+        if (addspeed > 0)
+        {
+            float accelspeed = maxSpeed * sv_accelerate * frameTime;
+            if (accelspeed > addspeed)
+                accelspeed = addspeed;
+
+            velocity += JPH::Vec3(wishVel.x, wishVel.y, wishVel.z) * accelspeed;
+        }
+    }
+
+    physicsModule.bodyInterface->SetLinearVelocity(bodyID, velocity);
+
+    glm::vec3 pos = glm::vec3(physicsModule.bodyInterface->GetPosition(bodyID).GetX(),
+        physicsModule.bodyInterface->GetPosition(bodyID).GetY(),
+        physicsModule.bodyInterface->GetPosition(bodyID).GetZ());
+    pos.y += 5.0f;
+
+    for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
+    {
+        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, pos);
+    }
 }
 
 OldEngine::OldEngine() = default;

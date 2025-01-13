@@ -110,6 +110,15 @@ RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& dir
         return hitInfo;
     }
 
+    for (auto hit : collector.mHits)
+    {
+        const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(hit.mBodyID));
+        if (hitEntity != entt::null)
+        {
+            hitInfo.hitEntities.push_back(hitEntity);
+        }
+    }
+
     const auto firstHit = collector.mHits[numHits - 1];
     const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(firstHit.mBodyID));
     const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));

@@ -30,6 +30,8 @@ public:
     void Inspect() override;
     void InspectRigidBody(RigidbodyComponent& rb);
 
+    entt::entity _playerEntity = entt::null;
+
 private:
     // for loading mesh data or convex data into the scene with no rendering mesh relation
     entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
@@ -41,4 +43,6 @@ private:
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;
+
+    // just for testing
 };

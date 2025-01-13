@@ -1,4 +1,5 @@
 ﻿#include "systems/physics_system.hpp"
+#include "../../../../build/CI-CD/_deps/joltphysics-src/Jolt/Physics/Collision/Shape/CapsuleShape.h"
 #include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -185,6 +186,7 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
+
     ZoneScoped;
     // let's check priority first between transforms and physics
     // Here we update jolt transforms based on our transform system since they are static objects and we want hierarchy
@@ -318,6 +320,21 @@ void PhysicsSystem::Inspect()
         node.name = "Plane Entity";
         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, newRigidBody);
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+    }
+
+    if (ImGui::Button("Create player"))
+    {
+        _playerEntity = _ecs.GetRegistry().create();
+        JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(2.0, 1.0), JPH::Vec3(0.0, 3.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+        bodyCreationSettings.mAllowDynamicOrKinematic = true;
+
+        bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+        RigidbodyComponent rb(*_physicsModule.bodyInterface, _playerEntity, bodyCreationSettings);
+
+        NameComponent node;
+        node.name = "Player entity";
+        _ecs.GetRegistry().emplace<NameComponent>(_playerEntity, node);
+        _ecs.GetRegistry().emplace<RigidbodyComponent>(_playerEntity, rb);
     }
 
     if (ImGui::Button("Clear Physics Entities"))

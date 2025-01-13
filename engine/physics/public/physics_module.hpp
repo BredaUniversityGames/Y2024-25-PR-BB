@@ -274,7 +274,8 @@ private:
 
 struct RayHitInfo
 {
-    entt::entity entity = entt::null; // Entity that was hit
+    entt::entity entity = entt::null; // First entity that was hit
+    std::vector<entt::entity> hitEntities; // All entities that were hit
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f); // Position where the ray hits; HitPoint = Start + mFraction * (End - Start)
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
     bool hasHit = false;
