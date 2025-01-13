@@ -49,7 +49,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
+        "assets/models/Graveyard.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",

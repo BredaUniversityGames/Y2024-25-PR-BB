@@ -13,6 +13,7 @@ layout (push_constant) uniform PushConstants
     uint positionIndex;
     uint ssaoIndex;
     uint depthIndex;
+    float shadowMapSize;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO

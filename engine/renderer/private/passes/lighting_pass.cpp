@@ -11,7 +11,7 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
+LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
@@ -25,6 +25,7 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
     _pushConstants.ssaoIndex = ssaoTarget.Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
+    _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.Shadow())->width;
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
@@ -34,7 +35,7 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
 
 void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pass");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
