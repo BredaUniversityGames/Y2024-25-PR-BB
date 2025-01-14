@@ -96,7 +96,6 @@ void BuildHzbPass::CreateSampler()
 
 void BuildHzbPass::CreateDSL()
 {
-    const auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
     std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
     bindings[0] = {
         .binding = 0,

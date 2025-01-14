@@ -1,6 +1,7 @@
 #include "inspector_module.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
 #include "implot/implot.h"
@@ -10,9 +11,8 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "scripting_module.hpp"
 #include "vulkan_context.hpp"
-
-#include <scripting_module.hpp>
 
 InspectorModule::InspectorModule() = default;
 

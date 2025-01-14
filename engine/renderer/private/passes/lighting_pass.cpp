@@ -1,6 +1,5 @@
 #include "passes/lighting_pass.hpp"
 
-#include "../vulkan_helper.hpp"
 #include "bloom_settings.hpp"
 #include "camera.hpp"
 #include "gpu_scene.hpp"

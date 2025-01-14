@@ -9,6 +9,7 @@
 class BloomSettings;
 class GraphicsContext;
 class CameraResource;
+class GPUScene;
 struct GPUImage;
 struct RenderSceneDescription;
 

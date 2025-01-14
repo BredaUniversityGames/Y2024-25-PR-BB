@@ -135,19 +135,12 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawCommands.clear();
 
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RelationshipComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
-        const auto& relation = staticMeshView.get<RelationshipComponent>(entity);
-
-        const auto& name = _ecs.GetRegistry().get<NameComponent>(relation.parent);
-        if (name.name == "SM_Prop_Book_01__54_")
-        {
-            int x = 0;
-        }
 
         auto resources { _context->Resources() };
 
