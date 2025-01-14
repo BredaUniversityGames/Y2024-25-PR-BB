@@ -84,4 +84,6 @@ void BindAudioAPI(wren::ForeignModule& module)
     auto& audioEmitterComponentClass = module.klass<WrenComponent<AudioEmitterComponent>>("AudioEmitterComponent");
     audioEmitterComponentClass.funcExt<bindings::AddSFX>("AddSFX");
     audioEmitterComponentClass.funcExt<bindings::AddEvent>("AddEvent");
+
+    module.klass<SoundInstance>("SoundInstance");
 }

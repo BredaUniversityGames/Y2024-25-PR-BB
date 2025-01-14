@@ -31,6 +31,9 @@ class Main {
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
+
+        __rayDistance = 1000.0
+        __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
     }
 
     static Update(engine, dt) {
@@ -52,6 +55,39 @@ class Main {
             audioEmitter.AddEvent(shootingInstance)
 
             System.print("Playing is shooting")
+        }
+
+        if (engine.GetInput().GetDigitalAction("Shoot")) {
+            var playerTransform = __player.GetTransformComponent()
+            var direction = Math.ToVector(playerTransform.rotation)
+            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
+            var end = rayHitInfo.position
+
+            if (rayHitInfo.hasHit) {
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = end
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 1000.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+            } else {
+                end = start + direction * __rayDistanceVector
+            }
+
+            var length = (end - start).length()
+            var i = 5.0
+            while (i < length) {
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = Math.Mix(start, end, i / length)
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 1000.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                i = i + 5.0
+            }
         }
 
         if (engine.GetInput().GetDigitalAction("Jump")) {
