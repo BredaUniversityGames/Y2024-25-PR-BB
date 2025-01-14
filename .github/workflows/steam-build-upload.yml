@@ -71,6 +71,7 @@ jobs:
         if: matrix.platform == 'ubuntu-latest'
         shell: bash
         run: |
+          p4 -P ${{ env.P4TICKET }} client -d NewWorkspace
           p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: /home/runner/work/Y2024-25-PR-BB/Y2024-25-PR-BB|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | p4 -P ${{ env.P4TICKET }} client -i
 
       - name: Perforce Client
