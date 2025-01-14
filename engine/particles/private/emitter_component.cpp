@@ -3,16 +3,16 @@
 namespace EnttEditor
 {
 template <>
-void ComponentEditorWidget<EmitterComponent>(entt::registry& reg, entt::registry::entity_type e)
+void ComponentEditorWidget<ParticleEmitterComponent>(entt::registry& reg, entt::registry::entity_type e)
 {
-    auto& t = reg.get<EmitterComponent>(e);
+    auto& t = reg.get<ParticleEmitterComponent>(e);
     t.Inspect(reg, e);
 }
 }
-void EmitterComponent::Inspect(entt::registry& reg, entt::entity entity)
+void ParticleEmitterComponent::Inspect(entt::registry& reg, entt::entity entity)
 {
-    ImGui::Checkbox("EmitOnce##Particle Emitter", &emitOnce);
-    ImGui::SliderFloat("MaxEmitDelay##Particle Emitter", &maxEmitDelay, 0.0f, 50.0f);
+    ImGui::Checkbox("Emit once##Particle Emitter", &emitOnce);
+    ImGui::SliderFloat("Emit delay##Particle Emitter", &maxEmitDelay, 0.0f, 50.0f);
 
     const char* types[] = { "Billboard", "Ribbon" };
     static const char* currentType = types[0];
@@ -41,7 +41,7 @@ void EmitterComponent::Inspect(entt::registry& reg, entt::entity entity)
     emitter.count = emitterCount;
     ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x);
     ImGui::SliderFloat("Mass##Particle Emitter", &emitter.mass, -100.0f, 100.0f);
-    ImGui::DragFloat2("Rotation Velocity##Particle Emitter", &emitter.rotationVelocity.x);
-    ImGui::SliderFloat("Max Life##Particle Emitter", &emitter.maxLife, 0.0f, 100.0f);
+    ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x);
+    ImGui::SliderFloat("Max life##Particle Emitter", &emitter.maxLife, 0.0f, 100.0f);
     ImGui::DragFloat3("Size##Particle Emitter", &emitter.size.x);
 }

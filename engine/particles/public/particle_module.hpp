@@ -43,6 +43,7 @@ public:
 
     void LoadEmitterPresets();
     void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f });
+    void SpawnEmitter(entt::entity entity, int emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f });
 
 private:
     std::shared_ptr<GraphicsContext> _context;
@@ -60,8 +61,11 @@ private:
         uint32_t materialIndex = 0;
         uint32_t flags = 0;
         ParticleType type = ParticleType::eBillboard;
+        std::string name = "Emitter Preset";
     };
 
     std::vector<EmitterPreset> _emitterPresets;
     std::vector<ResourceHandle<GPUImage>> _emitterImages;
+
+    friend class ParticleEditor;
 };

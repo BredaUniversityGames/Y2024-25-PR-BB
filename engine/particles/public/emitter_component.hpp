@@ -8,7 +8,7 @@ struct ActiveEmitterTag
 {
 };
 
-struct EmitterComponent
+struct ParticleEmitterComponent
 {
     bool emitOnce = true;
     float maxEmitDelay = 1.0f;
@@ -24,5 +24,5 @@ private:
 namespace EnttEditor
 {
 template <>
-void ComponentEditorWidget<EmitterComponent>(entt::registry& reg, entt::registry::entity_type e);
+void ComponentEditorWidget<ParticleEmitterComponent>(entt::registry& reg, entt::registry::entity_type e);
 }

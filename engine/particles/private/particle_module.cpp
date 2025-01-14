@@ -27,7 +27,7 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    const auto emitterView = _ecs->GetRegistry().view<EmitterComponent, RigidbodyComponent>();
+    const auto emitterView = _ecs->GetRegistry().view<ParticleEmitterComponent, RigidbodyComponent>();
     for (const auto entity : emitterView)
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
@@ -37,15 +37,15 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    const auto activeView = _ecs->GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
+    const auto activeView = _ecs->GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag>();
     for (const auto entity : activeView)
     {
-        auto& emitter = _ecs->GetRegistry().get<EmitterComponent>(entity);
+        auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
 
         // first remove active tags from inactive emitters and continue
         if (emitter.emitOnce)
         {
-            _ecs->GetRegistry().remove<EmitterComponent>(entity);
+            _ecs->GetRegistry().remove<ParticleEmitterComponent>(entity);
             _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
             continue;
         }
@@ -109,12 +109,21 @@ void ParticleModule::LoadEmitterPresets()
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,
         resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
+    preset.name = "Test";
     _emitterPresets.emplace_back(preset);
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    auto& preset = _emitterPresets[static_cast<int>(emitterPreset)];
+    SpawnEmitter(entity, static_cast<int>(emitterPreset), flags, position, velocity);
+}
+
+void ParticleModule::SpawnEmitter(entt::entity entity, int emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
+{
+    if (emitterPresetID > _emitterPresets.size() - 1)
+        return;
+
+    auto& preset = _emitterPresets[emitterPresetID];
 
     Emitter emitter;
     emitter.count = preset.count;
@@ -161,14 +170,14 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     }
     bool emitOnce = HasAnyFlags(flags, SpawnEmitterFlagBits::eEmitOnce);
 
-    EmitterComponent component;
+    ParticleEmitterComponent component;
     component.emitter = emitter;
     component.type = preset.type;
     component.maxEmitDelay = preset.emitDelay;
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;
 
-    _ecs->GetRegistry().emplace_or_replace<EmitterComponent>(entity, component);
+    _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
         _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);

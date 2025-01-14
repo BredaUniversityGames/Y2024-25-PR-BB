@@ -47,7 +47,7 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<CameraComponent>("Camera");
     _entityEditor.registerComponent<AudioEmitterComponent>("Audio Emitter");
     _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
-    _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
+    _entityEditor.registerComponent<ParticleEmitterComponent>("Particle Emitter");
 }
 
 void Editor::DrawHierarchy()
