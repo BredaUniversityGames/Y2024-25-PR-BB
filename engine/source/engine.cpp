@@ -45,7 +45,7 @@ void LoadMainMenuEnvironment(Engine& engine)
     auto renderer = engine.GetModule<RendererModule>().GetRenderer();
     auto gpu = renderer->GetContext()->Resources()->ModelResourceManager().Create(cpu, renderer->StaticBatchBuffer(), renderer->SkinnedBatchBuffer());
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), *renderer->GetContext()->Resources()->ModelResourceManager().Access(gpu), cpu, cpu.hierarchy, {});
+    SceneLoading::LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), *renderer->GetContext()->Resources()->ModelResourceManager().Access(gpu), cpu, cpu.hierarchy, cpu.animations);
 }
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
@@ -59,6 +59,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     particleModule.LoadEmitterPresets();
+
+    _ecs = &engine.GetModule<ECSModule>();
     /*
         // modules
         {
@@ -82,46 +84,43 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
             auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
 
-            _ecs = &engine.GetModule<ECSModule>();
 
             SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
             auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
+
 
             // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
             // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
             // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
+    */
+    // TODO: Once level saving is done, this should be deleted
+    entt::entity lightEntity = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
+    _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
 
-            // TODO: Once level saving is done, this should be deleted
-            entt::entity lightEntity = _ecs->GetRegistry().create();
-            _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-            _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
+    DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
+    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+    directionalLightComponent.nearPlane = -110.0f;
+    directionalLightComponent.farPlane = 63.0f;
+    directionalLightComponent.orthographicSize = 75.0f;
 
-            DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-            directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-            directionalLightComponent.nearPlane = -110.0f;
-            directionalLightComponent.farPlane = 63.0f;
-            directionalLightComponent.orthographicSize = 75.0f;
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
+    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
-            TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+    entt::entity cameraEntity = _ecs->GetRegistry().create();
+    _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
+    _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
+    _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-            entt::entity cameraEntity = _ecs->GetRegistry().create();
-            _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-            _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
-            _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+    CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
+    cameraComponent.projection = CameraComponent::Projection::ePerspective;
+    cameraComponent.fov = 45.0f;
+    cameraComponent.nearPlane = 0.5f;
+    cameraComponent.farPlane = 600.0f;
+    cameraComponent.reversedZ = true;
 
-            RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
-
-            CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
-            cameraComponent.projection = CameraComponent::Projection::ePerspective;
-            cameraComponent.fov = 45.0f;
-            cameraComponent.nearPlane = 0.5f;
-            cameraComponent.farPlane = 600.0f;
-            cameraComponent.reversedZ = true;
-
-            _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
-        }*/
+    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
     LoadMainMenuEnvironment(engine);
     glm::ivec2 mousePos;
@@ -157,13 +156,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     musicSi.is3D = true;
 
     // This sound might pop in because it starts playing before the engine is fully initialized
-    auto instance = audioModule.PlaySFX(audioModule.LoadSFX(musicSi), 1.0f, false);
-
-    auto audioEmitter = _ecs->GetRegistry().create();
-    _ecs->GetRegistry().emplace<TransformComponent>(audioEmitter);
-    auto& emitter = _ecs->GetRegistry().emplace<AudioEmitterComponent>(audioEmitter);
-
-    emitter._soundIds.emplace_back(instance);
 
     SoundInfo eagleSi;
     eagleSi.path = "assets/sounds/eagle.mp3";

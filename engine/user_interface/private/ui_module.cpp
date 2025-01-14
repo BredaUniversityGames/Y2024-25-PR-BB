@@ -28,5 +28,5 @@ void UIModule::Tick(Engine& engine)
 
 void UIModule::CreateNavigationTest()
 {
-    GetViewport().AddElement<Canvas>(CreateNavigationTestMenu(_uiInputContext, _viewport->GetExtend(), _graphicsContext));
+    GetViewport().AddElement<Canvas>(CreateMainMenu(_uiInputContext, _viewport->GetExtend(), _graphicsContext));
 }
