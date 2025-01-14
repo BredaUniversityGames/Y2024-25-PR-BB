@@ -40,8 +40,6 @@
 #include "resource_management/model_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 #include "single_time_commands.hpp"
-#include "ui_main_menu.hpp"
-#include "ui_module.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"

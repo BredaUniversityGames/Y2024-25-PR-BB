@@ -7,6 +7,7 @@
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
+#include "canvas.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -34,6 +35,7 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
+#include "ui_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -107,6 +109,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastMousePos = mousePos;
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    constexpr bool createTestCanvas = false;
+    if (createTestCanvas)
+    {
+        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
+
+        engine.GetModule<UIModule>().CreateNavigationTest();
+    }
 
     bblog::info("Successfully initialized engine!");
 

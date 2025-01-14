@@ -2,5 +2,8 @@
 
 void Canvas::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    ChildrenSubmitDrawInfo(drawList);
+    if (visibility == VisibilityState::eNotUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndVisible)
+    {
+        ChildrenSubmitDrawInfo(drawList);
+    }
 }

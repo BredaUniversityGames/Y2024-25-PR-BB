@@ -19,11 +19,7 @@ public:
     } state
         = ButtonState::eNormal;
 
-    void Update(const InputDeviceManager& inputManager) override;
-
-    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
-
-    void UpdateAllChildrenAbsoluteLocations() override;
+    void Update(const InputManagers& inputManagers, UIInputContext& inputContext) override;
 
     struct ButtonStyle
     {
@@ -32,6 +28,19 @@ public:
         ResourceHandle<GPUImage> pressedImage = {};
     } style {};
 
-    std::function<void()> onBeginHoverCallBack {};
-    std::function<void()> onMouseDownCallBack {};
+    UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
+        : style(aStyle)
+
+    {
+        SetLocation(location);
+        SetScale(size);
+    }
+
+    void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
+
+    std::function<void()> onBeginHoverCallBack = []() {};
+    std::function<void()> onMouseDownCallBack = []() {};
+
+private:
+    void SwitchState(bool inputActionPressed, bool inputActionReleased);
 };

@@ -81,7 +81,7 @@ Sampler& Sampler::operator=(Sampler&& other) noexcept
     return *this;
 }
 
-void CPUImage::FromPNG(std::string_view path)
+CPUImage& CPUImage::FromPNG(std::string_view path)
 {
     int width;
     int height;
@@ -114,10 +114,14 @@ void CPUImage::FromPNG(std::string_view path)
     {
         throw std::runtime_error("Image format is not supported!");
     }
+
     SetFormat(format);
     SetSize(static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+    SetName(path);
     initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * nrChannels));
     stbi_image_free(data);
+
+    return *this;
 }
 CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 {
