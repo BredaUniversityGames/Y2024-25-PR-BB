@@ -95,40 +95,50 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
     engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
 }
 
-RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
+std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
 {
-    RayHitInfo hitInfo;
+    std::vector<RayHitInfo> hitInfos;
 
     const JPH::Vec3 start(origin.x, origin.y, origin.z);
     JPH::Vec3 dir(direction.x, direction.y, direction.z);
     dir = dir.Normalized();
     const JPH::RayCast ray(start, dir * distance);
+
     debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
 
-    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
-    physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
-    const int numHits = static_cast<int>(collector.mHits.size());
-    if (numHits < 1)
-    {
-        return hitInfo;
-    }
+    // JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
+    JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector2;
 
-    for (auto hit : collector.mHits)
+    // physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
+
+    JPH::RayCastSettings settings;
+    physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
+
+    hitInfos.resize(collector2.mHits.size());
+    int iterator = 0;
+
+    for (auto hit : collector2.mHits)
     {
+
         const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(hit.mBodyID));
+
         if (hitEntity != entt::null)
         {
-            hitInfo.hitEntities.push_back(hitEntity);
+            hitInfos[iterator].entity = hitEntity;
         }
+        hitInfos[iterator].position = origin + hit.mFraction * ((direction * distance));
+        hitInfos[iterator].hitFraction = hit.mFraction;
+
+        JPH::BodyLockRead bodyLock(physicsSystem->GetBodyLockInterface(), hit.mBodyID);
+
+        if (bodyLock.Succeeded())
+        {
+            const JPH::Body& body = bodyLock.GetBody();
+            const auto joltNormal = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction));
+            hitInfos[iterator].normal = glm::vec3(joltNormal.GetX(), joltNormal.GetY(), joltNormal.GetZ());
+        }
+        iterator++;
     }
 
-    const auto firstHit = collector.mHits[numHits - 1];
-    const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(firstHit.mBodyID));
-    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
-
-    hitInfo.entity = hitEntity;
-    hitInfo.position = hitPosition;
-    hitInfo.hitFraction = firstHit.mFraction;
-    hitInfo.hasHit = true;
-    return hitInfo;
+    return hitInfos;
 }

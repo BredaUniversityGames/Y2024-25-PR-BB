@@ -375,6 +375,25 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 }
 void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 inputDir)
 {
+    // Helper function for velocity clipping
+    auto ClipVelocity = [](JPH::Vec3& velocity, const JPH::Vec3& normal, float overbounce = 1.0f)
+    {
+        float backoff = velocity.Dot(normal) * overbounce;
+        velocity -= normal * backoff;
+
+        auto ClipVelocity = [](JPH::Vec3& velocity, const JPH::Vec3& normal, float overbounce = 1.0f)
+        {
+            float backoff = velocity.Dot(normal) * overbounce;
+            velocity -= normal * backoff;
+
+            // Check if the velocity is still pointing towards the normal (getting stuck)
+            if (velocity.Dot(normal) < 0.0f)
+            {
+                velocity = JPH::Vec3(0, 0, 0); // Prevent sticking by zeroing out the component against the normal
+            }
+        };
+    };
+
     entt::entity playerEntity = _ecs->GetSystem<PhysicsSystem>()->_playerEntity;
     if (playerEntity == entt::null)
         return;
@@ -414,12 +433,12 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
     float rayLength = 2.0f;
 
-    RayHitInfo groundCheckRay = physicsModule.ShootRay(playerPos, rayDirection, rayLength);
+    std::vector<RayHitInfo> groundCheckRay = physicsModule.ShootRay(playerPos, rayDirection, rayLength);
 
     bool isGrounded = false;
-    for (auto hit : groundCheckRay.hitEntities)
+    for (auto hit : groundCheckRay)
     {
-        if (hit != playerEntity && groundCheckRay.hasHit)
+        if (hit.entity != playerEntity)
         {
             isGrounded = true;
             break;
@@ -485,6 +504,19 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
                 accelspeed = addspeed;
 
             velocity += JPH::Vec3(wishVel.x, wishVel.y, wishVel.z) * accelspeed;
+        }
+    }
+
+    // Wall Collision Fix - Project velocity if collision occurs
+    std::vector<RayHitInfo> wallCheckRays = physicsModule.ShootRay(playerPos, glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), 1.1);
+
+    for (auto hit : wallCheckRays)
+    {
+        if (hit.entity != playerEntity)
+        {
+            JPH::Vec3 wallNormal(hit.normal.x, 0.0, hit.normal.z);
+            ClipVelocity(velocity, wallNormal);
+            break;
         }
     }
 

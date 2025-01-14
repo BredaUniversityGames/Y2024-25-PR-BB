@@ -326,7 +326,7 @@ void PhysicsSystem::Inspect()
     if (ImGui::Button("Create player"))
     {
         _playerEntity = _ecs.GetRegistry().create();
-        JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(0.85, 0.55), JPH::Vec3(0.0, 3.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+        JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(0.85, 0.5), JPH::Vec3(0.0, 3.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
         bodyCreationSettings.mAllowDynamicOrKinematic = true;
 
         bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;

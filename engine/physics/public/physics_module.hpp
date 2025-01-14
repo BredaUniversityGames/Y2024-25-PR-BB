@@ -274,12 +274,12 @@ private:
 
 struct RayHitInfo
 {
-    entt::entity entity = entt::null; // First entity that was hit
-    std::vector<entt::entity> hitEntities; // All entities that were hit
+    entt::entity entity = entt::null; // entity that was hit
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f); // Position where the ray hits; HitPoint = Start + mFraction * (End - Start)
+    glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f); // Normal of the hit surface
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
-    bool hasHit = false;
 };
+
 inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 {
     glm::mat4 glmMat;
@@ -318,7 +318,7 @@ public:
         = default;
     ~PhysicsModule() final = default;
 
-    NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
+    NO_DISCARD std::vector<RayHitInfo> ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
 
     JPH::BodyInterface* bodyInterface = nullptr;
     DebugRendererSimpleImpl* debugRenderer = nullptr;
