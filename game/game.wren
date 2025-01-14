@@ -59,25 +59,30 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot")) {
             var playerTransform = __player.GetTransformComponent()
-            var rayHitInfo = engine.GetPhysics().ShootRay(playerTransform.translation, Math.ToVector(playerTransform.rotation), 1000.0)
+            var direction = Math.ToVector(playerTransform.rotation)
+            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, 1000.0)
+            var end = rayHitInfo.position
 
             if (rayHitInfo.hasHit) {
                 engine.GetAudio().PlaySFX("assets/sounds/hit.ogg", 1.0)
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
-                transform.translation = rayHitInfo.position
+                transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 1000.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive()
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
+            } else {
+                end = start + direction * Vec3.new(1000.0, 1000.0, 1000.0)
             }
 
-            var length = (rayHitInfo.position - playerTransform.translation).length()
+            var length = (end - start).length()
             var i = 5
             while (i < length) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
-                transform.translation = Math.Mix(playerTransform.translation, rayHitInfo.position, i / length)
+                transform.translation = Math.Mix(start, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 1000.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive()
