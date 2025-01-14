@@ -12,9 +12,10 @@ layout (set = 1, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
-layout (push_constant) uniform PushConstants
+layout (set = 2, binding = 0) buffer RedirectBuffer
 {
-    uint instanceOffset;
+    uint count;
+    uint redirect[];
 };
 
 layout (location = 0) in vec3 inPosition;
@@ -26,7 +27,7 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    Instance instance = instances[redirect[gl_DrawID]];
 
     position = (instance.model * vec4(inPosition, 1.0)).xyz;
     gl_Position = scene.directionalLight.lightVP * vec4(position, 1.0);

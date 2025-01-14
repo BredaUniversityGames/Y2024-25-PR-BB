@@ -12,13 +12,15 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (std430, set = 3, binding = 0) readonly buffer SkinningMatrices {
-    mat4 skinningMatrices[];
+layout (set = 3, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
 };
 
-layout (push_constant) uniform PushConstants
+layout (std430, set = 4, binding = 0) readonly buffer SkinningMatrices
 {
-    uint instanceOffset;
+    mat4 skinningMatrices[];
 };
 
 layout (location = 0) in vec3 inPosition;
@@ -32,11 +34,11 @@ layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
 layout (location = 4) out mat3 TBN;
-layout (location = 3) out flat int drawID;
+layout (location = 3) out flat uint drawID;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    Instance instance = instances[redirect[gl_DrawID]];
 
     mat4 skinMatrix =
     inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
@@ -48,7 +50,7 @@ void main()
     normal = normalize(skinMatrix * vec4(inNormal, 0.0)).xyz;
 
     mat4 modelTransform = instance.model;
-    drawID = gl_DrawID + int(instanceOffset);
+    drawID = redirect[gl_DrawID];
 
     vec3 tangent = normalize((modelTransform * vec4(inTangent.xyz, 0.0)).xyz);
     vec3 bitangent = normalize((modelTransform * vec4(inTangent.w * cross(inNormal, inTangent.xyz), 0.0)).xyz);

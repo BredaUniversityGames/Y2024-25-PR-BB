@@ -18,7 +18,6 @@ GBuffers::GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 s
     if (supportedDepthFormat.has_value())
     {
         _depthFormat = supportedDepthFormat.value();
-        _shadowFormat = supportedDepthFormat.value();
     }
     else
     {
@@ -27,7 +26,6 @@ GBuffers::GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 s
 
     CreateGBuffers();
     CreateDepthResources();
-    CreateShadowMapResources();
     CreateViewportAndScissor();
 }
 
@@ -77,29 +75,6 @@ void GBuffers::CreateDepthResources()
     CPUImage depthImageData {};
     depthImageData.SetFormat(_depthFormat).SetType(ImageType::eDepth).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eDepthStencilAttachment);
     _depthImage = _context->Resources()->ImageResourceManager().Create(depthImageData);
-}
-
-void GBuffers::CreateShadowMapResources()
-{
-    SamplerCreation shadowSamplerInfo {
-        .name = "Shadow sampler",
-        .minFilter = vk::Filter::eLinear,
-        .magFilter = vk::Filter::eLinear,
-        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
-        .compareEnable = true,
-        .compareOp = vk::CompareOp::eLessOrEqual,
-    };
-    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
-    _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
-
-    CPUImage shadowCreation {};
-    shadowCreation
-        .SetFormat(_shadowFormat)
-        .SetType(ImageType::eShadowMap)
-        .SetSize(4096, 4096)
-        .SetName("Shadow image")
-        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
-    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }
 
 void GBuffers::CleanUp()

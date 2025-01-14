@@ -40,7 +40,7 @@ void DebugPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t current
     UpdateVertexData();
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_attachment)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_attachment)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
