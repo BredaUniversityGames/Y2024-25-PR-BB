@@ -495,8 +495,8 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
         // Air acceleration
         float wishspeed = glm::length(wishVel);
         wishVel = glm::normalize(wishVel);
-        if (wishspeed > 3.0f)
-            wishspeed = 3.0f;
+        if (wishspeed > 0.3f)
+            wishspeed = 0.3f;
 
         float currentspeed = glm::dot(glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), wishVel);
         float addspeed = wishspeed - currentspeed;
