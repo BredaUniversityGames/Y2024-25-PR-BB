@@ -1,58 +1,85 @@
 #include "ui_button.hpp"
-#include "glm/gtx/transform.hpp"
-
 #include "input/input_device_manager.hpp"
+#include "ui_input.hpp"
+#include "ui_module.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
-void UIButton::Update(const InputDeviceManager& input)
+void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
 {
-    if (enabled)
+    switch (state)
     {
-        glm::ivec2 mousePos;
-        input.GetMousePosition(mousePos.x, mousePos.y);
+    case ButtonState::eNormal:
+        state = ButtonState::eHovered;
+        onBeginHoverCallBack();
 
-        // mouse inside boundary
-        if (mousePos.x > static_cast<uint16_t>(GetAbsoluteLocation().x)
-            && mousePos.x < static_cast<uint16_t>(GetAbsoluteLocation().x + GetScale().x)
-            && mousePos.y > static_cast<uint16_t>(GetAbsoluteLocation().y)
-            && mousePos.y < static_cast<uint16_t>(GetAbsoluteLocation().y + GetScale().y))
+        [[fallthrough]];
+
+    case ButtonState::eHovered:
+        if (inputActionPressed)
         {
-            switch (state)
-            {
-            case ButtonState::eNormal:
+            state = ButtonState::ePressed;
+            onMouseDownCallBack();
+        }
+        break;
 
-                state = ButtonState::eHovered;
-                onBeginHoverCallBack();
-                [[fallthrough]];
+    case ButtonState::ePressed:
+        if (inputActionReleased)
+        {
+            state = ButtonState::eNormal;
+        }
+        break;
+    }
+}
 
-            case ButtonState::eHovered:
-
-                if (input.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT))
-                {
-                    state = ButtonState::ePressed;
-                    onMouseDownCallBack();
-                }
-                break;
-
-            case ButtonState::ePressed:
-                if (input.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT))
-                {
-                    state = ButtonState::eNormal;
-                }
-                break;
-            }
+void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
+{
+    UIElement::Update(inputManagers, inputContext);
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
+    {
+        if (inputContext.HasInputBeenConsumed() == true)
+        {
+            state = ButtonState::eNormal;
         }
         else
         {
-            state = ButtonState::eNormal;
+            if (inputContext.GamepadHasFocus())
+            {
+                if (auto locked = inputContext.focusedUIElement.lock(); locked.get() != this)
+                {
+                    state = ButtonState::eNormal;
+                    return;
+                }
+                SwitchState(inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()), !inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()));
+                if (state == ButtonState::ePressed)
+                {
+                    std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
+                    inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
+                }
+                inputContext.ConsumeInput();
+            }
+            else // Mouse controls
+            {
+                glm::ivec2 mousePos;
+                inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
+                if (IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale()))
+                {
+                    SwitchState(inputManagers.inputDeviceManager.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT), inputManagers.inputDeviceManager.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT));
+                    inputContext.ConsumeInput();
+                }
+                else
+                {
+                    state = ButtonState::eNormal;
+                }
+            }
         }
     }
 }
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    UIElement::ChildrenSubmitDrawInfo(drawList);
-    if (enabled)
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
+
         ResourceHandle<GPUImage> image;
         switch (state)
         {
@@ -69,20 +96,16 @@ void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             break;
         }
 
+        glm::mat4 matrix = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+        matrix = glm::scale(matrix, glm::vec3(GetAbsoluteScale(), 0));
+
         QuadDrawInfo info {
-            .matrix = (glm::scale(glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0)), glm::vec3(GetScale(), 0))),
+            .matrix = matrix,
             .textureIndex = image.Index(),
         };
 
         info.useRedAsAlpha = false;
         drawList.emplace_back(info);
-    }
-}
-
-void UIButton::UpdateAllChildrenAbsoluteLocations()
-{
-    for (const auto& child : GetChildren())
-    {
-        child->SetAbsoluteLocation(this->GetAbsoluteLocation() + (GetScale() / 2.f) + child->GetRelativeLocation());
+        ChildrenSubmitDrawInfo(drawList);
     }
 }
