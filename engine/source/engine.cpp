@@ -48,6 +48,7 @@ void LoadMainMenuEnvironment(Engine& engine)
     SceneLoading::LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), *renderer->GetContext()->Resources()->ModelResourceManager().Access(gpu), cpu, cpu.hierarchy, cpu.animations);
 }
 
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -163,6 +164,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    constexpr bool createTestCanvas = false;
+    if (createTestCanvas)
+    {
+        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
+
+        engine.GetModule<UIModule>().CreateNavigationTest();
+    }
 
     bblog::info("Successfully initialized engine!");
 

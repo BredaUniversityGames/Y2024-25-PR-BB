@@ -16,6 +16,8 @@ public:
     void Render(const ECSModule& ecs) const override;
     void Inspect() override;
 
+    std::string_view GetName() override { return "AnimationSystem"; }
+
 private:
     RendererModule& _rendererModule;
 };

@@ -16,6 +16,7 @@ public:
     {
         SetLocation(glm::vec2(0));
         SetScale(glm::vec2(0, font->characterHeight));
+
         SetText(std::move(text));
     }
 

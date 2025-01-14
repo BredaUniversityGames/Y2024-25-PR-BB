@@ -268,7 +268,8 @@ void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 void PhysicsSystem::Inspect()
 {
     ZoneScoped;
-    ImGui::Begin("Physics System");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Physics System", nullptr, ImGuiWindowFlags_NoResize);
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;

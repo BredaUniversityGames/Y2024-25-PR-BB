@@ -51,6 +51,7 @@ std::unique_ptr<Canvas> CreateNavigationTestMenu(UIInputContext& uiInputContext,
 
     uiInputContext.focusedUIElement = button1;
     return canvas;
+
 }
 std::unique_ptr<Canvas> CreateMainMenu(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext)
 {
@@ -108,4 +109,5 @@ std::unique_ptr<Canvas> CreateMainMenu(UIInputContext& uiInputContext, const glm
 
     uiInputContext.focusedUIElement = playButton;
     return canvas;
+
 }
