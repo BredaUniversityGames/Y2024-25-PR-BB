@@ -442,10 +442,25 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
         moveInputDir -= right;
     if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
         moveInputDir += right;
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE) && isGrounded)
+
+    static bool wasGroundedLastFrame = false;
+
+    // Check if the player is grounded and the jump key is held
+    bool isJumpHeld = inputDeviceManager.IsKeyHeld(KeyboardCode::eSPACE);
+
+    // Allow continuous jumping while grounded and holding the jump key
+    if (isGrounded && isJumpHeld)
     {
+        velocity.SetY(0.0f);
         velocity += JPH::Vec3(0.0f, 8.20f, 0.0f);
+        wasGroundedLastFrame = true; // Update grounded state
     }
+    else
+    {
+        wasGroundedLastFrame = isGrounded;
+    }
+
+    wasGroundedLastFrame = isGrounded;
 
     /*if (glm::length(moveInputDir) > 0.0f)
         moveInputDir = glm::normalize(moveInputDir);*/
