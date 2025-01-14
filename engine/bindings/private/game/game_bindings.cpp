@@ -5,7 +5,7 @@
 
 namespace bindings
 {
-void SetLifetimePaused(WrenComponent<LifetimeComponent>& self, const bool paused)
+void SetLifetimePaused(WrenComponent<LifetimeComponent>& self, bool paused)
 {
     self.component->paused = paused;
 }
@@ -15,7 +15,7 @@ bool GetLifetimePaused(WrenComponent<LifetimeComponent>& self)
     return self.component->paused;
 }
 
-void SetLifetime(WrenComponent<LifetimeComponent>& self, const float lifetime)
+void SetLifetime(WrenComponent<LifetimeComponent>& self, float lifetime)
 {
     self.component->lifetime = lifetime;
 }

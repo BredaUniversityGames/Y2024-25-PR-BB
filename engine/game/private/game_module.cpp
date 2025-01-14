@@ -1,7 +1,7 @@
 #include "game_module.hpp"
 
-#include <ecs_module.hpp>
-#include <lifetime_system.hpp>
+#include "ecs_module.hpp"
+#include "lifetime_system.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {

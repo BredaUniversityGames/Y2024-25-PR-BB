@@ -1,7 +1,8 @@
 #include "lifetime_system.hpp"
 
-#include <ecs_module.hpp>
-#include <lifetime_component.hpp>
+#include "ecs_module.hpp"
+#include "lifetime_component.hpp"
+
 void LifetimeSystem::Update(ECSModule& ecs, float dt)
 {
     const auto& lifetimeView = ecs.GetRegistry().view<LifetimeComponent>();
