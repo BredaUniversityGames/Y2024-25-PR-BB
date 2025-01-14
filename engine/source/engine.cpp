@@ -49,7 +49,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Graveyard.glb",
+        "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
@@ -87,11 +87,11 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
     directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-    directionalLightComponent.nearPlane = -110.0f;
-    directionalLightComponent.farPlane = 63.0f;
+    directionalLightComponent.nearPlane = 0.1f;
+    directionalLightComponent.farPlane = 150.0f;
     directionalLightComponent.orthographicSize = 75.0f;
 
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
     TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
     entt::entity cameraEntity = _ecs->GetRegistry().create();

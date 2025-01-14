@@ -116,7 +116,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .mipmapMode = vk::SamplerMipmapMode::eNearest,
         .minLod = 0.0f,
         .maxLod = static_cast<float>(std::floor(std::log2(hzbSize))),
-        .reductionMode = vk::SamplerReductionMode::eMin,
+        .reductionMode = _camera.UsesReverseZ() ? vk::SamplerReductionMode::eMin : vk::SamplerReductionMode::eMax,
     };
     samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 

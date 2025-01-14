@@ -35,7 +35,8 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         .isPrepass = _isPrepass,
         .mipSize = std::fmax(static_cast<float>(depthImage->width), static_cast<float>(depthImage->height)),
         .hzbIndex = _cameraBatch.HZBImage().Index(),
-        .drawCommandsCount = scene.gpuScene->StaticDrawCount()
+        .drawCommandsCount = scene.gpuScene->StaticDrawCount(),
+        .isReverseZ = _cameraBatch.Camera().UsesReverseZ()
     };
     PushConstants skinnedPc = staticPc;
     skinnedPc.drawCommandsCount = scene.gpuScene->SkinnedDrawCount();

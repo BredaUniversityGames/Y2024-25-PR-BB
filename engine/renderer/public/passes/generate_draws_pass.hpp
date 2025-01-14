@@ -40,6 +40,7 @@ private:
         float mipSize;
         uint32_t hzbIndex;
         uint32_t drawCommandsCount;
+        uint32_t isReverseZ;
     } _pushConstants;
 
     void CreateCullingPipeline();

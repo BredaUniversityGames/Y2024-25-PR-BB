@@ -36,8 +36,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     , brdfLUTMap(creation.brdfLUTMap)
     , _context(creation.context)
     , _ecs(creation.ecs)
-    , _mainCamera(creation.context)
-    , _directionalLightShadowCamera(creation.context)
+    , _mainCamera(creation.context, true)
+    , _directionalLightShadowCamera(creation.context, false)
 {
     InitializeSceneBuffers();
     InitializePointLightBuffer();
@@ -135,12 +135,19 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawCommands.clear();
 
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RelationshipComponent>();
 
     for (auto entity : staticMeshView)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& relation = staticMeshView.get<RelationshipComponent>(entity);
+
+        const auto& name = _ecs.GetRegistry().get<NameComponent>(relation.parent);
+        if (name.name == "SM_Prop_Book_01__54_")
+        {
+            int x = 0;
+        }
 
         auto resources { _context->Resources() };
 
@@ -245,10 +252,10 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .farPlane = directionalLightComponent.farPlane,
             .orthographicSize = directionalLightComponent.orthographicSize,
             .aspectRatio = directionalLightComponent.aspectRatio,
-            .reversedZ = false,
+            .reversedZ = _directionalLightShadowCamera.UsesReverseZ(),
         };
 
-        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);
+        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera, lightView, depthProjectionMatrix);
 
         directionalLightIsSet = true;
     }

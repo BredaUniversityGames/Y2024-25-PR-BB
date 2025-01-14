@@ -15,11 +15,11 @@
 
 #include <tracy/TracyVulkan.hpp>
 
-BuildHzbPass::BuildHzbPass(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch, bool useReverseZ)
+BuildHzbPass::BuildHzbPass(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch)
     : _context(context)
     , _cameraBatch(cameraBatch)
 {
-    CreateSampler(useReverseZ);
+    CreateSampler();
     CreateDSL();
     CreatPipeline();
     CreateUpdateTemplate();
@@ -55,6 +55,7 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
 
         vk::DescriptorImageInfo inputImageInfo {
             .imageView = inputTexture,
+            .sampler = _context->Resources()->SamplerResourceManager().Access(_hzbSampler)->sampler,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
         vk::DescriptorImageInfo outputImageInfo {
@@ -79,7 +80,7 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
     util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
-void BuildHzbPass::CreateSampler(bool useReverseZ)
+void BuildHzbPass::CreateSampler()
 {
     auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
     SamplerCreation samplerCreation {
@@ -89,7 +90,7 @@ void BuildHzbPass::CreateSampler(bool useReverseZ)
         .anisotropyEnable = false,
         .minLod = 0.0f,
         .maxLod = 0.0f,
-        .reductionMode = useReverseZ ? vk::SamplerReductionMode::eMin : vk::SamplerReductionMode::eMax,
+        .reductionMode = _cameraBatch.Camera().UsesReverseZ() ? vk::SamplerReductionMode::eMin : vk::SamplerReductionMode::eMax,
     };
     samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 
@@ -105,8 +106,6 @@ void BuildHzbPass::CreateDSL()
         .descriptorType = vk::DescriptorType::eCombinedImageSampler,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
-        .pImmutableSamplers = &samplerResourceManager.Access(_hzbSampler)->sampler,
-
     };
     bindings[1] = {
         .binding = 1,

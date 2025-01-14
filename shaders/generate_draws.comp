@@ -51,6 +51,7 @@ layout (push_constant) uniform PushConstants
     float hzbSize;
     uint hzbIndex;
     uint drawCommandsCount;
+    uint isReverseZ;
 } pushConstants;
 
 layout (local_size_x = 64) in;
@@ -160,15 +161,21 @@ bool SecondPass_IsVisible(uint objectIndex)
     {
         float P00 = camera.proj[0][0];
         float P11 = camera.proj[1][1];
+        float nearestBoundsDepth = 0.0;
 
         vec4 AABB;
         if (camera.projectionType == 0)
         {
             projectionVisible = TryCalculateSphereBounds_Perspective(center, radius, camera.zNear, P00, P11, AABB);
+            nearestBoundsDepth = camera.zNear / (-center.z - radius);
         }
         else if (camera.projectionType == 1)
         {
             projectionVisible = TryCalculateSphereBounds_Ortho(center, radius, P00, P11, AABB);
+
+            float nearestZ = center.z - radius;
+            nearestBoundsDepth = (-nearestZ - camera.zNear) / (camera.zFar - camera.zNear);
+            nearestBoundsDepth = min(nearestBoundsDepth, 0.999);
         }
         if (projectionVisible)
         {
@@ -177,9 +184,8 @@ bool SecondPass_IsVisible(uint objectIndex)
             float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
 
             float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), 0.5 * (AABB.xy + AABB.zw), mipIndex).x;
-            float nearestBoundsDepth = camera.zNear / (-center.z - radius);
 
-            occlusionVisible = occluderDepth < nearestBoundsDepth;
+            occlusionVisible = bool(pushConstants.isReverseZ) ? occluderDepth < nearestBoundsDepth : occluderDepth > nearestBoundsDepth;
         }
     }
 
@@ -237,6 +243,8 @@ out vec4 _AABB)
     _AABB.y = centerNDC.y + radiusNDC.y;
     _AABB.z = centerNDC.x + radiusNDC.x;
     _AABB.w = centerNDC.y - radiusNDC.y;
+
+    _AABB = _AABB * 0.5 + 0.5;
 
     return true;
 }
