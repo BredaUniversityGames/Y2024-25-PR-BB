@@ -443,12 +443,13 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     /*if (glm::length(moveInputDir) > 0.0f)
         moveInputDir = glm::normalize(moveInputDir);*/
 
-    const float maxSpeed = 6.80f;
+    const float maxSpeed = 8.80f;
     const float sv_accelerate = 10.0f;
     const float frameTime = deltaTime;
 
     glm::vec3 wishVel = moveInputDir * maxSpeed;
 
+    physicsModule.bodyInterface->SetGravityFactor(bodyID, 1.75f);
     if (isGrounded)
     {
         physicsModule.bodyInterface->SetFriction(bodyID, 12.0f);

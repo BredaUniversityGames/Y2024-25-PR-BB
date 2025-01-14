@@ -2,6 +2,9 @@
 #include "ecs_module.hpp"
 #include "systems/physics_system.hpp"
 
+#include <application_module.hpp>
+#include <time_module.hpp>
+
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
 
@@ -69,7 +72,7 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
 
-    return ModuleTickOrder::ePostTick;
+    return ModuleTickOrder::ePreTick;
 }
 
 void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -87,7 +90,7 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     // Step the world
     // TODO: is this correct? We are ignoring deltatime?
-    physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
+    physicsSystem->Update(engine.GetModule<TimeModule>().GetDeltatime().count() / 1000.0f, _collisionSteps, _tempAllocator, _jobSystem);
 
     engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
 }
