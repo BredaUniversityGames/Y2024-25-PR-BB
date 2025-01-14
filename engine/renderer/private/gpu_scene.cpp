@@ -820,7 +820,7 @@ void GPUScene::CreateShadowMapResources()
     shadowCreation
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(4096, 4096)
+        .SetSize(2048, 2048)
         .SetName("Shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);

@@ -58,10 +58,16 @@ layout (local_size_x = 64) in;
 bool Prepass_IsVisible(uint objectIndex);
 bool SecondPass_IsVisible(uint objectIndex);
 bool VisibleInFrustum(in vec3 center, in float radius);
-bool TryCalculateSphereBounds(
+bool TryCalculateSphereBounds_Perspective(
     vec3 _center,
     float _radius,
     float _zNear,
+    float _P00,
+    float _P11,
+out vec4 _AABB);
+bool TryCalculateSphereBounds_Ortho(
+    vec3 _center,
+    float _radius,
     float _P00,
     float _P11,
 out vec4 _AABB);
@@ -154,10 +160,16 @@ bool SecondPass_IsVisible(uint objectIndex)
     {
         float P00 = camera.proj[0][0];
         float P11 = camera.proj[1][1];
-        float zNear = camera.proj[3][2];
 
         vec4 AABB;
-        projectionVisible = TryCalculateSphereBounds(center, radius, zNear, P00, P11, AABB);
+        if (camera.projectionType == 0)
+        {
+            projectionVisible = TryCalculateSphereBounds_Perspective(center, radius, camera.zNear, P00, P11, AABB);
+        }
+        else if (camera.projectionType == 1)
+        {
+            projectionVisible = TryCalculateSphereBounds_Ortho(center, radius, P00, P11, AABB);
+        }
         if (projectionVisible)
         {
             float boundsWidth = (AABB.x - AABB.z) * pushConstants.hzbSize;
@@ -165,7 +177,7 @@ bool SecondPass_IsVisible(uint objectIndex)
             float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
 
             float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), 0.5 * (AABB.xy + AABB.zw), mipIndex).x;
-            float nearestBoundsDepth = zNear / (-center.z - radius);
+            float nearestBoundsDepth = camera.zNear / (-center.z - radius);
 
             occlusionVisible = occluderDepth < nearestBoundsDepth;
         }
@@ -206,9 +218,32 @@ bool VisibleInFrustum(in vec3 center, in float radius)
     return visible && camera.cullingEnabled != 0;
 }
 
+bool TryCalculateSphereBounds_Ortho(
+    vec3 _center,
+    float _radius,
+    float _P00,
+    float _P11,
+out vec4 _AABB)
+{
+    vec4 centerClip = camera.proj * vec4(_center, 1.0);
+    vec3 centerNDC = centerClip.xyz / centerClip.w;
+
+    vec2 radiusNDC = vec2(
+    _radius * (2.0 * (_P00 * centerClip.w)),
+    _radius * (2.0 * (_P11 * centerClip.w))
+    );
+
+    _AABB.x = centerNDC.x - radiusNDC.x;
+    _AABB.y = centerNDC.y + radiusNDC.y;
+    _AABB.z = centerNDC.x + radiusNDC.x;
+    _AABB.w = centerNDC.y - radiusNDC.y;
+
+    return true;
+}
+
 // 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere
 // https://jcgt.org/published/0002/02/05/
-bool TryCalculateSphereBounds(
+bool TryCalculateSphereBounds_Perspective(
     vec3 _center,
     float _radius,
     float _zNear,

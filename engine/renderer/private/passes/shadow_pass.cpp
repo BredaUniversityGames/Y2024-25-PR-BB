@@ -111,8 +111,10 @@ void ShadowPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentF
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
+    const auto* shadowImage = resources->ImageResourceManager().Access(scene.gpuScene->Shadow());
+
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
-        .imageView = resources->ImageResourceManager().Access(scene.gpuScene->Shadow())->view,
+        .imageView = shadowImage->view,
         .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
         .loadOp = prepass ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -121,8 +123,7 @@ void ShadowPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentF
 
     vk::RenderingInfoKHR renderingInfo {
         .renderArea = {
-            .extent = vk::Extent2D { 4096, 4096 } // TODO: Remove hard coded size
-        },
+            .extent = vk::Extent2D { shadowImage->width, shadowImage->height } },
         .layerCount = 1,
         .pDepthAttachment = &depthAttachmentInfo,
     };

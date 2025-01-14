@@ -15,7 +15,7 @@ struct RenderSceneDescription;
 class LightingPass final : public FrameGraphRenderPass
 {
 public:
-    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
+    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
     ~LightingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -32,6 +32,8 @@ private:
         uint32_t positionIndex;
         uint32_t ssaoIndex;
         uint32_t depthIndex;
+
+        float shadowMapSize;
     } _pushConstants;
 
     void CreatePipeline();
