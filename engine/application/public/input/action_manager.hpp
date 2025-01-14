@@ -64,6 +64,7 @@ public:
 
     // Button actions.
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
+
     // Axis actions.
     virtual glm::vec2 GetAnalogAction(std::string_view actionName) const = 0;
 

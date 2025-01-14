@@ -25,7 +25,8 @@ BloomSettings::~BloomSettings()
 
 void BloomSettings::Render()
 {
-    ImGui::Begin("Bloom Settings");
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
 
     ImGui::InputFloat("Strength", &_data.strength, 0.5f, 2.0f);
     ImGui::InputFloat("Gradient strength", &_data.gradientStrength, 0.05f, 0.1f, "%.00005f");
