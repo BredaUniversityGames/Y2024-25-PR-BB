@@ -177,7 +177,7 @@ bool SecondPass_IsVisible(uint objectIndex)
             float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
 
             float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), 0.5 * (AABB.xy + AABB.zw), mipIndex).x;
-            float nearestBoundsDepth = (-center.z - radius - camera.zNear) / (camera.zFar - camera.zNear);
+            float nearestBoundsDepth = camera.zNear / (-center.z - radius);
 
             occlusionVisible = occluderDepth < nearestBoundsDepth;
         }

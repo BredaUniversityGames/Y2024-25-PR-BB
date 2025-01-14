@@ -113,13 +113,12 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .minFilter = vk::Filter::eLinear,
         .magFilter = vk::Filter::eLinear,
         .anisotropyEnable = false,
-        .borderColor = vk::BorderColor::eFloatOpaqueBlack,
         .mipmapMode = vk::SamplerMipmapMode::eNearest,
         .minLod = 0.0f,
         .maxLod = static_cast<float>(std::floor(std::log2(hzbSize))),
         .reductionMode = vk::SamplerReductionMode::eMin,
     };
-    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 
     _hzbSampler = _context->Resources()->SamplerResourceManager().Create(samplerCreation);
 
