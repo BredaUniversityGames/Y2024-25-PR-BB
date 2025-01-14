@@ -71,13 +71,13 @@ jobs:
       - name: Perforce Client
         shell: bash
         run: |
-          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: $(pwd)|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..."  | sed "s/^Host:.*/Host: $(hostname)/" | p4 -P ${{ env.P4TICKET }} client -i
+          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: $(pwd)|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | p4 -P ${{ env.P4TICKET }} client -i
           p4 -P ${{ env.P4TICKET }} set P4CLIENT=NewWorkspace
 
       - name: Perforce Sync
         shell: bash
         run: |
-          p4 -P ${{ env.P4TICKET }} sync //Y2024A-Y3-CustomTech/...
+          p4 -P ${{ env.P4TICKET }} sync -f
 
       # Setup python for packaging script
 
