@@ -3,22 +3,66 @@
 #include "engine.hpp"
 #include "model_loader.hpp"
 #include "renderer_module.hpp"
+
+#include "components/static_mesh_component.hpp"
+#include "graphics_context.hpp"
+#include "passes/debug_pass.hpp"
+
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "scene_loader.hpp"
+#include "resource_management/model_resource_manager.hpp"
+
 #include <set>
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
-    this->SetNavigationMesh("assets/models/NavmeshTest/NavMesh.gltf");
+    this->SetNavigationMesh("assets/models/NavmeshTest/Navmesh.gltf");
     ComputedPath path = this->FindPath(
-        { 0.7f, 0.0f, -0.7f },
-        { -0.7f, 0.0f, 0.7f });
+        { 3.02f, 0.0f, -3.02f },
+        { -3.02f, 0.0f, 3.02f });
+
+    auto models = _renderer->FrontLoadModels({"assets/models/NavmeshTest/navmesh_textured.gltf"});
+    auto& ecs = engine.GetModule<ECSModule>();
+    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
+    entt::entity e = SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
+        *modelResourceManager.Access(models[0].second),
+        models[0].first,
+        models[0].first.hierarchy,
+        models[0].first.animations
+    );
+
 
     return ModuleTickOrder::eTick;
 }
 
 void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    DebugPass& debugPass = _renderer->GetDebugPipeline();
+
+    ComputedPath path = FindPath(
+        { 3.02f, 0.0f, -3.02f },
+        { -3.02f, 0.0f, 3.02f }
+    );
+
+    if(!path.waypoints.empty())
+    {
+        for(size_t i = 0; i < path.waypoints.size() - 1; i++)
+        {
+            glm::vec3 from = path.waypoints[i].centre;
+            glm::vec3 to = path.waypoints[i + 1].centre;
+
+            from +=  glm::vec3{0.0f, 0.2f, 0.0f};
+            to +=  glm::vec3{0.0f, 0.2f, 0.0f};
+
+            debugPass.AddLine(
+                from,
+                to
+            );
+        }
+    }
 }
 
 void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -36,7 +80,43 @@ PathfindingModule::~PathfindingModule()
 int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 {
     CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
-    CPUMesh navmeshMesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
+
+    uint32_t meshIndex = std::numeric_limits<uint32_t>::max();
+    glm::mat4 transform = glm::mat4(1.0f);
+
+    Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
+
+    std::queue<std::pair<Hierarchy::Node*, glm::mat4>> nodeStack;
+    nodeStack.push({rootNode, rootNode->transform});
+    while(!nodeStack.empty())
+    {
+        const std::pair<Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
+        nodeStack.pop();
+
+        if(topNodeTransform.first->meshIndex.has_value())
+        {
+            if(topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            {
+                meshIndex = topNodeTransform.first->meshIndex.value().second;
+                transform = topNodeTransform.second;
+                break;
+            }
+        }
+
+        for(size_t i = 0; i < topNodeTransform.first->children.size(); i++)
+        {
+            Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
+            glm::mat4 transform = topNodeTransform.second * pNode->transform;
+
+            nodeStack.push({pNode, transform});
+        }
+    }
+
+    if(meshIndex == std::numeric_limits<uint32_t>::max())
+        return {};
+
+    CPUMesh navmeshMesh = navmesh.meshes[meshIndex]; // GLTF model should consist of only a single mesh
+    _inverseTransform = glm::inverse(transform);
 
     _triangles.clear();
 
@@ -57,6 +137,7 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         glm::vec3 p2 = navmeshMesh.vertices[info.indices[2]].position;
 
         info.centre = (p0 + p1 + p2) / 3.0f;
+        info.centre = glm::vec3(transform * glm::vec4(info.centre, 1.0f));
 
         size_t triangleIdx = _triangles.size();
         _triangles.push_back(info);
@@ -79,10 +160,10 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         for (uint32_t j = 0; j < 3; j++)
         {
             // Get all triangles that use this index
-            const std::vector<uint32_t>& index_triangles = indicesToTriangles[triangle.indices[j]];
+            const std::vector<uint32_t>& indexTriangles = indicesToTriangles[triangle.indices[j]];
 
             // Loop over every triangle that shares this index
-            for (uint32_t triangleIdx : index_triangles)
+            for (uint32_t triangleIdx : indexTriangles)
             {
                 // Don't add current triangle to list, obviously
                 if (triangleIdx == i)
@@ -139,6 +220,9 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     // Heuristic function
     IterablePriorityQueue<TriangleNode, std::vector<TriangleNode>, std::greater<TriangleNode>> openList;
     std::unordered_map<uint32_t, TriangleNode> closedList;
+
+    // startPos = glm::vec3(_inverseTransform * glm::vec4(startPos, 1.0f));
+    // endPos = glm::vec3(_inverseTransform * glm::vec4(endPos, 1.0f));
 
     // Find closest triangle // TODO: More efficient way of finding closes triangle
     float closestStartTriangleDistance = std::numeric_limits<float>::infinity(),
