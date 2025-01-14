@@ -37,6 +37,17 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
+void LoadMainMenuEnvironment(Engine& engine)
+{
+    engine.GetModule<UIModule>().CreateNavigationTest();
+
+    auto cpu = engine.GetModule<RendererModule>().GetRenderer()->GetModelLoader().ExtractModelFromGltfFile("assets/models/background.glb");
+    auto renderer = engine.GetModule<RendererModule>().GetRenderer();
+    auto gpu = renderer->GetContext()->Resources()->ModelResourceManager().Create(cpu, renderer->StaticBatchBuffer(), renderer->SkinnedBatchBuffer());
+
+    SceneLoading::LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), *renderer->GetContext()->Resources()->ModelResourceManager().Access(gpu), cpu, cpu.hierarchy, {});
+}
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -47,71 +58,72 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
-
-    // modules
-
-    std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
-        "assets/models/AnimatedRifle.glb",
-        //"assets/models/Cathedral.glb"
-        //"assets/models/BrainStem.glb",
-        //"assets/models/Adventure.glb",
-        //"assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-
-    };
-
     particleModule.LoadEmitterPresets();
+    /*
+        // modules
+        {
+            std::vector<std::string> modelPaths = {
+                "assets/models/parcour_test.glb",
+                "assets/models/AnimatedRifle.glb",
+                //"assets/models/Cathedral.glb"
+                //"assets/models/BrainStem.glb",
+                //"assets/models/Adventure.glb",
+                //"assets/models/DamagedHelmet.glb",
+                //"assets/models/CathedralGLB_GLTF.glb",
+                //"assets/models/Terrain/scene.gltf",
+                //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
+                //"assets/models/MetalRoughSpheres.glb",
+                //"assets/models/monkey.gltf",
 
-    auto models = rendererModule.FrontLoadModels(modelPaths);
-    std::vector<entt::entity> entities;
+            };
 
-    auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+            auto models = rendererModule.FrontLoadModels(modelPaths);
+            std::vector<entt::entity> entities;
 
-    _ecs = &engine.GetModule<ECSModule>();
+            auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
+            _ecs = &engine.GetModule<ECSModule>();
 
-    // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
-    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
+            SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
+            auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
 
-    // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
+            // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
+            // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
 
-    // TODO: Once level saving is done, this should be deleted
-    entt::entity lightEntity = _ecs->GetRegistry().create();
-    _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-    _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
+            // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[2], glm::vec3 { 20.0f, 0.0f, 20.0f });
 
-    DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-    directionalLightComponent.nearPlane = -110.0f;
-    directionalLightComponent.farPlane = 63.0f;
-    directionalLightComponent.orthographicSize = 75.0f;
+            // TODO: Once level saving is done, this should be deleted
+            entt::entity lightEntity = _ecs->GetRegistry().create();
+            _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
+            _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);
 
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
-    TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+            DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
+            directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+            directionalLightComponent.nearPlane = -110.0f;
+            directionalLightComponent.farPlane = 63.0f;
+            directionalLightComponent.orthographicSize = 75.0f;
 
-    entt::entity cameraEntity = _ecs->GetRegistry().create();
-    _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-    _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
-    _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-3.6f, 1.25f, 240.0f));
+            TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
+            entt::entity cameraEntity = _ecs->GetRegistry().create();
+            _ecs->GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
+            _ecs->GetRegistry().emplace<TransformComponent>(cameraEntity);
+            _ecs->GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-    CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
-    cameraComponent.projection = CameraComponent::Projection::ePerspective;
-    cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.5f;
-    cameraComponent.farPlane = 600.0f;
-    cameraComponent.reversedZ = true;
+            RelationshipHelpers::AttachChild(_ecs->GetRegistry(), cameraEntity, gunEntity);
 
-    _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
+            CameraComponent& cameraComponent = _ecs->GetRegistry().emplace<CameraComponent>(cameraEntity);
+            cameraComponent.projection = CameraComponent::Projection::ePerspective;
+            cameraComponent.fov = 45.0f;
+            cameraComponent.nearPlane = 0.5f;
+            cameraComponent.farPlane = 600.0f;
+            cameraComponent.reversedZ = true;
 
+            _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
+        }*/
+
+    LoadMainMenuEnvironment(engine);
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
     _lastMousePos = mousePos;
@@ -159,14 +171,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-
-    constexpr bool createTestCanvas = false;
-    if (createTestCanvas)
-    {
-        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
-
-        engine.GetModule<UIModule>().CreateNavigationTest();
-    }
 
     bblog::info("Successfully initialized engine!");
 
@@ -370,3 +374,7 @@ void OldEngine::Shutdown(MAYBE_UNUSED Engine& engine)
 
 OldEngine::OldEngine() = default;
 OldEngine::~OldEngine() = default;
+
+void LoadMainMenuEnvironment()
+{
+}

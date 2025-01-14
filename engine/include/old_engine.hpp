@@ -35,3 +35,5 @@ private:
     glm::ivec2 _lastMousePos {};
     MAYBE_UNUSED bool _shouldQuit = false;
 };
+
+void LoadMainMenuEnvironment(Engine& engine);
