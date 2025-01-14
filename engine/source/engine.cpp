@@ -380,18 +380,6 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     {
         float backoff = velocity.Dot(normal) * overbounce;
         velocity -= normal * backoff;
-
-        auto ClipVelocity = [](JPH::Vec3& velocity, const JPH::Vec3& normal, float overbounce = 1.0f)
-        {
-            float backoff = velocity.Dot(normal) * overbounce;
-            velocity -= normal * backoff;
-
-            // Check if the velocity is still pointing towards the normal (getting stuck)
-            if (velocity.Dot(normal) < 0.0f)
-            {
-                velocity = JPH::Vec3(0, 0, 0); // Prevent sticking by zeroing out the component against the normal
-            }
-        };
     };
 
     entt::entity playerEntity = _ecs->GetSystem<PhysicsSystem>()->_playerEntity;
@@ -462,13 +450,13 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     /*if (glm::length(moveInputDir) > 0.0f)
         moveInputDir = glm::normalize(moveInputDir);*/
 
-    const float maxSpeed = 8.80f;
+    const float maxSpeed = 9.0f;
     const float sv_accelerate = 10.0f;
     const float frameTime = deltaTime;
 
     glm::vec3 wishVel = moveInputDir * maxSpeed;
 
-    physicsModule.bodyInterface->SetGravityFactor(bodyID, 1.75f);
+    physicsModule.bodyInterface->SetGravityFactor(bodyID, 2.2f);
     if (isGrounded)
     {
         physicsModule.bodyInterface->SetFriction(bodyID, 12.0f);
@@ -508,7 +496,7 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     }
 
     // Wall Collision Fix - Project velocity if collision occurs
-    std::vector<RayHitInfo> wallCheckRays = physicsModule.ShootRay(playerPos, glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), 1.1);
+    std::vector<RayHitInfo> wallCheckRays = physicsModule.ShootMultipleRays(playerPos, glm::vec3(velocity.GetX(), velocity.GetY(), velocity.GetZ()), 1.25, 3, 35.0f);
 
     for (auto hit : wallCheckRays)
     {
@@ -516,7 +504,7 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
         {
             JPH::Vec3 wallNormal(hit.normal.x, 0.0, hit.normal.z);
             ClipVelocity(velocity, wallNormal);
-            break;
+            // break;
         }
     }
 

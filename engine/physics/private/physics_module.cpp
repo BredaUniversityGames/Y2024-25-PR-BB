@@ -3,6 +3,7 @@
 #include "systems/physics_system.hpp"
 
 #include <application_module.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <time_module.hpp>
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
@@ -141,4 +142,38 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     }
 
     return hitInfos;
+}
+
+std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, unsigned int numRays, float angle) const
+{
+    std::vector<RayHitInfo> results;
+
+    if (numRays == 1)
+    {
+        // Single ray shot straight forward
+        auto rayHit = ShootRay(origin, direction, distance);
+        if (!rayHit.empty())
+        {
+            results.insert(results.end(), rayHit.begin(), rayHit.end());
+        }
+        return results;
+    }
+
+    // Calculate the angle step based on the number of rays (ensuring symmetrical distribution)
+    float angleStep = glm::radians(angle) / (numRays / 2);
+
+    for (int i = 0; i < numRays; ++i)
+    {
+        float angleOffset = (i - (numRays - 1) / 2.0f) * angleStep;
+        glm::vec3 rotatedDirection = glm::rotateY(direction, angleOffset);
+
+        auto rayHit = ShootRay(origin, rotatedDirection, distance);
+
+        if (!rayHit.empty())
+        {
+            results.insert(results.end(), rayHit.begin(), rayHit.end());
+        }
+    }
+
+    return results;
 }
