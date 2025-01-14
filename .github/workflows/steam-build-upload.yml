@@ -32,7 +32,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'true'
-          lfs: 'true'
 
       # Install all dependencies
 
@@ -69,9 +68,17 @@ jobs:
           arguments: -y
 
       - name: Perforce Client
+        if: matrix.platform == 'ubuntu-latest'
         shell: bash
         run: |
-          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: $(pwd)|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | p4 -P ${{ env.P4TICKET }} client -i
+          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: /home/runner/work/Y2024-25-PR-BB/Y2024-25-PR-BB|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | p4 -P ${{ env.P4TICKET }} client -i
+          p4 -P ${{ env.P4TICKET }} set P4CLIENT=NewWorkspace
+
+      - name: Perforce Client
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        run: |
+          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: D:/a/Y2024-25-PR-BB/Y2024-25-PR-BB|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | p4 -P ${{ env.P4TICKET }} client -i
           p4 -P ${{ env.P4TICKET }} set P4CLIENT=NewWorkspace
 
       - name: Perforce Sync
@@ -96,7 +103,6 @@ jobs:
       - name: Package Linux Project
         if: matrix.platform == 'ubuntu-latest'
         run: |
-          echo "Put any content here" > assets/Newfile.txt
           python scripts/python/package.py -o "package/linux-dist" -e "build/WSL-Release/CustomTech" -a "assets" "shaders/bin" "game" -f "build/WSL-Release/libsteam_api.so" "build/WSL-Release/libfmod.so.14" "build/WSL-Release/libfmodstudio.so.14"
 
       # Save build as artifact for upload job
