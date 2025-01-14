@@ -41,7 +41,7 @@ private:
         uint32_t hzbIndex;
         uint32_t drawCommandsCount;
         uint32_t isReverseZ;
-    } _pushConstants;
+    };
 
     void CreateCullingPipeline();
     void RecordPrepassCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const CameraBatch::Draw& draw, vk::DescriptorSet sceneDraws, vk::DescriptorSet sceneInstances, uint32_t drawCount, const PushConstants& pc);
