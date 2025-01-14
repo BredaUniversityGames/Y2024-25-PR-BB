@@ -38,7 +38,6 @@ BuildHzbPass::~BuildHzbPass()
 void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Build HZB");
-    util::BeginLabel(commandBuffer, "Build HZB", glm::vec3 { 1.0f }, _context->VulkanContext()->Dldi());
 
     const auto& imageResourceManager = _context->Resources()->ImageResourceManager();
     const auto* hzb = imageResourceManager.Access(_cameraBatch.HZBImage());
@@ -54,8 +53,8 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
         util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
 
         vk::DescriptorImageInfo inputImageInfo {
-            .imageView = inputTexture,
             .sampler = _context->Resources()->SamplerResourceManager().Access(_hzbSampler)->sampler,
+            .imageView = inputTexture,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
         vk::DescriptorImageInfo outputImageInfo {
@@ -76,8 +75,6 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
     }
 
     util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral, 1, 0, hzb->mips);
-
-    util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
 void BuildHzbPass::CreateSampler()

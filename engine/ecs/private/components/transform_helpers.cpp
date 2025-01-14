@@ -239,8 +239,7 @@ glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat&
     const glm::mat4 rotationMatrix = glm::toMat4(rotation);
     const glm::mat4 scaleMatrix = glm::scale(glm::mat4 { 1.0f }, scale);
 
-    auto t = translationMatrix * rotationMatrix * scaleMatrix;
-    return t;
+    return translationMatrix * rotationMatrix * scaleMatrix;
 }
 void TransformHelpers::OnConstructTransform(entt::registry& reg, entt::entity entity)
 {
