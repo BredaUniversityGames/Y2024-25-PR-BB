@@ -1,5 +1,5 @@
 ﻿#include "systems/physics_system.hpp"
-#include "../../../../build/CI-CD/_deps/joltphysics-src/Jolt/Physics/Collision/Shape/CapsuleShape.h"
+#include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
 #include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
