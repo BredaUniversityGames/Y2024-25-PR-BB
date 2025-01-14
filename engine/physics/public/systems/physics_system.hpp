@@ -31,6 +31,7 @@ public:
     void InspectRigidBody(RigidbodyComponent& rb);
 
     entt::entity _playerEntity = entt::null;
+    std::string_view GetName() override { return "PhysicsSystem"; }
 
 private:
     // for loading mesh data or convex data into the scene with no rendering mesh relation
