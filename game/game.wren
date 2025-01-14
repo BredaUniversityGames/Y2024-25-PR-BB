@@ -6,7 +6,6 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
-        engine.GetAudio().LoadSFX("assets/sounds/hit.ogg", false, false)
 
         __counter = 0
         __frameTimer = 0
@@ -33,8 +32,6 @@ class Main {
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
     }
-
-    
 
     static Update(engine, dt) {
         __counter = __counter + 1
@@ -65,7 +62,6 @@ class Main {
             var end = rayHitInfo.position
 
             if (rayHitInfo.hasHit) {
-                engine.GetAudio().PlaySFX("assets/sounds/hit.ogg", 1.0)
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
@@ -89,7 +85,6 @@ class Main {
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
                 i = i + 5.0
             }
-
         }
 
         if (engine.GetInput().GetDigitalAction("Jump")) {

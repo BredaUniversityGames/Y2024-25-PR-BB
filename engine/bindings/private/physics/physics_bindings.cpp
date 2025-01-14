@@ -24,7 +24,6 @@ glm::vec3 GetRayHitPosition(RayHitInfo& self)
 {
     return self.position;
 }
-
 }
 
 void BindPhysicsAPI(wren::ForeignModule& module)

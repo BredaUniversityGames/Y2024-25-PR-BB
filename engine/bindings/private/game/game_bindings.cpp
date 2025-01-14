@@ -24,7 +24,6 @@ float GetLifetime(WrenComponent<LifetimeComponent>& self)
 {
     return self.component->lifetime;
 }
-
 }
 
 void BindGameAPI(wren::ForeignModule& module)

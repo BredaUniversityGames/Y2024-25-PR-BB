@@ -175,6 +175,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         BindPhysicsAPI(module);
     }
 
+    // Game
     {
         BindGameAPI(module);
     }
