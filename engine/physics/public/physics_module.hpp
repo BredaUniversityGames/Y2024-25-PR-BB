@@ -306,6 +306,8 @@ inline glm::vec3 ToGLMVec3(const JPH::Vec3& vec)
 {
     return glm::vec3(vec.GetX(), vec.GetY(), vec.GetZ());
 }
+
+struct RigidbodyComponent;
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
@@ -320,7 +322,12 @@ public:
 
     NO_DISCARD std::vector<RayHitInfo> ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
     NO_DISCARD std::vector<RayHitInfo> ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, unsigned int numRays, float angle) const;
-
+    void AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    void AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    glm::vec3 GetVelocity(RigidbodyComponent& rigidBody) const;
+    glm::vec3 GetAngularVelocity(RigidbodyComponent& rigidBody) const;
+    void SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
+    void SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
     JPH::BodyInterface* bodyInterface = nullptr;
     DebugRendererSimpleImpl* debugRenderer = nullptr;
     JPH::PhysicsSystem* physicsSystem = nullptr;

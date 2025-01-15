@@ -176,3 +176,36 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
 
     return results;
 }
+
+void PhysicsModule::AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
+{
+    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
+    bodyInterface->AddForce(rigidBody.bodyID, forceDirection);
+}
+void PhysicsModule::AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
+{
+    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
+    bodyInterface->AddImpulse(rigidBody.bodyID, forceDirection);
+}
+glm::vec3 PhysicsModule::GetVelocity(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 vel = bodyInterface->GetLinearVelocity(rigidBody.bodyID);
+    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
+    return velocity;
+}
+glm::vec3 PhysicsModule::GetAngularVelocity(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 vel = bodyInterface->GetAngularVelocity(rigidBody.bodyID);
+    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
+    return velocity;
+}
+void PhysicsModule::SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
+{
+    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
+    bodyInterface->SetLinearVelocity(rigidBody.bodyID, vel);
+}
+void PhysicsModule::SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
+{
+    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
+    bodyInterface->SetAngularVelocity(rigidBody.bodyID, vel);
+}
