@@ -1,6 +1,7 @@
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
+#include "game_module.hpp"
 #include "inspector_module.hpp"
 #include "main_engine.hpp"
 #include "old_engine.hpp"
@@ -32,7 +33,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<PathfindingModule>()
         .AddModule<AudioModule>()
         .AddModule<UIModule>()
-        .AddModule<ParticleModule>();
+        .AddModule<ParticleModule>()
+        .AddModule<GameModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
 
