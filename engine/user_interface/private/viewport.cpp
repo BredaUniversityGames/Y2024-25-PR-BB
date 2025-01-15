@@ -5,7 +5,7 @@
 
 void Viewport::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
-    for (int32_t i = _baseElements.size(); i >= 0; --i)
+    for (int32_t i = _baseElements.size() - 1; i >= 0; --i)
     {
         _baseElements[i]->Update(inputManagers, inputContext);
     }
