@@ -151,6 +151,7 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+entt::entity GetEntity(WrenEntity& self) { return self.entity; }
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -383,7 +384,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
 
-    entityClass.propReadonlyExt<&WrenEntity::GetEntity>("entity");
+    module.klass<entt::entity>("enttEntity");
+
+    entityClass.func<bindings::GetEntity>("GetEnttEntity");
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
