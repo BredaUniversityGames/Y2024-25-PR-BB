@@ -6,10 +6,10 @@ template <>
 void ComponentEditorWidget<ParticleEmitterComponent>(entt::registry& reg, entt::registry::entity_type e)
 {
     auto& t = reg.get<ParticleEmitterComponent>(e);
-    t.Inspect(reg, e);
+    t.Inspect();
 }
 }
-void ParticleEmitterComponent::Inspect(entt::registry& reg, entt::entity entity)
+void ParticleEmitterComponent::Inspect()
 {
     ImGui::Checkbox("Emit once##Particle Emitter", &emitOnce);
     ImGui::DragFloat("Emit delay##Particle Emitter", &maxEmitDelay, 0.0f, 50.0f);

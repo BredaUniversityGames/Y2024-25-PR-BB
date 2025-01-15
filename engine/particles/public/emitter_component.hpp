@@ -15,7 +15,7 @@ struct ParticleEmitterComponent
     float currentEmitDelay = 1.0f;
     ParticleType type = ParticleType::eBillboard;
     Emitter emitter;
-    void Inspect(entt::registry& reg, entt::entity entity);
+    void Inspect();
 
 private:
     friend class Editor;
