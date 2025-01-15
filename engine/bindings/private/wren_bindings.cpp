@@ -91,6 +91,11 @@ bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
     return self.GetInputDeviceManager().IsKeyPressed(code);
 }
 
+bool InputGetRawKey(ApplicationModule& self, KeyboardCode code)
+{
+    return self.GetInputDeviceManager().IsKeyHeld(code);
+}
+
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
 {
     return component.component->GetLocalPosition();
@@ -187,6 +192,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
         wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
         wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
+        wrenClass.funcExt<bindings::InputGetRawKey>("DebugGetKeyHeld");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
     }
