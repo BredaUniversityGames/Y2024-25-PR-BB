@@ -149,7 +149,7 @@ jobs:
         shell: bash
         run: |
           mkdir scripts/build_system/steam/builder/config
-          "${{ env.STEAM_CONFIG }}" | base64 -d > "scripts/build_system/steam/builder/config/config.vdf"
+          echo "${{ env.STEAM_CONFIG }}" | base64 -d > scripts/build_system/steam/builder/config/config.vdf
 
       # Upload to Steam
       
