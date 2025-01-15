@@ -160,11 +160,11 @@ jobs:
       # Delete artifacts after use
 
       - name: Delete Windows Artifacts
-        uses: geekyeggo/delete-artifact@v1
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: windows-dist
 
       - name: Delete Linux Artifacts
-        uses: geekyeggo/delete-artifact@v1
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: linux-dist
