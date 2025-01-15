@@ -27,7 +27,7 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
     auto models = _renderer->FrontLoadModels({"assets/models/NavmeshTest/navmesh_textured.gltf"});
     auto& ecs = engine.GetModule<ECSModule>();
     auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
-    entt::entity e = SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
+    SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
         *modelResourceManager.Access(models[0].second),
         models[0].first,
         models[0].first.hierarchy,
