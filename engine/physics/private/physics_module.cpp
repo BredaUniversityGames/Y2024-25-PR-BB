@@ -176,6 +176,18 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
 
     return results;
 }
+glm::vec3 PhysicsModule::GetPosition(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 pos = bodyInterface->GetPosition(rigidBody.bodyID);
+    const glm::vec3 position = glm::vec3(pos.GetX(), pos.GetY(), pos.GetZ());
+    return position;
+}
+glm::vec3 PhysicsModule::GetRotation(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Quat rot = bodyInterface->GetRotation(rigidBody.bodyID);
+    const glm::vec3 rotation = glm::eulerAngles(glm::quat(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
+    return rotation;
+}
 
 void PhysicsModule::AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
 {
@@ -208,4 +220,12 @@ void PhysicsModule::SetAngularVelocity(RigidbodyComponent& rigidBody, const glm:
 {
     const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
     bodyInterface->SetAngularVelocity(rigidBody.bodyID, vel);
+}
+void PhysicsModule::SetGravityFactor(RigidbodyComponent& rigidBody, const float factor) const
+{
+    bodyInterface->SetGravityFactor(rigidBody.bodyID, factor);
+}
+void PhysicsModule::SetFriction(RigidbodyComponent& rigidBody, const float friction) const
+{
+    bodyInterface->SetFriction(rigidBody.bodyID, friction);
 }
