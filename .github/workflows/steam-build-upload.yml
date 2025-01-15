@@ -105,14 +105,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-dist
-          path: package/windows-dist/
+          path: package/
 
       - name: Upload Linux Build Artifacts
         if: matrix.platform == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: linux-dist
-          path: package/linux-dist/
+          path: package/
 
   upload-project:
     name: Upload Project
@@ -131,12 +131,13 @@ jobs:
     
       # Download build artifacts from previous job
 
-      - name: Download math result for job 1
+      - name: Download packaged builds from artifacts
         uses: actions/download-artifact@v4
         with:
           name: |
             windows-dist
             linux-dist
+          path: package/
 
       # Create steam config to avoid 2FA
 
