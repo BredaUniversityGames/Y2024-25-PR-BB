@@ -155,7 +155,7 @@ jobs:
       
       - name: Upload Build
         run: |
-          scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf
+          scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf +quit
 
       # Delete artifacts after use
 
