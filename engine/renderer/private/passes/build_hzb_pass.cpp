@@ -5,7 +5,7 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "math_utils.hpp"
+#include "math_util.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
@@ -67,7 +67,7 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
 
         commandBuffer.pushConstants<uint32_t>(_buildHzbPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { mipSize });
 
-        uint32_t groupSize = DivideRoundingUp(mipSize, 8);
+        uint32_t groupSize = math::DivideRoundingUp(mipSize, 8);
         commandBuffer.dispatch(groupSize, groupSize, 1);
 
         util::TransitionImageLayout(commandBuffer, hzb->image, hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i, 1);

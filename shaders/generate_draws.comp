@@ -56,22 +56,11 @@ layout (push_constant) uniform PushConstants
 
 layout (local_size_x = 64) in;
 
-bool Prepass_IsVisible(uint objectIndex);
-bool SecondPass_IsVisible(uint objectIndex);
+bool PrepassIsVisible(uint objectIndex);
+bool SecondPassIsVisible(uint objectIndex);
 bool VisibleInFrustum(in vec3 center, in float radius);
-bool TryCalculateSphereBounds_Perspective(
-    vec3 _center,
-    float _radius,
-    float _zNear,
-    float _P00,
-    float _P11,
-out vec4 _AABB);
-bool TryCalculateSphereBounds_Ortho(
-    vec3 _center,
-    float _radius,
-    float _P00,
-    float _P11,
-out vec4 _AABB);
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB);
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB);
 bool GetVisibility(uint objectIndex);
 void SetVisibility(uint objectIndex, bool value);
 
@@ -83,7 +72,7 @@ void main()
     {
         if (bool(pushConstants.isPrepass))
         {
-            if (Prepass_IsVisible(gId))
+            if (PrepassIsVisible(gId))
             {
                 uint newIndex = atomicAdd(count, 1);
                 redirect[newIndex] = gId;
@@ -93,7 +82,7 @@ void main()
         }
         else
         {
-            bool visible = SecondPass_IsVisible(gId);
+            bool visible = SecondPassIsVisible(gId);
             bool shouldDraw = visible && !GetVisibility(gId);
 
             if (shouldDraw)
@@ -126,7 +115,7 @@ float GetScaledRadius(float radius, mat4 transform) {
     return radius * maxScaleFactor;
 }
 
-bool Prepass_IsVisible(uint objectIndex)
+bool PrepassIsVisible(uint objectIndex)
 {
     // For the prepass we only care if it was visible in the previous frame.
     if (!GetVisibility(objectIndex))
@@ -144,7 +133,7 @@ bool Prepass_IsVisible(uint objectIndex)
     return VisibleInFrustum(center, radius);
 }
 
-bool SecondPass_IsVisible(uint objectIndex)
+bool SecondPassIsVisible(uint objectIndex)
 {
     // Grab position from world matrix and convert it into view space.
     vec3 center = instances[objectIndex].model[3].xyz;
@@ -166,12 +155,12 @@ bool SecondPass_IsVisible(uint objectIndex)
         vec4 AABB;
         if (camera.projectionType == 0)
         {
-            projectionVisible = TryCalculateSphereBounds_Perspective(center, radius, camera.zNear, P00, P11, AABB);
+            projectionVisible = TryCalculateSphereBoundsPerspective(center, radius, camera.zNear, P00, P11, AABB);
             nearestBoundsDepth = camera.zNear / (-center.z - radius);
         }
         else if (camera.projectionType == 1)
         {
-            projectionVisible = TryCalculateSphereBounds_Ortho(center, radius, P00, P11, AABB);
+            projectionVisible = TryCalculateSphereBoundsOrtho(center, radius, P00, P11, AABB);
 
             float nearestZ = center.z - radius;
             nearestBoundsDepth = (-nearestZ - camera.zNear) / (camera.zFar - camera.zNear);
@@ -224,59 +213,48 @@ bool VisibleInFrustum(in vec3 center, in float radius)
     return visible && camera.cullingEnabled != 0;
 }
 
-bool TryCalculateSphereBounds_Ortho(
-    vec3 _center,
-    float _radius,
-    float _P00,
-    float _P11,
-out vec4 _AABB)
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB)
 {
-    vec4 centerClip = camera.proj * vec4(_center, 1.0);
+    vec4 centerClip = camera.proj * vec4(center, 1.0);
     vec3 centerNDC = centerClip.xyz / centerClip.w;
 
     vec2 radiusNDC = vec2(
-    _radius * (2.0 * (_P00 * centerClip.w)),
-    _radius * (2.0 * (_P11 * centerClip.w))
+    radius * (2.0 * (P00 * centerClip.w)),
+    radius * (2.0 * (P11 * centerClip.w))
     );
 
-    _AABB.x = centerNDC.x - radiusNDC.x;
-    _AABB.y = centerNDC.y + radiusNDC.y;
-    _AABB.z = centerNDC.x + radiusNDC.x;
-    _AABB.w = centerNDC.y - radiusNDC.y;
+    AABB.x = centerNDC.x - radiusNDC.x;
+    AABB.y = centerNDC.y + radiusNDC.y;
+    AABB.z = centerNDC.x + radiusNDC.x;
+    AABB.w = centerNDC.y - radiusNDC.y;
 
-    _AABB = _AABB * 0.5 + 0.5;
+    AABB = AABB * 0.5 + 0.5;
 
     return true;
 }
 
 // 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere
 // https://jcgt.org/published/0002/02/05/
-bool TryCalculateSphereBounds_Perspective(
-    vec3 _center,
-    float _radius,
-    float _zNear,
-    float _P00,
-    float _P11,
-out vec4 _AABB)
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB)
 {
-    if (-_center.z < _radius + _zNear)
+    if (-center.z < radius + zNear)
     {
         return false;
     }
 
-    vec2 centerXZ = -_center.xz;
-    vec2 vX = vec2(sqrt(dot(centerXZ, centerXZ) - _radius * _radius), _radius);
+    vec2 centerXZ = -center.xz;
+    vec2 vX = vec2(sqrt(dot(centerXZ, centerXZ) - radius * radius), radius);
     vec2 minX = mat2(vX.x, vX.y, -vX.y, vX.x) * centerXZ;
     vec2 maxX = mat2(vX.x, -vX.y, vX.y, vX.x) * centerXZ;
 
-    vec2 centerYZ = -_center.yz;
-    vec2 vY = vec2(sqrt(dot(centerYZ, centerYZ) - _radius * _radius), _radius);
+    vec2 centerYZ = -center.yz;
+    vec2 vY = vec2(sqrt(dot(centerYZ, centerYZ) - radius * radius), radius);
     vec2 minY = mat2(vY.x, vY.y, -vY.y, vY.x) * centerYZ;
     vec2 maxY = mat2(vY.x, -vY.y, vY.y, vY.x) * centerYZ;
 
-    _AABB = 0.5 - 0.5 * vec4(
-    minX.x / minX.y * _P00, minY.x / minY.y * _P11,
-    maxX.x / maxX.y * _P00, maxY.x / maxY.y * _P11);
+    AABB = 0.5 - 0.5 * vec4(
+    minX.x / minX.y * P00, minY.x / minY.y * P11,
+    maxX.x / maxX.y * P00, maxY.x / maxY.y * P11);
 
     return true;
 }

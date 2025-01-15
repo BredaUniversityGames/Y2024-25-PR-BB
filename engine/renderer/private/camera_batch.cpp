@@ -3,36 +3,13 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
+#include "math_util.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
-
-uint32_t roundUpToPowerOfTwo(uint32_t n)
-{
-    if (n == 0)
-    {
-        return 1; // Special case: smallest power of two is 1
-    }
-
-    // If n is already a power of two, return it
-    if ((n & (n - 1)) == 0)
-    {
-        return n;
-    }
-
-    // Round up to the next power of two
-    n--; // Subtract 1 to handle exact powers of two correctly
-    n |= n >> 1;
-    n |= n >> 2;
-    n |= n >> 4;
-    n |= n >> 8;
-    n |= n >> 16;
-
-    return n + 1;
-}
 
 CameraBatch::Draw::Draw(const std::shared_ptr<GraphicsContext>& context, const std::string& name, uint32_t instanceCount, vk::DescriptorSetLayout drawDSL, vk::DescriptorSetLayout visibilityDSL, vk::DescriptorSetLayout redirectDSL)
 {
@@ -107,7 +84,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
 {
     const auto* depthImageAccess = _context->Resources()->ImageResourceManager().Access(_depthImage);
 
-    uint16_t hzbSize = roundUpToPowerOfTwo(std::max(depthImageAccess->width, depthImageAccess->height));
+    uint16_t hzbSize = math::RoundUpToPowerOfTwo(std::max(depthImageAccess->width, depthImageAccess->height));
     SamplerCreation samplerCreation {
         .name = name + " HZB Sampler",
         .minFilter = vk::Filter::eLinear,
@@ -132,7 +109,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
         .isHDR = false,
         .format = vk::Format::eR16Sfloat,
-        .type = ImageType::eDepth, // TODO: should probably be color
+        .type = ImageType::e2D,
         .name = name + " HZB Image",
     };
     _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage, _hzbSampler);
