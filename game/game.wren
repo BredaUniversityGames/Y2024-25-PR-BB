@@ -11,6 +11,7 @@ class Main {
         __frameTimer = 0
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
+        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 3.0, 0.0),0.85,0.5)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
@@ -88,6 +89,33 @@ class Main {
                 i = i + 5.0
             }
         }
+
+
+        var playerBody = __playerController.GetRigidbodyComponent()
+        var velocity = engine.GetPhysics().GetVelocity(playerBody)
+
+        var cameraRotation = __player.GetTransformComponent().rotation
+        var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
+        forward.y = 0.0
+
+        var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+        
+        // lets test for ground here
+        var playerControllerPos = engine.GetPhysics().GetPosition(playerBody)
+        var rayDirection = Vec3.new(0.0, -1.0, 0.0)
+        var rayLength = 2.0
+
+        var groundCheckRay = engine.GetPhysics().ShootRay(playerControllerPos, rayDirection, rayLength)
+
+        var isGrounded = false
+        for(hit in groundCheckRay) {
+            if(hit.entity != __playerController) {
+                isGrounded = true
+                break
+            }
+        }
+
+
 
         if (engine.GetInput().GetDigitalAction("Jump")) {
             System.print("Player Jumped!")

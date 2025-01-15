@@ -6,6 +6,7 @@
 #include "audio_emitter_component.hpp"
 #include "audio_module.hpp"
 #include "components/name_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -24,6 +25,7 @@
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
+#include "game_module.hpp"
 #include <cstdint>
 
 namespace bindings
@@ -161,6 +163,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
+        engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
     }
 
     // Time Module
@@ -348,7 +351,7 @@ void bindings::BindMath(wren::ForeignModule& module)
         quat.var<&glm::quat::y>("y");
         quat.var<&glm::quat::z>("z");
         BindVectorTypeOperations(quat);
-        quat.funcExt<MathUtil::Mul>(wren::OPERATOR_MUL);
+        quat.funcExt<MathUtil::Mul>("mul");
     }
 }
 
@@ -382,4 +385,6 @@ void bindings::BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
 }

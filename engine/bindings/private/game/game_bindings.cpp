@@ -3,12 +3,13 @@
 #include "lifetime_component.hpp"
 #include "physics_module.hpp"
 #include "utility/wren_entity.hpp"
-#include "wren_game.hpp"
 
 #include "ecs_module.hpp"
 
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
+
+#include <game_module.hpp>
 
 namespace bindings
 {
@@ -32,7 +33,7 @@ float GetLifetime(WrenComponent<LifetimeComponent>& self)
     return self.component->lifetime;
 }
 
-WrenEntity CreatePlayer(WrenGame& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
+WrenEntity CreatePlayerController(GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
 {
     entt::entity playerEntity = ecs.GetRegistry().create();
     JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
@@ -55,6 +56,6 @@ void BindGameAPI(wren::ForeignModule& module)
     lifetimeComponent.propExt<bindings::GetLifetimePaused, bindings::SetLifetimePaused>("paused");
     lifetimeComponent.propExt<bindings::GetLifetime, bindings::SetLifetime>("lifetime");
 
-    auto& game = module.klass<WrenGame>("Game");
-    game.funcExt<bindings::CreatePlayer>("CreatePlayer");
+    auto& game = module.klass<GameModule>("Game");
+    game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
 }

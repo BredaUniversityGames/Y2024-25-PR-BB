@@ -292,7 +292,7 @@ void OldEngine::Tick(Engine& engine)
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
 
             glm::vec3 wishDir = rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TestPlayerMovement(engine, deltaTimeMS, wishDir);
+            // TestPlayerMovement(engine, deltaTimeMS, wishDir);
 
             // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
 

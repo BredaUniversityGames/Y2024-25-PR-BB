@@ -1,6 +1,9 @@
 #include "physics_bindings.hpp"
 #include "components/rigidbody_component.hpp"
+#include "ecs_module.hpp"
 #include "physics_module.hpp"
+#include "utility/wren_entity.hpp"
+
 #include <optional>
 
 namespace bindings
@@ -15,59 +18,59 @@ std::vector<RayHitInfo> ShootMultipleRays(PhysicsModule& self, const glm::vec3& 
     return self.ShootMultipleRays(origin, direction, distance, numRays, angle);
 }
 
-void AddForce(PhysicsModule& self, RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount)
+void AddForce(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const glm::vec3& direction, const float amount)
 {
-    self.AddForce(rigidBody, direction, amount);
+    self.AddForce(*rigidBody.component, direction, amount);
 }
 
-void AddImpulse(PhysicsModule& self, RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount)
+void AddImpulse(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const glm::vec3& direction, const float amount)
 {
-    self.AddImpulse(rigidBody, direction, amount);
+    self.AddImpulse(*rigidBody.component, direction, amount);
 }
 
-void SetVelocity(PhysicsModule& self, RigidbodyComponent& rigidBody, const glm::vec3& velocity)
+void SetVelocity(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const glm::vec3& velocity)
 {
-    self.SetVelocity(rigidBody, velocity);
+    self.SetVelocity(*rigidBody.component, velocity);
 }
 
-void SetAngularVelocity(PhysicsModule& self, RigidbodyComponent& rigidBody, const glm::vec3& velocity)
+void SetAngularVelocity(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const glm::vec3& velocity)
 {
-    self.SetAngularVelocity(rigidBody, velocity);
+    self.SetAngularVelocity(*rigidBody.component, velocity);
 }
 
-void SetGravityFactor(PhysicsModule& self, RigidbodyComponent& rigidBody, const float factor)
+void SetGravityFactor(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const float factor)
 {
-    self.SetGravityFactor(rigidBody, factor);
+    self.SetGravityFactor(*rigidBody.component, factor);
 }
 
-void SetFriction(PhysicsModule& self, RigidbodyComponent& rigidBody, const float friction)
+void SetFriction(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody, const float friction)
 {
-    self.SetFriction(rigidBody, friction);
+    self.SetFriction(*rigidBody.component, friction);
 }
 
-glm::vec3 GetVelocity(PhysicsModule& self, RigidbodyComponent& rigidBody)
+glm::vec3 GetVelocity(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody)
 {
-    return self.GetVelocity(rigidBody);
+    return self.GetVelocity(*rigidBody.component);
 }
 
-glm::vec3 GetAngularVelocity(PhysicsModule& self, RigidbodyComponent& rigidBody)
+glm::vec3 GetAngularVelocity(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody)
 {
-    return self.GetAngularVelocity(rigidBody);
+    return self.GetAngularVelocity(*rigidBody.component);
 }
 
-glm::vec3 GetPosition(PhysicsModule& self, RigidbodyComponent& rigidBody)
+glm::vec3 GetPosition(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody)
 {
-    return self.GetPosition(rigidBody);
+    return self.GetPosition(*rigidBody.component);
 }
 
-glm::vec3 GetRotation(PhysicsModule& self, RigidbodyComponent& rigidBody)
+glm::vec3 GetRotation(PhysicsModule& self, WrenComponent<RigidbodyComponent>& rigidBody)
 {
-    return self.GetRotation(rigidBody);
+    return self.GetRotation(*rigidBody.component);
 }
 
-entt::entity GetHitEntity(RayHitInfo& self)
+WrenEntity GetHitEntity(RayHitInfo& self, ECSModule& ecs)
 {
-    return self.entity;
+    return WrenEntity { self.entity, &ecs.GetRegistry() };
 }
 
 glm::vec3 GetRayHitPosition(RayHitInfo& self)
@@ -80,9 +83,9 @@ glm::vec3 GetRayHitNormal(RayHitInfo& self)
     return self.normal;
 }
 
-JPH::BodyID GetBodyID(RigidbodyComponent& self)
+JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
 {
-    return self.bodyID;
+    return self.component->bodyID;
 }
 }
 void BindPhysicsAPI(wren::ForeignModule& module)
@@ -102,10 +105,13 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::SetFriction>("SetFriction");
 
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");
-    rayHitInfo.propReadonlyExt<bindings::GetHitEntity>("hitEntity");
+    rayHitInfo.propReadonlyExt<bindings::GetHitEntity>("entity");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitNormal>("normal");
 
-    auto& rigidBodyComponent = module.klass<RigidbodyComponent>("RigidbodyComponent");
+    module.klass<JPH::BodyID>("BodyID");
+
+    auto& rigidBodyComponent = module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent");
+
     rigidBodyComponent.propReadonlyExt<bindings::GetBodyID>("GetBodyID");
 }
