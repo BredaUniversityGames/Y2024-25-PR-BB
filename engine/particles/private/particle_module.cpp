@@ -83,17 +83,42 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 }
 
+ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName)
+{
+    auto got = _emitterImages.find(fileName);
+
+    if (got == _emitterImages.end())
+    {
+        CPUImage creation;
+        creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
+        creation.SetName(fileName);
+        creation.FromPNG("assets/textures/" + fileName);
+        creation.isHDR = false;
+        auto image = _context->Resources()->ImageResourceManager().Create(creation);
+        _emitterImages.emplace(fileName, std::move(image));
+        _context->UpdateBindlessSet();
+        return _emitterImages.find(fileName)->second;
+    }
+
+    return got->second;
+}
+
+void ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle<GPUImage> image)
+{
+    auto resources = _context->Resources();
+
+    preset.materialIndex = image.Index();
+    float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
+    preset.size = glm::vec3(
+        resources->ImageResourceManager().Access(image)->width / biggestSize,
+        resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
+}
+
 void ParticleModule::LoadEmitterPresets()
 {
     // TODO: serialize emitter presets and load from file
+    auto image = GetEmitterImage("jeremi.png");
     auto resources = _context->Resources();
-
-    CPUImage creation;
-    creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    creation.FromPNG("assets/textures/yellow_orb_particle.png");
-    creation.isHDR = false;
-    auto image = _context->Resources()->ImageResourceManager().Create(creation);
-    _emitterImages.emplace_back(image);
 
     // hardcoded test emitter preset for now
     EmitterPreset preset;
@@ -101,15 +126,11 @@ void ParticleModule::LoadEmitterPresets()
     preset.mass = 2.0f;
     preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
     preset.maxLife = 5.0f;
-    preset.materialIndex = image.Index();
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
     preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-    float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
-    preset.size = glm::vec3(
-        resources->ImageResourceManager().Access(image)->width / biggestSize,
-        resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
     preset.name = "Test";
+    SetEmitterPresetImage(preset, image);
     _emitterPresets.emplace_back(preset);
 }
 

@@ -16,7 +16,7 @@ void ParticleEditor::Render()
 
     ImGui::Begin("Particle editor", nullptr, NULL);
 
-    if (ImGui::BeginChild("list", { 200, 200 }, true))
+    if (ImGui::BeginChild("list", { 170, 220 }, true))
     {
         RenderEmitterPresetList();
     }
@@ -24,7 +24,7 @@ void ParticleEditor::Render()
 
     ImGui::SameLine();
 
-    if (ImGui::BeginChild("editor", { 200, 200 }, true))
+    if (ImGui::BeginChild("editor", { 300, 220 }, true))
     {
         RenderEmitterPresetEditor();
     }
@@ -53,6 +53,7 @@ void ParticleEditor::RenderEmitterPresetList()
         if (ImGui::IsItemClicked())
         {
             _selectedPresetIndex = i;
+            _imageLoadMessage = "Ready to load...";
         }
     }
 }
@@ -65,7 +66,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
         ImGui::InputText("Name##EmitterPresetEditor", &selectedPreset.name);
 
-        ImGui::SliderFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
+        ImGui::DragFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
 
         const char* types[] = { "Billboard", "Ribbon" };
         static const char* currentType = types[0];
@@ -88,11 +89,21 @@ void ParticleEditor::RenderEmitterPresetEditor()
         }
 
         int emitterCount = static_cast<int>(selectedPreset.count);
-        ImGui::SliderInt("Count##EmitterPresetEditor", &emitterCount, 0, 1024);
+        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 0, 1024);
         selectedPreset.count = emitterCount;
-        ImGui::SliderFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, -100.0f, 100.0f);
+        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, -100.0f, 100.0f);
         ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x);
-        ImGui::SliderFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.0f, 100.0f);
+        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.0f, 100.0f);
+
+        ImGui::InputText("Image##EmitterPresetEditor", &_currentImage);
+        ImGui::SameLine();
+        if (ImGui::Button("Load##EmitterPresetEditor"))
+        {
+            auto image = _particleModule.GetEmitterImage(_currentImage);
+            _particleModule.SetEmitterPresetImage(selectedPreset, image);
+            _imageLoadMessage = "Loaded successfully!";
+        }
+        ImGui::Text(_imageLoadMessage.c_str());
 
         if (ImGui::Button("Spawn##EmitterPresetEditor"))
         {
@@ -101,7 +112,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
             node.name = "Particle Emitter";
             _ecsModule.GetRegistry().emplace<NameComponent>(entity, node);
 
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomPosition | SpawnEmitterFlagBits::eSetCustomVelocity);
+            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomPosition | SpawnEmitterFlagBits::eSetCustomVelocity, { 8.0f, 35.0f, 300.0f });
         }
 
         ImGui::SameLine();
