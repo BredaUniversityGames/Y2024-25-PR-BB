@@ -104,7 +104,6 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     JPH::Vec3 dir(direction.x, direction.y, direction.z);
     dir = dir.Normalized();
     const JPH::RayCast ray(start, dir * distance);
-
     debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
 
     // JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
