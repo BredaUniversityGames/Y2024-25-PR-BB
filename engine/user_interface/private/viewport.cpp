@@ -5,9 +5,9 @@
 
 void Viewport::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
-    for (auto& element : _baseElements | std::views::reverse)
+    for (int32_t i = _baseElements.size(); i >= 0; --i)
     {
-        element->Update(inputManagers, inputContext);
+        _baseElements[i]->Update(inputManagers, inputContext);
     }
 
     if (_clearAtEndOfFrame)
