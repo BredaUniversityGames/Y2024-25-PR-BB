@@ -386,7 +386,7 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     module.klass<entt::entity>("enttEntity");
 
-    entityClass.func<bindings::GetEntity>("GetEnttEntity");
+    entityClass.funcExt<bindings::GetEntity>("GetEnttEntity");
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
