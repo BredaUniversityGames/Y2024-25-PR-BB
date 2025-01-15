@@ -95,15 +95,18 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x);
         ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.0f, 100.0f);
 
-        ImGui::InputText("Image##EmitterPresetEditor", &_currentImage);
+        ImGui::Text("assets/textures/");
         ImGui::SameLine();
-        if (ImGui::Button("Load##EmitterPresetEditor"))
+        ImGui::InputText("Image##EmitterPresetEditor", &_currentImage);
+
+        if (ImGui::Button("Load Image##EmitterPresetEditor"))
         {
             auto image = _particleModule.GetEmitterImage(_currentImage);
             _particleModule.SetEmitterPresetImage(selectedPreset, image);
             _imageLoadMessage = "Loaded successfully!";
         }
-        ImGui::Text(_imageLoadMessage.c_str());
+        ImGui::SameLine();
+        ImGui::Text("%s", _imageLoadMessage.c_str());
 
         if (ImGui::Button("Spawn##EmitterPresetEditor"))
         {
