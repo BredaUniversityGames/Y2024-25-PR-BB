@@ -1,6 +1,8 @@
 #include "particle_editor.hpp"
 
-#include "particle_module.hpp"
+#include "ecs_module.hpp"
+#include "imgui/imgui.h"
+#include "profile_macros.hpp"
 
 ParticleEditor::ParticleEditor(ParticleModule& particleModule, ECSModule& ecsModule)
     : _particleModule(particleModule)
