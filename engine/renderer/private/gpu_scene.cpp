@@ -44,6 +44,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     InitializeObjectInstancesBuffers();
     InitializeSkinBuffers();
 
+    CreateHZBDescriptorSetLayout();
+
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
 
@@ -86,6 +88,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_pointLightDSL);
     vkContext->Device().destroy(_visibilityDSL);
     vkContext->Device().destroy(_redirectDSL);
+    vkContext->Device().destroy(_hzbImageDSL);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -435,6 +438,31 @@ void GPUScene::CreateSkinDescriptorSetLayout()
     std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
     std::vector<std::string_view> names { "SkinningMatrices" };
     _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateHZBDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
+    bindings[0] = {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
+    };
+    bindings[1] = {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageImage,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
+    };
+    std::vector<std::string_view> names { "inputTexture", "outputTexture" };
+    vk::DescriptorSetLayoutCreateInfo dslCreateInfo = vk::DescriptorSetLayoutCreateInfo {
+        .flags = vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR,
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data(),
+    };
+
+    _hzbImageDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names, dslCreateInfo);
 }
 
 void GPUScene::CreateSceneDescriptorSets()

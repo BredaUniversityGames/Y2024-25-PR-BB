@@ -67,6 +67,7 @@ public:
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
+    const vk::DescriptorSetLayout& GetHZBDescriptorSetLayout() const { return _hzbImageDSL; }
 
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDSL; }
     ResourceHandle<Buffer> StaticDrawBuffer(uint32_t frameIndex) const { return _staticDraws[frameIndex].buffer; }
@@ -200,6 +201,7 @@ private:
 
     vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSetLayout _redirectDSL;
+    vk::DescriptorSetLayout _hzbImageDSL;
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
@@ -218,6 +220,7 @@ private:
     void CreatePointLightDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
     void CreateSkinDescriptorSetLayout();
+    void CreateHZBDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();

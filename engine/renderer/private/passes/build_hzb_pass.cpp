@@ -15,12 +15,12 @@
 
 #include <tracy/TracyVulkan.hpp>
 
-BuildHzbPass::BuildHzbPass(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch)
+BuildHzbPass::BuildHzbPass(const std::shared_ptr<GraphicsContext>& context, CameraBatch& cameraBatch, vk::DescriptorSetLayout hzbImageDSL)
     : _context(context)
     , _cameraBatch(cameraBatch)
+    , _hzbImageDSL(hzbImageDSL)
 {
     CreateSampler();
-    CreateDSL();
     CreatPipeline();
     CreateUpdateTemplate();
 }
@@ -29,7 +29,6 @@ BuildHzbPass::~BuildHzbPass()
 {
     const auto& vkContext = _context->VulkanContext();
 
-    vkContext->Device().destroy(_hzbImageDSL);
     vkContext->Device().destroy(_buildHzbPipelineLayout);
     vkContext->Device().destroy(_buildHzbPipeline);
     vkContext->Device().destroy(_hzbUpdateTemplate);
@@ -92,31 +91,6 @@ void BuildHzbPass::CreateSampler()
     samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
 
     _hzbSampler = samplerResourceManager.Create(samplerCreation);
-}
-
-void BuildHzbPass::CreateDSL()
-{
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
-    bindings[0] = {
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
-    };
-    bindings[1] = {
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageImage,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
-    };
-    std::vector<std::string_view> names { "inputTexture", "outputTexture" };
-    vk::DescriptorSetLayoutCreateInfo dslCreateInfo = vk::DescriptorSetLayoutCreateInfo {
-        .flags = vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR,
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data(),
-    };
-
-    _hzbImageDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names, dslCreateInfo);
 }
 
 void BuildHzbPass::CreatPipeline()
