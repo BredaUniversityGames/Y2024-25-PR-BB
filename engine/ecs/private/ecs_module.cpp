@@ -36,6 +36,10 @@ void ECSModule::UpdateSystems(const float dt)
     ZoneScoped;
     for (auto& system : systems)
     {
+        ZoneScoped;
+        std::string name = std::string(system->GetName()) + " Update";
+        ZoneName(name.c_str(), 32);
+
         system->Update(*this, dt);
     }
 }
@@ -44,6 +48,10 @@ void ECSModule::RenderSystems() const
     ZoneScoped;
     for (const auto& system : systems)
     {
+        ZoneScoped;
+        std::string name = std::string(system->GetName()) + " Render";
+        ZoneName(name.c_str(), 32);
+
         system->Render(*this);
     }
 }

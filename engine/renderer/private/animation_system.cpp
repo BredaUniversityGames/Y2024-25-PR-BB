@@ -23,8 +23,6 @@ AnimationSystem::~AnimationSystem() = default;
 
 void AnimationSystem::Update(ECSModule& ecs, float dt)
 {
-    ZoneScoped;
-
     const auto animationControlView = ecs.GetRegistry().view<AnimationControlComponent>();
     for (auto entity : animationControlView)
     {
@@ -70,7 +68,6 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
-    ZoneScoped;
     // Draw skeletons as debug lines
     const auto debugView = ecs.GetRegistry().view<const JointComponent, const RelationshipComponent, const WorldMatrixComponent>();
     for (auto entity : debugView)

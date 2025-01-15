@@ -70,7 +70,6 @@ void InspectorModule::Shutdown(Engine& engine)
 
 void InspectorModule::Tick(Engine& engine)
 {
-    ZoneNamedN(inspectorTick, "InspectorTick", true);
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
