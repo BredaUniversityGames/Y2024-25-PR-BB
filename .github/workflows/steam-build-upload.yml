@@ -148,7 +148,7 @@ jobs:
       - name: Create Steam Config
         shell: bash
         run: |
-          type NUL > scripts/build_system/steam/builder/config/config.vdf
+          mkdir scripts/build_system/steam/builder/config
           "${{ env.STEAM_CONFIG }}" | base64 -d > "scripts/build_system/steam/builder/config/config.vdf"
 
       # Upload to Steam
