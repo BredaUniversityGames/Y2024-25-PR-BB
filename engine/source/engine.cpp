@@ -395,9 +395,6 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     JPH::BodyID bodyID = ecs.GetRegistry().get<RigidbodyComponent>(playerEntity).bodyID;
     JPH::Vec3 velocity = physicsModule.bodyInterface->GetLinearVelocity(bodyID);
 
-    if (velocity.Length() > 0.0f)
-        bblog::info("Speed info before: {}", velocity.Length());
-
     auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
     glm::quat cameraRotation;
 
@@ -534,9 +531,6 @@ void OldEngine::TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 in
     {
         TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, pos);
     }
-
-    if (velocity.Length() > 0.0f)
-        bblog::info("Speed info after: {}", velocity.Length());
 }
 
 OldEngine::OldEngine() = default;

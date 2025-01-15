@@ -62,9 +62,9 @@ class Main {
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
-            var end = rayHitInfo.position
-
-            if (rayHitInfo.hasHit) {
+            var end = start + direction * __rayDistanceVector
+            if(!rayHitInfo.isEmpty) {
+                end = rayHitInfo[0].position
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
@@ -72,9 +72,8 @@ class Main {
                 lifetime.lifetime = 1000.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive()
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-            } else {
-                end = start + direction * __rayDistanceVector
             }
+            
 
             var length = (end - start).length()
             var i = 5.0
