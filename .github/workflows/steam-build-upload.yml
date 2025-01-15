@@ -131,12 +131,16 @@ jobs:
     
       # Download build artifacts from previous job
 
-      - name: Download packaged builds from artifacts
+      - name: Download packaged windows build from artifacts
         uses: actions/download-artifact@v4
         with:
-          name: |
-            windows-dist
-            linux-dist
+          name: windows-dist
+          path: package/
+
+      - name: Download packaged linux build from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-dist
           path: package/
 
       # Create steam config to avoid 2FA
