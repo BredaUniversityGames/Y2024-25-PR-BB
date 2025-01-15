@@ -9,11 +9,15 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "game/game_bindings.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_codes/keys.hpp"
 #include "input/input_codes/mousebuttons.hpp"
+#include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "physics/physics_bindings.hpp"
+#include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
 #include "time_module.hpp"
 #include "utility/enum_bind.hpp"
@@ -123,6 +127,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetInput");
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
+        engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
     }
 
     // Time Module
@@ -163,6 +168,16 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Particles
     {
         BindParticleAPI(module);
+    }
+
+    // Physics
+    {
+        BindPhysicsAPI(module);
+    }
+
+    // Game
+    {
+        BindGameAPI(module);
     }
 
     // Components
@@ -229,6 +244,14 @@ public:
     {
         return glm::quat { euler };
     }
+    static glm::vec3 ToDirectionVector(glm::quat quat)
+    {
+        return quat * glm::vec3(0.0f, 0.0f, -1.0f);
+    }
+    static glm::vec3 Mix(glm::vec3 start, glm::vec3 end, float t)
+    {
+        return glm::mix(start, end, t);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -291,7 +314,9 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
 {
     auto& mathUtilClass = module.klass<MathUtil>("Math");
     mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
+    mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
+    mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
@@ -310,6 +335,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
+    entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }

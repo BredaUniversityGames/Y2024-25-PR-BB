@@ -18,6 +18,7 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
+#include "lifetime_component.hpp"
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
 #include "model_loader.hpp"
@@ -49,6 +50,7 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<AudioEmitterComponent>("Audio Emitter");
     _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
+    _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
 }
 
 void Editor::DrawHierarchy()
