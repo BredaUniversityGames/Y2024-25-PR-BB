@@ -5,4 +5,5 @@ target_link_libraries(Inspector
         PUBLIC Renderer
         PUBLIC ImGui
         PRIVATE Particles
+        PUBLIC Game
 )
