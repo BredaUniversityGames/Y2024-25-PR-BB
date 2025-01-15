@@ -1,8 +1,11 @@
 #include "particle_editor.hpp"
 
-#include "ecs_module.hpp"
-#include "imgui/imgui.h"
 #include "profile_macros.hpp"
+#include "ecs_module.hpp"
+#include "components/name_component.hpp"
+#include "gpu_resources.hpp"
+#include "imgui/imgui.h"
+#include <misc/cpp/imgui_stdlib.h>
 
 ParticleEditor::ParticleEditor(ParticleModule& particleModule, ECSModule& ecsModule)
     : _particleModule(particleModule)
@@ -16,7 +19,7 @@ void ParticleEditor::Render()
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
 
-    ImGui::Begin("Particle editor", nullptr, NULL);
+    ImGui::Begin("Particle editor", nullptr, ImGuiWindowFlags_NoResize);
 
     if (ImGui::BeginChild("list", { 170, 220 }, true))
     {
@@ -129,7 +132,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         if (ImGui::Button("Delete##EmitterPresetEditor"))
         {
             _particleModule._emitterPresets.erase(_particleModule._emitterPresets.begin() + _selectedPresetIndex);
-            _selectedPresetIndex = NULL;
+            _selectedPresetIndex = -1;
             ImGui::PopStyleColor(3);
             return;
         }
