@@ -91,7 +91,8 @@ jobs:
       - name: Package Windows Project
         if: matrix.platform == 'windows-latest'
         run: |
-          scripts/build_system/package_dist_windows.bat
+          cd scripts/build_system
+          package_dist_windows.bat
 
       - name: Package Linux Project
         if: matrix.platform == 'ubuntu-latest'
