@@ -303,6 +303,8 @@ public:
     {
         return glm::half_pi<float>();
     }
+
+    static glm::vec3 Mul(glm::quat& lhs, const glm::vec3& rhs) { return lhs * rhs; }
 };
 
 template <typename T>
@@ -346,6 +348,7 @@ void bindings::BindMath(wren::ForeignModule& module)
         quat.var<&glm::quat::y>("y");
         quat.var<&glm::quat::z>("z");
         BindVectorTypeOperations(quat);
+        quat.funcExt<MathUtil::Mul>(wren::OPERATOR_MUL);
     }
 }
 
