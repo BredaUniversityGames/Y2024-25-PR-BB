@@ -70,6 +70,12 @@ const GameActions GAME_ACTIONS {
                 .inputs = {
                     GamepadAnalog::eAXIS_LEFT,
                     GamepadAnalog::eDPAD,
+                    KeyboardAnalog {
+                        .up = KeyboardCode::eW,
+                        .down = KeyboardCode::eS,
+                        .left = KeyboardCode::eA,
+                        .right = KeyboardCode::eD,
+                    },
                 },
             },
             {
