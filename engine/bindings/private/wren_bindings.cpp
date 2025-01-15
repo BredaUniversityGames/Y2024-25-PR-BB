@@ -44,7 +44,14 @@ WrenEntity CreateEntity(ECSModule& self)
 
 void FreeEntity(ECSModule& self, WrenEntity& entity)
 {
-    self.GetRegistry().destroy(entity.entity);
+    if (self.GetRegistry().valid(entity.entity))
+    {
+        self.GetRegistry().destroy(entity.entity);
+    }
+    else
+    {
+        bblog::warn("Tried to destroy invalid entity: {0}", static_cast<uint32_t>(entity.entity));
+    }
 }
 
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
@@ -59,6 +66,12 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
+}
+
+template <typename T>
+std::vector<WrenEntity> GetEntitiesWithComponent(ECSModule& self)
+{
+    return self.GetRegistry().view<T>();
 }
 
 bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
@@ -89,6 +102,26 @@ glm::quat TransformComponentGetRotation(WrenComponent<TransformComponent>& compo
 glm::vec3 TransformComponentGetScale(WrenComponent<TransformComponent>& component)
 {
     return component.component->GetLocalScale();
+}
+
+glm::vec3 TransformHelpersGetWorldTranslation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldPosition(*component.entity.registry, component.entity.entity);
+}
+
+glm::quat TransformHelpersGetWorldRotation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldRotation(*component.entity.registry, component.entity.entity);
+}
+
+glm::vec3 TransformHelpersGetWorldScale(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldScale(*component.entity.registry, component.entity.entity);
+}
+
+void TransformHelpersSetWorldTransform(WrenComponent<TransformComponent>& component, glm::vec3 translation, glm::quat rotation, glm::vec3 scale)
+{
+    TransformHelpers::SetWorldTransform(*component.entity.registry, component.entity.entity, translation, rotation, scale);
 }
 
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
@@ -197,6 +230,12 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        transformClass.funcExt<bindings::TransformHelpersGetWorldTranslation>("GetWorldTranslation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldRotation>("GetWorldRotation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
+
+        transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
     }
 }
 
