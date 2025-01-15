@@ -323,21 +323,6 @@ void PhysicsSystem::Inspect()
         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
     }
 
-    if (ImGui::Button("Create player"))
-    {
-        _playerEntity = _ecs.GetRegistry().create();
-        JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(0.85, 0.5), JPH::Vec3(0.0, 3.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
-        bodyCreationSettings.mAllowDynamicOrKinematic = true;
-
-        bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
-        RigidbodyComponent rb(*_physicsModule.bodyInterface, _playerEntity, bodyCreationSettings);
-
-        NameComponent node;
-        node.name = "Player entity";
-        _ecs.GetRegistry().emplace<NameComponent>(_playerEntity, node);
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(_playerEntity, rb);
-    }
-
     if (ImGui::Button("Clear Physics Entities"))
     {
         _ecs.GetRegistry().view<RigidbodyComponent>().each([&](auto entity, auto&)
