@@ -141,7 +141,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
 
 void ParticleModule::SpawnEmitter(entt::entity entity, int emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    if (emitterPresetID > _emitterPresets.size() - 1)
+    if (emitterPresetID > static_cast<int>(_emitterPresets.size()) - 1)
         return;
 
     auto& preset = _emitterPresets[emitterPresetID];
