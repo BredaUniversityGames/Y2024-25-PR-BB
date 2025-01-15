@@ -56,9 +56,9 @@ glm::vec2 SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName,
     case GamepadAnalog::eAXIS_RIGHT:
     {
         static const std::unordered_map<GamepadAnalog, std::pair<GamepadAxis, GamepadAxis>> GAMEPAD_ANALOG_AXIS_MAPPING {
-                { GamepadAnalog::eAXIS_LEFT, { GamepadAxis::eLEFTX, GamepadAxis::eLEFTY } },
-                { GamepadAnalog::eAXIS_RIGHT, { GamepadAxis::eRIGHTX, GamepadAxis::eRIGHTY } },
-            };
+            { GamepadAnalog::eAXIS_LEFT, { GamepadAxis::eLEFTX, GamepadAxis::eLEFTY } },
+            { GamepadAnalog::eAXIS_RIGHT, { GamepadAxis::eRIGHTX, GamepadAxis::eRIGHTY } },
+        };
 
         const std::pair<GamepadAxis, GamepadAxis> axes = GAMEPAD_ANALOG_AXIS_MAPPING.at(gamepadAnalog);
         result.x = _sdlInputDeviceManager.GetGamepadAxis(axes.first);
