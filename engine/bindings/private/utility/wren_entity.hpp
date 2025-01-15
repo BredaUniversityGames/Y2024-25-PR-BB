@@ -15,6 +15,8 @@ struct WrenEntity
 
     template <typename T>
     WrenComponent<T> AddComponent();
+
+    entt::entity GetEntity() { return entity; }
 };
 
 template <typename T>
