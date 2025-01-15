@@ -1,6 +1,7 @@
 #include "gpu_scene.hpp"
 
 #include "batch_buffer.hpp"
+#include "camera_batch.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/joint_component.hpp"
@@ -18,8 +19,10 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -31,30 +34,61 @@ GPUScene::GPUScene(const GPUSceneCreation& creation)
     : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
-    , directionalShadowMap(creation.directionalShadowMap)
     , _context(creation.context)
     , _ecs(creation.ecs)
-    , _mainCamera(creation.context)
-    , _directionalLightShadowCamera(creation.context)
+    , _mainCamera(creation.context, true)
+    , _directionalLightShadowCamera(creation.context, false)
 {
     InitializeSceneBuffers();
     InitializePointLightBuffer();
     InitializeObjectInstancesBuffers();
     InitializeSkinBuffers();
 
+    CreateHZBDescriptorSetLayout();
+
     InitializeIndirectDrawBuffer();
     InitializeIndirectDrawDescriptor();
+
+    CreateShadowMapResources();
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindingsVisibility {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
+    };
+    std::vector<std::string_view> namesVisibility { "VisibilityBuffer" };
+
+    _visibilityDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsVisibility, namesVisibility);
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindingsRedirect {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics }
+    };
+    std::vector<std::string_view> namesRedirect { "RedirectBuffer" };
+
+    _redirectDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsRedirect, namesRedirect);
+
+    _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Batch", _mainCamera, creation.depthImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
+    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
 }
 
 GPUScene::~GPUScene()
 {
     auto vkContext { _context->VulkanContext() };
 
-    vkContext->Device().destroy(_drawBufferDescriptorSetLayout);
+    vkContext->Device().destroy(_drawBufferDSL);
     vkContext->Device().destroy(_sceneDescriptorSetLayout);
-    vkContext->Device().destroy(_objectInstancesDescriptorSetLayout);
+    vkContext->Device().destroy(_objectInstancesDSL);
     vkContext->Device().destroy(_skinDescriptorSetLayout);
-    vkContext->Device().destroy(_pointLightDescriptorSetLayout);
+    vkContext->Device().destroy(_pointLightDSL);
+    vkContext->Device().destroy(_visibilityDSL);
+    vkContext->Device().destroy(_redirectDSL);
+    vkContext->Device().destroy(_hzbImageDSL);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -78,7 +112,11 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.shadowMapIndex = directionalShadowMap.Index();
+    sceneData.shadowMapIndex = _shadowImage.Index();
+
+    sceneData.fogColor = fogColor;
+    sceneData.fogDensity = fogDensity;
+    sceneData.fogHeight = fogHeight;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
@@ -96,12 +134,10 @@ void GPUScene::UpdatePointLightArray(uint32_t frameIndex)
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 {
-    static std::vector<InstanceData> instances { MAX_INSTANCES };
+    static std::vector<InstanceData> staticInstances { MAX_STATIC_INSTANCES };
     uint32_t count = 0;
 
-    _drawCommands.clear();
-
-    _staticDrawRange.start = 0;
+    _staticDrawCommands.clear();
 
     auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
@@ -113,17 +149,17 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         auto resources { _context->Resources() };
 
         auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
-        assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+        assert(count < staticInstances.size() && "Reached the limit of instance data available for the meshes");
         assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
 
-        instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-        instances[count].materialIndex = mesh->material.Index();
-        instances[count].boundingRadius = mesh->boundingRadius;
+        staticInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+        staticInstances[count].materialIndex = mesh->material.Index();
+        staticInstances[count].boundingRadius = mesh->boundingRadius;
 
-        _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+        _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
                 .indexCount = mesh->count,
-                .instanceCount = 1,
+                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
@@ -133,8 +169,9 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         count++;
     }
 
-    _staticDrawRange.count = count;
-    _skinnedDrawRange.start = count;
+    static std::vector<InstanceData> skinnedInstances { MAX_SKINNED_INSTANCES };
+    _skinnedDrawCommands.clear();
+    count = 0;
 
     auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
 
@@ -146,18 +183,18 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         auto resources { _context->Resources() };
 
         auto mesh = resources->MeshResourceManager().Access(skinnedMeshComponent.mesh);
-        assert(count < instances.size() && "Reached the limit of instance data available for the meshes");
+        assert(count < skinnedInstances.size() && "Reached the limit of instance data available for the meshes");
         assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
 
-        instances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-        instances[count].materialIndex = mesh->material.Index();
-        instances[count].boundingRadius = mesh->boundingRadius;
-        instances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        skinnedInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
+        skinnedInstances[count].materialIndex = mesh->material.Index();
+        skinnedInstances[count].boundingRadius = mesh->boundingRadius;
+        skinnedInstances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
 
-        _drawCommands.emplace_back(DrawIndexedIndirectCommand {
+        _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
                 .indexCount = mesh->count,
-                .instanceCount = 1,
+                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
@@ -167,10 +204,11 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         count++;
     }
 
-    _skinnedDrawRange.count = count - _staticDrawRange.count;
+    const Buffer* staticInstancesBuffer = _context->Resources()->BufferResourceManager().Access(_staticInstancesFrameData[frameIndex].buffer);
+    memcpy(staticInstancesBuffer->mappedPtr, staticInstances.data(), staticInstances.size() * sizeof(InstanceData));
 
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
-    memcpy(buffer->mappedPtr, instances.data(), instances.size() * sizeof(InstanceData));
+    const Buffer* skinnedInstancesBuffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer);
+    memcpy(skinnedInstancesBuffer->mappedPtr, skinnedInstances.data(), skinnedInstances.size() * sizeof(InstanceData));
 }
 
 void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
@@ -211,10 +249,10 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .farPlane = directionalLightComponent.farPlane,
             .orthographicSize = directionalLightComponent.orthographicSize,
             .aspectRatio = directionalLightComponent.aspectRatio,
-            .reversedZ = false,
+            .reversedZ = _directionalLightShadowCamera.UsesReverseZ(),
         };
 
-        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera);
+        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera, lightView, depthProjectionMatrix);
 
         directionalLightIsSet = true;
     }
@@ -369,7 +407,7 @@ void GPUScene::CreatePointLightDescriptorSetLayout()
 
     std::vector<std::string_view> names { "PointLightSSBO" };
 
-    _pointLightDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _pointLightDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -386,7 +424,7 @@ void GPUScene::CreateObjectInstanceDescriptorSetLayout()
 
     std::vector<std::string_view> names { "InstanceData" };
 
-    _objectInstancesDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    _objectInstancesDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSkinDescriptorSetLayout()
@@ -401,6 +439,31 @@ void GPUScene::CreateSkinDescriptorSetLayout()
     std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
     std::vector<std::string_view> names { "SkinningMatrices" };
     _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateHZBDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
+    bindings[0] = {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
+    };
+    bindings[1] = {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageImage,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics,
+    };
+    std::vector<std::string_view> names { "inputTexture", "outputTexture" };
+    vk::DescriptorSetLayoutCreateInfo dslCreateInfo = vk::DescriptorSetLayoutCreateInfo {
+        .flags = vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR,
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data(),
+    };
+
+    _hzbImageDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names, dslCreateInfo);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -428,7 +491,7 @@ void GPUScene::CreatePointLightDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _pointLightDescriptorSetLayout; });
+        { l = _pointLightDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
@@ -446,21 +509,19 @@ void GPUScene::CreatePointLightDescriptorSets()
 
 void GPUScene::CreateObjectInstancesDescriptorSets()
 {
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT * 2> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _objectInstancesDescriptorSetLayout; });
+        { l = _objectInstancesDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
-    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT * 2;
     allocateInfo.pSetLayouts = layouts.data();
 
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-        "Failed allocating object instance descriptor sets!");
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    std::vector<vk::DescriptorSet> descriptorSets = _context->VulkanContext()->Device().allocateDescriptorSets(allocateInfo);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _objectInstancesFrameData[i].descriptorSet = descriptorSets[i];
+        _staticInstancesFrameData[i].descriptorSet = descriptorSets[i * 2];
+        _skinnedInstancesFrameData[i].descriptorSet = descriptorSets[i * 2 + 1];
         UpdateObjectInstancesDescriptorSet(i);
     }
 }
@@ -527,24 +588,35 @@ void GPUScene::UpdatePointLightDescriptorSet(uint32_t frameIndex)
 
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_objectInstancesFrameData[frameIndex].buffer);
+    vk::DescriptorBufferInfo staticBufferInfo {};
+    staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticInstancesFrameData[frameIndex].buffer)->buffer;
+    staticBufferInfo.offset = 0;
+    staticBufferInfo.range = vk::WholeSize;
 
-    vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
-    bufferInfo.offset = 0;
-    bufferInfo.range = vk::WholeSize;
+    vk::DescriptorBufferInfo skinnedBufferInfo {};
+    skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer)->buffer;
+    skinnedBufferInfo.offset = 0;
+    skinnedBufferInfo.range = vk::WholeSize;
 
-    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+    std::array<vk::WriteDescriptorSet, 2> descriptorWrites {};
 
-    vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
-    bufferWrite.dstSet = _objectInstancesFrameData[frameIndex].descriptorSet;
-    bufferWrite.dstBinding = 0;
-    bufferWrite.dstArrayElement = 0;
-    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-    bufferWrite.descriptorCount = 1;
-    bufferWrite.pBufferInfo = &bufferInfo;
+    vk::WriteDescriptorSet& staticBufferWrite { descriptorWrites[0] };
+    staticBufferWrite.dstSet = _staticInstancesFrameData[frameIndex].descriptorSet;
+    staticBufferWrite.dstBinding = 0;
+    staticBufferWrite.dstArrayElement = 0;
+    staticBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    staticBufferWrite.descriptorCount = 1;
+    staticBufferWrite.pBufferInfo = &staticBufferInfo;
 
-    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    vk::WriteDescriptorSet& skinnedBufferWrite { descriptorWrites[1] };
+    skinnedBufferWrite.dstSet = _skinnedInstancesFrameData[frameIndex].descriptorSet;
+    skinnedBufferWrite.dstBinding = 0;
+    skinnedBufferWrite.dstArrayElement = 0;
+    skinnedBufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    skinnedBufferWrite.descriptorCount = 1;
+    skinnedBufferWrite.pBufferInfo = &skinnedBufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites, 0);
 }
 
 void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
@@ -605,21 +677,33 @@ void GPUScene::CreatePointLightBuffer()
 
 void GPUScene::CreateObjectInstancesBuffers()
 {
-    vk::DeviceSize bufferSize = sizeof(InstanceData) * MAX_INSTANCES;
-
-    for (size_t i = 0; i < _objectInstancesFrameData.size(); ++i)
+    for (size_t i = 0; i < _staticInstancesFrameData.size(); ++i)
     {
-        std::string name = "[] Object instances data";
+        std::string name = "[] Static instances data";
 
         // Inserts i in the middle of []
         name.insert(1, 1, static_cast<char>(i + '0'));
 
         BufferCreation creation {};
-        creation.SetSize(bufferSize)
+        creation.SetSize(sizeof(InstanceData) * MAX_STATIC_INSTANCES)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
             .SetName(name);
 
-        _objectInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+        _staticInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+    }
+    for (size_t i = 0; i < _skinnedInstancesFrameData.size(); ++i)
+    {
+        std::string name = "[] Skinned instances data";
+
+        // Inserts i in the middle of []
+        name.insert(1, 1, static_cast<char>(i + '0'));
+
+        BufferCreation creation {};
+        creation.SetSize(sizeof(InstanceData) * MAX_SKINNED_INSTANCES)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+            .SetName(name);
+
+        _skinnedInstancesFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 void GPUScene::CreateSkinBuffers()
@@ -649,13 +733,24 @@ void GPUScene::InitializeIndirectDrawBuffer()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         BufferCreation creation {};
-        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_INSTANCES)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer)
+        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_STATIC_INSTANCES)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
             .SetIsMappable(true)
-            .SetName("Indirect draw buffer");
+            .SetName("Static indirect draw buffer");
 
-        _indirectDrawFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+        _staticDraws[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
+    }
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        BufferCreation creation {};
+        creation.SetSize(sizeof(DrawIndexedIndirectCommand) * MAX_SKINNED_INSTANCES)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+            .SetIsMappable(true)
+            .SetName("Skinned indirect draw buffer");
+
+        _skinnedDraws[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
 }
 
@@ -672,48 +767,90 @@ void GPUScene::InitializeIndirectDrawDescriptor()
     };
     std::vector<std::string_view> names { "DrawCommands" };
 
-    _drawBufferDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
+    _drawBufferDSL = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, names);
 
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
     std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
-        { l = _drawBufferDescriptorSetLayout; });
+        { l = _drawBufferDSL; });
     vk::DescriptorSetAllocateInfo allocateInfo {};
     allocateInfo.descriptorPool = vkContext->DescriptorPool();
     allocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     allocateInfo.pSetLayouts = layouts.data();
 
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-        "Failed allocating descriptor sets!");
+    std::vector<vk::DescriptorSet> descriptorSets = vkContext->Device().allocateDescriptorSets(allocateInfo);
 
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    std::array<vk::DescriptorBufferInfo, MAX_FRAMES_IN_FLIGHT> bufferInfos;
+    std::array<vk::WriteDescriptorSet, MAX_FRAMES_IN_FLIGHT> bufferWrites;
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        _indirectDrawFrameData[i].descriptorSet = descriptorSets[i];
+        _staticDraws[i].descriptorSet = descriptorSets[i];
 
-        const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[i].buffer);
+        vk::DescriptorBufferInfo& staticBufferInfo { bufferInfos[i] };
+        staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticDraws[i].buffer)->buffer;
+        staticBufferInfo.offset = 0;
+        staticBufferInfo.range = vk::WholeSize;
 
-        vk::DescriptorBufferInfo bufferInfo {};
-        bufferInfo.buffer = buffer->buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = vk::WholeSize;
-
-        vk::WriteDescriptorSet bufferWrite {};
-        bufferWrite.dstSet = _indirectDrawFrameData[i].descriptorSet;
-        bufferWrite.dstBinding = 0;
-        bufferWrite.dstArrayElement = 0;
-        bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
-        bufferWrite.descriptorCount = 1;
-        bufferWrite.pBufferInfo = &bufferInfo;
-
-        vkContext->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+        bufferWrites[i].dstSet = _staticDraws[i].descriptorSet;
+        bufferWrites[i].dstBinding = 0;
+        bufferWrites[i].dstArrayElement = 0;
+        bufferWrites[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrites[i].descriptorCount = 1;
+        bufferWrites[i].pBufferInfo = &staticBufferInfo;
     }
+
+    vkContext->Device().updateDescriptorSets(bufferWrites, {});
+
+    descriptorSets = vkContext->Device().allocateDescriptorSets(allocateInfo);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        _skinnedDraws[i].descriptorSet = descriptorSets[i];
+
+        vk::DescriptorBufferInfo& skinnedBufferInfo { bufferInfos[i] };
+        skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedDraws[i].buffer)->buffer;
+        skinnedBufferInfo.offset = 0;
+        skinnedBufferInfo.range = vk::WholeSize;
+
+        bufferWrites[i].dstSet = _skinnedDraws[i].descriptorSet;
+        bufferWrites[i].dstBinding = 0;
+        bufferWrites[i].dstArrayElement = 0;
+        bufferWrites[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bufferWrites[i].descriptorCount = 1;
+        bufferWrites[i].pBufferInfo = &skinnedBufferInfo;
+    }
+
+    vkContext->Device().updateDescriptorSets(bufferWrites, {});
 }
 
 void GPUScene::WriteDraws(uint32_t frameIndex)
 {
-    assert(_drawCommands.size() < MAX_INSTANCES && "Too many draw commands");
+    assert(_staticDrawCommands.size() < MAX_STATIC_INSTANCES && "Too many draw commands");
 
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_indirectDrawFrameData[frameIndex].buffer);
+    const Buffer* staticBuffer = _context->Resources()->BufferResourceManager().Access(_staticDraws[frameIndex].buffer);
+    const Buffer* skinnedBuffer = _context->Resources()->BufferResourceManager().Access(_skinnedDraws[frameIndex].buffer);
 
-    std::memcpy(buffer->mappedPtr, _drawCommands.data(), _drawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+    std::memcpy(staticBuffer->mappedPtr, _staticDrawCommands.data(), _staticDrawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+    std::memcpy(skinnedBuffer->mappedPtr, _skinnedDrawCommands.data(), _skinnedDrawCommands.size() * sizeof(DrawIndexedIndirectCommand));
+}
+
+void GPUScene::CreateShadowMapResources()
+{
+    SamplerCreation shadowSamplerInfo {
+        .name = "Shadow sampler",
+        .minFilter = vk::Filter::eLinear,
+        .magFilter = vk::Filter::eLinear,
+        .borderColor = vk::BorderColor::eFloatOpaqueWhite,
+        .compareEnable = true,
+        .compareOp = vk::CompareOp::eLessOrEqual,
+    };
+    shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
+    _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
+
+    CPUImage shadowCreation {};
+    shadowCreation
+        .SetFormat(vk::Format::eD32Sfloat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(2048, 2048)
+        .SetName("Shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }

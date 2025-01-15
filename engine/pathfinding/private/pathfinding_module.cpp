@@ -9,7 +9,7 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
-    this->SetNavigationMesh("assets/models/NavmeshTest/NavMesh.gltf");
+    this->SetNavigationMesh("assets/models/NavmeshTest/Navmesh.gltf");
     ComputedPath path = this->FindPath(
         { 0.7f, 0.0f, -0.7f },
         { -0.7f, 0.0f, 0.7f });

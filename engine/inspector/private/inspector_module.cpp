@@ -1,6 +1,7 @@
 #include "inspector_module.hpp"
 #include "editor.hpp"
 #include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
 #include "implot/implot.h"
@@ -10,9 +11,8 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "scripting_module.hpp"
 #include "vulkan_context.hpp"
-
-#include <scripting_module.hpp>
 
 InspectorModule::InspectorModule() = default;
 
@@ -24,6 +24,7 @@ void DumpVMAStats(Engine& engine);
 void DrawRenderStats(Engine& engine);
 void DrawSSAOSettings(Engine& engine);
 void DrawFXAASettings(Engine& engine);
+void DrawFogSettings(Engine& engine);
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -106,6 +107,7 @@ void InspectorModule::Tick(Engine& engine)
             ImGui::MenuItem("Shadow map visualisation", nullptr, &_openWindows["Shadow Map"]);
             ImGui::MenuItem("SSAO Settings", nullptr, &_openWindows["SSAO"]);
             ImGui::MenuItem("FXAA Settings", nullptr, &_openWindows["FXAA"]);
+            ImGui::MenuItem("Fog Settings", nullptr, &_openWindows["Fog"]);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Editor"))
@@ -166,6 +168,11 @@ void InspectorModule::Tick(Engine& engine)
     if (_openWindows["FXAA"])
     {
         DrawFXAASettings(engine);
+    }
+
+    if (_openWindows["Fog"])
+    {
+        DrawFogSettings(engine);
     }
 
     {
@@ -249,9 +256,17 @@ void DrawFXAASettings(Engine& engine)
     ImGui::End();
 }
 
+void DrawFogSettings(Engine& engine)
+{
+    const auto& renderer = engine.GetModule<RendererModule>().GetRenderer();
+    ImGui::ColorPicker3("Fog Color", &renderer->GetGPUScene().fogColor.x);
+    ImGui::DragFloat("Fog Density", &renderer->GetGPUScene().fogDensity, 0.01f);
+    ImGui::DragFloat("Fog Height", &renderer->GetGPUScene().fogHeight, 0.01f);
+}
+
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
 {
-    static ImTextureID textureID = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGBuffers().Shadow());
+    static ImTextureID textureID = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGPUScene().Shadow());
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
