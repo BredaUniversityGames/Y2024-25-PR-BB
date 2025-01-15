@@ -309,6 +309,10 @@ public:
     {
         return glm::sqrt(a);
     }
+    static float Abs(float a)
+    {
+        return glm::abs(a);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -379,6 +383,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
     mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
+    mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
