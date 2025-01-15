@@ -131,13 +131,13 @@ jobs:
     
       # Download build artifacts from previous job
 
-      - name: Download packaged windows build from artifacts
+      - name: Download Packaged Windows Build From Artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-dist
           path: package/
 
-      - name: Download packaged linux build from artifacts
+      - name: Download Packaged Linux Build From Artifacts
         uses: actions/download-artifact@v4
         with:
           name: linux-dist
@@ -159,10 +159,12 @@ jobs:
 
       # Delete artifacts after use
 
-      - name: Delete Artifacts
+      - name: Delete Windows Artifacts
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: |
-            windows-dist
-            linux-dist
-            
+          name: windows-dist
+
+      - name: Delete Linux Artifacts
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: linux-dist
