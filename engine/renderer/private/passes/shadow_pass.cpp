@@ -47,7 +47,7 @@ ShadowPass::~ShadowPass()
 
 void ShadowPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pass");
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 

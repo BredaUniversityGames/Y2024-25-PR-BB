@@ -65,7 +65,7 @@ ParticlePass::~ParticlePass()
 
 void ParticlePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pass");
 
     UpdateEmitters(commandBuffer);
 

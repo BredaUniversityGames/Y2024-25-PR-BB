@@ -34,7 +34,7 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
 
 void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pass");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
