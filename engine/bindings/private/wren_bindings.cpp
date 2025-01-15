@@ -151,7 +151,7 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
-entt::entity GetEntity(WrenEntity& self) { return self.entity; }
+unsigned int GetEntity(WrenEntity& self) { return static_cast<unsigned int>(self.entity); }
 }
 
 void BindEngineAPI(wren::ForeignModule& module)

@@ -105,7 +105,7 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::SetFriction>("SetFriction");
 
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");
-    rayHitInfo.propReadonlyExt<bindings::GetHitEntity>("entity");
+    rayHitInfo.funcExt<bindings::GetHitEntity>("GetEntity");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitNormal>("normal");
 
