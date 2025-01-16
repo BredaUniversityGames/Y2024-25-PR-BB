@@ -35,7 +35,10 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
+#include "ui_menus.hpp"
 #include "ui_module.hpp"
+
+#include <ui_menus.hpp>
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -51,7 +54,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
@@ -61,8 +63,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-
+        //"assets/models/monkey.gltf"
     };
 
     particleModule.LoadEmitterPresets();
@@ -74,8 +75,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
 
     // TransformHelpers::SetLocalScale(_ecs->GetRegistry(), entities[1], glm::vec3 { 4.0f });
     // TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entities[1], glm::vec3 { 106.0f, 14.0f, 145.0f });
@@ -159,14 +159,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     audioModule.LoadSFX(eagleSi);
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-
-    constexpr bool createTestCanvas = false;
-    if (createTestCanvas)
-    {
-        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
-
-        engine.GetModule<UIModule>().CreateNavigationTest();
-    }
 
     bblog::info("Successfully initialized engine!");
 
