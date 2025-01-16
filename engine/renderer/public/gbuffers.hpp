@@ -28,7 +28,6 @@ public:
     const auto& Attachments() const { return _attachments; }
     ResourceHandle<GPUImage> Depth() const { return _depthImage; }
     vk::Format DepthFormat() const { return _depthFormat; }
-    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
     glm::uvec2 Size() const { return _size; }
     const vk::Rect2D& Scissor() const { return _scissor; }
     const vk::Viewport& Viewport() const { return _viewport; }
@@ -44,17 +43,12 @@ private:
     ResourceHandle<GPUImage> _depthImage;
 
     vk::Format _depthFormat;
-    ResourceHandle<GPUImage> _shadowImage;
-    ResourceHandle<Sampler> _shadowSampler;
-
-    vk::Format _shadowFormat;
 
     vk::Viewport _viewport;
     vk::Rect2D _scissor;
 
     void CreateGBuffers();
     void CreateDepthResources();
-    void CreateShadowMapResources();
     void CreateViewportAndScissor();
     void CleanUp();
 };
