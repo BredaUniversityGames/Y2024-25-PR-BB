@@ -15,7 +15,7 @@ PresentationPass::PresentationPass(const std::shared_ptr<GraphicsContext>& conte
 
 void PresentationPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Presentation Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Presentation Pass");
 
     const vk::Image swapChainImage = _swapChain.GetImage(scene.targetSwapChainImageIndex);
     const GPUImage* inputImage = _context->Resources()->ImageResourceManager().Access(_input);

@@ -493,7 +493,6 @@ void Renderer::UpdateBindless()
 
 void Renderer::Render(float deltaTime)
 {
-    ZoneNamedN(zz, "Renderer::Render()", true);
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_context->VulkanContext()->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
@@ -522,9 +521,15 @@ void Renderer::Render(float deltaTime)
             util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    {
+        ZoneNamedN(zz, "Reset Fence", true);
+        util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    }
 
-    _commandBuffers[_currentFrame].reset();
+    {
+        ZoneNamedN(zz, "Reset Command Buffer", true);
+        _commandBuffers[_currentFrame].reset();
+    }
 
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(_currentFrame);
