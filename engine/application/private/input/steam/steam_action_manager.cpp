@@ -57,35 +57,27 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const
+DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
 {
-    // A bit of a waist honestly, as this gets called every time when an action has a digital gamepad input to check,
-    // but Steam checks all the gamepad inputs for an action for us. I didn't really find a clean way to do it another way for now.
-    // So we will just take the hit whenever we have multiple gamepad digital inputs bound to 1 action and check multiple times even when not needed.
+    DigitalActionType result{};
 
-    switch (inputType)
+    bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+    bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+
+    if (current && !previous)
     {
-    case DigitalActionType::ePressed:
+        result = result | DigitalActionType::ePressed;
+    }
+    if (current)
     {
-        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-        return current && !previous;
+        result = result | DigitalActionType::eHeld;
+    }
+    if (!current && previous)
+    {
+        result = result | DigitalActionType::eReleased;
     }
 
-    case DigitalActionType::eReleased:
-    {
-        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-        return !current && previous;
-    }
-
-    case DigitalActionType::eHold:
-    {
-        return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-    }
-    }
-
-    return false;
+    return result;
 }
 
 glm::vec2 SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadAnalog gamepadAnalog) const

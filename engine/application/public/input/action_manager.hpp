@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include "input_device_manager.hpp"
+#include "enum_utils.hpp"
 #include <glm/glm.hpp>
 #include <string>
 #include <variant>
@@ -10,13 +11,15 @@ class InputDeviceManager;
 
 enum class DigitalActionType : uint8_t
 {
+    eNone = 0 << 0,
     // Action happens once when input is received.
-    ePressed,
+    ePressed = 1 << 0,
     // Action happens continuously when input is being received.
-    eHold,
+    eHeld = 1 << 1,
     // Action happens once when input is released.
-    eReleased,
+    eReleased = 1 << 2,
 };
+GENERATE_ENUM_FLAG_OPERATORS(DigitalActionType)
 
 struct KeyboardAnalog
 {
@@ -33,7 +36,6 @@ using AnalogInputBinding = std::variant<GamepadAnalog, KeyboardAnalog>;
 struct DigitalAction
 {
     std::string name {};
-    DigitalActionType type {};
     std::vector<DigitalInputBinding> inputs {};
 };
 
@@ -55,6 +57,19 @@ struct ActionSet
 // A collection of action sets that contain all actions across the game.
 using GameActions = std::vector<ActionSet>;
 
+// Utility wrapper for easy action state checking.
+struct DigitalActionResult
+{
+    // True once upon pressed.
+    bool IsPressed() const { return HasAnyFlags(value, DigitalActionType::ePressed); }
+    // True all the time upon held.
+    bool IsHeld() const { return HasAnyFlags(value, DigitalActionType::eHeld); }
+    // True once upon released.
+    bool IsReleased() const { return HasAnyFlags(value, DigitalActionType::eReleased); }
+
+    DigitalActionType value = DigitalActionType::eNone;
+};
+
 // Abstract class, which manages keyboard and mouse actions.
 // Inherit to handle gamepad actions.
 class ActionManager
@@ -71,7 +86,7 @@ public:
     virtual void SetActiveActionSet(std::string_view actionSetName);
 
     // Button actions.
-    [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
+    [[nodiscard]] DigitalActionResult GetDigitalAction(std::string_view actionName) const;
 
     // Axis actions.
     [[nodiscard]] glm::vec2 GetAnalogAction(std::string_view actionName) const;
@@ -81,10 +96,10 @@ protected:
     GameActions _gameActions {};
     uint32_t _activeActionSet = 0;
 
-    [[nodiscard]] bool CheckDigitalInput(const DigitalAction& action) const;
-    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const;
-    [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const;
-    [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const = 0;
+    [[nodiscard]] DigitalActionType CheckDigitalInput(const DigitalAction& action) const;
+    [[nodiscard]] DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const;
+    [[nodiscard]] DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button) const;
+    [[nodiscard]] virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const = 0;
     [[nodiscard]] glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
     [[nodiscard]] glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
     [[nodiscard]] virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
