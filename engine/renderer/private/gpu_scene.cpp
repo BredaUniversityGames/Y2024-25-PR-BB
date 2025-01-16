@@ -463,7 +463,7 @@ void GPUScene::CreateClusterCullingDescriptorSetLayout()
         };
     }
 
-    std::vector<std::string_view> names { "GlobalIndex", "LightCells", "LightIndices" };
+    std::vector<std::string_view> names { "AtomicCount", "LightCells", "LightIndices" };
 
     _clusterCullingDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
