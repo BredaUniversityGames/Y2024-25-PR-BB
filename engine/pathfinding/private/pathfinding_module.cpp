@@ -10,8 +10,8 @@
 
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "scene_loader.hpp"
 #include "resource_management/model_resource_manager.hpp"
+#include "scene_loader.hpp"
 
 #include <set>
 
@@ -24,16 +24,14 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
         { 3.02f, 0.0f, -3.02f },
         { -3.02f, 0.0f, 3.02f });
 
-    auto models = _renderer->FrontLoadModels({"assets/models/NavmeshTest/navmesh_textured.gltf"});
+    auto models = _renderer->FrontLoadModels({ "assets/models/NavmeshTest/navmesh_textured.gltf" });
     auto& ecs = engine.GetModule<ECSModule>();
     auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
     SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
         *modelResourceManager.Access(models[0].second),
         models[0].first,
         models[0].first.hierarchy,
-        models[0].first.animations
-    );
-
+        models[0].first.animations);
 
     return ModuleTickOrder::eTick;
 }
@@ -44,23 +42,21 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 
     ComputedPath path = FindPath(
         { 3.02f, 0.0f, -3.02f },
-        { -3.02f, 0.0f, 3.02f }
-    );
+        { -3.02f, 0.0f, 3.02f });
 
-    if(!path.waypoints.empty())
+    if (!path.waypoints.empty())
     {
-        for(size_t i = 0; i < path.waypoints.size() - 1; i++)
+        for (size_t i = 0; i < path.waypoints.size() - 1; i++)
         {
             glm::vec3 from = path.waypoints[i].centre;
             glm::vec3 to = path.waypoints[i + 1].centre;
 
-            from +=  glm::vec3{0.0f, 0.2f, 0.0f};
-            to +=  glm::vec3{0.0f, 0.2f, 0.0f};
+            from += glm::vec3 { 0.0f, 0.2f, 0.0f };
+            to += glm::vec3 { 0.0f, 0.2f, 0.0f };
 
             debugPass.AddLine(
                 from,
-                to
-            );
+                to);
         }
     }
 }
@@ -87,15 +83,15 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
     Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
 
     std::queue<std::pair<Hierarchy::Node*, glm::mat4>> nodeStack;
-    nodeStack.push({rootNode, rootNode->transform});
-    while(!nodeStack.empty())
+    nodeStack.push({ rootNode, rootNode->transform });
+    while (!nodeStack.empty())
     {
         const std::pair<Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
         nodeStack.pop();
 
-        if(topNodeTransform.first->meshIndex.has_value())
+        if (topNodeTransform.first->meshIndex.has_value())
         {
-            if(topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            if (topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
             {
                 meshIndex = topNodeTransform.first->meshIndex.value().second;
                 transform = topNodeTransform.second;
@@ -103,16 +99,16 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
             }
         }
 
-        for(size_t i = 0; i < topNodeTransform.first->children.size(); i++)
+        for (size_t i = 0; i < topNodeTransform.first->children.size(); i++)
         {
             Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
             glm::mat4 transform = topNodeTransform.second * pNode->transform;
 
-            nodeStack.push({pNode, transform});
+            nodeStack.push({ pNode, transform });
         }
     }
 
-    if(meshIndex == std::numeric_limits<uint32_t>::max())
+    if (meshIndex == std::numeric_limits<uint32_t>::max())
         return {};
 
     CPUMesh navmeshMesh = navmesh.meshes[meshIndex]; // GLTF model should consist of only a single mesh
