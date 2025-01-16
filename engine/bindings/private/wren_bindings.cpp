@@ -10,9 +10,7 @@
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "game/game_bindings.hpp"
-#include "input/action_manager.hpp"
-#include "input/input_codes/keys.hpp"
-#include "input/input_codes/mousebuttons.hpp"
+#include "input/input_bindings.hpp"
 #include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
@@ -59,21 +57,6 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
-}
-
-bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
-{
-    return self.GetActionManager().GetDigitalAction(action_name);
-}
-
-glm::vec2 InputGetAnalogAction(ApplicationModule& self, const std::string& action_name)
-{
-    return self.GetActionManager().GetAnalogAction(action_name);
-}
-
-bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
-{
-    return self.GetInputDeviceManager().IsKeyPressed(code);
 }
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
@@ -147,12 +130,7 @@ void BindEngineAPI(wren::ForeignModule& module)
 
     // Input
     {
-        auto& wrenClass = module.klass<ApplicationModule>("Input");
-        wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
-        wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
-        wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
-
-        bindings::BindEnum<KeyboardCode>(module, "Keycode");
+        BindInputAPI(module);
     }
 
     // Audio
