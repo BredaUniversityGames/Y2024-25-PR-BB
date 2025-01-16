@@ -23,12 +23,12 @@ void ActionManager::SetActiveActionSet(std::string_view actionSetName)
     _activeActionSet = index;
 }
 
-bool ActionManager::GetDigitalAction(std::string_view actionName) const
+DigitalActionResult ActionManager::GetDigitalAction(std::string_view actionName) const
 {
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
-        return false;
+        return DigitalActionResult {};
     }
 
     const ActionSet& actionSet = _gameActions[_activeActionSet];
@@ -40,10 +40,10 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
     if (itr == actionSet.digitalActions.end())
     {
         bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
-        return false;
+        return DigitalActionResult {};
     }
 
-    return CheckDigitalInput(*itr);
+    return DigitalActionResult { CheckDigitalInput(*itr) };
 }
 
 glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
@@ -69,66 +69,57 @@ glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
     return CheckAnalogInput(*itr);
 }
 
-bool ActionManager::CheckDigitalInput(const DigitalAction& action) const
+DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
+    DigitalActionType result {};
+
     for (const DigitalInputBinding& input : action.inputs)
     {
-        bool result = std::visit([&](auto& arg)
-            { return CheckInput(action.name, arg, action.type); }, input);
-
-        if (result)
-        {
-            return true;
-        }
+        result = result | std::visit([&](auto& arg)
+                     { return CheckInput(action.name, arg); }, input);
     }
 
-    return false;
+    return result;
 }
 
-bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const
+DigitalActionType ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const
 {
-    switch (inputType)
+    DigitalActionType result {};
+
+    if (_inputDeviceManager.IsKeyPressed(code))
     {
-    case DigitalActionType::ePressed:
+        result = result | DigitalActionType::ePressed;
+    }
+    if (_inputDeviceManager.IsKeyHeld(code))
     {
-        return _inputDeviceManager.IsKeyPressed(code);
+        result = result | DigitalActionType::eHeld;
+    }
+    if (_inputDeviceManager.IsKeyReleased(code))
+    {
+        result = result | DigitalActionType::eReleased;
     }
 
-    case DigitalActionType::eReleased:
-    {
-        return _inputDeviceManager.IsKeyReleased(code);
-    }
-
-    case DigitalActionType::eHold:
-    {
-        return _inputDeviceManager.IsKeyHeld(code);
-    }
-    }
-
-    return false;
+    return result;
 }
 
-bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const
+DigitalActionType ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button) const
 {
-    switch (inputType)
+    DigitalActionType result {};
+
+    if (_inputDeviceManager.IsMouseButtonPressed(button))
     {
-    case DigitalActionType::ePressed:
+        result = result | DigitalActionType::ePressed;
+    }
+    if (_inputDeviceManager.IsMouseButtonHeld(button))
     {
-        return _inputDeviceManager.IsMouseButtonPressed(button);
+        result = result | DigitalActionType::eHeld;
+    }
+    if (_inputDeviceManager.IsMouseButtonReleased(button))
+    {
+        result = result | DigitalActionType::eReleased;
     }
 
-    case DigitalActionType::eReleased:
-    {
-        return _inputDeviceManager.IsMouseButtonReleased(button);
-    }
-
-    case DigitalActionType::eHold:
-    {
-        return _inputDeviceManager.IsMouseButtonHeld(button);
-    }
-    }
-
-    return false;
+    return result;
 }
 
 glm::vec2 ActionManager::CheckAnalogInput(const AnalogAction& action) const
