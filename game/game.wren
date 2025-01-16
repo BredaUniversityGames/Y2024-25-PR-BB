@@ -49,7 +49,7 @@ class Main {
             __counter = 0
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot")) {
+        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
             var audioEmitter = __player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
@@ -57,7 +57,7 @@ class Main {
             System.print("Playing is shooting")
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot")) {
+        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             var playerTransform = __player.GetTransformComponent()
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
@@ -90,16 +90,16 @@ class Main {
             }
         }
 
-        if (engine.GetInput().GetDigitalAction("Jump")) {
+        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
             System.print("Player Jumped!")
 
         }
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload") && gunAnimations.AnimationFinished()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
             gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         }
-        if(engine.GetInput().GetDigitalAction("Shoot")) {
+        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             if(gunAnimations.AnimationFinished()) {
                 gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
             }
