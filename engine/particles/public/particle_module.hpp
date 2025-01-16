@@ -43,7 +43,7 @@ public:
 
     void LoadEmitterPresets();
     void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
-    void SpawnEmitter(entt::entity entity, int emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
+    void SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
 
 private:
     std::shared_ptr<GraphicsContext> _context;

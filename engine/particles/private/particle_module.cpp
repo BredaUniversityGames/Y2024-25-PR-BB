@@ -136,12 +136,12 @@ void ParticleModule::LoadEmitterPresets()
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    SpawnEmitter(entity, static_cast<int>(emitterPreset), flags, position, velocity);
+    SpawnEmitter(entity, static_cast<int32_t>(emitterPreset), flags, position, velocity);
 }
 
-void ParticleModule::SpawnEmitter(entt::entity entity, int emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
+void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    if (emitterPresetID > static_cast<int>(_emitterPresets.size()) - 1)
+    if (emitterPresetID > static_cast<int32_t>(_emitterPresets.size()) - 1)
         return;
 
     auto& preset = _emitterPresets[emitterPresetID];

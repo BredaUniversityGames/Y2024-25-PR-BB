@@ -1,5 +1,7 @@
 #include "emitter_component.hpp"
 
+#include <magic_enum.hpp>
+
 namespace EnttEditor
 {
 template <>
@@ -14,19 +16,19 @@ void ParticleEmitterComponent::Inspect()
     ImGui::Checkbox("Emit once##Particle Emitter", &emitOnce);
     ImGui::DragFloat("Emit delay##Particle Emitter", &maxEmitDelay, 0.0f, 50.0f);
 
-    const char* types[] = { "Billboard", "Ribbon" };
-    static const char* currentType = types[0];
-    if (ImGui::BeginCombo("Type##Particle Emitter", currentType))
+    constexpr auto types = magic_enum::enum_names<ParticleType>();
+    static auto currentType = types[0];
+    if (ImGui::BeginCombo("Type##Particle Emitter", std::string(currentType).c_str()))
     {
-        for (int n = 0; n < IM_ARRAYSIZE(types); n++)
+        for (uint32_t n = 0; n < types.size(); n++)
         {
-            bool is_selected = (currentType == types[n]);
-            if (ImGui::Selectable(types[n], is_selected))
+            bool isSelected = (currentType == types[n]);
+            if (ImGui::Selectable(std::string(types[n]).c_str(), isSelected))
             {
                 currentType = types[n];
                 type = static_cast<ParticleType>(n);
             }
-            if (is_selected)
+            if (isSelected)
             {
                 ImGui::SetItemDefaultFocus(); // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
             }
@@ -36,9 +38,9 @@ void ParticleEmitterComponent::Inspect()
 
     ImGui::Text("Emitter");
     ImGui::DragFloat3("Position##Particle Emitter", &emitter.position.x);
-    int emitterCount = static_cast<int>(emitter.count);
+    int32_t emitterCount = static_cast<int32_t>(emitter.count);
     ImGui::DragInt("Count##Particle Emitter", &emitterCount, 0, 1024);
-    emitter.count = emitterCount;
+    emitter.count = static_cast<uint32_t>(emitterCount);
     ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x);
     ImGui::DragFloat("Mass##Particle Emitter", &emitter.mass, -100.0f, 100.0f);
     ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x);

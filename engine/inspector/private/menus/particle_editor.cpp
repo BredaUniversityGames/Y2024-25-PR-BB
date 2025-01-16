@@ -1,10 +1,11 @@
 #include "particle_editor.hpp"
 
-#include "profile_macros.hpp"
-#include "ecs_module.hpp"
 #include "components/name_component.hpp"
+#include "ecs_module.hpp"
 #include "gpu_resources.hpp"
+
 #include "imgui/imgui.h"
+#include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
 ParticleEditor::ParticleEditor(ParticleModule& particleModule, ECSModule& ecsModule)
@@ -15,8 +16,6 @@ ParticleEditor::ParticleEditor(ParticleModule& particleModule, ECSModule& ecsMod
 
 void ParticleEditor::Render()
 {
-    ZoneScoped;
-
     ImGui::SetNextWindowSize({ 0.f, 0.f });
 
     ImGui::Begin("Particle editor", nullptr, ImGuiWindowFlags_NoResize);
@@ -73,19 +72,19 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
         ImGui::DragFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
 
-        const char* types[] = { "Billboard", "Ribbon" };
-        static const char* currentType = types[0];
-        if (ImGui::BeginCombo("Type##EmitterPresetEditor", currentType))
+        constexpr auto types = magic_enum::enum_names<ParticleType>();
+        static auto currentType = types[0];
+        if (ImGui::BeginCombo("Type##EmitterPresetEditor", std::string(currentType).c_str()))
         {
-            for (int n = 0; n < IM_ARRAYSIZE(types); n++)
+            for (uint32_t n = 0; n < types.size(); n++)
             {
-                bool is_selected = (currentType == types[n]);
-                if (ImGui::Selectable(types[n], is_selected))
+                bool isSelected = (currentType == types[n]);
+                if (ImGui::Selectable(std::string(types[n]).c_str(), isSelected))
                 {
                     currentType = types[n];
                     selectedPreset.type = static_cast<ParticleType>(n);
                 }
-                if (is_selected)
+                if (isSelected)
                 {
                     ImGui::SetItemDefaultFocus(); // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
                 }
