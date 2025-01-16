@@ -8,6 +8,8 @@
 
 #include <tracy/TracyVulkan.hpp>
 
+class BuildHzbPass;
+class GenerateDrawsPass;
 class UIModule;
 class DebugPass;
 class Application;
@@ -58,6 +60,7 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
+    GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();
 
@@ -74,14 +77,18 @@ private:
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
+    std::unique_ptr<GenerateDrawsPass> _generateMainDrawsPass;
+    std::unique_ptr<GenerateDrawsPass> _generateShadowDrawsPass;
+    std::unique_ptr<BuildHzbPass> _buildMainHzbPass;
+    std::unique_ptr<BuildHzbPass> _buildShadowHzbPass;
     std::unique_ptr<GeometryPass> _geometryPass;
+    std::unique_ptr<ShadowPass> _shadowPass;
     std::unique_ptr<LightingPass> _lightingPass;
     std::unique_ptr<SkydomePass> _skydomePass;
     std::unique_ptr<TonemappingPass> _tonemappingPass;
     std::unique_ptr<FXAAPass> _fxaaPass;
     std::unique_ptr<UIPass> _uiPass;
     std::unique_ptr<GaussianBlurPass> _bloomBlurPass;
-    std::unique_ptr<ShadowPass> _shadowPass;
     std::unique_ptr<DebugPass> _debugPass;
     std::unique_ptr<IBLPass> _iblPass;
     std::unique_ptr<ParticlePass> _particlePass;

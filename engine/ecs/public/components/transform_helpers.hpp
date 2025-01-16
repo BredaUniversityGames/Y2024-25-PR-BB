@@ -48,8 +48,7 @@ public:
 
     static void ResetAllUpdateTags(entt::registry& reg);
 
-private:
-    friend class Editor;
-    friend struct TransformComponent;
+    // User should not need to call this function
+    // It is called automatically when a transform or the parent is updated
     static void UpdateWorldMatrix(entt::registry& reg, entt::entity entity);
 };

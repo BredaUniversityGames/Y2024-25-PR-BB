@@ -59,6 +59,13 @@ void InputDeviceManager::UpdateEvent(const SDL_Event& event)
     {
         _mouse.positionX += event.motion.xrel;
         _mouse.positionY += event.motion.yrel;
+
+        break;
+    }
+
+    case SDL_EVENT_WINDOW_FOCUS_GAINED:
+    {
+        SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
         break;
     }
 

@@ -43,7 +43,8 @@ GraphicsContext::~GraphicsContext()
 
 void GraphicsContext::CreateBindlessDescriptorSet()
 {
-    std::array<vk::DescriptorPoolSize, 5> poolSizes = {
+    std::array<vk::DescriptorPoolSize, 6> poolSizes = {
+        vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
         vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, MAX_BINDLESS_RESOURCES },
@@ -58,35 +59,23 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     poolCreateInfo.pPoolSizes = poolSizes.data();
     util::VK_ASSERT(_vulkanContext->Device().createDescriptorPool(&poolCreateInfo, nullptr, &_bindlessPool), "Failed creating bindless pool!");
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(5);
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
     vk::DescriptorSetLayoutBinding& combinedImageSampler = bindings[0];
     combinedImageSampler.descriptorType = vk::DescriptorType::eCombinedImageSampler;
     combinedImageSampler.descriptorCount = MAX_BINDLESS_RESOURCES;
-    combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eColor);
+    combinedImageSampler.binding = static_cast<uint32_t>(BindlessBinding::eImage);
     combinedImageSampler.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
-    vk::DescriptorSetLayoutBinding& depthImageBinding = bindings[1];
-    depthImageBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    depthImageBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    depthImageBinding.binding = static_cast<uint32_t>(BindlessBinding::eDepth);
-    depthImageBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
+    vk::DescriptorSetLayoutBinding& storageImage = bindings[1];
+    storageImage.descriptorType = vk::DescriptorType::eStorageImage;
+    storageImage.descriptorCount = MAX_BINDLESS_RESOURCES;
+    storageImage.binding = static_cast<uint32_t>(BindlessBinding::eStorageImage);
+    storageImage.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
-    vk::DescriptorSetLayoutBinding& cubemapBinding = bindings[2];
-    cubemapBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    cubemapBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    cubemapBinding.binding = static_cast<uint32_t>(BindlessBinding::eCubemap);
-    cubemapBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& shadowBinding = bindings[3];
-    shadowBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    shadowBinding.descriptorCount = MAX_BINDLESS_RESOURCES;
-    shadowBinding.binding = static_cast<uint32_t>(BindlessBinding::eShadowmap);
-    shadowBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-
-    vk::DescriptorSetLayoutBinding& materialBinding = bindings[4];
-    materialBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    vk::DescriptorSetLayoutBinding& materialBinding = bindings[2];
+    materialBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
     materialBinding.descriptorCount = 1;
-    materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eMaterial);
+    materialBinding.binding = static_cast<uint32_t>(BindlessBinding::eStorageBuffer);
     materialBinding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
 
     vk::StructureChain<vk::DescriptorSetLayoutCreateInfo, vk::DescriptorSetLayoutBindingFlagsCreateInfo> structureChain;
@@ -96,21 +85,19 @@ void GraphicsContext::CreateBindlessDescriptorSet()
     layoutCreateInfo.pBindings = bindings.data();
     layoutCreateInfo.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
 
-    std::array<vk::DescriptorBindingFlagsEXT, 5> bindingFlags = {
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound,
-        vk::DescriptorBindingFlagBits::ePartiallyBound
+    std::array<vk::DescriptorBindingFlagsEXT, 3> bindingFlags = {
+        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
+        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
+        vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind,
     };
 
     auto& extInfo = structureChain.get<vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT>();
     extInfo.bindingCount = bindings.size();
     extInfo.pBindingFlags = bindingFlags.data();
 
-    std::vector<std::string_view> names { "bindless_color_textures", "bindless_depth_textures", "bindless_cubemap_textures", "bindless_shadowmap_textures", "Materials" };
+    std::vector<std::string_view> names { "bindless_color_textures", "bindless_storage_image_r16f", "Materials" };
 
-    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(_vulkanContext, bindings, names, "Bindless DS Layout");
+    _bindlessLayout = PipelineBuilder::CacheDescriptorSetLayout(*_vulkanContext, bindings, names, layoutCreateInfo);
 
     vk::DescriptorSetAllocateInfo allocInfo {};
     allocInfo.descriptorPool = _bindlessPool;
@@ -126,7 +113,7 @@ void GraphicsContext::CreateBindlessMaterialBuffer()
 {
     BufferCreation creation {};
     creation.SetSize(MAX_BINDLESS_RESOURCES * sizeof(GPUMaterial::GPUInfo))
-        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer)
         .SetName("Bindless material uniform buffer");
 
     _bindlessMaterialBuffer = _graphicsResources->BufferResourceManager().Create(creation);
@@ -150,27 +137,15 @@ void GraphicsContext::UpdateBindlessImages()
 
         // If it can't be sampled, use the fallback.
         if (!(image->flags & vk::ImageUsageFlagBits::eSampled))
+        {
             image = imageResourceManager.Access(_fallbackImage);
-
-        BindlessBinding dstBinding = BindlessBinding::eNone;
-
-        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eColor)
-            dstBinding = BindlessBinding::eColor;
-
-        if (util::GetImageAspectFlags(image->format) == vk::ImageAspectFlagBits::eDepth)
-            dstBinding = BindlessBinding::eDepth;
-
-        if (image->type == ImageType::eCubeMap)
-            dstBinding = BindlessBinding::eCubemap;
-
-        if (image->type == ImageType::eShadowMap)
-            dstBinding = BindlessBinding::eShadowmap;
+        }
 
         if (_sampler.IsNull())
         {
             SamplerCreation createInfo {
                 .name = "Graphics context sampler",
-                .maxLod = std::floor(std::log2(2048.0f)),
+                .maxLod = static_cast<float>(image->mips),
             };
 
             _sampler = _graphicsResources->SamplerResourceManager().Create(createInfo);
@@ -182,7 +157,7 @@ void GraphicsContext::UpdateBindlessImages()
         _bindlessImageInfos.at(i).sampler = _graphicsResources->SamplerResourceManager().Access(samplerHandle)->sampler;
 
         _bindlessImageWrites.at(i).dstSet = _bindlessSet;
-        _bindlessImageWrites.at(i).dstBinding = static_cast<uint32_t>(dstBinding);
+        _bindlessImageWrites.at(i).dstBinding = static_cast<uint32_t>(BindlessBinding::eImage);
         _bindlessImageWrites.at(i).dstArrayElement = i;
         _bindlessImageWrites.at(i).descriptorType = vk::DescriptorType::eCombinedImageSampler;
         _bindlessImageWrites.at(i).descriptorCount = 1;
@@ -220,9 +195,9 @@ void GraphicsContext::UpdateBindlessMaterials()
     _bindlessMaterialInfo.range = sizeof(GPUMaterial::GPUInfo) * materialResourceManager.Resources().size();
 
     _bindlessMaterialWrite.dstSet = _bindlessSet;
-    _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eMaterial);
+    _bindlessMaterialWrite.dstBinding = static_cast<uint32_t>(BindlessBinding::eStorageBuffer);
     _bindlessMaterialWrite.dstArrayElement = 0;
-    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    _bindlessMaterialWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
     _bindlessMaterialWrite.descriptorCount = 1;
     _bindlessMaterialWrite.pBufferInfo = &_bindlessMaterialInfo;
 

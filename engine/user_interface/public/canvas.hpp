@@ -7,6 +7,7 @@ class Canvas : public UIElement
 {
 public:
     Canvas(const glm::vec2& size)
+        : UIElement()
     {
         SetScale(size);
     }

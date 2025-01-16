@@ -15,8 +15,10 @@
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
+#include "lifetime_component.hpp"
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
 #include "model_loader.hpp"
@@ -33,10 +35,8 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <vk_mem_alloc.h>
 
-Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const std::shared_ptr<ImGuiBackend>& imguiBackend)
+Editor::Editor(ECSModule& ecs)
     : _ecs(ecs)
-    , _renderer(renderer)
-    , _imguiBackend(imguiBackend)
 {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -50,36 +50,31 @@ Editor::Editor(ECSModule& ecs, const std::shared_ptr<Renderer>& renderer, const 
     _entityEditor.registerComponent<AudioEmitterComponent>("Audio Emitter");
     _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
+    _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
 }
 
-void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSettings)
+void Editor::DrawHierarchy()
 {
-    ZoneNamedN(editorDraw, "Editor Draw", true);
-    // Hierarchy panel
+    ZoneNamedN(displayHierarchy, "World DisplayHierarchy", true);
     const auto displayEntity = [&](const auto& self, entt::entity entity) -> void
     {
         RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
-        const std::string name = std::string(NameComponent::GetDisplayName(_ecs.GetRegistry(), entity));
+        const char* name = NameComponent::GetDisplayName(_ecs.GetRegistry(), entity).data();
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         if (relationship != nullptr && relationship->childrenCount > 0)
         {
-            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name.c_str());
+            const bool nodeOpen = ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags, "%s", name);
 
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
             }
 
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
-            {
-                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
-            }
-
             if (nodeOpen)
             {
                 entt::entity current = relationship->first;
-                for (size_t i {}; i < relationship->childrenCount; ++i)
+                for (size_t i = 0; i < relationship->childrenCount; ++i)
                 {
                     if (_ecs.GetRegistry().valid(current))
                     {
@@ -93,22 +88,16 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         }
         else
         {
-            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name.c_str());
+            ImGui::TreeNodeEx(std::bit_cast<void*>(static_cast<size_t>(entity)), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", name);
             if (ImGui::IsItemClicked())
             {
                 _selectedEntity = entity;
-            }
-
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
-            {
-                ImGui::SetTooltip("Entity %d", static_cast<int>(entity));
             }
         }
     };
 
     if (ImGui::Begin("World Inspector"))
     {
-        ZoneNamedN(worldInspector, "World Inspector", true);
         if (ImGui::Button("+ Add entity"))
         {
             entt::entity entity = _ecs.GetRegistry().create();
@@ -131,87 +120,17 @@ void Editor::Draw(PerformanceTracker& performanceTracker, BloomSettings& bloomSe
         ImGui::EndChild();
     }
     ImGui::End();
+}
 
-    {
-        ZoneNamedN(entityEditor, "Entity Editor", true);
-        _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
-    }
+void Editor::DrawEntityEditor()
+{
+    ZoneNamedN(entityEditor, "Entity Editor", true);
+    _entityEditor.renderSimpleCombo(_ecs.GetRegistry(), _selectedEntity);
 
     if (ImGui::Begin("Entity Details"))
     {
         DisplaySelectedEntityDetails();
     }
-    ImGui::End();
-
-    performanceTracker.Render();
-    bloomSettings.Render();
-
-    // Render systems inspect
-
-    {
-        ZoneNamedN(systemInspect, "System inspect", true);
-        for (const auto& system : _ecs.GetSystems())
-        {
-            system->Inspect();
-        }
-    }
-
-    static ImTextureID textureID = _imguiBackend->GetTexture(_renderer->GetGBuffers().Shadow());
-    ImGui::Begin("Directional Light Shadow Map View");
-    ImGui::Image(textureID, ImVec2(512, 512));
-    ImGui::End();
-
-    ImGui::Begin("SSAO settings");
-    ImGui::DragFloat("AO strength", &_renderer->GetSSAOPipeline().GetAOStrength(), 0.1f, 0.0f, 16.0f);
-    ImGui::DragFloat("Bias", &_renderer->GetSSAOPipeline().GetAOBias(), 0.001f, 0.0f, 0.1f);
-    ImGui::DragFloat("Radius", &_renderer->GetSSAOPipeline().GetAORadius(), 0.05f, 0.0f, 2.0f);
-    ImGui::DragFloat("Minimum AO distance", &_renderer->GetSSAOPipeline().GetMinAODistance(), 0.05f, 0.0f, 1.0f);
-    ImGui::DragFloat("Maximum AO distance", &_renderer->GetSSAOPipeline().GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
-    ImGui::End();
-
-    ImGui::Begin("FXAA settings");
-    ImGui::Checkbox("Enable FXAA", &_renderer->GetFXAAPipeline().GetEnableFXAA());
-    ImGui::DragFloat("Edge treshold min", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Edge treshold max", &_renderer->GetFXAAPipeline().GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Subpixel quality", &_renderer->GetFXAAPipeline().GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
-    ImGui::DragInt("Iterations", &_renderer->GetFXAAPipeline().GetIterations(), 1, 1, 128);
-
-    ImGui::End();
-
-    ImGui::Begin("Dump VMA stats");
-
-    if (ImGui::Button("Dump json"))
-    {
-        char* statsJson {};
-        vmaBuildStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), &statsJson, true);
-
-        const char* outputFilePath = "vma_stats.json";
-
-        std::ofstream file { outputFilePath };
-        if (file.is_open())
-        {
-            file << statsJson;
-
-            file.close();
-        }
-        else
-        {
-            bblog::error("Failed writing VMA stats to file!");
-        }
-
-        vmaFreeStatsString(_renderer->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
-    }
-
-    ImGui::End();
-
-    ImGui::Begin("Renderer Stats");
-
-    ImGui::LabelText("Draw calls", "%i", _renderer->GetContext()->GetDrawStats().DrawCalls());
-    ImGui::LabelText("Triangles", "%i", _renderer->GetContext()->GetDrawStats().IndexCount() / 3);
-    ImGui::LabelText("Indirect draw commands", "%i", _renderer->GetContext()->GetDrawStats().IndirectDrawCommands());
-    ImGui::LabelText("Particles after simulation", "%i", _renderer->GetContext()->GetDrawStats().GetParticleCount());
-    ImGui::LabelText("Emitters", "%i", _renderer->GetContext()->GetDrawStats().GetEmitterCount());
-
     ImGui::End();
 }
 

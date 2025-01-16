@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "3365920"
+	"Desc" "Public Build"
+	"SetLive" "" // Cannot set live the public branch automatically, must be done via admin panel
+	"ContentRoot" "..\..\..\..\package\"
+	"BuildOutput" "..\output\"
+	"Depots"
+	{
+		"3365921" "depot_build_public_windows.vdf"
+		"3365924" "depot_build_public_linux.vdf"
+	}
+}
