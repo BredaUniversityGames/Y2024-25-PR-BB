@@ -37,7 +37,7 @@ void ECSModule::UpdateSystems(const float dt)
     for (auto& system : systems)
     {
         ZoneScoped;
-        std::string name = std::string(system->GetName()) + " Update";
+        const std::string name = std::string(system->GetName()) + " Update";
         ZoneName(name.c_str(), 32);
 
         system->Update(*this, dt);
