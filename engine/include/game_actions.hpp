@@ -1,5 +1,4 @@
 #pragma once
-#include "../../build/WSL-RelWithDebInfo/_deps/googletest-src/googlemock/include/gmock/gmock-matchers.h"
 #include "input/action_manager.hpp"
 
 const GameActions GAME_ACTIONS {
