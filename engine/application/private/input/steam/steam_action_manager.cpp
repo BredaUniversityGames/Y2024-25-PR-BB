@@ -59,7 +59,7 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
 
 DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
 {
-    DigitalActionType result{};
+    DigitalActionType result {};
 
     bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
     bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);

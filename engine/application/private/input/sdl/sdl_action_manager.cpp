@@ -12,7 +12,7 @@ SDLActionManager::SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceMa
 
 DigitalActionType SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadButton button) const
 {
-    DigitalActionType result{};
+    DigitalActionType result {};
 
     if (_sdlInputDeviceManager.IsGamepadButtonPressed(button))
     {

@@ -1,7 +1,7 @@
 #pragma once
 #include "common.hpp"
-#include "input_device_manager.hpp"
 #include "enum_utils.hpp"
+#include "input_device_manager.hpp"
 #include <glm/glm.hpp>
 #include <string>
 #include <variant>

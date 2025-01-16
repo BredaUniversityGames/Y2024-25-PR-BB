@@ -28,7 +28,7 @@ DigitalActionResult ActionManager::GetDigitalAction(std::string_view actionName)
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
-        return DigitalActionResult{};
+        return DigitalActionResult {};
     }
 
     const ActionSet& actionSet = _gameActions[_activeActionSet];
@@ -40,10 +40,10 @@ DigitalActionResult ActionManager::GetDigitalAction(std::string_view actionName)
     if (itr == actionSet.digitalActions.end())
     {
         bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
-        return DigitalActionResult{};
+        return DigitalActionResult {};
     }
 
-    return DigitalActionResult{ CheckDigitalInput(*itr) };
+    return DigitalActionResult { CheckDigitalInput(*itr) };
 }
 
 glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
@@ -71,12 +71,12 @@ glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
 
 DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
-    DigitalActionType result{};
+    DigitalActionType result {};
 
     for (const DigitalInputBinding& input : action.inputs)
     {
         result = result | std::visit([&](auto& arg)
-            { return CheckInput(action.name, arg); }, input);
+                     { return CheckInput(action.name, arg); }, input);
     }
 
     return result;
@@ -84,7 +84,7 @@ DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) 
 
 DigitalActionType ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const
 {
-    DigitalActionType result{};
+    DigitalActionType result {};
 
     if (_inputDeviceManager.IsKeyPressed(code))
     {
@@ -104,7 +104,7 @@ DigitalActionType ActionManager::CheckInput(MAYBE_UNUSED std::string_view action
 
 DigitalActionType ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button) const
 {
-    DigitalActionType result{};
+    DigitalActionType result {};
 
     if (_inputDeviceManager.IsMouseButtonPressed(button))
     {
