@@ -207,26 +207,6 @@ void OldEngine::Tick(Engine& engine)
             TransformHelpers::SetLocalRotation(_ecs->GetRegistry(), entity, rotation);
 
             glm::vec3 movementDir {};
-            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eW))
-            {
-                movementDir += FORWARD;
-            }
-
-            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eS))
-            {
-                movementDir -= FORWARD;
-            }
-
-            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eD))
-            {
-                movementDir += RIGHT;
-            }
-
-            if (inputDeviceManager.IsKeyHeld(KeyboardCode::eA))
-            {
-                movementDir -= RIGHT;
-            }
-
             glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
             movementDir += RIGHT * moveAnalogAction.x;
             movementDir += FORWARD * moveAnalogAction.y;

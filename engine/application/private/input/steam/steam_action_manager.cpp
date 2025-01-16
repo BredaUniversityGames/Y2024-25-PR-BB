@@ -9,7 +9,7 @@ SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInput
     : ActionManager(steamInputDeviceManager)
     , _steamInputDeviceManager(steamInputDeviceManager)
 {
-    // TODO: File actions should be set from Steam's servers, but for that to happen we need to upload an official configuration via Steamworks
+    // Use the following lines of code to override and test new input action that is not yet on steam servers
     // std::string actionManifestFilePath = std::filesystem::current_path().string();
     // actionManifestFilePath.append("\\assets\\input\\steam_input_manifest.vdf");
     // SteamInput()->SetInputActionManifestFilePath(actionManifestFilePath.c_str());
@@ -57,26 +57,6 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-glm::vec2 SteamActionManager::GetAnalogAction(std::string_view actionName) const
-{
-    if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
-    {
-        return { 0.0f, 0.0f };
-    }
-
-    const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
-
-    auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
-    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
-    {
-        bblog::error("[Input] Failed to find analog action \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
-        return { 0.0f, 0.0f };
-    }
-
-    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_steamInputDeviceManager.GetGamepadHandle(), itr->second);
-    return { _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x), _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y) };
-}
-
 bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const
 {
     // A bit of a waist honestly, as this gets called every time when an action has a digital gamepad input to check,
@@ -106,6 +86,26 @@ bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED Ga
     }
 
     return false;
+}
+
+glm::vec2 SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadAnalog gamepadAnalog) const
+{
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return { 0.0f, 0.0f };
+    }
+
+    const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
+    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find analog action cache \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
+        return { 0.0f, 0.0f };
+    }
+
+    ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_steamInputDeviceManager.GetGamepadHandle(), itr->second);
+    return { _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x), _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y) };
 }
 
 void SteamActionManager::UpdateSteamControllerInputState()

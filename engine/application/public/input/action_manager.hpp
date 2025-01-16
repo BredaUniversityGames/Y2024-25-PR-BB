@@ -18,8 +18,16 @@ enum class DigitalActionType : uint8_t
     eReleased,
 };
 
+struct KeyboardAnalog
+{
+    KeyboardCode up;
+    KeyboardCode down;
+    KeyboardCode left;
+    KeyboardCode right;
+};
+
 using DigitalInputBinding = std::variant<GamepadButton, KeyboardCode, MouseButton>;
-using AnalogInputBinding = GamepadAnalog;
+using AnalogInputBinding = std::variant<GamepadAnalog, KeyboardAnalog>;
 
 // Action for button inputs.
 struct DigitalAction
@@ -66,7 +74,7 @@ public:
     [[nodiscard]] bool GetDigitalAction(std::string_view actionName) const;
 
     // Axis actions.
-    virtual glm::vec2 GetAnalogAction(std::string_view actionName) const = 0;
+    [[nodiscard]] glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;
@@ -77,4 +85,7 @@ protected:
     [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code, DigitalActionType inputType) const;
     [[nodiscard]] bool CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button, DigitalActionType inputType) const;
     [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const = 0;
+    [[nodiscard]] glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
+    [[nodiscard]] glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
+    [[nodiscard]] virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
 };
