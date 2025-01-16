@@ -1,4 +1,5 @@
 #pragma once
+#include "../../build/WSL-RelWithDebInfo/_deps/googletest-src/googlemock/include/gmock/gmock-matchers.h"
 #include "input/action_manager.hpp"
 
 const GameActions GAME_ACTIONS {
@@ -7,7 +8,7 @@ const GameActions GAME_ACTIONS {
         .name = "Shooter",
         .digitalActions = {
             {
-                .name = "Menu",
+                .name = "OpenMenu",
                 .inputs = {
                     GamepadButton::eSTART,
                     GamepadButton::eBACK,
@@ -73,6 +74,39 @@ const GameActions GAME_ACTIONS {
                 .name = "Look",
                 .inputs = {
                     GamepadAnalog::eAXIS_RIGHT,
+                },
+            },
+        },
+    },
+    {
+        .name = "UserInterface",
+        .digitalActions = {
+            {
+                .name = "Interact",
+                .inputs = {
+                    GamepadButton::eSOUTH,
+                },
+            },
+            {
+                .name = "CloseMenu",
+                .inputs = {
+                    GamepadButton::eSTART,
+                    GamepadButton::eBACK,
+                },
+            },
+            {
+                .name = "Back",
+                .inputs = {
+                    GamepadButton::eEAST,
+                },
+            },
+        },
+        .analogActions = {
+            {
+                .name = "Navigate",
+                .inputs = {
+                    GamepadAnalog::eAXIS_LEFT,
+                    GamepadAnalog::eDPAD,
                 },
             },
         },
