@@ -215,7 +215,7 @@ void SSAOPass::CreateDescriptorSetLayouts()
             .pImmutableSamplers = nullptr }
     };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(_context->VulkanContext(), bindings, { "uSampleKernel" }, "SSAO Descriptor Set Layout");
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uSampleKernel" });
 }
 void SSAOPass::CreateDescriptorSets()
 {

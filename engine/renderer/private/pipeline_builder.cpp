@@ -61,12 +61,9 @@ vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanCo
                 .pBindings = bindings.data(),
             };
         }
-
-        vk::DescriptorSetLayout layout { context->Device().createDescriptorSetLayout(createInfo.value(), nullptr) };
+        vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(createInfo.value(), nullptr) };
 
         _cacheDescriptorSetLayouts[hash] = layout;
-
-        util::NameObject(layout, name, context);
     }
 
     return _cacheDescriptorSetLayouts[hash];

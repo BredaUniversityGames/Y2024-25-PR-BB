@@ -49,7 +49,7 @@ void CameraResource::CreateDescriptorSetLayout(const std::shared_ptr<GraphicsCon
     std::vector<vk::DescriptorSetLayoutBinding> bindings { descriptorSetBinding };
     std::vector<std::string_view> names { "CameraUBO" };
 
-    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(context->VulkanContext(), bindings, names, "CameraUBO");
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*context->VulkanContext(), bindings, names);
 }
 
 void CameraResource::CreateBuffers()

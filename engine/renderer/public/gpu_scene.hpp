@@ -88,9 +88,6 @@ public:
     ResourceHandle<Buffer>& GetClusterCullingBuffer(uint32_t index) { return _clusterCullingData.buffers.at(index); }
     ResourceHandle<Buffer>& GetGlobalIndexBuffer(uint32_t index) { return _clusterCullingData.globalIndexBuffers.at(index); }
 
-    ResourceHandle<Buffer> IndirectCountBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    uint32_t IndirectCountOffset() const { return MAX_INSTANCES * sizeof(vk::DrawIndexedIndirectCommand); }
-
     uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
     uint32_t DrawCommandIndexCount(std::vector<DrawIndexedIndirectCommand> commands) const
