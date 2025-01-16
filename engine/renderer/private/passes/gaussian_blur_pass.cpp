@@ -146,8 +146,8 @@ void GaussianBlurPass::CreateDescriptorSetLayout()
     std::vector<vk::DescriptorSetLayoutBinding> bindings {
         vk::DescriptorSetLayoutBinding {
             .binding = 0,
-            .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eFragment,
             .pImmutableSamplers = nullptr,
         },
