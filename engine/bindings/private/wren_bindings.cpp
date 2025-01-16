@@ -61,7 +61,7 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     return std::nullopt;
 }
 
-bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
+DigitalActionResult InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
 {
     return self.GetActionManager().GetDigitalAction(action_name);
 }
