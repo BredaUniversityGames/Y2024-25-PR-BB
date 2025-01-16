@@ -34,7 +34,7 @@ SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 
 void SSAOPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pass");
 
     _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
     _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;

@@ -31,7 +31,7 @@ ShadowPass::~ShadowPass()
 
 void ShadowPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Shadow Pass");
 
     static bool isPrepass = true;
     DrawGeometry(commandBuffer, currentFrame, scene, isPrepass);

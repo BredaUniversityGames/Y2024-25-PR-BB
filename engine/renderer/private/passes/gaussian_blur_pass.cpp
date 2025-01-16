@@ -41,7 +41,7 @@ GaussianBlurPass::~GaussianBlurPass()
 
 void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian blur Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian Blur Pass");
     //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
     const GPUImage* verticalTarget = _context->Resources()->ImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
