@@ -86,21 +86,21 @@ public:
     virtual void SetActiveActionSet(std::string_view actionSetName);
 
     // Button actions.
-    [[nodiscard]] DigitalActionResult GetDigitalAction(std::string_view actionName) const;
+    NO_DISCARD DigitalActionResult GetDigitalAction(std::string_view actionName) const;
 
     // Axis actions.
-    [[nodiscard]] glm::vec2 GetAnalogAction(std::string_view actionName) const;
+    NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;
     GameActions _gameActions {};
     uint32_t _activeActionSet = 0;
 
-    [[nodiscard]] DigitalActionType CheckDigitalInput(const DigitalAction& action) const;
-    [[nodiscard]] DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const;
-    [[nodiscard]] DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button) const;
-    [[nodiscard]] virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const = 0;
-    [[nodiscard]] glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
-    [[nodiscard]] glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
-    [[nodiscard]] virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
+    NO_DISCARD DigitalActionType CheckDigitalInput(const DigitalAction& action) const;
+    NO_DISCARD DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const;
+    NO_DISCARD DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, MouseButton button) const;
+    NO_DISCARD virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const = 0;
+    NO_DISCARD glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
+    NO_DISCARD glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
+    NO_DISCARD virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
 };
