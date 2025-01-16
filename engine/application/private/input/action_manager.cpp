@@ -46,6 +46,29 @@ bool ActionManager::GetDigitalAction(std::string_view actionName) const
     return CheckDigitalInput(*itr);
 }
 
+glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
+{
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return { 0.0f, 0.0f };
+    }
+
+    const ActionSet& actionSet = _gameActions[_activeActionSet];
+    const auto& analogActions = actionSet.analogActions;
+
+    auto itr = std::find_if(analogActions.begin(), analogActions.end(),
+        [actionName](const AnalogAction& action)
+        { return action.name == actionName; });
+    if (itr == actionSet.analogActions.end())
+    {
+        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        return { 0.0f, 0.0f };
+    }
+
+    return CheckAnalogInput(*itr);
+}
+
 bool ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
     for (const DigitalInputBinding& input : action.inputs)
@@ -106,4 +129,26 @@ bool ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MouseBu
     }
 
     return false;
+}
+
+glm::vec2 ActionManager::CheckAnalogInput(const AnalogAction& action) const
+{
+    for (const AnalogInputBinding& input : action.inputs)
+    {
+        glm::vec2 result = std::visit([&](auto& arg)
+            { return CheckInput(action.name, arg); }, input);
+
+        // Return first input that is non-zero
+        if (result.x != 0.0f || result.y != 0.0f)
+        {
+            return result;
+        }
+    }
+
+    return { 0.0f, 0.0f };
+}
+
+glm::vec2 ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const
+{
+    return { _inputDeviceManager.IsKeyHeld(keyboardAnalog.right) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.left), _inputDeviceManager.IsKeyHeld(keyboardAnalog.up) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.down) };
 }
