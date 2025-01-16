@@ -22,7 +22,7 @@ FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 
 void FXAAPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pass");
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
 

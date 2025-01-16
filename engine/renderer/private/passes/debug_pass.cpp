@@ -35,7 +35,7 @@ DebugPass::~DebugPass()
 
 void DebugPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Debug Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Debug Pass");
 
     UpdateVertexData();
 
