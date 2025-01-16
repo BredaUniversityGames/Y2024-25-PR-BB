@@ -2,6 +2,7 @@
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
+#include "glm/vec4.hpp"
 
 class SwapChain;
 class GraphicsContext;
