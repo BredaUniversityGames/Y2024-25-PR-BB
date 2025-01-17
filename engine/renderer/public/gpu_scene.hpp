@@ -106,10 +106,6 @@ public:
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
 
-    glm::vec3 fogColor { 0.5, 0.6, 0.7 };
-    float fogDensity { 0.2f };
-    float fogHeight { 0.3f };
-
 private:
     struct alignas(16) DirectionalLightData
     {

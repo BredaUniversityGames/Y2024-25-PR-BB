@@ -12,6 +12,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
+#include "settings.hpp"
 #include "vulkan_context.hpp"
 
 InspectorModule::InspectorModule() = default;
@@ -67,6 +68,8 @@ void InspectorModule::Shutdown(Engine& engine)
         ptr->GetRenderer()->FlushCommands();
     }
     _editor.reset();
+
+    SettingsStore::Instance().Write();
 }
 
 void InspectorModule::Tick(Engine& engine)
@@ -259,9 +262,9 @@ void DrawFXAASettings(Engine& engine)
 void DrawFogSettings(Engine& engine)
 {
     const auto& renderer = engine.GetModule<RendererModule>().GetRenderer();
-    ImGui::ColorPicker3("Fog Color", &renderer->GetGPUScene().fogColor.x);
-    ImGui::DragFloat("Fog Density", &renderer->GetGPUScene().fogDensity, 0.01f);
-    ImGui::DragFloat("Fog Height", &renderer->GetGPUScene().fogHeight, 0.01f);
+    ImGui::ColorPicker3("Fog Color", &SettingsStore::Instance().settings.fogColor.x);
+    ImGui::DragFloat("Fog Density", &SettingsStore::Instance().settings.fogDensity, 0.01f);
+    ImGui::DragFloat("Fog Height", &SettingsStore::Instance().settings.fogHeight, 0.01f);
 }
 
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)

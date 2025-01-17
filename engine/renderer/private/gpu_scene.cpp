@@ -23,6 +23,7 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
+#include "settings.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -114,9 +115,9 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
     sceneData.shadowMapIndex = _shadowImage.Index();
 
-    sceneData.fogColor = fogColor;
-    sceneData.fogDensity = fogDensity;
-    sceneData.fogHeight = fogHeight;
+    sceneData.fogColor = SettingsStore::Instance().settings.fogColor;
+    sceneData.fogDensity = SettingsStore::Instance().settings.fogDensity;
+    sceneData.fogHeight = SettingsStore::Instance().settings.fogHeight;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
