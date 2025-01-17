@@ -20,7 +20,7 @@ void SettingsStore::Write()
     if (stream)
     {
         cereal::JSONOutputArchive archive { stream };
-        archive(settings);
+        archive(cereal::make_nvp("settings", settings));
     }
 }
 
@@ -31,6 +31,6 @@ SettingsStore::SettingsStore()
     if (stream)
     {
         cereal::JSONInputArchive archive { stream };
-        archive(settings);
+        archive(cereal::make_nvp("settings", settings));
     }
 }

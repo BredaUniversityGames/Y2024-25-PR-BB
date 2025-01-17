@@ -18,12 +18,6 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) override;
 
-    float& GetEdgeTreshholdMin() { return _pushConstants.edgeThresholdMin; }
-    float& GetEdgeTreshholdMax() { return _pushConstants.edgeThresholdMax; }
-    float& GetSubPixelQuality() { return _pushConstants.subPixelQuality; }
-    int32_t& GetIterations() { return _pushConstants.iterations; }
-    bool& GetEnableFXAA() { return _pushConstants.enableFXAA; }
-
     NON_MOVABLE(FXAAPass);
     NON_COPYABLE(FXAAPass);
 

@@ -23,9 +23,10 @@ InspectorModule::~InspectorModule()
 
 void DumpVMAStats(Engine& engine);
 void DrawRenderStats(Engine& engine);
-void DrawSSAOSettings(Engine& engine);
-void DrawFXAASettings(Engine& engine);
-void DrawFogSettings(Engine& engine);
+void DrawBloomSettings();
+void DrawSSAOSettings();
+void DrawFXAASettings();
+void DrawFogSettings();
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -106,8 +107,8 @@ void InspectorModule::Tick(Engine& engine)
         {
             ImGui::MenuItem("Performance Tracker", nullptr, &_openWindows["Performance"]);
             ImGui::MenuItem("Draw Stats", nullptr, &_openWindows["RenderStats"]);
-            ImGui::MenuItem("Bloom Settings", nullptr, &_openWindows["Bloom Settings"]);
             ImGui::MenuItem("Shadow map visualisation", nullptr, &_openWindows["Shadow Map"]);
+            ImGui::MenuItem("Bloom Settings", nullptr, &_openWindows["Bloom"]);
             ImGui::MenuItem("SSAO Settings", nullptr, &_openWindows["SSAO"]);
             ImGui::MenuItem("FXAA Settings", nullptr, &_openWindows["FXAA"]);
             ImGui::MenuItem("Fog Settings", nullptr, &_openWindows["Fog"]);
@@ -153,29 +154,29 @@ void InspectorModule::Tick(Engine& engine)
         _performanceTracker->Render();
     }
 
-    if (_openWindows["Bloom Settings"])
-    {
-        engine.GetModule<RendererModule>().GetRenderer()->GetBloomSettings().Render();
-    }
-
     if (_openWindows["Shadow Map"])
     {
         DrawShadowMapInspect(engine, *_imguiBackend);
     }
 
+    if (_openWindows["Bloom"])
+    {
+        DrawBloomSettings();
+    }
+
     if (_openWindows["SSAO"])
     {
-        DrawSSAOSettings(engine);
+        DrawSSAOSettings();
     }
 
     if (_openWindows["FXAA"])
     {
-        DrawFXAASettings(engine);
+        DrawFXAASettings();
     }
 
     if (_openWindows["Fog"])
     {
-        DrawFogSettings(engine);
+        DrawFogSettings();
     }
 
     {
@@ -231,12 +232,25 @@ void DumpVMAStats(Engine& engine)
     vmaFreeStatsString(engine.GetModule<RendererModule>().GetRenderer()->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
 }
 
-void DrawSSAOSettings(Engine& engine)
+void DrawBloomSettings()
+{
+    auto& bloom = SettingsStore::Instance().settings.bloom;
+
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Bloom", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::InputFloat("Strength", &bloom.strength, 0.5f, 2.0f);
+    ImGui::InputFloat("Gradient strength", &bloom.gradientStrength, 0.05f, 0.1f, "%.00005f");
+    ImGui::InputFloat("Max brightness extraction", &bloom.maxBrightnessExtraction, 1.0f, 5.0f);
+    ImGui::InputFloat3("Color weights", &bloom.colorWeights[0], "%.00005f");
+    ImGui::End();
+}
+
+void DrawSSAOSettings()
 {
     auto& ssao = SettingsStore::Instance().settings.ssao;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("SSAO settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("SSAO", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::DragFloat("AO strength", &ssao.strength, 0.1f, 0.0f, 16.0f);
     ImGui::DragFloat("Bias", &ssao.bias, 0.001f, 0.0f, 0.1f);
     ImGui::DragFloat("Radius", &ssao.radius, 0.05f, 0.0f, 2.0f);
@@ -245,26 +259,30 @@ void DrawSSAOSettings(Engine& engine)
     ImGui::End();
 }
 
-void DrawFXAASettings(Engine& engine)
+void DrawFXAASettings()
 {
-    auto& fxaa = engine.GetModule<RendererModule>().GetRenderer()->GetFXAAPipeline();
+    auto& fxaa = SettingsStore::Instance().settings.fxaa;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("FXAA settings", nullptr, ImGuiWindowFlags_NoResize);
-    ImGui::Checkbox("Enable FXAA", &fxaa.GetEnableFXAA());
-    ImGui::DragFloat("Edge treshold min", &fxaa.GetEdgeTreshholdMin(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Edge treshold max", &fxaa.GetEdgeTreshholdMax(), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("Subpixel quality", &fxaa.GetSubPixelQuality(), 0.01f, 0.0f, 1.0f);
-    ImGui::DragInt("Iterations", &fxaa.GetIterations(), 1, 1, 128);
+    ImGui::Begin("FXAA", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Checkbox("Enable FXAA", &fxaa.enableFXAA);
+    ImGui::DragFloat("Edge treshold min", &fxaa.edgeThresholdMin, 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Edge treshold max", &fxaa.edgeThresholdMax, 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Subpixel quality", &fxaa.subPixelQuality, 0.01f, 0.0f, 1.0f);
+    ImGui::DragInt("Iterations", &fxaa.iterations, 1, 1, 128);
     ImGui::End();
 }
 
-void DrawFogSettings(Engine& engine)
+void DrawFogSettings()
 {
     auto& fog = SettingsStore::Instance().settings.fog;
+
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("FXAA", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::ColorPicker3("Fog Color", &fog.color.x);
     ImGui::DragFloat("Fog Density", &fog.density, 0.01f);
     ImGui::DragFloat("Fog Height", &fog.height, 0.01f);
+    ImGui::End();
 }
 
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)

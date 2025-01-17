@@ -1,0 +1,42 @@
+{
+  "settings": {
+    "cereal_class_version": 0,
+    "fog": {
+      "cereal_class_version": 0,
+      "color": {
+        "x": 0.5,
+        "y": 0.6000000238418579,
+        "z": 0.699999988079071
+      },
+      "density": 0.20000000298023225,
+      "height": 0.30000001192092898
+    },
+    "ssao": {
+      "cereal_class_version": 0,
+      "strength": 2.0,
+      "bias": 0.009999999776482582,
+      "radius": 0.20000000298023225,
+      "minDistance": 1.0,
+      "maxDistance": 3.0
+    },
+    "fxaa": {
+      "cereal_class_version": 0,
+      "enableFXAA": true,
+      "edgeThresholdMin": 0.031199999153614045,
+      "edgeThresholdMax": 0.125,
+      "subPixelQuality": 1.2000000476837159,
+      "iterations": 12
+    },
+    "bloom": {
+      "cereal_class_version": 0,
+      "colorWeights": {
+        "x": 0.2125999927520752,
+        "y": 0.7152000069618225,
+        "z": 0.0722000002861023
+      },
+      "strength": 0.2999999523162842,
+      "gradientStrength": 0.20000000298023225,
+      "maxBrightnessExtraction": 5.0
+    }
+  }
+}

@@ -6,6 +6,7 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "settings.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
@@ -23,8 +24,16 @@ FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 void FXAAPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pass");
+
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
+
+    const auto& fxaaSettings = SettingsStore::Instance().settings.fxaa;
+    _pushConstants.iterations = fxaaSettings.iterations;
+    _pushConstants.enableFXAA = fxaaSettings.enableFXAA;
+    _pushConstants.edgeThresholdMax = fxaaSettings.edgeThresholdMax;
+    _pushConstants.edgeThresholdMin = fxaaSettings.edgeThresholdMin;
+    _pushConstants.subPixelQuality = fxaaSettings.subPixelQuality;
 
     vk::RenderingAttachmentInfoKHR fxaaColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_fxaaTarget)->view,

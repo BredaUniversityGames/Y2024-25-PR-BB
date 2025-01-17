@@ -26,7 +26,7 @@
 
 struct Settings
 {
-    VERSION(1);
+    VERSION(0);
 
     struct Fog
     {
@@ -47,6 +47,27 @@ struct Settings
         float minDistance { 1.0f };
         float maxDistance { 3.0f };
     } ssao;
+
+    struct FXAA
+    {
+        VERSION(0);
+
+        bool enableFXAA = true;
+        float edgeThresholdMin = 0.0312;
+        float edgeThresholdMax = 0.125;
+        float subPixelQuality = 1.2f;
+        int32_t iterations = 12;
+    } fxaa;
+
+    struct Bloom
+    {
+        VERSION(0);
+
+        glm::vec3 colorWeights { 0.2126f, 0.7152f, 0.0722f };
+        float strength { 0.8f };
+        float gradientStrength { 0.2f };
+        float maxBrightnessExtraction { 5.0f };
+    } bloom;
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density, height);
@@ -55,9 +76,17 @@ CLASS_VERSION(Settings::Fog);
 
 VISITABLE_STRUCT(Settings::SSAO, strength, bias, radius, minDistance, maxDistance);
 CLASS_SERIALIZE_VERSION(Settings::SSAO);
-CLASS_VERSION(Settings::SSAO);
+CLASS_VERSION(Settings::SSAO)
 
-VISITABLE_STRUCT(Settings, fog, ssao);
+VISITABLE_STRUCT(Settings::FXAA, enableFXAA, edgeThresholdMin, edgeThresholdMax, subPixelQuality, iterations);
+CLASS_SERIALIZE_VERSION(Settings::FXAA);
+CLASS_VERSION(Settings::FXAA);
+
+VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction);
+CLASS_SERIALIZE_VERSION(Settings::Bloom);
+CLASS_VERSION(Settings::Bloom);
+
+VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);
 
