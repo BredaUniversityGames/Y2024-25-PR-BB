@@ -34,6 +34,11 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pass");
 
+    const auto& tonemappingSettings = SettingsStore::Instance().settings.tonemapping;
+
+    _pushConstants.exposure = tonemappingSettings.exposure;
+    _pushConstants.tonemappingFunction = static_cast<uint32_t>(tonemappingSettings.tonemappingFunction);
+
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,

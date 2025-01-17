@@ -3,11 +3,15 @@
 
 #include "bindless.glsl"
 #include "settings.glsl"
+#include "tonemapping.glsl"
 
 layout (push_constant) uniform PushConstants
 {
     uint hdrTargetIndex;
     uint bloomTargetIndex;
+
+    uint tonemappingFunction;
+    float exposure;
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -19,17 +23,6 @@ layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
 
-vec3 aces(vec3 x) {
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
-}
-
-const float exposure = 0.4;
-
 void main()
 {
     vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], texCoords).rgb;
@@ -37,12 +30,21 @@ void main()
     vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT(pc.bloomTargetIndex)], texCoords).rgb;
     hdrColor += bloomColor * bloomSettings.strength;
 
-    // Reinhardt
-    //vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
-    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * pc.exposure);
 
-    // Aces
-    //vec3 mapped = aces(hdrColor);
+    switch (pc.tonemappingFunction)
+    {
+        case ACES: mapped = aces(mapped); break;
+        case AGX: mapped = agx(mapped); break;
+        case FILMIC: mapped = filmic(mapped); break;
+        case LOTTES: mapped = lottes(mapped); break;
+        case NEUTRAL: mapped = neutral(mapped); break;
+        case REINHARD: mapped = reinhard(mapped); break;
+        case REINHARD2: mapped = reinhard2(mapped); break;
+        case UCHIMURA: mapped = uchimura(mapped); break;
+        case UNCHARTED2: mapped = uncharted2(mapped); break;
+        case UNREAL: mapped = unreal(mapped); break;
+    }
 
     // Gamma correction
     mapped = pow(mapped, vec3(1.0 / 2.2));

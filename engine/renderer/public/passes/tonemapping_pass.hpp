@@ -25,6 +25,9 @@ private:
     {
         uint32_t hdrTargetIndex;
         uint32_t bloomTargetIndex;
+
+        uint32_t tonemappingFunction { 0 };
+        float exposure { 1.0f };
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

@@ -34,9 +34,14 @@
         "y": 0.7152000069618225,
         "z": 0.0722000002861023
       },
-      "strength": 0.2999999523162842,
+      "strength": 0.800000011920929,
       "gradientStrength": 0.20000000298023225,
       "maxBrightnessExtraction": 5.0
+    },
+    "tonemapping": {
+      "cereal_class_version": 0,
+      "tonemappingFunction": 7,
+      "exposure": 0.5130000114440918
     }
   }
 }

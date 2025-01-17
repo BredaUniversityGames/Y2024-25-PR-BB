@@ -1,18 +1,16 @@
 #include "inspector_module.hpp"
 #include "editor.hpp"
-#include "gbuffers.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
 #include "implot/implot.h"
+#include "magic_enum.hpp"
 #include "menus/performance_tracker.hpp"
-#include "passes/fxaa_pass.hpp"
-#include "passes/ssao_pass.hpp"
-#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "settings.hpp"
+#include "tonemapping_functions.hpp"
 #include "vulkan_context.hpp"
 
 InspectorModule::InspectorModule() = default;
@@ -27,6 +25,7 @@ void DrawBloomSettings();
 void DrawSSAOSettings();
 void DrawFXAASettings();
 void DrawFogSettings();
+void DrawTonemappingSettings();
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -112,6 +111,7 @@ void InspectorModule::Tick(Engine& engine)
             ImGui::MenuItem("SSAO Settings", nullptr, &_openWindows["SSAO"]);
             ImGui::MenuItem("FXAA Settings", nullptr, &_openWindows["FXAA"]);
             ImGui::MenuItem("Fog Settings", nullptr, &_openWindows["Fog"]);
+            ImGui::MenuItem("Tonemapping Settings", nullptr, &_openWindows["Tonemapping"]);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Editor"))
@@ -179,6 +179,11 @@ void InspectorModule::Tick(Engine& engine)
         DrawFogSettings();
     }
 
+    if (_openWindows["Tonemapping"])
+    {
+        DrawTonemappingSettings();
+    }
+
     {
         ZoneNamedN(systemInspect, "System inspect", true);
         for (const auto& system : engine.GetModule<ECSModule>().GetSystems())
@@ -237,7 +242,7 @@ void DrawBloomSettings()
     auto& bloom = SettingsStore::Instance().settings.bloom;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("Bloom", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::InputFloat("Strength", &bloom.strength, 0.5f, 2.0f);
     ImGui::InputFloat("Gradient strength", &bloom.gradientStrength, 0.05f, 0.1f, "%.00005f");
     ImGui::InputFloat("Max brightness extraction", &bloom.maxBrightnessExtraction, 1.0f, 5.0f);
@@ -250,7 +255,7 @@ void DrawSSAOSettings()
     auto& ssao = SettingsStore::Instance().settings.ssao;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("SSAO", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("SSAO Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::DragFloat("AO strength", &ssao.strength, 0.1f, 0.0f, 16.0f);
     ImGui::DragFloat("Bias", &ssao.bias, 0.001f, 0.0f, 0.1f);
     ImGui::DragFloat("Radius", &ssao.radius, 0.05f, 0.0f, 2.0f);
@@ -264,7 +269,7 @@ void DrawFXAASettings()
     auto& fxaa = SettingsStore::Instance().settings.fxaa;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("FXAA", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("FXAA Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Checkbox("Enable FXAA", &fxaa.enableFXAA);
     ImGui::DragFloat("Edge treshold min", &fxaa.edgeThresholdMin, 0.001f, 0.0f, 1.0f);
     ImGui::DragFloat("Edge treshold max", &fxaa.edgeThresholdMax, 0.001f, 0.0f, 1.0f);
@@ -278,10 +283,29 @@ void DrawFogSettings()
     auto& fog = SettingsStore::Instance().settings.fog;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("FXAA", nullptr, ImGuiWindowFlags_NoResize);
-    ImGui::ColorPicker3("Fog Color", &fog.color.x);
-    ImGui::DragFloat("Fog Density", &fog.density, 0.01f);
-    ImGui::DragFloat("Fog Height", &fog.height, 0.01f);
+    ImGui::Begin("FXAA Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::ColorPicker3("Color", &fog.color.x);
+    ImGui::DragFloat("Density", &fog.density, 0.01f);
+    ImGui::DragFloat("Height", &fog.height, 0.01f);
+    ImGui::End();
+}
+
+void DrawTonemappingSettings()
+{
+    auto& tonemapping = SettingsStore::Instance().settings.tonemapping;
+
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Tonemapping Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::SliderFloat("Exposure", &tonemapping.exposure, 0.0f, 2.0f);
+
+    int32_t value = static_cast<int32_t>(tonemapping.tonemappingFunction);
+    int32_t i { 0 };
+    for (const auto& name : magic_enum::enum_names<TonemappingFunctions>())
+    {
+        ImGui::RadioButton(name.data(), &value, i++);
+    }
+    tonemapping.tonemappingFunction = static_cast<TonemappingFunctions>(value);
+
     ImGui::End();
 }
 

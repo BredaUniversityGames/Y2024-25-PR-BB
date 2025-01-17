@@ -6,6 +6,7 @@
 
 #include "log.hpp"
 #include "serialization_helpers.hpp"
+#include "tonemapping_functions.hpp"
 
 #define VERSION(x) constexpr static uint32_t V = x
 #define CLASS_VERSION(x) CEREAL_CLASS_VERSION(x, x::V)
@@ -68,6 +69,14 @@ struct Settings
         float gradientStrength { 0.2f };
         float maxBrightnessExtraction { 5.0f };
     } bloom;
+
+    struct Tonemapping
+    {
+        VERSION(0);
+
+        TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
+        float exposure { 1.0f };
+    } tonemapping;
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density, height);
@@ -86,7 +95,11 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure);
+CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
+CLASS_VERSION(Settings::Tonemapping);
+
+VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);
 
