@@ -108,13 +108,14 @@ void main()
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
-    vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
-    vec3 ambient = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
+    vec3 ambient = (kD * diffuseIBL) * ambientOcclusion;
 
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
+    float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
+
+    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow + emissive);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
