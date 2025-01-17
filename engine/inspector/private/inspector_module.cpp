@@ -262,9 +262,9 @@ void DrawFXAASettings(Engine& engine)
 void DrawFogSettings(Engine& engine)
 {
     const auto& renderer = engine.GetModule<RendererModule>().GetRenderer();
-    ImGui::ColorPicker3("Fog Color", &SettingsStore::Instance().settings.fogColor.x);
-    ImGui::DragFloat("Fog Density", &SettingsStore::Instance().settings.fogDensity, 0.01f);
-    ImGui::DragFloat("Fog Height", &SettingsStore::Instance().settings.fogHeight, 0.01f);
+    ImGui::ColorPicker3("Fog Color", &SettingsStore::Instance().settings.fog.color.x);
+    ImGui::DragFloat("Fog Density", &SettingsStore::Instance().settings.fog.density, 0.01f);
+    ImGui::DragFloat("Fog Height", &SettingsStore::Instance().settings.fog.height, 0.01f);
 }
 
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
