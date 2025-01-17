@@ -233,15 +233,15 @@ void DumpVMAStats(Engine& engine)
 
 void DrawSSAOSettings(Engine& engine)
 {
-    auto& ssao = engine.GetModule<RendererModule>().GetRenderer()->GetSSAOPipeline();
+    auto& ssao = SettingsStore::Instance().settings.ssao;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("SSAO settings", nullptr, ImGuiWindowFlags_NoResize);
-    ImGui::DragFloat("AO strength", &ssao.GetAOStrength(), 0.1f, 0.0f, 16.0f);
-    ImGui::DragFloat("Bias", &ssao.GetAOBias(), 0.001f, 0.0f, 0.1f);
-    ImGui::DragFloat("Radius", &ssao.GetAORadius(), 0.05f, 0.0f, 2.0f);
-    ImGui::DragFloat("Minimum AO distance", &ssao.GetMinAODistance(), 0.05f, 0.0f, 1.0f);
-    ImGui::DragFloat("Maximum AO distance", &ssao.GetMaxAODistance(), 0.05f, 0.0f, 1.0f);
+    ImGui::DragFloat("AO strength", &ssao.strength, 0.1f, 0.0f, 16.0f);
+    ImGui::DragFloat("Bias", &ssao.bias, 0.001f, 0.0f, 0.1f);
+    ImGui::DragFloat("Radius", &ssao.radius, 0.05f, 0.0f, 2.0f);
+    ImGui::DragFloat("Minimum AO distance", &ssao.minDistance, 0.05f, 0.0f, 1.0f);
+    ImGui::DragFloat("Maximum AO distance", &ssao.maxDistance, 0.05f, 0.0f, 1.0f);
     ImGui::End();
 }
 
@@ -261,10 +261,10 @@ void DrawFXAASettings(Engine& engine)
 
 void DrawFogSettings(Engine& engine)
 {
-    const auto& renderer = engine.GetModule<RendererModule>().GetRenderer();
-    ImGui::ColorPicker3("Fog Color", &SettingsStore::Instance().settings.fog.color.x);
-    ImGui::DragFloat("Fog Density", &SettingsStore::Instance().settings.fog.density, 0.01f);
-    ImGui::DragFloat("Fog Height", &SettingsStore::Instance().settings.fog.height, 0.01f);
+    auto& fog = SettingsStore::Instance().settings.fog;
+    ImGui::ColorPicker3("Fog Color", &fog.color.x);
+    ImGui::DragFloat("Fog Density", &fog.density, 0.01f);
+    ImGui::DragFloat("Fog Height", &fog.height, 0.01f);
 }
 
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)

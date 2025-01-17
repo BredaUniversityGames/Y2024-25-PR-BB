@@ -20,11 +20,6 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
-    float& GetAOStrength() { return _pushConstants.aoStrength; }
-    float& GetAOBias() { return _pushConstants.aoBias; }
-    float& GetAORadius() { return _pushConstants.aoRadius; }
-    float& GetMinAODistance() { return _pushConstants.minAoDistance; }
-    float& GetMaxAODistance() { return _pushConstants.maxAoDistance; }
     NON_MOVABLE(SSAOPass);
     NON_COPYABLE(SSAOPass);
 

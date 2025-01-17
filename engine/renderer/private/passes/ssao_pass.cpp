@@ -6,6 +6,7 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "settings.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
@@ -35,6 +36,14 @@ SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 void SSAOPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pass");
+
+    const auto& ssaoSettings = SettingsStore::Instance().settings.ssao;
+
+    _pushConstants.aoStrength = ssaoSettings.strength;
+    _pushConstants.aoRadius = ssaoSettings.radius;
+    _pushConstants.aoBias = ssaoSettings.bias;
+    _pushConstants.maxAoDistance = ssaoSettings.maxDistance;
+    _pushConstants.minAoDistance = ssaoSettings.minDistance;
 
     _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
     _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;

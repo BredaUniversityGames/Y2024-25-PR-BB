@@ -26,7 +26,7 @@
 
 struct Settings
 {
-    VERSION(0);
+    VERSION(1);
 
     struct Fog
     {
@@ -36,13 +36,28 @@ struct Settings
         float density { 0.2f };
         float height { 0.3f };
     } fog;
+
+    struct SSAO
+    {
+        VERSION(0);
+
+        float strength { 2.0f };
+        float bias { 0.01f };
+        float radius { 0.2f };
+        float minDistance { 1.0f };
+        float maxDistance { 3.0f };
+    } ssao;
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density, height);
 CLASS_SERIALIZE_VERSION(Settings::Fog);
 CLASS_VERSION(Settings::Fog);
 
-VISITABLE_STRUCT(Settings, fog);
+VISITABLE_STRUCT(Settings::SSAO, strength, bias, radius, minDistance, maxDistance);
+CLASS_SERIALIZE_VERSION(Settings::SSAO);
+CLASS_VERSION(Settings::SSAO);
+
+VISITABLE_STRUCT(Settings, fog, ssao);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);
 
