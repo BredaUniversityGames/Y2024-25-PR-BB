@@ -168,8 +168,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment);
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation geometrySecondPass { *_geometryPass };
     geometrySecondPass.SetName("Geometry second pass")
@@ -180,8 +179,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment);
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowPrepass { *_shadowPass };
     shadowPrepass.SetName("Shadow prepass")
@@ -205,7 +203,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     ssaoPass.SetName("SSAO pass")
         .SetDebugLabelColor(GetColor(ColorType::Mint))
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation lightingPass { *_lightingPass };
@@ -213,7 +211,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Periwinkle))
         .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)

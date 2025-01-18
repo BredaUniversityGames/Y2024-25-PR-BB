@@ -27,7 +27,7 @@ private:
     struct PushConstants
     {
         uint32_t normalIndex;
-        uint32_t positionIndex;
+        uint32_t depthIndex;
         uint32_t ssaoNoiseIndex;
         uint32_t ssaoRenderTargetWidth = 1920 / 2; // just for refference
         uint32_t ssaoRenderTargetHeight = 1080 / 2;

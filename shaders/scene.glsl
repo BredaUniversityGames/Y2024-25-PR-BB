@@ -7,6 +7,8 @@ struct Camera
     mat4 proj;
     mat4 skydomeMVP;
     mat4 inverseView;
+    mat4 inverseProj;
+    mat4 inverseVP;
     vec3 cameraPosition;
     int distanceCullingEnabled;
     vec4 frustum;
@@ -62,3 +64,23 @@ struct Instance
     float boundingRadius;
     uint boneOffset;
 };
+
+vec3 ReconstructViewPosition(in float depth, in vec2 screenUv, in mat4 invProj)
+{
+    vec2 ndc = screenUv * 2.0 - 1.0;
+    vec4 clipSpacePos = vec4(ndc, depth, 1.0);
+    vec4 viewSpacePos = invProj * clipSpacePos;
+    viewSpacePos /= viewSpacePos.w;
+
+    return viewSpacePos.xyz;
+}
+
+vec3 ReconstructWorldPosition(in float depth, in vec2 screenUv, in mat4 invVP)
+{
+    vec2 ndc = screenUv * 2.0 - 1.0;
+    vec4 clipSpacePos = vec4(ndc, depth, 1.0);
+    vec4 worldSpacePos = invVP * clipSpacePos;
+    worldSpacePos /= worldSpacePos.w;
+
+    return worldSpacePos.xyz;
+}

@@ -13,7 +13,7 @@
         },
         "ssao": {
             "cereal_class_version": 0,
-            "strength": 2.0999999046325685,
+            "strength": 0.0,
             "bias": 0.009999999776482582,
             "radius": 0.20000000298023225,
             "minDistance": 1.0,

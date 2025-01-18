@@ -12,8 +12,7 @@ layout (location = 3) in flat uint drawID;
 layout (location = 4) in mat3 TBN;
 
 layout (location = 0) out vec4 outAlbedoM;// RGB: Albedo,   A: Metallic
-layout (location = 1) out vec2 outNormal;// RG: Normal
-layout (location = 2) out vec4 outPositionR;// RGB: Position  A: Roughness
+layout (location = 1) out vec4 outNormalR;// RG: Normal B: Roughness, A: Unused
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
@@ -63,6 +62,5 @@ void main()
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
-    outNormal = OctEncode(normal);
-    outPositionR = vec4(position, mrSample.g);
+    outNormalR = vec4(OctEncode(normal), mrSample.g, 0.0);
 }
