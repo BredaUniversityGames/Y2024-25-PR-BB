@@ -230,6 +230,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     if (creation.initialData.data())
     {
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
+        imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
     }
     if (creation.type == ImageType::eCubeMap)
     {

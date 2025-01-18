@@ -148,7 +148,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
         auto relationComponent = staticMeshView.get<RelationshipComponent>(entity);
 
-        if (_ecs.GetRegistry().get<NameComponent>(relationComponent.parent).name == "SM_Env_Cliff_Basalt_04__31_")
+        if (_ecs.GetRegistry().get<NameComponent>(relationComponent.parent).name == "SM_Env_Cliff_Basalt_04 (12)")
         {
             int x = 0;
         }
