@@ -114,8 +114,6 @@ void main()
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
 
-    outColor = vec4(roughness, metallic, 0.0, 1.0);
-
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
     vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);
