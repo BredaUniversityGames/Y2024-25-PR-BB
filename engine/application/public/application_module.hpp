@@ -49,7 +49,7 @@ private:
 
     std::string _windowName = "BB-Prototype";
     bool _isFullscreen = true;
-    bool _mouseHidden = false;
+    bool _mouseHidden = true;
 
     MAYBE_UNUSED uint32_t _width {};
     MAYBE_UNUSED uint32_t _height {};

@@ -20,8 +20,7 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
 {
     _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
-    _pushConstants.emissiveAOIndex = _gBuffers.Attachments()[2].Index();
-    _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.positionIndex = _gBuffers.Attachments()[2].Index();
     _pushConstants.ssaoIndex = ssaoTarget.Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
     _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.Shadow())->width;

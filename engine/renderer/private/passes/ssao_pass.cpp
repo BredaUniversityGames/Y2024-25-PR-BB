@@ -22,7 +22,7 @@ SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
     , _ssaoTarget(ssaoTarget)
 {
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
-    _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.positionIndex = _gBuffers.Attachments()[2].Index();
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);

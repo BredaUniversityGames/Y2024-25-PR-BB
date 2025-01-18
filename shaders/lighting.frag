@@ -9,7 +9,6 @@ layout (push_constant) uniform PushConstants
 {
     uint albedoMIndex;
     uint normalRIndex;
-    uint emissiveAOIndex;
     uint positionIndex;
     uint ssaoIndex;
     uint depthIndex;
@@ -60,7 +59,6 @@ void main()
 {
     vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
     vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
     vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
@@ -72,8 +70,6 @@ void main()
     position = viewPos.xyz / viewPos.w;
 
     float roughness = normalRSample.a;
-    vec3 emissive = emissiveAOSample.rgb;
-    float ao = emissiveAOSample.a;
 
     if (normal == vec3(0.0))
     discard;
@@ -115,7 +111,7 @@ void main()
 
     float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow + emissive);
+    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);

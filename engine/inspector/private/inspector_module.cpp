@@ -195,8 +195,6 @@ void InspectorModule::Tick(Engine& engine)
         }
     }
 
-    ImGui::ShowDemoWindow();
-
     {
         ZoneNamedN(zz, "ImGui Render", true);
         ImGui::Render();

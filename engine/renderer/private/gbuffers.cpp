@@ -63,11 +63,8 @@ void GBuffers::CreateGBuffers()
     imageData.SetFormat(vk::Format::eR16G16B16A16Sfloat).SetName("Normal Roughness");
     _attachments[1] = resources->ImageResourceManager().Create(imageData);
 
-    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Emissive AO");
-    _attachments[2] = resources->ImageResourceManager().Create(imageData);
-
     imageData.SetFormat(vk::Format::eR32G32B32A32Sfloat).SetName("Position");
-    _attachments[3] = resources->ImageResourceManager().Create(imageData);
+    _attachments[2] = resources->ImageResourceManager().Create(imageData);
 }
 
 void GBuffers::CreateDepthResources()
