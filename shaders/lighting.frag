@@ -4,6 +4,7 @@
 #include "bindless.glsl"
 #include "scene.glsl"
 #include "settings.glsl"
+#include "octahedron.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -58,18 +59,18 @@ vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, i
 void main()
 {
     vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 positionRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
     vec3 albedo = albedoMSample.rgb;
     float metallic = albedoMSample.a;
-    vec3 normal = normalRSample.rgb;
-    vec3 position = positionSample.rgb;
+    vec3 normal = OctDecode(normalSample.rg);
+    vec3 position = positionRSample.rgb;
     vec4 viewPos = camera.inverseView * vec4(position, 1.0); // Position buffer is in view space.
     position = viewPos.xyz / viewPos.w;
 
-    float roughness = normalRSample.a;
+    float roughness = positionRSample.a;
 
     if (normal == vec3(0.0))
     discard;

@@ -3,6 +3,7 @@
 
 #include "bindless.glsl"
 #include "scene.glsl"
+#include "octahedron.glsl"
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normalIn;
@@ -11,8 +12,8 @@ layout (location = 3) in flat uint drawID;
 layout (location = 4) in mat3 TBN;
 
 layout (location = 0) out vec4 outAlbedoM;// RGB: Albedo,   A: Metallic
-layout (location = 1) out vec4 outNormalR;// RGB: Normal,   A: Roughness
-layout (location = 2) out vec4 outPosition;// RGB: Position  A: unused
+layout (location = 1) out vec2 outNormal;// RG: Normal
+layout (location = 2) out vec4 outPositionR;// RGB: Position  A: Roughness
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
@@ -62,6 +63,6 @@ void main()
     }
 
     outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
-    outNormalR = vec4(normal, mrSample.g);
-    outPosition = vec4(position, 0.0);
+    outNormal = OctEncode(normal);
+    outPositionR = vec4(position, mrSample.g);
 }

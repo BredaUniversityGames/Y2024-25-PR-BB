@@ -3,10 +3,11 @@
 
 #include "bindless.glsl"
 #include "scene.glsl"
+#include "octahedron.glsl"
 
 layout (push_constant) uniform PushConstants
 {
-    uint normalRIndex;
+    uint normalIndex;
     uint positionIndex;
     uint noiseIndex;
     uint ssaoRenderTargetWidth;
@@ -34,10 +35,12 @@ void main()
 {
     const vec2 noiseScale = vec2(pushConstants.ssaoRenderTargetWidth / 4.0, pushConstants.ssaoRenderTargetHeight / 4.0); // scale noise to screen size
 
-    const vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalRIndex)], texCoords);
+    const vec4 normalSample = texture(bindless_color_textures[nonuniformEXT (pushConstants.normalIndex)], texCoords);
     const vec3 screenSpacePosition = texture(bindless_color_textures[nonuniformEXT (pushConstants.positionIndex)], texCoords).xyz;
 
-    const vec3 screenSpaceNormals = (camera.view * vec4(normalRSample.rgb, 0.0)).xyz;
+    const vec3 normal = OctDecode(normalSample.rg);
+
+    const vec3 screenSpaceNormals = (camera.view * vec4(normal, 0.0)).xyz;
 
     const vec3 randomVec = texture(bindless_color_textures[nonuniformEXT (pushConstants.noiseIndex)], texCoords * noiseScale).xyz;
 
