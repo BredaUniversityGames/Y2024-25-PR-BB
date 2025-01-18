@@ -8,8 +8,8 @@
 
 layout (push_constant) uniform PushConstants
 {
-    uint albedoMIndex;
-    uint normalRIndex;
+    uint albedoRMIndex;
+    uint normalIndex;
     uint ssaoIndex;
     uint depthIndex;
     float shadowMapSize;
@@ -57,17 +57,17 @@ vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, i
 
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
+    vec4 albedoRMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoRMIndex)], texCoords);
+    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalIndex)], texCoords);
     float depthSample = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
-    vec3 albedo = albedoMSample.rgb;
-    float metallic = albedoMSample.a;
-    vec3 normal = OctDecode(normalRSample.rg);
+    vec3 albedo = albedoRMSample.rgb;
+    float roughness;
+    float metallic;
+    DecodeRM(albedoRMSample.a, roughness, metallic);
+    vec3 normal = OctDecode(normalSample.rg);
     vec3 position = ReconstructWorldPosition(depthSample, texCoords, camera.inverseVP);
-
-    float roughness = normalRSample.b;
 
     if (normal == vec3(0.0))
     discard;
@@ -113,6 +113,8 @@ void main()
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
+
+    outColor = vec4(roughness, metallic, 0.0, 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);

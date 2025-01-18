@@ -11,8 +11,8 @@ layout (location = 2) in vec2 texCoord;
 layout (location = 3) in flat uint drawID;
 layout (location = 4) in mat3 TBN;
 
-layout (location = 0) out vec4 outAlbedoM;// RGB: Albedo,   A: Metallic
-layout (location = 1) out vec4 outNormalR;// RG: Normal B: Roughness, A: Unused
+layout (location = 0) out vec4 outAlbedoRM;// RGB: Albedo, A: Roughness Metallic
+layout (location = 1) out vec4 outNormal;// RG: Normal
 
 layout (std430, set = 1, binding = 0) buffer InstanceData
 {
@@ -61,6 +61,6 @@ void main()
         normal = normalize(TBN * normal) * material.normalScale;
     }
 
-    outAlbedoM = vec4(albedoSample.rgb, mrSample.b);
-    outNormalR = vec4(OctEncode(normal), mrSample.g, 0.0);
+    outAlbedoRM = vec4(albedoSample.rgb, EncodeRM(clamp(mrSample.g, 0.0, 1.0), clamp(mrSample.b, 0.0, 1.0)));
+    outNormal = vec4(OctEncode(normal), 0.0, 0.0);
 }

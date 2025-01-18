@@ -57,10 +57,10 @@ void GBuffers::CreateGBuffers()
         .SetSize(_size.x, _size.y)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Albedo Metallic");
+    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Albedo Metallic Roughness");
     _attachments[0] = resources->ImageResourceManager().Create(imageData);
 
-    imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Normal Roughness");
+    imageData.SetFormat(vk::Format::eR8G8Unorm).SetName("Normal");
     _attachments[1] = resources->ImageResourceManager().Create(imageData);
 }
 

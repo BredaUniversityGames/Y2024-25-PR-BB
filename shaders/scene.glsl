@@ -84,3 +84,28 @@ vec3 ReconstructWorldPosition(in float depth, in vec2 screenUv, in mat4 invVP)
 
     return worldSpacePos.xyz;
 }
+
+const uint ROUGHNESS_BITS = 5u;
+const uint METALLIC_BITS = 3u;
+const uint ROUGHNESS_RANGE = (1u << ROUGHNESS_BITS);
+const uint METALLIC_RANGE = (1u << METALLIC_BITS);
+const uint ROUGHNESS_BITMASK = ((1u << ROUGHNESS_BITS) - 1u);
+const uint METALLIC_BITMASK = ((1u << METALLIC_BITS) - 1u);
+
+float EncodeRM(float roughness, float metallic)
+{
+    uint r = uint(roughness * ROUGHNESS_BITMASK) & ROUGHNESS_BITMASK;
+    uint m = uint(metallic * METALLIC_BITMASK) & METALLIC_BITMASK;
+    uint c = (r << METALLIC_BITS) | m;
+    return float(c) * (1.0 / 255.0);
+}
+
+void DecodeRM(float pack, out float roughness, out float metallic)
+{
+    uint c = uint(pack * 255.0);
+    uint r = (c >> METALLIC_BITS) & ROUGHNESS_BITMASK;
+    uint m = c & METALLIC_BITMASK;
+    roughness = float(r) / ROUGHNESS_BITMASK;
+    metallic = float(m) / METALLIC_BITMASK;
+}
+
