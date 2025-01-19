@@ -28,7 +28,21 @@ private:
 
         uint32_t tonemappingFunction { 0 };
         float exposure { 1.0f };
+
+        uint32_t enableVignette;
         float vignetteIntensity;
+
+        uint32_t enableLensDistortion;
+        float lensDistortionIntensity;
+        float lensDistortionCubicIntensity;
+        float screenScale;
+
+        uint32_t enableToneAdjustments;
+        float brightness;
+        float contrast;
+        float saturation;
+        float vibrance;
+        float hue;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

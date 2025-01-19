@@ -296,6 +296,7 @@ void DrawTonemappingSettings()
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("Tonemapping Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::SeparatorText("Tonemapping");
     ImGui::SliderFloat("Exposure", &tonemapping.exposure, 0.0f, 2.0f);
 
     int32_t value = static_cast<int32_t>(tonemapping.tonemappingFunction);
@@ -305,7 +306,27 @@ void DrawTonemappingSettings()
         ImGui::RadioButton(name.data(), &value, i++);
     }
     tonemapping.tonemappingFunction = static_cast<TonemappingFunctions>(value);
-    ImGui::SliderFloat("Vignette Intensity", &tonemapping.vignetteIntensity, 0.0f, 2.0f);
+
+    ImGui::Checkbox("##V", &tonemapping.enableVignette);
+    ImGui::SameLine();
+    ImGui::SeparatorText("Vignette");
+    ImGui::SliderFloat("Intensity##V", &tonemapping.vignetteIntensity, 0.0f, 2.0f);
+
+    ImGui::Checkbox("##LD", &tonemapping.enableLensDistortion);
+    ImGui::SameLine();
+    ImGui::SeparatorText("Lens Distortion");
+    ImGui::SliderFloat("Intensity##LD", &tonemapping.lensDistortionIntensity, -2.0f, 2.0f);
+    ImGui::SliderFloat("Cubic Intensity", &tonemapping.lensDistortionCubicIntensity, -2.0f, 2.0f);
+    ImGui::SliderFloat("Screen Scale", &tonemapping.screenScale, 0.0f, 2.0f);
+
+    ImGui::Checkbox("##Tone", &tonemapping.enableToneAdjustments);
+    ImGui::SameLine();
+    ImGui::SeparatorText("Tone");
+    ImGui::DragFloat("Brightness", &tonemapping.brightness, 0.005f);
+    ImGui::DragFloat("Contrast", &tonemapping.contrast, 0.005f);
+    ImGui::DragFloat("Saturation", &tonemapping.saturation, 0.005f);
+    ImGui::DragFloat("Vibrance", &tonemapping.vibrance, 0.005f);
+    ImGui::SliderFloat("Hue", &tonemapping.hue, 0.0f, 1.0f);
 
     ImGui::End();
 }

@@ -38,7 +38,21 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     _pushConstants.exposure = tonemappingSettings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(tonemappingSettings.tonemappingFunction);
+
+    _pushConstants.enableVignette = tonemappingSettings.enableVignette;
     _pushConstants.vignetteIntensity = tonemappingSettings.vignetteIntensity;
+
+    _pushConstants.enableLensDistortion = tonemappingSettings.enableLensDistortion;
+    _pushConstants.lensDistortionIntensity = tonemappingSettings.lensDistortionIntensity;
+    _pushConstants.lensDistortionCubicIntensity = tonemappingSettings.lensDistortionCubicIntensity;
+    _pushConstants.screenScale = tonemappingSettings.screenScale;
+
+    _pushConstants.enableToneAdjustments = tonemappingSettings.enableToneAdjustments;
+    _pushConstants.brightness = tonemappingSettings.brightness;
+    _pushConstants.contrast = tonemappingSettings.contrast;
+    _pushConstants.saturation = tonemappingSettings.saturation;
+    _pushConstants.vibrance = tonemappingSettings.vibrance;
+    _pushConstants.hue = tonemappingSettings.hue;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
