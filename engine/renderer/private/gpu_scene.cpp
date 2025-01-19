@@ -140,18 +140,12 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawCommands.clear();
 
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RelationshipComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
-        auto relationComponent = staticMeshView.get<RelationshipComponent>(entity);
-
-        if (_ecs.GetRegistry().get<NameComponent>(relationComponent.parent).name == "SM_Env_Cliff_Basalt_04 (12)")
-        {
-            int x = 0;
-        }
 
         auto resources { _context->Resources() };
 
