@@ -109,7 +109,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .mips = static_cast<uint8_t>(std::log2(hzbSize)),
         .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
         .isHDR = false,
-        .format = vk::Format::eR16Sfloat,
+        .format = vk::Format::eR32Sfloat,
         .type = ImageType::e2D,
         .name = name + " HZB Image",
     };

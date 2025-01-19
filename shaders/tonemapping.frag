@@ -12,6 +12,7 @@ layout (push_constant) uniform PushConstants
 
     uint tonemappingFunction;
     float exposure;
+    float vignetteIntensity;
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -22,6 +23,8 @@ layout (set = 1, binding = 0) uniform BloomSettingsUBO
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
+
+vec3 Vignette(in vec3 color, in vec2 texCoords, in float intensity);
 
 void main()
 {
@@ -49,5 +52,14 @@ void main()
     // Gamma correction
     mapped = pow(mapped, vec3(1.0 / 2.2));
 
+    mapped = Vignette(mapped, texCoords, pc.vignetteIntensity);
+
     outColor = vec4(mapped, 1.0);
+}
+
+vec3 Vignette(in vec3 color, in vec2 uv, in float intensity)
+{
+    uv *= 1.0 - uv.yx;
+    float vig = uv.x * uv.y * 15;
+    return color * pow(vig, intensity);
 }

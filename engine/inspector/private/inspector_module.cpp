@@ -305,6 +305,7 @@ void DrawTonemappingSettings()
         ImGui::RadioButton(name.data(), &value, i++);
     }
     tonemapping.tonemappingFunction = static_cast<TonemappingFunctions>(value);
+    ImGui::SliderFloat("Vignette Intensity", &tonemapping.vignetteIntensity, 0.0f, 2.0f);
 
     ImGui::End();
 }

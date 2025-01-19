@@ -41,7 +41,8 @@
         "tonemapping": {
             "cereal_class_version": 0,
             "tonemappingFunction": 7,
-            "exposure": 0.4950000047683716
+            "exposure": 0.4950000047683716,
+            "vignetteIntensity": 0.13199999928474427
         }
     }
 }

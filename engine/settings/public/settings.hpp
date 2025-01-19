@@ -76,6 +76,7 @@ struct Settings
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
+        float vignetteIntensity { 0.2f };
     } tonemapping;
 };
 
@@ -95,7 +96,7 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, vignetteIntensity);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

@@ -28,6 +28,7 @@ private:
 
         uint32_t tonemappingFunction { 0 };
         float exposure { 1.0f };
+        float vignetteIntensity;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

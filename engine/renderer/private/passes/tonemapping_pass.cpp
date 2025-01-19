@@ -38,6 +38,7 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     _pushConstants.exposure = tonemappingSettings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(tonemappingSettings.tonemappingFunction);
+    _pushConstants.vignetteIntensity = tonemappingSettings.vignetteIntensity;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
