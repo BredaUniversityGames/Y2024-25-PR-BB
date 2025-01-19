@@ -1,7 +1,10 @@
 #include "input/input_device_manager.hpp"
+
 #include "hashmap_utils.hpp"
+
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
+#include <imgui.h>
 
 InputDeviceManager::InputDeviceManager()
 {

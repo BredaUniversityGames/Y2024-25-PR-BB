@@ -1,4 +1,5 @@
 #include "inspector_module.hpp"
+
 #include "editor.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
@@ -11,6 +12,7 @@
 #include "scripting_module.hpp"
 #include "settings.hpp"
 #include "tonemapping_functions.hpp"
+#include "tracy/Tracy.hpp"
 #include "vulkan_context.hpp"
 
 InspectorModule::InspectorModule() = default;
@@ -185,7 +187,7 @@ void InspectorModule::Tick(Engine& engine)
     }
 
     {
-        ZoneNamedN(systemInspect, "System inspect", true);
+        ZoneNamedN(zz, "System inspect", true);
         for (const auto& system : engine.GetModule<ECSModule>().GetSystems())
         {
             if (_openWindows[system->GetName().data()])
