@@ -83,7 +83,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     DirectionalLightComponent& directionalLightComponent = _ecs->GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
     directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
     directionalLightComponent.nearPlane = 0.1f;
-    directionalLightComponent.farPlane = 150.0f;
+    directionalLightComponent.farPlane = 200.0f;
     directionalLightComponent.orthographicSize = 75.0f;
 
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
