@@ -310,23 +310,29 @@ void DrawTonemappingSettings()
     ImGui::Checkbox("##V", &tonemapping.enableVignette);
     ImGui::SameLine();
     ImGui::SeparatorText("Vignette");
+    ImGui::BeginDisabled(!tonemapping.enableVignette);
     ImGui::SliderFloat("Intensity##V", &tonemapping.vignetteIntensity, 0.0f, 2.0f);
+    ImGui::EndDisabled();
 
     ImGui::Checkbox("##LD", &tonemapping.enableLensDistortion);
     ImGui::SameLine();
     ImGui::SeparatorText("Lens Distortion");
+    ImGui::BeginDisabled(!tonemapping.enableLensDistortion);
     ImGui::SliderFloat("Intensity##LD", &tonemapping.lensDistortionIntensity, -2.0f, 2.0f);
     ImGui::SliderFloat("Cubic Intensity", &tonemapping.lensDistortionCubicIntensity, -2.0f, 2.0f);
     ImGui::SliderFloat("Screen Scale", &tonemapping.screenScale, 0.0f, 2.0f);
+    ImGui::EndDisabled();
 
     ImGui::Checkbox("##Tone", &tonemapping.enableToneAdjustments);
     ImGui::SameLine();
     ImGui::SeparatorText("Tone");
+    ImGui::BeginDisabled(!tonemapping.enableToneAdjustments);
     ImGui::DragFloat("Brightness", &tonemapping.brightness, 0.005f);
     ImGui::DragFloat("Contrast", &tonemapping.contrast, 0.005f);
     ImGui::DragFloat("Saturation", &tonemapping.saturation, 0.005f);
     ImGui::DragFloat("Vibrance", &tonemapping.vibrance, 0.005f);
     ImGui::SliderFloat("Hue", &tonemapping.hue, 0.0f, 1.0f);
+    ImGui::EndDisabled();
 
     ImGui::End();
 }
