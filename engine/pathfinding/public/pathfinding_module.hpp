@@ -100,10 +100,19 @@ private:
 
     struct TriangleInfo
     {
-        uint32_t indices[3] = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
+        uint32_t indices[3] = {
+            std::numeric_limits<uint32_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
+            std::numeric_limits<uint32_t>::max()
+        };
+
         glm::vec3 centre = glm::vec3 { 0.0f };
 
-        uint32_t adjacentTriangleIndices[3] = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
+        uint32_t adjacentTriangleIndices[3] = {
+            std::numeric_limits<uint32_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
+            std::numeric_limits<uint32_t>::max()
+        };
         uint8_t adjacentTriangleCount = 0;
     };
 
@@ -111,4 +120,5 @@ private:
 
     std::vector<TriangleInfo> _triangles;
     std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
+    glm::mat4 _inverseTransform = glm::mat4(1.0f);
 };

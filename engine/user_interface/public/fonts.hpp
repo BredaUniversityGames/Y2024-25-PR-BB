@@ -24,4 +24,4 @@ struct UIFont
     uint16_t characterHeight;
 };
 
-NO_DISCARD std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context);
+NO_DISCARD std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context);
