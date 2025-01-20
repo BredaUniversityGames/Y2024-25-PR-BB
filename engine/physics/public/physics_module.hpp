@@ -269,7 +269,7 @@ public:
 private:
     std::vector<glm::vec3> linePositions;
     std::vector<glm::vec3> persistentLinePositions;
-    bool _isEnabled = true;
+    bool _isEnabled = false;
 };
 
 struct RayHitInfo
