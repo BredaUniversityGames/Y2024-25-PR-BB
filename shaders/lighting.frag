@@ -15,8 +15,8 @@ layout (push_constant) uniform PushConstants
     uint ssaoIndex;
     uint depthIndex;
     vec2 screenSize;
-    float shadowMapSize;
     ivec3 clusterDimensions;
+    float shadowMapSize;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
