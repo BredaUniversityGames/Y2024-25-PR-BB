@@ -9,8 +9,9 @@
 #include "settings.hpp"
 #include "vulkan_helper.hpp"
 
-BloomSettings::BloomSettings(const std::shared_ptr<GraphicsContext>& context)
+BloomSettings::BloomSettings(const std::shared_ptr<GraphicsContext>& context, const Settings::Bloom& settings)
     : _context(context)
+    , _settings(settings)
 {
     CreateDescriptorSetLayout();
     CreateUniformBuffers();
@@ -26,12 +27,10 @@ BloomSettings::~BloomSettings()
 
 void BloomSettings::Update(uint32_t currentFrame)
 {
-    const auto& bloomSettings = SettingsStore::Instance().settings.bloom;
-
-    _data.strength = bloomSettings.strength;
-    _data.colorWeights = bloomSettings.colorWeights;
-    _data.gradientStrength = bloomSettings.gradientStrength;
-    _data.maxBrightnessExtraction = bloomSettings.maxBrightnessExtraction;
+    _data.strength = _settings.strength;
+    _data.colorWeights = _settings.colorWeights;
+    _data.gradientStrength = _settings.gradientStrength;
+    _data.maxBrightnessExtraction = _settings.maxBrightnessExtraction;
 
     auto resources { _context->Resources() };
 

@@ -15,9 +15,10 @@
 #include <random>
 #include <single_time_commands.hpp>
 
-SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
+SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const Settings::SSAO& settings, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
+    , _settings(settings)
     , _gBuffers(gBuffers)
     , _ssaoTarget(ssaoTarget)
 {
@@ -37,13 +38,11 @@ void SSAOPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentF
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pass");
 
-    const auto& ssaoSettings = SettingsStore::Instance().settings.ssao;
-
-    _pushConstants.aoStrength = ssaoSettings.strength;
-    _pushConstants.aoRadius = ssaoSettings.radius;
-    _pushConstants.aoBias = ssaoSettings.bias;
-    _pushConstants.maxAoDistance = ssaoSettings.maxDistance;
-    _pushConstants.minAoDistance = ssaoSettings.minDistance;
+    _pushConstants.aoStrength = _settings.strength;
+    _pushConstants.aoRadius = _settings.radius;
+    _pushConstants.aoBias = _settings.bias;
+    _pushConstants.maxAoDistance = _settings.maxDistance;
+    _pushConstants.minAoDistance = _settings.minDistance;
 
     _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
     _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;

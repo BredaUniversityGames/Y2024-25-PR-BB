@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "frame_graph.hpp"
+#include "settings.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -13,7 +14,7 @@ struct RenderSceneDescription;
 class FXAAPass final : public FrameGraphRenderPass
 {
 public:
-    FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget);
+    FXAAPass(const std::shared_ptr<GraphicsContext>& context, const Settings::FXAA& settings, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget);
     ~FXAAPass() override;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) override;
@@ -38,6 +39,8 @@ private:
 
     std::shared_ptr<GraphicsContext> _context;
     const GBuffers& _gBuffers;
+
+    const Settings::FXAA& _settings;
 
     const ResourceHandle<GPUImage> _fxaaTarget;
     const ResourceHandle<GPUImage>& _source;

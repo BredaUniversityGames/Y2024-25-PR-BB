@@ -49,8 +49,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _application(application)
     , _viewport(viewport)
     , _ecs(ecs)
+    , _settings("settings.json")
 {
-    _bloomSettings = std::make_unique<BloomSettings>(_context);
+    _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
 
     auto vulkanInfo = application.GetVulkanInfo();
     _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
@@ -91,7 +92,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         _application.DisplaySize(),
     };
 
-    _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
+    _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation, _settings.data.fog);
 
     _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch());
     _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch());
@@ -100,11 +101,11 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
-    _fxaaPass = std::make_unique<FXAAPass>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
+    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+    _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPass = std::make_unique<GaussianBlurPass>(_context, _brightnessTarget, _bloomTarget);
-    _ssaoPass = std::make_unique<SSAOPass>(_context, *_gBuffers, _ssaoTarget);
+    _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);

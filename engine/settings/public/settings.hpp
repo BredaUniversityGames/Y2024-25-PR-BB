@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cereal/archives/json.hpp>
 #include <cereal/cereal.hpp>
-#include <glm/vec3.hpp>
+#include <filesystem>
+#include <fstream>
 #include <visit_struct/visit_struct.hpp>
 
 #include "log.hpp"
@@ -118,15 +120,40 @@ VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);
 
-class SettingsStore
+template <class T>
+class DataStore
 {
 public:
-    static SettingsStore& Instance();
+    DataStore(const std::filesystem::path& path)
+        : _path(path)
+    {
+        std::ifstream stream { path.c_str() };
 
-    void Write();
+        if (stream)
+        {
+            cereal::JSONInputArchive archive { stream };
+            archive(cereal::make_nvp("data", data));
+        }
+    }
 
-    Settings settings;
+    void Write()
+    {
+        std::ofstream stream { "settings.json" };
+
+        if (stream)
+        {
+            cereal::JSONOutputArchive archive { stream };
+            archive(cereal::make_nvp("data", data));
+        }
+    }
+
+    ~DataStore()
+    {
+        Write();
+    }
+
+    T data;
 
 private:
-    SettingsStore();
+    std::filesystem::path _path;
 };

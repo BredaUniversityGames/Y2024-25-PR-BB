@@ -123,31 +123,10 @@ vec2 LensDistortionUV(vec2 uv, float k, float kCube) {
 
 }
 
-/*
-mat4 brightnessMatrix( float b ) {
-    return mat4(
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        b, b, b, 1 );
-}
-*/
 void BrightnessAdjust(inout vec3 color, in float b)
 {
     color += b;
 }
-
-/*
-mat4 contrastMatrix( float c ) {
-	float t = 0.5 - c * 0.5;
-    return mat4(
-        c, 0, 0, 0,
-        0, c, 0, 0,
-        0, 0, c, 0,
-        t, t, t, 1 );
-
-}
-*/
 
 void ContrastAdjust(inout vec3 color, in float c)
 {

@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "resource_manager.hpp"
 #include "vulkan_include.hpp"
+#include "settings.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
@@ -21,7 +22,7 @@ public:
         std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
     };
 
-    BloomSettings(const std::shared_ptr<GraphicsContext>& context);
+    BloomSettings(const std::shared_ptr<GraphicsContext>& context, const Settings::Bloom& settings);
     ~BloomSettings();
     void Render();
     void Update(uint32_t currentFrame);
@@ -48,6 +49,7 @@ private:
     } _data;
 
     std::shared_ptr<GraphicsContext> _context;
+    const Settings::Bloom& _settings;
     vk::DescriptorSetLayout _descriptorSetLayout;
     FrameData _frameData;
 

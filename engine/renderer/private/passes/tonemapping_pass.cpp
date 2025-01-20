@@ -11,8 +11,9 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
     : _context(context)
+    , _settings(settings)
     , _swapChain(_swapChain)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
@@ -35,25 +36,23 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pass");
 
-    const auto& tonemappingSettings = SettingsStore::Instance().settings.tonemapping;
+    _pushConstants.exposure = _settings.exposure;
+    _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
 
-    _pushConstants.exposure = tonemappingSettings.exposure;
-    _pushConstants.tonemappingFunction = static_cast<uint32_t>(tonemappingSettings.tonemappingFunction);
+    _pushConstants.enableVignette = _settings.enableVignette;
+    _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
 
-    _pushConstants.enableVignette = tonemappingSettings.enableVignette;
-    _pushConstants.vignetteIntensity = tonemappingSettings.vignetteIntensity;
+    _pushConstants.enableLensDistortion = _settings.enableLensDistortion;
+    _pushConstants.lensDistortionIntensity = _settings.lensDistortionIntensity;
+    _pushConstants.lensDistortionCubicIntensity = _settings.lensDistortionCubicIntensity;
+    _pushConstants.screenScale = _settings.screenScale;
 
-    _pushConstants.enableLensDistortion = tonemappingSettings.enableLensDistortion;
-    _pushConstants.lensDistortionIntensity = tonemappingSettings.lensDistortionIntensity;
-    _pushConstants.lensDistortionCubicIntensity = tonemappingSettings.lensDistortionCubicIntensity;
-    _pushConstants.screenScale = tonemappingSettings.screenScale;
-
-    _pushConstants.enableToneAdjustments = tonemappingSettings.enableToneAdjustments;
-    _pushConstants.brightness = tonemappingSettings.brightness;
-    _pushConstants.contrast = tonemappingSettings.contrast;
-    _pushConstants.saturation = tonemappingSettings.saturation;
-    _pushConstants.vibrance = tonemappingSettings.vibrance;
-    _pushConstants.hue = tonemappingSettings.hue;
+    _pushConstants.enableToneAdjustments = _settings.enableToneAdjustments;
+    _pushConstants.brightness = _settings.brightness;
+    _pushConstants.contrast = _settings.contrast;
+    _pushConstants.saturation = _settings.saturation;
+    _pushConstants.vibrance = _settings.vibrance;
+    _pushConstants.hue = _settings.hue;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,

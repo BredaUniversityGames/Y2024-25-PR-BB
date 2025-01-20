@@ -4,6 +4,7 @@
 #include "bloom_settings.hpp"
 #include "cpu_resources.hpp"
 #include "ecs_module.hpp"
+#include "settings.hpp"
 #include "swap_chain.hpp"
 
 #include <tracy/TracyVulkan.hpp>
@@ -62,6 +63,8 @@ public:
 
     void FlushCommands();
 
+    Settings& GetSettings() { return _settings.data; };
+
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;
@@ -72,6 +75,8 @@ private:
     ApplicationModule& _application;
     Viewport& _viewport;
     ECSModule& _ecs;
+
+    DataStore<Settings> _settings;
 
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 

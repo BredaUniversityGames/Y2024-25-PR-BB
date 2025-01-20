@@ -23,11 +23,11 @@ InspectorModule::~InspectorModule()
 
 void DumpVMAStats(Engine& engine);
 void DrawRenderStats(Engine& engine);
-void DrawBloomSettings();
-void DrawSSAOSettings();
-void DrawFXAASettings();
-void DrawFogSettings();
-void DrawTonemappingSettings();
+void DrawBloomSettings(Settings& settings);
+void DrawSSAOSettings(Settings& settings);
+void DrawFXAASettings(Settings& settings);
+void DrawFogSettings(Settings& settings);
+void DrawTonemappingSettings(Settings& settings);
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -70,8 +70,6 @@ void InspectorModule::Shutdown(Engine& engine)
         ptr->GetRenderer()->FlushCommands();
     }
     _editor.reset();
-
-    SettingsStore::Instance().Write();
 }
 
 void InspectorModule::Tick(Engine& engine)
@@ -161,29 +159,31 @@ void InspectorModule::Tick(Engine& engine)
         DrawShadowMapInspect(engine, *_imguiBackend);
     }
 
+    Settings& settings = engine.GetModule<RendererModule>().GetRenderer()->GetSettings();
+
     if (_openWindows["Bloom"])
     {
-        DrawBloomSettings();
+        DrawBloomSettings(settings);
     }
 
     if (_openWindows["SSAO"])
     {
-        DrawSSAOSettings();
+        DrawSSAOSettings(settings);
     }
 
     if (_openWindows["FXAA"])
     {
-        DrawFXAASettings();
+        DrawFXAASettings(settings);
     }
 
     if (_openWindows["Fog"])
     {
-        DrawFogSettings();
+        DrawFogSettings(settings);
     }
 
     if (_openWindows["Tonemapping"])
     {
-        DrawTonemappingSettings();
+        DrawTonemappingSettings(settings);
     }
 
     {
@@ -239,9 +239,9 @@ void DumpVMAStats(Engine& engine)
     vmaFreeStatsString(engine.GetModule<RendererModule>().GetRenderer()->GetContext()->VulkanContext()->MemoryAllocator(), statsJson);
 }
 
-void DrawBloomSettings()
+void DrawBloomSettings(Settings& settings)
 {
-    auto& bloom = SettingsStore::Instance().settings.bloom;
+    auto& bloom = settings.bloom;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
@@ -252,9 +252,9 @@ void DrawBloomSettings()
     ImGui::End();
 }
 
-void DrawSSAOSettings()
+void DrawSSAOSettings(Settings& settings)
 {
-    auto& ssao = SettingsStore::Instance().settings.ssao;
+    auto& ssao = settings.ssao;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("SSAO Settings", nullptr, ImGuiWindowFlags_NoResize);
@@ -266,9 +266,9 @@ void DrawSSAOSettings()
     ImGui::End();
 }
 
-void DrawFXAASettings()
+void DrawFXAASettings(Settings& settings)
 {
-    auto& fxaa = SettingsStore::Instance().settings.fxaa;
+    auto& fxaa = settings.fxaa;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("FXAA Settings", nullptr, ImGuiWindowFlags_NoResize);
@@ -280,9 +280,9 @@ void DrawFXAASettings()
     ImGui::End();
 }
 
-void DrawFogSettings()
+void DrawFogSettings(Settings& settings)
 {
-    auto& fog = SettingsStore::Instance().settings.fog;
+    auto& fog = settings.fog;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("FXAA Settings", nullptr, ImGuiWindowFlags_NoResize);
@@ -292,9 +292,9 @@ void DrawFogSettings()
     ImGui::End();
 }
 
-void DrawTonemappingSettings()
+void DrawTonemappingSettings(Settings& settings)
 {
-    auto& tonemapping = SettingsStore::Instance().settings.tonemapping;
+    auto& tonemapping = settings.tonemapping;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("Tonemapping Settings", nullptr, ImGuiWindowFlags_NoResize);
