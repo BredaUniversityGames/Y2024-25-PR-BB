@@ -14,6 +14,7 @@ layout (push_constant) uniform PushConstants
     uint ssaoIndex;
     uint depthIndex;
     vec2 screenSize;
+    vec2 padding;
     ivec3 clusterDimensions;
     float shadowMapSize;
 } pushConstants;
