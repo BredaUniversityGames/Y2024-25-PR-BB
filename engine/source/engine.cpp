@@ -36,6 +36,9 @@
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
 
+#include "cheats_component.hpp"
+#include "game_module.hpp"
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -47,7 +50,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
+        //"assets/models/Cathedral.glb",
+        "assets/models/parcour_test1.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
@@ -155,7 +159,7 @@ void OldEngine::Tick(Engine& engine)
         ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
-
+        auto playerEntity = _ecs->GetRegistry().view<PlayerTag>().front();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
             auto windowSize = applicationModule.DisplaySize();
@@ -208,36 +212,19 @@ void OldEngine::Tick(Engine& engine)
 
             glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
+
+            // Only update the position if the player is not in noclip mode
+            if (_ecs->GetRegistry().all_of<CheatsComponent>(playerEntity))
+            {
+                CheatsComponent& cheatsComponent = _ecs->GetRegistry().get<CheatsComponent>(playerEntity);
+                if (cheatsComponent.noClip == true)
+                {
+                    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
+                }
+            }
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
-
-            // shoot rays
-            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
-            {
-                const glm::vec3 cameraDir = (rotation * FORWARD);
-                const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
-
-                std::cout << "Hit: " << hitInfo.hasHit << std::endl
-                          << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
-                          << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
-                          << "Fraction: " << hitInfo.hitFraction << std::endl;
-
-                if (_ecs->GetRegistry().all_of<RigidbodyComponent>(hitInfo.entity))
-                {
-
-                    RigidbodyComponent& rb = _ecs->GetRegistry().get<RigidbodyComponent>(hitInfo.entity);
-
-                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
-                    {
-                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
-                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
-                    }
-
-                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
-                }
-            }
         }
     }
 

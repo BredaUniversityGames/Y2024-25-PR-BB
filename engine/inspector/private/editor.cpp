@@ -3,6 +3,7 @@
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "bloom_settings.hpp"
+#include "cheats_component.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -51,6 +52,7 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
     _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
+    _entityEditor.registerComponent<CheatsComponent>("Cheats");
 }
 
 void Editor::DrawHierarchy()
