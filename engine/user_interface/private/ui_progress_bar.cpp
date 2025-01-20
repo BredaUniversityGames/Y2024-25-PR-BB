@@ -18,19 +18,23 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             matrixFull = glm::translate(glm::mat4(1), glm::vec3(localLocation1x, GetAbsoluteLocation().y, 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(scaleX, GetAbsoluteScale().y, 0));
 
-            assert(style.fillStyle != BarStyle::FillStyle::eMask && "Not implemented yet");
+            if (style.fillStyle == BarStyle::FillStyle::eMask)
+            {
+                uv0 = glm::vec2(0.5 - _fractionFilled * 0.5f, 0);
+                uv1 = glm::vec2(0.5f + _fractionFilled * 0.5f, 1);
+            }
 
             break;
         }
         case BarStyle::FillDirection::eFromBottom:
         {
 
-            matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation() + glm::vec2(0, GetAbsoluteScale().y), 0));
-            matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x, GetAbsoluteScale().y * -_fractionFilled, 0));
+            matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation() + glm::vec2(0, GetAbsoluteScale().y * (1 - _fractionFilled)), 0));
+            matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x, GetAbsoluteScale().y * _fractionFilled, 0));
 
             if (style.fillStyle == BarStyle::FillStyle::eMask)
             {
-                uv1 = glm::vec2(1, _fractionFilled);
+                uv0 = glm::vec2(0.0f, 1 - _fractionFilled);
             }
 
             break;

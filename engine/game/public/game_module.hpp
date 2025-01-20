@@ -12,7 +12,7 @@ class GameModule : public ModuleInterface
     std::string_view GetName() override { return "Game Module"; }
 
     HUD _hud;
-    bool _updateHud = false;
+    bool _updateHud = true;
 
 public:
     GameModule() = default;
