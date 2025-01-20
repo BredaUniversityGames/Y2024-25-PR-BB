@@ -35,7 +35,6 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
-#include "ui_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -50,7 +49,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
@@ -59,7 +57,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
-
     };
 
     particleModule.LoadEmitterPresets();
@@ -110,14 +107,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _lastMousePos = mousePos;
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-
-    constexpr bool createTestCanvas = false;
-    if (createTestCanvas)
-    {
-        engine.GetModule<ApplicationModule>().SetMouseHidden(false);
-
-        engine.GetModule<UIModule>().CreateNavigationTest();
-    }
 
     bblog::info("Successfully initialized engine!");
 
