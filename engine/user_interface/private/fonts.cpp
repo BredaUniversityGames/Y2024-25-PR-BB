@@ -11,7 +11,7 @@
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
-std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, std::shared_ptr<GraphicsContext>& context)
+std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
@@ -93,8 +93,8 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font->fontAtlas = context->Resources()->ImageResourceManager().Create(image);
-    context->UpdateBindlessSet();
+    font->fontAtlas = context.Resources()->ImageResourceManager().Create(image);
+    context.UpdateBindlessSet();
 
     FT_Done_Face(fontFace);
     FT_Done_FreeType(library);

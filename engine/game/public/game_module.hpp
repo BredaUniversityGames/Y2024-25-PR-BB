@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
+#include "ui_menus.hpp"
 
 class GameModule : public ModuleInterface
 {
@@ -9,6 +10,9 @@ class GameModule : public ModuleInterface
     void Tick(MAYBE_UNUSED Engine& engine) override;
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
     std::string_view GetName() override { return "Game Module"; }
+
+    HUD _hud;
+    bool _updateHud = false;
 
 public:
     GameModule() = default;
