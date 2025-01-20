@@ -48,7 +48,7 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 
 }
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, const std::string_view path);
 
 CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
@@ -72,7 +72,7 @@ CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
 
-    return ProcessModel(gltf, name);
+    return ProcessModel(gltf, name, path);
 }
 
 glm::vec4 CalculateTangent(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
@@ -656,7 +656,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     return nodeIndex;
 }
 
-CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
+CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name, const std::string_view path)
 {
     CPUModel model {};
 
@@ -688,6 +688,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
             if (gltf.skins.size() > 0 && gltfPrimitive.findAttribute("WEIGHTS_0") != gltfPrimitive.attributes.cend() && gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
             {
                 CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
+                primitive.name = std::string(path.data()).append(":").append(gltfMesh.name.data());
                 model.skinnedMeshes.emplace_back(primitive);
 
                 meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
@@ -695,6 +696,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
             else
             {
                 CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+                primitive.name = std::string(path.data()).append(":").append(gltfMesh.name.data());
                 model.meshes.emplace_back(primitive);
 
                 meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });

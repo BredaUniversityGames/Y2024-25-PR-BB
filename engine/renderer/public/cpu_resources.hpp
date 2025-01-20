@@ -52,6 +52,8 @@ struct CPUMesh
 
     math::Vec3Range boundingBox;
     float boundingRadius;
+
+    std::string name {};
 };
 
 struct CPUModel

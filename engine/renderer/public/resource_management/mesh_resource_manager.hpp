@@ -12,6 +12,8 @@
 #include <memory>
 #include <vulkan/vulkan.hpp>
 
+#include <iostream>
+
 class MaterialResourceManager;
 
 class MeshResourceManager final : public ResourceManager<GPUMesh>
@@ -22,6 +24,18 @@ public:
     {
     }
     ~MeshResourceManager() = default;
+
+    const std::unordered_map<std::string, ResourceHandle<GPUMesh>>& ViewLoadedMeshes()
+    {
+        return _loadedMeshes;
+    }
+
+    ResourceHandle<GPUMesh> TryGetMesh(const std::string_view mesh)
+    {
+        const auto resource = _loadedMeshes.find(mesh.data());
+
+        return resource != _loadedMeshes.end() ? resource->second : _loadedMeshes.begin()->second;
+    }
 
     template <typename TVertex>
     ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
@@ -37,19 +51,31 @@ public:
         const ResourceHandle<GPUMaterial> material = materials.at(correctedIndex);
 
         GPUMesh gpuMesh = CreateMesh(cpuMesh, material, batchBuffer);
-        return ResourceManager::Create(std::move(gpuMesh));
+
+        ResourceHandle<GPUMesh> resource = ResourceManager::Create(std::move(gpuMesh));
+
+        _loadedMeshes[cpuMesh.name] = resource;
+
+        return resource;
     }
 
     template <typename TVertex>
     ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
     {
         GPUMesh mesh = CreateMesh(data, material, batchBuffer);
-        return ResourceManager::Create(std::move(mesh));
+
+        ResourceHandle<GPUMesh> resource = ResourceManager::Create(std::move(mesh));
+
+        _loadedMeshes[data.name] = resource;
+
+        return resource;
     }
 
 private:
     std::shared_ptr<MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<VulkanContext> _vkContext;
+
+    std::unordered_map<std::string, ResourceHandle<GPUMesh>> _loadedMeshes;
 
     template <typename TVertex>
     GPUMesh CreateMesh(const CPUMesh<TVertex>& cpuMesh, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)

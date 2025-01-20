@@ -113,6 +113,8 @@ private:
 
     std::array<TracyVkCtx, MAX_FRAMES_IN_FLIGHT> _tracyContexts;
 
+    std::unordered_map<std::string, ResourceHandle<GPUMesh>> _loadedMeshes;
+
     void CreateCommandBuffers();
     void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, uint32_t swapChainImageIndex, float deltaTime);
     void CreateSyncObjects();

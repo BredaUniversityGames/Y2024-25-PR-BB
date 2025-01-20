@@ -56,5 +56,7 @@ CPUMesh<Vertex> GenerateUVSphere(uint32_t slices, uint32_t stacks, float radius)
 
     mesh.boundingRadius = radius;
     mesh.boundingBox = { glm::vec3 { -radius }, glm::vec3 { radius } };
+
+    mesh.name = "UVSphere";
     return mesh;
 }

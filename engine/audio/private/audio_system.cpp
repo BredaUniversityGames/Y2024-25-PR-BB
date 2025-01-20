@@ -65,7 +65,7 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 
         if (!ecs.GetRegistry().all_of<TransformComponent>(entity))
         {
-            return;
+            continue;
         }
 
         // Get 3d attributes of emitter

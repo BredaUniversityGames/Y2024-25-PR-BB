@@ -24,6 +24,9 @@
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
+#include "components/skinned_mesh_component.hpp"
+#include "components/static_mesh_component.hpp"
+#include "renderer_module.hpp"
 #include <cstdint>
 
 namespace bindings
@@ -128,6 +131,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
+        engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
     }
 
     // Time Module
@@ -153,6 +157,11 @@ void BindEngineAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
 
         bindings::BindEnum<KeyboardCode>(module, "Keycode");
+    }
+
+    // Renderer
+    {
+        BindRendererAPI(module);
     }
 
     // Audio
@@ -252,6 +261,10 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static float Sin(float a)
+    {
+        return glm::sin(a);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -317,6 +330,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+    mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
@@ -338,6 +352,12 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
     entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
+
+    entityClass.func<&WrenEntity::AddComponent<StaticMeshComponent>>("AddStaticMeshComponent");
+    entityClass.func<&WrenEntity::GetComponent<StaticMeshComponent>>("GetStaticMeshComponent");
+
+    entityClass.func<&WrenEntity::AddComponent<SkinnedMeshComponent>>("AddSkinnedMeshComponent");
+    entityClass.func<&WrenEntity::GetComponent<SkinnedMeshComponent>>("GetSkinnedMeshComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 }

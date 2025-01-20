@@ -37,6 +37,8 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
+#include "resource_management/mesh_resource_manager.hpp"
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -53,6 +55,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
+        "assets/models/enemy.glb",
         //"assets/models/Cathedral.glb"
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
@@ -69,6 +72,20 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     auto models = rendererModule.FrontLoadModels(modelPaths);
     std::vector<entt::entity> entities;
+
+    auto meshResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->MeshResourceManager();
+
+    // const auto& loadedMeshes = meshResourceManager.ViewLoadedMeshes();
+    //
+    // for (const auto& loaded_mesh : loadedMeshes)
+    // {
+    //     std::cout << loaded_mesh.first << std::endl;
+    //
+    //     if (loaded_mesh.first.empty())
+    //     {
+    //         std::cout << "empty???" << std::endl;
+    //     }
+    // }
 
     auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
 
