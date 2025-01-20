@@ -1,13 +1,13 @@
 #include "ui_menus.hpp"
+#include "fonts.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "ui_image.hpp"
 #include "ui_progress_bar.hpp"
-
-#include <fonts.hpp>
+#include "ui_text.hpp"
 #include <glm/glm.hpp>
-#include <ui_image.hpp>
-#include <ui_text.hpp>
+
 UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext)
 {
     // common image data.

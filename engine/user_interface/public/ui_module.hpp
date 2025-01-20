@@ -17,8 +17,6 @@ public:
     NO_DISCARD Viewport& GetViewport() { return *_viewport; };
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
-    void CreateNavigationTest();
-
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
 

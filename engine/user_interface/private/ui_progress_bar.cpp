@@ -7,6 +7,7 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         glm::mat4 matrixFull;
         glm::vec2 uv0 = glm::vec2(0, 0);
         glm::vec2 uv1 = glm::vec2(1, 1);
+
         switch (style.fillDirection)
         {
         case BarStyle::FillDirection::eFromCenterHorizontal:
@@ -16,6 +17,8 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             float scaleX = localLocation2x - localLocation1x;
             matrixFull = glm::translate(glm::mat4(1), glm::vec3(localLocation1x, GetAbsoluteLocation().y, 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(scaleX, GetAbsoluteScale().y, 0));
+
+            assert(style.fillStyle != BarStyle::FillStyle::eMask && "Not implemented yet");
 
             break;
         }
@@ -32,6 +35,9 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             break;
         }
+        case default:
+            assert(false && "Direction not implemented yet");
+            break;
         }
 
         glm::mat4 matrixEmpty = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));

@@ -2,8 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
-
-#include <ui_menus.hpp>
+#include "ui_menus.hpp"
 
 class GameModule : public ModuleInterface
 {
@@ -13,6 +12,7 @@ class GameModule : public ModuleInterface
     std::string_view GetName() override { return "Game Module"; }
 
     HUD _hud;
+    bool _createHud = false;
 
 public:
     GameModule() = default;
