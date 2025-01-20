@@ -2,6 +2,9 @@
 #include "math_util.hpp"
 #include "physics_module.hpp"
 
+#include "imgui_entt_entity_editor.hpp"
+#include <entt/entity/registry.hpp>
+
 struct UpdateMeshAndPhysics
 {
 };
@@ -38,3 +41,9 @@ struct RigidbodyComponent
     JPH::ShapeRefC shape;
     BodyType bodyType;
 };
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<RigidbodyComponent>(entt::registry& reg, entt::registry::entity_type e);
+}

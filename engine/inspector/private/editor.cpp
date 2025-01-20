@@ -51,6 +51,7 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<AudioListenerComponent>("Audio Listener");
     _entityEditor.registerComponent<EmitterComponent>("Particle Emitter");
     _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
+    _entityEditor.registerComponent<RigidbodyComponent>("Rigidbody");
 }
 
 void Editor::DrawHierarchy()

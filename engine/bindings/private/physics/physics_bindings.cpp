@@ -1,7 +1,10 @@
 #include "physics_bindings.hpp"
 
 #include "physics_module.hpp"
-#include <optional>
+#include "utility/wren_entity.hpp"
+
+#include "components/rigidbody_component.hpp"
+#include "optional"
 
 namespace bindings
 {
@@ -24,6 +27,7 @@ glm::vec3 GetRayHitPosition(RayHitInfo& self)
 {
     return self.position;
 }
+
 }
 
 void BindPhysicsAPI(wren::ForeignModule& module)
@@ -35,4 +39,6 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rayHitInfo.propReadonlyExt<bindings::GetHitEntity>("hitEntity");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitBool>("hasHit");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
+
+    module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent");
 }

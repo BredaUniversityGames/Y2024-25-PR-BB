@@ -1,7 +1,14 @@
 #include "game_bindings.hpp"
 
 #include "lifetime_component.hpp"
+#include "physics_module.hpp"
 #include "utility/wren_entity.hpp"
+
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <components/rigidbody_component.hpp>
+#include <components/transform_component.hpp>
+#include <ecs_module.hpp>
+#include <game_module.hpp>
 
 namespace bindings
 {
@@ -24,11 +31,35 @@ float GetLifetime(WrenComponent<LifetimeComponent>& self)
 {
     return self.component->lifetime;
 }
+
+WrenComponent<RigidbodyComponent> CreateRigidbody(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, WrenEntity entity, const float height, const float radius)
+{
+    glm::vec3 position = {};
+
+    if (auto transform = ecs.GetRegistry().try_get<TransformComponent>(entity.entity))
+    {
+        position = transform->GetLocalPosition();
+    }
+
+    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, PhysicsLayers::MOVING);
+    bodyCreationSettings.mAllowDynamicOrKinematic = true;
+
+    bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    RigidbodyComponent rb(*physicsModule.bodyInterface, entity.entity, bodyCreationSettings);
+
+    auto& component = ecs.GetRegistry().emplace<RigidbodyComponent>(entity.entity, rb);
+
+    return WrenComponent<RigidbodyComponent> { entity, &component };
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
 {
+
     auto& lifetimeComponent = module.klass<WrenComponent<LifetimeComponent>>("LifetimeComponent");
     lifetimeComponent.propExt<bindings::GetLifetimePaused, bindings::SetLifetimePaused>("paused");
     lifetimeComponent.propExt<bindings::GetLifetime, bindings::SetLifetime>("lifetime");
+
+    auto& game = module.klass<GameModule>("Game");
+    game.funcExt<bindings::CreateRigidbody>("CreateRigidbody");
 }

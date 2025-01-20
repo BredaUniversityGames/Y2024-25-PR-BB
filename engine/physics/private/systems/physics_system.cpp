@@ -238,9 +238,9 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
 
         // We cant support objects simulated by jolt and our hierarchy system at the same time
-        RelationshipComponent& relationship = _ecs.GetRegistry().get<RelationshipComponent>(entity);
-        if (relationship.parent != entt::null)
-            RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship.parent, entity);
+        RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
+        if (relationship && relationship->parent != entt::null)
+            RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship->parent, entity);
 
         // Crazy jolt stuff that I dont like but it works to set the proper scale
         JPH::BodyLockWrite lock(_physicsModule.physicsSystem->GetBodyLockInterface(), rb.bodyID);

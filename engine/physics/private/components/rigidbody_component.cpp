@@ -159,3 +159,12 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
     // set the owner entity so we can querry it later from physics ohbejcts if needed
     bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
 }
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<RigidbodyComponent>(entt::registry& reg, entt::registry::entity_type e)
+{
+    auto& comp = reg.get<RigidbodyComponent>(e);
+}
+}

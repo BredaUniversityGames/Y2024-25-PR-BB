@@ -32,10 +32,15 @@ class Main {
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
 
+        __enemySpawnTimer = 0
+
         __enemy = engine.GetECS().NewEntity()
         __enemy.AddTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
         var mesh = __enemy.AddStaticMeshComponent()
         mesh.SetMesh(engine.GetRenderer().GetMesh("assets/models/enemy.glb:Zombie"))
+        engine.GetGame().CreateRigidbody(engine.GetPhysics(), engine.GetECS(), __enemy, 1.0, 0.5)
+
+        __enemyList = [__enemy]
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
@@ -47,6 +52,7 @@ class Main {
         var deltaTime = engine.GetTime().GetDeltatime()
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
+        __enemySpawnTimer = __enemySpawnTimer + dt
 
         if (__frameTimer > 1000.0) {
             System.print("%(__counter) Frames per second")
@@ -54,9 +60,24 @@ class Main {
             __counter = 0
         }
 
-        {
-            var enemyTransform = __enemy.GetTransformComponent()
-            var playerTransform = __player.GetTransformComponent()
+
+        if (__enemySpawnTimer > 5000 ) {
+
+            __enemySpawnTimer = 0
+
+            var entity = engine.GetECS().NewEntity()
+            entity.AddTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
+            var mesh = entity.AddStaticMeshComponent()
+            mesh.SetMesh(engine.GetRenderer().GetMesh("assets/models/enemy.glb:Zombie"))
+            engine.GetGame().CreateRigidbody(engine.GetPhysics(), engine.GetECS(), entity, 1.0, 0.5)
+
+            __enemyList.add(entity)
+        }
+
+        var playerTransform = __player.GetTransformComponent()
+        
+        for (entity in __enemyList) {
+            var enemyTransform = entity.GetTransformComponent()
             var speed = 5 * dt * 0.001
 
             var dir = (playerTransform.translation - enemyTransform.translation).normalize()
@@ -106,10 +127,10 @@ class Main {
             // }
         }
 
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            System.print("Player Jumped!")
+        // if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
+        //     System.print("Player Jumped!")
 
-        }
+        // }
 
         var gunAnimations = __gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
@@ -121,15 +142,15 @@ class Main {
             }
         }
 
-        var movement = engine.GetInput().GetAnalogAction("Move")
+        // var movement = engine.GetInput().GetAnalogAction("Move")
 
-        if (movement.length() > 0) {
-            System.print("Player is moving")
-        }
+        // if (movement.length() > 0) {
+        //     System.print("Player is moving")
+        // }
 
-        var key = Keycode.eA()
-        if (engine.GetInput().DebugGetKey(key)) {
-            System.print("[Debug] Player pressed A!")
-        }
+        // var key = Keycode.eA()
+        // if (engine.GetInput().DebugGetKey(key)) {
+        //     System.print("[Debug] Player pressed A!")
+        // }
     }
 }
