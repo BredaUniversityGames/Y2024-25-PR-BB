@@ -24,15 +24,6 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
         { 3.02f, 0.0f, -3.02f },
         { -3.02f, 0.0f, 3.02f });
 
-    auto models = _renderer->FrontLoadModels({ "assets/models/NavmeshTest/navmesh_textured.gltf" });
-    auto& ecs = engine.GetModule<ECSModule>();
-    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
-    SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
-        *modelResourceManager.Access(models[0].second),
-        models[0].first,
-        models[0].first.hierarchy,
-        models[0].first.animations);
-
     return ModuleTickOrder::eTick;
 }
 

@@ -21,7 +21,6 @@ class Main {
 
             var playerTransform = __player.GetTransformComponent()
             playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
-            playerTransform.translation = Vec3.new(0.0, 4.0, 0.0)
 
             __player.AddAudioEmitterComponent()
 
