@@ -94,6 +94,9 @@ public:
     int32_t SetNavigationMesh(const std::string& mesh);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
+    const bool SetDebugDrawState(bool state) { return _debugDraw = state;}
+    const bool GetDebugDrawState() const { return _debugDraw; }
+
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
     ComputedPath ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes);
@@ -121,4 +124,6 @@ private:
     std::vector<TriangleInfo> _triangles;
     std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
     glm::mat4 _inverseTransform = glm::mat4(1.0f);
+
+    bool _debugDraw = false;
 };

@@ -35,6 +35,7 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
+#include "pathfinding_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -122,7 +123,7 @@ void OldEngine::Tick(Engine& engine)
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
-    physicsModule.debugRenderer->SetState(rendererModule.GetRenderer()->GetDebugPipeline().GetState());
+    auto& pathfindingModule = engine.GetModule<PathfindingModule>();
 
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
@@ -248,7 +249,21 @@ void OldEngine::Tick(Engine& engine)
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
-        rendererModule.GetRenderer()->GetDebugPipeline().SetState(!rendererModule.GetRenderer()->GetDebugPipeline().GetState());
+        physicsModule.debugRenderer->SetState(!physicsModule.debugRenderer->GetState());
+    }
+
+    if(inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
+    {
+        pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
+    }
+
+    if(physicsModule.debugRenderer->GetState() || pathfindingModule.GetDebugDrawState())
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(true);
+    }
+    else
+    {
+        rendererModule.GetRenderer()->GetDebugPipeline().SetState(false);
     }
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))

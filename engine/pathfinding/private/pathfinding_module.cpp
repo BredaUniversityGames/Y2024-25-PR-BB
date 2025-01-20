@@ -19,10 +19,19 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     _renderer = engine.GetModule<RendererModule>().GetRenderer();
 
-    this->SetNavigationMesh("assets/models/NavmeshTest/Navmesh.gltf");
-    ComputedPath path = this->FindPath(
-        { 3.02f, 0.0f, -3.02f },
-        { -3.02f, 0.0f, 3.02f });
+    std::string mesh_path = "assets/models/NavmeshTest/LevelNavmeshTest.glb";
+    this->SetNavigationMesh(mesh_path);
+
+#if 0
+    auto models = _renderer->FrontLoadModels({ mesh_path });
+    auto& ecs = engine.GetModule<ECSModule>();
+    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
+    SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
+        *modelResourceManager.Access(models[0].second),
+        models[0].first,
+        models[0].first.hierarchy,
+        models[0].first.animations);
+#endif
 
     return ModuleTickOrder::eTick;
 }
@@ -32,10 +41,11 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
     DebugPass& debugPass = _renderer->GetDebugPipeline();
 
     ComputedPath path = FindPath(
-        { 3.02f, 0.0f, -3.02f },
-        { -3.02f, 0.0f, 3.02f });
+        { -42.8f, 19.3f, 267.6f },
+        { -16.8f, 24.2f, 234.1f }
+        );
 
-    if (!path.waypoints.empty())
+    if (!path.waypoints.empty() && _debugDraw)
     {
         for (size_t i = 0; i < path.waypoints.size() - 1; i++)
         {
