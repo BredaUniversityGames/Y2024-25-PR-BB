@@ -290,6 +290,11 @@ public:
         return glm::half_pi<float>();
     }
 
+    static float Distance(glm::vec3 pos1, glm::vec3 pos2)
+    {
+        return glm::distance(pos1, pos2);
+    }
+
     static glm::vec3 Mul(glm::quat& lhs, const glm::vec3& rhs) { return lhs * rhs; }
 };
 
@@ -352,6 +357,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
+    mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
 }
 
 void bindings::BindEntity(wren::ForeignModule& module)

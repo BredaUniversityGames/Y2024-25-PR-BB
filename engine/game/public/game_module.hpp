@@ -3,6 +3,10 @@
 #include "common.hpp"
 #include "engine.hpp"
 
+struct PlayerTag
+{
+};
+
 class GameModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;

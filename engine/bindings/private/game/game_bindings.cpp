@@ -46,6 +46,12 @@ void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
 
 WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
 {
+
+    auto playerView = ecs.GetRegistry().view<PlayerTag>();
+    for (auto entity : playerView)
+    {
+        ecs.DestroyEntity(entity);
+    }
     entt::entity playerEntity = ecs.GetRegistry().create();
     JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
     bodyCreationSettings.mAllowDynamicOrKinematic = true;
@@ -54,9 +60,11 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
     RigidbodyComponent rb(*physicsModule.bodyInterface, playerEntity, bodyCreationSettings);
 
     NameComponent node;
+    PlayerTag playerTag;
     node.name = "Player entity";
     ecs.GetRegistry().emplace<NameComponent>(playerEntity, node);
     ecs.GetRegistry().emplace<RigidbodyComponent>(playerEntity, rb);
+    ecs.GetRegistry().emplace<PlayerTag>(playerEntity, playerTag);
     return { playerEntity, &ecs.GetRegistry() };
 }
 }

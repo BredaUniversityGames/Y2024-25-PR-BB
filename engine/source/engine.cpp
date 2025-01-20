@@ -37,6 +37,9 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
+#include "cheats_component.hpp"
+#include "game_module.hpp"
+
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
     auto path = std::filesystem::current_path();
@@ -167,7 +170,7 @@ void OldEngine::Tick(Engine& engine)
         ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = _ecs->GetRegistry().view<CameraComponent, TransformComponent>();
-
+        auto playerEntity = _ecs->GetRegistry().view<PlayerTag>().front();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
             auto windowSize = applicationModule.DisplaySize();
@@ -220,7 +223,16 @@ void OldEngine::Tick(Engine& engine)
 
             glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
+
+            // Only update the position if the player is not in noclip mode
+            if (_ecs->GetRegistry().all_of<CheatsComponent>(playerEntity))
+            {
+                CheatsComponent& cheatsComponent = _ecs->GetRegistry().get<CheatsComponent>(playerEntity);
+                if (cheatsComponent.noClip == true)
+                {
+                    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, position);
+                }
+            }
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);

@@ -133,7 +133,6 @@ class Main {
         var isGrounded = false
         for(hit in groundCheckRay) {
 
-            var curva = hit.GetEntity(engine.GetECS()).GetEnttEntity()
 
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != __playerController.GetEnttEntity()) {
                 isGrounded = true
