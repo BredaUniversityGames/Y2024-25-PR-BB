@@ -1,0 +1,170 @@
+name: Steam-Build-Upload
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build-and-package-project:
+    name: Build and Package Project
+
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [ ubuntu-latest, windows-latest ]
+        configuration: [ Release ]
+
+    runs-on: ${{ matrix.platform }}
+
+    env:
+      OPTION_ARGS: -DWARNINGS_AS_ERRORS=ON -DCOMPILE_SHADERS=ON -DENABLE_PCH=OFF -DENABLE_UNITY=OFF
+      PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
+      PRESET_SUFFIX: ${{ matrix.configuration }}
+      P4PORT: ${{ secrets.P4PORT }}
+      P4USER: ${{ secrets.P4USER }}
+      P4TICKET: ${{ secrets.P4TICKET }}
+
+    steps:
+      # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      # Install all dependencies
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: latest
+          cache: true
+
+      - name: Install X11
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt install libx11-dev
+          sudo apt install libxext-dev
+
+      # Configure and Build
+
+      - name: Configure Project
+        run: cmake --preset ${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }} ${{ env.OPTION_ARGS }}
+
+      - name: Build Project
+        run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      # Get assets from perforce depot
+
+      - name: Perforce Setup
+        uses: perforce/setup-p4@v1
+        id: trust
+        with:
+          command: trust
+          arguments: -y
+
+      - name: Perforce Client
+        shell: bash
+        run: |
+          p4 -P ${{ env.P4TICKET }} client -d NewWorkspace
+          p4 -P ${{ env.P4TICKET }} client -o NewWorkspace | sed "s|^Root: .*|Root: ${{ github.workspace }}|" | sed "s|^Client: .*|Client: ${{ env.P4USER }}|" | sed "/^View:/,/^$/c\View:\n\t //Y2024A-Y3-CustomTech/... //NewWorkspace/..." | sed "s/^Host:.*/Host: $(hostname)/" | p4 -P ${{ env.P4TICKET }} client -i
+          p4 -P ${{ env.P4TICKET }} set P4CLIENT=NewWorkspace
+
+      - name: Perforce Sync
+        shell: bash
+        run: |
+          p4 -P ${{ env.P4TICKET }} sync -f
+
+      # Setup python for packaging script
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Package project
+      
+      - name: Package Windows Project
+        if: matrix.platform == 'windows-latest'
+        run: |
+          python scripts/python/package.py -o "package/windows-dist" -e "build/x64-Release/CustomTech.exe" -a "assets" "shaders/bin" "game" -f "build/x64-Release/steam_api64.dll" "build/x64-Release/fmod.dll" "build/x64-Release/fmodstudio.dll"
+
+      - name: Package Linux Project
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          python scripts/python/package.py -o "package/linux-dist" -e "build/WSL-Release/CustomTech" -a "assets" "shaders/bin" "game" -f "build/WSL-Release/libsteam_api.so" "build/WSL-Release/libfmod.so.14" "build/WSL-Release/libfmodstudio.so.14"
+
+      # Save build as artifact for upload job
+
+      - name: Upload Windows Build Artifacts
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-dist
+          path: package/
+
+      - name: Upload Linux Build Artifacts
+        if: matrix.platform == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: package/
+
+  upload-project:
+    name: Upload Project
+    needs: build-and-package-project
+    runs-on: windows-latest
+
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_CONFIG: ${{ secrets.STEAM_CONFIG }}
+
+    steps:
+      # Check out project
+
+      - name: Checkout Project
+        uses: actions/checkout@v4
+    
+      # Download build artifacts from previous job
+
+      - name: Download Packaged Windows Build From Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-dist
+          path: package/
+
+      - name: Download Packaged Linux Build From Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-dist
+          path: package/
+
+      # Create steam config to avoid 2FA
+
+      - name: Create Steam Config
+        shell: bash
+        run: |
+          mkdir scripts/build_system/steam/builder/config
+          echo "${{ env.STEAM_CONFIG }}" | base64 -d > scripts/build_system/steam/builder/config/config.vdf
+
+      # Upload to Steam
+      
+      - name: Upload Build
+        run: |
+          scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf +quit
+
+      # Delete artifacts after use
+
+      - name: Delete Windows Artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: windows-dist
+
+      - name: Delete Linux Artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: linux-dist

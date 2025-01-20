@@ -21,7 +21,6 @@ AudioSystem::AudioSystem(ECSModule& ecs, AudioModule& audioModule)
 }
 void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 {
-    ZoneScoped;
     const auto& listenerView = ecs.GetRegistry().view<AudioListenerComponent>();
 
     if (!listenerView.empty())

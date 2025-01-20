@@ -37,7 +37,6 @@ void MainScript::InitMainScript(Engine* e)
 
 void MainScript::Update(Engine* e, DeltaMS deltatime)
 {
-    ZoneScoped;
     try
     {
         mainUpdate(WrenEngine { e }, deltatime.count());
