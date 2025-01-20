@@ -16,6 +16,8 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
 
+#include <filesystem>
+
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
     _physics = &engine.GetModule<PhysicsModule>();
@@ -89,15 +91,21 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName)
 
     if (got == _emitterImages.end())
     {
-        CPUImage creation;
-        creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
-        creation.SetName(fileName);
-        creation.FromPNG("assets/textures/" + fileName);
-        creation.isHDR = false;
-        auto image = _context->Resources()->ImageResourceManager().Create(creation);
-        _emitterImages.emplace(fileName, std::move(image));
-        _context->UpdateBindlessSet();
-        return _emitterImages.find(fileName)->second;
+        if (std::filesystem::exists("assets/textures/" + fileName))
+        {
+            CPUImage creation;
+            creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
+            creation.SetName(fileName);
+            creation.FromPNG("assets/textures/" + fileName);
+            creation.isHDR = false;
+            auto image = _context->Resources()->ImageResourceManager().Create(creation);
+            _emitterImages.emplace(fileName, std::move(image));
+            _context->UpdateBindlessSet();
+            return _emitterImages.find(fileName)->second;
+        }
+
+        bblog::error("[Error] Image not found!");
+        return _emitterImages.begin()->second;
     }
 
     return got->second;

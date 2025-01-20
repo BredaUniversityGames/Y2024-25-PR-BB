@@ -2,7 +2,7 @@
 
 #include "components/name_component.hpp"
 #include "ecs_module.hpp"
-#include "gpu_resources.hpp"
+#include "particle_module.hpp"
 
 #include "imgui/imgui.h"
 #include <magic_enum.hpp>
@@ -18,9 +18,9 @@ void ParticleEditor::Render()
 {
     ImGui::SetNextWindowSize({ 0.f, 0.f });
 
-    ImGui::Begin("Particle editor", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Particle preset editor", nullptr, ImGuiWindowFlags_NoResize);
 
-    if (ImGui::BeginChild("list", { 170, 220 }, true))
+    if (ImGui::BeginChild("List##ParticlePresetEditor", { 170, 220 }, true))
     {
         RenderEmitterPresetList();
     }
@@ -28,7 +28,7 @@ void ParticleEditor::Render()
 
     ImGui::SameLine();
 
-    if (ImGui::BeginChild("editor", { 300, 220 }, true))
+    if (ImGui::BeginChild("Editor##ParticlePresetEditor", { 300, 220 }, true))
     {
         RenderEmitterPresetEditor();
     }
@@ -41,7 +41,7 @@ void ParticleEditor::RenderEmitterPresetList()
 {
     ImGui::Text("Emitter Presets:");
     ImGui::SameLine();
-    if (ImGui::Button("+ new"))
+    if (ImGui::Button("New preset##EmitterPresetEditor"))
     {
         ParticleModule::EmitterPreset newPreset;
         newPreset.name += " " + std::to_string(_particleModule._emitterPresets.size());
@@ -64,6 +64,9 @@ void ParticleEditor::RenderEmitterPresetList()
 
 void ParticleEditor::RenderEmitterPresetEditor()
 {
+    ImGui::Text("Currently editing: ");
+    ImGui::SameLine();
+
     if (_selectedPresetIndex > -1)
     {
         auto& selectedPreset = _particleModule._emitterPresets[_selectedPresetIndex];
@@ -136,5 +139,9 @@ void ParticleEditor::RenderEmitterPresetEditor()
             return;
         }
         ImGui::PopStyleColor(3);
+    }
+    else
+    {
+        ImGui::Text("No preset selected");
     }
 }

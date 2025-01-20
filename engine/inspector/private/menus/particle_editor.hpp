@@ -1,8 +1,7 @@
 #pragma once
 
-#include "particle_module.hpp"
-
 class ECSModule;
+class ParticleModule;
 
 class ParticleEditor
 {
