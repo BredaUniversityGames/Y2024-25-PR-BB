@@ -294,6 +294,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     frameGraph
         .AddNode(generateMainDrawsPrepass)
         .AddNode(generateShadowDrawsPrepass)
+        .AddNode(clusterGenerationPass)
+        .AddNode(clusterCullingPass)
         .AddNode(geometryPrepass)
         .AddNode(shadowPrepass)
         .AddNode(buildMainHZBPass)
@@ -311,8 +313,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(fxaaPass)
         .AddNode(uiPass)
         .AddNode(debugPass)
-        .AddNode(clusterGenerationPass)
-        .AddNode(clusterCullingPass)
         .AddNode(presentationPass)
         .Build();
 

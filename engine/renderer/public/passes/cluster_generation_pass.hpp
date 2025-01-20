@@ -28,10 +28,6 @@ private:
         glm::vec2 normPerTileSize;
     } _pushConstants;
 
-    const uint32_t _clusterSizeX = 16;
-    const uint32_t _clusterSizeY = 9;
-    const uint32_t _clusterSizeZ = 24;
-    const uint32_t _numClusters = _clusterSizeX * _clusterSizeY * _clusterSizeZ;
     uint32_t _numTilesX { 0 }, _numTilesY { 0 };
 
     void CreatePipeline();

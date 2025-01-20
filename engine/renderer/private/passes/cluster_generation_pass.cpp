@@ -33,8 +33,8 @@ void ClusterGenerationPass::RecordCommands(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
     _pushConstants.screenSize = glm::vec2(_swapChain.GetExtent().width, _swapChain.GetExtent().height);
-    _numTilesX = static_cast<uint32_t>(std::ceil(_pushConstants.screenSize.x / _clusterSizeX));
-    _pushConstants.tileSizes = glm::uvec4(_clusterSizeX, _clusterSizeY, _clusterSizeZ, _numTilesX);
+    _numTilesX = static_cast<uint32_t>(std::ceil(_pushConstants.screenSize.x / CLUSTER_X));
+    _pushConstants.tileSizes = glm::uvec4(CLUSTER_X, CLUSTER_Y, CLUSTER_Z, _numTilesX);
     _pushConstants.normPerTileSize = glm::vec2(1.0f / _pushConstants.tileSizes.x, 1.0f / _pushConstants.tileSizes.y);
 
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, _pushConstants);
@@ -43,7 +43,7 @@ void ClusterGenerationPass::RecordCommands(vk::CommandBuffer commandBuffer, uint
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { scene.gpuScene->GetClusterDescriptorSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
 
-    commandBuffer.dispatch(_clusterSizeX, _clusterSizeY, _clusterSizeZ);
+    commandBuffer.dispatch(CLUSTER_X, CLUSTER_Y, CLUSTER_Z);
 }
 
 void ClusterGenerationPass::CreatePipeline()

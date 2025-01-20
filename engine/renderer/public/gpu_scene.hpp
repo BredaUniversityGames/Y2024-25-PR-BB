@@ -42,7 +42,11 @@ struct RenderSceneDescription
 constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
 constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 10;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
+constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 1 << 7;
 constexpr uint32_t MAX_BONES = 1 << 11;
+
+constexpr uint32_t CLUSTER_X = 16, CLUSTER_Y = 9, CLUSTER_Z = 24;
+constexpr uint32_t CLUSTER_SIZE = CLUSTER_X * CLUSTER_Y * CLUSTER_Z;
 
 struct DrawIndexedIndirectCommand
 {
@@ -189,8 +193,7 @@ private:
         std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
     };
 
-    std::shared_ptr<GraphicsContext>
-        _context;
+    std::shared_ptr<GraphicsContext> _context;
     ECSModule& _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
