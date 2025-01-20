@@ -14,8 +14,6 @@
 
 #include "components/name_component.hpp"
 
-
-
 namespace bindings
 {
 void SetLifetimePaused(WrenComponent<LifetimeComponent>& self, bool paused)
@@ -73,7 +71,7 @@ WrenComponent<RigidbodyComponent> CreateRigidbody(MAYBE_UNUSED GameModule& self,
         position = transform->GetLocalPosition();
     }
 
-    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, PhysicsLayers::MOVING);
+    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
     bodyCreationSettings.mAllowDynamicOrKinematic = true;
 
     bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;

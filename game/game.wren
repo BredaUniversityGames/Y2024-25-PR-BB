@@ -40,7 +40,7 @@ class Main {
         __enemySpawnTimer = 0
 
         __enemy = engine.GetECS().NewEntity()
-        __enemy.AddTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
+        __enemy.AddTransformComponent().translation = Vec3.new(0, 10, 0)
         var mesh = __enemy.AddStaticMeshComponent()
         mesh.SetMesh(engine.GetRenderer().GetMesh("assets/models/enemy.glb:Zombie"))
         engine.GetGame().CreateRigidbody(engine.GetPhysics(), engine.GetECS(), __enemy, 1.0, 0.5)
@@ -71,7 +71,7 @@ class Main {
             __enemySpawnTimer = 0
 
             var entity = engine.GetECS().NewEntity()
-            entity.AddTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
+            entity.AddTransformComponent().translation = Vec3.new(0, 10, 0)
             var mesh = entity.AddStaticMeshComponent()
             mesh.SetMesh(engine.GetRenderer().GetMesh("assets/models/enemy.glb:Zombie"))
             engine.GetGame().CreateRigidbody(engine.GetPhysics(), engine.GetECS(), entity, 1.0, 0.5)
@@ -82,13 +82,56 @@ class Main {
         var playerTransform = __player.GetTransformComponent()
 
         for (entity in __enemyList) {
+
             var enemyTransform = entity.GetTransformComponent()
-            var speed = 5 * dt * 0.001
-
             var dir = (playerTransform.translation - enemyTransform.translation).normalize()
-
             enemyTransform.rotation = Math.DirToQuat(-dir)
-            enemyTransform.translation = enemyTransform.translation + Vec3.new(speed, speed, speed) * dir
+
+            var body = entity.GetRigidbodyComponent()
+            var velocity = engine.GetPhysics().GetVelocity(body)
+
+            engine.GetPhysics().GravityFactor(body,2.2)
+
+            {
+                engine.GetPhysics().SetFriction(body, 12.0)
+                
+                var maxSpeed = 5
+                var sv_accelerate = 10.0
+                var frameTime = engine.GetTime().GetDeltatime()
+                var wishVel = dir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
+
+                var currentSpeed = Math.Dot(velocity, dir)
+
+                var addSpeed = maxSpeed - currentSpeed
+                if (addSpeed > 0) {
+                    var accelSpeed = sv_accelerate * frameTime * maxSpeed
+                    if (accelSpeed > addSpeed) {
+                        accelSpeed = addSpeed
+                    }
+                    //velocity = velocity + moveInputDir * Vec3.new(accelSpeed,accelSpeed,accelSpeed)
+                    velocity = velocity + Vec3.new(accelSpeed,accelSpeed,accelSpeed) * dir
+                }
+
+                var speed = velocity.length()
+                if (speed > maxSpeed) {
+                    var factor = maxSpeed / speed
+                    velocity.x = velocity.x * factor
+
+                    velocity.z = velocity.z * factor
+                }
+            }
+
+
+
+            engine.GetPhysics().SetVelocity(body, velocity)
+
+            var pos = engine.GetPhysics().GetPosition(body)
+            pos.y = pos.y + 0.5
+
+            entity.GetTransformComponent().translation = pos
+            entity.GetTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
+
+            //enemyTransform.translation = enemyTransform.translation + Vec3.new(speed, speed, speed) * dir
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
