@@ -2,6 +2,7 @@
 
 #include "components/name_component.hpp"
 #include "ecs_module.hpp"
+#include "gpu_resources.hpp"
 
 #include "imgui/imgui.h"
 #include <magic_enum.hpp>
