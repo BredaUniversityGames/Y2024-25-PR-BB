@@ -22,7 +22,7 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
             }
         }
 
-        for (int32_t i = _children.size(); i >= 0; --i)
+        for (int32_t i = _children.size() - 1; i >= 0; --i)
         {
             _children[i]->Update(inputManagers, uiInputContext);
         }
