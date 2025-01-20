@@ -2,7 +2,6 @@
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
 #include "ui_element.hpp"
-#include <functional>
 
 class UIProgressBar : public UIElement
 {
