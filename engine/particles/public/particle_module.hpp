@@ -3,6 +3,7 @@
 #include "resource_manager.hpp"
 
 #include "common.hpp"
+#include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
 
