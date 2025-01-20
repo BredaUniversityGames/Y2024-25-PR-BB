@@ -61,17 +61,17 @@ template <class _Ty, class _Container = std::vector<_Ty>, class _Pr = std::less<
 struct IterablePriorityQueue : public std::priority_queue<_Ty, _Container, _Pr>
 {
 public:
-    std::vector<_Ty>::iterator begin()
+    typename std::vector<_Ty>::iterator begin()
     {
         return this->c.begin();
     }
 
-    std::vector<_Ty>::iterator end()
+    typename std::vector<_Ty>::iterator end()
     {
         return this->c.end();
     }
 
-    _Container::iterator find(const _Ty& item)
+    typename _Container::iterator find(const _Ty& item)
     {
         return std::find(this->c.begin(), this->c.end(), item);
     }

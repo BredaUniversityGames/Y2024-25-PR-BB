@@ -6,10 +6,12 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
+#include "settings.hpp"
 #include "vulkan_helper.hpp"
 
-BloomSettings::BloomSettings(const std::shared_ptr<GraphicsContext>& context)
+BloomSettings::BloomSettings(const std::shared_ptr<GraphicsContext>& context, const Settings::Bloom& settings)
     : _context(context)
+    , _settings(settings)
 {
     CreateDescriptorSetLayout();
     CreateUniformBuffers();
@@ -23,21 +25,13 @@ BloomSettings::~BloomSettings()
     vkContext->Device().destroy(_descriptorSetLayout);
 }
 
-void BloomSettings::Render()
-{
-    ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
-
-    ImGui::InputFloat("Strength", &_data.strength, 0.5f, 2.0f);
-    ImGui::InputFloat("Gradient strength", &_data.gradientStrength, 0.05f, 0.1f, "%.00005f");
-    ImGui::InputFloat("Max brightness extraction", &_data.maxBrightnessExtraction, 1.0f, 5.0f);
-    ImGui::InputFloat3("Color weights", &_data.colorWeights[0], "%.00005f");
-
-    ImGui::End();
-}
-
 void BloomSettings::Update(uint32_t currentFrame)
 {
+    _data.strength = _settings.strength;
+    _data.colorWeights = _settings.colorWeights;
+    _data.gradientStrength = _settings.gradientStrength;
+    _data.maxBrightnessExtraction = _settings.maxBrightnessExtraction;
+
     auto resources { _context->Resources() };
 
     const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers.at(currentFrame));

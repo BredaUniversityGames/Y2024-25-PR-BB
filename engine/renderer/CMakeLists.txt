@@ -7,6 +7,7 @@ target_link_libraries(Renderer
         PUBLIC Particles
         PUBLIC ECS
         PUBLIC UserInterface
+        PUBLIC Settings
 
         PUBLIC VulkanAPI
         PUBLIC VulkanMemoryAllocator

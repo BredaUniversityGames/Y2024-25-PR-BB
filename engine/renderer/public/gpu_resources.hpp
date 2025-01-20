@@ -37,6 +37,7 @@ struct SamplerCreation
     float mipLodBias { 0.0f };
     float minLod { 0.0f };
     float maxLod { 1.0f };
+    vk::SamplerReductionMode reductionMode { vk::SamplerReductionMode::eWeightedAverage };
 };
 
 struct Sampler
@@ -104,8 +105,14 @@ struct GPUImage
 
     NON_COPYABLE(GPUImage);
 
+    struct Layer
+    {
+        vk::ImageView view;
+        std::vector<vk::ImageView> mipViews {};
+    };
+
     vk::Image image {};
-    std::vector<vk::ImageView> views {};
+    std::vector<Layer> layerViews {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     VmaAllocation allocation {};
     ResourceHandle<Sampler> sampler {};
@@ -254,6 +261,8 @@ struct alignas(16) GPUCamera
     glm::mat4 proj;
     glm::mat4 skydomeMVP; // TODO: remove this
     glm::mat4 inverseView;
+    glm::mat4 inverseProj;
+    glm::mat4 inverseVP;
 
     glm::vec3 cameraPosition;
     bool distanceCullingEnabled;

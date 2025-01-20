@@ -17,7 +17,6 @@ PerformanceTracker::PerformanceTracker()
 
 void PerformanceTracker::Update()
 {
-    ZoneScoped;
     auto currentTime = std::chrono::steady_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - _lastFrameTime).count();
     _lastFrameTime = currentTime;

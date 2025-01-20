@@ -1,0 +1,285 @@
+#version 460
+
+#extension GL_EXT_nonuniform_qualifier: enable
+
+#include "scene.glsl"
+#include "bindless.glsl"
+
+struct DrawCommand
+{
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int vertexOffset;
+    uint firstInstance;
+};
+
+layout (std430, set = 1, binding = 0) readonly buffer DrawCommands_In
+{
+    DrawCommand drawCommandsIn[];
+};
+
+layout (std430, set = 2, binding = 0) writeonly buffer DrawCommands_Out
+{
+    DrawCommand drawCommandsOut[];
+};
+
+layout (std430, set = 3, binding = 0) readonly buffer InstanceData
+{
+    Instance instances[];
+};
+
+layout (set = 4, binding = 0) readonly uniform CameraUBO
+{
+    Camera camera;
+};
+
+layout (set = 5, binding = 0) buffer VisibilityBuffer
+{
+    uint visibility[];
+};
+
+layout (set = 6, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
+};
+
+layout (push_constant) uniform PushConstants
+{
+    uint isPrepass;
+    float hzbSize;
+    uint hzbIndex;
+    uint drawCommandsCount;
+    uint isReverseZ;
+} pushConstants;
+
+layout (local_size_x = 64) in;
+
+bool PrepassIsVisible(uint objectIndex);
+bool SecondPassIsVisible(uint objectIndex);
+bool VisibleInFrustum(in vec3 center, in float radius);
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB);
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB);
+bool GetVisibility(uint objectIndex);
+void SetVisibility(uint objectIndex, bool value);
+
+void main()
+{
+    uint gId = gl_GlobalInvocationID.x;
+
+    if (gId < pushConstants.drawCommandsCount)
+    {
+        if (bool(pushConstants.isPrepass))
+        {
+            if (PrepassIsVisible(gId))
+            {
+                uint newIndex = atomicAdd(count, 1);
+                redirect[newIndex] = gId;
+                drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                drawCommandsOut[newIndex].instanceCount = 1;
+            }
+        }
+        else
+        {
+            bool visible = SecondPassIsVisible(gId);
+            bool shouldDraw = visible && !GetVisibility(gId);
+
+            if (shouldDraw)
+            {
+                uint newIndex = atomicAdd(count, 1);
+                redirect[newIndex] = gId;
+                drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                drawCommandsOut[newIndex].instanceCount = 1;
+            }
+
+            SetVisibility(gId, visible);
+        }
+    }
+}
+
+float GetScaledRadius(float radius, mat4 transform) {
+    // Extract the scale vectors from the transformation matrix
+    vec3 scaleX = vec3(transform[0][0], transform[1][0], transform[2][0]); // X-axis scale
+    vec3 scaleY = vec3(transform[0][1], transform[1][1], transform[2][1]); // Y-axis scale
+    vec3 scaleZ = vec3(transform[0][2], transform[1][2], transform[2][2]); // Z-axis scale
+
+    // Compute the scale factors (length of the axis vectors)
+    float scaleFactorX = length(scaleX);
+    float scaleFactorY = length(scaleY);
+    float scaleFactorZ = length(scaleZ);
+
+    // Use the largest scale factor to scale the radius
+    float maxScaleFactor = max(scaleFactorX, max(scaleFactorY, scaleFactorZ));
+
+    return radius * maxScaleFactor;
+}
+
+bool PrepassIsVisible(uint objectIndex)
+{
+    // For the prepass we only care if it was visible in the previous frame.
+    if (!GetVisibility(objectIndex))
+    {
+        return false;
+    }
+
+    // Grab position from world matrix and convert it into view space.
+    vec3 center = instances[objectIndex].model[3].xyz;
+    center = (camera.view * vec4(center, 1.f)).xyz;
+
+    // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
+    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model);//length(r.xyz);
+
+    return VisibleInFrustum(center, radius);
+}
+
+bool SecondPassIsVisible(uint objectIndex)
+{
+    // Grab position from world matrix and convert it into view space.
+    vec3 center = instances[objectIndex].model[3].xyz;
+    center = (camera.view * vec4(center, 1.0)).xyz;
+
+    // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
+    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model);
+
+    bool frustumVisible = VisibleInFrustum(center, radius);
+    bool projectionVisible = false;
+    bool occlusionVisible = false;
+
+    if (frustumVisible)
+    {
+        float P00 = camera.proj[0][0];
+        float P11 = camera.proj[1][1];
+        float nearestBoundsDepth = 0.0;
+
+        vec4 AABB;
+        if (camera.projectionType == 0)
+        {
+            projectionVisible = TryCalculateSphereBoundsPerspective(center, radius, camera.zNear, P00, P11, AABB);
+            nearestBoundsDepth = camera.zNear / (-center.z - radius);
+        }
+        else if (camera.projectionType == 1)
+        {
+            projectionVisible = TryCalculateSphereBoundsOrtho(center, radius, P00, P11, AABB);
+
+            float nearestZ = center.z - radius;
+            nearestBoundsDepth = (-nearestZ - camera.zNear) / (camera.zFar - camera.zNear);
+            nearestBoundsDepth = min(nearestBoundsDepth, 0.999);
+        }
+        if (projectionVisible)
+        {
+            float boundsWidth = (AABB.x - AABB.z) * pushConstants.hzbSize;
+            float boundsHeight = (AABB.w - AABB.y) * pushConstants.hzbSize;
+            float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
+
+            vec2 uvs = 0.5 * (AABB.xy + AABB.zw);
+            float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), uvs, mipIndex).x;
+
+            occlusionVisible = bool(pushConstants.isReverseZ) ? occluderDepth < nearestBoundsDepth : occluderDepth > nearestBoundsDepth;
+        }
+    }
+
+    // The draw has to be visible inside the frustum.
+    // If we can't project the draw, we assum to draw it (handles cases where you are inside the mesh).
+    // If it is visible during the occlusion cull, we draw it.
+    bool visible = frustumVisible && (occlusionVisible || !projectionVisible);
+
+    return visible;
+}
+
+bool VisibleInFrustum(in vec3 center, in float radius)
+{
+    bool visible = true;
+
+    // Test against frustum.
+    if (camera.projectionType == 0)
+    {
+        visible = visible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
+        visible = visible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
+    }
+    else if (camera.projectionType == 1)
+    {
+        visible = visible && center.x + radius > camera.frustum[0]; // Left plane
+        visible = visible && center.x - radius < camera.frustum[1]; // Right plane
+        visible = visible && center.y + radius > camera.frustum[2]; // Bottom plane
+        visible = visible && center.y - radius < camera.frustum[3]; // Top plane
+    }
+
+    if (camera.distanceCullingEnabled != 0)
+    {
+        // Test against near and far plane.
+        visible = visible && -center.z + radius > camera.zNear && -center.z - radius < camera.zFar;
+    }
+
+    return visible && camera.cullingEnabled != 0;
+}
+
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB)
+{
+    vec4 centerClip = camera.proj * vec4(center, 1.0);
+    vec3 centerNDC = centerClip.xyz / centerClip.w;
+
+    vec2 radiusNDC = vec2(
+    radius * (2.0 * (P00 * centerClip.w)),
+    radius * (2.0 * (P11 * centerClip.w))
+    );
+
+    AABB.x = centerNDC.x - radiusNDC.x;
+    AABB.y = centerNDC.y + radiusNDC.y;
+    AABB.z = centerNDC.x + radiusNDC.x;
+    AABB.w = centerNDC.y - radiusNDC.y;
+
+    AABB = AABB * 0.5 + 0.5;
+
+    return true;
+}
+
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere
+// https://jcgt.org/published/0002/02/05/
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB)
+{
+    if (-center.z < radius + zNear)
+    {
+        return false;
+    }
+
+    vec2 centerXZ = -center.xz;
+    vec2 vX = vec2(sqrt(dot(centerXZ, centerXZ) - radius * radius), radius);
+    vec2 minX = mat2(vX.x, vX.y, -vX.y, vX.x) * centerXZ;
+    vec2 maxX = mat2(vX.x, -vX.y, vX.y, vX.x) * centerXZ;
+
+    vec2 centerYZ = -center.yz;
+    vec2 vY = vec2(sqrt(dot(centerYZ, centerYZ) - radius * radius), radius);
+    vec2 minY = mat2(vY.x, vY.y, -vY.y, vY.x) * centerYZ;
+    vec2 maxY = mat2(vY.x, -vY.y, vY.y, vY.x) * centerYZ;
+
+    AABB = 0.5 - 0.5 * vec4(
+    minX.x / minX.y * P00, minY.x / minY.y * P11,
+    maxX.x / maxX.y * P00, maxY.x / maxY.y * P11);
+
+    return true;
+}
+
+bool GetVisibility(uint objectIndex)
+{
+    uint index = objectIndex / 32;
+    uint remainder = objectIndex % 32;
+    return bool((visibility[index] >> remainder) & 1u);
+}
+
+void SetVisibility(uint objectIndex, bool value)
+{
+    uint remainder = objectIndex % 32;
+    uint index = objectIndex / 32;
+    uint mask = 1u << remainder;
+
+    if (value)
+    {
+        atomicOr(visibility[index], mask); // Atomically set the bit
+    }
+    else
+    {
+        atomicAnd(visibility[index], ~mask); // Atomically clear the bit
+    }
+}
+

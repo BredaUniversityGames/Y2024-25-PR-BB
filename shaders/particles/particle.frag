@@ -86,7 +86,7 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
     vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
     vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (4096 * 1.6);// Assuming a 4096x4096 shadow map
+    const float offset = 1.0 / (2048 * 1.6); // TODO: Pass actual shadow map size
 
     float visibility = 1.0;
     float depthFactor = testCoord.z - bias;

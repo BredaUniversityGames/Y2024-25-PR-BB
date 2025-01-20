@@ -2,6 +2,7 @@
 
 #include "constants.hpp"
 #include "resource_manager.hpp"
+#include "settings.hpp"
 #include "vulkan_include.hpp"
 
 #include <array>
@@ -15,6 +16,20 @@ struct Buffer;
 class BloomSettings
 {
 public:
+    struct FrameData
+    {
+        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+        std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
+    };
+
+    BloomSettings(const std::shared_ptr<GraphicsContext>& context, const Settings::Bloom& settings);
+    ~BloomSettings();
+    void Render();
+    void Update(uint32_t currentFrame);
+    const vk::DescriptorSet& GetDescriptorSetData(uint32_t currentFrame) const { return _frameData.descriptorSets[currentFrame]; }
+    const vk::DescriptorSetLayout& GetDescriptorSetLayout() const { return _descriptorSetLayout; }
+
+private:
     struct alignas(16) SettingsData
     {
         // How much brightness is extracted from each color channel.
@@ -31,25 +46,10 @@ public:
 
     private:
         MAYBE_UNUSED glm::vec2 _padding;
-    };
+    } _data;
 
-    struct FrameData
-    {
-        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-        std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> buffers;
-    };
-
-    BloomSettings(const std::shared_ptr<GraphicsContext>& context);
-    ~BloomSettings();
-    void Render();
-    void Update(uint32_t currentFrame);
-    const vk::DescriptorSet& GetDescriptorSetData(uint32_t currentFrame) const { return _frameData.descriptorSets[currentFrame]; }
-    const vk::DescriptorSetLayout& GetDescriptorSetLayout() const { return _descriptorSetLayout; }
-
-    SettingsData _data;
-
-private:
     std::shared_ptr<GraphicsContext> _context;
+    const Settings::Bloom& _settings;
     vk::DescriptorSetLayout _descriptorSetLayout;
     FrameData _frameData;
 

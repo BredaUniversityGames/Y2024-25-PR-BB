@@ -22,15 +22,14 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
             }
         }
 
-        for (auto& child : _children | std::views::reverse)
+        for (int32_t i = _children.size(); i >= 0; --i)
         {
-            child->Update(inputManagers, uiInputContext);
+            _children[i]->Update(inputManagers, uiInputContext);
         }
     }
 }
 
 void UIElement::UpdateAllChildrenAbsoluteTransform()
-
 {
     for (const auto& child : _children)
     {

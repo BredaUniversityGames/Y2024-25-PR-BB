@@ -42,4 +42,33 @@ struct URange
     uint32_t count;
 };
 
+inline uint32_t DivideRoundingUp(uint32_t dividend, uint32_t divisor)
+{
+    return (dividend + divisor - 1) / divisor;
+}
+
+inline uint32_t RoundUpToPowerOfTwo(uint32_t n)
+{
+    if (n == 0)
+    {
+        return 1; // Special case: smallest power of two is 1
+    }
+
+    // If n is already a power of two, return it
+    if ((n & (n - 1)) == 0)
+    {
+        return n;
+    }
+
+    // Round up to the next power of two
+    n--; // Subtract 1 to handle exact powers of two correctly
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+
+    return n + 1;
+}
+
 }

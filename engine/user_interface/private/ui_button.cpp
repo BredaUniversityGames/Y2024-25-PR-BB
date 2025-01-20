@@ -49,7 +49,7 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
                     state = ButtonState::eNormal;
                     return;
                 }
-                SwitchState(inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()), !inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()));
+                SwitchState(inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsPressed(), inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsReleased());
                 if (state == ButtonState::ePressed)
                 {
                     std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);

@@ -380,7 +380,13 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       cpuImage
+                           .SetName(name)
+                           .SetSize(width, height)
+                           .SetData(std::move(data))
+                           .SetFlags(vk::ImageUsageFlagBits::eSampled)
+                           .SetFormat(vk::Format::eR8G8B8A8Unorm)
+                           .SetMips(std::floor(std::log2(std::max(width, height))));
 
                        stbi_image_free(stbiData);
                    },
@@ -394,7 +400,13 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                        data = std::vector<std::byte>(width * height * 4);
                        std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                       cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                       cpuImage
+                           .SetName(name)
+                           .SetSize(width, height)
+                           .SetData(std::move(data))
+                           .SetFlags(vk::ImageUsageFlagBits::eSampled)
+                           .SetFormat(vk::Format::eR8G8B8A8Unorm)
+                           .SetMips(std::floor(std::log2(std::max(width, height))));
 
                        stbi_image_free(stbiData);
                    },
@@ -418,7 +430,13 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                                    data = std::vector<std::byte>(width * height * 4);
                                    std::memcpy(data.data(), reinterpret_cast<std::byte*>(stbiData), data.size());
 
-                                   cpuImage.SetName(name).SetSize(width, height).SetData(std::move(data)).SetFlags(vk::ImageUsageFlagBits::eSampled).SetFormat(vk::Format::eR8G8B8A8Unorm);
+                                   cpuImage
+                                       .SetName(name)
+                                       .SetSize(width, height)
+                                       .SetData(std::move(data))
+                                       .SetFlags(vk::ImageUsageFlagBits::eSampled)
+                                       .SetFormat(vk::Format::eR8G8B8A8Unorm)
+                                       .SetMips(std::floor(std::log2(std::max(width, height))));
 
                                    stbi_image_free(stbiData);
                                } },

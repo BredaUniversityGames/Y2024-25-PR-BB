@@ -19,6 +19,9 @@ public:
     void CreateDefaultSampler()
     {
         SamplerCreation info;
+        info.name = "Default sampler";
+        info.minLod = 0;
+        info.maxLod = 32;
         _defaultSampler = Create(info);
     }
 
