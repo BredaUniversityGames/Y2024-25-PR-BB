@@ -5,6 +5,7 @@
 #include "audio/audio_bindings.hpp"
 #include "audio_emitter_component.hpp"
 #include "audio_module.hpp"
+#include "cheats_component.hpp"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
@@ -373,6 +374,9 @@ void bindings::BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
     entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
+    entityClass.func<&WrenEntity::AddComponent<CheatsComponent>>("AddCheatsComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 

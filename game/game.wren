@@ -27,6 +27,7 @@ class Main {
             playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
             __player.AddAudioEmitterComponent()
+            __playerController.AddCheatsComponent()
 
             //var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
             //engine.GetParticles().SpawnEmitter(__player, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
@@ -42,7 +43,7 @@ class Main {
 
     static Update(engine, dt) {
         __counter = __counter + 1
-
+        var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
@@ -94,6 +95,25 @@ class Main {
         }
 
 
+        var gunAnimations = __gun.GetAnimationControlComponent()
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        }
+        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
+            if(gunAnimations.AnimationFinished()) {
+                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
+            }
+        }
+
+
+        if(engine.GetInput().DebugGetKey(Keycode.eN())){
+           cheats.noClip = !cheats.noClip
+        }
+        // MOVEMENT
+        if(cheats.noClip == true){
+            return
+        }
+
         var playerBody = __playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
 
@@ -114,12 +134,9 @@ class Main {
         for(hit in groundCheckRay) {
 
             var curva = hit.GetEntity(engine.GetECS()).GetEnttEntity()
-            // System.print("Entity hit: %(curva)")
-            // System.print("PlayerController: %(__playerController.GetEnttEntity())")
+
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != __playerController.GetEnttEntity()) {
                 isGrounded = true
-                //System.print("PULA")
-
                 break
             }
         }
@@ -128,22 +145,8 @@ class Main {
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 
-        //this might not be translated correctly with controller
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
-        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eW())){
-        //     moveInputDir = moveInputDir + forward
-        // }
-        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eS())){
-        //     moveInputDir = moveInputDir - forward
-        // }
-        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eA())){
-        //     moveInputDir = moveInputDir - right
-        // }
-        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eD())){
-        //     moveInputDir = moveInputDir + right
-        // }
         moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
-
         moveInputDir = moveInputDir.normalize()
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
@@ -161,7 +164,6 @@ class Main {
         var maxSpeed = 15.0
         var sv_accelerate = 10.0
         var frameTime = engine.GetTime().GetDeltatime()
-        System.print(movement.x)
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
         engine.GetPhysics().GravityFactor(playerBody,2.2)
@@ -190,7 +192,6 @@ class Main {
                 
         }else{
             
-            System.print("Player is in the air")
             var wishSpeed = wishVel.length()
             wishVel = wishVel.normalize()
             if(wishSpeed > 0.3){
@@ -233,29 +234,5 @@ class Main {
 
 
 
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            System.print("Player Jumped!")
-
-        }
-
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        }
-        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            if(gunAnimations.AnimationFinished()) {
-                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
-            }
-        }
-
-
-        if (movement.length() > 0) {
-            //System.print("Player is moving")
-        }
-
-        var key = Keycode.eA()
-        if (engine.GetInput().DebugGetKey(key)) {
-            System.print("[Debug] Player pressed A!")
-        }
     }
 }

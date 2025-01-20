@@ -1,5 +1,6 @@
 #include "game_bindings.hpp"
 
+#include "cheats_component.hpp"
 #include "lifetime_component.hpp"
 #include "physics_module.hpp"
 #include "utility/wren_entity.hpp"
@@ -33,6 +34,16 @@ float GetLifetime(WrenComponent<LifetimeComponent>& self)
     return self.component->lifetime;
 }
 
+bool GetNoClipStatus(WrenComponent<CheatsComponent>& self)
+{
+    return self.component->noClip;
+}
+
+void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
+{
+    self.component->noClip = noClip;
+}
+
 WrenEntity CreatePlayerController(GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
 {
     entt::entity playerEntity = ecs.GetRegistry().create();
@@ -55,6 +66,9 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& lifetimeComponent = module.klass<WrenComponent<LifetimeComponent>>("LifetimeComponent");
     lifetimeComponent.propExt<bindings::GetLifetimePaused, bindings::SetLifetimePaused>("paused");
     lifetimeComponent.propExt<bindings::GetLifetime, bindings::SetLifetime>("lifetime");
+
+    auto& cheatsComponent = module.klass<WrenComponent<CheatsComponent>>("CheatsComponent");
+    cheatsComponent.propExt<bindings::GetNoClipStatus, bindings::SetNoClip>("noClip");
 
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
