@@ -9,7 +9,7 @@ SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInput
     : ActionManager(steamInputDeviceManager)
     , _steamInputDeviceManager(steamInputDeviceManager)
 {
-    // TODO: File actions should be set from Steam's servers, but for that to happen we need to upload an official configuration via Steamworks
+    // Use the following lines of code to override and test new input action that is not yet on steam servers
     // std::string actionManifestFilePath = std::filesystem::current_path().string();
     // actionManifestFilePath.append("\\assets\\input\\steam_input_manifest.vdf");
     // SteamInput()->SetInputActionManifestFilePath(actionManifestFilePath.c_str());
@@ -57,9 +57,32 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-glm::vec2 SteamActionManager::GetAnalogAction(std::string_view actionName) const
+DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
 {
-    if (!_inputDeviceManager.IsGamepadAvailable() || _gameActions.empty())
+    DigitalActionType result {};
+
+    bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
+    bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
+
+    if (current && !previous)
+    {
+        result = result | DigitalActionType::ePressed;
+    }
+    if (current)
+    {
+        result = result | DigitalActionType::eHeld;
+    }
+    if (!current && previous)
+    {
+        result = result | DigitalActionType::eReleased;
+    }
+
+    return result;
+}
+
+glm::vec2 SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadAnalog gamepadAnalog) const
+{
+    if (!_inputDeviceManager.IsGamepadAvailable())
     {
         return { 0.0f, 0.0f };
     }
@@ -69,43 +92,12 @@ glm::vec2 SteamActionManager::GetAnalogAction(std::string_view actionName) const
     auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
     if (itr == actionSetCache.gamepadAnalogActionsCache.end())
     {
-        bblog::error("[Input] Failed to find analog action \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
+        bblog::error("[Input] Failed to find analog action cache \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
         return { 0.0f, 0.0f };
     }
 
     ControllerAnalogActionData_t analogActionData = SteamInput()->GetAnalogActionData(_steamInputDeviceManager.GetGamepadHandle(), itr->second);
     return { _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x), _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y) };
-}
-
-bool SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button, DigitalActionType inputType) const
-{
-    // A bit of a waist honestly, as this gets called every time when an action has a digital gamepad input to check,
-    // but Steam checks all the gamepad inputs for an action for us. I didn't really find a clean way to do it another way for now.
-    // So we will just take the hit whenever we have multiple gamepad digital inputs bound to 1 action and check multiple times even when not needed.
-
-    switch (inputType)
-    {
-    case DigitalActionType::ePressed:
-    {
-        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-        return current && !previous;
-    }
-
-    case DigitalActionType::eReleased:
-    {
-        bool current = UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-        bool previous = UnorderedMapGetOr(_prevControllerState, { actionName.begin(), actionName.end() }, false);
-        return !current && previous;
-    }
-
-    case DigitalActionType::eHold:
-    {
-        return UnorderedMapGetOr(_currentControllerState, { actionName.begin(), actionName.end() }, false);
-    }
-    }
-
-    return false;
 }
 
 void SteamActionManager::UpdateSteamControllerInputState()

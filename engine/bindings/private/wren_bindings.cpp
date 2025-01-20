@@ -11,9 +11,7 @@
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "game/game_bindings.hpp"
-#include "input/action_manager.hpp"
-#include "input/input_codes/keys.hpp"
-#include "input/input_codes/mousebuttons.hpp"
+#include "input/input_bindings.hpp"
 #include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
@@ -46,14 +44,7 @@ WrenEntity CreateEntity(ECSModule& self)
 
 void FreeEntity(ECSModule& self, WrenEntity& entity)
 {
-    if (self.GetRegistry().valid(entity.entity))
-    {
-        self.GetRegistry().destroy(entity.entity);
-    }
-    else
-    {
-        bblog::warn("Tried to destroy invalid entity: {0}", static_cast<uint32_t>(entity.entity));
-    }
+    self.GetRegistry().destroy(entity.entity);
 }
 
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
@@ -68,32 +59,6 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
     }
 
     return std::nullopt;
-}
-
-template <typename T>
-std::vector<WrenEntity> GetEntitiesWithComponent(ECSModule& self)
-{
-    return self.GetRegistry().view<T>();
-}
-
-bool InputGetDigitalAction(ApplicationModule& self, const std::string& action_name)
-{
-    return self.GetActionManager().GetDigitalAction(action_name);
-}
-
-glm::vec2 InputGetAnalogAction(ApplicationModule& self, const std::string& action_name)
-{
-    return self.GetActionManager().GetAnalogAction(action_name);
-}
-
-bool InputGetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
-{
-    return self.GetInputDeviceManager().IsKeyPressed(code);
-}
-
-bool InputGetRawKey(ApplicationModule& self, KeyboardCode code)
-{
-    return self.GetInputDeviceManager().IsKeyHeld(code);
 }
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
@@ -189,13 +154,7 @@ void BindEngineAPI(wren::ForeignModule& module)
 
     // Input
     {
-        auto& wrenClass = module.klass<ApplicationModule>("Input");
-        wrenClass.funcExt<bindings::InputGetDigitalAction>("GetDigitalAction");
-        wrenClass.funcExt<bindings::InputGetAnalogAction>("GetAnalogAction");
-        wrenClass.funcExt<bindings::InputGetRawKeyOnce>("DebugGetKey");
-        wrenClass.funcExt<bindings::InputGetRawKey>("DebugGetKeyHeld");
-
-        bindings::BindEnum<KeyboardCode>(module, "Keycode");
+        BindInputAPI(module);
     }
 
     // Audio

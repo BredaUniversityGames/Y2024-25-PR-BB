@@ -53,7 +53,7 @@ class Main {
             __counter = 0
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot")) {
+        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
             var audioEmitter = __player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
@@ -61,7 +61,7 @@ class Main {
             System.print("Playing is shooting")
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot")) {
+         if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             // var playerTransform = __player.GetTransformComponent()
             // var direction = Math.ToVector(playerTransform.rotation)
             // var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
@@ -77,7 +77,7 @@ class Main {
             //     var emitterFlags = SpawnEmitterFlagBits.eIsActive()
             //     engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
             // }
-            
+
 
             // var length = (end - start).length()
             // var i = 5.0
@@ -102,7 +102,7 @@ class Main {
         forward.y = 0.0
 
         var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
-        
+
         // lets test for ground here
         var playerControllerPos = engine.GetPhysics().GetPosition(playerBody)
         var rayDirection = Vec3.new(0.0, -1.0, 0.0)
@@ -124,7 +124,7 @@ class Main {
             }
         }
 
-      
+
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 
@@ -142,7 +142,7 @@ class Main {
         if(engine.GetInput().DebugGetKeyHeld(Keycode.eD())){
             moveInputDir = moveInputDir + right
         }
-        
+
         moveInputDir = moveInputDir.normalize()
 
         var isJumpHeld = engine.GetInput().DebugGetKeyHeld(Keycode.eSPACE())
@@ -167,7 +167,7 @@ class Main {
         if(isGrounded){
             engine.GetPhysics().SetFriction(playerBody,12.0)
             var currentSpeed = Math.Dot(velocity, moveInputDir)
-            
+
             var addSpeed = maxSpeed - currentSpeed
             if(addSpeed>0){
                 var accelSpeed = sv_accelerate * frameTime * maxSpeed
@@ -221,16 +221,16 @@ class Main {
 
 
 
-        if (engine.GetInput().GetDigitalAction("Jump")) {
+        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
             System.print("Player Jumped!")
 
         }
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload") && gunAnimations.AnimationFinished()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
             gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         }
-        if(engine.GetInput().GetDigitalAction("Shoot")) {
+        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             if(gunAnimations.AnimationFinished()) {
                 gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
             }

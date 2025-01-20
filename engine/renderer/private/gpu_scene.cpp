@@ -93,7 +93,8 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
-    ZoneScoped;
+    ZoneNamedN(zz, "GPUScene::Update", true);
+
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateCameraData(frameIndex);

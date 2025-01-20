@@ -34,7 +34,7 @@ GeometryPass::~GeometryPass()
 
 void GeometryPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Geometry Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Geometry Pass");
 
     static bool isPrepass = true;
     DrawGeometry(commandBuffer, currentFrame, scene, isPrepass);
