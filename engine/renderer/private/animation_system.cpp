@@ -31,7 +31,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         if (animationControl.activeAnimation.has_value())
         {
             Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
-            currentAnimation.Update(dt / 1000.0f); // TODO: Frame index might not be needed anymore.
+            currentAnimation.Update(dt / 1000.0f);
         }
     }
 

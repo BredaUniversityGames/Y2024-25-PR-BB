@@ -90,12 +90,13 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .minFilter = vk::Filter::eLinear,
         .magFilter = vk::Filter::eLinear,
         .anisotropyEnable = false,
+        .borderColor = vk::BorderColor::eFloatOpaqueBlack,
         .mipmapMode = vk::SamplerMipmapMode::eNearest,
         .minLod = 0.0f,
         .maxLod = static_cast<float>(std::floor(std::log2(hzbSize))),
         .reductionMode = _camera.UsesReverseZ() ? vk::SamplerReductionMode::eMin : vk::SamplerReductionMode::eMax,
     };
-    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
 
     _hzbSampler = _context->Resources()->SamplerResourceManager().Create(samplerCreation);
 
@@ -108,7 +109,7 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
         .mips = static_cast<uint8_t>(std::log2(hzbSize)),
         .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
         .isHDR = false,
-        .format = vk::Format::eR16Sfloat,
+        .format = vk::Format::eR32Sfloat,
         .type = ImageType::e2D,
         .name = name + " HZB Image",
     };
