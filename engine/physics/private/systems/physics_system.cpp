@@ -409,7 +409,6 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         ImGui::EndCombo();
     }
 
-    ImGui::Text("Body ID: %u", rb.bodyID);
     ImGui::Text("Velocity: %f, %f, %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetX(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetY(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetZ());
     ImGui::Text("Speed %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).Length());
     ImGui::PopID();
