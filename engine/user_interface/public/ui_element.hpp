@@ -33,6 +33,7 @@ public:
         eTopRight,
         eBottomLeft,
         eBottomRight,
+        eBottomCenter,
         eFill
     } anchorPoint
         = AnchorPoint::eMiddle;

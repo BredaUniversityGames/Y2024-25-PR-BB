@@ -41,7 +41,7 @@ GaussianBlurPass::~GaussianBlurPass()
 
 void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian blur Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian Blur Pass");
     //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
     const GPUImage* verticalTarget = _context->Resources()->ImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
@@ -72,7 +72,7 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         }
 
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-            .imageView = target->views[0],
+            .imageView = target->view,
             .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
             .loadOp = vk::AttachmentLoadOp::eClear,
             .storeOp = vk::AttachmentStoreOp::eStore,
@@ -99,7 +99,6 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { descriptorSet }, {});
 
-        // Fullscreen triangle
         commandBuffer.draw(3, 1, 0, 0);
 
         _context->GetDrawStats().Draw(3);
@@ -177,7 +176,7 @@ void GaussianBlurPass::CreateDescriptorSets()
     {
         vk::DescriptorImageInfo imageInfo {
             .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
-            .imageView = _context->Resources()->ImageResourceManager().Access(_source)->views[0],
+            .imageView = _context->Resources()->ImageResourceManager().Access(_source)->view,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
 
@@ -201,7 +200,7 @@ void GaussianBlurPass::CreateDescriptorSets()
         {
             vk::DescriptorImageInfo imageInfo {
                 .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
-                .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->views[0],
+                .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->view,
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             };
 

@@ -185,7 +185,6 @@ void PhysicsSystem::CleanUp()
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-    ZoneScoped;
     // let's check priority first between transforms and physics
     // Here we update jolt transforms based on our transform system since they are static objects and we want hierarchy
     const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated>();

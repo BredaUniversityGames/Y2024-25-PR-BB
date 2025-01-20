@@ -35,6 +35,7 @@ target_add_module(Engine bindings Bindings)
 target_add_module(Engine inspector Inspector)
 target_add_module(Engine game Game)
 target_add_module(Engine ecs ECS)
+target_add_module(Engine settings Settings)
 
 
 target_link_libraries(Engine INTERFACE OldEngine)

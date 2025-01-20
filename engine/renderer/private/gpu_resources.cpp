@@ -17,12 +17,16 @@ SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode ad
 Sampler::Sampler(const SamplerCreation& creation, const std::shared_ptr<VulkanContext>& context)
     : _context(context)
 {
-    vk::SamplerCreateInfo createInfo {};
+    vk::StructureChain<vk::SamplerCreateInfo, vk::SamplerReductionModeCreateInfo> structureChain {};
+    vk::SamplerCreateInfo& createInfo { structureChain.get<vk::SamplerCreateInfo>() };
     if (creation.useMaxAnisotropy)
     {
         auto properties = _context->PhysicalDevice().getProperties();
         createInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
     }
+
+    vk::SamplerReductionModeCreateInfo& reductionModeCreateInfo { structureChain.get<vk::SamplerReductionModeCreateInfo>() };
+    reductionModeCreateInfo.reductionMode = creation.reductionMode;
 
     createInfo.addressModeU = creation.addressModeU;
     createInfo.addressModeV = creation.addressModeV;
@@ -224,15 +228,18 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     imageCreateInfo.usage = creation.flags;
 
     if (creation.initialData.data())
+    {
         imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferDst;
-
+        imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
+    }
     if (creation.type == ImageType::eCubeMap)
+    {
         imageCreateInfo.flags |= vk::ImageCreateFlagBits::eCubeCompatible;
-
+    }
     VmaAllocationCreateInfo allocCreateInfo {};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    util::vmaCreateImage(_context->MemoryAllocator(), (VkImageCreateInfo*)&imageCreateInfo, &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
+    util::vmaCreateImage(_context->MemoryAllocator(), reinterpret_cast<VkImageCreateInfo*>(&imageCreateInfo), &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
     std::string allocName = creation.name + " texture allocation";
     vmaSetAllocationName(_context->MemoryAllocator(), allocation, allocName.c_str());
 
@@ -248,12 +255,20 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
     for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
     {
+        viewCreateInfo.subresourceRange.levelCount = creation.mips;
+        viewCreateInfo.subresourceRange.baseMipLevel = 0;
         viewCreateInfo.subresourceRange.baseArrayLayer = i;
-        vk::ImageView imageView;
-        util::VK_ASSERT(_context->Device().createImageView(&viewCreateInfo, nullptr, &imageView), "Failed creating image view!");
-        views.emplace_back(imageView);
+        Layer& layer = layerViews.emplace_back();
+        layer.view = _context->Device().createImageView(viewCreateInfo);
+
+        for (size_t j = 0; j < imageCreateInfo.mipLevels; ++j)
+        {
+            viewCreateInfo.subresourceRange.levelCount = 1;
+            viewCreateInfo.subresourceRange.baseMipLevel = j;
+            layer.mipViews.emplace_back(_context->Device().createImageView(viewCreateInfo));
+        }
     }
-    view = *views.begin();
+    view = layerViews.begin()->view;
 
     if (creation.type == ImageType::eCubeMap)
     {
@@ -348,7 +363,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
             ss << "[VIEW " << i << "] ";
             ss << creation.name;
             std::string viewStr = ss.str();
-            util::NameObject(views[i], viewStr, _context);
+            util::NameObject(layerViews[i].view, viewStr, _context);
             ss.str("");
         }
 
@@ -371,15 +386,21 @@ GPUImage::~GPUImage()
     }
 
     util::vmaDestroyImage(_context->MemoryAllocator(), image, allocation);
-    for (auto& aView : views)
-        _context->Device().destroy(aView);
+    for (auto& layer : layerViews)
+    {
+        _context->Device().destroy(layer.view);
+        for (auto& mipView : layer.mipViews)
+        {
+            _context->Device().destroy(mipView);
+        }
+    }
     if (type == ImageType::eCubeMap)
         _context->Device().destroy(view);
 }
 
 GPUImage::GPUImage(GPUImage&& other) noexcept
     : image(other.image)
-    , views(std::move(other.views))
+    , layerViews(std::move(other.layerViews))
     , view(other.view)
     , allocation(other.allocation)
     , sampler(other.sampler)
@@ -410,7 +431,7 @@ GPUImage& GPUImage::operator=(GPUImage&& other) noexcept
     }
 
     image = other.image;
-    views = std::move(other.views);
+    layerViews = std::move(other.layerViews);
     view = other.view;
     allocation = other.allocation;
     sampler = other.sampler;
