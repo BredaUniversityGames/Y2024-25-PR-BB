@@ -42,8 +42,7 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 
     ComputedPath path = FindPath(
         { -42.8f, 19.3f, 267.6f },
-        { -16.8f, 24.2f, 234.1f }
-        );
+        { -16.8f, 24.2f, 234.1f });
 
     if (!path.waypoints.empty() && _debugDraw)
     {

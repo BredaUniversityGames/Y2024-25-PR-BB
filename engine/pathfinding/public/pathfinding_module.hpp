@@ -94,8 +94,8 @@ public:
     int32_t SetNavigationMesh(const std::string& mesh);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
-    const bool SetDebugDrawState(bool state) { return _debugDraw = state;}
-    const bool GetDebugDrawState() const { return _debugDraw; }
+    bool SetDebugDrawState(bool state) { return _debugDraw = state; }
+    bool GetDebugDrawState() const { return _debugDraw; }
 
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);

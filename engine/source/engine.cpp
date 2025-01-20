@@ -27,6 +27,7 @@
 #include "particle_module.hpp"
 #include "particle_util.hpp"
 #include "passes/debug_pass.hpp"
+#include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
@@ -35,7 +36,6 @@
 #include "scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
-#include "pathfinding_module.hpp"
 
 ModuleTickOrder OldEngine::Init(Engine& engine)
 {
@@ -252,12 +252,12 @@ void OldEngine::Tick(Engine& engine)
         physicsModule.debugRenderer->SetState(!physicsModule.debugRenderer->GetState());
     }
 
-    if(inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
     {
         pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
     }
 
-    if(physicsModule.debugRenderer->GetState() || pathfindingModule.GetDebugDrawState())
+    if (physicsModule.debugRenderer->GetState() || pathfindingModule.GetDebugDrawState())
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(true);
     }
