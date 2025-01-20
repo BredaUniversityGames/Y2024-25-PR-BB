@@ -52,8 +52,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _application(application)
     , _viewport(viewport)
     , _ecs(ecs)
+    , _settings("settings.json")
 {
-    _bloomSettings = std::make_unique<BloomSettings>(_context);
+    _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
 
     auto vulkanInfo = application.GetVulkanInfo();
     _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
@@ -94,7 +95,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         _application.DisplaySize(),
     };
 
-    _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
+    _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation, _settings.data.fog);
 
     _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch());
     _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch());
@@ -103,11 +104,11 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
-    _fxaaPass = std::make_unique<FXAAPass>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
+    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+    _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPass = std::make_unique<GaussianBlurPass>(_context, _brightnessTarget, _bloomTarget);
-    _ssaoPass = std::make_unique<SSAOPass>(_context, *_gBuffers, _ssaoTarget);
+    _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
@@ -173,9 +174,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation geometrySecondPass { *_geometryPass };
     geometrySecondPass.SetName("Geometry second pass")
@@ -186,9 +185,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
-        .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowPrepass { *_shadowPass };
     shadowPrepass.SetName("Shadow prepass")
@@ -212,7 +209,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     ssaoPass.SetName("SSAO pass")
         .SetDebugLabelColor(GetColor(ColorType::Mint))
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation lightingPass { *_lightingPass };
@@ -220,8 +217,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Periwinkle))
         .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
@@ -487,7 +483,7 @@ void Renderer::InitializeSSAOTarget()
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* stbiData = stbi_loadf("assets/hdri/industrial_sunset_02_puresky_4k.hdr", &width, &height, &numChannels, 4);
+    float* stbiData = stbi_loadf("assets/hdri/kloppenheim_06_puresky_4k copy.hdr", &width, &height, &numChannels, 4);
 
     if (stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");
@@ -511,7 +507,6 @@ void Renderer::UpdateBindless()
 
 void Renderer::Render(float deltaTime)
 {
-    ZoneNamedN(zz, "Renderer::Render()", true);
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_context->VulkanContext()->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
@@ -540,9 +535,15 @@ void Renderer::Render(float deltaTime)
             util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    {
+        ZoneNamedN(zz, "Reset Fence", true);
+        util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    }
 
-    _commandBuffers[_currentFrame].reset();
+    {
+        ZoneNamedN(zz, "Reset Command Buffer", true);
+        _commandBuffers[_currentFrame].reset();
+    }
 
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(_currentFrame);

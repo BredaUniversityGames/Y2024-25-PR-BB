@@ -4,14 +4,13 @@
 #include "bindless.glsl"
 #include "scene.glsl"
 #include "settings.glsl"
+#include "octahedron.glsl"
 #include "clusters.glsl"
 
 layout (push_constant) uniform PushConstants
 {
-    uint albedoMIndex;
-    uint normalRIndex;
-    uint emissiveAOIndex;
-    uint positionIndex;
+    uint albedoRMIndex;
+    uint normalIndex;
     uint ssaoIndex;
     uint depthIndex;
     vec2 screenSize;
@@ -71,14 +70,12 @@ float LinearDepth(float z, float near, float far)
 
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    vec4 albedoRMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoRMIndex)], texCoords);
+    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalIndex)], texCoords);
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
-    float depth = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
 
-    float linearDepthCulling = LinearDepth(1.0 - depth, camera.zNear, camera.zFar);
+    float linearDepthCulling = LinearDepth(1.0 - depthSample, camera.zNear, camera.zFar);
 
     float zFloat = pushConstants.clusterDimensions.z;
     float log2FarDivNear = log2(camera.zFar / camera.zNear);
@@ -106,16 +103,13 @@ void main()
 
     uint lightCount = lightCells[clusterIndex].count;
     uint lightIndexOffset = lightCells[clusterIndex].offset;
-    vec3 albedo = albedoMSample.rgb;
-    float metallic = albedoMSample.a;
-    vec3 normal = normalRSample.rgb;
-    vec3 position = positionSample.rgb;
-    vec4 viewPos = camera.inverseView * vec4(position, 1.0); // Position buffer is in view space.
-    position = viewPos.xyz / viewPos.w;
 
-    float roughness = normalRSample.a;
-    vec3 emissive = emissiveAOSample.rgb;
-    float ao = emissiveAOSample.a;
+    vec3 albedo = albedoRMSample.rgb;
+    float roughness;
+    float metallic;
+    DecodeRM(albedoRMSample.a, roughness, metallic);
+    vec3 normal = OctDecode(normalSample.rg);
+    vec3 position = ReconstructWorldPosition(depthSample, texCoords, camera.inverseVP);
 
     if (normal == vec3(0.0))
     discard;
@@ -153,13 +147,14 @@ void main()
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
-    vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
-    vec3 ambient = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
+    vec3 ambient = (kD * diffuseIBL) * ambientOcclusion;
 
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
+    float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
+
+    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);

@@ -12,6 +12,6 @@ public:
 private:
     const SDLInputDeviceManager& _sdlInputDeviceManager;
 
-    [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const final;
-    [[nodiscard]] virtual glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadAnalog gamepadAnalog) const final;
+    NO_DISCARD virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const final;
+    NO_DISCARD virtual glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadAnalog gamepadAnalog) const final;
 };

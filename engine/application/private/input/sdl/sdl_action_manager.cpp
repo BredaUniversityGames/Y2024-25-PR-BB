@@ -10,27 +10,24 @@ SDLActionManager::SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceMa
 {
 }
 
-bool SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadButton button, DigitalActionType inputType) const
+DigitalActionType SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadButton button) const
 {
-    switch (inputType)
+    DigitalActionType result {};
+
+    if (_sdlInputDeviceManager.IsGamepadButtonPressed(button))
     {
-    case DigitalActionType::ePressed:
+        result = result | DigitalActionType::ePressed;
+    }
+    if (_sdlInputDeviceManager.IsGamepadButtonHeld(button))
     {
-        return _sdlInputDeviceManager.IsGamepadButtonPressed(button);
+        result = result | DigitalActionType::eHeld;
+    }
+    if (_sdlInputDeviceManager.IsGamepadButtonReleased(button))
+    {
+        result = result | DigitalActionType::eReleased;
     }
 
-    case DigitalActionType::eReleased:
-    {
-        return _sdlInputDeviceManager.IsGamepadButtonReleased(button);
-    }
-
-    case DigitalActionType::eHold:
-    {
-        return _sdlInputDeviceManager.IsGamepadButtonHeld(button);
-    }
-    }
-
-    return false;
+    return result;
 }
 
 glm::vec2 SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadAnalog gamepadAnalog) const

@@ -23,6 +23,7 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
+#include "settings.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -30,11 +31,12 @@
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
 
-GPUScene::GPUScene(const GPUSceneCreation& creation)
+GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settings)
     : irradianceMap(creation.irradianceMap)
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , _context(creation.context)
+, _settings(settings)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context, true)
     , _directionalLightShadowCamera(creation.context, false)
@@ -97,7 +99,8 @@ GPUScene::~GPUScene()
 
 void GPUScene::Update(uint32_t frameIndex)
 {
-    ZoneScoped;
+    ZoneNamedN(zz, "GPUScene::Update", true);
+
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
     UpdateGlobalIndexBuffer(frameIndex);
@@ -118,9 +121,9 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
     sceneData.shadowMapIndex = _shadowImage.Index();
 
-    sceneData.fogColor = fogColor;
-    sceneData.fogDensity = fogDensity;
-    sceneData.fogHeight = fogHeight;
+    sceneData.fogColor = _settings.color;
+    sceneData.fogDensity = _settings.density;
+    sceneData.fogHeight = _settings.height;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
