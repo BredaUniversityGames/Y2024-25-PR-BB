@@ -14,8 +14,9 @@ layout (push_constant) uniform PushConstants
     uint positionIndex;
     uint ssaoIndex;
     uint depthIndex;
-    float shadowMapSize;
     vec2 screenSize;
+    float shadowMapSize;
+    ivec3 clusterDimensions;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -79,7 +80,7 @@ void main()
 
     float linearDepthCulling = LinearDepth(1.0 - depth, camera.zNear, camera.zFar);
 
-    float zFloat = 24;
+    float zFloat = pushConstants.clusterDimensions.z;
     float log2FarDivNear = log2(camera.zFar / camera.zNear);
     float log2Near = log2(camera.zNear);
 
@@ -97,10 +98,11 @@ void main()
     gl_FragCoord.y / tileSize.y,
     zIndex);
 
+
     uint clusterIndex =
     cluster.x +
-    cluster.y * 16 +
-    cluster.z * 16 * 9;
+    cluster.y * pushConstants.clusterDimensions.x +
+    cluster.z * pushConstants.clusterDimensions.x * pushConstants.clusterDimensions.y;
 
     uint lightCount = lightCells[clusterIndex].count;
     uint lightIndexOffset = lightCells[clusterIndex].offset;

@@ -35,6 +35,7 @@ private:
         uint32_t depthIndex;
         glm::vec2 screenSize;
         float shadowMapSize;
+        glm::ivec3 clusterDimensions;
     } _pushConstants;
 
     void CreatePipeline();

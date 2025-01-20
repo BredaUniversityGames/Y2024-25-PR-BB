@@ -24,8 +24,9 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
     _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
     _pushConstants.ssaoIndex = ssaoTarget.Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
-    _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.Shadow())->width;
     _pushConstants.screenSize = glm::vec2 { _gBuffers.Size().x, _gBuffers.Size().y };
+    _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.Shadow())->width;
+    _pushConstants.clusterDimensions = glm::ivec3 { CLUSTER_X, CLUSTER_Y, CLUSTER_Z };
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
