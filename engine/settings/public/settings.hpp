@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cereal/archives/json.hpp>
 #include <cereal/cereal.hpp>
 #include <visit_struct/visit_struct.hpp>
 

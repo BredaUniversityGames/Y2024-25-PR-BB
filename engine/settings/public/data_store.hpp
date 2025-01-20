@@ -1,5 +1,6 @@
 #pragma once
 
+#undef Bool
 #include <cereal/archives/json.hpp>
 #include <cereal/cereal.hpp>
 #include <filesystem>
