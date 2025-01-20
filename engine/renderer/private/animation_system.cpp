@@ -23,8 +23,6 @@ AnimationSystem::~AnimationSystem() = default;
 
 void AnimationSystem::Update(ECSModule& ecs, float dt)
 {
-    ZoneScoped;
-
     const auto animationControlView = ecs.GetRegistry().view<AnimationControlComponent>();
     for (auto entity : animationControlView)
     {
@@ -33,7 +31,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         if (animationControl.activeAnimation.has_value())
         {
             Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
-            currentAnimation.Update(dt / 1000.0f); // TODO: Frame index might not be needed anymore.
+            currentAnimation.Update(dt / 1000.0f);
         }
     }
 
@@ -70,7 +68,6 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
-    ZoneScoped;
     // Draw skeletons as debug lines
     const auto debugView = ecs.GetRegistry().view<const JointComponent, const RelationshipComponent, const WorldMatrixComponent>();
     for (auto entity : debugView)

@@ -15,6 +15,7 @@
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "gbuffers.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
 #include "lifetime_component.hpp"

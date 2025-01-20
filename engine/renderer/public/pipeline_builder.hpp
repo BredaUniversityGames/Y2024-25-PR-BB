@@ -27,7 +27,7 @@ public:
     void AddShaderStage(vk::ShaderStageFlagBits stage, const std::vector<std::byte>& spirvBytes, std::string_view entryPoint = "main");
     virtual std::tuple<vk::PipelineLayout, vk::Pipeline> BuildPipeline();
 
-    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names);
+    static vk::DescriptorSetLayout CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names, std::optional<vk::DescriptorSetLayoutCreateInfo> createInfo = std::nullopt);
 
     const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const { return _descriptorSetLayouts; }
     const std::vector<vk::PushConstantRange>& GetPushConstantRanges() const { return _pushConstantRanges; }

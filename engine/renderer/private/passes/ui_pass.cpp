@@ -65,10 +65,10 @@ void UIPass::CreatePipeLine()
 
 void UIPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "UI Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "UI Pass");
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->views[0],
+        .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
         .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
