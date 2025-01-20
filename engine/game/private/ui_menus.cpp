@@ -40,7 +40,7 @@ UIProgressBar::BarStyle LoadCircleBarStyle(GraphicsContext& graphicsContext)
     return barStyle;
 }
 
-std::pair<std::unique_ptr<Canvas>, HUD> CreateHud(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
 {
 
     HUD hud;
@@ -57,17 +57,23 @@ std::pair<std::unique_ptr<Canvas>, HUD> CreateHud(GraphicsContext& graphicsConte
     // temporary
     canvas->SetAbsoluteTransform(canvas->GetAbsoluteLocation(), canvas->GetRelativeScale());
 
-    hud.healthBar = canvas->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 700), glm::vec2(1000, 50));
-    hud.ultBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(300, 300), glm::vec2(250));
+    hud.healthBar = canvas->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
+    hud.healthBar.lock()->AddChild<UITextElement>(font, "health", 30);
+    hud.healthBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
+    hud.ultBar
+        = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(275, 275), glm::vec2(250));
     hud.ultBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    hud.ultBar.lock()->AddChild<UITextElement>(font, "ult", 40);
 
-    hud.sprintBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(225, 430), glm::vec2(100));
+    hud.sprintBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(200, 405), glm::vec2(100));
     hud.sprintBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    hud.sprintBar.lock()->AddChild<UITextElement>(font, "sprint", 20);
 
-    hud.grenadeBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(380, 360), glm::vec2(100));
+    hud.grenadeBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(355, 335), glm::vec2(100));
     hud.grenadeBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    hud.grenadeBar.lock()->AddChild<UITextElement>(font, "grenade", 20);
 
-    hud.ammoCounter = canvas->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 150), 50);
+    hud.ammoCounter = canvas->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 100), 50);
     hud.ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     // common image data.
@@ -79,10 +85,48 @@ std::pair<std::unique_ptr<Canvas>, HUD> CreateHud(GraphicsContext& graphicsConte
 
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/gun.png"));
 
-    auto gunPic = canvas->AddChild<UIImage>(im, glm::vec2(460, 200), glm::vec2(720, 360) * 0.2f);
+    auto gunPic = canvas->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
     gunPic.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
     canvas->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
     return { std::move(canvas), hud };
+}
+
+void HudUpdate(HUD& hud, float timePassed)
+{
+
+    // all temporary
+    float fract = (sin(timePassed / 100.0f) + 1) * 0.5;
+    if (auto locked = hud.healthBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(fract);
+    }
+
+    if (auto locked = hud.ultBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(fract);
+    }
+
+    if (auto locked = hud.sprintBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(0.9);
+    }
+
+    if (auto locked = hud.grenadeBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(0.3);
+    }
+
+    if (auto locked = hud.ammoCounter.lock(); locked != nullptr)
+    {
+        static float ammo = 8.0f;
+        ammo -= 0.01;
+        if (ammo <= 0.0f)
+        {
+            ammo = 8.0f;
+        }
+
+        locked->SetText(std::to_string(int(ammo)) + "/8");
+    }
 }

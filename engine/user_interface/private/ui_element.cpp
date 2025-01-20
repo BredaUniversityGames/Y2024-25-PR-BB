@@ -55,6 +55,13 @@ void UIElement::UpdateAllChildrenAbsoluteTransform()
         case AnchorPoint::eBottomRight:
             newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y };
             break;
+        case AnchorPoint::eBottomCenter:
+        {
+            float x = GetAbsoluteLocation().x + (GetAbsoluteScale().x / 2.0f) + (childRelativeLocation.x - child->_relativeScale.x / 2.0f);
+            float y = GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y;
+            newChildLocation = glm::vec2(x, y);
+            break;
+        }
         case AnchorPoint::eFill:
             newChildLocation = { GetAbsoluteLocation() };
             newChildScale = { GetAbsoluteScale() };

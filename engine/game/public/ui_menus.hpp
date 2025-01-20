@@ -13,4 +13,5 @@ struct HUD
     std::weak_ptr<UITextElement> ammoCounter;
 };
 
-std::pair<std::unique_ptr<Canvas>, HUD> CreateHud(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+void HudUpdate(HUD& hud, float timePassed);

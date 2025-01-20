@@ -11,8 +11,8 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         {
         case BarStyle::FillDirection::eFromCenterHorizontal:
         {
-            float localLocation1x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f - (_percentageFilled * 0.5f))).x;
-            float localLocation2x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f + (_percentageFilled * 0.5f))).x;
+            float localLocation1x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f - (_fractionFilled * 0.5f))).x;
+            float localLocation2x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f + (_fractionFilled * 0.5f))).x;
             float scaleX = localLocation2x - localLocation1x;
             matrixFull = glm::translate(glm::mat4(1), glm::vec3(localLocation1x, GetAbsoluteLocation().y, 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(scaleX, GetAbsoluteScale().y, 0));
@@ -23,11 +23,11 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         {
 
             matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation() + glm::vec2(0, GetAbsoluteScale().y), 0));
-            matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x, GetAbsoluteScale().y * -_percentageFilled, 0));
+            matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x, GetAbsoluteScale().y * -_fractionFilled, 0));
 
             if (style.fillStyle == BarStyle::FillStyle::eMask)
             {
-                uv1 = glm::vec2(1, _percentageFilled);
+                uv1 = glm::vec2(1, _fractionFilled);
             }
 
             break;
@@ -58,7 +58,7 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         ChildrenSubmitDrawInfo(drawList);
     }
 }
-void UIProgressBar::SetPercentage(float percentage)
+void UIProgressBar::SetFractionFilled(float percentage)
 {
-    _percentageFilled = glm::clamp(0.f, 1.f, percentage);
+    _fractionFilled = glm::clamp(0.f, 1.f, percentage);
 }
