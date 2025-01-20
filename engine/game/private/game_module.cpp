@@ -9,6 +9,7 @@
 #include <renderer_module.hpp>
 #include <time_module.hpp>
 #include <ui_progress_bar.hpp>
+#include <ui_text.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -26,6 +27,9 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 }
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+
+    // all temporary
+
     float fract = (sin(engine.GetModule<TimeModule>().GetTotalTime().count() / 100.0f) + 1) * 0.5;
     if (auto locked = _hud.healthBar.lock(); locked != nullptr)
     {
@@ -45,5 +49,17 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (auto locked = _hud.grenadeBar.lock(); locked != nullptr)
     {
         locked->SetPercentage(fract);
+    }
+
+    if (auto locked = _hud.ammoCounter.lock(); locked != nullptr)
+    {
+        static float ammo = 8.0f;
+        ammo -= 0.01;
+        if (ammo <= 0.0f)
+        {
+            ammo = 8.0f;
+        }
+
+        locked->SetText(std::to_string(int(ammo)) + "/8");
     }
 }

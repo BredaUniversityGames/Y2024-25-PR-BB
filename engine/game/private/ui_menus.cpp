@@ -6,6 +6,7 @@
 
 #include <fonts.hpp>
 #include <glm/glm.hpp>
+#include <ui_image.hpp>
 #include <ui_text.hpp>
 UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext)
 {
@@ -66,11 +67,20 @@ std::pair<std::unique_ptr<Canvas>, HUD> CreateHud(GraphicsContext& graphicsConte
     hud.grenadeBar = canvas->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(380, 360), glm::vec2(100));
     hud.grenadeBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    auto text = canvas->AddChild<UITextElement>(font, "5/8", glm::vec2(400, 150), 50);
-    text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    hud.ammoCounter = canvas->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 150), 50);
+    hud.ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    auto gunPic = canvas->AddChild<UI
-    
+    // common image data.
+    CPUImage commonImageData;
+    commonImageData.format
+        = vk::Format::eR8G8B8A8Unorm;
+    commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
+    commonImageData.isHDR = false;
+
+    auto im = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/gun.png"));
+
+    auto gunPic = canvas->AddChild<UIImage>(im, glm::vec2(460, 200), glm::vec2(720, 360) * 0.2f);
+    gunPic.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
     canvas->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
