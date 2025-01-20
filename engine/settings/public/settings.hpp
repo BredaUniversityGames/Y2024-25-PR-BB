@@ -2,8 +2,6 @@
 
 #include <cereal/archives/json.hpp>
 #include <cereal/cereal.hpp>
-#include <filesystem>
-#include <fstream>
 #include <visit_struct/visit_struct.hpp>
 
 #include "log.hpp"
@@ -119,41 +117,3 @@ CLASS_VERSION(Settings::Tonemapping);
 VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);
-
-template <class T>
-class DataStore
-{
-public:
-    DataStore(const std::filesystem::path& path)
-        : _path(path)
-    {
-        std::ifstream stream { path.c_str() };
-
-        if (stream)
-        {
-            cereal::JSONInputArchive archive { stream };
-            archive(cereal::make_nvp("data", data));
-        }
-    }
-
-    void Write()
-    {
-        std::ofstream stream { "settings.json" };
-
-        if (stream)
-        {
-            cereal::JSONOutputArchive archive { stream };
-            archive(cereal::make_nvp("data", data));
-        }
-    }
-
-    ~DataStore()
-    {
-        Write();
-    }
-
-    T data;
-
-private:
-    std::filesystem::path _path;
-};

@@ -2,8 +2,8 @@
 
 #include "constants.hpp"
 #include "resource_manager.hpp"
-#include "vulkan_include.hpp"
 #include "settings.hpp"
+#include "vulkan_include.hpp"
 
 #include <array>
 #include <glm/vec2.hpp>
