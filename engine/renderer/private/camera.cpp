@@ -199,6 +199,8 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
 
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
+    cameraBuffer.inverseProj = glm::inverse(cameraBuffer.proj);
+    cameraBuffer.inverseVP = glm::inverse(cameraBuffer.VP);
     cameraBuffer.cameraPosition = TransformHelpers::GetLocalPosition(transform);
 
     cameraBuffer.skydomeMVP = cameraBuffer.view;

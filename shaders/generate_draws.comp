@@ -172,7 +172,8 @@ bool SecondPassIsVisible(uint objectIndex)
             float boundsHeight = (AABB.w - AABB.y) * pushConstants.hzbSize;
             float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
 
-            float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), 0.5 * (AABB.xy + AABB.zw), mipIndex).x;
+            vec2 uvs = 0.5 * (AABB.xy + AABB.zw);
+            float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), uvs, mipIndex).x;
 
             occlusionVisible = bool(pushConstants.isReverseZ) ? occluderDepth < nearestBoundsDepth : occluderDepth > nearestBoundsDepth;
         }

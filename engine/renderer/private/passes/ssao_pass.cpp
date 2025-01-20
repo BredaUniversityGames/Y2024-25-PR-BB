@@ -6,6 +6,7 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "settings.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
@@ -14,14 +15,15 @@
 #include <random>
 #include <single_time_commands.hpp>
 
-SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
+SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const Settings::SSAO& settings, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
     , _context(context)
+    , _settings(settings)
     , _gBuffers(gBuffers)
     , _ssaoTarget(ssaoTarget)
 {
-    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
-    _pushConstants.positionIndex = _gBuffers.Attachments()[3].Index();
+    _pushConstants.normalIndex = _gBuffers.Attachments()[1].Index();
+    _pushConstants.depthIndex = _gBuffers.Depth().Index();
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
@@ -35,6 +37,12 @@ SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 void SSAOPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "SSAO Pass");
+
+    _pushConstants.aoStrength = _settings.strength;
+    _pushConstants.aoRadius = _settings.radius;
+    _pushConstants.aoBias = _settings.bias;
+    _pushConstants.maxAoDistance = _settings.maxDistance;
+    _pushConstants.minAoDistance = _settings.minDistance;
 
     _pushConstants.ssaoRenderTargetWidth = _gBuffers.Size().x / 2;
     _pushConstants.ssaoRenderTargetHeight = _gBuffers.Size().y / 2;

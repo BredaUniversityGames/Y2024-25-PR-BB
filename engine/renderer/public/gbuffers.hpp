@@ -17,7 +17,6 @@ class GBuffers
 {
 public:
     GBuffers(const std::shared_ptr<GraphicsContext>& context, glm::uvec2 size);
-
     ~GBuffers();
 
     NON_MOVABLE(GBuffers);
