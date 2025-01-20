@@ -5,7 +5,9 @@
 #include "audio/audio_bindings.hpp"
 #include "audio_emitter_component.hpp"
 #include "audio_module.hpp"
+#include "cheats_component.hpp"
 #include "components/name_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -25,6 +27,7 @@
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
 #include "renderer_module.hpp"
+#include "game_module.hpp"
 #include <cstdint>
 
 namespace bindings
@@ -77,6 +80,26 @@ glm::vec3 TransformComponentGetScale(WrenComponent<TransformComponent>& componen
     return component.component->GetLocalScale();
 }
 
+glm::vec3 TransformHelpersGetWorldTranslation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldPosition(*component.entity.registry, component.entity.entity);
+}
+
+glm::quat TransformHelpersGetWorldRotation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldRotation(*component.entity.registry, component.entity.entity);
+}
+
+glm::vec3 TransformHelpersGetWorldScale(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldScale(*component.entity.registry, component.entity.entity);
+}
+
+void TransformHelpersSetWorldTransform(WrenComponent<TransformComponent>& component, glm::vec3 translation, glm::quat rotation, glm::vec3 scale)
+{
+    TransformHelpers::SetWorldTransform(*component.entity.registry, component.entity.entity, translation, rotation, scale);
+}
+
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
 {
     TransformHelpers::SetLocalPosition(*component.entity.registry, component.entity.entity, translation);
@@ -97,6 +120,7 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+unsigned int GetEntity(WrenEntity& self) { return static_cast<unsigned int>(self.entity); }
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -114,6 +138,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
+        engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
     }
 
@@ -184,6 +209,12 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        transformClass.funcExt<bindings::TransformHelpersGetWorldTranslation>("GetWorldTranslation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldRotation>("GetWorldRotation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
+
+        transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
     }
 }
 
@@ -247,6 +278,22 @@ public:
     {
         return glm::sin(a);
     }
+    static float Dot(glm::vec3 a, glm::vec3 b)
+    {
+        return glm::dot(a, b);
+    }
+    static float Clamp(float a, float min, float max)
+    {
+        return glm::clamp(a, min, max);
+    }
+    static float Sqrt(float a)
+    {
+        return glm::sqrt(a);
+    }
+    static float Abs(float a)
+    {
+        return glm::abs(a);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -259,6 +306,8 @@ public:
     {
         return glm::half_pi<float>();
     }
+
+    static glm::vec3 Mul(glm::quat& lhs, const glm::vec3& rhs) { return lhs * rhs; }
 };
 
 template <typename T>
@@ -302,6 +351,7 @@ void bindings::BindMath(wren::ForeignModule& module)
         quat.var<&glm::quat::y>("y");
         quat.var<&glm::quat::z>("z");
         BindVectorTypeOperations(quat);
+        quat.funcExt<MathUtil::Mul>("mul");
     }
 }
 
@@ -314,6 +364,10 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
     mathUtilClass.funcStatic<&MathUtil::DirectionToQuat>("DirToQuat");
+    mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+    mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
+    mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
+    mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
@@ -323,6 +377,10 @@ void bindings::BindEntity(wren::ForeignModule& module)
 {
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
+
+    module.klass<entt::entity>("enttEntity");
+
+    entityClass.funcExt<bindings::GetEntity>("GetEnttEntity");
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
@@ -342,5 +400,10 @@ void bindings::BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddComponent<SkinnedMeshComponent>>("AddSkinnedMeshComponent");
     entityClass.func<&WrenEntity::GetComponent<SkinnedMeshComponent>>("GetSkinnedMeshComponent");
 
+    entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
+    entityClass.func<&WrenEntity::AddComponent<CheatsComponent>>("AddCheatsComponent");
+
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
 }

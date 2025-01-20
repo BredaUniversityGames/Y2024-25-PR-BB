@@ -16,6 +16,7 @@ class OldEngine : public ModuleInterface
     void Tick(Engine& engine) override;
     void Shutdown(Engine& engine) override;
 
+    void TestPlayerMovement(Engine& engine, float deltaTime, glm::vec3 inputDir);
     std::string_view GetName() override { return "OldEngine Module"; }
 
 public:

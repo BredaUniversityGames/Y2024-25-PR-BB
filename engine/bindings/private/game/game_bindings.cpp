@@ -1,5 +1,6 @@
 #include "game_bindings.hpp"
 
+#include "cheats_component.hpp"
 #include "lifetime_component.hpp"
 #include "physics_module.hpp"
 #include "utility/wren_entity.hpp"
@@ -7,8 +8,13 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <components/rigidbody_component.hpp>
 #include <components/transform_component.hpp>
-#include <ecs_module.hpp>
-#include <game_module.hpp>
+
+#include "ecs_module.hpp"
+#include "game_module.hpp"
+
+#include "components/name_component.hpp"
+
+
 
 namespace bindings
 {
@@ -30,6 +36,32 @@ void SetLifetime(WrenComponent<LifetimeComponent>& self, float lifetime)
 float GetLifetime(WrenComponent<LifetimeComponent>& self)
 {
     return self.component->lifetime;
+}
+
+bool GetNoClipStatus(WrenComponent<CheatsComponent>& self)
+{
+    return self.component->noClip;
+}
+
+void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
+{
+    self.component->noClip = noClip;
+}
+
+WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
+{
+    entt::entity playerEntity = ecs.GetRegistry().create();
+    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+    bodyCreationSettings.mAllowDynamicOrKinematic = true;
+
+    bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    RigidbodyComponent rb(*physicsModule.bodyInterface, playerEntity, bodyCreationSettings);
+
+    NameComponent node;
+    node.name = "Player entity";
+    ecs.GetRegistry().emplace<NameComponent>(playerEntity, node);
+    ecs.GetRegistry().emplace<RigidbodyComponent>(playerEntity, rb);
+    return { playerEntity, &ecs.GetRegistry() };
 }
 
 WrenComponent<RigidbodyComponent> CreateRigidbody(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, WrenEntity entity, const float height, const float radius)
@@ -55,11 +87,15 @@ WrenComponent<RigidbodyComponent> CreateRigidbody(MAYBE_UNUSED GameModule& self,
 
 void BindGameAPI(wren::ForeignModule& module)
 {
-
     auto& lifetimeComponent = module.klass<WrenComponent<LifetimeComponent>>("LifetimeComponent");
     lifetimeComponent.propExt<bindings::GetLifetimePaused, bindings::SetLifetimePaused>("paused");
     lifetimeComponent.propExt<bindings::GetLifetime, bindings::SetLifetime>("lifetime");
 
+    auto& cheatsComponent = module.klass<WrenComponent<CheatsComponent>>("CheatsComponent");
+    cheatsComponent.propExt<bindings::GetNoClipStatus, bindings::SetNoClip>("noClip");
+
     auto& game = module.klass<GameModule>("Game");
+    game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
+
     game.funcExt<bindings::CreateRigidbody>("CreateRigidbody");
 }

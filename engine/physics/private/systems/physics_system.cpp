@@ -1,4 +1,5 @@
 ﻿#include "systems/physics_system.hpp"
+#include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
 #include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -407,5 +408,7 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         ImGui::EndCombo();
     }
 
+    ImGui::Text("Velocity: %f, %f, %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetX(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetY(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetZ());
+    ImGui::Text("Speed %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).Length());
     ImGui::PopID();
 }

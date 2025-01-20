@@ -30,6 +30,7 @@ public:
     void Inspect() override;
     void InspectRigidBody(RigidbodyComponent& rb);
 
+    entt::entity _playerEntity = entt::null;
     std::string_view GetName() override { return "PhysicsSystem"; }
 
 private:
@@ -43,4 +44,6 @@ private:
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;
+
+    // just for testing
 };

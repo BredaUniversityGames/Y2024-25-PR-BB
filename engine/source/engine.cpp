@@ -51,6 +51,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     std::vector<std::string> modelPaths = {
         //"assets/models/Cathedral.glb",
+        "assets/models/parcour_test1.glb",
         "assets/models/AnimatedRifle.glb",
         "assets/models/enemy.glb",
         //"assets/models/Cathedral.glb"
@@ -88,9 +89,9 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    // SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    // SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[3].second), models[3].first, models[3].first.hierarchy, models[3].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
+    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
+    // SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
+    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -240,32 +241,6 @@ void OldEngine::Tick(Engine& engine)
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
-
-            // shoot rays
-            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
-            {
-                const glm::vec3 cameraDir = (rotation * FORWARD);
-                const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
-
-                std::cout << "Hit: " << hitInfo.hasHit << std::endl
-                          << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
-                          << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
-                          << "Fraction: " << hitInfo.hitFraction << std::endl;
-
-                if (_ecs->GetRegistry().all_of<RigidbodyComponent>(hitInfo.entity))
-                {
-
-                    RigidbodyComponent& rb = _ecs->GetRegistry().get<RigidbodyComponent>(hitInfo.entity);
-
-                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
-                    {
-                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
-                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
-                    }
-
-                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
-                }
-            }
         }
     }
 
