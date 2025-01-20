@@ -50,8 +50,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     // modules
 
     std::vector<std::string> modelPaths = {
-        "assets/models/AnimatedRifle.glb",
         "assets/models/Cathedral.glb"
+        "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
@@ -59,7 +59,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf"
     };
 
     particleModule.LoadEmitterPresets();
