@@ -130,22 +130,23 @@ class Main {
 
         //this might not be translated correctly with controller
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
-        if(engine.GetInput().DebugGetKeyHeld(Keycode.eW())){
-            moveInputDir = moveInputDir + forward
-        }
-        if(engine.GetInput().DebugGetKeyHeld(Keycode.eS())){
-            moveInputDir = moveInputDir - forward
-        }
-        if(engine.GetInput().DebugGetKeyHeld(Keycode.eA())){
-            moveInputDir = moveInputDir - right
-        }
-        if(engine.GetInput().DebugGetKeyHeld(Keycode.eD())){
-            moveInputDir = moveInputDir + right
-        }
+        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eW())){
+        //     moveInputDir = moveInputDir + forward
+        // }
+        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eS())){
+        //     moveInputDir = moveInputDir - forward
+        // }
+        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eA())){
+        //     moveInputDir = moveInputDir - right
+        // }
+        // if(engine.GetInput().DebugGetKeyHeld(Keycode.eD())){
+        //     moveInputDir = moveInputDir + right
+        // }
+        moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
 
         moveInputDir = moveInputDir.normalize()
 
-        var isJumpHeld = engine.GetInput().DebugGetKeyHeld(Keycode.eSPACE())
+        var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
 
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
