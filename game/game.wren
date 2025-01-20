@@ -158,27 +158,38 @@ class Main {
 
         __wasGroundedLastFrame = isGrounded
 
-        var maxSpeed = 9.0
+        var maxSpeed = 15.0
         var sv_accelerate = 10.0
         var frameTime = engine.GetTime().GetDeltatime()
-
+        System.print(movement.x)
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
         engine.GetPhysics().GravityFactor(playerBody,2.2)
         if(isGrounded){
-            engine.GetPhysics().SetFriction(playerBody,12.0)
+            engine.GetPhysics().SetFriction(playerBody, 12.0)
+
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
             var addSpeed = maxSpeed - currentSpeed
-            if(addSpeed>0){
+            if (addSpeed > 0) {
                 var accelSpeed = sv_accelerate * frameTime * maxSpeed
-                if(accelSpeed > addSpeed){
+                if (accelSpeed > addSpeed) {
                     accelSpeed = addSpeed
                 }
-
+                //velocity = velocity + moveInputDir * Vec3.new(accelSpeed,accelSpeed,accelSpeed)
                 velocity = velocity + Vec3.new(accelSpeed,accelSpeed,accelSpeed) * moveInputDir
             }
+
+            var speed = velocity.length()
+            if (speed > maxSpeed) {
+                var factor = maxSpeed / speed
+                velocity.x = velocity.x * factor
+
+                velocity.z = velocity.z * factor
+            }
+                
         }else{
+            
             System.print("Player is in the air")
             var wishSpeed = wishVel.length()
             wishVel = wishVel.normalize()
@@ -239,7 +250,7 @@ class Main {
 
 
         if (movement.length() > 0) {
-            System.print("Player is moving")
+            //System.print("Player is moving")
         }
 
         var key = Keycode.eA()
