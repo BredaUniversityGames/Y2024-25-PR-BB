@@ -35,7 +35,8 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             break;
         }
-        case default:
+
+        default:
             assert(false && "Direction not implemented yet");
             break;
         }
