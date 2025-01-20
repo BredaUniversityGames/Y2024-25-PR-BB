@@ -13,6 +13,7 @@ class GPUScene;
 class BatchBuffer;
 class ECSModule;
 class GraphicsContext;
+class CameraBatch;
 
 struct GPUSceneCreation
 {
@@ -22,7 +23,9 @@ struct GPUSceneCreation
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
-    ResourceHandle<GPUImage> directionalShadowMap;
+    ResourceHandle<GPUImage> depthImage;
+
+    glm::uvec2 displaySize;
 };
 
 struct RenderSceneDescription
@@ -36,9 +39,10 @@ struct RenderSceneDescription
     TracyVkCtx& tracyContext;
 };
 
-constexpr uint32_t MAX_INSTANCES = 4096 * 10;
-constexpr uint32_t MAX_POINT_LIGHTS = 8192;
-constexpr uint32_t MAX_BONES = 2048;
+constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
+constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 10;
+constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
+constexpr uint32_t MAX_BONES = 1 << 11;
 
 struct DrawIndexedIndirectCommand
 {
@@ -57,44 +61,54 @@ public:
     void Update(uint32_t frameIndex);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
-    const vk::DescriptorSet& GetObjectInstancesDescriptorSet(uint32_t frameIndex) const { return _objectInstancesFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetSkinnedInstancesDescriptorSet(uint32_t frameIndex) const { return _skinnedInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
-    const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDescriptorSetLayout; }
-    const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
+    const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
+    const vk::DescriptorSetLayout& GetHZBDescriptorSetLayout() const { return _hzbImageDSL; }
 
-    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].buffer; }
-    vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDescriptorSetLayout; }
-    vk::DescriptorSet DrawBufferDescriptorSet(uint32_t frameIndex) const { return _indirectDrawFrameData[frameIndex].descriptorSet; }
+    vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDSL; }
+    ResourceHandle<Buffer> StaticDrawBuffer(uint32_t frameIndex) const { return _staticDraws[frameIndex].buffer; }
+    vk::DescriptorSet StaticDrawDescriptorSet(uint32_t frameIndex) const { return _staticDraws[frameIndex].descriptorSet; }
+    ResourceHandle<Buffer> SkinnedDrawBuffer(uint32_t frameIndex) const { return _skinnedDraws[frameIndex].buffer; }
+    vk::DescriptorSet SkinnedDrawDescriptorSet(uint32_t frameIndex) const { return _skinnedDraws[frameIndex].descriptorSet; }
 
     const vk::DescriptorSetLayout GetSkinDescriptorSetLayout() const { return _skinDescriptorSetLayout; }
     const vk::DescriptorSet GetSkinDescriptorSet(uint32_t frameIndex) const { return _skinDescriptorSets[frameIndex]; }
 
-    const math::URange& StaticDrawRange() const { return _staticDrawRange; }
-    const math::URange& SkinnedDrawRange() const { return _skinnedDrawRange; }
+    uint32_t StaticDrawCount() const { return _staticDrawCommands.size(); };
+    const std::vector<DrawIndexedIndirectCommand>& StaticDrawCommands() const { return _staticDrawCommands; }
 
-    uint32_t DrawCount() const { return _drawCommands.size(); };
-    const std::vector<DrawIndexedIndirectCommand>& DrawCommands() const { return _drawCommands; }
-    uint32_t DrawCommandIndexCount(const math::URange& range) const
+    uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
+    const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
+    uint32_t DrawCommandIndexCount(std::vector<DrawIndexedIndirectCommand> commands) const
     {
-        assert(range.count <= _drawCommands.size());
-
         uint32_t count { 0 };
-        for (size_t i = range.start; i < range.count; ++i)
+        for (size_t i = 0; i < commands.size(); ++i)
         {
-            const auto& command = _drawCommands[i];
+            const auto& command = commands[i];
             count += command.command.indexCount;
         }
         return count;
     }
 
     const CameraResource& MainCamera() const { return _mainCamera; }
+    CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
+
+    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
+
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
+    CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
 
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
-    ResourceHandle<GPUImage> directionalShadowMap;
+
+    glm::vec3 fogColor { 0.5, 0.6, 0.7 };
+    float fogDensity { 0.2f };
+    float fogHeight { 0.3f };
 
 private:
     struct alignas(16) DirectionalLightData
@@ -128,6 +142,10 @@ private:
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
         uint32_t shadowMapIndex;
+
+        glm::vec3 fogColor;
+        float fogDensity;
+        float fogHeight;
     };
 
     struct alignas(16) InstanceData
@@ -156,25 +174,34 @@ private:
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _sceneFrameData;
-    vk::DescriptorSetLayout _objectInstancesDescriptorSetLayout;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _objectInstancesFrameData;
-    vk::DescriptorSetLayout _drawBufferDescriptorSetLayout;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _indirectDrawFrameData;
-    vk::DescriptorSetLayout _pointLightDescriptorSetLayout;
+    vk::DescriptorSetLayout _objectInstancesDSL;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _staticInstancesFrameData;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _skinnedInstancesFrameData;
+    vk::DescriptorSetLayout _drawBufferDSL;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _staticDraws;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _skinnedDraws;
+    vk::DescriptorSetLayout _pointLightDSL;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
-    std::vector<DrawIndexedIndirectCommand> _drawCommands;
+    std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
+    std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
 
-    math::URange _staticDrawRange;
-    math::URange _skinnedDrawRange;
-
-    // TODO: Handle all camera's in one buffer or array to enable better culling
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
+
+    std::unique_ptr<CameraBatch> _mainCameraBatch;
+    std::unique_ptr<CameraBatch> _shadowCameraBatch;
+
+    ResourceHandle<GPUImage> _shadowImage;
+    ResourceHandle<Sampler> _shadowSampler;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
     std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
+
+    vk::DescriptorSetLayout _visibilityDSL;
+    vk::DescriptorSetLayout _redirectDSL;
+    vk::DescriptorSetLayout _hzbImageDSL;
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
@@ -193,6 +220,7 @@ private:
     void CreatePointLightDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
     void CreateSkinDescriptorSetLayout();
+    void CreateHZBDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
@@ -213,4 +241,6 @@ private:
     void InitializeIndirectDrawDescriptor();
 
     void WriteDraws(uint32_t frameIndex);
+
+    void CreateShadowMapResources();
 };

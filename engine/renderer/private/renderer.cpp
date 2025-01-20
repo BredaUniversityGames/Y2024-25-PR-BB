@@ -7,6 +7,9 @@
 
 #include "application_module.hpp"
 #include "batch_buffer.hpp"
+#include "bytes.hpp"
+#include "camera_batch.hpp"
+#include "colors.hpp"
 #include "ecs_module.hpp"
 #include "fonts.hpp"
 #include "frame_graph.hpp"
@@ -16,9 +19,11 @@
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
 #include "model_loader.hpp"
+#include "passes/build_hzb_pass.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
 #include "passes/gaussian_blur_pass.hpp"
+#include "passes/generate_draws_pass.hpp"
 #include "passes/geometry_pass.hpp"
 #include "passes/ibl_pass.hpp"
 #include "passes/lighting_pass.hpp"
@@ -33,6 +38,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "single_time_commands.hpp"
 #include "viewport.hpp"
 #include "vulkan_context.hpp"
@@ -58,9 +64,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _modelLoader = std::make_unique<ModelLoader>();
 
-    const uint32_t mb128 = 128 * 1024 * 1024;
-    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
-    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, mb128, mb128);
+    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
     ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
@@ -82,115 +87,205 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         _iblPass->IrradianceMap(),
         _iblPass->PrefilterMap(),
         _iblPass->BRDFLUTMap(),
-        _gBuffers->Shadow()
+        _gBuffers->Depth(),
+        _application.DisplaySize(),
     };
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation);
 
-    _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, *_gpuScene);
+    _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch());
+    _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch());
+    _buildMainHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->MainCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
+    _buildShadowHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->ShadowCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
+    _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
+    _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPass = std::make_unique<TonemappingPass>(_context, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
     _fxaaPass = std::make_unique<FXAAPass>(_context, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPass = std::make_unique<GaussianBlurPass>(_context, _brightnessTarget, _bloomTarget);
     _ssaoPass = std::make_unique<SSAOPass>(_context, *_gBuffers, _ssaoTarget);
-    _shadowPass = std::make_unique<ShadowPass>(_context, *_gBuffers, *_gpuScene);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
-    _lightingPass = std::make_unique<LightingPass>(_context, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
+    _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
 
     CreateCommandBuffers();
     CreateSyncObjects();
 
-    FrameGraphNodeCreation geometryPass { *_geometryPass };
-    geometryPass.SetName("Geometry pass")
-        .SetDebugLabelColor(glm::vec3 { 6.0f, 214.0f, 160.0f } / 255.0f)
+    FrameGraphNodeCreation generateMainDrawsPrepass { *_generateMainDrawsPass, FrameGraphRenderPassType::eCompute };
+    generateMainDrawsPrepass.SetName("Generate main draws prepass")
+        .SetDebugLabelColor(GetColor(ColorType::Crimson))
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    FrameGraphNodeCreation generateMainDrawsSecondPass { *_generateMainDrawsPass, FrameGraphRenderPassType::eCompute };
+    generateMainDrawsSecondPass.SetName("Generate main draws second pass")
+        .SetDebugLabelColor(GetColor(ColorType::Crimson))
+        .AddInput(_gpuScene->MainCameraBatch().HZBImage(), FrameGraphResourceType::eTexture)
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    FrameGraphNodeCreation buildMainHZBPass { *_buildMainHzbPass, FrameGraphRenderPassType::eCompute };
+    buildMainHZBPass.SetName("Build main HZB pass")
+        .SetDebugLabelColor(GetColor(ColorType::Emerald))
+        .AddInput(_gpuScene->MainCameraBatch().DepthImage(), FrameGraphResourceType::eTexture)
+        .AddOutput(_gpuScene->MainCameraBatch().HZBImage(), FrameGraphResourceType::eTexture);
+
+    FrameGraphNodeCreation generateShadowDrawsPrepass { *_generateShadowDrawsPass, FrameGraphRenderPassType::eCompute };
+    generateShadowDrawsPrepass.SetName("Generate shadow draws prepass")
+        .SetDebugLabelColor(GetColor(ColorType::Goldenrod))
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    FrameGraphNodeCreation generateShadowDrawsSecondPass { *_generateShadowDrawsPass, FrameGraphRenderPassType::eCompute };
+    generateShadowDrawsSecondPass.SetName("Generate shadow draws second pass")
+        .SetDebugLabelColor(GetColor(ColorType::Goldenrod))
+        .AddInput(_gpuScene->ShadowCameraBatch().HZBImage(), FrameGraphResourceType::eTexture)
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader)
+        .AddOutput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    FrameGraphNodeCreation buildShadowHZBPass { *_buildShadowHzbPass, FrameGraphRenderPassType::eCompute };
+    buildShadowHZBPass.SetName("Build shadow HZB pass")
+        .SetDebugLabelColor(GetColor(ColorType::Emerald))
+        .AddInput(_gpuScene->ShadowCameraBatch().DepthImage(), FrameGraphResourceType::eTexture)
+        .AddOutput(_gpuScene->ShadowCameraBatch().HZBImage(), FrameGraphResourceType::eTexture);
+
+    FrameGraphNodeCreation geometryPrepass { *_geometryPass };
+    geometryPrepass.SetName("Geometry prepass")
+        .SetDebugLabelColor(GetColor(ColorType::Cyan))
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
         .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation shadowPass { *_shadowPass };
-    shadowPass.SetName("Shadow pass")
-        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
-        .AddOutput(_gBuffers->Shadow(), FrameGraphResourceType::eAttachment);
+    FrameGraphNodeCreation geometrySecondPass { *_geometryPass };
+    geometrySecondPass.SetName("Geometry second pass")
+        .SetDebugLabelColor(GetColor(ColorType::Cyan))
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->MainCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[1], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[2], FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Attachments()[3], FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation shadowPrepass { *_shadowPass };
+    shadowPrepass.SetName("Shadow prepass")
+        .SetDebugLabelColor(GetColor(ColorType::Orange))
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation shadowSecondPass { *_shadowPass };
+    shadowSecondPass.SetName("Shadow second pass")
+        .SetDebugLabelColor(GetColor(ColorType::Orange))
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
+        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation ssaoPass { *_ssaoPass };
     ssaoPass.SetName("SSAO pass")
-        .SetDebugLabelColor(glm::vec3(0.87f))
+        .SetDebugLabelColor(GetColor(ColorType::Mint))
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
         .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation lightingPass { *_lightingPass };
     lightingPass.SetName("Lighting pass")
-        .SetDebugLabelColor(glm::vec3 { 255.0f, 209.0f, 102.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Periwinkle))
         .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[2], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[3], FrameGraphResourceType::eTexture)
         .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_gBuffers->Shadow(), FrameGraphResourceType::eTexture)
+        .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation skyDomePass { *_skydomePass };
     skyDomePass.SetName("Sky dome pass")
-        .SetDebugLabelColor(glm::vec3 { 17.0f, 138.0f, 178.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Pistachio))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation particlePass { *_particlePass };
     particlePass.SetName("Particle pass")
-        .SetDebugLabelColor(glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Plum))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPass };
     bloomBlurPass.SetName("Bloom gaussian blur pass")
-        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 153.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Rose))
         .AddInput(_brightnessTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation toneMappingPass { *_tonemappingPass };
     toneMappingPass.SetName("Tonemapping pass")
-        .SetDebugLabelColor(glm::vec3 { 239.0f, 71.0f, 111.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Seafoam))
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation fxaaPass { *_fxaaPass };
     fxaaPass.SetName("FXAA pass")
-        .SetDebugLabelColor(glm::vec3 { 139.0f, 190.0f, 16.0f } / 255.0f)
+        .SetDebugLabelColor(GetColor(ColorType::Sand))
         .AddInput(_tonemappingTarget, FrameGraphResourceType::eTexture)
         .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     // TODO: THIS PASS SHOULD BE DONE LAST.
     FrameGraphNodeCreation uiPass { *_uiPass };
     uiPass.SetName("UI pass")
-        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 255.0f })
+        .SetDebugLabelColor(GetColor(ColorType::Teal))
         .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation debugPass { *_debugPass };
     debugPass.SetName("Debug pass")
-        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        .SetDebugLabelColor(GetColor(ColorType::BrightTeal))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_fxaaTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation presentationPass { *_presentationPass };
     presentationPass.SetName("Presentation pass")
-        .SetDebugLabelColor(glm::vec3 { 255.0f, 255.0f, 0.0f })
+        .SetDebugLabelColor(GetColor(ColorType::SkyBlue))
         // No support for presentation targets in frame graph, so we'll have to this for now
         .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
     _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
-    frameGraph.AddNode(geometryPass)
-        .AddNode(shadowPass)
+    frameGraph
+        .AddNode(generateMainDrawsPrepass)
+        .AddNode(generateShadowDrawsPrepass)
+        .AddNode(geometryPrepass)
+        .AddNode(shadowPrepass)
+        .AddNode(buildMainHZBPass)
+        .AddNode(buildShadowHZBPass)
+        .AddNode(generateMainDrawsSecondPass)
+        .AddNode(generateShadowDrawsSecondPass)
+        .AddNode(geometrySecondPass)
+        .AddNode(shadowSecondPass)
         .AddNode(ssaoPass)
         .AddNode(lightingPass)
         .AddNode(skyDomePass)
@@ -398,7 +493,6 @@ void Renderer::UpdateBindless()
 
 void Renderer::Render(float deltaTime)
 {
-    ZoneNamedN(zz, "Renderer::Render()", true);
     {
         ZoneNamedN(zz, "Wait On Fence", true);
         util::VK_ASSERT(_context->VulkanContext()->Device().waitForFences(1, &_inFlightFences[_currentFrame], vk::True, std::numeric_limits<uint64_t>::max()),
@@ -427,9 +521,15 @@ void Renderer::Render(float deltaTime)
             util::VK_ASSERT(result, "Failed acquiring next image from swap chain!");
     }
 
-    util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    {
+        ZoneNamedN(zz, "Reset Fence", true);
+        util::VK_ASSERT(_context->VulkanContext()->Device().resetFences(1, &_inFlightFences[_currentFrame]), "Failed resetting fences!");
+    }
 
-    _commandBuffers[_currentFrame].reset();
+    {
+        ZoneNamedN(zz, "Reset Command Buffer", true);
+        _commandBuffers[_currentFrame].reset();
+    }
 
     // Since there is only one scene, we can reuse the same gpu buffers
     _gpuScene->Update(_currentFrame);

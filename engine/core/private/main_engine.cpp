@@ -20,8 +20,7 @@ void MainEngine::MainLoopOnce()
         ZoneScoped;
 
         auto name = std::string(modulePriorityPair.module->GetName()) + " tick";
-
-        ZoneName(name.data(), 32);
+        ZoneName(name.c_str(), 32);
 
         modulePriorityPair.module->Tick(*this);
 
