@@ -2,7 +2,6 @@
 
 #include "components/name_component.hpp"
 #include "ecs_module.hpp"
-#include "particle_module.hpp"
 
 #include "imgui/imgui.h"
 #include <magic_enum.hpp>
