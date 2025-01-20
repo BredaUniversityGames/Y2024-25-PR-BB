@@ -44,7 +44,7 @@ void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
     self.component->noClip = noClip;
 }
 
-WrenEntity CreatePlayerController(GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
+WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
 {
     entt::entity playerEntity = ecs.GetRegistry().create();
     JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
