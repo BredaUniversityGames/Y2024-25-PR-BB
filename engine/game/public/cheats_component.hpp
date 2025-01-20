@@ -5,7 +5,7 @@
 // Add more variables for cheats here
 struct CheatsComponent
 {
-    bool noClip = false;
+    bool noClip = true;
 };
 namespace EnttEditor
 {
