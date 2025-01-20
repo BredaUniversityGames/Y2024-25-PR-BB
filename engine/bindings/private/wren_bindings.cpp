@@ -7,6 +7,7 @@
 #include "audio_module.hpp"
 #include "components/name_component.hpp"
 #include "components/transform_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "game/game_bindings.hpp"
@@ -94,6 +95,15 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, const glm::vec3& color)
+{
+    component.component->color = color;
+}
+
+glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->color;
+}
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -163,6 +173,10 @@ void BindEngineAPI(wren::ForeignModule& module)
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
         nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+
+        auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
+        pointLightClass.propExt<
+            bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
 
         // Transform component
         auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
@@ -318,4 +332,7 @@ void bindings::BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
+    entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
 }

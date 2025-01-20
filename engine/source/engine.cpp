@@ -60,7 +60,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
-
     };
 
     particleModule.LoadEmitterPresets();
@@ -107,7 +106,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    /*for (size_t i = 0; i < 5000; i++)
+    for (size_t i = 0; i < 5000; i++)
     {
         entt::entity entity = _ecs->GetRegistry().create();
         _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");
@@ -115,12 +114,10 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
         PointLightComponent& pointLightComponent = _ecs->GetRegistry().emplace<PointLightComponent>(entity);
         pointLightComponent.color = glm::vec3(rand() % 255, rand() % 255, rand() % 255) / 255.0f;
-        pointLightComponent.range = 10.0f;
-        pointLightComponent.attenuation = 1.0f;
 
-        // Spawn point lights in a 3D grid/box with an offset of 2 units between each light on each axis
-        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3((i % 50) * 2.0f, (i / 50) * 2.0f, (i / 250) * 2.0f));
-    }*/
+        // Spawn the Lights at random positions in a 100x100x100 cube
+        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(rand() % 50 - 25, rand() % 50 - 25, rand() % 50 - 25));
+    }
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
@@ -268,6 +265,26 @@ void OldEngine::Tick(Engine& engine)
             }
         }
     }
+
+    {
+        //Get all pointLights from the ECS
+        const auto pointLightView = _ecs->GetRegistry().view<PointLightComponent, TransformComponent>();
+        for (const auto& [entity, pointLightComponent, transformComponent] : pointLightView.each())
+        {
+            // Generate a smooth oscillating intensity in the desired range
+            float time = engine.GetModule<TimeModule>().GetTotalTime().count(); // Total elapsed time
+            float targetIntensity = sinf(time * 0.01) * 2.5f + 7.5f; // Oscillate between 5 and 10
+            pointLightComponent.intensity = glm::mix(pointLightComponent.intensity, targetIntensity, 0.1f);
+
+            // Random Color Oscillation
+            pointLightComponent.color = glm::vec3(
+                sinf(time * 0.005f) * 0.5f + 0.5f, // Red channel
+                sinf(time * 0.007f) * 0.5f + 0.5f, // Green channel
+                sinf(time * 0.009f) * 0.5f + 0.5f  // Blue channel
+            );        }
+
+    }
+
 
     _lastMousePos = { mouseX, mouseY };
 
