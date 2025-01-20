@@ -6,13 +6,15 @@
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "settings.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
+FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const Settings::FXAA& settings, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& fxaaTarget, const ResourceHandle<GPUImage>& sourceTarget)
     : _pushConstants()
     , _context(context)
     , _gBuffers(gBuffers)
+    , _settings(settings)
     , _fxaaTarget(fxaaTarget)
     , _source(sourceTarget)
 {
@@ -23,8 +25,15 @@ FXAAPass::FXAAPass(const std::shared_ptr<GraphicsContext>& context, const GBuffe
 void FXAAPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "FXAA Pass");
+
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
+
+    _pushConstants.iterations = _settings.iterations;
+    _pushConstants.enableFXAA = _settings.enableFXAA;
+    _pushConstants.edgeThresholdMax = _settings.edgeThresholdMax;
+    _pushConstants.edgeThresholdMin = _settings.edgeThresholdMin;
+    _pushConstants.subPixelQuality = _settings.subPixelQuality;
 
     vk::RenderingAttachmentInfoKHR fxaaColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_fxaaTarget)->view,

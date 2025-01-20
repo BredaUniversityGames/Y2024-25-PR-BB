@@ -99,7 +99,6 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { descriptorSet }, {});
 
-        // Fullscreen triangle
         commandBuffer.draw(3, 1, 0, 0);
 
         _context->GetDrawStats().Draw(3);

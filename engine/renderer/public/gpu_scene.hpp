@@ -4,6 +4,7 @@
 #include "constants.hpp"
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "settings.hpp"
 #include "vulkan_include.hpp"
 
 #include <memory>
@@ -52,7 +53,7 @@ struct DrawIndexedIndirectCommand
 class GPUScene
 {
 public:
-    GPUScene(const GPUSceneCreation& creation);
+    GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settings);
     ~GPUScene();
 
     NON_COPYABLE(GPUScene);
@@ -105,10 +106,6 @@ public:
     ResourceHandle<GPUImage> irradianceMap;
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
-
-    glm::vec3 fogColor { 0.5, 0.6, 0.7 };
-    float fogDensity { 0.2f };
-    float fogHeight { 0.3f };
 
 private:
     struct alignas(16) DirectionalLightData
@@ -170,6 +167,7 @@ private:
     };
 
     std::shared_ptr<GraphicsContext> _context;
+    const Settings::Fog& _settings;
     ECSModule& _ecs;
 
     vk::DescriptorSetLayout _sceneDescriptorSetLayout;
