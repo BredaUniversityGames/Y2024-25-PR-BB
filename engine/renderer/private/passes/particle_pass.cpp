@@ -255,10 +255,10 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
+    auto view = _ecs.GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
-        auto& component = view.get<EmitterComponent>(entity);
+        auto& component = view.get<ParticleEmitterComponent>(entity);
         if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later

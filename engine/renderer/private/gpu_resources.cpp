@@ -101,24 +101,10 @@ CPUImage& CPUImage::FromPNG(std::string_view path)
         throw std::runtime_error("Image size is too large!");
     }
 
-    vk::Format format;
-    if (nrChannels == 3)
-    {
-        format = vk::Format::eR8G8B8Unorm;
-    }
-    else if (nrChannels == 4)
-    {
-        format = vk::Format::eR8G8B8A8Unorm;
-    }
-    else
-    {
-        throw std::runtime_error("Image format is not supported!");
-    }
-
-    SetFormat(format);
+    SetFormat(vk::Format::eR8G8B8A8Unorm);
     SetSize(static_cast<uint16_t>(width), static_cast<uint16_t>(height));
     SetName(path);
-    initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * nrChannels));
+    initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * 4));
     stbi_image_free(data);
 
     return *this;

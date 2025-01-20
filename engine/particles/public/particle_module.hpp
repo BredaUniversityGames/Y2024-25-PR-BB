@@ -42,7 +42,8 @@ public:
     ~ParticleModule() override = default;
 
     void LoadEmitterPresets();
-    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 0.0f, 0.0f, 0.0f });
+    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
+    void SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
 
 private:
     std::shared_ptr<GraphicsContext> _context;
@@ -60,8 +61,14 @@ private:
         uint32_t materialIndex = 0;
         uint32_t flags = 0;
         ParticleType type = ParticleType::eBillboard;
+        std::string name = "Emitter Preset";
     };
 
+    ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName);
+    void SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle<GPUImage> image);
+
     std::vector<EmitterPreset> _emitterPresets;
-    std::vector<ResourceHandle<GPUImage>> _emitterImages;
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
+
+    friend class ParticleEditor;
 };
