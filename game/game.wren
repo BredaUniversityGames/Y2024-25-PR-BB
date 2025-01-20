@@ -33,11 +33,8 @@ class Main {
         }
 
         __enemy = engine.GetECS().NewEntity()
-
-        __enemy.AddTransformComponent()
-
+        __enemy.AddTransformComponent().scale = Vec3.new(0.1, 0.1, 0.1)
         var mesh = __enemy.AddStaticMeshComponent()
-
         mesh.SetMesh(engine.GetRenderer().GetMesh("assets/models/enemy.glb:Zombie"))
 
         __rayDistance = 1000.0
@@ -56,6 +53,18 @@ class Main {
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
+
+        {
+            var enemyTransform = __enemy.GetTransformComponent()
+            var playerTransform = __player.GetTransformComponent()
+            var speed = 5 * dt * 0.001
+
+            var dir = (playerTransform.translation - enemyTransform.translation).normalize()
+
+            enemyTransform.rotation = Math.DirToQuat(-dir)
+            enemyTransform.translation = enemyTransform.translation + Vec3.new(speed, speed, speed) * dir
+        }
+
 
         if (engine.GetInput().GetDigitalAction("Shoot")) {
             var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
