@@ -23,7 +23,7 @@ vec4 ScreenToView(vec4 screen)
     screen.y * 2.0 - 1.0,
     screen.z,
     screen.w);
-    vec4 view = camera.invProj * clip;
+    vec4 view = camera.inverseProj * clip;
 
     view = view / view.w;
 

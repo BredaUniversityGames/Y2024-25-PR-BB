@@ -5,7 +5,6 @@ struct Camera
     mat4 VP;
     mat4 view;
     mat4 proj;
-    mat4 invProj;
     mat4 skydomeMVP;
     mat4 inverseView;
     mat4 inverseProj;
