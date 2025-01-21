@@ -124,13 +124,11 @@ void ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle
 
 void ParticleModule::LoadEmitterPresets()
 {
-    {
-        // TODO: serialize emitter presets and load from file
-        auto image = GetEmitterImage("jeremi.png");
-        auto resources = _context->Resources();
+    // TODO: serialize emitter presets and load from file
 
-        // hardcoded test emitter preset for now
-        // hardcoded test emitter preset for now
+    { // TEST
+        auto image = GetEmitterImage("jeremi.png");
+
         EmitterPreset preset;
         preset.emitDelay = 0.2f;
         preset.mass = 2.0f;
@@ -142,15 +140,51 @@ void ParticleModule::LoadEmitterPresets()
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec3(1.0f);
         preset.name = "Test";
-
         SetEmitterPresetImage(preset, image);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // FLAME
+        auto image = GetEmitterImage("flame_03.png");
+
+        EmitterPreset preset;
+        preset.emitDelay = 0.2f;
+        preset.mass = -0.250f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 3.0f;
+        preset.count = 10;
+        preset.type = ParticleType::eBillboard;
+        preset.randomness = glm::vec3(0.120f, 1.0f, 0.120f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec3(5.0f);
+        preset.name = "Flame";
+        SetEmitterPresetImage(preset, image);
+        preset.size.z = -0.4f;
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // DUST
+        auto image = GetEmitterImage("point_03.png");
+
+        EmitterPreset preset;
+        preset.emitDelay = 1.0f;
+        preset.mass = 0.150f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 8.0f;
+        preset.count = 20;
+        preset.type = ParticleType::eBillboard;
+        preset.randomness = glm::vec3(1.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec3(0.5f, 0.5f, 0.5f);
+        preset.name = "Dust";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
         _emitterPresets.emplace_back(preset);
     }
 
     {
         // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("star.png");
-        auto resources = _context->Resources();
 
         // hardcoded test emitter preset for now
         EmitterPreset preset;
@@ -173,7 +207,6 @@ void ParticleModule::LoadEmitterPresets()
     {
         // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("swoosh.png");
-        auto resources = _context->Resources();
 
         // hardcoded test emitter preset for now
         EmitterPreset preset;
