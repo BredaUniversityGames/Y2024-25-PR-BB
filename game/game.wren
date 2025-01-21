@@ -24,15 +24,40 @@ class Main {
 
             __player.AddAudioEmitterComponent()
 
-            __emitter = engine.GetECS().NewEntity()
-            var emitterTransform = __emitter.AddTransformComponent()
-            emitterTransform.translation = Vec3.new(4.5, 35.0, 300.0)
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
-            engine.GetParticles().SpawnEmitter(__emitter, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, 10.0, -5.0))
-
             var gunTransform = __gun.GetTransformComponent()
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+        }
+
+        // Inside cathedral: pentagram scene
+        {   // Fire emitter 1
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 2
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 3
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 4
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Dust emitter
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
         __rayDistance = 1000.0
