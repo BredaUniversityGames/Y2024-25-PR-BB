@@ -58,7 +58,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
 
@@ -71,9 +71,12 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
+    auto cathedral = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
+    //SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
     auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
+
+    //TODO: Remove after review.
+    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cathedral, glm::vec3(18.0f, -34.0f, -205.0f));
 
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
@@ -106,7 +109,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    for (size_t i = 0; i < 5000; i++)
+    for (size_t i = 0; i < 1000; i++)
     {
         entt::entity entity = _ecs->GetRegistry().create();
         _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");

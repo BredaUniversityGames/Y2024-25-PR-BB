@@ -43,7 +43,7 @@ struct RenderSceneDescription
 constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
 constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 10;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
-constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 1024;
+constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 256;
 constexpr uint32_t MAX_BONES = 1 << 11;
 
 constexpr uint32_t CLUSTER_X = 16, CLUSTER_Y = 9, CLUSTER_Z = 24;
