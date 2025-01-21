@@ -14,3 +14,6 @@
 [submodule "external/freetype"]
 	path = external/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "external/visit_struct"]
+	path = external/visit_struct
+	url = https://github.com/cbeck88/visit_struct
