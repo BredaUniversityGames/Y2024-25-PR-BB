@@ -136,6 +136,7 @@ void ParticleModule::LoadEmitterPresets()
     preset.maxLife = 5.0f;
     preset.count = 10;
     preset.type = ParticleType::eBillboard;
+    preset.randomness = glm::vec3(1.0f);
     preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
     preset.name = "Test";
     SetEmitterPresetImage(preset, image);
@@ -162,6 +163,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
     emitter.flags = preset.flags;
+    emitter.randomness = preset.randomness;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))

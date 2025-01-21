@@ -27,6 +27,7 @@ struct alignas(16) Emitter
     float randomValue = 0.0f;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint32_t materialIndex = 0;
+    glm::vec3 randomness = { 1.0f, 1.0f, 1.0f };
     uint8_t flags = 0;
 };
 

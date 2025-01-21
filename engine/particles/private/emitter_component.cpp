@@ -42,6 +42,7 @@ void ParticleEmitterComponent::Inspect()
     ImGui::DragInt("Count##Particle Emitter", &emitterCount, 0, 1024);
     emitter.count = static_cast<uint32_t>(emitterCount);
     ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x);
+    ImGui::DragFloat3("Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.0f, 100.0f);
     ImGui::DragFloat("Mass##Particle Emitter", &emitter.mass, -100.0f, 100.0f);
     ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x);
     ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.0f, 100.0f);

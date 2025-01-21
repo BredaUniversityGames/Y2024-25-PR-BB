@@ -101,6 +101,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, -100.0f, 100.0f);
         ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x);
         ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.0f, 100.0f);
+        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.0f, 100.0f);
 
         ImGui::Text("assets/textures/");
         ImGui::SameLine();
