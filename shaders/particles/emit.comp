@@ -39,13 +39,13 @@ void main()
     if (index >= emitter.count)
     return;
 
-    vec2 rng = hash_simplex_2D(vec2(float(index), emitter.randomValue));
+    vec3 rng = HashVec3(uint(emitter.randomValue + index)) * 2 - 1; //hash_simplex_2D(vec2(float(index), emitter.randomValue));
 
     // test particle variables
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = vec3(emitter.velocity.x + emitter.randomness.x * rng.x, emitter.velocity.y, emitter.velocity.z + emitter.randomness.z * rng.y);// TODO: add something to make this more random?
+    particle.velocity = vec3(emitter.velocity.x + emitter.randomness.x * rng.x, emitter.velocity.y + emitter.randomness.y * rng.y, emitter.velocity.z + emitter.randomness.z * rng.y);// TODO: add something to make this more random?
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;

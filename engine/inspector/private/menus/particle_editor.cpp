@@ -100,6 +100,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat3("Color Multiplier##EmitterPresetEditor", &selectedPreset.color.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
 
         ImGui::Text("assets/textures/");
         ImGui::SameLine();
