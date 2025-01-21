@@ -37,14 +37,15 @@ void ParticleEmitterComponent::Inspect()
     }
 
     ImGui::Text("Emitter");
-    ImGui::DragFloat3("Position##Particle Emitter", &emitter.position.x);
+    ImGui::DragFloat3("Position##Particle Emitter", &emitter.position.x, 0.1f);
     int32_t emitterCount = static_cast<int32_t>(emitter.count);
-    ImGui::DragInt("Count##Particle Emitter", &emitterCount, 0, 1024);
+    ImGui::DragInt("Count##Particle Emitter", &emitterCount, 1, 0, 1024);
     emitter.count = static_cast<uint32_t>(emitterCount);
-    ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x);
-    ImGui::DragFloat3("Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.0f, 100.0f);
-    ImGui::DragFloat("Mass##Particle Emitter", &emitter.mass, -100.0f, 100.0f);
-    ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x);
-    ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.0f, 100.0f);
-    ImGui::DragFloat3("Size##Particle Emitter", &emitter.size.x);
+    ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x, 0.1f, -100.0f, 100.0f);
+    ImGui::DragFloat3("Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat("Mass##Particle Emitter", &emitter.mass, 1.0f, -100.0f, 100.0f);
+    ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+    ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat3("Size##Particle Emitter", &emitter.size.x, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat3("Color Multiplier##Particle Emitter", &emitter.color.x, 0.1f, 0.0f, 100.0f);
 }

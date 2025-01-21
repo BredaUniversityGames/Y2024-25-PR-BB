@@ -73,6 +73,7 @@ void main()
             instance.size = particle.size.xy;
             instance.angle = particle.rotationVelocity.x;
             instance.flags = particle.flags;
+            instance.color = particle.color;
             culledInstances.instances[culledIndex] = instance;
         }
     }
