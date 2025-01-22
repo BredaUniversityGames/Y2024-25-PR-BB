@@ -133,6 +133,7 @@ void main()
     float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
     Lo += CalculateBRDF(N, V, lightDir, albedo, F0, metallic, roughness, scene.directionalLight.color.rgb);
 
+    vec3 pointLightLo = vec3(0.0);
     for (int i = 0; i < lightCount; i++)
     {
         uint lightIndex = lightIndices[i + lightIndexOffset];
@@ -143,7 +144,7 @@ void main()
         float attenuation = CalculateAttenuation(lightPos, position, light.range);
         vec3 lightColor = light.color.rgb * attenuation * light.intensity;
 
-        Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
+        pointLightLo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }
 
     // IBL Contributions
@@ -155,7 +156,7 @@ void main()
 
     float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow);
+    vec3 litColor = vec3((Lo * shadow) + pointLightLo + ambient * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
