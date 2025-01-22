@@ -61,7 +61,6 @@ vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanCo
                 .pBindings = bindings.data(),
             };
         }
-
         vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(createInfo.value(), nullptr) };
 
         _cacheDescriptorSetLayouts[hash] = layout;
