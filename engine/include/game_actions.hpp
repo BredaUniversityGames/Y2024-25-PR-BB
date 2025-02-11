@@ -24,6 +24,7 @@ const GameActions GAME_ACTIONS {
                 .name = "Dash",
                 .inputs = {
                     GamepadButton::eLEFT_TRIGGER,
+                    KeyboardCode::eLSHIFT,
                 },
             },
             {

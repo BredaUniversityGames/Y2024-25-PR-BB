@@ -1,7 +1,24 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 
 class MovementClass{
-    static Movement(engine, playerController, player, wasGroundedLastFrame){
+
+
+    construct new(newHasDashed, newDashTimer){
+        System.print("Movement Class Constructed")
+        hasDashed = newHasDashed
+        dashTimer = newDashTimer
+    }
+
+
+//getters
+    hasDashed {_hasDashed}
+    dashTimer {_dashTimer}
+//setters
+    hasDashed=(value) { _hasDashed  = value}
+    dashTimer=(value) { _dashTimer = value}
+
+
+    Movement(engine, playerController, player, wasGroundedLastFrame){
 
         var cheats = playerController.GetCheatsComponent()
         if(cheats.noClip == true){
@@ -50,6 +67,7 @@ class MovementClass{
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
 
+
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, 8.20, 0.0)
@@ -65,7 +83,7 @@ class MovementClass{
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
         engine.GetPhysics().GravityFactor(playerBody,2.2)
-        if(isGrounded){
+        if(isGrounded && hasDashed == false){
 
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
@@ -123,5 +141,42 @@ class MovementClass{
         var pos = engine.GetPhysics().GetPosition(playerBody)
         pos.y = pos.y + 0.5
         player.GetTransformComponent().translation = pos
+    }
+
+    Dash(engine, dt, playerController, player){
+        var playerBody = playerController.GetRigidbodyComponent()
+        var velocity = engine.GetPhysics().GetVelocity(playerBody)
+        var dashForce = 14.0
+        if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
+
+            hasDashed = true
+            var cameraRotation = player.GetTransformComponent().rotation
+            var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
+            forward.y = 0.0
+            var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+            var movement = engine.GetInput().GetAnalogAction("Move")
+
+            var moveInputDir = Vec3.new(0.0,0.0,0.0)
+            moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+            moveInputDir = moveInputDir.normalize()
+
+            if(moveInputDir.length() > 0.01){
+                velocity = velocity + (moveInputDir * Vec3.new(dashForce,dashForce,dashForce))
+                engine.GetPhysics().SetVelocity(playerBody, velocity)
+            }else{
+                velocity = velocity + (forward * Vec3.new(dashForce,dashForce,dashForce))
+                engine.GetPhysics().SetVelocity(playerBody, velocity)
+            }
+        }
+
+        if(hasDashed == true){
+            System.print("Dashing")
+            dashTimer = dashTimer + dt
+            if(dashTimer > 200.0){
+                hasDashed = false
+                dashTimer = 0.0
+            }
+        }
+
     }
 }

@@ -10,9 +10,12 @@ class Main {
 
         __wasGroundedLastFrame = false
 
+        __movementClass = MovementClass.new(false,0.0)
 
         __counter = 0
         __frameTimer = 0
+        __groundedTimer = 0
+        __hasDashed = false
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
         __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 90.0, 0.0),0.85,0.5)
@@ -112,7 +115,8 @@ class Main {
         }
  
 
-        MovementClass.Movement(engine, __playerController, __player, __wasGroundedLastFrame )
+        __movementClass.Movement(engine, __playerController, __player, __wasGroundedLastFrame )
+        __movementClass.Dash(engine,dt,__playerController, __player)
 
 
 
