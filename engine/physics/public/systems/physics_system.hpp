@@ -44,6 +44,4 @@ private:
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;
-
-    // just for testing
 };

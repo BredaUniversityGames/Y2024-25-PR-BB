@@ -161,7 +161,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
     // Calculate the angle step based on the number of rays (ensuring symmetrical distribution)
     float angleStep = glm::radians(angle) / (numRays / 2);
 
-    for (unsigned int i = 0; i < numRays; ++i)
+    for (uint32_t i = 0; i < numRays; ++i)
     {
         float angleOffset = (i - (numRays - 1) / 2.0f) * angleStep;
         glm::vec3 rotatedDirection = glm::rotateY(direction, angleOffset);

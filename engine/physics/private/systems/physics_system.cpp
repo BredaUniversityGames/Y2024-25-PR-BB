@@ -1,6 +1,4 @@
 ﻿#include "systems/physics_system.hpp"
-#include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
-#include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -17,6 +15,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 
 #include <tracy/Tracy.hpp>
 
