@@ -91,7 +91,6 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     // Step the world
-    // TODO: is this correct? We are ignoring deltatime?
     physicsSystem->Update(engine.GetModule<TimeModule>().GetDeltatime().count() / 1000.0f, _collisionSteps, _tempAllocator, _jobSystem);
 
     engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
