@@ -16,11 +16,9 @@ ParticleEditor::ParticleEditor(ParticleModule& particleModule, ECSModule& ecsMod
 
 void ParticleEditor::Render()
 {
-    ImGui::SetNextWindowSize({ 0.f, 0.f });
-
-    ImGui::Begin("Particle preset editor", nullptr, ImGuiWindowFlags_NoResize);
-
-    if (ImGui::BeginChild("List##ParticlePresetEditor", { 170, 220 }, true))
+    ImGui::Begin("Particle preset editor", nullptr);
+    auto region = ImGui::GetContentRegionAvail();
+    if (ImGui::BeginChild("List##ParticlePresetEditor", { 150, region.y }, true))
     {
         RenderEmitterPresetList();
     }
@@ -28,7 +26,7 @@ void ParticleEditor::Render()
 
     ImGui::SameLine();
 
-    if (ImGui::BeginChild("Editor##ParticlePresetEditor", { 300, 220 }, true))
+    if (ImGui::BeginChild("Editor##ParticlePresetEditor", { region.x - 150, region.y }, true))
     {
         RenderEmitterPresetEditor();
     }
@@ -39,14 +37,13 @@ void ParticleEditor::Render()
 
 void ParticleEditor::RenderEmitterPresetList()
 {
-    ImGui::Text("Emitter Presets:");
-    ImGui::SameLine();
-    if (ImGui::Button("New preset##EmitterPresetEditor"))
+    if (ImGui::Button("+ new preset##EmitterPresetEditor"))
     {
         ParticleModule::EmitterPreset newPreset;
         newPreset.name += " " + std::to_string(_particleModule._emitterPresets.size());
         _particleModule._emitterPresets.emplace_back(std::move(newPreset));
     }
+    ImGui::Text("Emitter Presets:");
 
     for (uint32_t i = 0; i < _particleModule._emitterPresets.size(); i++)
     {
@@ -96,11 +93,14 @@ void ParticleEditor::RenderEmitterPresetEditor()
         }
 
         int emitterCount = static_cast<int>(selectedPreset.count);
-        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 0, 1024);
+        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 1, 0, 1024);
         selectedPreset.count = emitterCount;
-        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, -100.0f, 100.0f);
-        ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x);
-        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.0f, 100.0f);
+        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
+        ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Color Multiplier##EmitterPresetEditor", &selectedPreset.color.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
 
         ImGui::Text("assets/textures/");
         ImGui::SameLine();

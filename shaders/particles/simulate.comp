@@ -38,12 +38,19 @@ void main()
 
     if (particle.life > 0)
     {
+        // simulate size
+        particle.size.xy += vec2(particle.size.z) * deltaTime;
+        if ((particle.size.x < 0) || (particle.size.y < 0))
+        {
+            // add to dead buffer
+            uint deadIndex = atomicAdd(particleCounters.deadCount, 1);
+            deadBuffer[deadIndex] = particleIndex;
+            return;
+        }
+
         // simulate particles
         particle.velocity.y -= particle.mass * deltaTime;
         particle.position += particle.velocity * deltaTime;
-
-        // TODO: simulate size
-        float biggestSize = max(particle.size.x, particle.size.y);
 
         // simulate angle
         particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
@@ -56,6 +63,7 @@ void main()
         aliveBufferNEW[newAliveIndex] = particleIndex;
 
         // only visible particles go into the rendering buffer after frustum culling
+        float biggestSize = max(particle.size.x, particle.size.y);
         if (IsVisible(particle.position, biggestSize))
         {
             uint culledIndex = atomicAdd(culledInstances.count, 1);
@@ -65,6 +73,7 @@ void main()
             instance.size = particle.size.xy;
             instance.angle = particle.rotationVelocity.x;
             instance.flags = particle.flags;
+            instance.color = particle.color;
             culledInstances.instances[culledIndex] = instance;
         }
     }

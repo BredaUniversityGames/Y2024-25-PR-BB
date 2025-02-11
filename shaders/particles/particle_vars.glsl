@@ -15,6 +15,7 @@ struct Particle
     uint materialIndex;
     vec3 size;
     uint flags;
+    vec3 color;
 };
 
 struct ParticleCounters
@@ -31,6 +32,7 @@ struct ParticleInstance
     vec2 size;
     float angle;
     uint flags;
+    vec3 color;
 };
 
 struct CulledInstances
