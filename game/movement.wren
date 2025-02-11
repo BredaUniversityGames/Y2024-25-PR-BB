@@ -8,17 +8,40 @@ class MovementClass{
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
+
+        maxSpeed = 11.0
+        sv_accelerate = 8.5
+        jumpForce = 8.20
+        gravityFactor = 2.2
+        
     }
 
 
 //getters
+    //Extra movement
     hasDashed {_hasDashed}
     hasDoubleJumped {_hasDoubleJumped}
     dashTimer {_dashTimer}
+
+    //Base movement
+    maxSpeed {_maxSpeed}
+    sv_accelerate {_sv_accelerate}
+    jumpForce {_jumpForce}
+    gravityFactor {_gravityFactor} // A multiplier for the regular 9.8 gravity of the physics simulation
+
+
+
 //setters
+    //Extra movement
     hasDashed=(value) { _hasDashed  = value}
     hasDoubleJumped=(value) { _hasDoubleJumped = value}
     dashTimer=(value) { _dashTimer = value}
+
+    //Base movement
+    maxSpeed=(value) { _maxSpeed = value}
+    sv_accelerate=(value) { _sv_accelerate = value}
+    jumpForce=(value) { _jumpForce = value}
+    gravityFactor=(value) { _gravityFactor = value}
 
 
     Movement(engine, playerController, player, wasGroundedLastFrame){
@@ -75,25 +98,22 @@ class MovementClass{
 
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
-            velocity = velocity + Vec3.new(0.0, 8.20, 0.0)
+            velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
             wasGroundedLastFrame = false
             hasDoubleJumped = false
         }else {
             wasGroundedLastFrame = isGrounded
             if(doubleJump && hasDoubleJumped == false){
                 velocity.y = 0.0
-                velocity = velocity + Vec3.new(0.0, 8.20, 0.0)
+                velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
                 hasDoubleJumped = true
             }
         }
         wasGroundedLastFrame = isGrounded
 
-        var maxSpeed = 11.0
-        var sv_accelerate = 8.5
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
-        engine.GetPhysics().GravityFactor(playerBody,2.2)
         if(isGrounded && hasDashed == false){
 
             var currentSpeed = Math.Dot(velocity, moveInputDir)
@@ -182,11 +202,15 @@ class MovementClass{
 
         if(hasDashed == true){
             System.print("Dashing")
+            engine.GetPhysics().GravityFactor(playerBody,gravityFactor/2.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
                 hasDashed = false
                 dashTimer = 0.0
             }
+        }else{
+            engine.GetPhysics().GravityFactor(playerBody,gravityFactor) 
+
         }
 
     }
