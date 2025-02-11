@@ -13,7 +13,6 @@ struct ParticleEmitterComponent
     bool emitOnce = true;
     float maxEmitDelay = 1.0f;
     float currentEmitDelay = 1.0f;
-    ParticleType type = ParticleType::eBillboard;
     Emitter emitter;
     void Inspect();
 

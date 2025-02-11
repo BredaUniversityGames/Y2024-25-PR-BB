@@ -3,6 +3,7 @@ const uint MAX_PARTICLES = 1024 * 64;
 // particle rendering flags
 const uint UNLIT = 1 << 0;
 const uint NOSHADOW = 1 << 1;
+const uint SIZEOVERTIME = 1 << 2;
 
 struct Particle
 {

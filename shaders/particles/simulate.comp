@@ -38,8 +38,16 @@ void main()
 
     if (particle.life > 0)
     {
-        // simulate size
-        particle.size.xy += vec2(particle.size.z) * deltaTime;
+        // simulate size over lifetime
+        if ((particle.flags & SIZEOVERTIME) != SIZEOVERTIME)
+        {
+            particle.size.xy = mix(vec2(0.0, 0.0), particle.size.xy, particle.life / particle.maxLife);
+        }
+        else
+        {
+            particle.size.xy += vec2(particle.size.z) * deltaTime;
+        }
+
         if ((particle.size.x < 0) || (particle.size.y < 0))
         {
             // add to dead buffer

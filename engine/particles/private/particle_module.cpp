@@ -119,7 +119,7 @@ void ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,
-        resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
+        resources->ImageResourceManager().Access(image)->height / biggestSize, preset.size.z);
 }
 
 void ParticleModule::LoadEmitterPresets()
@@ -135,12 +135,12 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
         preset.maxLife = 5.0f;
         preset.count = 10;
-        preset.type = ParticleType::eBillboard;
         preset.randomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec3(1.0f);
+        preset.color = glm::vec4(1.0f);
         preset.name = "Test";
         SetEmitterPresetImage(preset, image);
+
         _emitterPresets.emplace_back(preset);
     }
 
@@ -153,13 +153,13 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 3.0f;
         preset.count = 10;
-        preset.type = ParticleType::eBillboard;
         preset.randomness = glm::vec3(0.120f, 1.0f, 0.120f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec3(5.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eSizeOverTime);
+        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
         preset.name = "Flame";
         SetEmitterPresetImage(preset, image);
         preset.size.z = -0.4f;
+
         _emitterPresets.emplace_back(preset);
     }
 
@@ -172,13 +172,13 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
         preset.count = 20;
-        preset.type = ParticleType::eBillboard;
         preset.randomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec3(0.5f, 0.5f, 0.5f);
+        preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         preset.name = "Dust";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
+
         _emitterPresets.emplace_back(preset);
     }
 
@@ -193,10 +193,9 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
-        preset.type = ParticleType::eBillboard;
         preset.randomness = glm::vec3(5.0f, 0.0f, 5.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec3(0.2f, 0.2f, 1.0f);
+        preset.color = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
         preset.name = "Impact";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(2.0f, 2.0f, 0.0f);
@@ -215,10 +214,9 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
         preset.count = 5;
-        preset.type = ParticleType::eBillboard;
         preset.randomness = glm::vec3(0.5f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec3(0.1f, 0.15f, 1.0f);
+        preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
         preset.name = "Ray";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.8f, 0.8f, 0.0f);
@@ -288,7 +286,6 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
 
     ParticleEmitterComponent component;
     component.emitter = emitter;
-    component.type = preset.type;
     component.maxEmitDelay = preset.emitDelay;
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;

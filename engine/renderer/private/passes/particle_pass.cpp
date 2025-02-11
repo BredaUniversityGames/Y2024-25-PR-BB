@@ -133,8 +133,7 @@ void ParticlePass::RecordEmit(vk::CommandBuffer commandBuffer)
         _emitPushConstant.bufferOffset = bufferOffset;
         commandBuffer.pushConstants<EmitPushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, { _emitPushConstant });
         // +63 so we always dispatch at least once.
-        auto count = static_cast<uint32_t>(rand()) % _emitters[bufferOffset].count + 1u;
-        commandBuffer.dispatch((count + 63) / 64, 1, 1);
+        commandBuffer.dispatch((_emitters[bufferOffset].count + 63) / 64, 1, 1);
     }
     _context->GetDrawStats().SetEmitterCount(_emitters.size());
     _emitters.clear();

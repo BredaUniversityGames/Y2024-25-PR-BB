@@ -11,7 +11,8 @@ static constexpr int32_t MAX_PARTICLES = 1024 * 64;
 enum class ParticleRenderFlagBits : uint8_t
 {
     eUnlit = 1 << 0,
-    eNoShadow = 1 << 1
+    eNoShadow = 1 << 1,
+    eSizeOverTime = 1 << 2
 };
 GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)
 
@@ -29,7 +30,7 @@ struct alignas(16) Emitter
     uint32_t materialIndex = 0;
     glm::vec3 randomness = { 1.0f, 1.0f, 1.0f };
     uint8_t flags = 0;
-    glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 };
 
 struct alignas(16) Particle
@@ -60,17 +61,11 @@ struct alignas(16) ParticleInstance
     glm::vec2 size = { 1.0f, 1.0f };
     float angle = 0.0f;
     uint8_t flags = 0;
+    glm::vec3 color = { 1.0f, 1.0f, 1.0f };
 };
 
 struct alignas(16) CulledInstances
 {
     uint32_t count = 0;
     ParticleInstance instances[MAX_PARTICLES];
-};
-
-enum class ParticleType : uint8_t
-{
-    eBillboard = 0,
-    eRibbon,
-    eMax
 };
