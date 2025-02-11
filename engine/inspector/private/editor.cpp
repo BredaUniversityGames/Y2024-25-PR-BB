@@ -18,7 +18,6 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "lifetime_component.hpp"
 #include "log.hpp"
 #include "menus/performance_tracker.hpp"
 #include "model_loader.hpp"
@@ -26,7 +25,8 @@
 #include "passes/ssao_pass.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
-#include "serialization.hpp"
+// #include "serialization.hpp"
+#include "systems/lifetime_component.hpp"
 #include "systems/physics_system.hpp"
 #include "vulkan_context.hpp"
 

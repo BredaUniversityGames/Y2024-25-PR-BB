@@ -44,6 +44,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <timers.hpp>
+
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
@@ -326,11 +328,29 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
 
     std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
     SingleTimeCommands commands { _context->VulkanContext() };
+
     for (const auto& path : modelPaths)
     {
-        auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
-        models.emplace_back(std::move(cpu), std::move(gpu));
+        CPUModel cpu {};
+
+        {
+            ZoneScoped;
+
+            std::string zone = path + " CPU parse";
+            ZoneName(zone.c_str(), 128);
+
+            cpu = _modelLoader->ExtractModelFromGltfFile(path);
+        }
+
+        {
+            ZoneScoped;
+
+            std::string zone = path + " GPU upload";
+            ZoneName(zone.c_str(), 128);
+
+            auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
+            models.emplace_back(std::move(cpu), std::move(gpu));
+        }
     }
 
     return models;

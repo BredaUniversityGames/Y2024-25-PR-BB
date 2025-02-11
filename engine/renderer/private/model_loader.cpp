@@ -7,6 +7,7 @@
 #include "graphics_resources.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
+#include "profile_macros.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -52,6 +53,11 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
 CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
 {
+    ZoneScoped;
+
+    std::string zone = std::string(path) + " Model Extraction";
+    ZoneName(zone.c_str(), 128);
+
     fastgltf::GltfFileStream fileStream { path };
 
     if (!fileStream.isOpen())
@@ -61,13 +67,20 @@ CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
 
-    auto loadedGltf = _parser.loadGltf(fileStream, directory,
-        fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
+    fastgltf::Asset gltf {};
 
-    if (!loadedGltf)
-        throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+    {
+        ZoneScoped;
 
-    fastgltf::Asset& gltf = loadedGltf.get();
+        std::string zone = std::string(path) + " FastGLTF parse";
+        ZoneName(zone.c_str(), 128);
+
+        auto loadedGltf = _parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
+        if (!loadedGltf)
+            throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+
+        gltf = std::move(loadedGltf.get());
+    }
 
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
@@ -295,6 +308,7 @@ void ProcessVertices<SkinnedVertex>(std::vector<SkinnedVertex>& vertices, const 
 template <typename T>
 CPUMesh<T> ProcessPrimitive(const fastgltf::Primitive& gltfPrimitive, const fastgltf::Asset& gltf)
 {
+
     CPUMesh<T> mesh {};
     mesh.boundingBox.min = glm::vec3 { std::numeric_limits<float>::max() };
     mesh.boundingBox.max = glm::vec3 { std::numeric_limits<float>::lowest() };
@@ -363,6 +377,7 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
     std::string_view name)
 {
     CPUImage cpuImage {};
+    ZoneScopedN("Image Loading");
 
     std::visit(fastgltf::visitor {
                    [](MAYBE_UNUSED auto& arg) {},
@@ -370,6 +385,7 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                    {
                        assert(filePath.fileByteOffset == 0); // We don't support offsets with stbi.
                        assert(filePath.uri.isLocalPath()); // We're only capable of loading local files.
+
                        int32_t width, height, nrChannels;
 
                        const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
@@ -450,6 +466,8 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
 
 StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
+    ZoneScopedN("Animation Loading");
+
     StagingAnimationChannels stagingAnimationChannels {};
 
     for (const auto& gltfAnimation : gltf.animations)
@@ -676,6 +694,11 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
 
 CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 {
+    ZoneScoped;
+
+    std::string zone = std::string(name) + " data processing";
+    ZoneName(zone.c_str(), 128);
+
     CPUModel model {};
 
     // Extract texture data
@@ -683,8 +706,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
-        const CPUImage image = ProcessImage(gltf.images[i], gltf, textureData[i], name);
-        model.textures.emplace_back(image);
+        model.textures.emplace_back(ProcessImage(gltf.images[i], gltf, textureData[i], name));
     }
 
     // Extract material data
@@ -698,27 +720,31 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>> meshLUT {};
 
     // Extract mesh data
-    uint32_t counter { 0 };
-    for (auto& gltfMesh : gltf.meshes)
     {
-        for (const auto& gltfPrimitive : gltfMesh.primitives)
+        ZoneScopedN("Mesh Loading");
+
+        uint32_t counter { 0 };
+        for (auto& gltfMesh : gltf.meshes)
         {
-            if (gltf.skins.size() > 0 && gltfPrimitive.findAttribute("WEIGHTS_0") != gltfPrimitive.attributes.cend() && gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
+            for (const auto& gltfPrimitive : gltfMesh.primitives)
             {
-                CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
-                model.skinnedMeshes.emplace_back(primitive);
+                if (gltf.skins.size() > 0 && gltfPrimitive.findAttribute("WEIGHTS_0") != gltfPrimitive.attributes.cend() && gltfPrimitive.findAttribute("JOINTS_0") != gltfPrimitive.attributes.cend())
+                {
+                    CPUMesh<SkinnedVertex> primitive = ProcessPrimitive<SkinnedVertex>(gltfPrimitive, gltf);
+                    model.skinnedMeshes.emplace_back(primitive);
 
-                meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
-            }
-            else
-            {
-                CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
-                model.meshes.emplace_back(primitive);
+                    meshLUT.insert({ counter, std::pair(MeshType::eSKINNED, model.skinnedMeshes.size() - 1) });
+                }
+                else
+                {
+                    CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+                    model.meshes.emplace_back(primitive);
 
-                meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });
+                    meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });
+                }
             }
+            ++counter;
         }
-        ++counter;
     }
 
     StagingAnimationChannels animations {};

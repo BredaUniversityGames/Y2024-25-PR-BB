@@ -33,7 +33,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
 
