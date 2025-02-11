@@ -42,6 +42,12 @@ class MovementClass{
         moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
         moveInputDir = moveInputDir.normalize()
 
+        if(movement.length() > 0.1){
+            engine.GetPhysics().SetFriction(playerBody, 0.0)
+        }else{
+            engine.GetPhysics().SetFriction(playerBody, 12.0)
+        }
+
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
 
         if(isGrounded && isJumpHeld) {
@@ -60,7 +66,6 @@ class MovementClass{
 
         engine.GetPhysics().GravityFactor(playerBody,2.2)
         if(isGrounded){
-            engine.GetPhysics().SetFriction(playerBody, 12.0)
 
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
