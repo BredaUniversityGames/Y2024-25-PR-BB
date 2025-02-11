@@ -115,7 +115,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
 
     hitInfos.resize(collector2.mHits.size());
-    int iterator = 0;
+    int32_t iterator = 0;
 
     for (auto hit : collector2.mHits)
     {
@@ -143,7 +143,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     return hitInfos;
 }
 
-std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, unsigned int numRays, float angle) const
+std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, uint32_t numRays, float angle) const
 {
     std::vector<RayHitInfo> results;
 
