@@ -65,8 +65,7 @@ private:
         uint32_t materialIndex = 0;
         glm::vec3 randomness = { 1.0f, 1.0f, 1.0f }; // y is inused as of now for randomness
         uint32_t flags = 0;
-        glm::vec3 color = { 1.0f, 1.0f, 1.0f };
-        ParticleType type = ParticleType::eBillboard;
+        glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color + color multiplier
         std::string name = "Emitter Preset";
     };
 

@@ -70,38 +70,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
         ImGui::InputText("Name##EmitterPresetEditor", &selectedPreset.name);
 
-        ImGui::DragFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
-
-        constexpr auto types = magic_enum::enum_names<ParticleType>();
-        static auto currentType = types[0];
-        if (ImGui::BeginCombo("Type##EmitterPresetEditor", std::string(currentType).c_str()))
-        {
-            for (uint32_t n = 0; n < types.size(); n++)
-            {
-                bool isSelected = (currentType == types[n]);
-                if (ImGui::Selectable(std::string(types[n]).c_str(), isSelected))
-                {
-                    currentType = types[n];
-                    selectedPreset.type = static_cast<ParticleType>(n);
-                }
-                if (isSelected)
-                {
-                    ImGui::SetItemDefaultFocus(); // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        int emitterCount = static_cast<int>(selectedPreset.count);
-        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 1, 0, 1024);
-        selectedPreset.count = emitterCount;
-        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
-        ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
-        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Color Multiplier##EmitterPresetEditor", &selectedPreset.color.x, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
-
+        // image loading (scuffed for now)
         ImGui::Text("assets/textures/");
         ImGui::SameLine();
         ImGui::InputText("Image##EmitterPresetEditor", &_currentImage);
@@ -114,6 +83,20 @@ void ParticleEditor::RenderEmitterPresetEditor()
         }
         ImGui::SameLine();
         ImGui::Text("%s", _imageLoadMessage.c_str());
+
+        // parameter editors
+        ImGui::DragFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
+        int emitterCount = static_cast<int>(selectedPreset.count);
+        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 1, 0, 1024);
+        selectedPreset.count = emitterCount;
+        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
+        ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat2("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Size velocity##EmitterPresetEditor", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::ColorPicker3("Color##EmitterPresetEditor", &selectedPreset.color.x);
+        ImGui::DragFloat("Color Multiplier#EmitterPresetEditor", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 
         if (ImGui::Button("Spawn##EmitterPresetEditor"))
         {
