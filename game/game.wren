@@ -3,6 +3,10 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, 
 class Main {
 
     static Start(engine) {
+
+        // Set navigational mesh
+        engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
+
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
@@ -115,5 +119,7 @@ class Main {
         if (engine.GetInput().DebugGetKey(key)) {
             System.print("[Debug] Player pressed A!")
         }
+
+        var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }
