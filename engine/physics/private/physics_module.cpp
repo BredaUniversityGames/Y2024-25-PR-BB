@@ -3,9 +3,9 @@
 #include "ecs_module.hpp"
 #include "systems/physics_system.hpp"
 
-#include <application_module.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <time_module.hpp>
+#include "application_module.hpp"
+#include "glm/gtx/rotate_vector.hpp"
+#include "time_module.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
