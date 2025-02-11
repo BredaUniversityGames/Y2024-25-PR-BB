@@ -1,16 +1,13 @@
 #include "game_bindings.hpp"
 
 #include "cheats_component.hpp"
+#include "components/name_component.hpp"
+#include "components/rigidbody_component.hpp"
+#include "ecs_module.hpp"
+#include "game_module.hpp"
 #include "lifetime_component.hpp"
 #include "physics_module.hpp"
 #include "utility/wren_entity.hpp"
-
-#include "ecs_module.hpp"
-
-#include "components/name_component.hpp"
-#include "components/rigidbody_component.hpp"
-
-#include <game_module.hpp>
 
 namespace bindings
 {
