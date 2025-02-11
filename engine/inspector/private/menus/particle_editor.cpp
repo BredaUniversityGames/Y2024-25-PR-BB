@@ -105,7 +105,15 @@ void ParticleEditor::RenderEmitterPresetEditor()
             node.name = "Particle Emitter";
             _ecsModule.GetRegistry().emplace<NameComponent>(entity, node);
 
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomPosition | SpawnEmitterFlagBits::eSetCustomVelocity, { 8.0f, 35.0f, 300.0f });
+            TransformComponent transform;
+            _ecsModule.GetRegistry().emplace<TransformComponent>(entity, transform);
+            const auto view = _ecsModule.GetRegistry().view<CameraComponent, TransformComponent>();
+            for (const auto cameraEntity : view)
+            {
+                const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(cameraEntity);
+                TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
+            }
+            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomVelocity, { 8.0f, 35.0f, 300.0f });
         }
 
         ImGui::SameLine();
