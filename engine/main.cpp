@@ -13,6 +13,7 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
+#include "profile_macros.hpp"
 #include "wren_bindings.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
