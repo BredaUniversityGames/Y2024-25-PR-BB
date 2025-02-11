@@ -6,15 +6,18 @@ class MovementClass{
     construct new(newHasDashed, newDashTimer){
         System.print("Movement Class Constructed")
         hasDashed = newHasDashed
+        hasDoubleJumped = false
         dashTimer = newDashTimer
     }
 
 
 //getters
     hasDashed {_hasDashed}
+    hasDoubleJumped {_hasDoubleJumped}
     dashTimer {_dashTimer}
 //setters
     hasDashed=(value) { _hasDashed  = value}
+    hasDoubleJumped=(value) { _hasDoubleJumped = value}
     dashTimer=(value) { _dashTimer = value}
 
 
@@ -66,14 +69,22 @@ class MovementClass{
         }
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
+        var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
+
 
 
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, 8.20, 0.0)
             wasGroundedLastFrame = false
+            hasDoubleJumped = false
         }else {
             wasGroundedLastFrame = isGrounded
+            if(doubleJump && hasDoubleJumped == false){
+                velocity.y = 0.0
+                velocity = velocity + Vec3.new(0.0, 8.20, 0.0)
+                hasDoubleJumped = true
+            }
         }
         wasGroundedLastFrame = isGrounded
 
