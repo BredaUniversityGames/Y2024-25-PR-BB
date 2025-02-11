@@ -1,6 +1,9 @@
 #include "particle_editor.hpp"
 
+#include "components/camera_component.hpp"
 #include "components/name_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "gpu_resources.hpp"
 
