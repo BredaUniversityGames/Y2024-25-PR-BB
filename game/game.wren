@@ -64,35 +64,35 @@ class Main {
         }
 
          if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            // var playerTransform = __player.GetTransformComponent()
-            // var direction = Math.ToVector(playerTransform.rotation)
-            // var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
-            // var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
-            // var end = start + direction * __rayDistanceVector
-            // if(!rayHitInfo.isEmpty) {
-            //     end = rayHitInfo[0].position
-            //     var entity = engine.GetECS().NewEntity()
-            //     var transform = entity.AddTransformComponent()
-            //     transform.translation = end
-            //     var lifetime = entity.AddLifetimeComponent()
-            //     lifetime.lifetime = 1000.0
-            //     var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-            //     engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-            // }
+            var playerTransform = __player.GetTransformComponent()
+            var direction = Math.ToVector(playerTransform.rotation)
+            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
+            var end = start + direction * __rayDistanceVector
+            if(!rayHitInfo.isEmpty) {
+                end = rayHitInfo[0].position
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = end
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 1000.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+            }
 
 
-            // var length = (end - start).length()
-            // var i = 5.0
-            // while (i < length) {
-            //     var entity = engine.GetECS().NewEntity()
-            //     var transform = entity.AddTransformComponent()
-            //     transform.translation = Math.Mix(start, end, i / length)
-            //     var lifetime = entity.AddLifetimeComponent()
-            //     lifetime.lifetime = 1000.0
-            //     var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-            //     engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-            //     i = i + 5.0
-            // }
+            var length = (end - start).length()
+            var i = 5.0
+            while (i < length) {
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = Math.Mix(start, end, i / length)
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 1000.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                i = i + 5.0
+            }
         }
 
 

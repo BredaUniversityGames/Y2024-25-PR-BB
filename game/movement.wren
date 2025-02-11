@@ -51,11 +51,10 @@ class MovementClass{
         }else {
             wasGroundedLastFrame = isGrounded
         }
-
         wasGroundedLastFrame = isGrounded
 
-        var maxSpeed = 15.0
-        var sv_accelerate = 10.0
+        var maxSpeed = 11.0
+        var sv_accelerate = 8.5
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
@@ -116,10 +115,8 @@ class MovementClass{
         }
 
         engine.GetPhysics().SetVelocity(playerBody, velocity)
-
         var pos = engine.GetPhysics().GetPosition(playerBody)
         pos.y = pos.y + 0.5
-
         player.GetTransformComponent().translation = pos
     }
 }
