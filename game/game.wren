@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "weapon.wren" for WeaponBase, Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -7,19 +7,6 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
-
-    
-        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
-
-        for (thing in __armory) {
-            thing.attack()
-        }
-
-        __activeWeapon = __armory[Weapons.pistol]
-        __activeWeapon.equip()
-
-        __activeWeapon.attack()
-
 
         __counter = 0
         __frameTimer = 0
@@ -46,8 +33,10 @@ class Main {
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
 
-        __rayDistance = 1000.0
-        __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
+        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
+
+        __activeWeapon = __armory[Weapons.pistol]
+        __activeWeapon.equip(engine)        
     }
 
     static Update(engine, dt) {
@@ -63,60 +52,18 @@ class Main {
             __counter = 0
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
-            var audioEmitter = __player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(shootingInstance)
-
-            System.print("Playing is shooting")
+        for (weapon in __armory) {
+            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            var playerTransform = __player.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
-            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
-            var end = rayHitInfo.position
-
-            if (rayHitInfo.hasHit) {
-                var entity = engine.GetECS().NewEntity()
-                var transform = entity.AddTransformComponent()
-                transform.translation = end
-                var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-            } else {
-                end = start + direction * __rayDistanceVector
-            }
-
-            var length = (end - start).length()
-            var i = 5.0
-            while (i < length) {
-                var entity = engine.GetECS().NewEntity()
-                var transform = entity.AddTransformComponent()
-                transform.translation = Math.Mix(start, end, i / length)
-                var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-                i = i + 5.0
-            }
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
+            __activeWeapon.attack(engine, dt)
+            //System.print("Playing is shooting")
         }
 
         if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
             System.print("Player Jumped!")
 
-        }
-
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        }
-        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            if(gunAnimations.AnimationFinished()) {
-                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
-            }
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")

@@ -230,6 +230,14 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static float Max(const float a, const float b)
+    {
+        return glm::max(a, b);
+    }
+    static float Min(const float a, const float b)
+    {
+        return glm::min(a, b);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -295,6 +303,8 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+    mathUtilClass.funcStatic<&MathUtil::Max>("Max");
+    mathUtilClass.funcStatic<&MathUtil::Min>("Min");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
