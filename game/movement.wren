@@ -259,15 +259,19 @@ class MovementClass{
 
             if(moveInputDir.length() > 0.01){
                 slideWishDirection = moveInputDir
-            }else{
-                slideWishDirection = forward
             }
-            velocity = velocity + (slideWishDirection* Vec3.new(slideForce,slideForce,slideForce))
+
+            if(slideWishDirection.length() > 0.01){
+                velocity = velocity + (slideWishDirection* Vec3.new(slideForce,slideForce,slideForce))
+            }else{
+                velocity = velocity + (forward* Vec3.new(slideForce,slideForce,slideForce))
+            }
             engine.GetPhysics().SetVelocity(playerBody, velocity)
 
         }else{
             isSliding = false
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
+            slideWishDirection = Vec3.new(0.0,0.0,0.0)
         }
     }
 }
