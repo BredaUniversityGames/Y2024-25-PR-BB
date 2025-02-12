@@ -2,9 +2,7 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, 
 
 class MovementClass{
 
-
     construct new(newHasDashed, newDashTimer){
-        System.print("Movement Class Constructed")
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
@@ -223,7 +221,6 @@ class MovementClass{
         }
 
         if(hasDashed == true){
-            System.print("Dashing")
             engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
