@@ -18,7 +18,6 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
-#include "model_loader.hpp"
 #include "passes/build_hzb_pass.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
@@ -62,8 +61,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeTonemappingTarget();
     InitializeFXAATarget();
     LoadEnvironmentMap();
-
-    _modelLoader = std::make_unique<ModelLoader>();
 
     _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
     _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
@@ -309,7 +306,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     }
 }
 
-std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::LoadModels(const std::vector<std::string>& modelPaths)
+std::vector<ResourceHandle<GPUModel>> Renderer::LoadModels(const std::vector<CPUModel>& cpuModels)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -324,16 +321,16 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::LoadModels(
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
-    SingleTimeCommands commands { _context->VulkanContext() };
-    for (const auto& path : modelPaths)
+    std::vector<ResourceHandle<GPUModel>> gpuModels{};
+    gpuModels.reserve(cpuModels.size());
+
+    for (const auto& cpuModel : cpuModels)
     {
-        auto cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
-        models.emplace_back(std::move(cpu), std::move(gpu));
+        auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
+        gpuModels.emplace_back(std::move(gpu));
     }
 
-    return models;
+    return gpuModels;
 }
 
 void Renderer::FlushCommands()
@@ -344,8 +341,6 @@ void Renderer::FlushCommands()
 Renderer::~Renderer()
 {
     auto vkContext { _context->VulkanContext() };
-
-    _modelLoader.reset();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {

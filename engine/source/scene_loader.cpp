@@ -18,6 +18,7 @@
 #include "cpu_resources.hpp"
 #include "systems/physics_system.hpp"
 
+#include <model_loading_module.hpp>
 #include <entt/entity/entity.hpp>
 
 void LoadNodeRecursive(ECSModule& ecs,
@@ -144,14 +145,22 @@ entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<
     return LoadModelIntoECSAsHierarchy(ecsModule, gpuModelResource, cpuModel, cpuModel.hierarchy, cpuModel.animations);
 }
 
-std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>>& models)
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels)
 {
-    std::vector<entt::entity> entities{};
-    entities.reserve(models.size());
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto gpuModels = rendererModule.LoadModels(cpuModels);
 
-    for (const auto& [cpuModel, gpuModel] : models)
+    std::vector<entt::entity> entities{};
+    entities.reserve(cpuModels.size());
+
+    if (cpuModels.size() == gpuModels.size())
     {
-        entities.push_back(LoadModel(engine, cpuModel, gpuModel));
+        throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
+    }
+
+    for (uint32_t i = 0; i < cpuModels.size(); ++i)
+    {
+        entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
     }
 
     return entities;
@@ -159,10 +168,17 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
 
 std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
 {
-    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto& modelLoadingModule = engine.GetModule<ModelLoadingModule>();
 
-    auto models = rendererModule.LoadModels(paths);
-    return LoadModels(engine, models);
+    std::vector<CPUModel> cpuModels{};
+    cpuModels.reserve(paths.size());
+
+    for (const auto& path : paths)
+    {
+        cpuModels.push_back(modelLoadingModule.LoadGLTF(path));
+    }
+
+    return LoadModels(engine, cpuModels);
 }
 
 

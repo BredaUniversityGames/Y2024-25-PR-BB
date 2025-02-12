@@ -3,19 +3,10 @@
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
-#include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include "resource_management/sampler_resource_manager.hpp"
-#include "single_time_commands.hpp"
-#include "timers.hpp"
-#include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -50,7 +41,7 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
+CPUModel ModelLoader::LoadGLTF(std::string_view path)
 {
     fastgltf::GltfFileStream fileStream { path };
 
@@ -809,7 +800,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     return model;
 }
 
-void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
+void ModelLoader::ReadGeometrySizeGLTF(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
 {
     vertexBufferSize = 0;
     indexBufferSize = 0;

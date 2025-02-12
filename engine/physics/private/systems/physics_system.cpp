@@ -168,7 +168,7 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
 
 void PhysicsSystem::CreateCollision(const std::string& path, const PhysicsShapes shapeType)
 {
-    CPUModel models = _collisionLoader.get()->ExtractModelFromGltfFile(path);
+    CPUModel models = _collisionLoader.get()->LoadGLTF(path);
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, shapeType);
 }
 

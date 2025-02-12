@@ -30,7 +30,6 @@ class PresentationPass;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
-class ModelLoader;
 class Engine;
 class BatchBuffer;
 class GPUScene;
@@ -48,9 +47,8 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> LoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<ResourceHandle<GPUModel>> LoadModels(const std::vector<CPUModel>& cpuModels);
 
-    ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
     BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
@@ -69,8 +67,6 @@ public:
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;
-
-    std::unique_ptr<ModelLoader> _modelLoader;
 
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;

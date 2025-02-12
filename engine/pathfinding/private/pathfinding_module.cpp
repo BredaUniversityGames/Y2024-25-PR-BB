@@ -3,6 +3,7 @@
 #include "engine.hpp"
 #include "model_loader.hpp"
 #include "renderer_module.hpp"
+#include "model_loading_module.hpp"
 
 #include "components/static_mesh_component.hpp"
 #include "graphics_context.hpp"
@@ -17,10 +18,9 @@
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    _renderer = engine.GetModule<RendererModule>().GetRenderer();
-
     std::string mesh_path = "assets/models/NavmeshTest/LevelNavmeshTest.glb";
-    this->SetNavigationMesh(mesh_path);
+    CPUModel navmesh = engine.GetModule<ModelLoadingModule>().LoadGLTF(mesh_path);
+    this->SetNavigationMesh(navmesh);
 
 #if 0
     auto models = _renderer->FrontLoadModels({ mesh_path });
@@ -38,7 +38,8 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 
 void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    DebugPass& debugPass = _renderer->GetDebugPipeline();
+    const Renderer& renderer = *engine.GetModule<RendererModule>().GetRenderer();
+    DebugPass& debugPass = renderer.GetDebugPipeline();
 
     ComputedPath path = FindPath(
         { -42.8f, 19.3f, 267.6f },
@@ -73,20 +74,18 @@ PathfindingModule::~PathfindingModule()
 {
 }
 
-int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
+int32_t PathfindingModule::SetNavigationMesh(const CPUModel& navmesh)
 {
-    CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
-
     uint32_t meshIndex = std::numeric_limits<uint32_t>::max();
     glm::mat4 transform = glm::mat4(1.0f);
 
-    Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
+    const Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
 
-    std::queue<std::pair<Hierarchy::Node*, glm::mat4>> nodeStack;
+    std::queue<std::pair<const Hierarchy::Node*, glm::mat4>> nodeStack;
     nodeStack.push({ rootNode, rootNode->transform });
     while (!nodeStack.empty())
     {
-        const std::pair<Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
+        const std::pair<const Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
         nodeStack.pop();
 
         if (topNodeTransform.first->meshIndex.has_value())
@@ -101,7 +100,7 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
 
         for (size_t i = 0; i < topNodeTransform.first->children.size(); i++)
         {
-            Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
+            const Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
             glm::mat4 transform = topNodeTransform.second * pNode->transform;
 
             nodeStack.push({ pNode, transform });

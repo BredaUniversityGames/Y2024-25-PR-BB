@@ -13,6 +13,7 @@
 #include "steam_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
+#include "model_loading_module.hpp"
 
 #include "wren_bindings.hpp"
 
@@ -34,7 +35,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         .AddModule<AudioModule>()
         .AddModule<UIModule>()
         .AddModule<ParticleModule>()
-        .AddModule<GameModule>();
+        .AddModule<GameModule>()
+        .AddModule<ModelLoadingModule>();
 
     auto& scripting = instance.GetModule<ScriptingModule>();
 

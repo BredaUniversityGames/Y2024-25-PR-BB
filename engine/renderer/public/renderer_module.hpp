@@ -23,7 +23,7 @@ public:
     NON_COPYABLE(RendererModule);
     NON_MOVABLE(RendererModule);
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> LoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<ResourceHandle<GPUModel>> LoadModels(const std::vector<CPUModel>& cpuModels);
 
     std::shared_ptr<Renderer> GetRenderer() { return _renderer; }
     std::shared_ptr<GraphicsContext> GetGraphicsContext() { return _context; }
