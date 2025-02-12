@@ -14,6 +14,8 @@
 #include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "pathfinding/pathfinding_bindings.hpp"
+#include "pathfinding_module.hpp"
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
@@ -111,6 +113,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
+        engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
     }
 
     // Time Module
@@ -151,6 +154,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Physics
     {
         BindPhysicsAPI(module);
+    }
+
+    // Pathfinding
+    {
+        BindPathfindingAPI(module);
     }
 
     // Game
