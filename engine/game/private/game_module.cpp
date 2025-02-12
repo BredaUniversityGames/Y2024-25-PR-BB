@@ -4,6 +4,7 @@
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "canvas.hpp"
+#include "cheats_component.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
