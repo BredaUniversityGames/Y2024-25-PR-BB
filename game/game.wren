@@ -91,6 +91,12 @@ class Main {
             //System.print("Playing is shooting")
         }
 
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
+            __activeWeapon.reload(engine)
+            //System.print("Playing is shooting")
+        }
+
+
         if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
             //System.print("Player Jumped!")
 

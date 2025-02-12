@@ -72,11 +72,11 @@ class Pistol is WeaponBase {
     reload (engine) {
         System.print("Pistol reload")
 
-
-        //if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-        //gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        //}
-        
+        var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        }
     }
 
     attack(engine, deltaTime) {
