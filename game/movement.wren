@@ -13,6 +13,11 @@ class MovementClass{
         sv_accelerate = 8.5
         jumpForce = 8.20
         gravityFactor = 2.2
+        playerHeight = 1.7
+        isGrounded = false
+        isSliding = false
+        slideWishDirection = Vec3.new(0.0,0.0,0.0)
+        
         
     }
 
@@ -22,12 +27,18 @@ class MovementClass{
     hasDashed {_hasDashed}
     hasDoubleJumped {_hasDoubleJumped}
     dashTimer {_dashTimer}
+    isSliding {_isSliding}
+    slideWishDirection {_slideWishDirection}
 
     //Base movement
     maxSpeed {_maxSpeed}
     sv_accelerate {_sv_accelerate}
     jumpForce {_jumpForce}
     gravityFactor {_gravityFactor} // A multiplier for the regular 9.8 gravity of the physics simulation
+    playerHeight {_playerHeight}
+    isGrounded {_isGrounded}
+    
+
 
 
 
@@ -36,12 +47,16 @@ class MovementClass{
     hasDashed=(value) { _hasDashed  = value}
     hasDoubleJumped=(value) { _hasDoubleJumped = value}
     dashTimer=(value) { _dashTimer = value}
+    isSliding=(value) { _isSliding = value}
+    slideWishDirection=(value) { _slideWishDirection = value}   
 
     //Base movement
     maxSpeed=(value) { _maxSpeed = value}
     sv_accelerate=(value) { _sv_accelerate = value}
     jumpForce=(value) { _jumpForce = value}
     gravityFactor=(value) { _gravityFactor = value}
+    playerHeight=(value) { _playerHeight = value}
+    isGrounded=(value) { _isGrounded = value}
 
 
     Movement(engine, playerController, player, wasGroundedLastFrame){
@@ -67,7 +82,7 @@ class MovementClass{
 
         var groundCheckRay = engine.GetPhysics().ShootRay(playerControllerPos, rayDirection, rayLength)
 
-        var isGrounded = false
+        isGrounded = false
         for(hit in groundCheckRay) {
 
 
@@ -155,29 +170,39 @@ class MovementClass{
             }
         }
 
-        // Wall Collision Fix - Project velocity if collision occurs
-        var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
+        // Not needed????
+        // // Wall Collision Fix - Project velocity if collision occurs
+        // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
 
-        for(hit in wallCheckRays) {
-        if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-            var wallNormal = hit.normal
+        // for(hit in wallCheckRays) {
+        // if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+        //     var wallNormal = hit.normal
 
-            //Clip velocity
-            var backoff = Math.Dot(velocity, wallNormal) * 1.0
-            velocity = velocity - wallNormal *  Vec3.new(backoff,backoff,backoff)
-        }
-        }
+        //     //Clip velocity
+        //     var backoff = Math.Dot(velocity, wallNormal) * 1.0
+        //     velocity = velocity - wallNormal *  Vec3.new(backoff,backoff,backoff)
+        // }
+        // }
 
         engine.GetPhysics().SetVelocity(playerBody, velocity)
         var pos = engine.GetPhysics().GetPosition(playerBody)
-        pos.y = pos.y + 0.5
+        if(isSliding == true){
+            pos.y = pos.y + (playerHeight/4.0)/2.0
+        }else{
+            pos.y = pos.y + playerHeight/2.0
+        }
         player.GetTransformComponent().translation = pos
     }
 
     Dash(engine, dt, playerController, player){
         var playerBody = playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
-        var dashForce = 14.0
+        var dashForce = 16.0
+        if(isGrounded==false){
+            dashForce = 9.0
+        }else{
+            dashForce = 14.0
+        }
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
 
             hasDashed = true
@@ -195,14 +220,14 @@ class MovementClass{
                 velocity = velocity + (moveInputDir * Vec3.new(dashForce,dashForce,dashForce))
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }else{
-                velocity = velocity + (forward * Vec3.new(dashForce,dashForce,dashForce))
+                velocity = velocity + (forward*Vec3.new(2.0,2.0,2.0)* Vec3.new(dashForce,dashForce,dashForce))
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }
         }
 
         if(hasDashed == true){
             System.print("Dashing")
-            engine.GetPhysics().GravityFactor(playerBody,gravityFactor/2.0) // reduce the gravity while dashing
+            engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
                 hasDashed = false
@@ -213,5 +238,36 @@ class MovementClass{
 
         }
 
+    }
+
+    Slide(engine, dt, playerController, player){
+        var slideForce = 5.0 * dt
+        if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded == true && hasDashed == false){
+            isSliding = true
+            //crouch first
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
+            var playerBody = playerController.GetRigidbodyComponent()
+            var velocity = engine.GetPhysics().GetVelocity(playerBody)
+            var cameraRotation = player.GetTransformComponent().rotation
+            var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
+            forward.y = 0.0
+            var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+            var movement = engine.GetInput().GetAnalogAction("Move")
+            var moveInputDir = Vec3.new(0.0,0.0,0.0)
+            moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+            moveInputDir = moveInputDir.normalize()
+
+            if(moveInputDir.length() > 0.01){
+                slideWishDirection = moveInputDir
+            }else{
+                slideWishDirection = forward
+            }
+            velocity = velocity + (slideWishDirection* Vec3.new(slideForce,slideForce,slideForce))
+            engine.GetPhysics().SetVelocity(playerBody, velocity)
+
+        }else{
+            isSliding = false
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
+        }
     }
 }

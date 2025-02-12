@@ -18,6 +18,7 @@ const GameActions GAME_ACTIONS {
                 .inputs = {
                     GamepadButton::eLEFT_SHOULDER,
                     GamepadButton::eEAST,
+                    KeyboardCode::eLCTRL,
                 },
             },
             {

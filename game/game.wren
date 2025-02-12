@@ -18,7 +18,7 @@ class Main {
         __hasDashed = false
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 90.0, 0.0),0.85,0.5)
+        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 90.0, 0.0),1.7,0.5)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
@@ -117,6 +117,7 @@ class Main {
 
         __movementClass.Movement(engine, __playerController, __player, __wasGroundedLastFrame )
         __movementClass.Dash(engine,dt,__playerController, __player)
+        __movementClass.Slide(engine,dt,__playerController, __player)
 
 
 

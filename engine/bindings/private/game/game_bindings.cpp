@@ -50,7 +50,7 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
         ecs.DestroyEntity(entity);
     }
     entt::entity playerEntity = ecs.GetRegistry().create();
-    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height / 2.0, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
     bodyCreationSettings.mAllowDynamicOrKinematic = true;
 
     bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
@@ -63,6 +63,24 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
     ecs.GetRegistry().emplace<RigidbodyComponent>(playerEntity, rb);
     ecs.GetRegistry().emplace<PlayerTag>(playerEntity, playerTag);
     return { playerEntity, &ecs.GetRegistry() };
+}
+
+// Do not pass heights smaller than 0.1f, it will get clamped for saftey to 0.1f
+void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const float height)
+{
+    auto playerView = ecs.GetRegistry().view<PlayerTag>();
+    for (auto entity : playerView)
+    {
+        auto& rb = ecs.GetRegistry().get<RigidbodyComponent>(entity);
+        const auto& shape = physicsModule.bodyInterface->GetShape(rb.bodyID);
+        auto capsuleShape = JPH::StaticCast<JPH::CapsuleShape>(shape);
+        if (capsuleShape == nullptr)
+        {
+            return;
+        }
+        const float radius = capsuleShape->GetRadius();
+        physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::CapsuleShape(height / 2.0, radius), true, JPH::EActivation::Activate);
+    }
 }
 }
 
@@ -77,4 +95,5 @@ void BindGameAPI(wren::ForeignModule& module)
 
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
+    game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
 }
