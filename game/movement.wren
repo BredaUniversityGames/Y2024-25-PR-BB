@@ -59,7 +59,7 @@ class MovementClass{
     isGrounded=(value) { _isGrounded = value}
 
 
-    Movement(engine, playerController, player, wasGroundedLastFrame){
+    Movement(engine, playerController, player){
 
         var cheats = playerController.GetCheatsComponent()
         if(cheats.noClip == true){
@@ -114,17 +114,14 @@ class MovementClass{
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
-            wasGroundedLastFrame = false
             hasDoubleJumped = false
         }else {
-            wasGroundedLastFrame = isGrounded
             if(doubleJump && hasDoubleJumped == false){
                 velocity.y = 0.0
                 velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
                 hasDoubleJumped = true
             }
         }
-        wasGroundedLastFrame = isGrounded
 
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)

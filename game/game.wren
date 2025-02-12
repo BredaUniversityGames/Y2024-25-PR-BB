@@ -8,10 +8,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
-        __wasGroundedLastFrame = false
-
         __movementClass = MovementClass.new(false,0.0)
-
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -115,7 +112,7 @@ class Main {
         }
  
 
-        __movementClass.Movement(engine, __playerController, __player, __wasGroundedLastFrame )
+        __movementClass.Movement(engine, __playerController, __player )
         __movementClass.Dash(engine,dt,__playerController, __player)
         __movementClass.Slide(engine,dt,__playerController, __player)
 
