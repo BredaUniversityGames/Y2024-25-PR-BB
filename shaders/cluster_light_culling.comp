@@ -1,0 +1,90 @@
+#version 460
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#define MAX_LIGHTS_PER_CLUSTER 256
+
+#include "scene.glsl"
+#include "clusters.glsl"
+
+layout (set = 0, binding = 0) readonly buffer Clusters { AABB clusters[]; }; //Input
+
+layout (set = 1, binding = 0) readonly buffer Lights { PointLightArray lights; }; //Input
+
+layout (set = 2, binding = 0) buffer AtomicCounter { uint globalIndex; }; //Output
+layout (set = 2, binding = 1) buffer LightCells { LightCell lightCells[]; }; //Output
+layout (set = 2, binding = 2) buffer LightIndices { uint lightIndices[]; }; //Output
+layout (set = 3, binding = 0) uniform CameraUBO { Camera camera; }; //Input
+
+shared uint sharedVisibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
+shared uint sharedLightIterator;
+
+float SquaredDistancePointAABB(vec3 point, uint tile)
+{
+    AABB currentCell = clusters[tile];
+    float squaredDistance = 0.0;
+
+    for (uint i = 0; i < 3; ++i) {
+        float v = point[i];
+        if (v < currentCell.min[i])
+        {
+            float diff = currentCell.min[i] - v;
+            squaredDistance += (diff * diff);
+        }
+        if (v > currentCell.max[i])
+        {
+            float diff = currentCell.max[i] - v;
+            squaredDistance += (diff * diff);
+        }
+    }
+    return squaredDistance;
+}
+
+bool TestSphereAABB(uint lightIndex, uint tile)
+{
+    float lightRadius = lights.lights[lightIndex].range;
+    vec4 lightPosition = vec4(lights.lights[lightIndex].position, 1.0);
+    vec4 positionView = camera.view * lightPosition;
+    float squaredDistance = SquaredDistancePointAABB(positionView.xyz, tile);
+
+    return squaredDistance < (lightRadius * lightRadius);
+}
+
+void main()
+{
+    uint tileIndex =
+    gl_WorkGroupID.x +
+    gl_WorkGroupID.y * gl_NumWorkGroups.x +
+    gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y;
+
+    uint visibleLightIndices[MAX_LIGHTS_PER_CLUSTER];
+    uint lightCount = lights.count;
+
+    uint lightIterator = 0;
+
+    if (gl_LocalInvocationIndex == 0) {
+        sharedLightIterator = 0;
+    }
+    barrier();
+
+    for (uint i = gl_LocalInvocationIndex; i < lightCount; i += gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z)
+    {
+        if (TestSphereAABB(i, tileIndex)) {
+            uint index = atomicAdd(sharedLightIterator, 1);
+            if (index < MAX_LIGHTS_PER_CLUSTER) {
+                sharedVisibleLightIndices[index] = i;
+            }
+        }
+    }
+    barrier();
+
+    if (gl_LocalInvocationIndex == 0) {
+        uint offset = atomicAdd(globalIndex, sharedLightIterator);
+        for (uint i = 0; i < sharedLightIterator; ++i)
+        {
+            lightIndices[offset + i] = sharedVisibleLightIndices[i];
+        }
+        lightCells[tileIndex].offset = offset;
+        lightCells[tileIndex].count = sharedLightIterator;
+    }
+}

@@ -28,6 +28,7 @@ GaussianBlurPass::GaussianBlurPass(const std::shared_ptr<GraphicsContext>& conte
     };
     createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
+    CreateDescriptorSetLayout();
     CreatePipeline();
     CreateDescriptorSets();
 }
@@ -141,21 +142,18 @@ void GaussianBlurPass::CreatePipeline()
 
 void GaussianBlurPass::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .pImmutableSamplers = nullptr,
+        },
+    };
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating gaussian blur descriptor set layout!");
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "source" });
+    util::NameObject(_descriptorSetLayout, "Gaussian blur descriptor set layout", _context->VulkanContext());
 }
 
 void GaussianBlurPass::CreateDescriptorSets()
