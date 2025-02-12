@@ -101,7 +101,7 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::SetAngularVelocity>("SetAngularVelocity");
     wren_class.funcExt<bindings::GetPosition>("GetPosition");
     wren_class.funcExt<bindings::GetRotation>("GetRotation");
-    wren_class.funcExt<bindings::SetGravityFactor>("GravityFactor");
+    wren_class.funcExt<bindings::SetGravityFactor>("SetGravityFactor");
     wren_class.funcExt<bindings::SetFriction>("SetFriction");
 
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");

@@ -110,6 +110,8 @@ class PlayerMovement{
         }else{
             engine.GetPhysics().SetFriction(playerBody, 12.0)
         }
+        engine.GetPhysics().SetGravityFactor(playerBody,gravityFactor) 
+
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
@@ -172,7 +174,9 @@ class PlayerMovement{
             }
         }
 
-        // Not needed????
+        // Wall Collision Fix - Project velocity if collision occurs
+        // Somehow it works without it currently, leave it here we might need it later
+        
         // // Wall Collision Fix - Project velocity if collision occurs
         // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
 
@@ -228,15 +232,11 @@ class PlayerMovement{
         }
 
         if(hasDashed){
-            //engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
                 hasDashed = false
                 dashTimer = 0.0
             }
-        }else{
-            engine.GetPhysics().GravityFactor(playerBody,gravityFactor) 
-
         }
 
     }
