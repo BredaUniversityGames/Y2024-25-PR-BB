@@ -11,7 +11,7 @@ int32_t SetNavigationMesh(PathfindingModule& self, const std::string& path)
     return self.SetNavigationMesh(path);
 }
 
-ComputedPath FindPath(PathfindingModule& self, glm::vec3 start_pos, glm::vec3 end_pos)
+ComputedPath FindPath(PathfindingModule& self, const glm::vec3& start_pos, const glm::vec3& end_pos)
 {
     return self.FindPath(start_pos, end_pos);
 }
