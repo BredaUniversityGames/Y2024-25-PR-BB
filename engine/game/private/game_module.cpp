@@ -61,7 +61,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
 
@@ -168,7 +168,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = ECS.GetRegistry().view<CameraComponent, TransformComponent>();
-
+        auto playerEntity = ECS.GetRegistry().view<PlayerTag>().front();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
             auto windowSize = applicationModule.DisplaySize();
@@ -221,36 +221,19 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
             glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
             position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-            TransformHelpers::SetLocalPosition(ECS.GetRegistry(), entity, position);
+
+            // Only update the position if the player is not in noclip mode
+            if (ECS.GetRegistry().all_of<CheatsComponent>(playerEntity))
+            {
+                CheatsComponent& cheatsComponent = ECS.GetRegistry().get<CheatsComponent>(playerEntity);
+                if (cheatsComponent.noClip == true)
+                {
+                    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), entity, position);
+                }
+            }
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule.debugRenderer->SetCameraPos(cameraPos);
-
-            // shoot rays
-            if (inputDeviceManager.IsKeyPressed(KeyboardCode::eSPACE))
-            {
-                const glm::vec3 cameraDir = (rotation * FORWARD);
-                const RayHitInfo hitInfo = physicsModule.ShootRay(position + glm::vec3(0.0001), glm::normalize(cameraDir), 5.0);
-
-                std::cout << "Hit: " << hitInfo.hasHit << std::endl
-                          << "Entity: " << static_cast<int>(hitInfo.entity) << std::endl
-                          << "Position: " << hitInfo.position.x << ", " << hitInfo.position.y << ", " << hitInfo.position.z << std::endl
-                          << "Fraction: " << hitInfo.hitFraction << std::endl;
-
-                if (ECS.GetRegistry().all_of<RigidbodyComponent>(hitInfo.entity))
-                {
-
-                    RigidbodyComponent& rb = ECS.GetRegistry().get<RigidbodyComponent>(hitInfo.entity);
-
-                    if (physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Dynamic)
-                    {
-                        JPH::Vec3 forceDirection = JPH::Vec3(cameraDir.x, cameraDir.y, cameraDir.z) * 2000000.0f;
-                        physicsModule.bodyInterface->AddImpulse(rb.bodyID, forceDirection);
-                    }
-
-                    particleModule.SpawnEmitter(hitInfo.entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eEmitOnce | SpawnEmitterFlagBits::eSetCustomPosition, hitInfo.position);
-                }
-            }
         }
     }
 
