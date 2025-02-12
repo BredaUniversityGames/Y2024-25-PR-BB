@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "movement.wren" for MovementClass
+import "movement.wren" for PlayerMovement
 
 class Main {
 
@@ -8,26 +8,26 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
-        __movementClass = MovementClass.new(false,0.0)
+        __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-        __player = engine.GetECS().GetEntityByName("Camera")
+        __camera = engine.GetECS().GetEntityByName("Camera")
         __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 90.0, 0.0),1.7,0.5)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         gunAnimations.Stop()
 
-        if (__player) {
+        if (__camera) {
             System.print("Player is online!")
 
-            var playerTransform = __player.GetTransformComponent()
+            var playerTransform = __camera.GetTransformComponent()
             playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
-            __player.AddAudioEmitterComponent()
+            __camera.AddAudioEmitterComponent()
             __playerController.AddCheatsComponent()
 
             //var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
@@ -57,14 +57,14 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
             var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
-            var audioEmitter = __player.GetAudioEmitterComponent()
+            var audioEmitter = __camera.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
 
             System.print("Playing is shooting")
         }
 
          if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            var playerTransform = __player.GetTransformComponent()
+            var playerTransform = __camera.GetTransformComponent()
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
@@ -111,15 +111,6 @@ class Main {
            cheats.noClip = !cheats.noClip
         }
  
-
-        __movementClass.Movement(engine, __playerController, __player )
-        __movementClass.Dash(engine,dt,__playerController, __player)
-        __movementClass.Slide(engine,dt,__playerController, __player)
-
-
-
-
-
-
+        __playerMovement.Update(engine,dt,__playerController, __camera)
     }
 }

@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 
-class MovementClass{
+class PlayerMovement{
 
     construct new(newHasDashed, newDashTimer){
         hasDashed = newHasDashed
@@ -57,7 +57,8 @@ class MovementClass{
     isGrounded=(value) { _isGrounded = value}
 
 
-    Movement(engine, playerController, player){
+
+    Movement(engine, playerController, camera){
 
         var cheats = playerController.GetCheatsComponent()
         if(cheats.noClip == true){
@@ -67,7 +68,7 @@ class MovementClass{
         var playerBody = playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
 
-        var cameraRotation = player.GetTransformComponent().rotation
+        var cameraRotation = camera.GetTransformComponent().rotation
         var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
         forward.y = 0.0
 
@@ -124,7 +125,7 @@ class MovementClass{
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
 
-        if(isGrounded && hasDashed == false){
+        if(isGrounded && !hasDashed){
 
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
@@ -186,10 +187,10 @@ class MovementClass{
         }else{
             pos.y = pos.y + playerHeight/2.0
         }
-        player.GetTransformComponent().translation = pos
+        camera.GetTransformComponent().translation = pos
     }
 
-    Dash(engine, dt, playerController, player){
+    Dash(engine, dt, playerController, camera){
         var playerBody = playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
         var dashForce = 16.0
@@ -201,7 +202,7 @@ class MovementClass{
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
 
             hasDashed = true
-            var cameraRotation = player.GetTransformComponent().rotation
+            var cameraRotation = camera.GetTransformComponent().rotation
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
             var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
@@ -220,7 +221,7 @@ class MovementClass{
             }
         }
 
-        if(hasDashed == true){
+        if(hasDashed){
             engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
@@ -234,15 +235,15 @@ class MovementClass{
 
     }
 
-    Slide(engine, dt, playerController, player){
+    Slide(engine, dt, playerController, camera){
         var slideForce = 5.0 * dt
-        if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded == true && hasDashed == false){
+        if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
             //crouch first
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = engine.GetPhysics().GetVelocity(playerBody)
-            var cameraRotation = player.GetTransformComponent().rotation
+            var cameraRotation = camera.GetTransformComponent().rotation
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
             var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
@@ -267,5 +268,13 @@ class MovementClass{
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
             slideWishDirection = Vec3.new(0.0,0.0,0.0)
         }
+    }
+
+
+    
+    Update(engine, dt, playerController, camera){
+        this.Movement(engine, playerController, camera)
+        this.Dash(engine, dt, playerController, camera)
+        this.Slide(engine, dt, playerController, camera)
     }
 }
