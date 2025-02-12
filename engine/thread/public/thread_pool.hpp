@@ -12,13 +12,16 @@ public:
     ThreadPool(uint32_t threadCount);
     ~ThreadPool();
 
-    template <typename Ret>
-    std::future<Ret> QueueWork(std::packaged_task<Ret()>&& task)
+    template <typename Functor, typename... Args>
+    auto QueueWork(Functor&& f)
     {
-        auto future = task.get_future();
+        using Ret = std::invoke_result_t<Functor>;
+        auto packaged = std::packaged_task<Ret()>(std::move(f));
+        auto future = packaged.get_future();
+
         {
             std::scoped_lock<std::mutex> lock { _mutex };
-            _tasks.emplace(std::make_unique<detail::BasicTaskImpl<Ret>>(std::move(task)));
+            _tasks.emplace(std::make_unique<detail::BasicTaskImpl<Ret>>(std::move(packaged)));
         }
 
         _workerNotify.notify_one();
@@ -33,6 +36,7 @@ public:
     void CancelAll();
 
     // Blocks the calling thread until all work in the queue is complete
+    // WARN: any futures that are cancelled will throw if accessed
     void FinishPendingWork();
 
 private:

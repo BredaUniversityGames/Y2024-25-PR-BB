@@ -29,17 +29,17 @@ TEST(ThreadPoolTests, QueueAndExecute)
     ThreadPool pool { 1 };
     pool.Start();
 
-    auto future = pool.QueueWork(std::packaged_task<int()>(FibTask(10)));
+    auto future = pool.QueueWork(FibTask(10));
     EXPECT_EQ(future.get(), 3'628'800);
 }
 
 TEST(ThreadPoolTests, WaitForAllTasks)
 {
     ThreadPool pool { 1 };
-    auto future = pool.QueueWork(std::packaged_task<int()>(FibTask(100)));
+    auto future = pool.QueueWork(FibTask(100));
 
     pool.Start();
-    pool.FinishWork();
+    pool.FinishPendingWork();
 
     // Check if the future is already ready
     EXPECT_NE(future.wait_for(std::chrono::milliseconds(0)), std::future_status::timeout);
@@ -48,7 +48,7 @@ TEST(ThreadPoolTests, WaitForAllTasks)
 TEST(ThreadPoolTests, TaskCancelled)
 {
     ThreadPool pool { 1 };
-    auto future = pool.QueueWork(std::packaged_task<int()>(FibTask(100)));
+    auto future = pool.QueueWork(FibTask(100));
     pool.CancelAll();
 
     EXPECT_THROW(future.get(), std::future_error);
@@ -63,12 +63,12 @@ TEST(ThreadPoolTests, TaskParallelism)
 
     for (int i = 0; i < THREAD_COUNT; i++)
     {
-        pool.QueueWork(std::packaged_task<void()>(WaitTask(WAIT_TIME)));
+        pool.QueueWork(WaitTask(WAIT_TIME));
     }
 
     Stopwatch t {};
     pool.Start();
-    pool.FinishWork();
+    pool.FinishPendingWork();
     auto elapsed = t.GetElapsed().count();
 
     EXPECT_LT(elapsed, WAIT_TIME * THREAD_COUNT);
