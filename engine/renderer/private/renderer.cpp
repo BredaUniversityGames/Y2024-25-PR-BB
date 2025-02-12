@@ -44,8 +44,6 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-#include <timers.hpp>
-
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)

@@ -1,8 +1,6 @@
 #include "editor.hpp"
-
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
-#include "bloom_settings.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -14,26 +12,15 @@
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
-#include "gbuffers.hpp"
-#include "gpu_scene.hpp"
-#include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "log.hpp"
-#include "menus/performance_tracker.hpp"
 #include "model_loader.hpp"
-#include "passes/fxaa_pass.hpp"
-#include "passes/ssao_pass.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
-// #include "serialization.hpp"
 #include "systems/lifetime_component.hpp"
 #include "systems/physics_system.hpp"
-#include "vulkan_context.hpp"
 
 #include <entt/entity/entity.hpp>
-#include <fstream>
 #include <imgui/misc/cpp/imgui_stdlib.h>
-#include <vk_mem_alloc.h>
 
 Editor::Editor(ECSModule& ecs)
     : _ecs(ecs)

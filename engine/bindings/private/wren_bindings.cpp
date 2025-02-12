@@ -18,11 +18,8 @@
 #include "renderer/animation_bindings.hpp"
 #include "systems/lifetime_component.hpp"
 #include "time_module.hpp"
-#include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
-
-#include <cstdint>
 
 namespace bindings
 {
