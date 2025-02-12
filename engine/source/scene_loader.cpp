@@ -23,6 +23,24 @@
 #include <glm/glm.hpp>
 #include <single_time_commands.hpp>
 
+void ProcessNodeGameplayComponents(const Hierarchy::Node& node, ECSModule& ecs, entt::entity currentEntity)
+{
+    // enemy spawners
+    if (node.name.starts_with("ESPWN_"))
+    {
+        assert(false && "Enemy spawner component not yet implemented");
+        // ecs.GetRegistry().emplace<EnemySpawnerComponent>(currentEntity);
+    }
+
+    // player spawn point
+    // note: if there are multiple spawnpoints in the given hierarchy then the last one to be processed will be the actual player spawn point.
+    if (node.name.starts_with("PSPWN_"))
+    {
+        assert(false && "Enemy spawner component not yet implemented");
+        // ecs.GetRegistry().emplace<EnemySpawnerComponent>(currentEntity);
+    }
+}
+
 void LoadNodeRecursive(ECSModule& ecs,
     entt::entity entity,
     uint32_t currentNodeIndex,
@@ -33,7 +51,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     AnimationControlComponent* animationControl,
     std::unordered_map<uint32_t, entt::entity>& entityLUT, // Used for looking up from hierarchy node index to entt entity.
     entt::entity skeletonRoot = entt::null,
-    bool isSkeletonRoot = false)
+    bool isSkeletonRoot = false, SceneLoading::LoadFlags loadFlags)
 {
     const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
@@ -50,6 +68,7 @@ void LoadNodeRecursive(ECSModule& ecs,
 
     TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
 
+    // Static/skeletal meshes
     if (currentNode.meshIndex.has_value())
     {
         switch (currentNode.meshIndex.value().first)
@@ -58,42 +77,56 @@ void LoadNodeRecursive(ECSModule& ecs,
             ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
 
             // check if it should have collider
-
-            ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
-
-            // add collider recursively
-
+            if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadCollision))
+            {
+                ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
+            }
             break;
+
         case MeshType::eSKINNED:
-            ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);
+
+            if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadSkeletalMeshes))
+            {
+                ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);
+            }
             break;
+
         default:
             throw std::runtime_error("Mesh type not supported!");
         }
     }
 
-    if (!currentNode.animationSplines.empty())
+    if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadSkeletalMeshes))
     {
-        assert(animationControl != nullptr);
+        if (!currentNode.animationSplines.empty())
+        {
+            assert(animationControl != nullptr);
 
-        auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannelComponent>(entity);
-        animationChannel.animationSplines = currentNode.animationSplines;
-        animationChannel.animationControl = animationControl;
+            auto& animationChannel = ecs.GetRegistry().emplace<AnimationChannelComponent>(entity);
+            animationChannel.animationSplines = currentNode.animationSplines;
+            animationChannel.animationControl = animationControl;
+        }
+
+        if (isSkeletonRoot)
+        {
+            ecs.GetRegistry().emplace<SkeletonComponent>(entity);
+            skeletonRoot = entity;
+        }
+
+        if (currentNode.joint.has_value())
+        {
+            auto& joint = ecs.GetRegistry().emplace<JointComponent>(entity);
+            joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
+            joint.jointIndex = currentNode.joint.value().index;
+            assert(skeletonRoot != entt::null && "Joint requires a skeleton root, that should be present!");
+            joint.skeletonEntity = skeletonRoot;
+        }
     }
 
-    if (isSkeletonRoot)
+    // Gameplay components.
+    if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadGameplayElements))
     {
-        ecs.GetRegistry().emplace<SkeletonComponent>(entity);
-        skeletonRoot = entity;
-    }
-
-    if (currentNode.joint.has_value())
-    {
-        auto& joint = ecs.GetRegistry().emplace<JointComponent>(entity);
-        joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
-        joint.jointIndex = currentNode.joint.value().index;
-        assert(skeletonRoot != entt::null && "Joint requires a skeleton root, that should be present!");
-        joint.skeletonEntity = skeletonRoot;
+        ProcessNodeGameplayComponents(hierarchy.nodes[currentNodeIndex], ecs, entity);
     }
 
     for (const auto& nodeIndex : currentNode.children)
@@ -103,7 +136,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     }
 }
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
+entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations, LoadFlags loadFlags)
 {
     entt::entity rootEntity = ecs.GetRegistry().create();
 
@@ -120,6 +153,8 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     if (hierarchy.skeletonRoot.has_value())
     {
         entt::entity skeletonEntity = ecs.GetRegistry().create();
+
+        // Note: load twice?
         LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, true);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
