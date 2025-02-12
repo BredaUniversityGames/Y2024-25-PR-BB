@@ -11,25 +11,25 @@ class Main {
         __frameTimer = 0
         __timer = 0
         __player = engine.GetECS().GetEntityByName("Camera")
-        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        gunAnimations.Stop()
+        //__gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        //var gunAnimations = __gun.GetAnimationControlComponent()
+        //gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        //gunAnimations.Stop()
 
         if (__player) {
             System.print("Player is online!")
 
-            var playerTransform = __player.GetTransformComponent()
-            playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+            //var playerTransform = __player.GetTransformComponent()
+            //playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
             __player.AddAudioEmitterComponent()
 
             //var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
             //engine.GetParticles().SpawnEmitter(__player, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
 
-            var gunTransform = __gun.GetTransformComponent()
-            gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+            //var gunTransform = __gun.GetTransformComponent()
+            //gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
+            //gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
 
         __rayDistance = 1000.0
@@ -90,30 +90,14 @@ class Main {
             }
         }
 
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            System.print("Player Jumped!")
-
-        }
-
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        }
-        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            if(gunAnimations.AnimationFinished()) {
-                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
-            }
-        }
-
-        var movement = engine.GetInput().GetAnalogAction("Move")
-
-        if (movement.length() > 0) {
-            System.print("Player is moving")
-        }
-
-        var key = Keycode.eA()
-        if (engine.GetInput().DebugGetKey(key)) {
-            System.print("[Debug] Player pressed A!")
-        }
+        //var gunAnimations = __gun.GetAnimationControlComponent()
+        //if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+        //    gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        //}
+        //if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
+        //    if(gunAnimations.AnimationFinished()) {
+        //        gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
+        //    }
+        //}
     }
 }
