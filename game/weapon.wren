@@ -98,9 +98,9 @@ class Pistol is WeaponBase {
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                lifetime.lifetime = 300.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 5.0, 0.0))
             } else {
                 end = start + direction * __rayDistanceVector
             }
@@ -112,9 +112,9 @@ class Pistol is WeaponBase {
                 var transform = entity.AddTransformComponent()
                 transform.translation = Math.Mix(start, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                lifetime.lifetime = 200.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
                 i = i + 5.0
             }
 
