@@ -20,7 +20,7 @@
 #include "systems/physics_system.hpp"
 
 #include <entt/entity/entity.hpp>
-#include <imgui/misc/cpp/imgui_stdlib.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 Editor::Editor(ECSModule& ecs)
     : _ecs(ecs)
