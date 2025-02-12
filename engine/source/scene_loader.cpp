@@ -144,20 +144,25 @@ entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<
     return LoadModelIntoECSAsHierarchy(ecsModule, gpuModelResource, cpuModel, cpuModel.hierarchy, cpuModel.animations);
 }
 
-std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>>& models)
 {
-    auto& rendererModule = engine.GetModule<RendererModule>();
-
     std::vector<entt::entity> entities{};
-    entities.reserve(paths.size());
+    entities.reserve(models.size());
 
-    auto models = rendererModule.LoadModels(paths);
     for (const auto& [cpuModel, gpuModel] : models)
     {
         entities.push_back(LoadModel(engine, cpuModel, gpuModel));
     }
 
     return entities;
+}
+
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
+{
+    auto& rendererModule = engine.GetModule<RendererModule>();
+
+    auto models = rendererModule.LoadModels(paths);
+    return LoadModels(engine, models);
 }
 
 
