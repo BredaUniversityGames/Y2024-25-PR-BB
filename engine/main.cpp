@@ -11,6 +11,7 @@
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
+#include "thread_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
@@ -18,29 +19,41 @@
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
-    MainEngine instance;
+    ThreadPool pool { 4 };
 
-    instance
-        .AddModule<ScriptingModule>()
-        .AddModule<InspectorModule>()
-        .AddModule<ECSModule>()
-        .AddModule<TimeModule>()
-        .AddModule<SteamModule>()
-        .AddModule<ApplicationModule>()
-        .AddModule<PhysicsModule>()
-        .AddModule<OldEngine>()
-        .AddModule<RendererModule>()
-        .AddModule<PathfindingModule>()
-        .AddModule<AudioModule>()
-        .AddModule<UIModule>()
-        .AddModule<ParticleModule>()
-        .AddModule<GameModule>();
+    auto wait = []()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    };
 
-    auto& scripting = instance.GetModule<ScriptingModule>();
+    pool.QueueWork(std::packaged_task<void()>(wait));
+    pool.Start();
+    pool.FinishWork();
 
-    BindEngineAPI(scripting.GetForeignAPI());
-    scripting.GenerateEngineBindingsFile();
-    scripting.SetMainScript(instance, "game/game.wren");
-
-    return instance.Run();
+    // MainEngine instance;
+    //
+    // instance
+    //     .AddModule<ThreadModule>()
+    //     .AddModule<ScriptingModule>()
+    //     .AddModule<InspectorModule>()
+    //     .AddModule<ECSModule>()
+    //     .AddModule<TimeModule>()
+    //     .AddModule<SteamModule>()
+    //     .AddModule<ApplicationModule>()
+    //     .AddModule<PhysicsModule>()
+    //     .AddModule<OldEngine>()
+    //     .AddModule<RendererModule>()
+    //     .AddModule<PathfindingModule>()
+    //     .AddModule<AudioModule>()
+    //     .AddModule<UIModule>()
+    //     .AddModule<ParticleModule>()
+    //     .AddModule<GameModule>();
+    //
+    // auto& scripting = instance.GetModule<ScriptingModule>();
+    //
+    // BindEngineAPI(scripting.GetForeignAPI());
+    // scripting.GenerateEngineBindingsFile();
+    // scripting.SetMainScript(instance, "game/game.wren");
+    //
+    // return instance.Run();
 }
