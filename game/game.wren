@@ -1,11 +1,51 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 
+class Base {
+    construct new(engine) {
+        _width = Vec3.new(1, 1, 1)
+        _engine = engine
+    }
+
+    shoot() {
+        System.print("base")
+    }
+
+    width { _width }
+
+    width=(value) { _width = value }
+}
+
+class Derived is Base {
+
+    construct new() {
+        _width = Vec3.new(2, 2, 2)
+    }
+
+    shoot() {
+        System.print("derived")
+    }
+} 
+
 class Main {
 
     static Start(engine) {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+
+        __base = Base.new(engine)
+        __derived = Derived.new()
+
+        __armory = [__base, __derived]
+
+        for (thing in __armory) {
+            thing.shoot()
+        }
+
+        __activeWeapon = __armory[0]
+
+        __activeWeapon.shoot()
+
 
         __counter = 0
         __frameTimer = 0
