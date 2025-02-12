@@ -7,8 +7,8 @@ class PlayerMovement{
         hasDoubleJumped = false
         dashTimer = newDashTimer
 
-        maxSpeed = 11.0
-        sv_accelerate = 8.5
+        maxSpeed = 7.0
+        sv_accelerate = 5.5
         jumpForce = 8.20
         gravityFactor = 2.2
         playerHeight = 1.7
@@ -176,7 +176,7 @@ class PlayerMovement{
 
         // Wall Collision Fix - Project velocity if collision occurs
         // Somehow it works without it currently, leave it here we might need it later
-        
+
         // // Wall Collision Fix - Project velocity if collision occurs
         // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
 

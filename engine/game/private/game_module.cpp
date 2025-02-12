@@ -61,7 +61,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb",
+        "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
 

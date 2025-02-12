@@ -19,7 +19,7 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(0.0, 90.0, 0.0),1.7,0.5)
+        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(-18.3, 30.3, 193.8),1.7,0.5)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
