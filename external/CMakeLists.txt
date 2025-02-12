@@ -1,5 +1,4 @@
 # Magic Enum
-
 FetchContent_Declare(
         MagicEnum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
@@ -11,7 +10,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(MagicEnum)
 
 # SpdLog
-
 FetchContent_Declare(
         SpdLog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -23,7 +21,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SpdLog)
 
 # Vulkan
-
 find_package(Vulkan REQUIRED)
 add_library(VulkanAPI INTERFACE)
 
@@ -32,7 +29,6 @@ target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
 target_compile_definitions(VulkanAPI INTERFACE VULKAN_HPP_NO_CONSTRUCTORS)
 
 # Vulkan Memory allocator
-
 FetchContent_Declare(
         VMA
         GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
@@ -44,7 +40,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(VMA)
 
 # FastGLTF
-
 FetchContent_Declare(
         FastGLTF
         GIT_REPOSITORY https://github.com/spnda/fastgltf.git
@@ -56,7 +51,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(FastGLTF)
 
 # Cereal
-
 FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
@@ -65,24 +59,20 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-# FreeType
-set(FT_DISABLE_HARFBUZZ ON)
-add_subdirectory(freetype)
-
-# FMOD (no git to fetch content)
-
-add_subdirectory(fmod)
-
-# Cereal
-
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_SANDBOX "Build sandbox examples" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 FetchContent_MakeAvailable(cereal)
 
-# Wren Language
+# FreeType
+set(FT_DISABLE_HARFBUZZ ON)
+add_subdirectory(freetype)
 
+# FMOD (no git to fetch content)
+add_subdirectory(fmod)
+
+# Wren Language
 FetchContent_Declare(
         wren
         GIT_REPOSITORY https://github.com/santiberna/wrenbind17.git
@@ -96,7 +86,6 @@ FetchContent_MakeAvailable(wren)
 
 
 # Tracy Profiler
-
 FetchContent_Declare(
         Tracy
         GIT_REPOSITORY https://github.com/wolfpld/tracy.git
@@ -116,7 +105,6 @@ set(TRACY_ON_DEMAND ON)
 FetchContent_MakeAvailable(Tracy)
 
 # EnTT
-
 FetchContent_Declare(
         EnTT
         GIT_REPOSITORY https://github.com/skypjack/entt.git
@@ -128,11 +116,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(EnTT)
 
 # SDL
-
 FetchContent_Declare(
         SDL
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG preview-3.1.3
+        GIT_TAG release-3.2.0
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -144,7 +131,6 @@ FetchContent_MakeAvailable(SDL)
 target_compile_options(SDL3-static PRIVATE -Wno-deprecated-declarations)
 
 # GLM
-
 FetchContent_Declare(
         GLM
         GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -159,7 +145,6 @@ FetchContent_MakeAvailable(GLM)
 target_compile_definitions(glm PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_ENABLE_EXPERIMENTAL PUBLIC GLM_FORCE_QUAT_DATA_WXYZ)
 
 # Jolt
-
 FetchContent_Declare(
         JoltPhysics
         GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
@@ -197,7 +182,6 @@ target_compile_options(Jolt PRIVATE
 )
 
 # SPIRV-Reflect
-
 FetchContent_Declare(
         SPIRV-Reflect
         GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
@@ -209,7 +193,6 @@ override_option(SPIRV_REFLECT_STATIC_LIB ON)
 FetchContent_MakeAvailable(SPIRV-Reflect)
 
 # ImGUI and ImPlot (cannot be used with FetchContent without forking)
-
 file(GLOB imgui_sources CONFIGURE_DEPENDS "imgui/*.cpp")
 file(GLOB imgui_headers CONFIGURE_DEPENDS "imgui/*.h")
 
@@ -241,17 +224,14 @@ target_include_directories(ImGui
 )
 
 # Steamworks API
-
 add_subdirectory(steamworks)
 
 # Enable Unity for external libraries
-
 if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
 
 # Useful defines for vulkan
-
 if (WIN32)
     target_compile_options(VulkanAPI
             INTERFACE -DVK_USE_PLATFORM_WIN32_KHR

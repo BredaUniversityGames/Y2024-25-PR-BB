@@ -1,6 +1,6 @@
 #include "game_bindings.hpp"
 
-#include "lifetime_component.hpp"
+#include "systems/lifetime_component.hpp"
 #include "utility/wren_entity.hpp"
 
 namespace bindings

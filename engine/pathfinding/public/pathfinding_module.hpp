@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cpu_resources.hpp"
 #include "module_interface.hpp"
 #include "renderer.hpp"
 #include <glm/glm.hpp>
@@ -94,6 +95,9 @@ public:
     int32_t SetNavigationMesh(const std::string& mesh);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
+    bool SetDebugDrawState(bool state) { return _debugDraw = state; }
+    bool GetDebugDrawState() const { return _debugDraw; }
+
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
     ComputedPath ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes);
@@ -121,4 +125,9 @@ private:
     std::vector<TriangleInfo> _triangles;
     std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
     glm::mat4 _inverseTransform = glm::mat4(1.0f);
+
+    CPUMesh<Vertex> _mesh = {};
+
+    bool _debugDraw = false;
+    std::vector<ComputedPath> _computedPaths;
 };
