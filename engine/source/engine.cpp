@@ -44,8 +44,8 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
-    auto& rendererModule = engine.GetModule<RendererModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
+    particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
@@ -56,24 +56,14 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        // "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-
-    particleModule.LoadEmitterPresets();
-
-    auto models = rendererModule.FrontLoadModels(modelPaths);
-    std::vector<entt::entity> entities;
-
-    auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    std::vector<entt::entity> entities = SceneLoading::LoadModels(engine, modelPaths);
+    auto gunEntity = entities[1];
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
-
-    // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
     _ecs->GetRegistry().emplace<TransformComponent>(lightEntity);

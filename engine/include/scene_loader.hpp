@@ -1,18 +1,12 @@
 #pragma once
 
-#include "animation.hpp"
-#include "cpu_resources.hpp"
+#include <vector>
+#include <string>
 
-#include <entt/entity/entity.hpp>
-#include <memory>
-#include <optional>
-
-class GraphicsContext;
-class ECSModule;
-
-struct Animation;
+class Engine;
 
 namespace SceneLoading
 {
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel,const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations = {});
+// Loads multiple models into the scene at once, using the given path.
+std::vector<entt::entity> LoadModels(Engine& engine, const std::vector<std::string>& paths);
 };

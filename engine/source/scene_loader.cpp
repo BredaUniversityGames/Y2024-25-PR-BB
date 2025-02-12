@@ -15,13 +15,10 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-
+#include "cpu_resources.hpp"
 #include "systems/physics_system.hpp"
-#include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
-#include <glm/glm.hpp>
-#include <single_time_commands.hpp>
 
 void LoadNodeRecursive(ECSModule& ecs,
     entt::entity entity,
@@ -103,7 +100,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     }
 }
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
 {
     entt::entity rootEntity = ecs.GetRegistry().create();
 
@@ -136,3 +133,31 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
 
     return rootEntity;
 }
+
+entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<GPUModel> gpuModel)
+{
+    auto& ecsModule = engine.GetModule<ECSModule>();
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    const GPUModel& gpuModelResource = *modelResourceManager.Access(gpuModel);
+
+    return LoadModelIntoECSAsHierarchy(ecsModule, gpuModelResource, cpuModel, cpuModel.hierarchy, cpuModel.animations);
+}
+
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
+{
+    auto& rendererModule = engine.GetModule<RendererModule>();
+
+    std::vector<entt::entity> entities{};
+    entities.reserve(paths.size());
+
+    auto models = rendererModule.LoadModels(paths);
+    for (const auto& [cpuModel, gpuModel] : models)
+    {
+        entities.push_back(LoadModel(engine, cpuModel, gpuModel));
+    }
+
+    return entities;
+}
+
+

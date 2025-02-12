@@ -309,7 +309,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     }
 }
 
-std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::LoadModels(const std::vector<std::string>& modelPaths)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -335,6 +335,7 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
 
     return models;
 }
+
 void Renderer::FlushCommands()
 {
     GetContext()->VulkanContext()->Device().waitIdle();

@@ -48,10 +48,9 @@ void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
     _renderer->Render(dt.count());
 }
 
-std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> RendererModule::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> RendererModule::LoadModels(const std::vector<std::string>& modelPaths)
 {
-    auto result = _renderer->FrontLoadModels(modelPaths);
-
+    auto result = _renderer->LoadModels(modelPaths);
     _renderer->UpdateBindless();
 
     return result;

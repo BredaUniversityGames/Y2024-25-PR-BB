@@ -48,7 +48,7 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> LoadModels(const std::vector<std::string>& modelPaths);
 
     ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
