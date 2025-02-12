@@ -1,4 +1,4 @@
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
 
 #include "animation.hpp"
 #include "components/joint_component.hpp"
