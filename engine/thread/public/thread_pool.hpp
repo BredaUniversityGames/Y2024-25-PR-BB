@@ -36,7 +36,7 @@ public:
     void FinishPendingWork();
 
 private:
-    static void WorkerMain(ThreadPool* pool);
+    static void WorkerMain(ThreadPool* pool, uint32_t ID);
 
     std::mutex _mutex;
     std::condition_variable _workerNotify;

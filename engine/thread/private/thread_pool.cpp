@@ -1,10 +1,12 @@
+#include "profile_macros.hpp"
+#include <string>
 #include <thread_pool.hpp>
 
 ThreadPool::ThreadPool(uint32_t threadCount)
 {
     for (uint32_t i = 0; i < threadCount; i++)
     {
-        _threads.emplace_back(std::thread(WorkerMain, this));
+        _threads.emplace_back(std::thread(WorkerMain, this, i));
     }
 }
 
@@ -55,8 +57,11 @@ void ThreadPool::FinishPendingWork()
         { return _tasks.empty(); });
 }
 
-void ThreadPool::WorkerMain(ThreadPool* pool)
+void ThreadPool::WorkerMain(ThreadPool* pool, uint32_t ID)
 {
+    std::string threadName = "WorkerThread " + std::to_string(ID);
+    tracy::SetThreadNameWithHint(threadName.c_str(), 1);
+
     while (true)
     {
         Task my_task {};
@@ -79,7 +84,9 @@ void ThreadPool::WorkerMain(ThreadPool* pool)
             pool->_tasks.pop();
         }
 
-        my_task.Run();
+        if (my_task.Valid())
+            my_task.Run();
+
         pool->_ownerNotify.notify_all();
     }
 }
