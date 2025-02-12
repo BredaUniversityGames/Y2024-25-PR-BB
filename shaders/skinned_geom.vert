@@ -36,9 +36,20 @@ layout (location = 2) out vec2 texCoord;
 layout (location = 4) out mat3 TBN;
 layout (location = 3) out flat uint drawID;
 
+mat3 Adjoint(in mat4 m)
+{
+    return mat3(
+    cross(m[1].xyz, m[2].xyz),
+    cross(m[2].xyz, m[0].xyz),
+    cross(m[0].xyz, m[1].xyz)
+    );
+}
+
 void main()
 {
     Instance instance = instances[redirect[gl_DrawID]];
+    drawID = redirect[gl_DrawID];
+    mat4 modelTransform = instance.model;
 
     mat4 skinMatrix =
     inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
@@ -46,14 +57,14 @@ void main()
     inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
     inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
 
-    position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
-    normal = normalize(skinMatrix * vec4(inNormal, 0.0)).xyz;
+    mat4 transform = modelTransform * skinMatrix;
 
-    mat4 modelTransform = instance.model;
-    drawID = redirect[gl_DrawID];
+    position = (transform * vec4(inPosition, 1.0)).xyz;
 
-    vec3 tangent = normalize((modelTransform * vec4(inTangent.xyz, 0.0)).xyz);
-    vec3 bitangent = normalize((modelTransform * vec4(inTangent.w * cross(inNormal, inTangent.xyz), 0.0)).xyz);
+    mat3 normalTransform = Adjoint(transform);
+    normal = normalize(normalTransform * inNormal).xyz;
+    vec3 tangent = normalize((normalTransform * inTangent.xyz).xyz);
+    vec3 bitangent = normalize(normalTransform * (inTangent.w * cross(inNormal, inTangent.xyz)));
     TBN = mat3(tangent, bitangent, normal);
     texCoord = inTexCoord;
 

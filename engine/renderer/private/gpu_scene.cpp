@@ -36,7 +36,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , _context(creation.context)
-, _settings(settings)
+    , _settings(settings)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context, true)
     , _directionalLightShadowCamera(creation.context, false)
@@ -307,6 +307,7 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
     auto jointView = _ecs.GetRegistry().view<JointComponent, WorldMatrixComponent>();
+    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
     static std::array<glm::mat4, MAX_BONES> skinMatrices {};
     static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
     skeletonBoneOffset.clear();
@@ -324,8 +325,12 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     for (entt::entity entity : jointView)
     {
         const auto& joint = jointView.get<JointComponent>(entity);
-        const auto& matrixComponent = jointView.get<WorldMatrixComponent>(entity);
-        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrixComponent);
+        const auto& jointMatrixComponent = jointView.get<WorldMatrixComponent>(entity);
+        const glm::mat4& jointWorldTransform = TransformHelpers::GetWorldMatrix(jointMatrixComponent);
+
+        const auto& skeletonMatrixComponent = skeletonView.get<WorldMatrixComponent>(joint.skeletonEntity);
+        const glm::mat4& skeletonWorldTransform = TransformHelpers::GetWorldMatrix(skeletonMatrixComponent);
+        glm::mat4 invSkeletonWorldTransfrom = glm::inverse(skeletonWorldTransform);
 
         if (lastSkeleton != joint.skeletonEntity)
         {
@@ -338,11 +343,10 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
-        skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
+        skinMatrices[offset + joint.jointIndex] = (jointWorldTransform * invSkeletonWorldTransfrom) * joint.inverseBindMatrix;
     }
 
     // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
-    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent>();
     for (auto [entity, offset] : skeletonBoneOffset)
     {
         auto& skeleton = skeletonView.get<SkeletonComponent>(entity);

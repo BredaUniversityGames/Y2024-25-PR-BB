@@ -50,7 +50,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         //"assets/models/Cathedral.glb",
         //"assets/models/AnimatedRifle.glb",
-        "assets/models/BrainStem.glb",
+        "assets/models/Demon.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
@@ -69,7 +69,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    const size_t DIM = 8;
+    const size_t DIM = 2;
     for (size_t i = 0; i < DIM; ++i)
     {
         for (size_t j = 0; j < DIM; ++j)
