@@ -19,41 +19,30 @@
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
-    ThreadPool pool { 4 };
+    MainEngine instance;
 
-    auto wait = []()
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    };
+    instance
+        .AddModule<ThreadModule>()
+        .AddModule<ScriptingModule>()
+        .AddModule<InspectorModule>()
+        .AddModule<ECSModule>()
+        .AddModule<TimeModule>()
+        .AddModule<SteamModule>()
+        .AddModule<ApplicationModule>()
+        .AddModule<PhysicsModule>()
+        .AddModule<OldEngine>()
+        .AddModule<RendererModule>()
+        .AddModule<PathfindingModule>()
+        .AddModule<AudioModule>()
+        .AddModule<UIModule>()
+        .AddModule<ParticleModule>()
+        .AddModule<GameModule>();
 
-    pool.QueueWork(std::packaged_task<void()>(wait));
-    pool.Start();
-    pool.FinishWork();
+    auto& scripting = instance.GetModule<ScriptingModule>();
 
-    // MainEngine instance;
-    //
-    // instance
-    //     .AddModule<ThreadModule>()
-    //     .AddModule<ScriptingModule>()
-    //     .AddModule<InspectorModule>()
-    //     .AddModule<ECSModule>()
-    //     .AddModule<TimeModule>()
-    //     .AddModule<SteamModule>()
-    //     .AddModule<ApplicationModule>()
-    //     .AddModule<PhysicsModule>()
-    //     .AddModule<OldEngine>()
-    //     .AddModule<RendererModule>()
-    //     .AddModule<PathfindingModule>()
-    //     .AddModule<AudioModule>()
-    //     .AddModule<UIModule>()
-    //     .AddModule<ParticleModule>()
-    //     .AddModule<GameModule>();
-    //
-    // auto& scripting = instance.GetModule<ScriptingModule>();
-    //
-    // BindEngineAPI(scripting.GetForeignAPI());
-    // scripting.GenerateEngineBindingsFile();
-    // scripting.SetMainScript(instance, "game/game.wren");
-    //
-    // return instance.Run();
+    BindEngineAPI(scripting.GetForeignAPI());
+    scripting.GenerateEngineBindingsFile();
+    scripting.SetMainScript(instance, "game/game.wren");
+
+    return instance.Run();
 }
