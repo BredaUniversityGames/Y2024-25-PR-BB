@@ -14,6 +14,8 @@ class PlayerMovement{
         playerHeight = 1.7
         isGrounded = false
         isSliding = false
+        slideForce = 3.5
+        dashForce = 22.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
         
         
@@ -27,6 +29,8 @@ class PlayerMovement{
     dashTimer {_dashTimer}
     isSliding {_isSliding}
     slideWishDirection {_slideWishDirection}
+    slideForce {_slideForce}
+    dashForce {_dashForce}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -47,6 +51,8 @@ class PlayerMovement{
     dashTimer=(value) { _dashTimer = value}
     isSliding=(value) { _isSliding = value}
     slideWishDirection=(value) { _slideWishDirection = value}   
+    slideForce=(value) { _slideForce = value}
+    dashForce=(value) { _dashForce = value}
 
     //Base movement
     maxSpeed=(value) { _maxSpeed = value}
@@ -193,11 +199,11 @@ class PlayerMovement{
     Dash(engine, dt, playerController, camera){
         var playerBody = playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
-        var dashForce = 16.0
+        var dashAmount = dashForce
         if(isGrounded==false){
-            dashForce = 9.0
+            dashAmount = dashForce/1.6
         }else{
-            dashForce = 14.0
+            dashAmount = dashForce
         }
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
 
@@ -213,16 +219,16 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                velocity = velocity + (moveInputDir * Vec3.new(dashForce,dashForce,dashForce))
+                velocity = velocity + (moveInputDir * Vec3.new(dashAmount,dashAmount,dashAmount))
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }else{
-                velocity = velocity + (forward*Vec3.new(2.0,2.0,2.0)* Vec3.new(dashForce,dashForce,dashForce))
+                velocity = velocity + (forward*Vec3.new(2.0,2.0,2.0)* Vec3.new(dashAmount,dashAmount,dashAmount))
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }
         }
 
         if(hasDashed){
-            engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
+            //engine.GetPhysics().GravityFactor(playerBody,0.0) // reduce the gravity while dashing
             dashTimer = dashTimer + dt
             if(dashTimer > 200.0){
                 hasDashed = false
@@ -236,7 +242,7 @@ class PlayerMovement{
     }
 
     Slide(engine, dt, playerController, camera){
-        var slideForce = 5.0 * dt
+        var slideAmount = slideForce * dt
         if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
             //crouch first
@@ -257,9 +263,7 @@ class PlayerMovement{
             }
 
             if(slideWishDirection.length() > 0.01){
-                velocity = velocity + (slideWishDirection* Vec3.new(slideForce,slideForce,slideForce))
-            }else{
-                velocity = velocity + (forward* Vec3.new(slideForce,slideForce,slideForce))
+                velocity = velocity + (slideWishDirection* Vec3.new(slideAmount,slideAmount,slideAmount))
             }
             engine.GetPhysics().SetVelocity(playerBody, velocity)
 
