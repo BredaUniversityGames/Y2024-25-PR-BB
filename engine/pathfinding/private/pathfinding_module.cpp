@@ -51,8 +51,8 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
             glm::vec3 from = path.waypoints[i].centre;
             glm::vec3 to = path.waypoints[i + 1].centre;
 
-            from += glm::vec3 { 0.0f, 0.2f, 0.0f };
-            to += glm::vec3 { 0.0f, 0.2f, 0.0f };
+            from += glm::vec3 { 0.0f, 0.1f, 0.0f };
+            to += glm::vec3 { 0.0f, 0.1f, 0.0f };
 
             debugPass.AddLine(
                 from,
