@@ -7,7 +7,7 @@
 #include "ecs_module.hpp"
 #include "gpu_resources.hpp"
 
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
