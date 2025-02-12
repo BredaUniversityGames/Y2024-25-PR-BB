@@ -149,7 +149,7 @@ void ParticleModule::LoadEmitterPresets()
 
         EmitterPreset preset;
         preset.emitDelay = 0.2f;
-        preset.mass = -0.250f;
+        preset.mass = -0.015f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 3.0f;
         preset.count = 10;
@@ -168,7 +168,7 @@ void ParticleModule::LoadEmitterPresets()
 
         EmitterPreset preset;
         preset.emitDelay = 1.0f;
-        preset.mass = 0.150f;
+        preset.mass = 0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
         preset.count = 20;
@@ -189,7 +189,7 @@ void ParticleModule::LoadEmitterPresets()
         // hardcoded test emitter preset for now
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
-        preset.mass = 5.0f;
+        preset.mass = 3.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
@@ -246,6 +246,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.rotationVelocity = preset.rotationVelocity;
     emitter.flags = preset.flags;
     emitter.randomness = preset.randomness;
+    emitter.particleRandomness = preset.particleRandomness;
     emitter.color = preset.color;
 
     // Set position and velocity according to which components the entity already has

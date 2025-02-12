@@ -2,6 +2,7 @@
 
 #include "../scene.glsl"
 #include "particle_binds.glsl"
+#include "rng_helper.glsl"
 
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
@@ -57,7 +58,10 @@ void main()
         }
 
         // simulate particles
-        particle.velocity.y -= particle.mass * deltaTime;
+        particle.velocity.y -= particle.mass;
+        vec2 rng = hash_simplex_2D(vec2(float(index), particle.life / deltaTime));
+        particle.velocity.x += particle.randomness.x * rng.x;
+        particle.velocity.z += particle.randomness.z * rng.y;
         particle.position += particle.velocity * deltaTime;
 
         // simulate angle

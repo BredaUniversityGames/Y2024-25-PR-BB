@@ -17,6 +17,7 @@ struct Particle
     vec3 size;
     uint flags;
     vec3 color;
+    vec3 randomness;
 };
 
 struct ParticleCounters
