@@ -5,8 +5,8 @@
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "game_module.hpp"
-#include "lifetime_component.hpp"
 #include "physics_module.hpp"
+#include "systems/lifetime_component.hpp"
 #include "utility/wren_entity.hpp"
 
 namespace bindings

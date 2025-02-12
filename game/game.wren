@@ -4,6 +4,10 @@ import "movement.wren" for PlayerMovement
 class Main {
 
     static Start(engine) {
+
+        // Set navigational mesh
+        engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
+
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
@@ -30,12 +34,40 @@ class Main {
             __camera.AddAudioEmitterComponent()
             __playerController.AddCheatsComponent()
 
-            //var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
-            //engine.GetParticles().SpawnEmitter(__player, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(5.0, -1.0, -5.0))
-
             var gunTransform = __gun.GetTransformComponent()
             gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+        }
+
+        // Inside cathedral: pentagram scene
+        {   // Fire emitter 1
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 2
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 3
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Fire emitter 4
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        {   // Dust emitter
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
         __rayDistance = 1000.0
@@ -75,9 +107,11 @@ class Main {
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                lifetime.lifetime = 300.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 5.0, 0.0))
+            } else {
+                end = start + direction * __rayDistanceVector
             }
 
 
@@ -88,9 +122,9 @@ class Main {
                 var transform = entity.AddTransformComponent()
                 transform.translation = Math.Mix(start, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 1000.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eTest(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+                lifetime.lifetime = 200.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
                 i = i + 5.0
             }
         }
@@ -112,5 +146,7 @@ class Main {
         }
  
         __playerMovement.Update(engine,dt,__playerController, __camera)
+
+        var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }
