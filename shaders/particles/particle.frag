@@ -26,6 +26,7 @@ layout (location = 1) in vec3 normalIn;
 layout (location = 2) in vec2 texCoord;
 layout (location = 3) flat in uint materialIndex;
 layout (location = 4) flat in uint flags;
+layout (location = 5) in vec3 colorIn;
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec4 outBrightness;
@@ -54,6 +55,8 @@ void main()
         // TODO: find solution to temporary avoiding of hard shadows
         shadow += 0.1;
     }
+
+    color *= vec4(colorIn, 0.0);
 
     if ((flags & UNLIT) != UNLIT)
     {
@@ -86,7 +89,7 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
     vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
     vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (2048 * 1.6); // TODO: Pass actual shadow map size
+    const float offset = 1.0 / (2048 * 1.6);// TODO: Pass actual shadow map size
 
     float visibility = 1.0;
     float depthFactor = testCoord.z - bias;

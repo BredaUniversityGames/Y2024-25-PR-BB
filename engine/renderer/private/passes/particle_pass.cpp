@@ -16,6 +16,7 @@
 #include "vulkan_helper.hpp"
 
 #include <pipeline_builder.hpp>
+#include <random>
 
 ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
@@ -255,10 +256,10 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
+    auto view = _ecs.GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
-        auto& component = view.get<EmitterComponent>(entity);
+        auto& component = view.get<ParticleEmitterComponent>(entity);
         if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later
