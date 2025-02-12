@@ -61,7 +61,7 @@ TEST(ThreadPoolTests, TaskParallelism)
 
     ThreadPool pool { THREAD_COUNT };
 
-    for (int i = 0; i < THREAD_COUNT; i++)
+    for (uint32_t i = 0; i < THREAD_COUNT; i++)
     {
         pool.QueueWork(WaitTask(WAIT_TIME));
     }

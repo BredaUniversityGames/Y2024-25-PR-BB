@@ -16,7 +16,7 @@ public:
     auto QueueWork(Functor&& f)
     {
         using Ret = std::invoke_result_t<Functor>;
-        auto packaged = std::packaged_task<Ret()>(std::move(f));
+        auto packaged = std::packaged_task<Ret()>(std::forward<Functor>(f));
         auto future = packaged.get_future();
 
         {
@@ -38,6 +38,9 @@ public:
     // Blocks the calling thread until all work in the queue is complete
     // WARN: any futures that are cancelled will throw if accessed
     void FinishPendingWork();
+
+    NON_MOVABLE(ThreadPool);
+    NON_COPYABLE(ThreadPool);
 
 private:
     static void WorkerMain(ThreadPool* pool, uint32_t ID);
