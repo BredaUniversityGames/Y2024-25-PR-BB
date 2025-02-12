@@ -92,19 +92,19 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            System.print("Player Jumped!")
+            //System.print("Player Jumped!")
 
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
 
         if (movement.length() > 0) {
-            System.print("Player is moving")
+            //System.print("Player is moving")
         }
 
         var key = Keycode.eA()
         if (engine.GetInput().DebugGetKey(key)) {
-            System.print("[Debug] Player pressed A!")
+            //System.print("[Debug] Player pressed A!")
         }
     }
 }

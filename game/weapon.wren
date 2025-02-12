@@ -71,6 +71,12 @@ class Pistol is WeaponBase {
 
     reload (engine) {
         System.print("Pistol reload")
+
+
+        //if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+        //gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        //}
+        
     }
 
     attack(engine, deltaTime) {
@@ -78,15 +84,15 @@ class Pistol is WeaponBase {
         if (_cooldown <= 0) {
             System.print("Pistol shoot")
 
-            player = engine.GetECS().GetEntityByName("Camera")
-            gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
 
-    // Play shooting audio
+            // Play shooting audio
             var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
             var audioEmitter = player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
 
-    // Spawn particles
+            // Spawn particles
             var playerTransform = player.GetTransformComponent()
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
@@ -118,16 +124,9 @@ class Pistol is WeaponBase {
                 i = i + 5.0
             }
 
-    // Play shooting animation
+            // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-                gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-            }
-            if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-                if(gunAnimations.AnimationFinished()) {
-                    gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
-                }
-            }
+            gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
             
             _cooldown = _attackSpeed
         } 
