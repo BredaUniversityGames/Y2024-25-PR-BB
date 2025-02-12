@@ -1,30 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-
-class Base {
-    construct new(engine) {
-        _width = Vec3.new(1, 1, 1)
-        _engine = engine
-    }
-
-    shoot() {
-        System.print("base")
-    }
-
-    width { _width }
-
-    width=(value) { _width = value }
-}
-
-class Derived is Base {
-
-    construct new() {
-        _width = Vec3.new(2, 2, 2)
-    }
-
-    shoot() {
-        System.print("derived")
-    }
-} 
+import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -33,18 +8,17 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
-        __base = Base.new(engine)
-        __derived = Derived.new()
-
-        __armory = [__base, __derived]
+    
+        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
         for (thing in __armory) {
-            thing.shoot()
+            thing.attack()
         }
 
-        __activeWeapon = __armory[0]
+        __activeWeapon = __armory[Weapons.pistol]
+        __activeWeapon.equip()
 
-        __activeWeapon.shoot()
+        __activeWeapon.attack()
 
 
         __counter = 0
@@ -155,5 +129,8 @@ class Main {
         if (engine.GetInput().DebugGetKey(key)) {
             System.print("[Debug] Player pressed A!")
         }
+
+
+
     }
 }
