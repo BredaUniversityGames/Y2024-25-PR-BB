@@ -10,6 +10,7 @@
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
+#include "thread_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
@@ -24,6 +25,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         ZoneScopedN("Engine Module Initialization");
 
         instance
+            .AddModule<ThreadModule>()
             .AddModule<ScriptingModule>()
             .AddModule<InspectorModule>()
             .AddModule<ECSModule>()
