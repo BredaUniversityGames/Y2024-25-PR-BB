@@ -97,8 +97,8 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragFloat2("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Size velocity##EmitterPresetEditor", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Particle Randomness##EmitterPresetEditor", &selectedPreset.particleRandomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Spawn Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Movement Randomness##EmitterPresetEditor", &selectedPreset.particleRandomness.x, 0.1f, 0.0f, 100.0f);
         ImGui::ColorPicker3("Color##EmitterPresetEditor", &selectedPreset.color.x);
         ImGui::DragFloat("Color Multiplier#EmitterPresetEditor", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 

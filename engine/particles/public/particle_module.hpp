@@ -56,9 +56,9 @@ private:
 
     struct EmitterPreset
     {
-        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // 2d size + velocity
+        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // 2d size + size velocity
         float mass = 1.0f;
-        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle + velocity
+        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle + angle velocity
         float maxLife = 5.0f;
         float emitDelay = 1.0f;
         uint32_t count = 0;

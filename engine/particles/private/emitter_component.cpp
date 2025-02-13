@@ -29,8 +29,8 @@ void ParticleEmitterComponent::Inspect()
     ImGui::DragFloat2("Size##Particle Emitter", &emitter.size.x, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Size velocity##Particle Emitter", &emitter.size.z, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.1f, 0.0f, 100.0f);
-    ImGui::DragFloat3("Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.1f, 0.0f, 100.0f);
-    ImGui::DragFloat3("Particle Randomness##EmitterPresetEditor", &emitter.particleRandomness.x, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat3("Spawn Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat3("Movement Randomness##EmitterPresetEditor", &emitter.particleRandomness.x, 0.1f, 0.0f, 100.0f);
     ImGui::ColorPicker3("Color##Particle Emitter", &emitter.color.x);
     ImGui::DragFloat("Color Multiplier#Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
 }
