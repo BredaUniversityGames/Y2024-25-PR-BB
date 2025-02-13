@@ -1,8 +1,8 @@
 #include "performance_tracker.hpp"
 #include "profile_macros.hpp"
 
-#include "imgui/imgui.h"
-#include "implot/implot.h"
+#include <imgui.h>
+#include <implot.h>
 
 #include <algorithm>
 

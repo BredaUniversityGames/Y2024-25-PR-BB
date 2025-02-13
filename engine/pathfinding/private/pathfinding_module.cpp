@@ -11,7 +11,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/model_resource_manager.hpp"
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
 
 #include "scripting_module.hpp"
 

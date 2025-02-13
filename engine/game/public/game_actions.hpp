@@ -18,12 +18,14 @@ const GameActions GAME_ACTIONS {
                 .inputs = {
                     GamepadButton::eLEFT_SHOULDER,
                     GamepadButton::eEAST,
+                    KeyboardCode::eLCTRL,
                 },
             },
             {
                 .name = "Dash",
                 .inputs = {
                     GamepadButton::eLEFT_TRIGGER,
+                    KeyboardCode::eLSHIFT,
                 },
             },
             {

@@ -5,13 +5,14 @@
 #include "audio/audio_bindings.hpp"
 #include "audio_emitter_component.hpp"
 #include "audio_module.hpp"
+#include "cheats_component.hpp"
 #include "components/name_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "game/game_bindings.hpp"
 #include "input/input_bindings.hpp"
-#include "lifetime_component.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
@@ -19,11 +20,12 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "systems/lifetime_component.hpp"
 #include "time_module.hpp"
-#include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 #include "wren_engine.hpp"
 
+#include "game_module.hpp"
 #include <cstdint>
 
 namespace bindings
@@ -76,6 +78,26 @@ glm::vec3 TransformComponentGetScale(WrenComponent<TransformComponent>& componen
     return component.component->GetLocalScale();
 }
 
+glm::vec3 TransformHelpersGetWorldTranslation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldPosition(*component.entity.registry, component.entity.entity);
+}
+
+glm::quat TransformHelpersGetWorldRotation(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldRotation(*component.entity.registry, component.entity.entity);
+}
+
+glm::vec3 TransformHelpersGetWorldScale(WrenComponent<TransformComponent>& component)
+{
+    return TransformHelpers::GetWorldScale(*component.entity.registry, component.entity.entity);
+}
+
+void TransformHelpersSetWorldTransform(WrenComponent<TransformComponent>& component, glm::vec3 translation, glm::quat rotation, glm::vec3 scale)
+{
+    TransformHelpers::SetWorldTransform(*component.entity.registry, component.entity.entity, translation, rotation, scale);
+}
+
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
 {
     TransformHelpers::SetLocalPosition(*component.entity.registry, component.entity.entity, translation);
@@ -96,6 +118,7 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -113,6 +136,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<AudioModule>>("GetAudio");
         engineAPI.func<&WrenEngine::GetModule<ParticleModule>>("GetParticles");
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
+        engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
     }
 
@@ -183,6 +207,12 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         transformClass.propExt<
             bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+
+        transformClass.funcExt<bindings::TransformHelpersGetWorldTranslation>("GetWorldTranslation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldRotation>("GetWorldRotation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
+
+        transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
     }
 }
 
@@ -238,6 +268,22 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static float Dot(glm::vec3 a, glm::vec3 b)
+    {
+        return glm::dot(a, b);
+    }
+    static float Clamp(float a, float min, float max)
+    {
+        return glm::clamp(a, min, max);
+    }
+    static float Sqrt(float a)
+    {
+        return glm::sqrt(a);
+    }
+    static float Abs(float a)
+    {
+        return glm::abs(a);
+    }
     static float Max(const float a, const float b)
     {
         return glm::max(a, b);
@@ -281,6 +327,12 @@ public:
     {
         return glm::half_pi<float>();
     }
+
+    static float Distance(glm::vec3 pos1, glm::vec3 pos2)
+    {
+        return glm::distance(pos1, pos2);
+    }
+
     static glm::vec3 Mul(glm::quat& lhs, const glm::vec3& rhs) { return lhs * rhs; }
 };
 
@@ -336,6 +388,10 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+    mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+    mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
+    mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
+    mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
     mathUtilClass.funcStatic<&MathUtil::Max>("Max");
     mathUtilClass.funcStatic<&MathUtil::Min>("Min");
     mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
@@ -344,12 +400,17 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
+    mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
 }
 
 void bindings::BindEntity(wren::ForeignModule& module)
 {
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
+
+    module.klass<entt::entity>("enttEntity");
+
+    entityClass.funcExt<bindings::GetEntity>("GetEnttEntity");
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
@@ -363,5 +424,10 @@ void bindings::BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
     entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
 
+    entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
+    entityClass.func<&WrenEntity::AddComponent<CheatsComponent>>("AddCheatsComponent");
+
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
 }
