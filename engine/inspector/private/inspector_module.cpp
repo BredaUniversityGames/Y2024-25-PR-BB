@@ -350,10 +350,12 @@ void DrawTonemappingSettings(Settings& settings)
 
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
 {
-    static ImTextureID textureID = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGPUScene().Shadow());
+    static ImTextureID textureID = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGPUScene().StaticShadow());
+    static ImTextureID textureID2 = imguiBackend.GetTexture(engine.GetModule<RendererModule>().GetRenderer()->GetGPUScene().DynamicShadow());
     ImGui::SetNextWindowSize({ 0.f, 0.f });
     ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
+    ImGui::Image(textureID2, ImVec2(512, 512));
     ImGui::End();
 }
 

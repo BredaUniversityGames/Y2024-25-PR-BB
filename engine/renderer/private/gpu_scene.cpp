@@ -76,7 +76,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     _redirectDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsRedirect, namesRedirect);
 
     _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Batch", _mainCamera, creation.depthImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
-    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
+    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _staticShadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
 }
 
 GPUScene::~GPUScene()
@@ -114,7 +114,7 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.shadowMapIndex = _shadowImage.Index();
+    sceneData.shadowMapIndex = _staticShadowImage.Index();
 
     sceneData.fogColor = _settings.color;
     sceneData.fogDensity = _settings.density;
@@ -857,5 +857,6 @@ void GPUScene::CreateShadowMapResources()
         .SetSize(2048, 2048)
         .SetName("Shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
-    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
+    _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
+    _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
 }

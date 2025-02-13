@@ -65,7 +65,7 @@ void ShadowPass::CreateStaticPipeline(const GPUScene& gpuScene)
                       .SetDepthStencilState(depthStencilStateCreateInfo)
                       .SetRasterizationState(rasterizationStateCreateInfo)
                       .SetColorAttachmentFormats({})
-                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(gpuScene.Shadow())->format)
+                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(gpuScene.StaticShadow())->format)
                       .BuildPipeline();
 
     _staticPipelineLayout = std::get<0>(result);
@@ -99,7 +99,7 @@ void ShadowPass::CreateSkinnedPipeline(const GPUScene& gpuScene)
                       .SetDepthStencilState(depthStencilStateCreateInfo)
                       .SetRasterizationState(rasterizationStateCreateInfo)
                       .SetColorAttachmentFormats({})
-                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(gpuScene.Shadow())->format)
+                      .SetDepthAttachmentFormat(_context->Resources()->ImageResourceManager().Access(gpuScene.StaticShadow())->format)
                       .BuildPipeline();
 
     _skinnedPipelineLayout = std::get<0>(result);
@@ -111,81 +111,104 @@ void ShadowPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentF
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    const auto* shadowImage = resources->ImageResourceManager().Access(scene.gpuScene->Shadow());
+    const auto* staticShadowImage = resources->ImageResourceManager().Access(scene.gpuScene->StaticShadow());
+    const auto* dynamicShadowImage = resources->ImageResourceManager().Access(scene.gpuScene->DynamicShadow());
 
-    vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
-        .imageView = shadowImage->view,
-        .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-        .loadOp = prepass ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
-        .storeOp = vk::AttachmentStoreOp::eStore,
-        .clearValue = { .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
-    };
-
-    vk::RenderingInfoKHR renderingInfo {
-        .renderArea = {
-            .extent = vk::Extent2D { shadowImage->width, shadowImage->height } },
-        .layerCount = 1,
-        .pDepthAttachment = &depthAttachmentInfo,
-    };
-
-    commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
-
-    if (scene.gpuScene->StaticDrawCount() > 0)
     {
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
+        vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
+            .imageView = staticShadowImage->view,
+            .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .loadOp = prepass ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .clearValue = { .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
+        };
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.StaticDraw().redirectDescriptor }, {});
+        vk::RenderingInfoKHR renderingInfo {
+            .renderArea = {
+                .extent = vk::Extent2D { staticShadowImage->width, staticShadowImage->height } },
+            .layerCount = 1,
+            .pDepthAttachment = &depthAttachmentInfo,
+        };
 
-        vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
-        vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
-        vk::Buffer indirectDrawBuffer = resources->BufferResourceManager().Access(_cameraBatch.StaticDraw().drawBuffer)->buffer;
-        vk::Buffer countBuffer = resources->BufferResourceManager().Access(_cameraBatch.StaticDraw().redirectBuffer)->buffer;
+        commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
-        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
+        if (scene.gpuScene->StaticDrawCount() > 0)
+        {
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
-        commandBuffer.drawIndexedIndirectCountKHR(
-            indirectDrawBuffer,
-            0,
-            countBuffer,
-            0,
-            scene.gpuScene->StaticDrawCount(),
-            sizeof(DrawIndexedIndirectCommand),
-            _context->VulkanContext()->Dldi());
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.StaticDraw().redirectDescriptor }, {});
 
-        _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawCommands()));
+            vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
+            vk::Buffer indexBuffer = resources->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
+            vk::Buffer indirectDrawBuffer = resources->BufferResourceManager().Access(_cameraBatch.StaticDraw().drawBuffer)->buffer;
+            vk::Buffer countBuffer = resources->BufferResourceManager().Access(_cameraBatch.StaticDraw().redirectBuffer)->buffer;
+
+            commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+            commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
+
+            commandBuffer.drawIndexedIndirectCountKHR(
+                indirectDrawBuffer,
+                0,
+                countBuffer,
+                0,
+                scene.gpuScene->StaticDrawCount(),
+                sizeof(DrawIndexedIndirectCommand),
+                _context->VulkanContext()->Dldi());
+
+            _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawCommands()));
+        }
+        commandBuffer.endRenderingKHR(vkContext->Dldi());
     }
 
-    if (scene.gpuScene->SkinnedDrawCount() > 0)
     {
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
+        vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
+            .imageView = dynamicShadowImage->view,
+            .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .loadOp = prepass ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .clearValue = { .depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 } },
+        };
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { scene.gpuScene->GetSkinnedInstancesDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _cameraBatch.SkinnedDraw().redirectDescriptor }, {});
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
+        vk::RenderingInfoKHR renderingInfo {
+            .renderArea = {
+                .extent = vk::Extent2D { dynamicShadowImage->width, dynamicShadowImage->height } },
+            .layerCount = 1,
+            .pDepthAttachment = &depthAttachmentInfo,
+        };
 
-        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
-        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
-        vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.SkinnedDraw().drawBuffer)->buffer;
-        vk::Buffer countBuffer = resources->BufferResourceManager().Access(_cameraBatch.SkinnedDraw().redirectBuffer)->buffer;
+        commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
-        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
-        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
+        if (scene.gpuScene->SkinnedDrawCount() > 0)
+        {
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
 
-        commandBuffer.drawIndexedIndirectCountKHR(
-            indirectDrawBuffer,
-            0,
-            countBuffer,
-            0,
-            scene.gpuScene->SkinnedDrawCount(),
-            sizeof(DrawIndexedIndirectCommand),
-            _context->VulkanContext()->Dldi());
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { scene.gpuScene->GetSkinnedInstancesDescriptorSet(currentFrame) }, {});
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _cameraBatch.SkinnedDraw().redirectDescriptor }, {});
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
 
-        _context->GetDrawStats().IndirectDraw(scene.gpuScene->SkinnedDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->SkinnedDrawCommands()));
+            vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
+            vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
+            vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.SkinnedDraw().drawBuffer)->buffer;
+            vk::Buffer countBuffer = resources->BufferResourceManager().Access(_cameraBatch.SkinnedDraw().redirectBuffer)->buffer;
+
+            commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+            commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
+
+            commandBuffer.drawIndexedIndirectCountKHR(
+                indirectDrawBuffer,
+                0,
+                countBuffer,
+                0,
+                scene.gpuScene->SkinnedDrawCount(),
+                sizeof(DrawIndexedIndirectCommand),
+                _context->VulkanContext()->Dldi());
+
+            _context->GetDrawStats().IndirectDraw(scene.gpuScene->SkinnedDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->SkinnedDrawCommands()));
+        }
+
+        commandBuffer.endRenderingKHR(vkContext->Dldi());
     }
-
-    commandBuffer.endRenderingKHR(vkContext->Dldi());
 }

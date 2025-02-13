@@ -98,7 +98,8 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
 
-    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
+    ResourceHandle<GPUImage> StaticShadow() const { return _staticShadowImage; }
+    ResourceHandle<GPUImage> DynamicShadow() const { return _dynamicShadowImage; }
 
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
     CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
@@ -191,7 +192,8 @@ private:
     std::unique_ptr<CameraBatch> _mainCameraBatch;
     std::unique_ptr<CameraBatch> _shadowCameraBatch;
 
-    ResourceHandle<GPUImage> _shadowImage;
+    ResourceHandle<GPUImage> _staticShadowImage;
+    ResourceHandle<GPUImage> _dynamicShadowImage;
     ResourceHandle<Sampler> _shadowSampler;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
