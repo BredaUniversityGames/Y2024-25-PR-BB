@@ -153,7 +153,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 2.0f;
         preset.count = 10;
-        preset.spawnRandomness = glm::vec3(0.2f, 0.3f, 0.2f);
+        preset.spawnRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
         preset.name = "Flame";

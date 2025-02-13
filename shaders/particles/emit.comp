@@ -46,7 +46,7 @@ void main()
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = vec3(emitter.velocity.x + emitter.spawnRandomness.x * rng.x, emitter.velocity.y + emitter.spawnRandomness.y, emitter.velocity.z + emitter.spawnRandomness.z * rng.y);// TODO: add something to make this more random?
+    particle.velocity = emitter.velocity + emitter.spawnRandomness * rng;
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
