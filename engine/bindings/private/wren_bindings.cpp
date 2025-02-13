@@ -67,7 +67,7 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
     {
         if (n.name == name)
         {
-            entities.emplace_back(e, &self.GetRegistry());
+            entities.emplace_back(WrenEntity { e, &self.GetRegistry() });
         }
     }
 
