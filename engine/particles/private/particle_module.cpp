@@ -148,17 +148,18 @@ void ParticleModule::LoadEmitterPresets()
         auto image = GetEmitterImage("flame_03.png");
 
         EmitterPreset preset;
-        preset.emitDelay = 0.2f;
-        preset.mass = -0.015f;
+        preset.emitDelay = 0.1f;
+        preset.mass = -0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
-        preset.maxLife = 3.0f;
+        preset.maxLife = 2.0f;
         preset.count = 10;
-        preset.randomness = glm::vec3(0.120f, 1.0f, 0.120f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eSizeOverTime);
+        preset.randomness = glm::vec3(0.2f, 0.3f, 0.2f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
         preset.name = "Flame";
+        preset.particleRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
         SetEmitterPresetImage(preset, image);
-        preset.size.z = -0.4f;
+        preset.size.z = -0.8f;
 
         _emitterPresets.emplace_back(preset);
     }
