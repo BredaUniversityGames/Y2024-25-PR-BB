@@ -153,7 +153,7 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
     std::vector<entt::entity> entities{};
     entities.reserve(cpuModels.size());
 
-    if (cpuModels.size() == gpuModels.size())
+    if (cpuModels.size() != gpuModels.size())
     {
         throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
     }

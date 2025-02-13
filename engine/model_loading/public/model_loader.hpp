@@ -6,10 +6,6 @@
 
 #include <vector>
 
-class SingleTimeCommands;
-class BatchBuffer;
-class GraphicsContext;
-
 struct StagingAnimationChannels
 {
     std::vector<Animation> animations;
