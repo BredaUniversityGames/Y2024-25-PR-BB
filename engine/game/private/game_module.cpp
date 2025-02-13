@@ -140,17 +140,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
-    // update physics
-    auto linesData = physicsModule.debugRenderer->GetLinesData();
-    auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    physicsModule.debugRenderer->ClearLines();
-    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
-    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
-
-    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
-    audioModule.ClearLines();
-
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
     {
@@ -243,17 +232,24 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
 
+    // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         physicsModule.debugRenderer->SetState(!physicsModule.debugRenderer->GetState());
     }
 
+    // Toggle pathfinding debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
     {
         pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
     }
 
-    if (physicsModule.debugRenderer->GetState() || pathfindingModule.GetDebugDrawState())
+    int8_t physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
+           pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
+
+    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+
+    if (physicsDebugDrawing || pathfindingDebugDrawing)
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(true);
     }
@@ -261,6 +257,27 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(false);
     }
+
+    if (physicsDebugDrawing)
+    {
+        auto linesData = physicsModule.debugRenderer->GetLinesData();
+        auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
+        physicsModule.debugRenderer->ClearLines();
+        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
+        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
+    }
+
+    if (pathfindingDebugDrawing)
+    {
+        // Update pathfinding module debug lines
+        const std::vector<glm::vec3>& pathfindingLines = pathfindingModule.GetDebugLines();
+        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(pathfindingLines);
+    }
+
+    // TODO: Ability to toggle audio debug lines, right now they get rendered as soon as the debug renderer is enabled
+    // Update audio module debug lines
+    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
+    audioModule.ClearLines();
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
     {
