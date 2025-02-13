@@ -18,6 +18,7 @@
 #include "model_loading.hpp"
 #include "profile_macros.hpp"
 #include "renderer_module.hpp"
+#include "renderer.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
 
