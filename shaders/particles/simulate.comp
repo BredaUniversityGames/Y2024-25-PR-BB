@@ -53,7 +53,7 @@ void main()
         vec3 force = vec3(0.0);
         force.y -= particle.mass;
         vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, deltaTime));
-        force += particle.randomness * rng;
+        force += particle.velocityRandomness * rng;
 
         particle.velocity += force;
         particle.position += particle.velocity * deltaTime;

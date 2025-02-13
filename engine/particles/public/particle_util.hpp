@@ -27,10 +27,10 @@ struct alignas(16) Emitter
     float randomValue = 0.0f;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint32_t materialIndex = 0;
-    glm::vec3 randomness = { 1.0f, 1.0f, 1.0f };
+    glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
     uint8_t flags = 0;
     glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glm::vec3 particleRandomness = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
 };
 
 struct alignas(16) Particle
@@ -45,7 +45,7 @@ struct alignas(16) Particle
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint8_t flags = 0;
     glm::vec3 color = { 1.0f, 1.0f, 1.0f };
-    glm::vec3 randomness = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
 };
 
 struct alignas(16) ParticleCounters

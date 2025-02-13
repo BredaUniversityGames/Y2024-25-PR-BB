@@ -135,7 +135,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
         preset.maxLife = 5.0f;
         preset.count = 10;
-        preset.randomness = glm::vec3(1.0f);
+        preset.spawnRandomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f);
         preset.name = "Test";
@@ -153,11 +153,11 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 2.0f;
         preset.count = 10;
-        preset.randomness = glm::vec3(0.2f, 0.3f, 0.2f);
+        preset.spawnRandomness = glm::vec3(0.2f, 0.3f, 0.2f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
         preset.name = "Flame";
-        preset.particleRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
+        preset.velocityRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
         SetEmitterPresetImage(preset, image);
         preset.size.z = -0.8f;
 
@@ -173,7 +173,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
         preset.count = 20;
-        preset.randomness = glm::vec3(1.0f);
+        preset.spawnRandomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         preset.name = "Dust";
@@ -194,7 +194,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
-        preset.randomness = glm::vec3(5.0f, 0.0f, 5.0f);
+        preset.spawnRandomness = glm::vec3(5.0f, 0.0f, 5.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
         preset.name = "Impact";
@@ -215,7 +215,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
         preset.count = 5;
-        preset.randomness = glm::vec3(0.5f);
+        preset.spawnRandomness = glm::vec3(0.5f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
         preset.name = "Ray";
@@ -246,8 +246,8 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
     emitter.flags = preset.flags;
-    emitter.randomness = preset.randomness;
-    emitter.particleRandomness = preset.particleRandomness;
+    emitter.spawnRandomness = preset.spawnRandomness;
+    emitter.velocityRandomness = preset.velocityRandomness;
     emitter.color = preset.color;
 
     // Set position and velocity according to which components the entity already has

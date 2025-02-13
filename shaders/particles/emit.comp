@@ -13,10 +13,10 @@ struct Emitter
     float randomValue;
     vec3 size;
     uint materialIndex;
-    vec3 randomness;
+    vec3 spawnRandomness;
     uint flags;
     vec4 color;
-    vec3 particleRandomness;
+    vec3 velocityRandomness;
 };
 
 const uint MAX_EMITTERS = 256;
@@ -46,7 +46,7 @@ void main()
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = vec3(emitter.velocity.x + emitter.randomness.x * rng.x, emitter.velocity.y + emitter.randomness.y, emitter.velocity.z + emitter.randomness.z * rng.y);// TODO: add something to make this more random?
+    particle.velocity = vec3(emitter.velocity.x + emitter.spawnRandomness.x * rng.x, emitter.velocity.y + emitter.spawnRandomness.y, emitter.velocity.z + emitter.spawnRandomness.z * rng.y);// TODO: add something to make this more random?
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
@@ -54,7 +54,7 @@ void main()
     particle.size = emitter.size;
     particle.flags = emitter.flags;
     particle.color = emitter.color.xyz * emitter.color.w;
-    particle.randomness = emitter.particleRandomness;
+    particle.velocityRandomness = emitter.velocityRandomness;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);
