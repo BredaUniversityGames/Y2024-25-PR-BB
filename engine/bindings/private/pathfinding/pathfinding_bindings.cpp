@@ -8,7 +8,8 @@ namespace bindings
 {
 int32_t SetNavigationMesh(PathfindingModule& self, const std::string& path)
 {
-    return self.SetNavigationMesh(path);
+    return 0;
+    // return self.SetNavigationMesh(path); // TODO: Not sure how to do this right now as we don't have access to model loading module, any ideas?
 }
 
 ComputedPath FindPath(PathfindingModule& self, const glm::vec3& start_pos, const glm::vec3& end_pos)

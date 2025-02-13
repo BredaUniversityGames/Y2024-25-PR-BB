@@ -6,7 +6,6 @@
 #include "log.hpp"
 #include "math_util.hpp"
 #include "profile_macros.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
@@ -692,6 +691,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     ZoneName(zone.c_str(), 128);
 
     CPUModel model {};
+    model.name = name;
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());

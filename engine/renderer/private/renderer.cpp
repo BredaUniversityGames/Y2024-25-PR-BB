@@ -326,15 +326,15 @@ std::vector<ResourceHandle<GPUModel>> Renderer::LoadModels(const std::vector<CPU
 
     for (const auto& cpuModel : cpuModels)
     {
-		{
+        {
             ZoneScoped;
 
-            std::string zone = path + " GPU upload";
+            std::string zone = cpuModel.name + " GPU upload";
             ZoneName(zone.c_str(), 128);
 
-			auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
-			gpuModels.emplace_back(std::move(gpu));
-		}
+	    auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
+	    gpuModels.emplace_back(std::move(gpu));
+        }
     }
 
     return gpuModels;

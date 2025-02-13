@@ -16,7 +16,6 @@
 #include "ecs_module.hpp"
 #include "game_actions.hpp"
 #include "graphics_context.hpp"
-#include "graphics_resources.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
 #include "model_loader.hpp"
@@ -27,7 +26,6 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
-#include "resource_management/model_resource_manager.hpp"
 #include "scene/scene_loader.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
@@ -50,8 +48,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
-    auto& rendererModule = engine.GetModule<RendererModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
+    particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
@@ -65,17 +63,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-
-    particleModule.LoadEmitterPresets();
-
-    auto models = rendererModule.FrontLoadModels(modelPaths);
-    std::vector<entt::entity> entities;
-
-    auto modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
-
-    SceneLoading::LoadModelIntoECSAsHierarchy(ECS, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
-    SceneLoading::LoadModelIntoECSAsHierarchy(ECS, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
-    auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(ECS, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
+    auto entities = SceneLoading::LoadModels(engine, modelPaths);
+    auto gunEntity = entities[1];
 
     entt::entity lightEntity = ECS.GetRegistry().create();
     ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");

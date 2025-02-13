@@ -2,8 +2,10 @@
 
 #include <vector>
 #include <string>
+#include <entt/entity/entity.hpp>
 
 class Engine;
+struct CPUModel;
 
 namespace SceneLoading
 {
