@@ -12,7 +12,9 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/model_resource_manager.hpp"
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
+
+#include "scripting_module.hpp"
 
 #include <set>
 
@@ -41,25 +43,27 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
     const Renderer& renderer = *engine.GetModule<RendererModule>().GetRenderer();
     DebugPass& debugPass = renderer.GetDebugPipeline();
 
-    ComputedPath path = FindPath(
-        { -42.8f, 19.3f, 267.6f },
-        { -16.8f, 24.2f, 234.1f });
-
-    if (!path.waypoints.empty() && _debugDraw)
+    // Draws any path that was generated through the scripting language
+    if (_debugDraw)
     {
-        for (size_t i = 0; i < path.waypoints.size() - 1; i++)
+        for (const auto& path : _computedPaths)
         {
-            glm::vec3 from = path.waypoints[i].centre;
-            glm::vec3 to = path.waypoints[i + 1].centre;
+            for (size_t i = 0; i < path.waypoints.size() - 1; i++)
+            {
+                glm::vec3 from = path.waypoints[i].centre;
+                glm::vec3 to = path.waypoints[i + 1].centre;
 
-            from += glm::vec3 { 0.0f, 0.1f, 0.0f };
-            to += glm::vec3 { 0.0f, 0.1f, 0.0f };
+                from += glm::vec3 { 0.0f, 0.1f, 0.0f };
+                to += glm::vec3 { 0.0f, 0.1f, 0.0f };
 
-            debugPass.AddLine(
-                from,
-                to);
+                debugPass.AddLine(
+                    from,
+                    to);
+            }
         }
     }
+
+    _computedPaths.clear();
 }
 
 void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -111,6 +115,7 @@ int32_t PathfindingModule::SetNavigationMesh(const CPUModel& navmesh)
         return {};
 
     CPUMesh navmeshMesh = navmesh.meshes[meshIndex]; // GLTF model should consist of only a single mesh
+    _mesh = navmeshMesh;
     _inverseTransform = glm::inverse(transform);
 
     _triangles.clear();
@@ -257,7 +262,9 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
         if (topNode.triangleIndex == closestDestinationTriangleIndex) // If we reached our goal
         {
             closedList[topNode.triangleIndex] = topNode;
-            return ReconstructPath(topNode.triangleIndex, closedList);
+            ComputedPath path = ReconstructPath(topNode.triangleIndex, closedList);
+            _computedPaths.push_back(path);
+            return path;
             break;
         }
 
@@ -319,17 +326,49 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
     pathNode.centre = _triangles[finalTriangleIndex].centre;
     path.waypoints.push_back(pathNode);
 
+    uint32_t previousTriangleIndex = finalTriangleIndex;
     uint32_t parentTriangleIndex = finalTriangleNode.parentTriangleIndex;
 
     while (true)
     {
         if (parentTriangleIndex == std::numeric_limits<uint32_t>::max())
+        {
+            pathNode.centre = _triangles[previousTriangleIndex].centre;
+            path.waypoints.push_back(pathNode);
             break;
+        }
 
         const TriangleNode& node = nodes[parentTriangleIndex];
-        pathNode.centre = _triangles[parentTriangleIndex].centre;
+        // pathNode.centre = _triangles[parentTriangleIndex].centre;
+        // path.waypoints.push_back(pathNode);
+
+        std::unordered_map<uint32_t, uint32_t> triangleIndices;
+        for (int32_t i = 0; i < 3; i++)
+        {
+            triangleIndices[_triangles[previousTriangleIndex].indices[i]]++;
+        }
+        for (int32_t i = 0; i < 3; i++)
+        {
+            triangleIndices[_triangles[parentTriangleIndex].indices[i]]++;
+        }
+
+        uint32_t adjacentEdgeIndices[2] = {};
+
+        uint32_t i = 0;
+        for (const auto& [index, count] : triangleIndices)
+        {
+            if (count == 2)
+            {
+                adjacentEdgeIndices[i++] = index;
+            }
+        }
+
+        pathNode.centre = (_mesh.vertices[adjacentEdgeIndices[0]].position + _mesh.vertices[adjacentEdgeIndices[1]].position) * 0.5f;
+        pathNode.centre = glm::vec3(glm::inverse(_inverseTransform) * glm::vec4(pathNode.centre, 1.0f));
+
         path.waypoints.push_back(pathNode);
 
+        previousTriangleIndex = parentTriangleIndex;
         parentTriangleIndex = node.parentTriangleIndex;
     }
 

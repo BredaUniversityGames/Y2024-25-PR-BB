@@ -4,7 +4,6 @@
 #include "game_module.hpp"
 #include "inspector_module.hpp"
 #include "main_engine.hpp"
-#include "old_engine.hpp"
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
@@ -15,29 +14,34 @@
 #include "ui_module.hpp"
 #include "model_loading_module.hpp"
 
+#include "profile_macros.hpp"
 #include "wren_bindings.hpp"
 
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
 
-    instance
-        .AddModule<ScriptingModule>()
-        .AddModule<InspectorModule>()
-        .AddModule<ECSModule>()
-        .AddModule<TimeModule>()
-        .AddModule<SteamModule>()
-        .AddModule<ApplicationModule>()
-        .AddModule<PhysicsModule>()
-        .AddModule<OldEngine>()
-        .AddModule<RendererModule>()
-        .AddModule<PathfindingModule>()
-        .AddModule<AudioModule>()
-        .AddModule<UIModule>()
-        .AddModule<ParticleModule>()
-        .AddModule<GameModule>()
-        .AddModule<ModelLoadingModule>();
+    {
+        ZoneScopedN("Engine Module Initialization");
 
+        instance
+            .AddModule<ScriptingModule>()
+            .AddModule<InspectorModule>()
+            .AddModule<ECSModule>()
+            .AddModule<TimeModule>()
+            .AddModule<SteamModule>()
+            .AddModule<ApplicationModule>()
+            .AddModule<PhysicsModule>()
+            .AddModule<RendererModule>()
+            .AddModule<PathfindingModule>()
+            .AddModule<AudioModule>()
+            .AddModule<UIModule>()
+            .AddModule<ParticleModule>()
+            .AddModule<GameModule>()
+			.AddModule<ModelLoadingModule>();
+    }
+
+    instance.MainLoopOnce();
     auto& scripting = instance.GetModule<ScriptingModule>();
 
     BindEngineAPI(scripting.GetForeignAPI());

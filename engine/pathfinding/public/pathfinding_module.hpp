@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cpu_resources.hpp"
 #include "module_interface.hpp"
 #include "renderer.hpp"
 #include <glm/glm.hpp>
@@ -123,5 +124,8 @@ private:
     std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
     glm::mat4 _inverseTransform = glm::mat4(1.0f);
 
+    CPUMesh<Vertex> _mesh = {};
+
     bool _debugDraw = false;
+    std::vector<ComputedPath> _computedPaths;
 };

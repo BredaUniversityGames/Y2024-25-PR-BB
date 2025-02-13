@@ -13,3 +13,6 @@ target_link_libraries(Renderer
         PUBLIC VulkanMemoryAllocator
         PUBLIC spirv-reflect-static
 )
+
+source_exclude_unity("private/lib/stbi_impl.cpp")
+source_exclude_unity("private/lib/vma_impl.cpp")
