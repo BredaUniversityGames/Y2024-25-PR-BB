@@ -1,7 +1,7 @@
 #pragma once
 #include "engine.hpp"
 #include "cpu_resources.hpp"
-#include "model_loader.hpp"
+#include "model_loader.hpp" // TODO: Removing this causes incomplete type, even when forward declared?
 #include <memory>
 
 class ModelLoader;
