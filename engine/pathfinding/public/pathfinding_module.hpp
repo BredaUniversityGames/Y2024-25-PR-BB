@@ -97,6 +97,7 @@ public:
 
     bool SetDebugDrawState(bool state) { return _debugDraw = state; }
     bool GetDebugDrawState() const { return _debugDraw; }
+    const std::vector<glm::vec3>& GetDebugLines() const { return _debugLines; }
 
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
@@ -127,5 +128,6 @@ private:
     CPUMesh<Vertex> _mesh = {};
 
     bool _debugDraw = false;
+    std::vector<glm::vec3> _debugLines;
     std::vector<ComputedPath> _computedPaths;
 };
