@@ -59,6 +59,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 
             const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
             emitter.emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
+            emitter.emitter.position += emitter.positionOffset;
 
             if (_physics->bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             {
@@ -74,6 +75,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
         {
             emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
+            emitter.emitter.position += emitter.positionOffset;
         }
 
         // update timers

@@ -13,6 +13,7 @@ struct ParticleEmitterComponent
     bool emitOnce = true;
     float maxEmitDelay = 1.0f;
     float currentEmitDelay = 1.0f;
+    glm::vec3 positionOffset = glm::vec3(0.0f);
     Emitter emitter;
     void Inspect();
 
