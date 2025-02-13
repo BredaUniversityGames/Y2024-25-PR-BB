@@ -17,9 +17,9 @@
 #include "graphics_resources.hpp"
 #include "model_loading.hpp"
 #include "profile_macros.hpp"
+#include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
-#include "renderer_module.hpp"
 
 #include <entt/entity/entity.hpp>
 
