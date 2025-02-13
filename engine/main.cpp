@@ -39,6 +39,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<GameModule>();
     }
 
+    instance.MainLoopOnce();
     auto& scripting = instance.GetModule<ScriptingModule>();
 
     BindEngineAPI(scripting.GetForeignAPI());
