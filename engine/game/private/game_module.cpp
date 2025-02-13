@@ -54,8 +54,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
 
     std::vector<std::string> modelPaths = {
-        //"assets/models/prefix_test.glb",
-        "assets/models/Cathedral.glb",
+        "assets/models/prefix_test.glb",
+        //"assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
