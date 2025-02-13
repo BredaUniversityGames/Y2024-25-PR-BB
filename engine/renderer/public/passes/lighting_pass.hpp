@@ -31,7 +31,6 @@ private:
         uint32_t normalRIndex;
         uint32_t ssaoIndex;
         uint32_t depthIndex;
-
         float shadowMapSize;
     } _pushConstants;
 

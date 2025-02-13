@@ -34,6 +34,8 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <passes/shadow_pass.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     ZoneScopedN("Game Module Initialization");
@@ -111,6 +113,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _lastMousePos = mousePos;
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    // Capture the static shadows
+    rendererModule.GetRenderer()->GetShadowPipeline().RequestStaticShadowUpdate();
 
     bblog::info("Successfully initialized engine!");
 

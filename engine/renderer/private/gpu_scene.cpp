@@ -114,7 +114,8 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.shadowMapIndex = _staticShadowImage.Index();
+    sceneData.staticShadowMapIndex = _staticShadowImage.Index();
+    sceneData.dynamicShadowMapIndex = _dynamicShadowImage.Index();
 
     sceneData.fogColor = _settings.color;
     sceneData.fogDensity = _settings.density;
@@ -850,13 +851,21 @@ void GPUScene::CreateShadowMapResources()
     shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
-    CPUImage shadowCreation {};
-    shadowCreation
+    CPUImage shadowCreationStatic {};
+    shadowCreationStatic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
         .SetSize(2048, 2048)
-        .SetName("Shadow image")
+        .SetName("Static shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
-    _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
-    _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
+    _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationStatic, _shadowSampler);
+
+    CPUImage shadowCreationDynamic {};
+    shadowCreationDynamic
+        .SetFormat(vk::Format::eD32Sfloat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(2048, 2048)
+        .SetName("Dynamic shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationDynamic, _shadowSampler);
 }

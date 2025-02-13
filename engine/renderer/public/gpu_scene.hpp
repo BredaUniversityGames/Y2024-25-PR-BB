@@ -139,7 +139,8 @@ private:
         uint32_t irradianceIndex;
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
-        uint32_t shadowMapIndex;
+        uint32_t staticShadowMapIndex;
+        uint32_t dynamicShadowMapIndex;
 
         glm::vec3 fogColor;
         float fogDensity;

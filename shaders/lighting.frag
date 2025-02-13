@@ -201,20 +201,61 @@ vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, ui
     return prefilteredColor * (F * envBRDF.x + envBRDF.y);
 }
 
+float shadowPCF(uint index, vec3 coords, float bias) {
+    vec2 texelSize = 1.0 / textureSize(bindless_shadowmap_textures[nonuniformEXT(index)], 0);
+    float sum = 0.0;
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            vec2 offset = vec2(x, y) * texelSize;
+            sum += texture(
+                bindless_shadowmap_textures[nonuniformEXT(index)],
+                vec3(coords.xy + offset, coords.z - bias)
+            ).r;
+        }
+    }
+    return sum / 9.0;
+}
+
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
+    // Transform the position into shadow map space.
     vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
     vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
+
+    // Compute an offset in texture space based on shadow map resolution.
     const float offset = 1.0 / (pushConstants.shadowMapSize * 1.6);
 
-    float visibility = 1.0;
+    // Calculate the depth value for comparison.
     float depthFactor = testCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
-    shadow *= 0.25;// Average the samples
+
+    // Use a 3x3 PCF kernel to smooth the shadow edge.
+    float staticSum = 0.0;
+    float dynamicSum = 0.0;
+    int samples = 0;
+
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            vec2 offsetCoord = shadowCoord.xy + vec2(float(x) * offset, float(y) * offset);
+
+            // Sample the shadow map using the sampler2DShadow.
+            staticSum += texture(bindless_shadowmap_textures[nonuniformEXT(scene.staticShadowMapIndex)],
+                                 vec3(offsetCoord, depthFactor));
+            dynamicSum += texture(bindless_shadowmap_textures[nonuniformEXT(scene.dynamicShadowMapIndex)],
+                                  vec3(offsetCoord, depthFactor));
+            samples++;
+        }
+    }
+
+    // Average the results.
+    float staticRead = staticSum / float(samples);
+    float dynamicRead = dynamicSum / float(samples);
+
+    // Use the minimum visibility from both shadow maps.
+    shadow = min(staticRead, dynamicRead);
 }
+
 
 vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor)
 {
