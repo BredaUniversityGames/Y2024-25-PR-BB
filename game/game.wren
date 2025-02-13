@@ -104,9 +104,13 @@ class Main {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
         }
 
-        
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
+            __activeWeapon.reload(engine)
+        }
 
-        
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
+            __activeWeapon.attack(engine, dt)
+        }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
             System.print("Activate ultimate")
