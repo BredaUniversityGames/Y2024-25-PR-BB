@@ -12,7 +12,7 @@ public:
     ThreadPool(uint32_t threadCount);
     ~ThreadPool();
 
-    template <typename Functor, typename... Args>
+    template <typename Functor>
     auto QueueWork(Functor&& f)
     {
         using Ret = std::invoke_result_t<Functor>;
