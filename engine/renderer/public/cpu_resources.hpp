@@ -10,6 +10,11 @@
 #include <unordered_map>
 #include <vector>
 
+struct PointLightComponent;
+namespace fastgltf
+{
+struct Light;
+}
 struct Hierarchy
 {
     struct Joint
@@ -90,7 +95,7 @@ struct CPUModel
 
     std::vector<CPUMaterial> materials {};
     std::vector<CPUImage> textures {};
-
+    std::vector<PointLightComponent> pointLights {};
     std::vector<Animation> animations {};
 };
 

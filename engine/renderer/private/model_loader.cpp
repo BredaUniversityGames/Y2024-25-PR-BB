@@ -618,6 +618,14 @@ CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, co
     return material;
 }
 
+PointLightComponent ProcessPointLight(fastgltf::Light GLTFpointLight)
+{
+
+    PointLightComponent pointLight;
+
+    pointLight.attenuation = GLTFpointLight.
+}
+
 uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     uint32_t gltfNodeIndex,
     CPUModel& model,
@@ -744,6 +752,20 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
                 }
             }
             ++counter;
+        }
+    }
+
+    // Extract point light data
+    {
+        ZoneScopedN("Light Loading");
+
+        uint32_t counter { 0 };
+        for (auto& gltfLight : gltf.lights)
+        {
+            if (gltfLight.type == fastgltf::LightType::Point)
+            {
+                model.pointLights.emplace_back(ProcessPointLight(gltfLight));
+            }
         }
     }
 

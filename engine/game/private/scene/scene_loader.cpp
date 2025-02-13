@@ -108,7 +108,6 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     entt::entity rootEntity = ecs.GetRegistry().create();
 
     std::unordered_map<uint32_t, entt::entity> entityLUT;
-
     AnimationControlComponent* animationControl = nullptr;
     if (!animations.empty())
     {
