@@ -37,8 +37,6 @@ ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 
 void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    DebugPass& debugPass = _renderer->GetDebugPipeline();
-
     // Draws any path that was generated through the scripting language
     if (_debugDraw)
     {
