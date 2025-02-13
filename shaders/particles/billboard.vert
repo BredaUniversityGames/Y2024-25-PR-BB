@@ -22,6 +22,7 @@ layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 texCoord;
 layout (location = 3) out uint materialIndex;
 layout (location = 4) out uint flags;
+layout (location = 5) out vec3 outColor;
 
 void main()
 {
@@ -41,6 +42,7 @@ void main()
     materialIndex = instance.materialIndex;
     texCoord = inTexCoord;
     flags = instance.flags;
+    outColor = instance.color;
 
     gl_Position = camera.VP * vec4(position, 1.0);
 }

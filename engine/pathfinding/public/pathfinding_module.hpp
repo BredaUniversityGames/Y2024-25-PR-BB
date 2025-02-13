@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cpu_resources.hpp"
 #include "module_interface.hpp"
 #include "renderer.hpp"
 #include "cpu_resources.hpp"

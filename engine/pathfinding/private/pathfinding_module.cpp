@@ -11,7 +11,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/model_resource_manager.hpp"
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
 
 #include "scripting_module.hpp"
 
@@ -42,15 +42,15 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
     // Draws any path that was generated through the scripting language
     if (_debugDraw)
     {
-        for(const auto& path : _computedPaths)
+        for (const auto& path : _computedPaths)
         {
             for (size_t i = 0; i < path.waypoints.size() - 1; i++)
             {
                 glm::vec3 from = path.waypoints[i].centre;
                 glm::vec3 to = path.waypoints[i + 1].centre;
 
-                from += glm::vec3 { 0.0f, 0.2f, 0.0f };
-                to += glm::vec3 { 0.0f, 0.2f, 0.0f };
+                from += glm::vec3 { 0.0f, 0.1f, 0.0f };
+                to += glm::vec3 { 0.0f, 0.1f, 0.0f };
 
                 debugPass.AddLine(
                     from,
@@ -336,18 +336,16 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
             break;
         }
 
-
-
         const TriangleNode& node = nodes[parentTriangleIndex];
-        //pathNode.centre = _triangles[parentTriangleIndex].centre;
-        //path.waypoints.push_back(pathNode);
+        // pathNode.centre = _triangles[parentTriangleIndex].centre;
+        // path.waypoints.push_back(pathNode);
 
         std::unordered_map<uint32_t, uint32_t> triangleIndices;
-        for(int32_t i = 0; i < 3; i++)
+        for (int32_t i = 0; i < 3; i++)
         {
             triangleIndices[_triangles[previousTriangleIndex].indices[i]]++;
         }
-        for(int32_t i = 0; i < 3; i++)
+        for (int32_t i = 0; i < 3; i++)
         {
             triangleIndices[_triangles[parentTriangleIndex].indices[i]]++;
         }
@@ -355,9 +353,9 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
         uint32_t adjacentEdgeIndices[2] = {};
 
         uint32_t i = 0;
-        for(const auto& [index, count]: triangleIndices)
+        for (const auto& [index, count] : triangleIndices)
         {
-            if(count == 2)
+            if (count == 2)
             {
                 adjacentEdgeIndices[i++] = index;
             }
