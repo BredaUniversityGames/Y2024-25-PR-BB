@@ -6,7 +6,7 @@
 
 namespace bindings
 {
-int32_t SetNavigationMesh(PathfindingModule& self, const std::string& path)
+int32_t SetNavigationMesh(MAYBE_UNUSED PathfindingModule& self, MAYBE_UNUSED const std::string& path)
 {
     return 0;
     // return self.SetNavigationMesh(path); // TODO: Not sure how to do this right now as we don't have access to model loading module, any ideas?
