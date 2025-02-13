@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "weapon.wren" for WeaponBase, Pistol, Shotgun, Knife, Weapons
+import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -36,7 +36,7 @@ class Main {
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
-        __activeWeapon = __armory[Weapons.pistol]
+        __activeWeapon = __armory[Weapons.shotgun]
         __activeWeapon.equip(engine)
         // Inside cathedral: pentagram scene
         {   // Fire emitter 1
@@ -71,6 +71,9 @@ class Main {
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
+
+        __ultimateCharge = 0
+        __ultimateActive = false
     }
 
     static Update(engine, dt) {
@@ -80,8 +83,19 @@ class Main {
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
 
+        if (__ultimateActive) {
+            __ultimateCharge = __ultimateCharge - dt
+            if (__ultimateCharge == 0) {
+                __activeWeapon = __armory[Weapons.pistol]
+                __activeWeapon.equip()
+                __ultimateActive = false
+            }
+        } else {
+            __ultimateCharge = __ultimateCharge + dt
+        }
+
         if (__frameTimer > 1000.0) {
-            System.print("%(__counter) Frames per second")
+            //System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
@@ -90,14 +104,17 @@ class Main {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-            __activeWeapon.attack(engine, dt)
-            //System.print("Playing is shooting")
-        }
+        
 
-        if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
-            __activeWeapon.reload(engine)
-            //System.print("Playing is shooting")
+        
+
+        if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
+            System.print("Activate ultimate")
+            if (__ultimateCharge == 1000) {
+
+                __activeWeapon = __armory[Weapons.shotgun]
+                __activeWeapon.equip()
+            }
         }
 
 

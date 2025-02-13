@@ -246,6 +246,29 @@ public:
     {
         return glm::min(a, b);
     }
+    static float Radians(const float a)
+    {
+        return glm::radians(a);
+    }
+    static glm::quat AngleAxis(const float a, glm::vec3 vec)
+    {
+        return glm::angleAxis(a, vec);
+    }
+    static glm::vec3 RotateForwardVector(glm::vec3 forward, glm::vec2 rotation, glm::vec3 up)
+    {
+        glm::vec3 normalizedForward = glm::normalize(forward);
+        glm::vec3 normalizedUp = glm::normalize(up);
+
+        glm::quat yawQuat = glm::angleAxis(glm::radians(rotation.x), normalizedUp);
+        glm::vec3 rotatedForward = yawQuat * normalizedForward;
+
+        glm::vec3 right = glm::normalize(glm::cross(normalizedUp, rotatedForward));
+
+        glm::quat pitchQuat = glm::angleAxis(glm::radians(rotation.y), right);
+        rotatedForward = pitchQuat * rotatedForward;
+
+        return glm::normalize(rotatedForward);
+    }
     static float PI()
     {
         return glm::pi<float>();
@@ -258,6 +281,7 @@ public:
     {
         return glm::half_pi<float>();
     }
+    static glm::vec3 Mul(glm::quat& lhs, const glm::vec3& rhs) { return lhs * rhs; }
 };
 
 template <typename T>
@@ -301,6 +325,7 @@ void bindings::BindMath(wren::ForeignModule& module)
         quat.var<&glm::quat::y>("y");
         quat.var<&glm::quat::z>("z");
         BindVectorTypeOperations(quat);
+        quat.funcExt<MathUtil::Mul>("mul");
     }
 }
 
@@ -313,6 +338,9 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::Max>("Max");
     mathUtilClass.funcStatic<&MathUtil::Min>("Min");
+    mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
+    mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
+    mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");
     mathUtilClass.funcStatic<&MathUtil::PI>("PI");
     mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
     mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
