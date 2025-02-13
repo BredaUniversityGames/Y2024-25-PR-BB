@@ -4,6 +4,10 @@
 #include "engine.hpp"
 #include "ui/ui_menus.hpp"
 
+struct PlayerTag
+{
+};
+
 class GameModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
