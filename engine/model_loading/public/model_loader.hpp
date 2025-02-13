@@ -1,8 +1,8 @@
 #pragma once
 
-#include "include_fastgltf.hpp"
 #include "components/animation_channel_component.hpp"
 #include "cpu_resources.hpp"
+#include "include_fastgltf.hpp"
 
 #include <vector>
 

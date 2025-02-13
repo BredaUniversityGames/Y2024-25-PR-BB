@@ -11,14 +11,14 @@
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "resource_management/model_resource_manager.hpp"
-#include "cpu_resources.hpp"
-#include "systems/physics_system.hpp"
-#include "profile_macros.hpp"
 #include "model_loading_module.hpp"
+#include "profile_macros.hpp"
+#include "resource_management/model_resource_manager.hpp"
+#include "systems/physics_system.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -151,7 +151,7 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto gpuModels = rendererModule.LoadModels(cpuModels);
 
-    std::vector<entt::entity> entities{};
+    std::vector<entt::entity> entities {};
     entities.reserve(cpuModels.size());
 
     if (cpuModels.size() != gpuModels.size())
@@ -171,7 +171,7 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
 {
     auto& modelLoadingModule = engine.GetModule<ModelLoadingModule>();
 
-    std::vector<CPUModel> cpuModels{};
+    std::vector<CPUModel> cpuModels {};
     cpuModels.reserve(paths.size());
 
     for (const auto& path : paths)
@@ -188,5 +188,3 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
 
     return LoadModels(engine, cpuModels);
 }
-
-

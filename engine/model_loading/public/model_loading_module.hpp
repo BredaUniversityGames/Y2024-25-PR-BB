@@ -1,6 +1,6 @@
 #pragma once
-#include "engine.hpp"
 #include "cpu_resources.hpp"
+#include "engine.hpp"
 #include "model_loader.hpp" // TODO: Removing this causes incomplete type, even when forward declared?
 #include <memory>
 
@@ -9,8 +9,8 @@ class ModelLoader;
 class ModelLoadingModule : public ModuleInterface
 {
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override;
-    void Tick(MAYBE_UNUSED Engine& engine) override {}
-    void Shutdown(MAYBE_UNUSED Engine& engine) override {}
+    void Tick(MAYBE_UNUSED Engine& engine) override { }
+    void Shutdown(MAYBE_UNUSED Engine& engine) override { }
 
     std::string_view GetName() override { return "Model Loading Module"; }
 

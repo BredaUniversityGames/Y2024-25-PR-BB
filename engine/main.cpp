@@ -4,6 +4,7 @@
 #include "game_module.hpp"
 #include "inspector_module.hpp"
 #include "main_engine.hpp"
+#include "model_loading_module.hpp"
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
@@ -12,7 +13,6 @@
 #include "steam_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
-#include "model_loading_module.hpp"
 
 #include "profile_macros.hpp"
 #include "wren_bindings.hpp"
@@ -38,7 +38,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-			.AddModule<ModelLoadingModule>();
+            .AddModule<ModelLoadingModule>();
     }
 
     instance.MainLoopOnce();

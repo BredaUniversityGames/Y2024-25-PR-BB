@@ -321,7 +321,7 @@ std::vector<ResourceHandle<GPUModel>> Renderer::LoadModels(const std::vector<CPU
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<ResourceHandle<GPUModel>> gpuModels{};
+    std::vector<ResourceHandle<GPUModel>> gpuModels {};
     gpuModels.reserve(cpuModels.size());
 
     for (const auto& cpuModel : cpuModels)
@@ -332,8 +332,8 @@ std::vector<ResourceHandle<GPUModel>> Renderer::LoadModels(const std::vector<CPU
             std::string zone = cpuModel.name + " GPU upload";
             ZoneName(zone.c_str(), 128);
 
-	    auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
-	    gpuModels.emplace_back(std::move(gpu));
+            auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
+            gpuModels.emplace_back(std::move(gpu));
         }
     }
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <entt/entity/entity.hpp>
+#include <string>
+#include <vector>
 
 class Engine;
 struct CPUModel;
