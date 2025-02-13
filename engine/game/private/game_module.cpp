@@ -244,11 +244,11 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
     }
 
-    int8_t  physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
-            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
+    int8_t physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
+           pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
 
     rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
-    
+
     if (physicsDebugDrawing || pathfindingDebugDrawing)
     {
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(true);
@@ -258,7 +258,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(false);
     }
 
-    if(physicsDebugDrawing)
+    if (physicsDebugDrawing)
     {
         auto linesData = physicsModule.debugRenderer->GetLinesData();
         auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
@@ -267,7 +267,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
     }
 
-    if(pathfindingDebugDrawing)
+    if (pathfindingDebugDrawing)
     {
         // Update pathfinding module debug lines
         const std::vector<glm::vec3>& pathfindingLines = pathfindingModule.GetDebugLines();
@@ -278,8 +278,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     // Update audio module debug lines
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
     audioModule.ClearLines();
-
-
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
     {
