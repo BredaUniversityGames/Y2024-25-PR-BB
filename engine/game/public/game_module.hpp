@@ -2,7 +2,11 @@
 
 #include "common.hpp"
 #include "engine.hpp"
-#include "ui_menus.hpp"
+#include "ui/ui_menus.hpp"
+
+struct PlayerTag
+{
+};
 
 class GameModule : public ModuleInterface
 {
@@ -12,6 +16,7 @@ class GameModule : public ModuleInterface
     std::string_view GetName() override { return "Game Module"; }
 
     HUD _hud;
+    glm::ivec2 _lastMousePos {};
     bool _updateHud = false;
 
 public:

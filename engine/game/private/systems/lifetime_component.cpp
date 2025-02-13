@@ -1,4 +1,4 @@
-#include "lifetime_component.hpp"
+#include "systems/lifetime_component.hpp"
 
 namespace EnttEditor
 {
