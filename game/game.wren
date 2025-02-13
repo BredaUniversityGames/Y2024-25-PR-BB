@@ -106,6 +106,20 @@ class Main {
             __counter = 0
         }
 
+        
+
+        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
+            //System.print("Player Jumped!")
+
+        }
+
+
+        if(engine.GetInput().DebugGetKey(Keycode.eN())){
+           cheats.noClip = !cheats.noClip
+        }
+
+        __playerMovement.Update(engine,dt,__playerController, __camera)
+
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
         }
@@ -126,18 +140,6 @@ class Main {
                 __activeWeapon.equip()
             }
         }
-
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            //System.print("Player Jumped!")
-
-        }
-
-
-        if(engine.GetInput().DebugGetKey(Keycode.eN())){
-           cheats.noClip = !cheats.noClip
-        }
-
-        __playerMovement.Update(engine,dt,__playerController, __camera)
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

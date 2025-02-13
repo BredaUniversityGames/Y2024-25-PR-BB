@@ -54,9 +54,9 @@ class Pistol {
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-            var end = rayHitInfo.position
+            var end = rayHitInfo.position[0]
 
-            if (rayHitInfo.hasHit) {
+            if (!rayHitInfo.isEmpty) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
@@ -145,14 +145,14 @@ class Shotgun {
             var i = 0
             while (i < _raysPerShot) {
 
-                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 10, _spread[i].y * 10), playerTransform.rotation.mul(Vec3.new(0, 1, 0)))                
+                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 3, _spread[i].y * 3), playerTransform.rotation.mul(Vec3.new(0, 1, 0)))                
 
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
                 
                 var end = start + newDirection * _rangeVector
                 
-                if (rayHitInfo.hasHit) {
-                    end = rayHitInfo.position
+                if (!rayHitInfo.isEmpty) {
+                    end = rayHitInfo[0].position
                 }
 
                 var length = (end - start).length()
