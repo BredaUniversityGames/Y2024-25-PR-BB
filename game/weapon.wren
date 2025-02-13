@@ -15,6 +15,8 @@ class Pistol {
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
+        _reloadTimer = 0
+        _reloadSpeed = 1.2 * 1000
 
         // animations
 
@@ -32,12 +34,13 @@ class Pistol {
             gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         }
 
+        _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
     }
 
     attack(engine, deltaTime) {
 
-        if (_cooldown <= 0 && _ammo > 0) {
+        if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Pistol shoot")
 
@@ -54,18 +57,17 @@ class Pistol {
             var direction = Math.ToVector(playerTransform.rotation)
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-            var end = rayHitInfo.position[0]
+            var end = start + direction * _rangeVector 
 
             if (!rayHitInfo.isEmpty) {
+                end = rayHitInfo[0].position
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 5.0, 0.0))
-            } else {
-                end = start + direction * _rangeVector
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal * Vec3.new(5, 5, 5))
             }
 
             var length = (end - start).length()
@@ -95,6 +97,9 @@ class Pistol {
 
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
+
+    reloadTimer {_reloadTimer}
+    reloadTimer=(value) {_reloadTimer = value}
 }
 
 
@@ -109,6 +114,8 @@ class Shotgun {
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
+        _reloadTimer = 0
+        _reloadSpeed = 0.4 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
     }
     
@@ -121,11 +128,12 @@ class Shotgun {
             gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         }
 
+        _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
     }
 
     attack(engine, deltaTime) {   
-        if (_cooldown <= 0 && _ammo > 0) {
+        if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Shotgun shoot")
 
@@ -183,6 +191,9 @@ class Shotgun {
 
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
+
+    reloadTimer {_reloadTimer}
+    reloadTimer=(value) {_reloadTimer = value}
 }
 
 class Knife {
@@ -193,6 +204,8 @@ class Knife {
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
+        _reloadTimer = 0
+        _reloadSpeed = 0
     }
 
     reload (engine) {
@@ -209,4 +222,7 @@ class Knife {
 
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
+
+    reloadTimer {_reloadTimer}
+    reloadTimer=(value) {_reloadTimer = value}
 }

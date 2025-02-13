@@ -189,11 +189,11 @@ void ParticleModule::LoadEmitterPresets()
         // hardcoded test emitter preset for now
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
-        preset.mass = 5.0f;
+        preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
-        preset.randomness = glm::vec3(5.0f, 0.0f, 5.0f);
+        preset.randomness = glm::vec3(0.0f, 0.0f, 0.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
         preset.name = "Impact";

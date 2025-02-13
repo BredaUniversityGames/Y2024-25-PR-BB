@@ -122,6 +122,7 @@ class Main {
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
         }
 
         if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
@@ -140,6 +141,17 @@ class Main {
                 __activeWeapon.equip()
             }
         }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e1())) {
+            __activeWeapon = __armory[Weapons.pistol]
+            __activeWeapon.equip(engine)
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e2())) {
+            __activeWeapon = __armory[Weapons.shotgun]
+            __activeWeapon.equip(engine)
+        }
+
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
