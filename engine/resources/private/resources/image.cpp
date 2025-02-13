@@ -38,7 +38,7 @@ CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 CPUImage& CPUImage::SetSize(uint16_t width, uint16_t height, uint16_t depth)
 {
     this->imageInfo.width = width;
-    this->imageInfo.width = height;
+    this->imageInfo.height = height;
     this->imageInfo.depth = depth;
     return *this;
 }

@@ -58,9 +58,9 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
     TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
 
-    if (currentNode.meshIndex.has_value())
+    if (currentNode.meshTypeAndIndex.has_value())
     {
-        auto mesh = models.meshes[currentNode.meshIndex.value().second];
+        auto mesh = models.meshes[currentNode.meshTypeAndIndex.value().second];
 
         JPH::VertexList vertices;
         JPH::IndexedTriangleList triangles;

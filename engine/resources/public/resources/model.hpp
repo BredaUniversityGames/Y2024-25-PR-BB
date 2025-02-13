@@ -64,6 +64,7 @@ struct CPUMaterial
 
 struct CPUModel
 {
+
     Hierarchy hierarchy {};
 
     std::vector<CPUMesh<Vertex>> meshes {};
