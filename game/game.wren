@@ -16,9 +16,12 @@ class Main {
         //gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
         //gunAnimations.Stop()
 
-        __demon = engine.GetECS().GetEntityByName("Demon")
-        var demonAnimations = __demon.GetAnimationControlComponent()
-        demonAnimations.Play("Armature|A_Run_F_Masc|BaseLayer.001", 1.0, true)
+
+        var demons = engine.GetECS().GetEntitiesByName("Demon")
+        for(demon in demons) {
+            var demonAnimations = demon.GetAnimationControlComponent()
+            demonAnimations.Play("Armature|A_Run_F_Masc|BaseLayer.001", 1.0, true)
+        }
 
         if (__player) {
             System.print("Player is online!")

@@ -69,13 +69,15 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    const size_t DIM = 2;
+    const size_t DIM = 8;
     for (size_t i = 0; i < DIM; ++i)
     {
         for (size_t j = 0; j < DIM; ++j)
         {
             auto ent = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
             TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), ent, { i, 0, j });
+            NameComponent& name = _ecs->GetRegistry().get<NameComponent>(ent);
+            name.name = "Demon";
         }
     }
 
