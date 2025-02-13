@@ -90,11 +90,11 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         const std::pair<Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
         nodeStack.pop();
 
-        if (topNodeTransform.first->meshIndex.has_value())
+        if (topNodeTransform.first->meshTypeAndIndex.has_value())
         {
-            if (topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            if (topNodeTransform.first->meshTypeAndIndex.value().first == MeshType::eSTATIC)
             {
-                meshIndex = topNodeTransform.first->meshIndex.value().second;
+                meshIndex = topNodeTransform.first->meshTypeAndIndex.value().second;
                 transform = topNodeTransform.second;
                 break;
             }

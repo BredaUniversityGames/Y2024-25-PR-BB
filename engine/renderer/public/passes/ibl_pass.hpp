@@ -1,6 +1,5 @@
 #pragma once
-
-#include "vertex.hpp"
+#include "gpu_resources.hpp"
 
 #include <memory>
 

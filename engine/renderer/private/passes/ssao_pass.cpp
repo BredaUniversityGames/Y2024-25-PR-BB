@@ -186,7 +186,7 @@ void SSAOPass::CreateBuffers()
         .SetData(std::move(byteData))
         .SetFlags(vk::ImageUsageFlagBits::eSampled)
         .SetFormat(vk::Format::eR32G32B32A32Sfloat);
-    noiseImage.isHDR = true;
+    noiseImage.imageInfo.isHDR = true;
 
     SamplerCreation noiseSampler {};
     noiseSampler.name = "SSAO_Noise_Sampler";

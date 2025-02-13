@@ -1,7 +1,10 @@
 #pragma once
 
-#include "cpu_resources.hpp"
+#include "gpu_resources.hpp"
 #include "module_interface.hpp"
+#include "resources/model.hpp"
+
+#include <vector>
 
 class Renderer;
 class ImGuiBackend;

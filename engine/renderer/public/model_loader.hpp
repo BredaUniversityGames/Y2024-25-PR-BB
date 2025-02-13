@@ -1,10 +1,10 @@
 #pragma once
 
-#include "components/animation_channel_component.hpp"
-#include "cpu_resources.hpp"
-#include "vertex.hpp"
+#include "common.hpp"
+#include "components/animation_components.hpp"
+#include "resources/model.hpp"
 
-#include <include_fastgltf.hpp>
+#include <lib/include_fastgltf.hpp>
 #include <memory>
 #include <vector>
 

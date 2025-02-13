@@ -1,6 +1,6 @@
 #include "animation_bindings.hpp"
 
-#include "animation.hpp"
+#include "components/animation_components.hpp"
 #include "utility/enum_bind.hpp"
 #include "utility/wren_entity.hpp"
 

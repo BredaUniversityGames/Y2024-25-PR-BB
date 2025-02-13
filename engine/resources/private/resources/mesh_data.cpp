@@ -1,4 +1,4 @@
-#include "vertex.hpp"
+#include "resources/mesh_data.hpp"
 
 vk::VertexInputBindingDescription Vertex::GetBindingDescription()
 {

@@ -1,9 +1,24 @@
 #pragma once
-
-#include <array>
+#include <math_util.hpp>
+#include <vector>
 #include <vulkan_include.hpp>
 
-#include "gpu_resources.hpp"
+template <typename T>
+struct CPUMesh
+{
+    std::vector<T> vertices;
+    std::vector<uint32_t> indices;
+    uint32_t materialIndex {};
+
+    math::Vec3Range boundingBox;
+    float boundingRadius;
+};
+
+enum class MeshType
+{
+    eSTATIC,
+    eSKINNED
+};
 
 struct LineVertex
 {

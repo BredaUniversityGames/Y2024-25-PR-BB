@@ -1,13 +1,14 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
-#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <optional>
 #include <string>
 #include <vector>
+
+// TODO
+//  These shouldn't be public using statements
 
 using Translation = glm::vec3;
 using Rotation = glm::quat;
@@ -39,6 +40,13 @@ struct AnimationSpline
 
     std::vector<float> timestamps;
     std::vector<T> values;
+};
+
+struct TransformAnimationSpline
+{
+    std::optional<AnimationSpline<Translation>> translation { std::nullopt };
+    std::optional<AnimationSpline<Rotation>> rotation { std::nullopt };
+    std::optional<AnimationSpline<Scale>> scaling { std::nullopt };
 };
 
 struct Animation
@@ -77,20 +85,4 @@ struct Animation
             time = 0.0f;
         }
     }
-};
-
-struct AnimationControlComponent
-{
-    std::vector<Animation> animations;
-    std::optional<uint32_t> activeAnimation { std::nullopt };
-
-    void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false);
-    void Play(const std::string& name, float speed = 1.0f, bool looping = false);
-    void Stop();
-    void Pause();
-    void Resume();
-    Animation::PlaybackOptions CurrentPlayback();
-    std::optional<std::string> CurrentAnimationName();
-    std::optional<uint32_t> CurrentAnimationIndex();
-    bool AnimationFinished();
 };

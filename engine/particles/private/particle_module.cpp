@@ -97,7 +97,7 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName)
             creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
             creation.SetName(fileName);
             creation.FromPNG("assets/textures/" + fileName);
-            creation.isHDR = false;
+            creation.imageInfo.isHDR = false;
             auto image = _context->Resources()->ImageResourceManager().Create(creation);
             auto& resource = _emitterImages.emplace(fileName, image).first->second;
             _context->UpdateBindlessSet();

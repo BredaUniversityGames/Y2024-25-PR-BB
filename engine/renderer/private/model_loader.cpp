@@ -1,6 +1,5 @@
 #include "model_loader.hpp"
 
-#include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
@@ -13,6 +12,7 @@
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
+#include "resources/model.hpp"
 #include "single_time_commands.hpp"
 #include "timers.hpp"
 #include "vulkan_context.hpp"
@@ -567,14 +567,14 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
     return stagingAnimationChannels;
 }
 
-CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUModel::CPUMaterial material {};
+    CPUMaterial material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -638,7 +638,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
         for (auto it = range.first; it != range.second; ++it)
         {
-            auto node = Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second };
+            auto node = Hierarchy::Node { "mesh node", glm::identity<glm::mat4>() };
+            node.meshTypeAndIndex = it->second;
             model.hierarchy.nodes.emplace_back(node);
             model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
         }
@@ -677,8 +678,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
 
             uint32_t jointIndex = std::distance(skin.joints.begin(), it);
             model.hierarchy.nodes[nodeIndex].joint = Hierarchy::Joint {
-                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
                 jointIndex,
+                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
             };
         }
     }
@@ -706,13 +707,13 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
 
     for (size_t i = 0; i < gltf.images.size(); ++i)
     {
-        model.textures.emplace_back(ProcessImage(gltf.images[i], gltf, textureData[i], name));
+        model.images.emplace_back(ProcessImage(gltf.images[i], gltf, textureData[i], name));
     }
 
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 

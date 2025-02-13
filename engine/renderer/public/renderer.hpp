@@ -2,9 +2,10 @@
 
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
-#include "cpu_resources.hpp"
 #include "data_store.hpp"
 #include "ecs_module.hpp"
+#include "gpu_resources.hpp"
+#include "resources/model.hpp"
 #include "settings.hpp"
 #include "swap_chain.hpp"
 

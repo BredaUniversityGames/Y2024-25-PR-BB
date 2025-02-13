@@ -1,7 +1,4 @@
-#include "animation.hpp"
-
-#include <algorithm>
-
+#include "components/animation_components.hpp"
 #include "log.hpp"
 
 void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float speed, bool looping)

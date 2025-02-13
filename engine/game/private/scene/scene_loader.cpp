@@ -1,6 +1,6 @@
 #include "scene/scene_loader.hpp"
 
-#include "animation.hpp"
+#include "components/animation_components.hpp"
 #include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -16,8 +16,8 @@
 #include "graphics_resources.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
+#include "resources/model.hpp"
 #include "systems/physics_system.hpp"
-#include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <glm/glm.hpp>
@@ -50,22 +50,23 @@ void LoadNodeRecursive(ECSModule& ecs,
 
     TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
 
-    if (currentNode.meshIndex.has_value())
+    if (currentNode.meshTypeAndIndex.has_value())
     {
-        switch (currentNode.meshIndex.value().first)
+        auto index = currentNode.meshTypeAndIndex->second;
+        switch (currentNode.meshTypeAndIndex->first)
         {
         case MeshType::eSTATIC:
-            ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
+            ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(index);
 
             // check if it should have collider
 
-            ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
+            ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(index), PhysicsShapes::eCONVEXHULL, entity));
 
             // add collider recursively
 
             break;
         case MeshType::eSKINNED:
-            ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(currentNode.meshIndex.value().second);
+            ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = model.skinnedMeshes.at(index);
             break;
         default:
             throw std::runtime_error("Mesh type not supported!");
@@ -127,7 +128,7 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
     {
         const Hierarchy::Node& node = hierarchy.nodes[i];
-        if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+        if (node.skeletonNode.has_value() && node.meshTypeAndIndex.has_value() && node.meshTypeAndIndex->first == MeshType::eSKINNED)
         {
             SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
             skinnedMeshComponent.skeletonEntity = entityLUT[node.skeletonNode.value()];

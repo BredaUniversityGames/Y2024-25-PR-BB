@@ -12,10 +12,10 @@ UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext)
 {
     // common image data.
     CPUImage commonImageData;
-    commonImageData.format
+    commonImageData.imageInfo.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
+    commonImageData.imageInfo.isHDR = false;
 
     UIProgressBar::BarStyle barStyle;
     barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_empty.png"));
@@ -28,10 +28,10 @@ UIProgressBar::BarStyle LoadCircleBarStyle(GraphicsContext& graphicsContext)
 {
     // common image data.
     CPUImage commonImageData;
-    commonImageData.format
+    commonImageData.imageInfo.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
+    commonImageData.imageInfo.isHDR = false;
 
     UIProgressBar::BarStyle barStyle;
     barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/circleempty.png"));
@@ -45,10 +45,10 @@ UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
 {
     // common image data.
     CPUImage commonImageData;
-    commonImageData.format
+    commonImageData.imageInfo.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
+    commonImageData.imageInfo.isHDR = false;
 
     UIProgressBar::BarStyle barStyle;
     barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/ult_empty.png"));
@@ -77,10 +77,10 @@ std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsConte
     canvas->SetAbsoluteTransform(canvas->GetAbsoluteLocation(), canvas->GetRelativeScale());
 
     CPUImage commonImageData {};
-    commonImageData.format
+    commonImageData.imageInfo.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
+    commonImageData.imageInfo.isHDR = false;
     auto crosshair = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
     canvas->AddChild<UIImage>(crosshair, glm::vec2(0), glm::vec2(120, 160) * 0.15f);
 
@@ -106,10 +106,10 @@ std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsConte
 
     // common image data.
     CPUImage imageData;
-    imageData.format
+    imageData.imageInfo.format
         = vk::Format::eR8G8B8A8Unorm;
     imageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    imageData.isHDR = false;
+    imageData.imageInfo.isHDR = false;
 
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
 

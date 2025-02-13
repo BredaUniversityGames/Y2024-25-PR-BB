@@ -495,7 +495,7 @@ void Renderer::LoadEnvironmentMap()
 
     CPUImage envMapCreation {};
     envMapCreation.SetSize(width, height).SetFlags(vk::ImageUsageFlagBits::eSampled).SetName("Environment HDRI").SetData(std::move(data)).SetFormat(vk::Format::eR32G32B32A32Sfloat);
-    envMapCreation.isHDR = true;
+    envMapCreation.imageInfo.isHDR = true;
 
     _environmentMap = _context->Resources()->ImageResourceManager().Create(envMapCreation);
 }

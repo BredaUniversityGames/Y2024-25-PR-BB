@@ -1,7 +1,6 @@
 #include "resource_management/model_resource_manager.hpp"
 
 #include "batch_buffer.hpp"
-#include "cpu_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
@@ -17,7 +16,7 @@ ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, Batc
 {
     GPUModel model;
 
-    for (const auto& image : data.textures)
+    for (const auto& image : data.images)
     {
         model.textures.emplace_back(_imageResourceManager->Create(image));
     }

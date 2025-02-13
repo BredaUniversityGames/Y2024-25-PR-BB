@@ -1,7 +1,6 @@
 #include "animation_system.hpp"
 
-#include "animation.hpp"
-#include "components/animation_channel_component.hpp"
+#include "components/animation_components.hpp"
 #include "components/joint_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
@@ -11,8 +10,7 @@
 #include "passes/debug_pass.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
-
-#include <tracy/Tracy.hpp>
+#include "resources/animation.hpp"
 
 AnimationSystem::AnimationSystem(RendererModule& rendererModule)
     : _rendererModule(rendererModule)

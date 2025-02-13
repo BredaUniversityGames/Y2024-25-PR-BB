@@ -85,13 +85,13 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
     }
 
     CPUImage image;
-    image.name = path + " fontatlas";
-    image.width = atlasWidth;
-    image.height = atlasHeight;
+    image.imageInfo.name = path + " fontatlas";
+    image.imageInfo.width = atlasWidth;
+    image.imageInfo.height = atlasHeight;
     image.SetData(std::move(atlasData));
     image.SetFormat(vk::Format::eR8Unorm);
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    image.isHDR = false;
+    image.imageInfo.isHDR = false;
 
     font->fontAtlas = context.Resources()->ImageResourceManager().Create(image);
     context.UpdateBindlessSet();

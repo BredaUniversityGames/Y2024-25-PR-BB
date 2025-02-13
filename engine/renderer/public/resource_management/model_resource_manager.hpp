@@ -1,13 +1,15 @@
 #pragma once
 
-#include "cpu_resources.hpp"
+#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/model.hpp"
+
+#include <memory>
+
 class ImageResourceManager;
 class MaterialResourceManager;
 class MeshResourceManager;
 class BatchBuffer;
-
-#include <memory>
 
 class ModelResourceManager final : public ResourceManager<GPUModel>
 {

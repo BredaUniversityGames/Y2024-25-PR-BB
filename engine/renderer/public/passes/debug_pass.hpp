@@ -2,7 +2,7 @@
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
-#include "vertex.hpp"
+#include "resources/mesh_data.hpp"
 
 #include <memory>
 

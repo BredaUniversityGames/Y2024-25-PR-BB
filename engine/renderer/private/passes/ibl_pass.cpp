@@ -315,11 +315,11 @@ void IBLPass::CreatePrefilterCubemap()
         .SetSize(128, 128)
         .SetFormat(vk::Format::eR16G16B16A16Sfloat)
         .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled)
-        .SetMips(fmin(floor(log2(creation.width)), 6.0));
+        .SetMips(fmin(floor(log2(creation.imageInfo.width)), 6.0));
 
     _prefilterMap = _context->Resources()->ImageResourceManager().Create(creation, _sampler);
 
-    _prefilterMapViews.resize(creation.mips);
+    _prefilterMapViews.resize(creation.imageInfo.mips);
     for (size_t i = 0; i < _prefilterMapViews.size(); ++i)
     {
         for (size_t j = 0; j < 6; ++j)
@@ -327,7 +327,7 @@ void IBLPass::CreatePrefilterCubemap()
             vk::ImageViewCreateInfo imageViewCreateInfo {};
             imageViewCreateInfo.image = _context->Resources()->ImageResourceManager().Access(_prefilterMap)->image;
             imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-            imageViewCreateInfo.format = creation.format;
+            imageViewCreateInfo.format = creation.imageInfo.format;
             imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
             imageViewCreateInfo.subresourceRange.baseMipLevel = i;
             imageViewCreateInfo.subresourceRange.levelCount = 1;

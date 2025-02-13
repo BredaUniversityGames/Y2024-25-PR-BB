@@ -100,18 +100,23 @@ CameraBatch::CameraBatch(const std::shared_ptr<GraphicsContext>& context, const 
 
     _hzbSampler = _context->Resources()->SamplerResourceManager().Create(samplerCreation);
 
-    CPUImage hzbImage {
-        .initialData = {},
+    ImageInfo info {
         .width = hzbSize,
         .height = hzbSize,
         .depth = 1,
         .layers = 1,
         .mips = static_cast<uint8_t>(std::log2(hzbSize)),
-        .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-        .isHDR = false,
-        .format = vk::Format::eR32Sfloat,
         .type = ImageType::e2D,
+        .flags = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+        .format = vk::Format::eR32Sfloat,
+        .isHDR = false,
+
         .name = name + " HZB Image",
+    };
+
+    CPUImage hzbImage {
+        .initialData = {},
+        .imageInfo = info
     };
     _hzbImage = _context->Resources()->ImageResourceManager().Create(hzbImage, _hzbSampler);
 }

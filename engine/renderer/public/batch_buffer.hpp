@@ -6,9 +6,7 @@
 #include "graphics_resources.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "single_time_commands.hpp"
-#include "vertex.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <vector>
 

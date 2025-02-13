@@ -5,7 +5,6 @@
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
 #include "settings.hpp"
-#include "vulkan_include.hpp"
 
 #include <memory>
 #include <tracy/TracyVulkan.hpp>
