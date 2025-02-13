@@ -36,8 +36,7 @@ void ProcessNodeGameplayComponents(const Hierarchy::Node& node, ECSModule& ecs, 
     // note: if there are multiple spawnpoints in the given hierarchy then the last one to be processed will be the actual player spawn point.
     if (node.name.starts_with("PSPWN_"))
     {
-        assert(false && "Enemy spawner component not yet implemented");
-        // ecs.GetRegistry().emplace<EnemySpawnerComponent>(currentEntity);
+        assert(false && "Setting player spawn not yet implemented");
     }
 }
 
@@ -51,7 +50,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     AnimationControlComponent* animationControl,
     std::unordered_map<uint32_t, entt::entity>& entityLUT, // Used for looking up from hierarchy node index to entt entity.
     entt::entity skeletonRoot = entt::null,
-    bool isSkeletonRoot = false, SceneLoading::LoadFlags loadFlags)
+    bool isSkeletonRoot = false, SceneLoading::LoadFlags loadFlags = SceneLoading::LoadFlags::eAll)
 {
     const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
@@ -124,7 +123,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     }
 
     // Gameplay components.
-    if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadGameplayElements))
+    if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadGameplayComponents))
     {
         ProcessNodeGameplayComponents(hierarchy.nodes[currentNodeIndex], ecs, entity);
     }
@@ -132,7 +131,7 @@ void LoadNodeRecursive(ECSModule& ecs,
     for (const auto& nodeIndex : currentNode.children)
     {
         const entt::entity childEntity = ecs.GetRegistry().create();
-        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, cpuModel, animationControl, entityLUT, skeletonRoot);
+        LoadNodeRecursive(ecs, childEntity, nodeIndex, hierarchy, entity, model, cpuModel, animationControl, entityLUT, skeletonRoot, false, loadFlags);
     }
 }
 
