@@ -42,6 +42,7 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
     // Draws any path that was generated through the scripting language
     if (_debugDraw)
     {
+        _debugLines.clear();
         for (const auto& path : _computedPaths)
         {
             for (size_t i = 0; i < path.waypoints.size() - 1; i++)
@@ -52,9 +53,8 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
                 from += glm::vec3 { 0.0f, 0.1f, 0.0f };
                 to += glm::vec3 { 0.0f, 0.1f, 0.0f };
 
-                debugPass.AddLine(
-                    from,
-                    to);
+                _debugLines.push_back(from);
+                _debugLines.push_back(to);
             }
         }
     }
