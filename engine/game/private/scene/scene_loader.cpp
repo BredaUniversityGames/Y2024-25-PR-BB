@@ -19,6 +19,7 @@
 #include "profile_macros.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
+#include "renderer_module.hpp"
 
 #include <entt/entity/entity.hpp>
 
