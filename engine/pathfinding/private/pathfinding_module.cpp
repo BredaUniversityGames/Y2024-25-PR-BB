@@ -1,8 +1,7 @@
 #include "pathfinding_module.hpp"
 
 #include "engine.hpp"
-#include "model_loader.hpp"
-#include "model_loading_module.hpp"
+#include "model_loading.hpp"
 #include "renderer_module.hpp"
 
 #include "components/static_mesh_component.hpp"
@@ -20,10 +19,6 @@
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    std::string mesh_path = "assets/models/NavmeshTest/LevelNavmeshTest.glb";
-    CPUModel navmesh = engine.GetModule<ModelLoadingModule>().LoadGLTF(mesh_path);
-    this->SetNavigationMesh(navmesh);
-
 #if 0
     auto models = _renderer->FrontLoadModels({ mesh_path });
     auto& ecs = engine.GetModule<ECSModule>();
@@ -78,8 +73,9 @@ PathfindingModule::~PathfindingModule()
 {
 }
 
-int32_t PathfindingModule::SetNavigationMesh(const CPUModel& navmesh)
+int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
 {
+    CPUModel navmesh = ModelLoading::LoadGLTF(filePath);
     uint32_t meshIndex = std::numeric_limits<uint32_t>::max();
     glm::mat4 transform = glm::mat4(1.0f);
 

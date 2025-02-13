@@ -92,7 +92,7 @@ public:
     NON_COPYABLE(PathfindingModule)
     NON_MOVABLE(PathfindingModule)
 
-    int32_t SetNavigationMesh(const CPUModel& navmesh);
+    int32_t SetNavigationMesh(std::string_view filePath);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
 
     bool SetDebugDrawState(bool state) { return _debugDraw = state; }

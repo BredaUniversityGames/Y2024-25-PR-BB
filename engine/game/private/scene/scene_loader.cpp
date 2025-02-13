@@ -15,7 +15,7 @@
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "model_loading_module.hpp"
+#include "model_loading.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
@@ -170,8 +170,6 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
 
 std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
 {
-    auto& modelLoadingModule = engine.GetModule<ModelLoadingModule>();
-
     std::vector<CPUModel> cpuModels {};
     cpuModels.reserve(paths.size());
 
@@ -183,7 +181,7 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
             std::string zone = path + " CPU upload";
             ZoneName(zone.c_str(), 128);
 
-            cpuModels.push_back(modelLoadingModule.LoadGLTF(path));
+            cpuModels.push_back(ModelLoading::LoadGLTF(path));
         }
     }
 

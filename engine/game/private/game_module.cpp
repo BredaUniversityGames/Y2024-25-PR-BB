@@ -18,7 +18,6 @@
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
-#include "model_loader.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
 #include "pathfinding_module.hpp"

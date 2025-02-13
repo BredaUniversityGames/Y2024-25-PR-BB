@@ -4,7 +4,6 @@
 #include "game_module.hpp"
 #include "inspector_module.hpp"
 #include "main_engine.hpp"
-#include "model_loading_module.hpp"
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
@@ -37,8 +36,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<AudioModule>()
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
-            .AddModule<GameModule>()
-            .AddModule<ModelLoadingModule>();
+            .AddModule<GameModule>();
     }
 
     instance.MainLoopOnce();
