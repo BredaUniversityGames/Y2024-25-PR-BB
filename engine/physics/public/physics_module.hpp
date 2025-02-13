@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 
 #include "module_interface.hpp"
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
@@ -274,11 +275,12 @@ private:
 
 struct RayHitInfo
 {
-    entt::entity entity = entt::null; // Entity that was hit
+    entt::entity entity = entt::null; // entity that was hit
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f); // Position where the ray hits; HitPoint = Start + mFraction * (End - Start)
+    glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f); // Normal of the hit surface
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
-    bool hasHit = false;
 };
+
 inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 {
     glm::mat4 glmMat;
@@ -305,6 +307,8 @@ inline glm::vec3 ToGLMVec3(const JPH::Vec3& vec)
 {
     return glm::vec3(vec.GetX(), vec.GetY(), vec.GetZ());
 }
+
+struct RigidbodyComponent;
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;
@@ -317,7 +321,19 @@ public:
         = default;
     ~PhysicsModule() final = default;
 
-    NO_DISCARD RayHitInfo ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
+    NO_DISCARD std::vector<RayHitInfo> ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
+    NO_DISCARD std::vector<RayHitInfo> ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, unsigned int numRays, float angle) const;
+
+    glm::vec3 GetPosition(RigidbodyComponent& rigidBody) const;
+    glm::vec3 GetRotation(RigidbodyComponent& rigidBody) const;
+    void AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    void AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const;
+    glm::vec3 GetVelocity(RigidbodyComponent& rigidBody) const;
+    glm::vec3 GetAngularVelocity(RigidbodyComponent& rigidBody) const;
+    void SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
+    void SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const;
+    void SetGravityFactor(RigidbodyComponent& rigidBody, const float factor) const;
+    void SetFriction(RigidbodyComponent& rigidBody, const float friction) const;
 
     JPH::BodyInterface* bodyInterface = nullptr;
     DebugRendererSimpleImpl* debugRenderer = nullptr;
