@@ -145,13 +145,14 @@ private:
         float fogHeight;
     };
 
-    struct alignas(16) InstanceData
+    struct alignas(32) InstanceData
     {
         glm::mat4 model;
 
         uint32_t materialIndex;
         float boundingRadius;
         uint32_t boneOffset;
+        bool isStaticDraw;
     };
 
     struct FrameData

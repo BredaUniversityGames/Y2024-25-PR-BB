@@ -6,4 +6,5 @@
 struct StaticMeshComponent
 {
     ResourceHandle<GPUMesh> mesh;
+    bool isStaticDraw;
 };

@@ -12,11 +12,13 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-GenerateDrawsPass::GenerateDrawsPass(const std::shared_ptr<GraphicsContext>& context, const CameraBatch& cameraBatch)
+GenerateDrawsPass::GenerateDrawsPass(const std::shared_ptr<GraphicsContext>& context, const CameraBatch& cameraBatch, const bool drawStatic, const bool drawDynamic)
     : _context(context)
     , _cameraBatch(cameraBatch)
 {
     CreateCullingPipeline();
+    _shouldDrawStatic = drawStatic;
+    _shouldDrawDynamic = drawDynamic;
 }
 
 GenerateDrawsPass::~GenerateDrawsPass()
@@ -36,12 +38,15 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         .mipSize = std::fmax(static_cast<float>(depthImage->width), static_cast<float>(depthImage->height)),
         .hzbIndex = _cameraBatch.HZBImage().Index(),
         .drawCommandsCount = scene.gpuScene->StaticDrawCount(),
-        .isReverseZ = _cameraBatch.Camera().UsesReverseZ()
+        .isReverseZ = _cameraBatch.Camera().UsesReverseZ(),
+        .drawStaticDraws = static_cast<uint32_t>(_shouldDrawStatic),
     };
     PushConstants skinnedPc = staticPc;
     skinnedPc.drawCommandsCount = scene.gpuScene->SkinnedDrawCount();
+    skinnedPc.drawStaticDraws = static_cast<uint32_t>(_shouldDrawDynamic);
 
-    std::array<vk::Buffer, 2> buffers;
+    std::array<vk::Buffer, 2>
+        buffers;
     buffers[0] = bufferResourceManager.Access(_cameraBatch.StaticDraw().redirectBuffer)->buffer;
     buffers[1] = bufferResourceManager.Access(_cameraBatch.SkinnedDraw().redirectBuffer)->buffer;
     commandBuffer.fillBuffer(buffers[0], 0, sizeof(uint32_t), 0);

@@ -27,8 +27,7 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    const mat4 instanceModel = instances[redirect[gl_DrawID]].model;
-
-    position = (instanceModel * vec4(inPosition, 1.0)).xyz;
+    const Instance instance = instances[redirect[gl_DrawID]];
+    position = (instance.model * vec4(inPosition, 1.0)).xyz;
     gl_Position = scene.directionalLight.lightVP * vec4(position, 1.0);
 }

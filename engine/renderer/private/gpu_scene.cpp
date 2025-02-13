@@ -36,7 +36,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , _context(creation.context)
-, _settings(settings)
+    , _settings(settings)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context, true)
     , _directionalLightShadowCamera(creation.context, false)
@@ -157,6 +157,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         staticInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         staticInstances[count].materialIndex = mesh->material.Index();
         staticInstances[count].boundingRadius = mesh->boundingRadius;
+        staticInstances[count].isStaticDraw = meshComponent.isStaticDraw;
 
         _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -192,6 +193,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].materialIndex = mesh->material.Index();
         skinnedInstances[count].boundingRadius = mesh->boundingRadius;
         skinnedInstances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        skinnedInstances[count].isStaticDraw = true;
 
         _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -200,6 +202,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
+
             },
         });
 

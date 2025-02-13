@@ -63,6 +63,8 @@ struct Instance
     uint materialIndex;
     float boundingRadius;
     uint boneOffset;
+    bool isStaticDraw;
+    bool padding[3];
 };
 
 vec3 ReconstructViewPosition(in float depth, in vec2 screenUv, in mat4 invProj)

@@ -56,6 +56,7 @@ void LoadNodeRecursive(ECSModule& ecs,
         {
         case MeshType::eSTATIC:
             ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
+            ecs.GetRegistry().try_get<StaticMeshComponent>(entity)->isStaticDraw = true;
 
             // check if it should have collider
 
