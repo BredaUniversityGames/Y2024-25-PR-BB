@@ -23,7 +23,7 @@
 #include <glm/glm.hpp>
 #include <single_time_commands.hpp>
 
-void ProcessNodeGameplayComponents(const Hierarchy::Node& node, ECSModule& ecs, entt::entity currentEntity)
+void ProcessNodeGameplayComponents(const Hierarchy::Node& node, MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED entt::entity currentEntity)
 {
     // enemy spawners
     if (node.name.starts_with("ESPWN_"))
@@ -142,31 +142,34 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     std::unordered_map<uint32_t, entt::entity> entityLUT;
 
     AnimationControlComponent* animationControl = nullptr;
-    if (!animations.empty())
+    if (!animations.empty() && HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadSkeletalMeshes))
     {
         animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
     }
 
-    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT);
+    LoadNodeRecursive(ecs, rootEntity, hierarchy.root, hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, false, loadFlags);
 
-    if (hierarchy.skeletonRoot.has_value())
+    if (HasAnyFlags(loadFlags, SceneLoading::LoadFlags::eLoadSkeletalMeshes))
     {
-        entt::entity skeletonEntity = ecs.GetRegistry().create();
 
-        // Note: load twice?
-        LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, true);
-        RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
-    }
-
-    for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
-    {
-        const Hierarchy::Node& node = hierarchy.nodes[i];
-        if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+        if (hierarchy.skeletonRoot.has_value())
         {
-            SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
-            skinnedMeshComponent.skeletonEntity = entityLUT[node.skeletonNode.value()];
+            entt::entity skeletonEntity = ecs.GetRegistry().create();
+
+            // Note: load twice?
+            LoadNodeRecursive(ecs, skeletonEntity, hierarchy.skeletonRoot.value(), hierarchy, entt::null, gpuModel, cpuModel, animationControl, entityLUT, entt::null, true, loadFlags);
+            RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
+        }
+
+        for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
+        {
+            const Hierarchy::Node& node = hierarchy.nodes[i];
+            if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+            {
+                SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
+                skinnedMeshComponent.skeletonEntity = entityLUT[node.skeletonNode.value()];
+            }
         }
     }
-
     return rootEntity;
 }
