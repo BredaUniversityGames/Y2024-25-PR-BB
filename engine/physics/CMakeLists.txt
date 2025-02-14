@@ -6,6 +6,7 @@ target_link_libraries(Physics
         PUBLIC Application
         PUBLIC Jolt
         PUBLIC ECS
+        PUBLIC ModelLoading
         PRIVATE Renderer
         PRIVATE ImGui
 )

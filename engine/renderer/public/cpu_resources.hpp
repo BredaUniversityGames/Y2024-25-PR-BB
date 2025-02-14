@@ -92,6 +92,8 @@ struct CPUModel
     std::vector<CPUImage> textures {};
 
     std::vector<Animation> animations {};
+
+    std::string name {};
 };
 
 struct GPUModel
