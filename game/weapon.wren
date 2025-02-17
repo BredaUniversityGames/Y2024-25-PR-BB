@@ -58,10 +58,13 @@ class Pistol {
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
+            var forward = Math.ToVector(playerTransform.rotation)
+            var up = playerTransform.rotation.mul(Vec3.new(0, 1, 0))
+            var right = Math.Cross(forward, up)
+            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var end = playerTransform.translation + forward * _rangeVector
+            var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-            var end = start + direction * _rangeVector 
 
             if (!rayHitInfo.isEmpty) {
                 end = rayHitInfo[0].position
@@ -71,11 +74,11 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal * Vec3.new(5, 5, 5))
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal * Vec3.new(10, 10, 10))
             }
 
             var length = (end - start).length()
-            var i = 5.0
+            var i = 1.0
             while (i < length) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
@@ -166,13 +169,16 @@ class Shotgun {
             
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
+            var forward = Math.ToVector(playerTransform.rotation)
+            var up = playerTransform.rotation.mul(Vec3.new(0, 1, 0))
+            var right = Math.Cross(forward, up)
+            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var end = playerTransform.translation + forward * _rangeVector
+            var direction = (end - start).normalize()
             
             var i = 0
             while (i < _raysPerShot) {
-
-                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 3, _spread[i].y * 3), playerTransform.rotation.mul(Vec3.new(0, 1, 0)))                
+                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
 
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
                 
@@ -191,7 +197,7 @@ class Shotgun {
                     var lifetime = entity.AddLifetimeComponent()
                     lifetime.lifetime = 200.0
                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                    engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), newDirection * Vec3.new(10, 10, 10))
+                    engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eShotgunShoot(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), newDirection * Vec3.new(2, 2, 2))
                     j = j + 1.0
                 }
 
@@ -244,6 +250,7 @@ class Knife {
     }
 
     reload (engine) {
+        // Use some weapon inspect animation maybe?
         System.print("Knife reload")
     }
 
@@ -262,9 +269,10 @@ class Knife {
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
             var direction = Math.ToVector(playerTransform.rotation)
-            var start = playerTransform.translation + direction * Vec3.new(0.1, 0.1, 0.1)
+            var up = playerTransform.rotation.mul(Vec3.new(0, 1, 0))
+            var right = Math.Cross(direction, up)
+            var start = playerTransform.translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1) 
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-            var end = start + direction * _rangeVector 
 
             var entity = engine.GetECS().NewEntity()
             var transform = entity.AddTransformComponent()
@@ -272,7 +280,7 @@ class Knife {
             var lifetime = entity.AddLifetimeComponent()
             lifetime.lifetime = 100.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() | SpawnEmitterFlagBits.eEmitOnce() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eStab(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(5, 5, 5))
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eStab(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
@@ -283,6 +291,7 @@ class Knife {
     }
 
     equip (engine) {
+        // Knife should not be equipped?
         System.print("Knife equip")   
     }
 

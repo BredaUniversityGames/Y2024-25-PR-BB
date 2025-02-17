@@ -272,6 +272,10 @@ public:
     {
         return glm::dot(a, b);
     }
+    static glm::vec3 Cross(glm::vec3 a, glm::vec3 b)
+    {
+        return glm::cross(a, b);
+    }
     static float Clamp(float a, float min, float max)
     {
         return glm::clamp(a, min, max);
@@ -389,6 +393,7 @@ void bindings::BindMathHelper(wren::ForeignModule& module)
     mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
     mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
     mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+    mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
     mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
     mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
     mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");

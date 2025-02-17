@@ -190,7 +190,7 @@ void ParticleModule::LoadEmitterPresets()
         // hardcoded test emitter preset for now
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
-        preset.mass = 3.0f;
+        preset.mass = 1.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
@@ -214,13 +214,13 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
-        preset.count = 5;
-        preset.spawnRandomness = glm::vec3(0.5f);
+        preset.count = 7;
+        preset.spawnRandomness = glm::vec3(0.2f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
         preset.name = "Ray";
         SetEmitterPresetImage(preset, image);
-        preset.size = glm::vec3(0.8f, 0.8f, 0.0f);
+        preset.size = glm::vec3(0.4f, 0.4f, 0.0f);
 
         _emitterPresets.emplace_back(preset);
     }
@@ -234,13 +234,34 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 0.3f;
-        preset.count = 40;
+        preset.count = 20;
         preset.spawnRandomness = glm::vec3(0.5f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
         preset.name = "Stab";
         SetEmitterPresetImage(preset, image);
-        preset.size = glm::vec3(0.8f, 0.8f, -0.03f);
+        preset.size = glm::vec3(0.2f, 0.2f, -0.03f);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        // TODO: serialize emitter presets and load from file
+        auto image = GetEmitterImage("swoosh.png");
+
+        // hardcoded test emitter preset for now
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
+        preset.name = "ShotgunShoot";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
 
         _emitterPresets.emplace_back(preset);
     }

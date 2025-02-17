@@ -32,6 +32,7 @@ enum class EmitterPresetID : uint8_t
     eImpact,
     eRay,
     eStab,
+    eShotgunShoot,
     eNone
 };
 
