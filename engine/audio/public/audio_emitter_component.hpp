@@ -9,7 +9,7 @@
 struct AudioEmitterComponent
 {
     std::vector<SoundInstance> _soundIds {};
-    std::vector<EventInstanceID> _eventIds {};
+    std::vector<EventInstance> _eventIds {};
 };
 
 namespace EnttEditor

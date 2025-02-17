@@ -18,7 +18,7 @@ class Pistol {
         _reloadTimer = 0
         _reloadSpeed = 1.2 * 1000
         
-        _attackSFX = "event:/Weapons/Explosion"
+        _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = ""
         _equipSFX = ""
         
@@ -89,7 +89,7 @@ class Pistol {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
+            gunAnimations.Play(_attackAnim, 2.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -104,6 +104,11 @@ class Pistol {
 
     reloadTimer {_reloadTimer}
     reloadTimer=(value) {_reloadTimer = value}
+
+    ammo {_ammo}
+    ammo=(value) {_ammo = value}
+
+    maxAmmo {_maxAmmo}
 }
 
 
@@ -121,6 +126,16 @@ class Shotgun {
         _reloadTimer = 0
         _reloadSpeed = 0.4 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
+
+        _attackSFX = "event:/Weapons/Explosion"
+        _reloadSFX = ""
+        _equipSFX = ""
+        
+        _attackAnim = "Armature|Armature|Shoot"
+        _reloadAnim = "Armature|Armature|Reload"
+        _equipAnim = "" 
+
+        _mesh = ""
     }
     
     reload (engine) {
@@ -129,7 +144,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -145,7 +160,7 @@ class Shotgun {
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
 
             // Play shooting audio
-            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Character/Door Close")
+            var shootingInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
             
@@ -184,7 +199,7 @@ class Shotgun {
             }
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)            
+            gunAnimations.Play(_attackAnim, 2.0, false)            
             _cooldown = _attackSpeed
         }
     }
@@ -198,6 +213,11 @@ class Shotgun {
 
     reloadTimer {_reloadTimer}
     reloadTimer=(value) {_reloadTimer = value}
+
+    ammo {_ammo}
+    ammo=(value) {_ammo = value}
+
+    maxAmmo {_maxAmmo}
 }
 
 class Knife {
@@ -227,4 +247,9 @@ class Knife {
 
     reloadTimer {_reloadTimer}
     reloadTimer=(value) {_reloadTimer = value}
+
+    ammo {_ammo}
+    ammo=(value) {_ammo = value}
+
+    maxAmmo {_maxAmmo}
 }

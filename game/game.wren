@@ -122,7 +122,13 @@ class Main {
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
-            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+
+            if (weapon != __activeWeapon) {
+                weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+                if (weapon.reloadTimer <= 0) {
+                    weapon.ammo = weapon.maxAmmo
+                }
+            }
         }
 
         if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {

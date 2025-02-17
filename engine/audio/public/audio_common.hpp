@@ -11,7 +11,7 @@ struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
 struct FMOD_DSP;
 
-using BaseID = size_t;
+using BaseID = long;
 
 // using AudioID = BaseID;
 using ChannelID = BaseID;
@@ -39,6 +39,20 @@ struct SoundInstance
     }
     ChannelID id = -1;
     bool is3D;
+};
+
+struct EventInstance
+{
+    EventInstance();
+    explicit EventInstance(const EventInstanceID eventInstanceId, const bool startLater, const bool oneShot)
+        : id(eventInstanceId)
+        , startDuringSystemUpdate(startLater)
+        , isOneShot(oneShot)
+    {
+    }
+    EventInstanceID id = -1;
+    bool startDuringSystemUpdate = false;
+    bool isOneShot = false;
 };
 
 struct BankInfo
