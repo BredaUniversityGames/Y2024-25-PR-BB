@@ -49,6 +49,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     spdlog::info("Starting engine...");
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
+    auto& rendererModule = engine.GetModule<RendererModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
