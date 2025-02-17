@@ -78,7 +78,7 @@ class PlayerMovement{
         var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
         forward.y = 0.0
 
-        var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+        var right = (cameraRotation.mulVec3( Vec3.new(1.0, 0.0, 0.0))).normalize()
 
         // lets test for ground here
         var playerControllerPos = engine.GetPhysics().GetPosition(playerBody)
@@ -215,7 +215,7 @@ class PlayerMovement{
             var cameraRotation = camera.GetTransformComponent().rotation
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
-            var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+            var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
             var movement = engine.GetInput().GetAnalogAction("Move")
 
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
@@ -226,7 +226,7 @@ class PlayerMovement{
                 velocity = velocity + (moveInputDir * Vec3.new(dashAmount,dashAmount,dashAmount))
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }else{
-                velocity = velocity + (forward*Vec3.new(2.0,2.0,2.0)* Vec3.new(dashAmount,dashAmount,dashAmount))
+                velocity = velocity + ((forward * 2.0) * dashAmount)
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }
         }
@@ -255,7 +255,7 @@ class PlayerMovement{
             var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
             var movement = engine.GetInput().GetAnalogAction("Move")
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
-            moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+            moveInputDir = forward * movement.y + right * movement.x
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
@@ -263,7 +263,7 @@ class PlayerMovement{
             }
 
             if(slideWishDirection.length() > 0.01){
-                velocity = velocity + (slideWishDirection* Vec3.new(slideAmount,slideAmount,slideAmount))
+                velocity = velocity + (slideWishDirection* slideAmount)
             }
             engine.GetPhysics().SetVelocity(playerBody, velocity)
 
