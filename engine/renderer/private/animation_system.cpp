@@ -26,55 +26,64 @@ AnimationSystem::~AnimationSystem() = default;
 
 void AnimationSystem::Update(ECSModule& ecs, float dt)
 {
-    const auto animationControlView = ecs.GetRegistry().view<AnimationControlComponent>();
-    for (auto entity : animationControlView)
     {
-        auto& animationControl = animationControlView.get<AnimationControlComponent>(entity);
-
-        if (animationControl.activeAnimation.has_value())
+        ZoneScopedN("Tick animations");
+        const auto animationControlView = ecs.GetRegistry().view<AnimationControlComponent>();
+        for (auto entity : animationControlView)
         {
-            Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
-            currentAnimation.Update(dt / 1000.0f);
-        }
-    }
+            auto& animationControl = animationControlView.get<AnimationControlComponent>(entity);
 
-    const auto animationView = ecs.GetRegistry().view<AnimationTransformComponent, AnimationChannelComponent>();
-    for (auto entity : animationView)
-    {
-        auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
-        auto* animationControl = animationChannel.animationControl;
-        if (animationControl->activeAnimation.has_value())
-        {
-            auto& transform = animationView.get<AnimationTransformComponent>(entity);
-            auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
-            float time = animationControl->animations[animationControl->activeAnimation.value()].time;
-            if (activeAnimation.translation.has_value())
+            if (animationControl.activeAnimation.has_value())
             {
-                glm::vec3 position = activeAnimation.translation.value().Sample(time);
-
-                transform.position = position;
-            }
-            if (activeAnimation.rotation.has_value())
-            {
-                glm::quat rotation = activeAnimation.rotation.value().Sample(time);
-
-                transform.rotation = rotation;
-            }
-            if (activeAnimation.scaling.has_value())
-            {
-                glm::vec3 scale = activeAnimation.scaling.value().Sample(time);
-
-                transform.scale = scale;
+                Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
+                currentAnimation.Update(dt / 1000.0f);
             }
         }
     }
 
-    const auto skeletonView = ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
-    for (auto entity : skeletonView)
     {
-        const auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
-        const auto& matrix = skeletonView.get<WorldMatrixComponent>(entity);
-        TraverseAndCalculateMatrix(skeleton.root, TransformHelpers::GetWorldMatrix(matrix), ecs, skeleton);
+        ZoneScopedN("Animate Transforms");
+        const auto animationView = ecs.GetRegistry().view<AnimationTransformComponent, AnimationChannelComponent>();
+        for (auto entity : animationView)
+        {
+            auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
+            auto* animationControl = animationChannel.animationControl;
+            if (animationControl->activeAnimation.has_value())
+            {
+                auto& transform = animationView.get<AnimationTransformComponent>(entity);
+                auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
+                float time = animationControl->animations[animationControl->activeAnimation.value()].time;
+                if (activeAnimation.translation.has_value())
+                {
+                    glm::vec3 position = activeAnimation.translation.value().Sample(time);
+
+                    transform.position = position;
+                }
+                if (activeAnimation.rotation.has_value())
+                {
+                    glm::quat rotation = activeAnimation.rotation.value().Sample(time);
+
+                    transform.rotation = rotation;
+                }
+                if (activeAnimation.scaling.has_value())
+                {
+                    glm::vec3 scale = activeAnimation.scaling.value().Sample(time);
+
+                    transform.scale = scale;
+                }
+            }
+        }
+    }
+
+    {
+        ZoneScopedN("Calculate World Matrix");
+        const auto skeletonView = ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
+        for (auto entity : skeletonView)
+        {
+            const auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
+            const auto& matrix = skeletonView.get<WorldMatrixComponent>(entity);
+            TraverseAndCalculateMatrix(skeleton.root, TransformHelpers::GetWorldMatrix(matrix), ecs, skeleton);
+        }
     }
 }
 
