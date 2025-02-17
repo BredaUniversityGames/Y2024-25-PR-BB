@@ -6,6 +6,13 @@
 
 #include "animation.hpp"
 
+struct AnimationTransformComponent
+{
+    glm::vec3 position;
+    glm::quat rotation;
+    glm::vec3 scale;
+};
+
 struct TransformAnimationSpline
 {
     std::optional<AnimationSpline<Translation>> translation { std::nullopt };
