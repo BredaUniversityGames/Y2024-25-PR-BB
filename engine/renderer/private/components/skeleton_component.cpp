@@ -11,7 +11,7 @@ void SkeletonHelpers::AttachChild(entt::registry& registry, entt::entity parent,
 
     assert(firstChildIt != parentNode.children.end());
 
-    firstChildIt.operator*() = child;
+    *firstChildIt = child;
 }
 
 void SkeletonHelpers::InitializeSkeletonNode(SkeletonNodeComponent& node)

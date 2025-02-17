@@ -2,8 +2,10 @@
 
 #include "system_interface.hpp"
 
-#include <cstdint>
+#include <entt/entt.hpp>
+#include <glm/mat4x4.hpp>
 
+struct SkeletonComponent;
 class RendererModule;
 
 class AnimationSystem final : public SystemInterface
@@ -20,4 +22,6 @@ public:
 
 private:
     RendererModule& _rendererModule;
+
+    void TraverseAndCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton);
 };

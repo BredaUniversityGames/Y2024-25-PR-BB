@@ -12,8 +12,12 @@ struct SkeletonNodeComponent
 struct SkeletonComponent
 {
     entt::entity root;
-    std::vector<entt::entity> nodes;
     uint32_t boneOffset = 0;
+};
+
+struct SkeletonMatrixTransform
+{
+    glm::mat4 world;
 };
 
 namespace SkeletonHelpers

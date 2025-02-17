@@ -306,7 +306,7 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
-    auto jointView = _ecs.GetRegistry().view<JointComponent, WorldMatrixComponent>();
+    auto jointView = _ecs.GetRegistry().view<JointComponent, SkeletonMatrixTransform>();
     auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
     static std::array<glm::mat4, MAX_BONES> skinMatrices {};
     static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
@@ -325,8 +325,8 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     for (entt::entity entity : jointView)
     {
         const auto& joint = jointView.get<JointComponent>(entity);
-        const auto& jointMatrixComponent = jointView.get<WorldMatrixComponent>(entity);
-        const glm::mat4& jointWorldTransform = TransformHelpers::GetWorldMatrix(jointMatrixComponent);
+        const auto& jointMatrixComponent = jointView.get<SkeletonMatrixTransform>(entity);
+        const glm::mat4& jointWorldTransform = jointMatrixComponent.world;
 
         const auto& skeletonMatrixComponent = skeletonView.get<WorldMatrixComponent>(joint.skeletonEntity);
         const glm::mat4& skeletonWorldTransform = TransformHelpers::GetWorldMatrix(skeletonMatrixComponent);

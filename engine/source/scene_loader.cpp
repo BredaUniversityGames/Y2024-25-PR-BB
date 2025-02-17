@@ -122,7 +122,7 @@ public:
     void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
         _skeletonComponent = &_ecs.GetRegistry().emplace<SkeletonComponent>(entity);
-        _skeletonEntity = entity;
+        _skeletonComponent->root = entity;
 
         LoadNode(entity, currentNodeIndex, parent);
     }
@@ -134,7 +134,6 @@ private:
     std::unordered_map<uint32_t, entt::entity>& _entityLUT;
 
     SkeletonComponent* _skeletonComponent;
-    entt::entity _skeletonEntity;
 
     void LoadNode(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
@@ -166,7 +165,7 @@ private:
             auto& joint = _ecs.GetRegistry().emplace<JointComponent>(entity);
             joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
             joint.jointIndex = currentNode.joint.value().index;
-            joint.skeletonEntity = _skeletonEntity;
+            joint.skeletonEntity = _skeletonComponent->root;
         }
 
         for (const auto& nodeIndex : currentNode.children)
@@ -192,9 +191,10 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     RecursiveNodeLoader recursiveNodeLoader { ecs, hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
     recursiveNodeLoader.Load(rootEntity, hierarchy.root, entt::null);
 
+    entt::entity skeletonEntity = entt::null;
     if (hierarchy.skeletonRoot.has_value())
     {
-        entt::entity skeletonEntity = ecs.GetRegistry().create();
+        skeletonEntity = ecs.GetRegistry().create();
         ecs.GetRegistry().emplace<TransformComponent>(skeletonEntity);
         ecs.GetRegistry().emplace<RelationshipComponent>(skeletonEntity);
 
@@ -203,15 +203,17 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
 
-    // TODO: Broken
-    // Links skeleton entities to the skinned mesh components.
-    for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
+    if (skeletonEntity != entt::null)
     {
-        const Hierarchy::Node& node = hierarchy.nodes[i];
-        if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+        // Links skeleton entities to the skinned mesh components.
+        for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
         {
-            SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
-            skinnedMeshComponent.skeletonEntity = entityLUT[node.skeletonNode.value()];
+            const Hierarchy::Node& node = hierarchy.nodes[i];
+            if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+            {
+                SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
+                skinnedMeshComponent.skeletonEntity = skeletonEntity;
+            }
         }
     }
 

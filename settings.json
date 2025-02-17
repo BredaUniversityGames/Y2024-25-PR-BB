@@ -44,7 +44,7 @@
       "exposure": 1.0470000505447388,
       "enableVignette": true,
       "vignetteIntensity": 0.13899999856948853,
-      "enableLensDistortion": true,
+      "enableLensDistortion": false,
       "lensDistortionIntensity": -0.04899999871850014,
       "lensDistortionCubicIntensity": -0.23399999737739564,
       "screenScale": 0.9879999756813049,

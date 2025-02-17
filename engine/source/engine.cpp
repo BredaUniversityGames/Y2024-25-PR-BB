@@ -138,7 +138,7 @@ void OldEngine::Tick(Engine& engine)
     // update physics
     auto linesData = physicsModule.debugRenderer->GetLinesData();
     auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+    // rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
     physicsModule.debugRenderer->ClearLines();
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
