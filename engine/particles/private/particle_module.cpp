@@ -135,7 +135,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
         preset.maxLife = 5.0f;
         preset.count = 10;
-        preset.randomness = glm::vec3(1.0f);
+        preset.spawnRandomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f);
         preset.name = "Test";
@@ -148,17 +148,18 @@ void ParticleModule::LoadEmitterPresets()
         auto image = GetEmitterImage("flame_03.png");
 
         EmitterPreset preset;
-        preset.emitDelay = 0.2f;
-        preset.mass = -0.250f;
+        preset.emitDelay = 0.1f;
+        preset.mass = -0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
-        preset.maxLife = 3.0f;
+        preset.maxLife = 2.0f;
         preset.count = 10;
-        preset.randomness = glm::vec3(0.120f, 1.0f, 0.120f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eSizeOverTime);
+        preset.spawnRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
         preset.name = "Flame";
+        preset.velocityRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
         SetEmitterPresetImage(preset, image);
-        preset.size.z = -0.4f;
+        preset.size.z = -0.8f;
 
         _emitterPresets.emplace_back(preset);
     }
@@ -168,11 +169,11 @@ void ParticleModule::LoadEmitterPresets()
 
         EmitterPreset preset;
         preset.emitDelay = 1.0f;
-        preset.mass = 0.150f;
+        preset.mass = 0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
         preset.count = 20;
-        preset.randomness = glm::vec3(1.0f);
+        preset.spawnRandomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         preset.name = "Dust";
@@ -189,11 +190,11 @@ void ParticleModule::LoadEmitterPresets()
         // hardcoded test emitter preset for now
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
+        preset.mass = 3.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 1.0f;
         preset.count = 100;
-        preset.randomness = glm::vec3(0.0f, 0.0f, 0.0f);
+        preset.spawnRandomness = glm::vec3(5.0f, 0.0f, 5.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
         preset.name = "Impact";
@@ -214,7 +215,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
         preset.count = 5;
-        preset.randomness = glm::vec3(0.5f);
+        preset.spawnRandomness = glm::vec3(0.5f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
         preset.name = "Ray";
@@ -234,7 +235,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 0.3f;
         preset.count = 40;
-        preset.randomness = glm::vec3(0.5f);
+        preset.spawnRandomness = glm::vec3(0.5f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
         preset.name = "Stab";
@@ -265,7 +266,8 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
     emitter.flags = preset.flags;
-    emitter.randomness = preset.randomness;
+    emitter.spawnRandomness = preset.spawnRandomness;
+    emitter.velocityRandomness = preset.velocityRandomness;
     emitter.color = preset.color;
 
     // Set position and velocity according to which components the entity already has
