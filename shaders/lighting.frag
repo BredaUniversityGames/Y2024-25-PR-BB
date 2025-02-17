@@ -41,25 +41,6 @@ layout (location = 1) out vec4 outBrightness;
 
 const float PI = 3.14159265359;
 
-const vec2 poissonDisk[16] = vec2[](
-vec2(-0.94201624, -0.39906216),
-vec2(0.94558609, -0.76890725),
-vec2(-0.094184101, -0.92938870),
-vec2(0.34495938, 0.29387760),
-vec2(-0.91588581, 0.45771432),
-vec2(-0.81544232, -0.87912464),
-vec2(-0.38277543, 0.27676845),
-vec2(0.97484398, 0.75648379),
-vec2(0.44323325, -0.97511554),
-vec2(0.53742981, -0.47373420),
-vec2(-0.26496911, -0.41893023),
-vec2(0.79197514, 0.19090188),
-vec2(-0.24188840, 0.99706507),
-vec2(-0.81409955, 0.91437590),
-vec2(0.19984126, 0.78641367),
-vec2(0.14383161, -0.14100790)
-);
-
 
 float DistributionGGX(vec3 N, vec3 H, float roughness);
 float GeometrySchlickGGX(float NoV, float roughness);
@@ -71,7 +52,7 @@ float CalculateAttenuation(vec3 lightPos, vec3 position, float range);
 float CalculateShadowBias(float cosTheta, float baseBias);
 vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
-void DirectionalShadowMap(vec3 position, float bias, vec3 worldPos, inout float shadow);
+void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
 vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition);
 
@@ -125,7 +106,7 @@ void main()
     vec3 ambient = (kD * diffuseIBL) * ambientOcclusion;
 
     float shadow = 0.0;
-    DirectionalShadowMap(position, bias, position, shadow);
+    DirectionalShadowMap(position, bias, shadow);
 
     float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
 
@@ -221,27 +202,19 @@ vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, ui
     return prefilteredColor * (F * envBRDF.x + envBRDF.y);
 }
 
-
-float randomIndex(vec3 seed, int i) {
-    vec4 seed4 = vec4(seed, i);
-    float dot_product = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
-    return fract(sin(dot_product) * 43758.5453);
-}
-
-void DirectionalShadowMap(vec3 position, float bias, vec3 worldPos, inout float shadow)
+void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
-    vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
-    vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (pushConstants.shadowMapSize * 1.6);
+    const vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
+    const vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
 
     float staticVisibility = 1.0;
     float dynamicVisibility = 1.0;
-    float depthFactor = testCoord.z - bias;
+    const float depthFactor = testCoord.z - bias;
 
     for (int i = 0;i < 4; i++) {
-        const int index = int(16.0 * randomIndex(floor(worldPos.xyz * scene.directionalLight.poissonWorldOffset), i)) % 16;
-        staticVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.staticShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, (testCoord.z - bias) / testCoord.w)).r);
-        dynamicVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.dynamicShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, (testCoord.z - bias) / testCoord.w)).r);
+        const int index = int(16.0 * randomIndex(floor(position.xyz * scene.directionalLight.poissonWorldOffset), i)) % 16;
+        staticVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.staticShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
+        dynamicVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.dynamicShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
     }
     shadow = min(staticVisibility, dynamicVisibility);
 }
