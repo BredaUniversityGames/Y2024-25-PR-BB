@@ -223,11 +223,24 @@ class Shotgun {
 class Knife {
     construct new(engine) {
         _damage = 100
-        _range = 3
+        _range = 2
+        _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.2 * 1000
         _cooldown = 0
+        _maxAmmo = 0
+        _ammo = _maxAmmo
         _reloadTimer = 0
         _reloadSpeed = 0
+
+        _attackSFX = "event:/Weapons/Machine Gun"
+        _reloadSFX = ""
+        _equipSFX = ""
+        
+        _attackAnim = "Armature|Armature|Shoot"
+        _reloadAnim = "Armature|Armature|Reload"
+        _equipAnim = "" 
+
+        _mesh = ""
     }
 
     reload (engine) {
@@ -235,7 +248,38 @@ class Knife {
     }
 
     attack(engine, deltaTime) {
-        System.print("Knife stab")
+        if (_cooldown <= 0) {
+            System.print("Knife Stab")
+
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+
+            // Play shooting audio
+            var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
+            var audioEmitter = player.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
+
+            // Spawn particles
+            var playerTransform = player.GetTransformComponent()
+            var direction = Math.ToVector(playerTransform.rotation)
+            var start = playerTransform.translation + direction * Vec3.new(0.1, 0.1, 0.1)
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+            var end = start + direction * _rangeVector 
+
+            var entity = engine.GetECS().NewEntity()
+            var transform = entity.AddTransformComponent()
+            transform.translation = start
+            var lifetime = entity.AddLifetimeComponent()
+            lifetime.lifetime = 100.0
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() | SpawnEmitterFlagBits.eEmitOnce() // |
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eStab(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(5, 5, 5))
+
+            // Play shooting animation
+            var gunAnimations = gun.GetAnimationControlComponent()
+            gunAnimations.Play(_attackAnim, 2.0, false)
+            
+            _cooldown = _attackSpeed
+        } 
     }
 
     equip (engine) {

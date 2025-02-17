@@ -223,6 +223,26 @@ void ParticleModule::LoadEmitterPresets()
 
         _emitterPresets.emplace_back(preset);
     }
+
+    {
+        auto image = GetEmitterImage("star.png");
+
+        // hardcoded test emitter preset for now
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 0.3f;
+        preset.count = 40;
+        preset.randomness = glm::vec3(0.5f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
+        preset.name = "Stab";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(0.8f, 0.8f, -0.03f);
+
+        _emitterPresets.emplace_back(preset);
+    }
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)

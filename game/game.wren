@@ -148,6 +148,10 @@ class Main {
             }
         }
 
+        if (engine.GetInput().DebugGetKey(Keycode.eV())) {
+            __armory[Weapons.knife].attack(engine, dt)
+        }
+
         if (engine.GetInput().DebugGetKey(Keycode.e1())) {
             __activeWeapon = __armory[Weapons.pistol]
             __activeWeapon.equip(engine)
