@@ -72,10 +72,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
     auto cathedral = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[0].second), models[0].first, models[0].first.hierarchy, models[0].first.animations);
     //SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[2].second), models[2].first, models[2].first.hierarchy, models[2].first.animations);
     auto gunEntity = SceneLoading::LoadModelIntoECSAsHierarchy(*_ecs, *modelResourceManager.Access(models[1].second), models[1].first, models[1].first.hierarchy, models[1].first.animations);
-
-    //TODO: Remove after review.
-    TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cathedral, glm::vec3(18.0f, -34.0f, -205.0f));
-
     // TODO: Once level saving is done, this should be deleted
     entt::entity lightEntity = _ecs->GetRegistry().create();
     _ecs->GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
@@ -106,19 +102,6 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs->GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), cameraEntity, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    for (size_t i = 0; i < 1000; i++)
-    {
-        entt::entity entity = _ecs->GetRegistry().create();
-        _ecs->GetRegistry().emplace<NameComponent>(entity, "Point Light");
-        _ecs->GetRegistry().emplace<TransformComponent>(entity);
-
-        PointLightComponent& pointLightComponent = _ecs->GetRegistry().emplace<PointLightComponent>(entity);
-        pointLightComponent.color = glm::vec3(rand() % 255, rand() % 255, rand() % 255) / 255.0f;
-
-        // Spawn the Lights at random positions in a 100x100x100 cube
-        TransformHelpers::SetLocalPosition(_ecs->GetRegistry(), entity, glm::vec3(rand() % 50 - 25, rand() % 50 - 25, rand() % 50 - 25));
-    }
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
@@ -258,26 +241,6 @@ void OldEngine::Tick(Engine& engine)
             }
         }
     }
-
-    {
-        //Get all pointLights from the ECS
-        const auto pointLightView = _ecs->GetRegistry().view<PointLightComponent, TransformComponent>();
-        for (const auto& [entity, pointLightComponent, transformComponent] : pointLightView.each())
-        {
-            // Generate a smooth oscillating intensity in the desired range
-            float time = engine.GetModule<TimeModule>().GetTotalTime().count(); // Total elapsed time
-            float targetIntensity = sinf(time * 0.01) * 2.5f + 7.5f; // Oscillate between 5 and 10
-            pointLightComponent.intensity = glm::mix(pointLightComponent.intensity, targetIntensity, 0.1f);
-
-            // Random Color Oscillation
-            pointLightComponent.color = glm::vec3(
-                sinf(time * 0.005f) * 0.5f + 0.5f, // Red channel
-                sinf(time * 0.007f) * 0.5f + 0.5f, // Green channel
-                sinf(time * 0.009f) * 0.5f + 0.5f  // Blue channel
-            );        }
-
-    }
-
 
     _lastMousePos = { mouseX, mouseY };
 

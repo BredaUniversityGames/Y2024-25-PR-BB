@@ -64,6 +64,7 @@ public:
     NON_MOVABLE(GPUScene);
 
     void Update(uint32_t frameIndex);
+    void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
@@ -91,7 +92,7 @@ public:
     const std::vector<DrawIndexedIndirectCommand>& StaticDrawCommands() const { return _staticDrawCommands; }
     ResourceHandle<Buffer>& GetClusterBuffer() { return _clusterData.buffer; }
     ResourceHandle<Buffer>& GetClusterCullingBuffer(uint32_t index) { return _clusterCullingData.buffers.at(index); }
-    ResourceHandle<Buffer>& GetGlobalIndexBuffer(uint32_t index) { return _clusterCullingData.globalIndexBuffers.at(index); }
+    ResourceHandle<Buffer>& GetGlobalIndexBuffer() { return _clusterCullingData.globalIndexBuffer; }
 
     uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
@@ -186,7 +187,7 @@ private:
     struct ClusterCullingData
     {
         std::array<ResourceHandle<Buffer>, 2> buffers;
-        std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> globalIndexBuffers;
+        ResourceHandle<Buffer> globalIndexBuffer;
         std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
     };
 
@@ -232,7 +233,6 @@ private:
     vk::DescriptorSetLayout _hzbImageDSL;
 
     void UpdateSceneData(uint32_t frameIndex);
-    void UpdateGlobalIndexBuffer(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);
     void UpdateObjectInstancesData(uint32_t frameIndex);
     void UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex);

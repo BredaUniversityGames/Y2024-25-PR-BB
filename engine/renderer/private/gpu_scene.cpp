@@ -103,7 +103,6 @@ void GPUScene::Update(uint32_t frameIndex)
 
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
-    UpdateGlobalIndexBuffer(frameIndex);
     UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
     UpdateSkinBuffers(frameIndex);
@@ -139,11 +138,24 @@ void GPUScene::UpdatePointLightArray(uint32_t frameIndex)
     memcpy(buffer->mappedPtr, &pointLightArray, sizeof(PointLightArray));
 }
 
-void GPUScene::UpdateGlobalIndexBuffer(uint32_t frameIndex)
+void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
 {
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffers.at(frameIndex));
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffer);
 
-    memset(buffer->mappedPtr, 0, sizeof(uint32_t));
+    currentCommandBuffer.fillBuffer(buffer->buffer, 0, vk::WholeSize, 0);
+
+    //Memory Barrier
+    vk::BufferMemoryBarrier barrier {
+        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .size = buffer->size,
+    };
+
+    currentCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, {}, {}, barrier, {});
 }
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
@@ -709,7 +721,7 @@ void GPUScene::UpdatePointLightDescriptorSet(uint32_t frameIndex)
 void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
 {
     std::array buffers = {
-        _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffers.at(frameIndex)),
+        _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffer),
         _context->Resources()->BufferResourceManager().Access(_clusterCullingData.buffers.at(0)),
         _context->Resources()->BufferResourceManager().Access(_clusterCullingData.buffers.at(1))
     };
@@ -842,18 +854,12 @@ void GPUScene::CreateClusterBuffer()
 void GPUScene::CreateClusterCullingBuffers()
 {
     BufferCreation createInfo {};
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        createInfo = {};
-        std::string name = "[] Atomic Counter Buffer";
-        name.insert(1, 1, static_cast<char>(i + '0'));
-        createInfo.SetSize(sizeof(uint32_t))
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
-            .SetName(name);
+    createInfo.SetSize(sizeof(uint32_t))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetName("Atomic Counter Buffer");
 
-        _clusterCullingData.globalIndexBuffers.at(i) = _context->Resources()->BufferResourceManager().Create(createInfo);
-    }
+    _clusterCullingData.globalIndexBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
 
     createInfo = {};
     createInfo.SetSize(CLUSTER_SIZE * (sizeof(uint32_t) * 2))

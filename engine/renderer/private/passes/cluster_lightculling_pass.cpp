@@ -32,6 +32,8 @@ void ClusterLightCullingPass::RecordCommands(vk::CommandBuffer commandBuffer, ui
     TracyVkZone(scene.tracyContext, commandBuffer, "Cluster Light Culling Pipeline");
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
+    scene.gpuScene->UpdateGlobalIndexBuffer(commandBuffer);
+
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, { _gpuScene.GetClusterDescriptorSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, { _gpuScene.GetPointLightDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, { _gpuScene.GetClusterCullingDescriptorSet(currentFrame) }, {});

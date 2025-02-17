@@ -84,8 +84,6 @@ void main()
 
     float sliceScaling = zFloat / log2FarDivNear;
     float sliceBias = -(zFloat * log2Near / log2FarDivNear);
-
-    //float linearDepthCulling = LinearDepth(gl_FragCoord.z, camera.zNear, camera.zFar);
     uint zIndex = uint(max(log2(linearDepthCulling) * sliceScaling + sliceBias, 0.0));
     vec2 tileSize =
     vec2(pushConstants.screenSize.x / float(16),
