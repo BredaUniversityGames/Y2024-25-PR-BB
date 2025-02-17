@@ -116,6 +116,8 @@ private:
 
         glm::vec4 direction;
         glm::vec4 color;
+        float poissonWorldOffset;
+        float poissonConstant;
     };
 
     struct alignas(16) PointLightData

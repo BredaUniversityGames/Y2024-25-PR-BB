@@ -9,9 +9,11 @@ struct DirectionalLightComponent
     glm::vec3 color { 1.0f };
 
     float shadowBias = 0.002f;
-    float orthographicSize = 17.0f;
-    float nearPlane = -16.0f;
-    float farPlane = 32.0f;
+    float poissonWorldOffset = 127.0f;
+    float poissonConstant = 4096.0f;
+    float orthographicSize = 75.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 200.0f;
     float aspectRatio = 1.0f;
 
     constexpr static glm::mat4 BIAS_MATRIX {

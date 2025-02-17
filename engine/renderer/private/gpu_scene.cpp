@@ -248,6 +248,8 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
         directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
         directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
+        directionalLightData.poissonConstant = directionalLightComponent.poissonConstant;
+        directionalLightData.poissonWorldOffset = directionalLightComponent.poissonWorldOffset;
 
         CameraComponent camera {
             .projection = CameraComponent::Projection::eOrthographic,
@@ -855,7 +857,7 @@ void GPUScene::CreateShadowMapResources()
     shadowCreationStatic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(2048, 2048)
+        .SetSize(4096, 4096)
         .SetName("Static shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationStatic, _shadowSampler);
@@ -864,7 +866,7 @@ void GPUScene::CreateShadowMapResources()
     shadowCreationDynamic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(2048, 2048)
+        .SetSize(4096, 4096)
         .SetName("Dynamic shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationDynamic, _shadowSampler);

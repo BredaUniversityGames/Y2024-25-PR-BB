@@ -27,6 +27,8 @@ struct DirectionalLight
 
     vec4 direction;
     vec4 color;
+    float poissonWorldOffset;
+    float poissonConstant;
 };
 
 struct PointLight
