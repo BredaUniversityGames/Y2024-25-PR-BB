@@ -17,12 +17,16 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 1.2 * 1000
+        
+        _attackSFX = "event:/Weapons/Explosion"
+        _reloadSFX = ""
+        _equipSFX = ""
+        
+        _attackAnim = "Armature|Armature|Shoot"
+        _reloadAnim = "Armature|Armature|Reload"
+        _equipAnim = "" 
 
-        // animations
-
-        // SFX
-
-        // mesh
+        _mesh = ""
     }
 
     reload (engine) {
@@ -31,7 +35,7 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -48,9 +52,9 @@ class Pistol {
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
 
             // Play shooting audio
-            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
+            var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(shootingInstance)
+            audioEmitter.AddEvent(eventInstance)
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
@@ -141,7 +145,7 @@ class Shotgun {
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
 
             // Play shooting audio
-            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
+            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Character/Door Close")
             var audioEmitter = player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(shootingInstance)
             
@@ -198,11 +202,9 @@ class Shotgun {
 
 class Knife {
     construct new(engine) {
-        _damage = 20
-        _range = 50
+        _damage = 100
+        _range = 3
         _attackSpeed = 0.2 * 1000
-        _maxAmmo = 6
-        _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 0

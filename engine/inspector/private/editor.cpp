@@ -156,7 +156,7 @@ void Editor::DisplaySelectedEntityDetails()
         // Inspect Transform component
         // TODO use euler angles instead of quaternion
         changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
+        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
         changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
 
         if (changed)
