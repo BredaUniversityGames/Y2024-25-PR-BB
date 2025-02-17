@@ -58,7 +58,6 @@ void MainScript::Update(DeltaMS deltatime)
     try
     {
         mainUpdate(WrenEngine { engine }, deltatime.count());
-        valid = true;
     }
     catch (wren::Exception& ex)
     {

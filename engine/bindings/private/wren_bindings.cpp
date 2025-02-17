@@ -15,6 +15,7 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
 #include "wren_engine.hpp"
@@ -25,6 +26,11 @@ namespace bindings
 float TimeModuleGetDeltatime(TimeModule& self)
 {
     return self.GetDeltatime().count();
+}
+
+void TransitionToScript(WrenEngine& engine, const std::string& path)
+{
+    engine.instance->GetModule<ScriptingModule>().SetMainScript(*engine.instance, path);
 }
 
 }
@@ -44,6 +50,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
+        engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 
     // Time Module
