@@ -74,6 +74,10 @@ class Main {
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
     }
 
+    static Shutdown(engine) {
+        System.print("Shutdown script!")
+    }
+
     static Update(engine, dt) {
         __counter = __counter + 1
         var cheats = __playerController.GetCheatsComponent()
