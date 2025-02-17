@@ -10,7 +10,7 @@ struct DirectionalLightComponent
 
     float shadowBias = 0.002f;
     float poissonWorldOffset = 127.0f;
-    float poissonConstant = 4096.0f;
+    float poissonConstant = 2048.0f; // Good results when we keep this the same size as the shadowmap
     float orthographicSize = 75.0f;
     float nearPlane = 0.1f;
     float farPlane = 200.0f;

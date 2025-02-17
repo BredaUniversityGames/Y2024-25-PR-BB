@@ -857,7 +857,7 @@ void GPUScene::CreateShadowMapResources()
     shadowCreationStatic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(4096, 4096)
+        .SetSize(2048, 2048)
         .SetName("Static shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationStatic, _shadowSampler);
@@ -866,7 +866,7 @@ void GPUScene::CreateShadowMapResources()
     shadowCreationDynamic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
-        .SetSize(4096, 4096)
+        .SetSize(2048, 2048)
         .SetName("Dynamic shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationDynamic, _shadowSampler);
