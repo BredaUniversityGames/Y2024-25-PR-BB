@@ -18,7 +18,7 @@ public:
     ~ShadowPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
-    void RequestStaticShadowUpdate();
+    void RequestStaticShadowUpdate(const uint8_t numberOfFrames = 2);
 
     NON_MOVABLE(ShadowPass);
     NON_COPYABLE(ShadowPass);
@@ -33,7 +33,7 @@ private:
     vk::PipelineLayout _skinnedPipelineLayout;
     vk::Pipeline _skinnedPipeline;
 
-    bool _shouldUpdateStaticShadowMap = false;
+    uint8_t _remainingStaticShadowsUpdates = 0;
     void CreateStaticPipeline(const GPUScene& gpuScene);
     void CreateSkinnedPipeline(const GPUScene& gpuScene);
 
