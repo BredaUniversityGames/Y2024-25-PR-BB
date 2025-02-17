@@ -16,6 +16,7 @@
 #include "graphics_resources.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 
+#include "components/animation_transform_component.hpp"
 #include "systems/physics_system.hpp"
 #include "vertex.hpp"
 
@@ -140,20 +141,16 @@ private:
         const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name;
-        _ecs.GetRegistry().emplace<TransformComponent>(entity);
+        _ecs.GetRegistry().emplace<AnimationTransformComponent>(entity);
+        auto& skeletonNode = _ecs.GetRegistry().emplace<SkeletonNodeComponent>(entity);
+        SkeletonHelpers::InitializeSkeletonNode(skeletonNode);
 
-        // TODO: Change with animation hierarchy
-        _ecs.GetRegistry().emplace<SkeletonNodeComponent>(entity);
-
-        // TODO: Change with new animation relation setters
-        // TODO: Dont forget to set parent and children
         if (parent != entt::null)
         {
-            RelationshipHelpers::AttachChild(_ecs.GetRegistry(), parent, entity);
+            SkeletonHelpers::AttachChild(_ecs.GetRegistry(), parent, entity);
         }
 
-        // TODO: Do this through new system
-        // TransformHelpers::SetLocalTransform(_ecs.GetRegistry(), entity, currentNode.transform);
+        AnimationTransformHelpers::SetLocalTransform(_ecs.GetRegistry(), entity, currentNode.transform);
 
         if (!currentNode.animationSplines.empty())
         {
@@ -169,14 +166,13 @@ private:
             auto& joint = _ecs.GetRegistry().emplace<JointComponent>(entity);
             joint.inverseBindMatrix = currentNode.joint.value().inverseBind;
             joint.jointIndex = currentNode.joint.value().index;
-            assert(skeletonRoot != entt::null && "Joint requires a skeleton root, that should be present!");
-            joint.skeletonEntity = skeletonRoot;
+            joint.skeletonEntity = _skeletonEntity;
         }
 
         for (const auto& nodeIndex : currentNode.children)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
-            LoadSkeletonNode(childEntity, nodeIndex, entity, skeletonRoot);
+            LoadNode(childEntity, nodeIndex, entity);
         }
     }
 };
@@ -199,9 +195,12 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     if (hierarchy.skeletonRoot.has_value())
     {
         entt::entity skeletonEntity = ecs.GetRegistry().create();
+        ecs.GetRegistry().emplace<TransformComponent>(skeletonEntity);
+        ecs.GetRegistry().emplace<RelationshipComponent>(skeletonEntity);
+
         RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl, entityLUT };
         recursiveSkeletonLoader.Load(skeletonEntity, hierarchy.skeletonRoot.value(), entt::null);
-        // TODO: RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
+        RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
     }
 
     // TODO: Broken

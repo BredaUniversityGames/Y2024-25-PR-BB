@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <entt/entt.hpp>
 
 struct SkeletonNodeComponent
 {
@@ -15,6 +16,9 @@ struct SkeletonComponent
     uint32_t boneOffset = 0;
 };
 
-void AttachChild()
+namespace SkeletonHelpers
 {
+
+void AttachChild(entt::registry& registry, entt::entity parent, entt::entity child);
+void InitializeSkeletonNode(SkeletonNodeComponent& node);
 }
