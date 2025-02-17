@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "movement.wren" for PlayerMovement
+import "gameplay/movement.wren" for PlayerMovement
 
 class Main {
 

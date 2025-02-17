@@ -2,7 +2,7 @@
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "physics_module.hpp"
-#include "utility/wren_entity.hpp"
+#include "entity/wren_entity.hpp"
 
 #include <optional>
 
