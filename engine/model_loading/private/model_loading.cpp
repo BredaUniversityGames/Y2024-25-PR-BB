@@ -1,27 +1,21 @@
-#include "model_loader.hpp"
+#include "model_loading.hpp"
 
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
 #include "profile_macros.hpp"
-#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
-#include "resource_management/material_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include "resource_management/sampler_resource_manager.hpp"
-#include "single_time_commands.hpp"
-#include "timers.hpp"
-#include "vulkan_context.hpp"
-#include "vulkan_helper.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 #include <stb_image.h>
+
+constexpr static auto DEFAULT_LOAD_FLAGS = fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
+static fastgltf::Parser parser = fastgltf::Parser();
 
 namespace detail
 {
@@ -51,7 +45,7 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
 }
 CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name);
 
-CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
+CPUModel ModelLoading::LoadGLTF(std::string_view path)
 {
     ZoneScoped;
 
@@ -75,7 +69,7 @@ CPUModel ModelLoader::ExtractModelFromGltfFile(std::string_view path)
         std::string zone = std::string(path) + " FastGLTF parse";
         ZoneName(zone.c_str(), 128);
 
-        auto loadedGltf = _parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
+        auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
         if (!loadedGltf)
             throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
 
@@ -700,6 +694,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     ZoneName(zone.c_str(), 128);
 
     CPUModel model {};
+    model.name = name;
 
     // Extract texture data
     std::vector<std::vector<std::byte>> textureData(gltf.images.size());
@@ -835,7 +830,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     return model;
 }
 
-void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
+void ModelLoading::ReadGeometrySizeGLTF(std::string_view path, uint32_t& vertexBufferSize, uint32_t& indexBufferSize)
 {
     vertexBufferSize = 0;
     indexBufferSize = 0;
@@ -846,7 +841,7 @@ void ModelLoader::ReadGeometrySize(std::string_view path, uint32_t& vertexBuffer
         throw std::runtime_error("Path not found!");
 
     std::string_view directory = path.substr(0, path.find_last_of('/'));
-    auto loadedGltf = _parser.loadGltf(fileStream, directory,
+    auto loadedGltf = parser.loadGltf(fileStream, directory,
         fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages);
 
     if (!loadedGltf)
