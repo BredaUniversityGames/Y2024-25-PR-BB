@@ -2,6 +2,7 @@
 
 #include "../scene.glsl"
 #include "particle_binds.glsl"
+#include "rng_helper.glsl"
 
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
@@ -38,26 +39,23 @@ void main()
 
     if (particle.life > 0)
     {
-        // simulate size over lifetime
-        if ((particle.flags & SIZEOVERTIME) != SIZEOVERTIME)
-        {
-            particle.size.xy = mix(vec2(0.0, 0.0), particle.size.xy, particle.life / particle.maxLife);
-        }
-        else
-        {
-            particle.size.xy += vec2(particle.size.z) * deltaTime;
-        }
-
+        // simulate size
+        particle.size.xy += vec2(particle.size.z) * deltaTime;
         if ((particle.size.x < 0) || (particle.size.y < 0))
         {
-            // add to dead buffer
+            // add to dead buffer if too small
             uint deadIndex = atomicAdd(particleCounters.deadCount, 1);
             deadBuffer[deadIndex] = particleIndex;
             return;
         }
 
-        // simulate particles
-        particle.velocity.y -= particle.mass * deltaTime;
+        // simulate movement
+        vec3 force = vec3(0.0);
+        force.y -= particle.mass;
+        vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, deltaTime));
+        force += particle.velocityRandomness * rng;
+
+        particle.velocity += force;
         particle.position += particle.velocity * deltaTime;
 
         // simulate angle
