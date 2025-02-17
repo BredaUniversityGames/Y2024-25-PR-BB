@@ -4,8 +4,9 @@
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
-#include "implot/implot.h"
+#include "implot.h"
 #include "magic_enum.hpp"
+#include "menus/particle_editor.hpp"
 #include "menus/performance_tracker.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
@@ -59,6 +60,7 @@ ModuleTickOrder InspectorModule::Init(Engine& engine)
 
     _editor = std::make_unique<Editor>(ecs);
     _performanceTracker = std::make_unique<PerformanceTracker>();
+    _particleEditor = std::make_unique<ParticleEditor>(engine.GetModule<ParticleModule>(), ecs);
 
     return ModuleTickOrder::ePostTick;
 }
@@ -120,6 +122,8 @@ void InspectorModule::Tick(Engine& engine)
 
             ImGui::MenuItem("Entity editor", nullptr, &_openWindows["EntityEditor"]);
 
+            ImGui::MenuItem("Particle editor", nullptr, &_openWindows["ParticleEditor"]);
+
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Systems"))
@@ -142,6 +146,11 @@ void InspectorModule::Tick(Engine& engine)
     if (_openWindows["EntityEditor"])
     {
         _editor->DrawEntityEditor();
+    }
+
+    if (_openWindows["ParticleEditor"])
+    {
+        _particleEditor->Render();
     }
 
     if (_openWindows["RenderStats"])

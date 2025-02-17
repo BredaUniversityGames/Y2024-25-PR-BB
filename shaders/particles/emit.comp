@@ -13,7 +13,10 @@ struct Emitter
     float randomValue;
     vec3 size;
     uint materialIndex;
+    vec3 spawnRandomness;
     uint flags;
+    vec4 color;
+    vec3 velocityRandomness;
 };
 
 const uint MAX_EMITTERS = 256;
@@ -37,19 +40,21 @@ void main()
     if (index >= emitter.count)
     return;
 
-    vec2 rng = hash_simplex_2D(vec2(float(index), emitter.randomValue));
+    vec3 rng = snoise3(vec3(float(index), emitter.randomValue, particleCounters.deadCount));
 
     // test particle variables
     Particle particle;
     particle.position = emitter.position;
     particle.mass = emitter.mass;
-    particle.velocity = vec3(rng.x, emitter.velocity.y, rng.y);// TODO: add something to make this more random?
+    particle.velocity = emitter.velocity + emitter.spawnRandomness * rng;
     particle.maxLife = emitter.maxLife;
     particle.rotationVelocity = emitter.rotationVelocity;
     particle.life = emitter.maxLife;
     particle.materialIndex = emitter.materialIndex;
     particle.size = emitter.size;
     particle.flags = emitter.flags;
+    particle.color = emitter.color.xyz * emitter.color.w;
+    particle.velocityRandomness = emitter.velocityRandomness;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);

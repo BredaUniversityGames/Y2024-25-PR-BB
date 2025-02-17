@@ -6,4 +6,5 @@ target_link_libraries(Game
         PUBLIC ECS
         PUBLIC UserInterface
         PUBLIC Renderer
+        PUBLIC ModelLoading
 )

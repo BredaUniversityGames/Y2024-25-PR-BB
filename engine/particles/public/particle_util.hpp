@@ -6,7 +6,7 @@
 
 // temporary values for testing/progress
 static constexpr uint32_t MAX_EMITTERS = 256;
-static constexpr int32_t MAX_PARTICLES = 1024 * 256;
+static constexpr int32_t MAX_PARTICLES = 1024 * 64;
 
 enum class ParticleRenderFlagBits : uint8_t
 {
@@ -27,7 +27,10 @@ struct alignas(16) Emitter
     float randomValue = 0.0f;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint32_t materialIndex = 0;
+    glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
     uint8_t flags = 0;
+    glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
 };
 
 struct alignas(16) Particle
@@ -41,6 +44,8 @@ struct alignas(16) Particle
     uint32_t materialIndex = 0;
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint8_t flags = 0;
+    glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
 };
 
 struct alignas(16) ParticleCounters
@@ -57,17 +62,11 @@ struct alignas(16) ParticleInstance
     glm::vec2 size = { 1.0f, 1.0f };
     float angle = 0.0f;
     uint8_t flags = 0;
+    glm::vec3 color = { 1.0f, 1.0f, 1.0f };
 };
 
 struct alignas(16) CulledInstances
 {
     uint32_t count = 0;
     ParticleInstance instances[MAX_PARTICLES];
-};
-
-enum class ParticleType : uint8_t
-{
-    eNone = 0,
-    eBillboard,
-    eRibbon
 };

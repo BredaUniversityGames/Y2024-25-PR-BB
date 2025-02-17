@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cpu_resources.hpp"
 #include "module_interface.hpp"
 #include "renderer.hpp"
 #include <glm/glm.hpp>
@@ -91,8 +92,12 @@ public:
     NON_COPYABLE(PathfindingModule)
     NON_MOVABLE(PathfindingModule)
 
-    int32_t SetNavigationMesh(const std::string& mesh);
+    int32_t SetNavigationMesh(std::string_view filePath);
     ComputedPath FindPath(glm::vec3 startPos, glm::vec3 endPos);
+
+    bool SetDebugDrawState(bool state) { return _debugDraw = state; }
+    bool GetDebugDrawState() const { return _debugDraw; }
+    const std::vector<glm::vec3>& GetDebugLines() const { return _debugLines; }
 
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
@@ -116,9 +121,13 @@ private:
         uint8_t adjacentTriangleCount = 0;
     };
 
-    std::shared_ptr<Renderer> _renderer;
-
     std::vector<TriangleInfo> _triangles;
     std::unordered_map<uint32_t, uint32_t[3]> _trianglesToNeighbours;
     glm::mat4 _inverseTransform = glm::mat4(1.0f);
+
+    CPUMesh<Vertex> _mesh = {};
+
+    bool _debugDraw = false;
+    std::vector<glm::vec3> _debugLines;
+    std::vector<ComputedPath> _computedPaths;
 };

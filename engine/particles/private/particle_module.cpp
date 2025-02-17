@@ -16,6 +16,8 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
 
+#include <filesystem>
+
 ModuleTickOrder ParticleModule::Init(Engine& engine)
 {
     _physics = &engine.GetModule<PhysicsModule>();
@@ -27,7 +29,7 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    const auto emitterView = _ecs->GetRegistry().view<EmitterComponent, RigidbodyComponent>();
+    const auto emitterView = _ecs->GetRegistry().view<ParticleEmitterComponent, RigidbodyComponent>();
     for (const auto entity : emitterView)
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
@@ -37,15 +39,15 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    const auto activeView = _ecs->GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
+    const auto activeView = _ecs->GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag>();
     for (const auto entity : activeView)
     {
-        auto& emitter = _ecs->GetRegistry().get<EmitterComponent>(entity);
+        auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
 
         // first remove active tags from inactive emitters and continue
         if (emitter.emitOnce)
         {
-            _ecs->GetRegistry().remove<EmitterComponent>(entity);
+            _ecs->GetRegistry().remove<ParticleEmitterComponent>(entity);
             _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
             continue;
         }
@@ -83,38 +85,158 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 }
 
-void ParticleModule::LoadEmitterPresets()
+ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName)
 {
-    // TODO: serialize emitter presets and load from file
+    auto got = _emitterImages.find(fileName);
+
+    if (got == _emitterImages.end())
+    {
+        if (std::filesystem::exists("assets/textures/" + fileName))
+        {
+            CPUImage creation;
+            creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
+            creation.SetName(fileName);
+            creation.FromPNG("assets/textures/" + fileName);
+            creation.isHDR = false;
+            auto image = _context->Resources()->ImageResourceManager().Create(creation);
+            auto& resource = _emitterImages.emplace(fileName, image).first->second;
+            _context->UpdateBindlessSet();
+            return resource;
+        }
+
+        bblog::error("[Error] Image not found!");
+        return _emitterImages.begin()->second;
+    }
+
+    return got->second;
+}
+
+void ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle<GPUImage> image)
+{
     auto resources = _context->Resources();
 
-    CPUImage creation;
-    creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    creation.FromPNG("assets/textures/yellow_orb_particle.png");
-    creation.isHDR = false;
-    auto image = _context->Resources()->ImageResourceManager().Create(creation);
-    _emitterImages.emplace_back(image);
-
-    // hardcoded test emitter preset for now
-    EmitterPreset preset;
-    preset.emitDelay = 0.2f;
-    preset.mass = 2.0f;
-    preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
-    preset.maxLife = 5.0f;
     preset.materialIndex = image.Index();
-    preset.count = 10;
-    preset.type = ParticleType::eBillboard;
-    preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
         resources->ImageResourceManager().Access(image)->width / biggestSize,
-        resources->ImageResourceManager().Access(image)->height / biggestSize, 0.0f);
-    _emitterPresets.emplace_back(preset);
+        resources->ImageResourceManager().Access(image)->height / biggestSize, preset.size.z);
+}
+
+void ParticleModule::LoadEmitterPresets()
+{
+    // TODO: serialize emitter presets and load from file
+
+    { // TEST
+        auto image = GetEmitterImage("jeremi.png");
+
+        EmitterPreset preset;
+        preset.emitDelay = 0.2f;
+        preset.mass = 2.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
+        preset.maxLife = 5.0f;
+        preset.count = 10;
+        preset.spawnRandomness = glm::vec3(1.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f);
+        preset.name = "Test";
+        SetEmitterPresetImage(preset, image);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // FLAME
+        auto image = GetEmitterImage("flame_03.png");
+
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = -0.005f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 2.0f;
+        preset.count = 10;
+        preset.spawnRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
+        preset.name = "Flame";
+        preset.velocityRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
+        SetEmitterPresetImage(preset, image);
+        preset.size.z = -0.8f;
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // DUST
+        auto image = GetEmitterImage("point_03.png");
+
+        EmitterPreset preset;
+        preset.emitDelay = 1.0f;
+        preset.mass = 0.005f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 8.0f;
+        preset.count = 20;
+        preset.spawnRandomness = glm::vec3(1.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+        preset.name = "Dust";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        // TODO: serialize emitter presets and load from file
+        auto image = GetEmitterImage("star.png");
+
+        // hardcoded test emitter preset for now
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 3.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 100;
+        preset.spawnRandomness = glm::vec3(5.0f, 0.0f, 5.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
+        preset.name = "Impact";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(2.0f, 2.0f, 0.0f);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        // TODO: serialize emitter presets and load from file
+        auto image = GetEmitterImage("swoosh.png");
+
+        // hardcoded test emitter preset for now
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.5f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
+        preset.name = "Ray";
+        SetEmitterPresetImage(preset, image);
+        preset.size = glm::vec3(0.8f, 0.8f, 0.0f);
+
+        _emitterPresets.emplace_back(preset);
+    }
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    auto& preset = _emitterPresets[static_cast<int>(emitterPreset)];
+    SpawnEmitter(entity, static_cast<int32_t>(emitterPreset), flags, position, velocity);
+}
+
+void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
+{
+    if (emitterPresetID > static_cast<int32_t>(_emitterPresets.size()) - 1)
+        return;
+
+    auto& preset = _emitterPresets[emitterPresetID];
 
     Emitter emitter;
     emitter.count = preset.count;
@@ -124,6 +246,9 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     emitter.maxLife = preset.maxLife;
     emitter.rotationVelocity = preset.rotationVelocity;
     emitter.flags = preset.flags;
+    emitter.spawnRandomness = preset.spawnRandomness;
+    emitter.velocityRandomness = preset.velocityRandomness;
+    emitter.color = preset.color;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
@@ -161,14 +286,13 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
     }
     bool emitOnce = HasAnyFlags(flags, SpawnEmitterFlagBits::eEmitOnce);
 
-    EmitterComponent component;
+    ParticleEmitterComponent component;
     component.emitter = emitter;
-    component.type = preset.type;
     component.maxEmitDelay = preset.emitDelay;
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;
 
-    _ecs->GetRegistry().emplace_or_replace<EmitterComponent>(entity, component);
+    _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
         _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);

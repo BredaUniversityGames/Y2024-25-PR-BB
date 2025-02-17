@@ -7,7 +7,7 @@ const GameActions GAME_ACTIONS {
         .name = "Shooter",
         .digitalActions = {
             {
-                .name = "Menu",
+                .name = "OpenMenu",
                 .inputs = {
                     GamepadButton::eSTART,
                     GamepadButton::eBACK,
@@ -18,12 +18,14 @@ const GameActions GAME_ACTIONS {
                 .inputs = {
                     GamepadButton::eLEFT_SHOULDER,
                     GamepadButton::eEAST,
+                    KeyboardCode::eLCTRL,
                 },
             },
             {
                 .name = "Dash",
                 .inputs = {
                     GamepadButton::eLEFT_TRIGGER,
+                    KeyboardCode::eLSHIFT,
                 },
             },
             {
@@ -73,6 +75,39 @@ const GameActions GAME_ACTIONS {
                 .name = "Look",
                 .inputs = {
                     GamepadAnalog::eAXIS_RIGHT,
+                },
+            },
+        },
+    },
+    {
+        .name = "UserInterface",
+        .digitalActions = {
+            {
+                .name = "Interact",
+                .inputs = {
+                    GamepadButton::eSOUTH,
+                },
+            },
+            {
+                .name = "CloseMenu",
+                .inputs = {
+                    GamepadButton::eSTART,
+                    GamepadButton::eBACK,
+                },
+            },
+            {
+                .name = "Back",
+                .inputs = {
+                    GamepadButton::eEAST,
+                },
+            },
+        },
+        .analogActions = {
+            {
+                .name = "Navigate",
+                .inputs = {
+                    GamepadAnalog::eAXIS_LEFT,
+                    GamepadAnalog::eDPAD,
                 },
             },
         },

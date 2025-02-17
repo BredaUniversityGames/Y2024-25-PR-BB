@@ -8,6 +8,7 @@ int MainEngine::Run()
     while (!_exitRequested)
     {
         MainLoopOnce();
+        FrameMark;
     }
 
     return _exitCode;
