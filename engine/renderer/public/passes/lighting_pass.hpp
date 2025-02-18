@@ -31,6 +31,9 @@ private:
         uint32_t normalRIndex;
         uint32_t ssaoIndex;
         uint32_t depthIndex;
+        glm::vec2 screenSize;
+        glm::vec2 padding;
+        glm::ivec3 clusterDimensions;
         float shadowMapSize;
     } _pushConstants;
 

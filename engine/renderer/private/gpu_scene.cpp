@@ -45,6 +45,8 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
 {
     InitializeSceneBuffers();
     InitializePointLightBuffer();
+    InitializeClusterBuffer();
+    InitializeClusterCullingBuffers();
     InitializeObjectInstancesBuffers();
     InitializeSkinBuffers();
 
@@ -93,6 +95,8 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_visibilityDSL);
     vkContext->Device().destroy(_redirectDSL);
     vkContext->Device().destroy(_hzbImageDSL);
+    vkContext->Device().destroy(_clusterDescriptorSetLayout);
+    vkContext->Device().destroy(_clusterCullingDescriptorSetLayout);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -135,6 +139,26 @@ void GPUScene::UpdatePointLightArray(uint32_t frameIndex)
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_pointLightFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &pointLightArray, sizeof(PointLightArray));
+}
+
+void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
+{
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffer);
+
+    currentCommandBuffer.fillBuffer(buffer->buffer, 0, vk::WholeSize, 0);
+
+    //Memory Barrier
+    vk::BufferMemoryBarrier barrier {
+        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .size = buffer->size,
+    };
+
+    currentCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, {}, {}, barrier, {});
 }
 
 void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
@@ -306,7 +330,7 @@ void GPUScene::UpdatePointLightData(PointLightArray& pointLightArray, MAYBE_UNUS
         pointLightData.color
             = glm::vec4(pointLightComponent.color, 1.0f);
         pointLightData.range = pointLightComponent.range;
-        pointLightData.attenuation = pointLightComponent.attenuation;
+        pointLightData.intensity = pointLightComponent.intensity;
 
         pointLightCount++;
     }
@@ -395,6 +419,20 @@ void GPUScene::InitializePointLightBuffer()
     CreatePointLightDescriptorSets();
 }
 
+void GPUScene::InitializeClusterBuffer()
+{
+    CreateClusterBuffer();
+    CreateClusterDescriptorSetLayout();
+    CreateClusterDescriptorSet();
+}
+
+void GPUScene::InitializeClusterCullingBuffers()
+{
+    CreateClusterCullingBuffers();
+    CreateClusterCullingDescriptorSetLayout();
+    CreateClusterCullingDescriptorSet();
+}
+
 void GPUScene::InitializeObjectInstancesBuffers()
 {
     CreateObjectInstancesBuffers();
@@ -438,6 +476,39 @@ void GPUScene::CreatePointLightDescriptorSetLayout()
     std::vector<std::string_view> names { "PointLightSSBO" };
 
     _pointLightDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateClusterDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
+    vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
+    descriptorSetLayoutBinding.binding = 0;
+    descriptorSetLayoutBinding.descriptorCount = 1;
+    descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+    descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+    descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+    std::vector<std::string_view> names { "ClusterData" };
+
+    _clusterDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+}
+
+void GPUScene::CreateClusterCullingDescriptorSetLayout()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
+    for (size_t i = 0; i < bindings.size(); i++)
+    {
+        bindings.at(i) = {
+            .binding = static_cast<uint32_t>(i),
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eAll,
+        };
+    }
+
+    std::vector<std::string_view> names { "AtomicCount", "LightCells", "LightIndices" };
+
+    _clusterCullingDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateObjectInstanceDescriptorSetLayout()
@@ -537,6 +608,65 @@ void GPUScene::CreatePointLightDescriptorSets()
     }
 }
 
+void GPUScene::CreateClusterDescriptorSet()
+{
+    vk::DescriptorSetLayout layout { _clusterDescriptorSetLayout };
+
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layout,
+    };
+
+    vk::DescriptorSet descriptorSet;
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &descriptorSet),
+        "Failed allocating cluster descriptor set!");
+
+    _clusterData.descriptorSet = descriptorSet;
+
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterData.buffer);
+
+    vk::DescriptorBufferInfo bufferInfo {};
+    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = vk::WholeSize;
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
+    vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
+    bufferWrite.dstSet = _clusterData.descriptorSet;
+    bufferWrite.dstBinding = 0;
+    bufferWrite.dstArrayElement = 0;
+    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    bufferWrite.descriptorCount = 1;
+    bufferWrite.pBufferInfo = &bufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
+void GPUScene::CreateClusterCullingDescriptorSet()
+{
+
+    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts {};
+    std::for_each(layouts.begin(), layouts.end(), [this](auto& l)
+        { l = _clusterCullingDescriptorSetLayout; });
+
+    vk::DescriptorSetAllocateInfo allocateInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+        .pSetLayouts = layouts.data(),
+    };
+
+    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()), "Failed to allocate descriptor set for cluster culling pipeline");
+
+    for (size_t i = 0; i < descriptorSets.size(); ++i)
+    {
+        _clusterCullingData.descriptorSets[i] = descriptorSets[i];
+        UpdateAtomicGlobalDescriptorSet(i);
+    }
+}
+
 void GPUScene::CreateObjectInstancesDescriptorSets()
 {
     std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT * 2> layouts {};
@@ -614,6 +744,38 @@ void GPUScene::UpdatePointLightDescriptorSet(uint32_t frameIndex)
     bufferWrite.pBufferInfo = &bufferInfo;
 
     _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
+void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
+{
+    std::array buffers = {
+        _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffer),
+        _context->Resources()->BufferResourceManager().Access(_clusterCullingData.buffers.at(0)),
+        _context->Resources()->BufferResourceManager().Access(_clusterCullingData.buffers.at(1))
+    };
+
+    std::array<vk::WriteDescriptorSet, 3> writeDescriptorSets;
+
+    std::array<vk::DescriptorBufferInfo, 3> bufferInfos;
+
+    for (size_t j = 0; j < buffers.size(); j++)
+    {
+        bufferInfos.at(j) = {
+            .buffer = buffers.at(j)->buffer,
+            .offset = 0,
+            .range = vk::WholeSize,
+        };
+
+        writeDescriptorSets.at(j) = {
+            .dstSet = _clusterCullingData.descriptorSets[frameIndex],
+            .dstBinding = static_cast<uint32_t>(j),
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfos[j],
+        };
+    }
+    _context->VulkanContext()->Device().updateDescriptorSets(3, writeDescriptorSets.data(), 0, nullptr);
 }
 
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
@@ -703,6 +865,45 @@ void GPUScene::CreatePointLightBuffer()
 
         _pointLightFrameData[i].buffer = _context->Resources()->BufferResourceManager().Create(creation);
     }
+}
+
+void GPUScene::CreateClusterBuffer()
+{
+    BufferCreation createInfo {};
+    createInfo.SetSize(CLUSTER_SIZE * (sizeof(glm::vec4) * 2))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetIsMappable(false)
+        .SetName("Cluster Buffer");
+
+    _clusterData.buffer = _context->Resources()->BufferResourceManager().Create(createInfo);
+}
+
+void GPUScene::CreateClusterCullingBuffers()
+{
+    BufferCreation createInfo {};
+    createInfo.SetSize(sizeof(uint32_t))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetName("Atomic Counter Buffer");
+
+    _clusterCullingData.globalIndexBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
+
+    createInfo = {};
+    createInfo.SetSize(CLUSTER_SIZE * (sizeof(uint32_t) * 2))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetName("ClusterCullingLightCells Buffer");
+
+    _clusterCullingData.buffers.at(0) = _context->Resources()->BufferResourceManager().Create(createInfo);
+
+    createInfo = {};
+    createInfo.SetSize(CLUSTER_SIZE * MAX_LIGHTS_PER_CLUSTER * sizeof(uint32_t))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetName("ClusterCullingLightIndices Buffer");
+
+    _clusterCullingData.buffers.at(1) = _context->Resources()->BufferResourceManager().Create(createInfo);
 }
 
 void GPUScene::CreateObjectInstancesBuffers()

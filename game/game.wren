@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "movement.wren" for PlayerMovement
+import "gameplay/movement.wren" for PlayerMovement
 
 class Main {
 
@@ -74,6 +74,10 @@ class Main {
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
     }
 
+    static Shutdown(engine) {
+        System.print("Shutdown script!")
+    }
+
     static Update(engine, dt) {
         __counter = __counter + 1
         var cheats = __playerController.GetCheatsComponent()
@@ -144,7 +148,7 @@ class Main {
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
         }
- 
+
         __playerMovement.Update(engine,dt,__playerController, __camera)
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))

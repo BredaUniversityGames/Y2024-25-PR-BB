@@ -36,7 +36,7 @@ struct PointLight
     vec3 position;
     float range;
     vec3 color;
-    float attenuation;
+    float intensity;
 };
 
 struct PointLightArray
