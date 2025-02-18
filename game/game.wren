@@ -1,4 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 
 class Main {
@@ -39,6 +40,10 @@ class Main {
             gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
 
+        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
+
+        __activeWeapon = __armory[Weapons.shotgun]
+        __activeWeapon.equip(engine)
         // Inside cathedral: pentagram scene
         {   // Fire emitter 1
             var emitter = engine.GetECS().NewEntity()
@@ -72,6 +77,9 @@ class Main {
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
+
+        __ultimateCharge = 0
+        __ultimateActive = false
     }
 
     static Shutdown(engine) {
@@ -85,63 +93,28 @@ class Main {
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
 
+        if (__ultimateActive) {
+            __ultimateCharge = __ultimateCharge - dt
+            if (__ultimateCharge == 0) {
+                __activeWeapon = __armory[Weapons.pistol]
+                __activeWeapon.equip()
+                __ultimateActive = false
+            }
+        } else {
+            __ultimateCharge = __ultimateCharge + dt
+        }
+
         if (__frameTimer > 1000.0) {
             //System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
 
-        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            var shootingInstance = engine.GetAudio().PlayEventOnce("event:/Weapons/Machine Gun")
-            var audioEmitter = __camera.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(shootingInstance)
-
-            System.print("Playing is shooting")
-        }
-
-         if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            var playerTransform = __camera.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
-            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
-            var end = start + direction * __rayDistanceVector
-            if(!rayHitInfo.isEmpty) {
-                end = rayHitInfo[0].position
-                var entity = engine.GetECS().NewEntity()
-                var transform = entity.AddTransformComponent()
-                transform.translation = end
-                var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 300.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 5.0, 0.0))
-            } else {
-                end = start + direction * __rayDistanceVector
-            }
 
 
-            var length = (end - start).length()
-            var i = 5.0
-            while (i < length) {
-                var entity = engine.GetECS().NewEntity()
-                var transform = entity.AddTransformComponent()
-                transform.translation = Math.Mix(start, end, i / length)
-                var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 200.0
-                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity()
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
-                i = i + 5.0
-            }
-        }
+        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
+            //System.print("Player Jumped!")
 
-
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        }
-        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
-            if(gunAnimations.AnimationFinished()) {
-                gunAnimations.Play("Armature|Armature|Shoot", 2.0, false)
-            }
         }
 
 
@@ -150,6 +123,49 @@ class Main {
         }
 
         __playerMovement.Update(engine,dt,__playerController, __camera)
+
+        for (weapon in __armory) {
+            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+
+            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+            if (weapon != __activeWeapon) {
+                if (weapon.reloadTimer <= 0) {
+                    weapon.ammo = weapon.maxAmmo
+                }
+            }
+        }
+
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
+            __activeWeapon.reload(engine)
+        }
+
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
+            __activeWeapon.attack(engine, dt)
+        }
+
+        if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
+            System.print("Activate ultimate")
+            if (__ultimateCharge == 1000) {
+
+                __activeWeapon = __armory[Weapons.shotgun]
+                __activeWeapon.equip()
+            }
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.eV())) {
+            __armory[Weapons.knife].attack(engine, dt)
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e1())) {
+            __activeWeapon = __armory[Weapons.pistol]
+            __activeWeapon.equip(engine)
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e2())) {
+            __activeWeapon = __armory[Weapons.shotgun]
+            __activeWeapon.equip(engine)
+        }
+
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
