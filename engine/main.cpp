@@ -41,8 +41,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<GameModule>();
     }
 
-    instance.MainLoopOnce();
     auto& scripting = instance.GetModule<ScriptingModule>();
+    instance.GetModule<TimeModule>().ResetTimer();
 
     BindEngineAPI(scripting.GetForeignAPI());
     scripting.GenerateEngineBindingsFile();
