@@ -78,7 +78,7 @@ class PlayerMovement{
         var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
         forward.y = 0.0
 
-        var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+        var right = (cameraRotation.mulVec3( Vec3.new(1.0, 0.0, 0.0))).normalize()
 
         // lets test for ground here
         var playerControllerPos = engine.GetPhysics().GetPosition(playerBody)
@@ -102,7 +102,7 @@ class PlayerMovement{
         var movement = engine.GetInput().GetAnalogAction("Move")
 
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
-        moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+        moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
 
         if(movement.length() > 0.1){
@@ -131,7 +131,7 @@ class PlayerMovement{
         }
 
         var frameTime = engine.GetTime().GetDeltatime()
-        var wishVel = moveInputDir * Vec3.new(maxSpeed,maxSpeed,maxSpeed)
+        var wishVel = moveInputDir.mulScalar(maxSpeed)
 
         if(isGrounded && !hasDashed){
 
@@ -143,8 +143,8 @@ class PlayerMovement{
                 if (accelSpeed > addSpeed) {
                     accelSpeed = addSpeed
                 }
-                //velocity = velocity + moveInputDir * Vec3.new(accelSpeed,accelSpeed,accelSpeed)
-                velocity = velocity + Vec3.new(accelSpeed,accelSpeed,accelSpeed) * moveInputDir
+
+                velocity = velocity + moveInputDir.mulScalar(accelSpeed)
             }
 
             var speed = velocity.length()
@@ -166,11 +166,11 @@ class PlayerMovement{
             var currentSpeed = Math.Dot(velocity, wishVel)
             var addSpeed = wishSpeed - currentSpeed
             if(addSpeed > 0){
-                var accelSpeed = maxSpeed*sv_accelerate*frameTime
+                var accelSpeed = maxSpeed * sv_accelerate*frameTime
                 if(accelSpeed > addSpeed){
                     accelSpeed = addSpeed
                 }
-                velocity = velocity + wishVel * Vec3.new(accelSpeed,accelSpeed,accelSpeed)
+                velocity = velocity + wishVel.mulScalar(accelSpeed)
             }
         }
 
@@ -215,18 +215,18 @@ class PlayerMovement{
             var cameraRotation = camera.GetTransformComponent().rotation
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
-            var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+            var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
             var movement = engine.GetInput().GetAnalogAction("Move")
 
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
-            moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+            moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                velocity = velocity + (moveInputDir * Vec3.new(dashAmount,dashAmount,dashAmount))
+                velocity = velocity + moveInputDir.mulScalar(dashAmount)
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }else{
-                velocity = velocity + (forward*Vec3.new(2.0,2.0,2.0)* Vec3.new(dashAmount,dashAmount,dashAmount))
+                velocity = velocity + forward.mulScalar(2.0 * dashAmount)
                 engine.GetPhysics().SetVelocity(playerBody, velocity)
             }
         }
@@ -252,10 +252,10 @@ class PlayerMovement{
             var cameraRotation = camera.GetTransformComponent().rotation
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
-            var right = (cameraRotation.mul( Vec3.new(1.0, 0.0, 0.0))).normalize()
+            var right = cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0)).normalize()
             var movement = engine.GetInput().GetAnalogAction("Move")
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
-            moveInputDir = forward * Vec3.new(movement.y,movement.y,movement.y) + right * Vec3.new(movement.x,movement.x,movement.x)
+            moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
@@ -263,7 +263,7 @@ class PlayerMovement{
             }
 
             if(slideWishDirection.length() > 0.01){
-                velocity = velocity + (slideWishDirection* Vec3.new(slideAmount,slideAmount,slideAmount))
+                velocity = velocity + slideWishDirection.mulScalar(slideAmount)
             }
             engine.GetPhysics().SetVelocity(playerBody, velocity)
 

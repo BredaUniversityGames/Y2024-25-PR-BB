@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
-import "movement.wren" for PlayerMovement
+import "gameplay/movement.wren" for PlayerMovement
 
 class Main {
 
@@ -82,6 +82,10 @@ class Main {
         __ultimateActive = false
     }
 
+    static Shutdown(engine) {
+        System.print("Shutdown script!")
+    }
+
     static Update(engine, dt) {
         __counter = __counter + 1
         var cheats = __playerController.GetCheatsComponent()
@@ -106,7 +110,7 @@ class Main {
             __counter = 0
         }
 
-        
+
 
         if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
             //System.print("Player Jumped!")

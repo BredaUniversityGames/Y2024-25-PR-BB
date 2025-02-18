@@ -5,6 +5,7 @@
 #include "scene.glsl"
 #include "settings.glsl"
 #include "octahedron.glsl"
+#include "clusters.glsl"
 
 layout (push_constant) uniform PushConstants
 {
@@ -12,6 +13,9 @@ layout (push_constant) uniform PushConstants
     uint normalIndex;
     uint ssaoIndex;
     uint depthIndex;
+    vec2 screenSize;
+    vec2 padding;
+    ivec3 clusterDimensions;
     float shadowMapSize;
 } pushConstants;
 
@@ -34,6 +38,10 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
     BloomSettings bloomSettings;
 };
 
+layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
+layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
+layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -55,12 +63,45 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
 vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition);
 
+// stackoverflow.com/questions/51108596/linearize-depth
+float LinearDepth(float z, float near, float far)
+{
+    return near * far / (far + z * (near - far));
+}
+
 void main()
 {
     vec4 albedoRMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoRMIndex)], texCoords);
     vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalIndex)], texCoords);
     float depthSample = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
+
+    float linearDepthCulling = LinearDepth(1.0 - depthSample, camera.zNear, camera.zFar);
+
+    float zFloat = pushConstants.clusterDimensions.z;
+    float log2FarDivNear = log2(camera.zFar / camera.zNear);
+    float log2Near = log2(camera.zNear);
+
+    float sliceScaling = zFloat / log2FarDivNear;
+    float sliceBias = -(zFloat * log2Near / log2FarDivNear);
+    uint zIndex = uint(max(log2(linearDepthCulling) * sliceScaling + sliceBias, 0.0));
+    vec2 tileSize =
+    vec2(pushConstants.screenSize.x / float(16),
+    pushConstants.screenSize.y / float(9));
+
+    uvec3 cluster = uvec3(
+    gl_FragCoord.x / tileSize.x,
+    gl_FragCoord.y / tileSize.y,
+    zIndex);
+
+
+    uint clusterIndex =
+    cluster.x +
+    cluster.y * pushConstants.clusterDimensions.x +
+    cluster.z * pushConstants.clusterDimensions.x * pushConstants.clusterDimensions.y;
+
+    uint lightCount = lightCells[clusterIndex].count;
+    uint lightIndexOffset = lightCells[clusterIndex].offset;
 
     vec3 albedo = albedoRMSample.rgb;
     float roughness;
@@ -90,14 +131,18 @@ void main()
     float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
     Lo += CalculateBRDF(N, V, lightDir, albedo, F0, metallic, roughness, scene.directionalLight.color.rgb);
 
-    // Point Light Calculations
-    for (int i = 0; i < pointLights.count; i++) {
-        PointLight light = pointLights.lights[i];
-        vec3 L = normalize(light.position - position);
-        float attenuation = CalculateAttenuation(light.position, position, light.range);
-        vec3 lightColor = light.color * attenuation;
+    vec3 pointLightLo = vec3(0.0);
+    for (int i = 0; i < lightCount; i++)
+    {
+        uint lightIndex = lightIndices[i + lightIndexOffset];
+        PointLight light = pointLights.lights[lightIndex];
 
-        Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
+        vec3 lightPos = light.position.xyz;
+        vec3 L = normalize(lightPos - position);
+        float attenuation = CalculateAttenuation(lightPos, position, light.range);
+        vec3 lightColor = light.color.rgb * attenuation * light.intensity;
+
+        pointLightLo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }
 
     // IBL Contributions
@@ -109,7 +154,7 @@ void main()
 
     float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient * ambientShadow);
+    vec3 litColor = vec3((Lo * shadow) + pointLightLo + ambient * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
@@ -180,7 +225,7 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
     float distance = length(lightPos - position);
-    return clamp(1.0 - (distance / range), 0.0, 1.0);
+    return max(1.0 - (distance / range), 0.0) / (distance * distance);
 }
 
 float CalculateShadowBias(float cosTheta, float baseBias) {
