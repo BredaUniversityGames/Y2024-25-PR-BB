@@ -147,7 +147,7 @@ void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
 
     currentCommandBuffer.fillBuffer(buffer->buffer, 0, vk::WholeSize, 0);
 
-    //Memory Barrier
+    // Memory Barrier
     vk::BufferMemoryBarrier barrier {
         .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
         .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
@@ -185,14 +185,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         staticInstances[count].materialIndex = mesh->material.Index();
         staticInstances[count].boundingRadius = mesh->boundingRadius;
 
-        if (_ecs.GetRegistry().all_of<IsStaticDraw>(entity))
-        {
-            staticInstances[count].isStaticDraw = true;
-        }
-        else
-        {
-            staticInstances[count].isStaticDraw = false;
-        }
+        staticInstances[count].isStaticDraw = _ecs.GetRegistry().all_of<IsStaticDraw>(entity);
 
         if (_shouldUpdateShadows == false && _ecs.GetRegistry().all_of<WantsShadowsUpdated>(entity))
         {
@@ -255,7 +248,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     const Buffer* skinnedInstancesBuffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer);
     memcpy(skinnedInstancesBuffer->mappedPtr, skinnedInstances.data(), skinnedInstances.size() * sizeof(InstanceData));
 
-    //remove the tags, it will add again if needed later
+    // remove the tags, it will add again if needed later
     const auto view = _ecs.GetRegistry().view<WantsShadowsUpdated>();
     for (auto entity : view)
     {
