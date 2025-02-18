@@ -37,10 +37,6 @@ void ShadowPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curren
     DrawGeometry(commandBuffer, currentFrame, scene, isPrepass);
     isPrepass = !isPrepass;
 }
-void ShadowPass::RequestStaticShadowUpdate(const uint8_t numberOfFrames)
-{
-    _remainingStaticShadowsUpdates = numberOfFrames;
-}
 
 void ShadowPass::CreateStaticPipeline(const GPUScene& gpuScene)
 {
@@ -118,7 +114,7 @@ void ShadowPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentF
     const auto* staticShadowImage = resources->ImageResourceManager().Access(scene.gpuScene->StaticShadow());
     const auto* dynamicShadowImage = resources->ImageResourceManager().Access(scene.gpuScene->DynamicShadow());
 
-    if (_remainingStaticShadowsUpdates > 0)
+    if (scene.gpuScene->ShouldUpdateShadows() == true)
     {
         vk::RenderingAttachmentInfoKHR depthAttachmentInfo {
             .imageView = staticShadowImage->view,
@@ -165,7 +161,6 @@ void ShadowPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t currentF
             _context->GetDrawStats().IndirectDraw(scene.gpuScene->StaticDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->StaticDrawCommands()));
         }
         commandBuffer.endRenderingKHR(vkContext->Dldi());
-        _remainingStaticShadowsUpdates--;
     }
 
     {

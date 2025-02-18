@@ -102,9 +102,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
-    // Capture the static shadows
-    rendererModule.GetRenderer()->GetShadowPipeline().RequestStaticShadowUpdate();
-
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;

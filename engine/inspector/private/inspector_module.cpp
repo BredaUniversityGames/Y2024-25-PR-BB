@@ -357,10 +357,6 @@ void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
     ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::Image(textureID2, ImVec2(512, 512));
-    if (ImGui::Button("Update static shadows"))
-    {
-        engine.GetModule<RendererModule>().GetRenderer()->GetShadowPipeline().RequestStaticShadowUpdate();
-    }
     ImGui::End();
 }
 

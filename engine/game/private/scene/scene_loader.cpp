@@ -1,6 +1,7 @@
 #include "scene/scene_loader.hpp"
 
 #include "animation.hpp"
+#include "components/is_static_draw.hpp"
 #include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -17,8 +18,8 @@
 #include "graphics_resources.hpp"
 #include "model_loading.hpp"
 #include "profile_macros.hpp"
-#include "renderer_module.hpp"
 #include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
 
@@ -57,7 +58,7 @@ void LoadNodeRecursive(ECSModule& ecs,
         {
         case MeshType::eSTATIC:
             ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = model.staticMeshes.at(currentNode.meshIndex.value().second);
-            ecs.GetRegistry().try_get<StaticMeshComponent>(entity)->isStaticDraw = true;
+            ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
             // check if it should have collider
 

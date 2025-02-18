@@ -4,6 +4,7 @@
 #include "camera_batch.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/is_static_draw.hpp"
 #include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
@@ -13,6 +14,7 @@
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
@@ -141,7 +143,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     uint32_t count = 0;
 
     _staticDrawCommands.clear();
-
+    _shouldUpdateShadows = false;
     auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
@@ -158,7 +160,20 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         staticInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         staticInstances[count].materialIndex = mesh->material.Index();
         staticInstances[count].boundingRadius = mesh->boundingRadius;
-        staticInstances[count].isStaticDraw = meshComponent.isStaticDraw;
+
+        if (_ecs.GetRegistry().all_of<IsStaticDraw>(entity))
+        {
+            staticInstances[count].isStaticDraw = true;
+        }
+        else
+        {
+            staticInstances[count].isStaticDraw = false;
+        }
+
+        if (_shouldUpdateShadows == false && _ecs.GetRegistry().all_of<WantsShadowsUpdated>(entity))
+        {
+            _shouldUpdateShadows = true;
+        }
 
         _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -215,6 +230,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     const Buffer* skinnedInstancesBuffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer);
     memcpy(skinnedInstancesBuffer->mappedPtr, skinnedInstances.data(), skinnedInstances.size() * sizeof(InstanceData));
+
+    //remove the tags, it will add again if needed later
+    const auto view = _ecs.GetRegistry().view<WantsShadowsUpdated>();
+    for (auto entity : view)
+    {
+        _ecs.GetRegistry().remove<WantsShadowsUpdated>(entity);
+    }
 }
 
 void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)

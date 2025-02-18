@@ -100,6 +100,7 @@ public:
 
     ResourceHandle<GPUImage> StaticShadow() const { return _staticShadowImage; }
     ResourceHandle<GPUImage> DynamicShadow() const { return _dynamicShadowImage; }
+    bool ShouldUpdateShadows() const { return _shouldUpdateShadows; }
 
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
     CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
@@ -188,6 +189,7 @@ private:
 
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
+    bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
