@@ -8,6 +8,7 @@
 #include "magic_enum.hpp"
 #include "menus/particle_editor.hpp"
 #include "menus/performance_tracker.hpp"
+#include "passes/shadow_pass.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
@@ -15,8 +16,6 @@
 #include "tonemapping_functions.hpp"
 #include "tracy/Tracy.hpp"
 #include "vulkan_context.hpp"
-
-#include <passes/shadow_pass.hpp>
 
 InspectorModule::InspectorModule() = default;
 

@@ -20,6 +20,7 @@
 #include "input/input_device_manager.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/shadow_pass.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
@@ -30,8 +31,6 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-
-#include <passes/shadow_pass.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {

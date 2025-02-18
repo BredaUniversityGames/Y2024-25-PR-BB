@@ -45,8 +45,7 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
     skinnedPc.drawCommandsCount = scene.gpuScene->SkinnedDrawCount();
     skinnedPc.drawStaticDraws = static_cast<uint32_t>(_shouldDrawDynamic);
 
-    std::array<vk::Buffer, 2>
-        buffers;
+    std::array<vk::Buffer, 2> buffers;
     buffers[0] = bufferResourceManager.Access(_cameraBatch.StaticDraw().redirectBuffer)->buffer;
     buffers[1] = bufferResourceManager.Access(_cameraBatch.SkinnedDraw().redirectBuffer)->buffer;
     commandBuffer.fillBuffer(buffers[0], 0, sizeof(uint32_t), 0);
