@@ -12,11 +12,6 @@ target_link_libraries(Renderer
         PUBLIC VulkanAPI
         PUBLIC VulkanMemoryAllocator
         PUBLIC spirv-reflect-static
-        PUBLIC fastgltf::fastgltf
-)
-
-target_include_directories(Renderer
-        PUBLIC "${PROJECT_SOURCE_DIR}/external/stb"
 )
 
 source_exclude_unity("private/lib/stbi_impl.cpp")

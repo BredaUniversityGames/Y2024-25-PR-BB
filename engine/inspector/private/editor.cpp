@@ -15,7 +15,6 @@
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "imgui_backend.hpp"
-#include "model_loader.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "systems/lifetime_component.hpp"
