@@ -6,6 +6,7 @@
 #include "audio_emitter_component.hpp"
 #include "cheats_component.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -69,6 +70,16 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, const glm::vec3& color)
+{
+    component.component->color = color;
+}
+
+glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->color;
+}
+
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
 
 void BindEntity(wren::ForeignModule& module)
@@ -95,6 +106,9 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
+    entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -141,6 +155,10 @@ void BindEntityAPI(wren::ForeignModule& module)
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
         nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+
+        auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
+        pointLightClass.propExt<
+            bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
 
         // Transform component
         auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
