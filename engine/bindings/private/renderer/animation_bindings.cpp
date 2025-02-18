@@ -1,8 +1,8 @@
 #include "animation_bindings.hpp"
 
 #include "animation.hpp"
+#include "entity/wren_entity.hpp"
 #include "utility/enum_bind.hpp"
-#include "utility/wren_entity.hpp"
 
 namespace bindings
 {

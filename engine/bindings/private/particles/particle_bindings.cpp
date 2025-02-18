@@ -1,8 +1,8 @@
 #include "particle_bindings.hpp"
 
+#include "entity/wren_entity.hpp"
 #include "particle_module.hpp"
 #include "utility/enum_bind.hpp"
-#include "utility/wren_entity.hpp"
 
 namespace bindings
 {

@@ -4,10 +4,10 @@
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
+#include "entity/wren_entity.hpp"
 #include "game_module.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
-#include "utility/wren_entity.hpp"
 
 namespace bindings
 {
