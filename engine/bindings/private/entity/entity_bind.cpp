@@ -1,17 +1,18 @@
+#include "ecs_module.hpp"
 #include "wren_common.hpp"
 #include "wren_entity.hpp"
-#include "ecs_module.hpp"
 
 #include "animation.hpp"
 #include "audio_emitter_component.hpp"
 #include "cheats_component.hpp"
-#include "components/transform_helpers.hpp"
+#include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "systems/lifetime_component.hpp"
-#include "components/name_component.hpp"
 
-namespace bindings {
+namespace bindings
+{
 
 glm::vec3 TransformComponentGetTranslation(WrenComponent<TransformComponent>& component)
 {
@@ -122,7 +123,8 @@ std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& na
 
 }
 
-void BindEntityAPI(wren::ForeignModule& module) {
+void BindEntityAPI(wren::ForeignModule& module)
+{
 
     bindings::BindEntity(module);
 
@@ -134,28 +136,28 @@ void BindEntityAPI(wren::ForeignModule& module) {
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
     }
-        // Components
-        {
-            // Name class
-            auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
-            nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+    // Components
+    {
+        // Name class
+        auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
+        nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
 
-            // Transform component
-            auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
+        // Transform component
+        auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
 
-            transformClass.propExt<
-                bindings::TransformComponentGetTranslation, bindings::TransformComponentSetTranslation>("translation");
+        transformClass.propExt<
+            bindings::TransformComponentGetTranslation, bindings::TransformComponentSetTranslation>("translation");
 
-            transformClass.propExt<
-                bindings::TransformComponentGetRotation, bindings::TransformComponentSetRotation>("rotation");
+        transformClass.propExt<
+            bindings::TransformComponentGetRotation, bindings::TransformComponentSetRotation>("rotation");
 
-            transformClass.propExt<
-                bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
+        transformClass.propExt<
+            bindings::TransformComponentGetScale, bindings::TransformComponentSetScale>("scale");
 
-            transformClass.funcExt<bindings::TransformHelpersGetWorldTranslation>("GetWorldTranslation");
-            transformClass.funcExt<bindings::TransformHelpersGetWorldRotation>("GetWorldRotation");
-            transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldTranslation>("GetWorldTranslation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldRotation>("GetWorldRotation");
+        transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
 
-            transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
-        }
+        transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
+    }
 }

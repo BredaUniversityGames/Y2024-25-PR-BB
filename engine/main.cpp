@@ -47,7 +47,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     BindEngineAPI(scripting.GetForeignAPI());
     scripting.GenerateEngineBindingsFile();
 
-    scripting.SetMainScript(instance, "game/main_menu.wren");
+    scripting.SetMainScript(instance, "game/game.wren");
 
     return instance.Run();
 }

@@ -1,8 +1,8 @@
 #include "physics_bindings.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
-#include "physics_module.hpp"
 #include "entity/wren_entity.hpp"
+#include "physics_module.hpp"
 
 #include <optional>
 
