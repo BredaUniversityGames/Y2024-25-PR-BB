@@ -211,11 +211,11 @@ void AudioModule::UnloadBank(const BankInfo& bankInfo)
     FMOD_CHECKRESULT(FMOD_Studio_Bank_Unload(_banks[bankInfo.uid]));
     _banks.erase(bankInfo.uid);
 }
-EventInstanceID AudioModule::StartOneShotEvent(const std::string_view name)
+EventInstance AudioModule::StartOneShotEvent(const std::string_view name)
 {
     return StartEvent(name, true);
 }
-NO_DISCARD EventInstanceID AudioModule::StartLoopingEvent(const std::string_view name)
+NO_DISCARD EventInstance AudioModule::StartLoopingEvent(const std::string_view name)
 {
     return StartEvent(name, false);
 }
@@ -231,7 +231,25 @@ void AudioModule::UpdateSound3DAttributes(const ChannelID id, const glm::vec3& p
     const auto vel = GLMToFMOD(velocity);
     FMOD_Channel_Set3DAttributes(_channelsActive[id], &pos, &vel);
 }
-NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, const bool isOneShot)
+
+bool HasDistanceParameter(FMOD_STUDIO_EVENTDESCRIPTION* eventDescription)
+{
+    int paramCount = 0;
+    FMOD_Studio_EventDescription_GetParameterDescriptionCount(eventDescription, &paramCount);
+
+    for (int i = 0; i < paramCount; ++i)
+    {
+        FMOD_STUDIO_PARAMETER_DESCRIPTION paramDesc;
+        FMOD_CHECKRESULT(FMOD_Studio_EventDescription_GetParameterDescriptionByIndex(eventDescription, i, &paramDesc));
+        if (std::string(paramDesc.name) == "Distance")
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+NO_DISCARD EventInstance AudioModule::StartEvent(const std::string_view name, const bool isOneShot)
 {
     FMOD_STUDIO_EVENTDESCRIPTION* eve = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_GetEvent(_studioSystem, name.data(), &eve));
@@ -242,30 +260,43 @@ NO_DISCARD EventInstanceID AudioModule::StartEvent(const std::string_view name, 
     _events[eventId] = evi;
     ++_nextEventId;
 
-    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Start(evi));
+    const bool startLater = HasDistanceParameter(eve);
 
-    if (isOneShot)
+    if (!startLater)
     {
-        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(evi, FMOD_STUDIO_STOP_ALLOWFADEOUT));
-        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(evi));
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Start(evi));
+        if (isOneShot)
+        {
+            FMOD_BOOL fmodOneShot = false;
+            FMOD_CHECKRESULT(FMOD_Studio_EventDescription_IsOneshot(eve, &fmodOneShot));
+            if (!fmodOneShot)
+            {
+                FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(evi, FMOD_STUDIO_STOP_ALLOWFADEOUT));
+            }
+            FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(evi));
+        }
     }
 
-    return eventId;
+    return EventInstance(eventId, startLater, isOneShot);
 }
-void AudioModule::StopEvent(const EventInstanceID eventId)
+void AudioModule::StopEvent(const EventInstance instance)
 {
-    if (_events.contains(eventId))
+    if (_events.contains(instance.id))
     {
-        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[eventId], FMOD_STUDIO_STOP_ALLOWFADEOUT));
-        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(_events[eventId]));
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[instance.id], FMOD_STUDIO_STOP_ALLOWFADEOUT));
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(_events[instance.id]));
     }
 }
-bool AudioModule::IsEventPlaying(EventInstanceID eventId)
+bool AudioModule::IsEventPlaying(EventInstance instance)
 {
-    if (_events.contains(eventId))
+    if (_events.contains(instance.id))
     {
+        if (instance.startDuringSystemUpdate)
+        {
+            return true;
+        }
         FMOD_STUDIO_PLAYBACK_STATE state {};
-        FMOD_Studio_EventInstance_GetPlaybackState(_events[eventId], &state);
+        FMOD_Studio_EventInstance_GetPlaybackState(_events[instance.id], &state);
 
         return state != FMOD_STUDIO_PLAYBACK_STOPPED;
     }
@@ -283,9 +314,9 @@ void AudioModule::SetListener3DAttributes(const glm::vec3& position, const glm::
     FMOD_Studio_System_SetListenerAttributes(_studioSystem, 0, &attribs, nullptr);
 }
 
-void AudioModule::SetEvent3DAttributes(EventInstanceID id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up)
+void AudioModule::SetEvent3DAttributes(EventInstance instance, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up)
 {
-    if (!_events.contains(id))
+    if (!_events.contains(instance.id))
     {
         bblog::warn("Tried to update event 3d attributes, of event that isn't playing");
         return;
@@ -297,5 +328,22 @@ void AudioModule::SetEvent3DAttributes(EventInstanceID id, const glm::vec3& posi
     attribs.forward = GLMToFMOD(forward);
     attribs.up = GLMToFMOD(up);
 
-    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Set3DAttributes(_events[id], &attribs));
+    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Set3DAttributes(_events[instance.id], &attribs));
+}
+void AudioModule::StartEventInstance(const EventInstance instance)
+{
+    FMOD_STUDIO_EVENTDESCRIPTION* eve;
+    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_GetDescription(_events[instance.id], &eve));
+    FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Start(_events[instance.id]));
+
+    if (instance.isOneShot)
+    {
+        FMOD_BOOL fmodOneShot = false;
+        FMOD_CHECKRESULT(FMOD_Studio_EventDescription_IsOneshot(eve, &fmodOneShot));
+        if (!fmodOneShot)
+        {
+            FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[instance.id], FMOD_STUDIO_STOP_ALLOWFADEOUT));
+        }
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(_events[instance.id]));
+    }
 }

@@ -57,22 +57,22 @@ public:
 
     // Play an event once
     // Events started through this will stop on their own
-    EventInstanceID StartOneShotEvent(std::string_view name);
+    EventInstance StartOneShotEvent(std::string_view name);
 
     // Start an event that should play at least once
     // Store the returned id and later call StopEvent(id), it might not stop otherwise
-    NO_DISCARD EventInstanceID StartLoopingEvent(std::string_view name);
+    NO_DISCARD EventInstance StartLoopingEvent(std::string_view name);
 
     // Stops an event that is
-    void StopEvent(EventInstanceID eventId);
+    void StopEvent(EventInstance instance);
 
-    bool IsEventPlaying(EventInstanceID eventId);
+    bool IsEventPlaying(EventInstance instance);
 
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 
     void UpdateSound3DAttributes(ChannelID id, const glm::vec3& position, const glm::vec3& velocity);
 
-    void SetEvent3DAttributes(EventInstanceID id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
+    void SetEvent3DAttributes(EventInstance id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
 
     std::vector<glm::vec3>&
     GetDebugLines()
@@ -93,8 +93,11 @@ public:
 
 private:
     friend class AudioSystem;
-    NO_DISCARD EventInstanceID
+    NO_DISCARD EventInstance
     StartEvent(std::string_view name, bool isOneShot);
+
+    // This function is intended to be used bby the audio system only
+    void StartEventInstance(EventInstance instance);
 
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
