@@ -1,5 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "gameplay/movement.wren" for PlayerMovement
+import "gameplay/movement.wren" for PlayerMovement, EnemyMovement
 
 class Main {
 
@@ -12,6 +12,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
+        __enemyMovement = EnemyMovement.new(engine)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -150,6 +151,7 @@ class Main {
         }
 
         __playerMovement.Update(engine,dt,__playerController, __camera)
+        __enemyMovement.Update(engine)
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

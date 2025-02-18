@@ -282,3 +282,15 @@ class PlayerMovement{
         this.Slide(engine, dt, playerController, camera)
     }
 }
+
+class EnemyMovement {
+
+    construct new(engine) {
+        __enemyController = engine.GetGame().CreateNPC(engine.GetPhysics(), engine.GetECS(), Vec3.new(0.0, 0.0, 0.0), 1.0, 1.0)
+    }
+
+    Update(engine) {
+        var rb = __enemyController.GetRigidbodyComponent()
+        var velocity = engine.GetPhysics().SetVelocity(rb, Vec3.new(1.0, 0.0, 0.0))
+    }
+}

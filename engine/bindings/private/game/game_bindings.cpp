@@ -8,6 +8,11 @@
 #include "game_module.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
+#include "entity/wren_entity.hpp"
+#include "renderer_module.hpp"
+#include "model_loading.hpp"
+#include "components/static_mesh_component.hpp"
+#include "cpu_resources.hpp"
 
 namespace bindings
 {
@@ -65,6 +70,23 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
     return { playerEntity, &ecs.GetRegistry() };
 }
 
+WrenEntity CreateNPC(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
+{
+    entt::entity npcEntity = ecs.GetRegistry().create();
+    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height / 2.0f, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+    bodyCreationSettings.mAllowDynamicOrKinematic = true;
+
+    bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    RigidbodyComponent rb(*physicsModule.bodyInterface, npcEntity, bodyCreationSettings);
+
+    NameComponent node;
+    node.name = "NPC Entity";
+    ecs.GetRegistry().emplace<NameComponent>(npcEntity, node);
+    ecs.GetRegistry().emplace<RigidbodyComponent>(npcEntity, rb);
+
+    return { npcEntity, &ecs.GetRegistry() };
+}
+
 // Do not pass heights smaller than 0.1f, it will get clamped for saftey to 0.1f
 void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const float height)
 {
@@ -96,4 +118,6 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
+
+    game.funcExt<bindings::CreateNPC>("CreateNPC");
 }
