@@ -15,7 +15,6 @@ struct CameraComponent
     };
 
     Projection projection = Projection::ePerspective;
-    // Field of View in degrees
     float fov = glm::half_pi<float>();
     float nearPlane = 0.01f;
     float farPlane = 600.0f;

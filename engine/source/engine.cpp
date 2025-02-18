@@ -69,7 +69,7 @@ ModuleTickOrder OldEngine::Init(Engine& engine)
 
     _ecs = &engine.GetModule<ECSModule>();
 
-    const size_t DIM = 8;
+    const size_t DIM = 14;
     for (size_t i = 0; i < DIM; ++i)
     {
         for (size_t j = 0; j < DIM; ++j)
