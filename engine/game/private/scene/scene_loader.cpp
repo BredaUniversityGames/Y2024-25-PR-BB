@@ -17,10 +17,11 @@
 #include "graphics_resources.hpp"
 #include "model_loading.hpp"
 #include "profile_macros.hpp"
-#include "renderer_module.hpp"
 #include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
+#include "thread_module.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -174,15 +175,17 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
     std::vector<CPUModel> cpuModels {};
     cpuModels.reserve(paths.size());
 
+    auto& threadPool = engine.GetModule<ThreadModule>().GetPool();
+
     for (const auto& path : paths)
     {
         {
             ZoneScoped;
 
-            std::string zone = path + " CPU upload";
+            std::string zone = path + " CPU parsing";
             ZoneName(zone.c_str(), 128);
 
-            cpuModels.push_back(ModelLoading::LoadGLTF(path));
+            cpuModels.push_back(ModelLoading::LoadGLTFFast(threadPool, path));
         }
     }
 
