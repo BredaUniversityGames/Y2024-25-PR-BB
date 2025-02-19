@@ -8,7 +8,6 @@
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
 
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
