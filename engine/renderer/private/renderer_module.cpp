@@ -50,6 +50,7 @@ void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 
 std::vector<ResourceHandle<GPUModel>> RendererModule::LoadModels(const std::vector<CPUModel>& cpuModels)
 {
+    ZoneScopedN("Loading models into Renderer");
     auto result = _renderer->LoadModels(cpuModels);
     _renderer->UpdateBindless();
 

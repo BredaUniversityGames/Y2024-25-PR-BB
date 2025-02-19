@@ -2,6 +2,7 @@
 
 #include "math_util.hpp"
 #include "resource_manager.hpp"
+#include "single_time_commands.hpp"
 #include "vulkan_include.hpp"
 
 #include <glm/glm.hpp>
@@ -97,7 +98,7 @@ struct CPUImage
 
 struct GPUImage
 {
-    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context);
+    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* commands = nullptr);
     ~GPUImage();
 
     GPUImage(GPUImage&& other) noexcept;

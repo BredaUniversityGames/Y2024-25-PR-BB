@@ -10,9 +10,9 @@ ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>&
 {
 }
 
-ResourceHandle<GPUImage> ImageResourceManager::Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler)
+ResourceHandle<GPUImage> ImageResourceManager::Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler, SingleTimeCommands* commands)
 {
-    return ResourceManager::Create(GPUImage { cpuImage, sampler, _context });
+    return ResourceManager::Create(GPUImage { cpuImage, sampler, _context, commands });
 }
 
 vk::ImageType ImageResourceManager::ImageTypeConversion(ImageType type)

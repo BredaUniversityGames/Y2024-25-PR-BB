@@ -66,7 +66,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
 
     SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
+    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
     commandBufferPrimitive.Submit();
 
     _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());

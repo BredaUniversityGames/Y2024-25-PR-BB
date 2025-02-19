@@ -61,7 +61,7 @@ void LoadNodeRecursive(ECSModule& ecs,
 
             // check if it should have collider
 
-            ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
+            // ecs.GetRegistry().emplace<RigidbodyComponent>(entity, ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
 
             // add collider recursively
 
@@ -107,6 +107,7 @@ void LoadNodeRecursive(ECSModule& ecs,
 
 entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
 {
+    ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
 
     std::unordered_map<uint32_t, entt::entity> entityLUT;
@@ -151,6 +152,7 @@ entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<
 
 std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels)
 {
+
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto gpuModels = rendererModule.LoadModels(cpuModels);
 
@@ -162,9 +164,12 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
         throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
     }
 
-    for (uint32_t i = 0; i < cpuModels.size(); ++i)
     {
-        entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
+        ZoneScopedN("Instantiate Models in ECS");
+        for (uint32_t i = 0; i < cpuModels.size(); ++i)
+        {
+            entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
+        }
     }
 
     return entities;
@@ -189,5 +194,12 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
         }
     }
 
-    return LoadModels(engine, cpuModels);
+    auto entities = LoadModels(engine, cpuModels);
+
+    {
+        ZoneScopedN("CPU Model Free");
+        cpuModels.clear();
+    }
+
+    return entities;
 }

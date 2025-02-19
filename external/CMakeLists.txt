@@ -94,13 +94,8 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(TRACY_ENABLE OFF)
-else ()
-    set(TRACY_ENABLE ON)
-endif ()
-
-set(TRACY_ON_DEMAND ON)
+set(TRACY_ENABLE ON)
+set(TRACY_ON_DEMAND OFF)
 
 FetchContent_MakeAvailable(Tracy)
 
