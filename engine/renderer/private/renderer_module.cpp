@@ -22,8 +22,8 @@ RendererModule::RendererModule()
 ModuleTickOrder RendererModule::Init(Engine& engine)
 {
     auto& ecs = engine.GetModule<ECSModule>();
-    _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
 
+    _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
     _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), engine.GetModule<UIModule>().GetViewport(), _context, ecs);
 
     ecs.AddSystem<AnimationSystem>(*this);

@@ -34,8 +34,6 @@
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    ZoneScopedN("Game Module Initialization");
-
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 

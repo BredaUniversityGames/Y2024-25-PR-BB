@@ -28,7 +28,6 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         instance
             .AddModule<ThreadModule>()
             .AddModule<ScriptingModule>()
-            .AddModule<InspectorModule>()
             .AddModule<ECSModule>()
             .AddModule<TimeModule>()
             .AddModule<SteamModule>()
@@ -39,7 +38,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<AudioModule>()
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
-            .AddModule<GameModule>();
+            .AddModule<GameModule>()
+            .AddModule<InspectorModule>();
     }
 
     {
