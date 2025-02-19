@@ -64,12 +64,12 @@ class BBSceneExporter(Operator):
         successful_exports = []
         failed_exports = []
 
-       for collection in bpy.data.collections:
+        for collection in bpy.data.collections:
             try:
                 if collection.hide_viewport:
                     continue
 
-               layer_collection = self.find_layer_collection(context.view_layer.layer_collection, collection.name)
+                layer_collection = self.find_layer_collection(context.view_layer.layer_collection, collection.name)
                 if not layer_collection:
                     continue
 
@@ -81,7 +81,7 @@ class BBSceneExporter(Operator):
                         obj.select_set(True)
                         context.view_layer.objects.active = obj
 
-               collection_filepath = os.path.join(export_path, f"{collection.name}.gltf")
+                collection_filepath = os.path.join(export_path, f"{collection.name}.gltf")
 
                 # Export the collection
                 bpy.ops.export_scene.gltf(
@@ -144,7 +144,7 @@ classes = (
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.gltf_export_settings = bpy.props.PointerProperty(type=ExportGLTFSettings)
+    bpy.types.Scene.gltf_export_settings = bpy.props.PointerProperty(type=BBExportSceneSettings)
 
 def unregister():
     for cls in classes:
