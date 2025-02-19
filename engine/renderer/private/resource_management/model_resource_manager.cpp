@@ -15,7 +15,14 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<ImageResourceManager>
 
 ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, BatchBuffer& staticBatchBuffer, BatchBuffer& skinnedBatchBuffer)
 {
-    GPUModel model;
+    // If a duplicate model already exists, we just return that one
+    auto itr = _loadedModels.find(data.name);
+    if (itr != _loadedModels.end())
+    {
+        return itr->second;
+    }
+
+    GPUModel model {};
 
     for (const auto& image : data.textures)
     {
@@ -62,5 +69,6 @@ ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, Batc
         model.skinnedMeshes.emplace_back(_meshResourceManager->Create(cpuMesh, model.materials, skinnedBatchBuffer));
     }
 
-    return ResourceManager::Create(std::move(model));
+    _loadedModels[data.name] = ResourceManager::Create(std::move(model));
+    return _loadedModels[data.name];
 }
