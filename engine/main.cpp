@@ -44,11 +44,9 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     {
         ZoneScopedN("Game Script Setup");
 
-        auto& scripting = instance.GetModule<ScriptingModule>();
-        instance.GetModule<TimeModule>().ResetTimer();
-
         BindEngineAPI(scripting.GetForeignAPI());
         scripting.GenerateEngineBindingsFile();
+
         scripting.SetMainScript(instance, "game/game.wren");
     }
 
