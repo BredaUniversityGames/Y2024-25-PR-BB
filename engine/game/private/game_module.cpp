@@ -51,7 +51,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/monkey.gltf",
+        "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
