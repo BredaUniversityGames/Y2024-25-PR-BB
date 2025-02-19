@@ -1,4 +1,4 @@
 cd ../..
-python scripts/python/package.py -o "package/linux-dist" -e "build/WSL-Release/CustomTech" -a "assets" "shaders/bin" "game" -f "settings.json" "build/WSL-Release/libsteam_api.so" "build/WSL-Release/libfmod.so.14" "build/WSL-Release/libfmodstudio.so.14"
+python scripts/python/package.py -c scripts/build_system/package_config/linux_dist.json
 cd scripts/build_system
 echo Linux distribution build packaged.

@@ -1,3 +1,5 @@
 cd ../..
-python scripts/python/package.py -o "package/linux-dev-rel-deb" -e "build/WSL-RelWithDebInfo/CustomTech" -a "assets" "shaders/bin" "game" -f "settings.json" "build/WSL-RelWithDebInfo/libsteam_api.so" "build/WSL-RelWithDebInfo/libfmodL.so.14" "build/WSL-RelWithDebInfo/libfmodstudioL.so.14" "steam_appid.txt"
+python scripts/python/package.py -c scripts/build_system/package_config/linux_dev_rel_deb.json
+cd scripts/build_system
+echo Linux release with debug info for development build packaged.
 pause
