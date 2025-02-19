@@ -4,6 +4,7 @@
 #include "camera_batch.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
+#include "components/is_static_draw.hpp"
 #include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
@@ -13,6 +14,7 @@
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
@@ -36,7 +38,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     , prefilterMap(creation.prefilterMap)
     , brdfLUTMap(creation.brdfLUTMap)
     , _context(creation.context)
-, _settings(settings)
+    , _settings(settings)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context, true)
     , _directionalLightShadowCamera(creation.context, false)
@@ -78,7 +80,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     _redirectDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindingsRedirect, namesRedirect);
 
     _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Batch", _mainCamera, creation.depthImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
-    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _shadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
+    _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _staticShadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
 }
 
 GPUScene::~GPUScene()
@@ -118,7 +120,8 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
     sceneData.irradianceIndex = irradianceMap.Index();
     sceneData.prefilterIndex = prefilterMap.Index();
     sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.shadowMapIndex = _shadowImage.Index();
+    sceneData.staticShadowMapIndex = _staticShadowImage.Index();
+    sceneData.dynamicShadowMapIndex = _dynamicShadowImage.Index();
 
     sceneData.fogColor = _settings.color;
     sceneData.fogDensity = _settings.density;
@@ -144,7 +147,7 @@ void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
 
     currentCommandBuffer.fillBuffer(buffer->buffer, 0, vk::WholeSize, 0);
 
-    //Memory Barrier
+    // Memory Barrier
     vk::BufferMemoryBarrier barrier {
         .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
         .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
@@ -164,7 +167,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     uint32_t count = 0;
 
     _staticDrawCommands.clear();
-
+    _shouldUpdateShadows = false;
     auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
@@ -181,6 +184,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         staticInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         staticInstances[count].materialIndex = mesh->material.Index();
         staticInstances[count].boundingRadius = mesh->boundingRadius;
+
+        staticInstances[count].isStaticDraw = _ecs.GetRegistry().all_of<IsStaticDraw>(entity);
+
+        if (_shouldUpdateShadows == false && _ecs.GetRegistry().all_of<WantsShadowsUpdated>(entity))
+        {
+            _shouldUpdateShadows = true;
+        }
 
         _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -216,6 +226,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].materialIndex = mesh->material.Index();
         skinnedInstances[count].boundingRadius = mesh->boundingRadius;
         skinnedInstances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        skinnedInstances[count].isStaticDraw = true;
 
         _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -224,6 +235,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
+
             },
         });
 
@@ -235,6 +247,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     const Buffer* skinnedInstancesBuffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer);
     memcpy(skinnedInstancesBuffer->mappedPtr, skinnedInstances.data(), skinnedInstances.size() * sizeof(InstanceData));
+
+    // remove the tags, it will add again if needed later
+    const auto view = _ecs.GetRegistry().view<WantsShadowsUpdated>();
+    for (auto entity : view)
+    {
+        _ecs.GetRegistry().remove<WantsShadowsUpdated>(entity);
+    }
 }
 
 void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
@@ -268,6 +287,8 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightData.depthBiasMVP = DirectionalLightComponent::BIAS_MATRIX * directionalLightData.lightVP;
         directionalLightData.direction = glm::vec4(direction, directionalLightComponent.shadowBias);
         directionalLightData.color = glm::vec4(directionalLightComponent.color, 1.0f);
+        directionalLightData.poissonConstant = directionalLightComponent.poissonConstant;
+        directionalLightData.poissonWorldOffset = directionalLightComponent.poissonWorldOffset;
 
         CameraComponent camera {
             .projection = CameraComponent::Projection::eOrthographic,
@@ -1048,12 +1069,21 @@ void GPUScene::CreateShadowMapResources()
     shadowSamplerInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _shadowSampler = _context->Resources()->SamplerResourceManager().Create(shadowSamplerInfo);
 
-    CPUImage shadowCreation {};
-    shadowCreation
+    CPUImage shadowCreationStatic {};
+    shadowCreationStatic
         .SetFormat(vk::Format::eD32Sfloat)
         .SetType(ImageType::eShadowMap)
         .SetSize(2048, 2048)
-        .SetName("Shadow image")
+        .SetName("Static shadow image")
         .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
-    _shadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreation, _shadowSampler);
+    _staticShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationStatic, _shadowSampler);
+
+    CPUImage shadowCreationDynamic {};
+    shadowCreationDynamic
+        .SetFormat(vk::Format::eD32Sfloat)
+        .SetType(ImageType::eShadowMap)
+        .SetSize(2048, 2048)
+        .SetName("Dynamic shadow image")
+        .SetFlags(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    _dynamicShadowImage = _context->Resources()->ImageResourceManager().Create(shadowCreationDynamic, _shadowSampler);
 }
