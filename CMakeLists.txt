@@ -14,7 +14,7 @@ include(scripts/cmake/code-modules.cmake)
 
 ### COMPILATION SETTINGS ###
 
-option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
+option(WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
 option(COMPILE_TESTS "Compile with Unit Tests" ON)
 option(COMPILE_SHADERS "Compile all GLSL shaders as part of build step" ON)
