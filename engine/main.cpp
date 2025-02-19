@@ -20,6 +20,7 @@
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
+    Stopwatch startupTimer {};
 
     {
         ZoneScopedN("Engine Module Initialization");
@@ -48,8 +49,9 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         BindEngineAPI(scripting.GetForeignAPI());
         scripting.GenerateEngineBindingsFile();
 
-        // scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/game.wren");
     }
 
+    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
