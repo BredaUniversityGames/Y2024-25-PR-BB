@@ -87,15 +87,17 @@ float CalculateShadowBias(float cosTheta, float baseBias) {
 
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
-    vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
-    vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (2048 * 1.6);// TODO: Pass actual shadow map size
+    const vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
+    const vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
 
-    float visibility = 1.0;
-    float depthFactor = testCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
-    shadow *= 0.25;// Average the samples
+    float staticVisibility = 1.0;
+    float dynamicVisibility = 1.0;
+    const float depthFactor = testCoord.z - bias;
+
+    for (int i = 0;i < 4; i++) {
+        const int index = int(16.0 * randomIndex(floor(position.xyz * scene.directionalLight.poissonWorldOffset), i)) % 16;
+        staticVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.staticShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
+        dynamicVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.dynamicShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
+    }
+    shadow = min(staticVisibility, dynamicVisibility);
 }

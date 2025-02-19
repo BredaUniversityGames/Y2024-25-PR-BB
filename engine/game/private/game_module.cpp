@@ -20,6 +20,7 @@
 #include "input/input_device_manager.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/shadow_pass.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
