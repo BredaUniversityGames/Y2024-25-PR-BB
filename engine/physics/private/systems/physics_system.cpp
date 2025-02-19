@@ -32,8 +32,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     const Hierarchy& hierarchy,
     entt::entity parent, PhysicsShapes shape)
 {
-
-    if (const bool validation = shape != eMESH && shape != eCONVEXHULL)
+    if (MAYBE_UNUSED const bool validation = shape != eMESH && shape != eCONVEXHULL)
     {
         assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
         bblog::error("Shape is not supported, please use eMESH or eCONVEXHULL");
