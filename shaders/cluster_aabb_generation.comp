@@ -1,0 +1,82 @@
+#version 460
+
+#include "scene.glsl"
+#include "clusters.glsl"
+
+layout (local_size_x = 16, local_size_y = 9, local_size_z = 1) in;
+
+layout (push_constant) uniform PushConstants
+{
+    uvec4 tileSizes;
+    vec2 screenSize;
+    vec2 normPerTileSize;
+} pushConstants;
+
+layout (set = 0, binding = 0) buffer AABBs { AABB clusters[]; };
+
+layout (set = 1, binding = 0) uniform CameraUBO { Camera camera; };
+
+vec4 ScreenToView(vec4 screen)
+{
+    vec4 clip = vec4(
+    screen.x * 2.0 - 1.0,
+    screen.y * 2.0 - 1.0,
+    screen.z,
+    screen.w);
+    vec4 view = camera.inverseProj * clip;
+
+    view = view / view.w;
+
+    return view;
+}
+
+vec3 RayIntersectZPlane(vec3 incident, float zOffset)
+{
+    return incident * zOffset / incident.z;
+}
+
+void main()
+{
+    const vec3 eyePos = vec3(0.0, 0.0, 0.0);
+    const float zNear = camera.zNear;
+    const float zFar = camera.zFar;
+    const vec2 normPerTileSize = pushConstants.normPerTileSize;
+
+    uint tileIndex =
+    gl_WorkGroupID.x +
+    gl_WorkGroupID.y * gl_NumWorkGroups.x +
+    gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y;
+
+    vec4 maxScreen = vec4(
+    (gl_WorkGroupID.x + 1.0) * normPerTileSize.x,
+    (gl_WorkGroupID.y + 1.0) * normPerTileSize.y,
+    0.0,
+    1.0);
+
+    vec4 minScreen = vec4(
+    gl_WorkGroupID.x * normPerTileSize.x,
+    gl_WorkGroupID.y * normPerTileSize.y,
+    0.0,
+    1.0);
+
+    vec3 maxViewSpace = ScreenToView(maxScreen).xyz;
+    vec3 minViewSpace = ScreenToView(minScreen).xyz;
+
+    float nearPlane = -zNear *
+    pow(zFar / zNear, float(gl_WorkGroupID.z) / pushConstants.tileSizes.z);
+    float farPlane = -zNear *
+    pow(zFar / zNear, float(gl_WorkGroupID.z + 1) / pushConstants.tileSizes.z);
+
+
+    vec3 minNear = RayIntersectZPlane(minViewSpace, nearPlane);
+    vec3 minFar = RayIntersectZPlane(minViewSpace, farPlane);
+    vec3 maxNear = RayIntersectZPlane(maxViewSpace, nearPlane);
+    vec3 maxFar = RayIntersectZPlane(maxViewSpace, farPlane);
+
+    vec3 minAABB = min(min(minNear, minFar), min(maxNear, maxFar));
+    vec3 maxAABB = max(max(minNear, minFar), max(maxNear, maxFar));
+
+    clusters[tileIndex].min = vec4(minAABB, 0.0);
+    clusters[tileIndex].max = vec4(maxAABB, 0.0);
+}
+

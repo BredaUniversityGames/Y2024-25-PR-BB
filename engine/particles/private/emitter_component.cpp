@@ -29,7 +29,29 @@ void ParticleEmitterComponent::Inspect()
     ImGui::DragFloat2("Size##Particle Emitter", &emitter.size.x, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Size velocity##Particle Emitter", &emitter.size.z, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.1f, 0.0f, 100.0f);
-    ImGui::DragFloat3("Randomness##EmitterPresetEditor", &emitter.randomness.x, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat3("Spawn Randomness##EmitterPresetEditor", &emitter.spawnRandomness.x, 0.1f, 0.0f, 100.0f);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+    {
+        ImGui::TextUnformatted("Adjusts how much the initial velocity of the spawned particles is randomized");
+        ImGui::TextUnformatted("on the x, y and z axis.");
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Formula:");
+        ImGui::TextUnformatted("particle.velocity = emitter.velocity + noise3DValue * emitter.spawnRandomness");
+
+        ImGui::EndTooltip();
+    }
+    ImGui::DragFloat3("Velocity Randomness##EmitterPresetEditor", &emitter.velocityRandomness.x, 0.1f, 0.0f, 100.0f);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+    {
+        ImGui::TextUnformatted("Adjusts how much the velocity of the particles during simulation is randomized");
+        ImGui::TextUnformatted("on the x, y and z axis.");
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Formula:");
+        ImGui::TextUnformatted("particle.velocity += noise3DValue * particle.velocityRandomness");
+        ImGui::TextUnformatted("particle.position += particle.velocity * deltaTime");
+
+        ImGui::EndTooltip();
+    }
     ImGui::ColorPicker3("Color##Particle Emitter", &emitter.color.x);
     ImGui::DragFloat("Color Multiplier#Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
 }

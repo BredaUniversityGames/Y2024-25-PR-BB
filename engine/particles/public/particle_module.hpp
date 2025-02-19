@@ -31,6 +31,8 @@ enum class EmitterPresetID : uint8_t
     eDust,
     eImpact,
     eRay,
+    eStab,
+    eShotgunShoot,
     eNone
 };
 
@@ -56,15 +58,16 @@ private:
 
     struct EmitterPreset
     {
-        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // 2d size + velocity
+        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // 2d size + size velocity
         float mass = 1.0f;
-        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle + velocity
+        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle + angle velocity
         float maxLife = 5.0f;
         float emitDelay = 1.0f;
         uint32_t count = 0;
         uint32_t materialIndex = 0;
-        glm::vec3 randomness = { 1.0f, 1.0f, 1.0f }; // y is inused as of now for randomness
+        glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
         uint32_t flags = 0;
+        glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color + color multiplier
         std::string name = "Emitter Preset";
     };

@@ -44,6 +44,10 @@ constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
 constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 11;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
 constexpr uint32_t MAX_BONES = 1 << 14;
+constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 256;
+
+constexpr uint32_t CLUSTER_X = 16, CLUSTER_Y = 9, CLUSTER_Z = 24;
+constexpr uint32_t CLUSTER_SIZE = CLUSTER_X * CLUSTER_Y * CLUSTER_Z;
 
 struct DrawIndexedIndirectCommand
 {
@@ -60,15 +64,20 @@ public:
     NON_MOVABLE(GPUScene);
 
     void Update(uint32_t frameIndex);
+    void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetSkinnedInstancesDescriptorSet(uint32_t frameIndex) const { return _skinnedInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
+    const vk::DescriptorSet& GetClusterDescriptorSet() const { return _clusterData.descriptorSet; }
+    const vk::DescriptorSet& GetClusterCullingDescriptorSet(uint32_t frameIndex) const { return _clusterCullingData.descriptorSets.at(frameIndex); }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
     const vk::DescriptorSetLayout& GetHZBDescriptorSetLayout() const { return _hzbImageDSL; }
+    const vk::DescriptorSetLayout& GetClusterDescriptorSetLayout() const { return _clusterDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetClusterCullingDescriptorSetLayout() const { return _clusterCullingDescriptorSetLayout; }
 
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDSL; }
     ResourceHandle<Buffer> StaticDrawBuffer(uint32_t frameIndex) const { return _staticDraws[frameIndex].buffer; }
@@ -81,6 +90,9 @@ public:
 
     uint32_t StaticDrawCount() const { return _staticDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& StaticDrawCommands() const { return _staticDrawCommands; }
+    ResourceHandle<Buffer>& GetClusterBuffer() { return _clusterData.buffer; }
+    ResourceHandle<Buffer>& GetClusterCullingBuffer(uint32_t index) { return _clusterCullingData.buffers.at(index); }
+    ResourceHandle<Buffer>& GetGlobalIndexBuffer() { return _clusterCullingData.globalIndexBuffer; }
 
     uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
@@ -98,7 +110,9 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
 
-    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
+    ResourceHandle<GPUImage> StaticShadow() const { return _staticShadowImage; }
+    ResourceHandle<GPUImage> DynamicShadow() const { return _dynamicShadowImage; }
+    bool ShouldUpdateShadows() const { return _shouldUpdateShadows; }
 
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
     CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
@@ -115,6 +129,8 @@ private:
 
         glm::vec4 direction;
         glm::vec4 color;
+        float poissonWorldOffset;
+        float poissonConstant;
     };
 
     struct alignas(16) PointLightData
@@ -122,7 +138,7 @@ private:
         glm::vec3 position;
         float range;
         glm::vec3 color;
-        float attenuation;
+        float intensity;
     };
 
     struct alignas(16) PointLightArray
@@ -138,20 +154,22 @@ private:
         uint32_t irradianceIndex;
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
-        uint32_t shadowMapIndex;
+        uint32_t staticShadowMapIndex;
+        uint32_t dynamicShadowMapIndex;
 
         glm::vec3 fogColor;
         float fogDensity;
         float fogHeight;
     };
 
-    struct alignas(16) InstanceData
+    struct alignas(32) InstanceData
     {
         glm::mat4 model;
 
         uint32_t materialIndex;
         float boundingRadius;
         uint32_t boneOffset;
+        bool isStaticDraw;
     };
 
     struct FrameData
@@ -164,6 +182,19 @@ private:
     {
         ResourceHandle<Buffer> buffer;
         vk::DescriptorSet descriptorSet;
+    };
+
+    struct ClusterData
+    {
+        ResourceHandle<Buffer> buffer;
+        vk::DescriptorSet descriptorSet;
+    };
+
+    struct ClusterCullingData
+    {
+        std::array<ResourceHandle<Buffer>, 2> buffers;
+        ResourceHandle<Buffer> globalIndexBuffer;
+        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
     };
 
     std::shared_ptr<GraphicsContext> _context;
@@ -181,8 +212,15 @@ private:
     vk::DescriptorSetLayout _pointLightDSL;
     std::array<PointLightFrameData, MAX_FRAMES_IN_FLIGHT> _pointLightFrameData;
 
+    vk::DescriptorSetLayout _clusterDescriptorSetLayout;
+    ClusterData _clusterData;
+
+    vk::DescriptorSetLayout _clusterCullingDescriptorSetLayout;
+    ClusterCullingData _clusterCullingData;
+
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
+    bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
@@ -190,7 +228,8 @@ private:
     std::unique_ptr<CameraBatch> _mainCameraBatch;
     std::unique_ptr<CameraBatch> _shadowCameraBatch;
 
-    ResourceHandle<GPUImage> _shadowImage;
+    ResourceHandle<GPUImage> _staticShadowImage;
+    ResourceHandle<GPUImage> _dynamicShadowImage;
     ResourceHandle<Sampler> _shadowSampler;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
@@ -211,27 +250,36 @@ private:
 
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
+    void InitializeClusterBuffer();
+    void InitializeClusterCullingBuffers();
     void InitializeObjectInstancesBuffers();
     void InitializeSkinBuffers();
 
     void CreateSceneDescriptorSetLayout();
     void CreatePointLightDescriptorSetLayout();
+    void CreateClusterDescriptorSetLayout();
+    void CreateClusterCullingDescriptorSetLayout();
     void CreateObjectInstanceDescriptorSetLayout();
     void CreateSkinDescriptorSetLayout();
     void CreateHZBDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
+    void CreateClusterDescriptorSet();
+    void CreateClusterCullingDescriptorSet();
     void CreateObjectInstancesDescriptorSets();
     void CreateSkinDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdatePointLightDescriptorSet(uint32_t frameIndex);
+    void UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
     void UpdateSkinDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
     void CreatePointLightBuffer();
+    void CreateClusterBuffer();
+    void CreateClusterCullingBuffers();
     void CreateObjectInstancesBuffers();
     void CreateSkinBuffers();
 

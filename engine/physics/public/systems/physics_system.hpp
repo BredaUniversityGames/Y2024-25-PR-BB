@@ -11,12 +11,12 @@ struct RigidbodyComponent;
 struct CPUModel;
 template <typename T>
 struct CPUMesh;
-class ModelLoader;
+
 class PhysicsSystem : public SystemInterface
 {
 public:
     PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& physicsModule);
-    ~PhysicsSystem();
+    ~PhysicsSystem() = default;
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 
@@ -30,6 +30,7 @@ public:
     void Inspect() override;
     void InspectRigidBody(RigidbodyComponent& rb);
 
+    entt::entity _playerEntity = entt::null;
     std::string_view GetName() override { return "PhysicsSystem"; }
 
 private:
@@ -39,7 +40,6 @@ private:
     // for loading mesh data or convex data into the scene. returns a vector of rigidbodies
     std::vector<RigidbodyComponent> LoadBodiesRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
 
-    std::unique_ptr<ModelLoader> _collisionLoader;
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;

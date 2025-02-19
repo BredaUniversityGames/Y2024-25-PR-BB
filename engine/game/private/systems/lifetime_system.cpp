@@ -1,7 +1,7 @@
-#include "lifetime_system.hpp"
+#include "systems/lifetime_system.hpp"
 
 #include "ecs_module.hpp"
-#include "lifetime_component.hpp"
+#include "systems/lifetime_component.hpp"
 
 void LifetimeSystem::Update(ECSModule& ecs, float dt)
 {

@@ -7,7 +7,7 @@
 #include "ecs_module.hpp"
 #include "gpu_resources.hpp"
 
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -97,7 +97,29 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragFloat2("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Size velocity##EmitterPresetEditor", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Randomness##EmitterPresetEditor", &selectedPreset.randomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Spawn Randomness##EmitterPresetEditor", &selectedPreset.spawnRandomness.x, 0.1f, 0.0f, 100.0f);
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Adjusts how much the initial velocity of the spawned particles is randomized");
+            ImGui::TextUnformatted("on the x, y and z axis.");
+            ImGui::Spacing();
+            ImGui::TextUnformatted("Formula:");
+            ImGui::TextUnformatted("particle.velocity = emitter.velocity + noise3DValue * emitter.spawnRandomness");
+
+            ImGui::EndTooltip();
+        }
+        ImGui::DragFloat3("Velocity Randomness##EmitterPresetEditor", &selectedPreset.velocityRandomness.x, 0.1f, 0.0f, 100.0f);
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Adjusts how much the velocity of the particles during simulation is randomized");
+            ImGui::TextUnformatted("on the x, y and z axis.");
+            ImGui::Spacing();
+            ImGui::TextUnformatted("Formula:");
+            ImGui::TextUnformatted("particle.velocity += noise3DValue * particle.velocityRandomness");
+            ImGui::TextUnformatted("particle.position += particle.velocity * deltaTime");
+
+            ImGui::EndTooltip();
+        }
         ImGui::ColorPicker3("Color##EmitterPresetEditor", &selectedPreset.color.x);
         ImGui::DragFloat("Color Multiplier#EmitterPresetEditor", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 

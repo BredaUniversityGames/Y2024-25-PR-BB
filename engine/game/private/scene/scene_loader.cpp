@@ -1,6 +1,8 @@
-#include "scene_loader.hpp"
+#include "scene/scene_loader.hpp"
 
 #include "animation.hpp"
+#include "components/animation_transform_component.hpp"
+#include "components/is_static_draw.hpp"
 #include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
@@ -11,18 +13,14 @@
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
+#include "model_loading.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-
-#include "components/animation_transform_component.hpp"
+#include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
-#include "vertex.hpp"
 
 #include <entt/entity/entity.hpp>
-#include <glm/glm.hpp>
-#include <single_time_commands.hpp>
 
 class RecursiveNodeLoader
 {
@@ -60,6 +58,7 @@ public:
             {
             case MeshType::eSTATIC:
                 _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(currentNode.meshIndex.value().second);
+                _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
 
@@ -176,7 +175,7 @@ private:
     }
 };
 
-entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, std::vector<Animation> animations)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
 {
     entt::entity rootEntity = ecs.GetRegistry().create();
 
@@ -218,4 +217,60 @@ entt::entity SceneLoading::LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPU
     }
 
     return rootEntity;
+}
+
+entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<GPUModel> gpuModel)
+{
+    auto& ecsModule = engine.GetModule<ECSModule>();
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    const GPUModel& gpuModelResource = *modelResourceManager.Access(gpuModel);
+
+    return LoadModelIntoECSAsHierarchy(ecsModule, gpuModelResource, cpuModel, cpuModel.hierarchy, cpuModel.animations);
+}
+
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels)
+{
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto gpuModels = rendererModule.LoadModels(cpuModels);
+
+    if (cpuModels.size() != gpuModels.size())
+    {
+        throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
+    }
+
+    return LoadModels(engine, cpuModels, gpuModels);
+}
+
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels, const std::vector<ResourceHandle<GPUModel>>& gpuModels)
+{
+    std::vector<entt::entity> entities {};
+    entities.reserve(cpuModels.size());
+
+    for (uint32_t i = 0; i < cpuModels.size(); ++i)
+    {
+        entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
+    }
+
+    return entities;
+}
+
+std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
+{
+    std::vector<CPUModel> cpuModels {};
+    cpuModels.reserve(paths.size());
+
+    for (const auto& path : paths)
+    {
+        {
+            ZoneScoped;
+
+            std::string zone = path + " CPU upload";
+            ZoneName(zone.c_str(), 128);
+
+            cpuModels.push_back(ModelLoading::LoadGLTF(path));
+        }
+    }
+
+    return LoadModels(engine, cpuModels);
 }

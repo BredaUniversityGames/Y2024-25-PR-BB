@@ -28,8 +28,6 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
     config.includePaths.emplace_back("./game/");
 
     _context = std::make_unique<ScriptingContext>(config);
-    _mainModule = std::make_unique<MainScript>();
-
     _engineBindingsPath = fileIO::CanonicalizePath("game/engine_api.wren");
 
     return ModuleTickOrder::ePreTick;
@@ -39,9 +37,9 @@ void ScriptingModule::Tick(Engine& engine)
 {
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
 
-    if (_mainModule->IsValid())
+    if (_mainModule)
     {
-        _mainModule->Update(&engine, dt);
+        _mainModule->Update(dt);
         _context->FlushOutputStream();
     }
 }
@@ -51,19 +49,18 @@ void ScriptingModule::SetMainScript(Engine& e, const std::string& path)
     _mainEngineScript = path;
     if (auto result = _context->RunScript(_mainEngineScript))
     {
-        _mainModule->SetMainScript(_context->GetVM(), result.value(), "Main");
-        _mainModule->InitMainScript(&e);
+        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
     }
 }
 
 void ScriptingModule::HotReload(Engine& e)
 {
+    _mainModule.reset();
     _context->Reset();
     BindEngineAPI(GetForeignAPI());
 
     if (auto result = _context->RunScript(_mainEngineScript))
     {
-        _mainModule->SetMainScript(_context->GetVM(), result.value(), "Main");
-        _mainModule->InitMainScript(&e);
+        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
     }
 };
