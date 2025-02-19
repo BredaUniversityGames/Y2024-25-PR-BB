@@ -1,6 +1,7 @@
 #include "scripting_context.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
+#include "profile_macros.hpp"
 
 #include <filesystem>
 
