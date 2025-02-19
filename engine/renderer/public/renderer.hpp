@@ -24,6 +24,8 @@ class FXAAPass;
 class UIPass;
 class GaussianBlurPass;
 class ShadowPass;
+class ClusterGenerationPass;
+class ClusterLightCullingPass;
 class IBLPass;
 class ParticlePass;
 class PresentationPass;
@@ -58,6 +60,7 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
+    ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
     GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();
@@ -94,6 +97,8 @@ private:
     std::unique_ptr<ParticlePass> _particlePass;
     std::unique_ptr<SSAOPass> _ssaoPass;
     std::unique_ptr<PresentationPass> _presentationPass;
+    std::unique_ptr<ClusterGenerationPass> _clusterGenerationPass;
+    std::unique_ptr<ClusterLightCullingPass> _clusterLightCullingPass;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;

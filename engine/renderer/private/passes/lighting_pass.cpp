@@ -22,7 +22,9 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.ssaoIndex = ssaoTarget.Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
-    _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.Shadow())->width;
+    _pushConstants.screenSize = glm::vec2 { _gBuffers.Size().x, _gBuffers.Size().y };
+    _pushConstants.shadowMapSize = _context->Resources()->ImageResourceManager().Access(scene.StaticShadow())->width;
+    _pushConstants.clusterDimensions = glm::ivec3 { CLUSTER_X, CLUSTER_Y, CLUSTER_Z };
 
     vk::PhysicalDeviceProperties properties {};
     _context->VulkanContext()->PhysicalDevice().getProperties(&properties);
@@ -69,6 +71,7 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetPointLightDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 5, { scene.gpuScene->GetClusterCullingDescriptorSet(currentFrame) }, {});
 
     commandBuffer.draw(3, 1, 0, 0);
 
