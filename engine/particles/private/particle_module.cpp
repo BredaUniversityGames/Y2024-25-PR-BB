@@ -180,12 +180,6 @@ void ParticleModule::LoadEmitterPresets()
         preset.name = "Dust";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
-        ParticleBurst testBurst;
-        testBurst.count = 500;
-        testBurst.loop = true;
-        testBurst.startTime = 1.0f;
-        testBurst.maxInterval = 2.0f;
-        preset.bursts.emplace_back(testBurst);
 
         _emitterPresets.emplace_back(preset);
     }
@@ -303,5 +297,29 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
         _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
+    }
+}
+
+void ParticleModule::SpawnBurst(entt::entity entity, uint32_t count, float maxInterval, float startTime, bool loop, uint32_t cycles)
+{
+    ParticleBurst burst;
+    burst.count = count;
+    burst.maxInterval = maxInterval;
+    burst.loop = loop;
+    burst.cycles = cycles;
+    burst.startTime = startTime;
+    SpawnBurst(entity, std::move(burst));
+}
+
+void ParticleModule::SpawnBurst(entt::entity entity, const ParticleBurst& burst)
+{
+    if (_ecs->GetRegistry().all_of<ParticleEmitterComponent>(entity))
+    {
+        auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
+        emitter.bursts.emplace_back(burst);
+    }
+    else
+    {
+        bblog::error("Particle Emitter component from entity %i not found!", static_cast<size_t>(entity));
     }
 }

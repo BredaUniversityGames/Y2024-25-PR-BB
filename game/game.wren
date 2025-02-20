@@ -70,6 +70,12 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
+        __testEmitter = engine.GetECS().NewEntity()
+        {   // Test emitter
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        }
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
     }
@@ -101,6 +107,7 @@ class Main {
             var start = playerTransform.translation + direction * Vec3.new(2.0, 2.0, 2.0)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, __rayDistance)
             var end = start + direction * __rayDistanceVector
+            engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
             if(!rayHitInfo.isEmpty) {
                 end = rayHitInfo[0].position
                 var entity = engine.GetECS().NewEntity()

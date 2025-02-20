@@ -274,9 +274,11 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
                 _ecs.GetRegistry().remove<ActiveEmitterTag>(entity);
             }
         }
-        for (auto it = component.bursts.begin(); it != component.bursts.end(); ++it)
+        for (auto it = component.bursts.begin(); it != component.bursts.end();)
         {
-            auto& burst = *it;
+            auto copyIt = it;
+            it++;
+            auto& burst = *copyIt;
             if (burst.currentInterval < 0.0f)
             {
                 if (burst.cycles > 0 || burst.loop)
@@ -293,8 +295,7 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
                 }
                 else
                 {
-                    component.bursts.erase(it);
-                    --it;
+                    component.bursts.erase(copyIt);
                 }
             }
         }

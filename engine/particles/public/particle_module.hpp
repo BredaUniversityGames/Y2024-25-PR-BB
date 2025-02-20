@@ -48,6 +48,8 @@ public:
     void LoadEmitterPresets();
     void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
     void SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
+    void SpawnBurst(entt::entity entity, const ParticleBurst& burst);
+    void SpawnBurst(entt::entity entity, uint32_t count, float maxInterval, float startTime = 0.0f, bool loop = true, uint32_t cycles = 0);
 
 private:
     std::shared_ptr<GraphicsContext> _context;
