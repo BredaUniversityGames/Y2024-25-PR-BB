@@ -52,6 +52,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         scripting.SetMainScript(instance, "game/game.wren");
     }
 
+    instance.GetModule<TimeModule>().ResetTimer();
     bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
