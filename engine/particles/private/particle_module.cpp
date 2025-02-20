@@ -180,6 +180,12 @@ void ParticleModule::LoadEmitterPresets()
         preset.name = "Dust";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
+        ParticleBurst testBurst;
+        testBurst.count = 20;
+        testBurst.loop = true;
+        testBurst.startTime = 1.0f;
+        testBurst.maxInterval = 2.0f;
+        preset.bursts.emplace_back(testBurst);
 
         _emitterPresets.emplace_back(preset);
     }

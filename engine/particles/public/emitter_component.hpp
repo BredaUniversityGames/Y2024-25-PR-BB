@@ -15,7 +15,7 @@ struct ParticleBurst
     uint32_t cycles = 0;
     float maxInterval = 0.0f;
     float currentInterval = 0.0f;
-    bool loop = false;
+    bool loop = true;
 };
 
 struct ParticleEmitterComponent
