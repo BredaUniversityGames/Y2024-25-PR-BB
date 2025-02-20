@@ -3,6 +3,7 @@
 #include "resource_manager.hpp"
 
 #include "common.hpp"
+#include "emitter_component.hpp"
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"
@@ -14,7 +15,6 @@ struct GPUImage;
 class ECSModule;
 class PhysicsModule;
 
-// TODO: make bitflag utility base class if we want to use it in more places
 enum class SpawnEmitterFlagBits : uint8_t
 {
     eEmitOnce = 1 << 0,
@@ -56,9 +56,9 @@ private:
 
     struct EmitterPreset
     {
-        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // 2d size + size velocity
+        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // size (2) + size velocity (1)
         float mass = 1.0f;
-        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle + angle velocity
+        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle (1) + angle velocity (1)
         float maxLife = 5.0f;
         float emitDelay = 1.0f;
         uint32_t count = 0;
@@ -66,7 +66,8 @@ private:
         glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
         uint32_t flags = 0;
         glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
-        glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color + color multiplier
+        glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
+        std::list<ParticleBurst> bursts = {};
         std::string name = "Emitter Preset";
     };
 

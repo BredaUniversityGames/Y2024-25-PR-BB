@@ -5,7 +5,6 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
-#include "emitter_component.hpp"
 #include "engine.hpp"
 #include "gpu_resources.hpp"
 #include "graphics_context.hpp"
@@ -24,7 +23,7 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
     _context = engine.GetModule<RendererModule>().GetRenderer()->GetContext();
     _ecs = &engine.GetModule<ECSModule>();
 
-    return ModuleTickOrder::ePostRender;
+    return ModuleTickOrder::ePreRender;
 }
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
@@ -43,14 +42,6 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for (const auto entity : activeView)
     {
         auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
-
-        // first remove active tags from inactive emitters and continue
-        if (emitter.emitOnce)
-        {
-            _ecs->GetRegistry().remove<ParticleEmitterComponent>(entity);
-            _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
-            continue;
-        }
 
         // update position and velocity
         if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
@@ -79,11 +70,19 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         }
 
         // update timers
-        if (emitter.currentEmitDelay < 0.0f)
+        const float deltaTime = static_cast<double>(engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3);
+        emitter.currentEmitDelay -= deltaTime;
+        for (auto& burst : emitter.bursts)
         {
-            emitter.currentEmitDelay = emitter.maxEmitDelay;
+            if (burst.startTime > 0.0f)
+            {
+                burst.startTime -= deltaTime;
+            }
+            else
+            {
+                burst.currentInterval -= deltaTime;
+            }
         }
-        emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
     }
 }
 
@@ -170,7 +169,7 @@ void ParticleModule::LoadEmitterPresets()
         auto image = GetEmitterImage("point_03.png");
 
         EmitterPreset preset;
-        preset.emitDelay = 1.0f;
+        preset.emitDelay = 0.5f;
         preset.mass = 0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
@@ -181,12 +180,17 @@ void ParticleModule::LoadEmitterPresets()
         preset.name = "Dust";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
+        ParticleBurst testBurst;
+        testBurst.count = 500;
+        testBurst.loop = true;
+        testBurst.startTime = 1.0f;
+        testBurst.maxInterval = 2.0f;
+        preset.bursts.emplace_back(testBurst);
 
         _emitterPresets.emplace_back(preset);
     }
 
     {
-        // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("star.png");
 
         // hardcoded test emitter preset for now
@@ -207,7 +211,6 @@ void ParticleModule::LoadEmitterPresets()
     }
 
     {
-        // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("swoosh.png");
 
         // hardcoded test emitter preset for now
@@ -293,6 +296,8 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     component.maxEmitDelay = preset.emitDelay;
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;
+    component.count = emitter.count;
+    std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
 
     _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
