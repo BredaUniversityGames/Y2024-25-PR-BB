@@ -10,6 +10,10 @@
 #define NON_MOVABLE(ClassName)       \
     ClassName(ClassName&&) = delete; \
     ClassName& operator=(ClassName&&) = delete;
+
+#define DEFAULT_MOVABLE(ClassName)             \
+    ClassName(ClassName&&) noexcept = default; \
+    ClassName& operator=(ClassName&&) noexcept = default;
 // NOLINTEND
 
 // Attribute macros

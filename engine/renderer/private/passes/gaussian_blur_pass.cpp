@@ -45,7 +45,7 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
     TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian Blur Pass");
     //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
     const GPUImage* verticalTarget = _context->Resources()->ImageResourceManager().Access(_targets[0]);
-    util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    util::TransitionImageLayout(commandBuffer, verticalTarget->imageAlloc.image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
     vk::DescriptorSet descriptorSet = _sourceDescriptorSets[currentFrame];
 
@@ -63,12 +63,12 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
             descriptorSet = _targetDescriptorSets[horizontalTargetIndex][currentFrame];
             const GPUImage* source = _context->Resources()->ImageResourceManager().Access(_targets[horizontalTargetIndex]);
 
-            util::TransitionImageLayout(commandBuffer, source->image, source->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+            util::TransitionImageLayout(commandBuffer, source->imageAlloc.image, source->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
             // The first vertical pass, the target is already set up for color attachment
             if (i != 1)
             {
-                util::TransitionImageLayout(commandBuffer, target->image, target->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+                util::TransitionImageLayout(commandBuffer, target->imageAlloc.image, target->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
             }
         }
 

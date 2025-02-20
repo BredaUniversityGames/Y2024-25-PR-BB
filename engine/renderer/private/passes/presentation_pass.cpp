@@ -22,10 +22,10 @@ void PresentationPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNU
 
     util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(),
         vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, 0, 1);
-    util::TransitionImageLayout(commandBuffer, inputImage->image, inputImage->format,
+    util::TransitionImageLayout(commandBuffer, inputImage->imageAlloc.image, inputImage->format,
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
 
-    util::CopyImageToImage(commandBuffer, inputImage->image, _swapChain.GetImage(scene.targetSwapChainImageIndex), vk::Extent2D { inputImage->width, inputImage->height }, _swapChain.GetExtent());
+    util::CopyImageToImage(commandBuffer, inputImage->imageAlloc.image, _swapChain.GetImage(scene.targetSwapChainImageIndex), vk::Extent2D { inputImage->width, inputImage->height }, _swapChain.GetExtent());
 
     util::TransitionImageLayout(commandBuffer, swapChainImage, _swapChain.GetFormat(),
         vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);

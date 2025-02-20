@@ -1,19 +1,18 @@
 ﻿#include "passes/ssao_pass.hpp"
 
 #include "camera.hpp"
+#include "commands/single_time_commands.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "resource_management/sampler_resource_manager.hpp"
 #include "settings.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
-
-#include "resource_management/buffer_resource_manager.hpp"
-#include "resource_management/sampler_resource_manager.hpp"
 #include <random>
-#include <single_time_commands.hpp>
 
 SSAOPass::SSAOPass(const std::shared_ptr<GraphicsContext>& context, const Settings::SSAO& settings, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()

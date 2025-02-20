@@ -1,9 +1,12 @@
 #pragma once
 
+#include "commands/single_time_commands.hpp"
 #include "math_util.hpp"
 #include "resource_manager.hpp"
-#include "single_time_commands.hpp"
 #include "vulkan_include.hpp"
+
+#include "resources/image.hpp"
+#include "resources/sampler.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -16,124 +19,6 @@ enum class MeshType : uint8_t
 {
     eSTATIC,
     eSKINNED,
-};
-
-struct SamplerCreation
-{
-    SamplerCreation& SetGlobalAddressMode(vk::SamplerAddressMode addressMode);
-
-    std::string name {};
-    vk::SamplerAddressMode addressModeU { vk::SamplerAddressMode::eRepeat };
-    vk::SamplerAddressMode addressModeW { vk::SamplerAddressMode::eRepeat };
-    vk::SamplerAddressMode addressModeV { vk::SamplerAddressMode::eRepeat };
-    vk::Filter minFilter { vk::Filter::eLinear };
-    vk::Filter magFilter { vk::Filter::eLinear };
-    bool useMaxAnisotropy { true };
-    bool anisotropyEnable { true };
-    vk::BorderColor borderColor { vk::BorderColor::eIntOpaqueBlack };
-    bool unnormalizedCoordinates { false };
-    bool compareEnable { false };
-    vk::CompareOp compareOp { vk::CompareOp::eAlways };
-    vk::SamplerMipmapMode mipmapMode { vk::SamplerMipmapMode::eLinear };
-    float mipLodBias { 0.0f };
-    float minLod { 0.0f };
-    float maxLod { 1.0f };
-    vk::SamplerReductionMode reductionMode { vk::SamplerReductionMode::eWeightedAverage };
-};
-
-struct Sampler
-{
-    Sampler(const SamplerCreation& creation, const std::shared_ptr<VulkanContext>& context);
-    ~Sampler();
-
-    Sampler(Sampler&& other) noexcept;
-    Sampler& operator=(Sampler&& other) noexcept;
-
-    NON_COPYABLE(Sampler);
-
-    vk::Sampler sampler;
-
-private:
-    std::shared_ptr<VulkanContext> _context;
-};
-
-enum class ImageType
-{
-    e2D,
-    eDepth,
-    eCubeMap,
-    eShadowMap
-};
-
-struct CPUImage
-{
-    std::vector<std::byte> initialData;
-    uint16_t width { 1 };
-    uint16_t height { 1 };
-    uint16_t depth { 1 };
-    uint16_t layers { 1 };
-    uint8_t mips { 1 };
-    vk::ImageUsageFlags flags { 0 };
-    bool isHDR;
-
-    vk::Format format { vk::Format::eUndefined };
-    ImageType type { ImageType::e2D };
-
-    std::string name;
-
-    /**
-     * loads the pixel data, width, height and format from a specifed png file.
-     * assigned format can be R8G8B8Unorm or vk::Format::eR8G8B8A8Unorm.
-     * @param path filepath for the png file, .png extention required.
-     */
-    CPUImage& FromPNG(std::string_view path);
-    CPUImage& SetData(std::vector<std::byte> data);
-    CPUImage& SetSize(uint16_t width, uint16_t height, uint16_t depth = 1);
-    CPUImage& SetMips(uint8_t mips);
-    CPUImage& SetFlags(vk::ImageUsageFlags flags);
-    CPUImage& SetFormat(vk::Format format);
-    CPUImage& SetName(std::string_view name);
-    CPUImage& SetType(ImageType type);
-};
-
-struct GPUImage
-{
-    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* commands = nullptr);
-    ~GPUImage();
-
-    GPUImage(GPUImage&& other) noexcept;
-    GPUImage& operator=(GPUImage&& other) noexcept;
-
-    NON_COPYABLE(GPUImage);
-
-    struct Layer
-    {
-        vk::ImageView view;
-        std::vector<vk::ImageView> mipViews {};
-    };
-
-    vk::Image image {};
-    std::vector<Layer> layerViews {};
-    vk::ImageView view; // Same as first view in view, or refers to a cubemap view
-    VmaAllocation allocation {};
-    ResourceHandle<Sampler> sampler {};
-
-    uint16_t width { 1 };
-    uint16_t height { 1 };
-    uint16_t depth { 1 };
-    uint16_t layers { 1 };
-    uint8_t mips { 1 };
-    vk::ImageUsageFlags flags { 0 };
-    bool isHDR;
-    ImageType type;
-
-    vk::Format format { vk::Format::eUndefined };
-    vk::ImageType vkType { vk::ImageType::e2D };
-
-    std::string name;
-
-private:
-    std::shared_ptr<VulkanContext> _context;
 };
 
 struct MaterialCreation

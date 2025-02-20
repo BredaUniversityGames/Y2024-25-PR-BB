@@ -27,6 +27,7 @@ add_library(VulkanAPI INTERFACE)
 target_link_libraries(VulkanAPI INTERFACE ${Vulkan_LIBRARY})
 target_include_directories(VulkanAPI INTERFACE Vulkan-Headers/include)
 target_compile_definitions(VulkanAPI INTERFACE VULKAN_HPP_NO_CONSTRUCTORS)
+target_compile_definitions(VulkanAPI INTERFACE VULKAN_HPP_HANDLES_MOVE_EXCHANGE)
 
 # Vulkan Memory allocator
 FetchContent_Declare(

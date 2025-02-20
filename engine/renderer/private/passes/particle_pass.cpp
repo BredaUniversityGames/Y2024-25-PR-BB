@@ -2,6 +2,7 @@
 
 #include "bloom_settings.hpp"
 #include "camera.hpp"
+#include "commands/single_time_commands.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "glm/glm.hpp"
@@ -11,7 +12,6 @@
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
-#include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 

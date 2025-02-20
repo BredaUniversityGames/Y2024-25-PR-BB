@@ -1,4 +1,4 @@
-#include "single_time_commands.hpp"
+#include "commands/single_time_commands.hpp"
 #include "graphics_context.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
@@ -48,7 +48,7 @@ void SingleTimeCommands::Submit()
     assert(_stagingAllocations.size() == _stagingBuffers.size());
     for (size_t i = 0; i < _stagingBuffers.size(); ++i)
     {
-        util::vmaDestroyBuffer(_context->MemoryAllocator(), _stagingBuffers[i], _stagingAllocations[i]);
+        vma::DestroyBuffer(_context->MemoryAllocator(), _stagingBuffers[i], _stagingAllocations[i]);
     }
     _submitted = true;
 }

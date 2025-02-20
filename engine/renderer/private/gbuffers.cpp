@@ -90,6 +90,6 @@ void GBuffers::TransitionLayout(vk::CommandBuffer commandBuffer, vk::ImageLayout
     {
         const GPUImage* image = _context->Resources()->ImageResourceManager().Access(attachment);
 
-        util::TransitionImageLayout(commandBuffer, image->image, image->format, oldLayout, newLayout);
+        util::TransitionImageLayout(commandBuffer, image->imageAlloc.image, image->format, oldLayout, newLayout);
     }
 }
