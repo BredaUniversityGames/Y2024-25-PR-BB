@@ -17,7 +17,14 @@ ModelResourceManager::ModelResourceManager(std::shared_ptr<VulkanContext> vkCont
 
 ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, BatchBuffer& staticBatchBuffer, BatchBuffer& skinnedBatchBuffer)
 {
-    GPUModel model;
+    // If a duplicate model already exists, we just return that one
+    auto itr = _loadedModels.find(data.name);
+    if (itr != _loadedModels.end())
+    {
+        return itr->second;
+    }
+
+    GPUModel model {};
 
     SingleTimeCommands commands { _vkContext };
 
@@ -80,5 +87,6 @@ ResourceHandle<GPUModel> ModelResourceManager::Create(const CPUModel& data, Batc
         commands.Submit();
     }
 
-    return ResourceManager::Create(std::move(model));
+    _loadedModels[data.name] = ResourceManager::Create(std::move(model));
+    return _loadedModels[data.name];
 }

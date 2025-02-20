@@ -2,12 +2,13 @@
 
 #include "cpu_resources.hpp"
 #include "resource_manager.hpp"
+
+#include <memory>
+
 class ImageResourceManager;
 class MaterialResourceManager;
 class MeshResourceManager;
 class BatchBuffer;
-
-#include <memory>
 
 class ModelResourceManager final : public ResourceManager<GPUModel>
 {
@@ -26,4 +27,6 @@ private:
     std::shared_ptr<MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<MeshResourceManager> _meshResourceManager;
     std::shared_ptr<VulkanContext> _vkContext;
+
+    std::unordered_map<std::string_view, ResourceHandle<GPUModel>> _loadedModels {};
 };
