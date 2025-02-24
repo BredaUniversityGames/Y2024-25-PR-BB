@@ -81,10 +81,10 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
         const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
         RigidbodyComponent rb;
         if (shape == eMESH)
-            rb = RigidbodyComponent(*_physicsModule.bodyInterface, entt::null, position, vertices, triangles);
+            rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices, triangles);
 
         if (shape == eCONVEXHULL)
-            rb = RigidbodyComponent(*_physicsModule.bodyInterface, entt::null, position, vertices);
+            rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices);
 
         // Assume worldMatrix is your 4x4 transformation matrix
         glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
@@ -105,12 +105,12 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
             skew,
             perspective);
 
-        auto result = _physicsModule.bodyInterface->GetShape(rb.bodyID)->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
+        auto result = _physicsModule.GetBodyInterface().GetShape(rb.bodyID)->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
         if (result.HasError())
             bblog::error(result.GetError().c_str());
 
-        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
-        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
         _ecs.GetRegistry()
             .emplace<RigidbodyComponent>(entity, rb);
     }
@@ -156,9 +156,9 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
 
     RigidbodyComponent rb;
     if (shapeType == eMESH)
-        rb = RigidbodyComponent(*_physicsModule.bodyInterface, entityToAttachTo, glm::vec3(0.0), vertices, triangles);
+        rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices, triangles);
     if (shapeType == eCONVEXHULL)
-        rb = RigidbodyComponent(*_physicsModule.bodyInterface, entityToAttachTo, glm::vec3(0.0), vertices);
+        rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices);
     return rb;
 }
 
@@ -174,8 +174,8 @@ void PhysicsSystem::CleanUp()
     for (const entt::entity entity : toDestroy)
     {
         const RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
-        _physicsModule.bodyInterface->RemoveBody(rb.bodyID);
-        _physicsModule.bodyInterface->DestroyBody(rb.bodyID);
+        _physicsModule.GetBodyInterface().RemoveBody(rb.bodyID);
+        _physicsModule.GetBodyInterface().DestroyBody(rb.bodyID);
         _ecs.GetRegistry().remove<RigidbodyComponent>(entity);
     }
 }
@@ -197,24 +197,24 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         // Decompose the matrix
         glm::decompose(worldMatrix, scale, rotationQuat, translation, skew, perspective);
 
-        _physicsModule.bodyInterface->SetPosition(rb.bodyID, JPH::Vec3(translation.x, translation.y, translation.z), JPH::EActivation::Activate);
-        _physicsModule.bodyInterface->SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetPosition(rb.bodyID, JPH::Vec3(translation.x, translation.y, translation.z), JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
 
         auto result = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
         if (result.HasError())
             bblog::error(result.GetError().c_str());
-        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetShape(rb.bodyID, result.Get(), false, JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetShape(rb.bodyID, result.Get(), false, JPH::EActivation::Activate);
     }
 
     // this part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
-    _physicsModule.physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
+    _physicsModule._physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
 
     // mark all active bodies to have their mesh updated
     for (auto active_body : activeBodies)
     {
-        const entt::entity entity = static_cast<entt::entity>(_physicsModule.bodyInterface->GetUserData(active_body));
-        if (_ecs.GetRegistry().valid(entity) && _physicsModule.bodyInterface->GetMotionType(active_body) != JPH::EMotionType::Static)
+        const entt::entity entity = static_cast<entt::entity>(_physicsModule.GetBodyInterface().GetUserData(active_body));
+        if (_ecs.GetRegistry().valid(entity) && _physicsModule.GetBodyInterface().GetMotionType(active_body) != JPH::EMotionType::Static)
         {
             _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
         }
@@ -227,12 +227,12 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
 
         // if somehow is now not active or is static lets remove the update component
-        if (!_physicsModule.bodyInterface->IsActive(rb.bodyID))
+        if (!_physicsModule.GetBodyInterface().IsActive(rb.bodyID))
             _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
-        if (_physicsModule.bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
+        if (_physicsModule.GetBodyInterface().GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
 
-        auto joltMatrix = _physicsModule.bodyInterface->GetWorldTransform(rb.bodyID);
+        auto joltMatrix = _physicsModule.GetBodyInterface().GetWorldTransform(rb.bodyID);
 
         // We cant support objects simulated by jolt and our hierarchy system at the same time
         RelationshipComponent& relationship = _ecs.GetRegistry().get<RelationshipComponent>(entity);
@@ -240,7 +240,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
             RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship.parent, entity);
 
         // Crazy jolt stuff that I dont like but it works to set the proper scale
-        JPH::BodyLockWrite lock(_physicsModule.physicsSystem->GetBodyLockInterface(), rb.bodyID);
+        JPH::BodyLockWrite lock(_physicsModule._physicsSystem->GetBodyLockInterface(), rb.bodyID);
         if (lock.Succeeded())
         {
             JPH::Body& body = lock.GetBody();
@@ -270,7 +270,7 @@ void PhysicsSystem::Inspect()
     static int amount = 1;
     static PhysicsShapes currentShape = eSPHERE;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
-    ImGui::Text("Active bodies: %u", _physicsModule.physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
+    ImGui::Text("Active bodies: %u", _physicsModule._physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
 
     ImGui::DragInt("Amount", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
@@ -295,22 +295,22 @@ void PhysicsSystem::Inspect()
         for (int i = 0; i < amount; i++)
         {
             entt::entity entity = _ecs.GetRegistry().create();
-            RigidbodyComponent rb(*_physicsModule.bodyInterface, entity, currentShape);
+            RigidbodyComponent rb(_physicsModule.GetBodyInterface(), entity, currentShape);
 
             NameComponent node;
             node.name = "Physics Entity";
             _ecs.GetRegistry().emplace<NameComponent>(entity, node);
             _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-            _physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
+            _physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
         }
     }
 
     if (ImGui::Button("Create Plane Entity"))
     {
-        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
 
         entt::entity entity = _ecs.GetRegistry().create();
-        RigidbodyComponent newRigidBody(*_physicsModule.bodyInterface, entity, plane_settings);
+        RigidbodyComponent newRigidBody(_physicsModule.GetBodyInterface(), entity, plane_settings);
         NameComponent node;
         node.name = "Plane Entity";
         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, newRigidBody);
@@ -327,39 +327,39 @@ void PhysicsSystem::Inspect()
 
 void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
 {
-    _physicsModule.bodyInterface->ActivateBody(rb.bodyID);
+    _physicsModule.GetBodyInterface().ActivateBody(rb.bodyID);
 
     ImGui::PushID(&rb.bodyID);
-    JPH::Vec3 position = _physicsModule.bodyInterface->GetPosition(rb.bodyID);
+    JPH::Vec3 position = _physicsModule.GetBodyInterface().GetPosition(rb.bodyID);
     float pos[3] = { position.GetX(), position.GetY(), position.GetZ() };
     if (ImGui::DragFloat3("Position", pos, 0.1f))
     {
-        _physicsModule.physicsSystem->GetBodyInterfaceNoLock().SetPosition(rb.bodyID, JPH::Vec3(pos[0], pos[1], pos[2]), JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetPosition(rb.bodyID, JPH::Vec3(pos[0], pos[1], pos[2]), JPH::EActivation::Activate);
     }
 
-    const auto joltRotation = _physicsModule.bodyInterface->GetRotation(rb.bodyID).GetEulerAngles();
+    const auto joltRotation = _physicsModule.GetBodyInterface().GetRotation(rb.bodyID).GetEulerAngles();
     float euler[3] = { joltRotation.GetX(), joltRotation.GetY(), joltRotation.GetZ() };
     if (ImGui::DragFloat3("Rotation", euler))
     {
         JPH::Quat newRotation = JPH::Quat::sEulerAngles(JPH::Vec3(euler[0], euler[1], euler[2]));
-        _physicsModule.bodyInterface->SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
+        _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
     }
 
     if (rb.shapeType == PhysicsShapes::eSPHERE)
     {
-        const auto& shape = _physicsModule.bodyInterface->GetShape(rb.bodyID);
+        const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
         float radius = shape->GetInnerRadius();
 
         if (ImGui::DragFloat("Radius", &radius, 0.1f))
         {
             radius = glm::max(radius, 0.01f);
-            _physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::SphereShape(radius), true, JPH::EActivation::Activate);
+            _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::SphereShape(radius), true, JPH::EActivation::Activate);
         }
     }
 
     if (rb.shapeType == PhysicsShapes::eBOX)
     {
-        const auto& shape = _physicsModule.bodyInterface->GetShape(rb.bodyID);
+        const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
         auto boxShape = JPH::StaticCast<JPH::BoxShape>(shape);
         if (boxShape == nullptr)
         {
@@ -372,11 +372,11 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
             size[0] = glm::max(size[0], 0.1f);
             size[1] = glm::max(size[1], 0.1f);
             size[2] = glm::max(size[2], 0.1f);
-            _physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
+            _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
         }
     }
 
-    JPH::EMotionType rbType = _physicsModule.bodyInterface->GetMotionType(rb.bodyID);
+    JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
     const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
     const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
 
@@ -387,15 +387,15 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
             bool isSelected = (rbType == static_cast<JPH::EMotionType>(n));
             if (ImGui::Selectable(rbTypeNames[n], isSelected))
             {
-                _physicsModule.bodyInterface->SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
+                _physicsModule.GetBodyInterface().SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
 
                 if (static_cast<JPH::EMotionType>(n) == JPH::EMotionType::Static)
                 {
-                    _physicsModule.bodyInterface->SetObjectLayer(rb.bodyID, PhysicsLayers::NON_MOVING);
+                    _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eNON_MOVING_OBJECT);
                 }
                 else
                 {
-                    _physicsModule.bodyInterface->SetObjectLayer(rb.bodyID, PhysicsLayers::MOVING);
+                    _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eMOVING_OBJECT);
                 }
             }
             if (isSelected)
@@ -404,7 +404,7 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         ImGui::EndCombo();
     }
 
-    ImGui::Text("Velocity: %f, %f, %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetX(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetY(), _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).GetZ());
-    ImGui::Text("Speed %f", _physicsModule.bodyInterface->GetLinearVelocity(rb.bodyID).Length());
+    ImGui::Text("Velocity: %f, %f, %f", _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetX(), _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetY(), _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetZ());
+    ImGui::Text("Speed %f", _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).Length());
     ImGui::PopID();
 }

@@ -1,4 +1,5 @@
 ﻿#include "components/rigidbody_component.hpp"
+#include "physics/collision_layers.hpp"
 
 // default creates a sphere at 0,2,0
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType, BodyType type)
@@ -11,11 +12,11 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
     {
         if (bodyType == eDYNAMIC)
         {
-            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
         }
         else if (bodyType == eSTATIC)
         {
-            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
         }
 
         bodySettings.mAllowDynamicOrKinematic = true;
@@ -25,11 +26,11 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
     {
         if (bodyType == eDYNAMIC)
         {
-            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
+            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
         }
         else if (bodyType == eSTATIC)
         {
-            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
+            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
         }
 
         // lets save thes shape reference
@@ -59,7 +60,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::Vec3Arg(position.x, position.y, position.z),
             JPH::QuatArg::sIdentity(),
             JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
+            eNON_MOVING_OBJECT);
     }
 
     JPH::MassProperties msp;
@@ -97,7 +98,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::Vec3Arg(position.x, position.y, position.z),
             JPH::QuatArg::sIdentity(),
             JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
+            eNON_MOVING_OBJECT);
     }
     JPH::MassProperties msp;
     msp.ScaleToMass(10.0f); // actual mass in kg
@@ -128,7 +129,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::Vec3Arg(position.x, position.y, position.z),
             JPH::QuatArg::sIdentity(),
             JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
+            eNON_MOVING_OBJECT);
     }
     else if (bodyType == eDYNAMIC)
     {
@@ -137,7 +138,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::Vec3(position.x, position.y, position.z),
             JPH::Quat::sIdentity(),
             JPH::EMotionType::Dynamic,
-            PhysicsLayers::MOVING);
+            eMOVING_OBJECT);
     }
 
     // lets save thes shape reference
