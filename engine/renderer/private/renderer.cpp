@@ -95,7 +95,10 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
     }
 
-    _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    {
+        ZoneScopedN("IBL pass creation");
+        _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    }
 
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();

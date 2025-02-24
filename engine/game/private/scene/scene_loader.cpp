@@ -154,7 +154,6 @@ entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<
 
 std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels)
 {
-
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto gpuModels = rendererModule.LoadModels(cpuModels);
 
