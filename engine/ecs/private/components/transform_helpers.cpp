@@ -1,6 +1,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/relationship_component.hpp"
 #include "components/transform_component.hpp"
+#include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
 #include "log.hpp"
 
@@ -303,4 +304,5 @@ void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entit
         }
     }
     reg.emplace_or_replace<ToBeUpdated>(entity);
+    reg.emplace_or_replace<WantsShadowsUpdated>(entity);
 }

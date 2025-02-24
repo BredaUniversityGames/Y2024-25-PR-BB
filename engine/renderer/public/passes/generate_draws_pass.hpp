@@ -15,10 +15,13 @@ struct RenderSceneDescription;
 class GenerateDrawsPass final : public FrameGraphRenderPass
 {
 public:
-    GenerateDrawsPass(const std::shared_ptr<GraphicsContext>& context, const CameraBatch& cameraBatch);
+    GenerateDrawsPass(const std::shared_ptr<GraphicsContext>& context, const CameraBatch& cameraBatch, const bool drawStatic, const bool drawDynamic);
     ~GenerateDrawsPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
+
+    void SetDrawStatic(bool drawStatic) { _shouldDrawStatic = drawStatic; }
+    void SetDrawDynamic(bool drawDynamic) { _shouldDrawDynamic = drawDynamic; }
 
     NON_COPYABLE(GenerateDrawsPass);
     NON_MOVABLE(GenerateDrawsPass);
@@ -30,6 +33,8 @@ private:
     vk::Pipeline _generateDrawsPipeline;
 
     bool _isPrepass = true;
+    bool _shouldDrawStatic = true;
+    bool _shouldDrawDynamic = true;
     const uint32_t _localComputeSize = 64;
 
     const CameraBatch& _cameraBatch;
@@ -41,6 +46,7 @@ private:
         uint32_t hzbIndex;
         uint32_t drawCommandsCount;
         uint32_t isReverseZ;
+        uint32_t drawStaticDraws;
     };
 
     void CreateCullingPipeline();
