@@ -71,7 +71,7 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(0);
+        VERSION(1);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -90,6 +90,12 @@ struct Settings
         float saturation;
         float vibrance;
         float hue;
+
+        // pixelization
+        float minPixelSize;
+        float maxPixelSize;
+        float pixelizationLevels;
+        float pixelizationDepthBias;
     } tonemapping;
 };
 
@@ -109,7 +115,7 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

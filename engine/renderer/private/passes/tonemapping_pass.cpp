@@ -55,6 +55,10 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.saturation = _settings.saturation;
     _pushConstants.vibrance = _settings.vibrance;
     _pushConstants.hue = _settings.hue;
+    _pushConstants.minPixelSize = _settings.minPixelSize;
+    _pushConstants.maxPixelSize = _settings.maxPixelSize;
+    _pushConstants.pixelizationLevels = _settings.pixelizationLevels;
+    _pushConstants.pixelizationDepthBias = _settings.pixelizationDepthBias;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,

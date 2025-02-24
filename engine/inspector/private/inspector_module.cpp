@@ -344,6 +344,12 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::DragFloat("Saturation", &tonemapping.saturation, 0.005f);
     ImGui::DragFloat("Vibrance", &tonemapping.vibrance, 0.005f);
     ImGui::SliderFloat("Hue", &tonemapping.hue, 0.0f, 1.0f);
+
+    // Pixelization
+    ImGui::DragFloat("Min Pixel Size", &tonemapping.minPixelSize, 0.01f);
+    ImGui::DragFloat("Max Pixel Size", &tonemapping.maxPixelSize, 0.01f);
+    ImGui::DragFloat("Pixelization Levels", &tonemapping.pixelizationLevels, 0.01f);
+    ImGui::DragFloat("Pixelization Depth Bias", &tonemapping.pixelizationDepthBias, 1.0f);
     ImGui::EndDisabled();
 
     ImGui::End();

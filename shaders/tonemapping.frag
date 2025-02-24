@@ -28,6 +28,13 @@ layout (push_constant) uniform PushConstants
     float saturation;
     float vibrance;
     float hue;
+
+    //pixelization
+    float minPixelSize;
+    float maxPixelSize;
+    float pixelizationLevels;
+    float pixelizationDepthBias;
+
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -49,7 +56,7 @@ int And(int a, int b);
 vec3 Vibrance(vec3 inCol, float vibrance);
 vec3 ShiftHue(in vec3 col, in float Shift);
 
-#define MIN_SIZE 2.0
+#define MIN_SIZE 1.0
 #define MAX_SIZE 4.0
 
 
@@ -74,10 +81,19 @@ void main()
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
     }
     // Prepare the circle parameters, cycling the circle size over time.
+    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT(pc.bloomTargetIndex)], newTexCoords).rgb;
     float depthSample = texture(bindless_depth_textures[nonuniformEXT(pc.depthIndex)], texCoords).r;
 
-    float diameter = mix(MIN_SIZE, MAX_SIZE, depthSample);
-    float radius = diameter / 2.0;
+    // Number of discrete pixelation levels
+    float levels = pc.pixelizationLevels;
+
+    // Clamp and quantize the depth sample to one of the discrete levels.
+    float t = clamp(depthSample * pc.pixelizationDepthBias, 0.0, 1.0);
+    t = floor(t * levels) / (levels - 1.0);
+
+    // Now use the quantized value in the mix function.
+    float diameter = mix(pc.minPixelSize, pc.maxPixelSize, t);
+
     vec2 center = vec2(0.0);
     vec2 iResolution = vec2(1920.0, 1080.0);
 
@@ -97,7 +113,7 @@ void main()
 
     vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], uv, -32.0).rgb;
 
-    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT(pc.bloomTargetIndex)], newTexCoords).rgb;
+
     hdrColor += bloomColor * bloomSettings.strength;
 
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);

@@ -46,6 +46,12 @@ private:
         float saturation;
         float vibrance;
         float hue;
+
+        // pixelization
+        float minPixelSize;
+        float maxPixelSize;
+        float pixelizationLevels;
+        float pixelizationDepthBias;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
