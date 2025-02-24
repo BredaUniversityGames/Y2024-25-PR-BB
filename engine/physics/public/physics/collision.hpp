@@ -1,18 +1,37 @@
 #pragma once
-#include "Jolt/Jolt.h"
+#include <Jolt/Jolt.h>
 
-// This is probably the simplest setup you can have
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
 
-enum PhysicsObjectLayer : JPH::ObjectLayer {
+enum PhysicsObjectLayer : JPH::ObjectLayer
+{
     eNON_MOVING_OBJECT,
     eMOVING_OBJECT,
     eNUM_LAYERS_OBJECT
 };
 
-enum PhysicsBroadphaseLayer : JPH::BroadPhaseLayer::Type {
+enum PhysicsBroadphaseLayer : JPH::BroadPhaseLayer::Type
+{
     eNON_MOVING_BROADPHASE,
     eMOVING_BROADPHASE,
     eNUM_LAYERS_BROADPHASE
+};
+
+enum class PhysicsShapes
+{
+    eSPHERE,
+    eBOX,
+    eCAPSULE,
+    eCUSTOM,
+    eCONVEXHULL,
+    eMESH,
+};
+
+enum class BodyType
+{
+    eDYNAMIC,
+    eSTATIC,
 };
 
 std::unique_ptr<JPH::ObjectLayerPairFilter> MakeObjectPairFilterImpl();

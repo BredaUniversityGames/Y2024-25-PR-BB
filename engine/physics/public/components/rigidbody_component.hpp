@@ -1,6 +1,15 @@
 ﻿#pragma once
 #include "math_util.hpp"
-#include "physics_module.hpp"
+#include "physics/collision.hpp"
+#include <entt/entity/entity.hpp>
+
+#include <Jolt/Jolt.h>
+
+#include <Jolt/Geometry/IndexedTriangle.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 struct UpdateMeshAndPhysics
 {
@@ -9,7 +18,7 @@ struct UpdateMeshAndPhysics
 struct RigidbodyComponent
 {
     // default creates a sphere at 0,2,0
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType = eSPHERE, BodyType type = eDYNAMIC);
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType = PhysicsShapes::eSPHERE, BodyType type = BodyType::eDYNAMIC);
 
     RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings);
 
@@ -20,7 +29,7 @@ struct RigidbodyComponent
     RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices);
 
     // for AABB collisions
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type = eSTATIC);
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type = BodyType::eSTATIC);
 
     void SetOwnerEntity(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity)
     {
@@ -36,6 +45,6 @@ struct RigidbodyComponent
 
     JPH::BodyID bodyID;
     PhysicsShapes shapeType;
-    JPH::ShapeRefC shape;
+    JPH::RefConst<JPH::Shape> shape;
     BodyType bodyType;
 };

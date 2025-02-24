@@ -271,7 +271,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
     {
         entt::entity entity = ECS.GetRegistry().create();
-        RigidbodyComponent rb(physicsModule.GetBodyInterface(), entity, eSPHERE);
+        RigidbodyComponent rb(physicsModule.GetBodyInterface(), entity, PhysicsShapes::eSPHERE);
 
         NameComponent node;
         node.name = "Physics Entity";

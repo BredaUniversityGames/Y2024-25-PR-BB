@@ -1,4 +1,11 @@
 ﻿#include "physics_module.hpp"
+
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/RegisterTypes.h>
+
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "systems/physics_system.hpp"

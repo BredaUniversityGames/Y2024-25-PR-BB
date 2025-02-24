@@ -1,4 +1,4 @@
-#include "physics/collision_layers.hpp"
+#include "physics/collision.hpp"
 
 /// Class that determines if two object layers can collide
 class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter

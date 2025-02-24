@@ -43,7 +43,7 @@ FetchContent_MakeAvailable(VMA)
 FetchContent_Declare(
         FastGLTF
         GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG v0.8.0
+        GIT_TAG main
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )

@@ -15,8 +15,16 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+
 #include <systems/physics_system.hpp>
+
+#include <Jolt/Jolt.h>
+
+#include <Jolt/Geometry/IndexedTriangle.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
 #include <tracy/Tracy.hpp>
 
@@ -33,7 +41,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     entt::entity parent, PhysicsShapes shape)
 {
 
-    if (const bool validation = shape != eMESH && shape != eCONVEXHULL)
+    if (const bool validation = shape != PhysicsShapes::eMESH && shape != PhysicsShapes::eCONVEXHULL)
     {
         assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
         bblog::error("Shape is not supported, please use eMESH or eCONVEXHULL");
@@ -80,10 +88,10 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
         const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
         RigidbodyComponent rb;
-        if (shape == eMESH)
+        if (shape == PhysicsShapes::eMESH)
             rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices, triangles);
 
-        if (shape == eCONVEXHULL)
+        if (shape == PhysicsShapes::eCONVEXHULL)
             rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices);
 
         // Assume worldMatrix is your 4x4 transformation matrix
@@ -125,7 +133,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
 RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo)
 {
-    const bool validation = shapeType != eMESH && shapeType != eCONVEXHULL;
+    const bool validation = shapeType != PhysicsShapes::eMESH && shapeType != PhysicsShapes::eCONVEXHULL;
     if (validation)
     {
         assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
@@ -141,7 +149,7 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
     }
 
     // set trinagles
-    if (shapeType == eMESH)
+    if (shapeType == PhysicsShapes::eMESH)
     {
         for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
         {
@@ -155,9 +163,9 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
     }
 
     RigidbodyComponent rb;
-    if (shapeType == eMESH)
+    if (shapeType == PhysicsShapes::eMESH)
         rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices, triangles);
-    if (shapeType == eCONVEXHULL)
+    if (shapeType == PhysicsShapes::eCONVEXHULL)
         rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices);
     return rb;
 }
@@ -268,19 +276,19 @@ void PhysicsSystem::Inspect()
     ImGui::Begin("Physics System", nullptr, ImGuiWindowFlags_NoResize);
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;
-    static PhysicsShapes currentShape = eSPHERE;
+    static PhysicsShapes currentShape = PhysicsShapes::eSPHERE;
     ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
     ImGui::Text("Active bodies: %u", _physicsModule._physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
 
     ImGui::DragInt("Amount", &amount, 1, 1, 100);
     const char* shapeNames[] = { "Sphere", "Box", "Convex Hull" };
-    const char* currentItem = shapeNames[currentShape];
+    const char* currentItem = shapeNames[static_cast<int>(currentShape)];
 
     if (ImGui::BeginCombo("Select Physics Shape", currentItem)) // Dropdown name
     {
         for (int n = 0; n < IM_ARRAYSIZE(shapeNames); n++)
         {
-            bool isSelected = (currentShape == n);
+            bool isSelected = (static_cast<int>(currentShape) == n);
             if (ImGui::Selectable(shapeNames[n], isSelected))
             {
                 currentShape = static_cast<PhysicsShapes>(n);

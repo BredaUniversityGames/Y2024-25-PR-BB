@@ -3,6 +3,8 @@
 #include "common.hpp"
 #include "system_interface.hpp"
 
+#include "physics_module.hpp"
+
 class AudioModule;
 class AudioSystem final : public SystemInterface
 {

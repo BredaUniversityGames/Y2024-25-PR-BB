@@ -1,60 +1,25 @@
 ﻿#pragma once
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
-#include "Jolt/Jolt.h"
+#include <Jolt/Jolt.h>
 
-JPH_SUPPRESS_WARNING_PUSH
-JPH_SUPPRESS_WARNINGS
-
-#include <Jolt/Physics/Collision/CastResult.h>
-#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
-#include <Jolt/Physics/Collision/RayCast.h>
-
-#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
-#include <Jolt/Physics/Collision/Shape/MeshShape.h>
-#include <Jolt/Physics/Collision/Shape/Shape.h>
-
-#include "Jolt/Renderer/DebugRendererSimple.h"
-#include <Jolt/Core/Factory.h>
-#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
-#include <Jolt/Physics/Body/BodyActivationListener.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
-#include <Jolt/RegisterTypes.h>
-
-JPH_SUPPRESS_WARNING_POP
 
 // TODO: should be using Log.hpp
 
 #include "common.hpp"
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
-#include "physics/collision_layers.hpp"
+#include "physics/collision.hpp"
 #include "physics/constants.hpp"
 #include "physics/contact_listener.hpp"
 #include "physics/debug_renderer.hpp"
 
-#include <glm/glm.hpp>
-
-enum PhysicsShapes
-{
-    eSPHERE,
-    eBOX,
-    eCUSTOM,
-    eCONVEXHULL,
-    eMESH,
-};
-
-enum BodyType
-{
-    eDYNAMIC,
-    eSTATIC,
-};
+#include <entt/entity/entity.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
 struct RayHitInfo
 {

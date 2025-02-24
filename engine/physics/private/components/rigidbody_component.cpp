@@ -1,5 +1,9 @@
 ﻿#include "components/rigidbody_component.hpp"
-#include "physics/collision_layers.hpp"
+
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
 // default creates a sphere at 0,2,0
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType, BodyType type)
@@ -8,13 +12,13 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 {
     JPH::BodyCreationSettings bodySettings;
 
-    if (shapeType == eSPHERE)
+    if (shapeType == PhysicsShapes::eSPHERE)
     {
-        if (bodyType == eDYNAMIC)
+        if (bodyType == BodyType::eDYNAMIC)
         {
             bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
         }
-        else if (bodyType == eSTATIC)
+        else if (bodyType == BodyType::eSTATIC)
         {
             bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
         }
@@ -22,13 +26,13 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
         bodySettings.mAllowDynamicOrKinematic = true;
         bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
     }
-    else if (shapeType == eBOX)
+    else if (shapeType == PhysicsShapes::eBOX)
     {
-        if (bodyType == eDYNAMIC)
+        if (bodyType == BodyType::eDYNAMIC)
         {
             bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
         }
-        else if (bodyType == eSTATIC)
+        else if (bodyType == BodyType::eSTATIC)
         {
             bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
         }
@@ -46,14 +50,14 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 
 // for mesh collisions
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices, JPH::IndexedTriangleList& triangles)
-    : shapeType(eMESH)
-    , bodyType(eSTATIC)
+    : shapeType(PhysicsShapes::eMESH)
+    , bodyType(BodyType::eSTATIC)
 {
     JPH::BodyCreationSettings bodySettings;
 
     JPH::MeshShapeSettings meshSettings;
 
-    if (bodyType == eSTATIC)
+    if (bodyType == BodyType::eSTATIC)
     {
         bodySettings = JPH::BodyCreationSettings(
             new JPH::MeshShapeSettings(vertices, triangles),
@@ -78,14 +82,14 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 
 // for convex collisions
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices)
-    : shapeType(eCONVEXHULL)
-    , bodyType(eSTATIC)
+    : shapeType(PhysicsShapes::eCONVEXHULL)
+    , bodyType(BodyType::eSTATIC)
 {
     JPH::BodyCreationSettings bodySettings;
 
     JPH::MeshShapeSettings meshSettings;
 
-    if (bodyType == eSTATIC)
+    if (bodyType == BodyType::eSTATIC)
     {
         JPH::Array<JPH::Vec3> hull;
 
@@ -116,13 +120,13 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 
 // for AABB collisions
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type)
-    : shapeType(eBOX)
+    : shapeType(PhysicsShapes::eBOX)
     , bodyType(type)
 {
     glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
     JPH::BodyCreationSettings bodySettings;
     halfExtents = glm::abs(halfExtents);
-    if (bodyType == eSTATIC)
+    if (bodyType == BodyType::eSTATIC)
     {
         bodySettings = JPH::BodyCreationSettings(
             new JPH::BoxShape(JPH::Vec3Arg(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
@@ -131,7 +135,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
             JPH::EMotionType::Static,
             eNON_MOVING_OBJECT);
     }
-    else if (bodyType == eDYNAMIC)
+    else if (bodyType == BodyType::eDYNAMIC)
     {
         bodySettings = JPH::BodyCreationSettings(
             new JPH::BoxShape(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
@@ -151,7 +155,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::
 }
 
 RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings)
-    : shapeType(eCUSTOM)
+    : shapeType(PhysicsShapes::eCUSTOM)
 {
     // lets save thes shape reference
     shape = bodyCreationSettings.GetShape();
