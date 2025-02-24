@@ -1,6 +1,7 @@
 #pragma once
 
 #include "frame_graph.hpp"
+#include "gbuffers.hpp"
 #include "settings.hpp"
 #include "swap_chain.hpp"
 
@@ -13,7 +14,7 @@ class GraphicsContext;
 class TonemappingPass final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
+    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const GBuffers& gBuffers, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
     ~TonemappingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -26,6 +27,7 @@ private:
     {
         uint32_t hdrTargetIndex;
         uint32_t bloomTargetIndex;
+        uint32_t depthIndex;
 
         uint32_t tonemappingFunction { 0 };
         float exposure { 1.0f };
@@ -57,6 +59,7 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
+    const GBuffers& _gBuffers;
 
     void CreatePipeline();
 };
