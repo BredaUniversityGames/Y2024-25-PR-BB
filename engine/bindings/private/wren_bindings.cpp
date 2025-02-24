@@ -5,6 +5,7 @@
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
 #include "entity/entity_bind.hpp"
+#include "entity/wren_entity.hpp"
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
 #include "input/input_bindings.hpp"
@@ -15,14 +16,12 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
-//#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
 #include "wren_engine.hpp"
-#include "entity/wren_entity.hpp"
 
 namespace bindings
 {
@@ -44,7 +43,7 @@ std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string
 
     auto& registry = engine.GetModule<ECSModule>().value()->GetRegistry();
 
-    for(size_t i = 0; i < entities.size(); i++)
+    for (size_t i = 0; i < entities.size(); i++)
     {
         wrentities[i].entity = entities[i];
         wrentities[i].registry = &registry;
@@ -109,11 +108,6 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Physics
     {
         BindPhysicsAPI(module);
-    }
-
-    // Renderer
-    {
-        //BindRendererAPI(module);
     }
 
     // Pathfinding
