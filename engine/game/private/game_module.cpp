@@ -52,39 +52,26 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
-        "assets/models/AnimatedRifle.glb",
+        //"assets/models/Cathedral.glb",
+        //"assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/CathedralGLB_GLTF.glb",
         //"assets/models/Terrain/scene.gltf",
         //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
     auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    auto gunEntity = entities[1];
-
-    entt::entity lightEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-    ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
-
-    DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-    directionalLightComponent.nearPlane = 0.1f;
-    directionalLightComponent.farPlane = 200.0f;
-    directionalLightComponent.orthographicSize = 75.0f;
-
-    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
-    TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+    //auto gunEntity = entities[1];
 
     entt::entity cameraEntity = ECS.GetRegistry().create();
     ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
     ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-    RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
+    //RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;

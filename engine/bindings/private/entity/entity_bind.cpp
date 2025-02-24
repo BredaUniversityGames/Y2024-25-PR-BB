@@ -7,6 +7,7 @@
 #include "cheats_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -65,6 +66,11 @@ void TransformComponentSetScale(WrenComponent<TransformComponent>& component, co
     TransformHelpers::SetLocalScale(*component.entity.registry, component.entity.entity, scale);
 }
 
+void NameComponentSetName(WrenComponent<NameComponent>& nameComponent, const std::string& name)
+{
+    nameComponent.component->name = name;
+}
+
 std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
 {
     return nameComponent.component->name;
@@ -79,6 +85,39 @@ glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& compon
 {
     return component.component->color;
 }
+
+void DirectionalLightComponentSetColor(WrenComponent<DirectionalLightComponent>& component, const glm::vec3& color)
+{
+    component.component->color = color;
+}
+
+glm::vec3 DirectionalLightComponentGetColor(WrenComponent<DirectionalLightComponent>& component)
+{
+    return component.component->color;
+}
+
+void DirectionalLightComponentSetViewPlanes(WrenComponent<DirectionalLightComponent>& component, const glm::vec2& planes)
+{
+    component.component->nearPlane = planes.x;
+    component.component->farPlane = planes.y;
+}
+
+glm::vec2 DirectionalLightComponentGetViewPlanes(WrenComponent<DirectionalLightComponent>& component)
+{
+    return { component.component->nearPlane, component.component->farPlane };
+}
+
+void DirectionalLightComponentSetOrthographicSize(WrenComponent<DirectionalLightComponent>& component, float orthographicSize)
+{
+    component.component->orthographicSize = orthographicSize;
+}
+
+float DirectionalLightComponentGetOrthographicSize(WrenComponent<DirectionalLightComponent>& component)
+{
+    return component.component->orthographicSize;
+}
+
+
 
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
 
@@ -109,6 +148,9 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<DirectionalLightComponent>>("GetDirectionalLightComponent");
+    entityClass.func<&WrenEntity::AddComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -154,11 +196,17 @@ void BindEntityAPI(wren::ForeignModule& module)
     {
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
-        nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+        //nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+        nameClass.propExt<bindings::NameComponentGetName, bindings::NameComponentSetName>("name");
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
         pointLightClass.propExt<
             bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
+
+        auto& directionalLightClass = module.klass<WrenComponent<DirectionalLightComponent>>("DirectionalLightComponent");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetColor, bindings::DirectionalLightComponentSetColor>("color");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetViewPlanes, bindings::DirectionalLightComponentSetViewPlanes>("planes");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetOrthographicSize, bindings::DirectionalLightComponentSetOrthographicSize>("orthographicSize");
 
         // Transform component
         auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
