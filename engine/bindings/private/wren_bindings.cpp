@@ -15,10 +15,14 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+//#include "renderer/renderer_bindings.hpp"
+#include "renderer_module.hpp"
+#include "scene/scene_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
 #include "wren_engine.hpp"
+#include "entity/wren_entity.hpp"
 
 namespace bindings
 {
@@ -31,6 +35,22 @@ float TimeModuleGetDeltatime(TimeModule& self)
 void TransitionToScript(WrenEngine& engine, const std::string& path)
 {
     engine.instance->GetModule<ScriptingModule>().SetMainScript(*engine.instance, path);
+}
+
+std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string& path)
+{
+    std::vector<entt::entity> entities = SceneLoading::LoadModels(*engine.instance, { path });
+    std::vector<WrenEntity> wrentities(static_cast<size_t>(entities.size()));
+
+    auto& registry = engine.GetModule<ECSModule>().value()->GetRegistry();
+
+    for(size_t i = 0; i < entities.size(); i++)
+    {
+        wrentities[i].entity = entities[i];
+        wrentities[i].registry = &registry;
+    }
+
+    return wrentities;
 }
 
 }
@@ -50,6 +70,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
+        engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
+        engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 
@@ -87,6 +109,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Physics
     {
         BindPhysicsAPI(module);
+    }
+
+    // Renderer
+    {
+        //BindRendererAPI(module);
     }
 
     // Pathfinding
