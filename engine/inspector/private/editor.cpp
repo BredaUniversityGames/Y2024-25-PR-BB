@@ -15,7 +15,6 @@
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "imgui_backend.hpp"
-#include "model_loader.hpp"
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "systems/lifetime_component.hpp"
@@ -156,7 +155,7 @@ void Editor::DisplaySelectedEntityDetails()
         // Inspect Transform component
         // TODO use euler angles instead of quaternion
         changed |= ImGui::DragFloat3("Position", &transform->_localPosition.x);
-        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.x);
+        changed |= ImGui::DragFloat4("Rotation", &transform->_localRotation.w);
         changed |= ImGui::DragFloat3("Scale", &transform->_localScale.x);
 
         if (changed)

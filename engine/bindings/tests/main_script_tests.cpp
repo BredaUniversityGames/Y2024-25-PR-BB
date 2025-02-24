@@ -23,9 +23,8 @@ TEST(MainScriptTests, MainScript)
     auto result = context.RunScript("game/tests/wren_main.wren");
     ASSERT_TRUE(result.has_value());
 
-    MainScript wrenMain {};
-    wrenMain.SetMainScript(context.GetVM(), result.value_or(""), "ExampleMain");
-    wrenMain.Update(nullptr, DeltaMS { 10.0f }); // Safe, the script does not use the engine parameter
+    MainScript wrenMain { nullptr, context.GetVM(), result.value_or(""), "ExampleMain" };
+    wrenMain.Update(DeltaMS { 10.0f }); // Safe, the script does not use the engine parameter
 
     EXPECT_TRUE(wrenMain.IsValid());
     EXPECT_EQ(output.str(), "10\n");

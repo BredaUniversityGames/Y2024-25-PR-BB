@@ -24,4 +24,6 @@ private:
     std::shared_ptr<ImageResourceManager> _imageResourceManager;
     std::shared_ptr<MaterialResourceManager> _materialResourceManager;
     std::shared_ptr<MeshResourceManager> _meshResourceManager;
+
+    std::unordered_map<std::string_view, ResourceHandle<GPUModel>> _loadedModels {};
 };

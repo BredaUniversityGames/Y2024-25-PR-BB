@@ -18,8 +18,9 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
-#include "model_loader.hpp"
 #include "passes/build_hzb_pass.hpp"
+#include "passes/cluster_generation_pass.hpp"
+#include "passes/cluster_lightculling_pass.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
 #include "passes/gaussian_blur_pass.hpp"
@@ -35,6 +36,7 @@
 #include "passes/tonemapping_pass.hpp"
 #include "passes/ui_pass.hpp"
 #include "profile_macros.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
@@ -62,8 +64,6 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     InitializeTonemappingTarget();
     InitializeFXAATarget();
     LoadEnvironmentMap();
-
-    _modelLoader = std::make_unique<ModelLoader>();
 
     _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
     _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
@@ -94,8 +94,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation, _settings.data.fog);
 
-    _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch());
-    _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch());
+    _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch(), true, true);
+    _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch(), true, true);
     _buildMainHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->MainCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
     _buildShadowHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->ShadowCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
@@ -110,6 +110,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
+    _clusterGenerationPass = std::make_unique<ClusterGenerationPass>(_context, *_gBuffers, *_swapChain, *_gpuScene);
+    _clusterLightCullingPass = std::make_unique<ClusterLightCullingPass>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -189,7 +191,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
+        .AddOutput(_gpuScene->StaticShadow(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowSecondPass { *_shadowPass };
     shadowSecondPass.SetName("Shadow second pass")
@@ -198,7 +201,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
+        .AddOutput(_gpuScene->StaticShadow(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation ssaoPass { *_ssaoPass };
     ssaoPass.SetName("SSAO pass")
@@ -214,7 +218,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
+        .AddInput(_gpuScene->StaticShadow(), FrameGraphResourceType::eTexture)
+        .AddInput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 
@@ -269,11 +274,24 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         // No support for presentation targets in frame graph, so we'll have to this for now
         .AddInput(_fxaaTarget, FrameGraphResourceType::eTexture | FrameGraphResourceType::eReference);
 
-    _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
+    FrameGraphNodeCreation clusterGenerationPass { *_clusterGenerationPass, FrameGraphRenderPassType::eCompute };
+    clusterGenerationPass.SetName("Cluster Generation pass")
+        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        .AddOutput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    FrameGraphNodeCreation clusterCullingPass { *_clusterLightCullingPass, FrameGraphRenderPassType::eCompute };
+    clusterCullingPass.SetName("Cluster Light Culling pass")
+        .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
+        .AddInput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
+
+    _frameGraph
+        = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph
         .AddNode(generateMainDrawsPrepass)
         .AddNode(generateShadowDrawsPrepass)
+        .AddNode(clusterGenerationPass)
+        .AddNode(clusterCullingPass)
         .AddNode(geometryPrepass)
         .AddNode(shadowPrepass)
         .AddNode(buildMainHZBPass)
@@ -309,7 +327,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     }
 }
 
-std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadModels(const std::vector<std::string>& modelPaths)
+std::vector<ResourceHandle<GPUModel>> Renderer::LoadModels(const std::vector<CPUModel>& cpuModels)
 {
     // TODO: Use this later to determine batch buffer size.
     // uint32_t totalVertexSize {};
@@ -324,35 +342,25 @@ std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> Renderer::FrontLoadMo
     //     totalIndexSize += indexSize;
     //}
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> models;
-    SingleTimeCommands commands { _context->VulkanContext() };
+    std::vector<ResourceHandle<GPUModel>> gpuModels {};
+    gpuModels.reserve(cpuModels.size());
 
-    for (const auto& path : modelPaths)
+    for (const auto& cpuModel : cpuModels)
     {
-        CPUModel cpu {};
-
         {
             ZoneScoped;
 
-            std::string zone = path + " CPU parse";
+            std::string zone = cpuModel.name + " GPU upload";
             ZoneName(zone.c_str(), 128);
 
-            cpu = _modelLoader->ExtractModelFromGltfFile(path);
-        }
-
-        {
-            ZoneScoped;
-
-            std::string zone = path + " GPU upload";
-            ZoneName(zone.c_str(), 128);
-
-            auto gpu = _context->Resources()->ModelResourceManager().Create(cpu, *_staticBatchBuffer, *_skinnedBatchBuffer);
-            models.emplace_back(std::move(cpu), std::move(gpu));
+            auto gpu = _context->Resources()->ModelResourceManager().Create(cpuModel, *_staticBatchBuffer, *_skinnedBatchBuffer);
+            gpuModels.emplace_back(std::move(gpu));
         }
     }
 
-    return models;
+    return gpuModels;
 }
+
 void Renderer::FlushCommands()
 {
     GetContext()->VulkanContext()->Device().waitIdle();
@@ -361,8 +369,6 @@ void Renderer::FlushCommands()
 Renderer::~Renderer()
 {
     auto vkContext { _context->VulkanContext() };
-
-    _modelLoader.reset();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {

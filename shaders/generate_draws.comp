@@ -52,6 +52,7 @@ layout (push_constant) uniform PushConstants
     uint hzbIndex;
     uint drawCommandsCount;
     uint isReverseZ;
+    uint drawStaticDraws;
 } pushConstants;
 
 layout (local_size_x = 64) in;
@@ -70,34 +71,37 @@ void main()
 
     if (gId < pushConstants.drawCommandsCount)
     {
-        if (bool(pushConstants.isPrepass))
+        if (bool(pushConstants.drawStaticDraws) && instances[gId].isStaticDraw)
         {
-            if (PrepassIsVisible(gId))
+            if (bool(pushConstants.isPrepass))
             {
-                uint newIndex = atomicAdd(count, 1);
-                redirect[newIndex] = gId;
-                drawCommandsOut[newIndex] = drawCommandsIn[gId];
-                drawCommandsOut[newIndex].instanceCount = 1;
+                if (PrepassIsVisible(gId))
+                {
+                    uint newIndex = atomicAdd(count, 1);
+                    redirect[newIndex] = gId;
+                    drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                    drawCommandsOut[newIndex].instanceCount = 1;
+                }
+            }
+            else
+            {
+                bool visible = SecondPassIsVisible(gId);
+                bool shouldDraw = visible && !GetVisibility(gId);
+
+                if (shouldDraw)
+                {
+                    uint newIndex = atomicAdd(count, 1);
+                    redirect[newIndex] = gId;
+                    drawCommandsOut[newIndex] = drawCommandsIn[gId];
+                    drawCommandsOut[newIndex].instanceCount = 1;
+                }
+
+                SetVisibility(gId, visible);
             }
         }
-        else
-        {
-            bool visible = SecondPassIsVisible(gId);
-            bool shouldDraw = visible && !GetVisibility(gId);
 
-            if (shouldDraw)
-            {
-                uint newIndex = atomicAdd(count, 1);
-                redirect[newIndex] = gId;
-                drawCommandsOut[newIndex] = drawCommandsIn[gId];
-                drawCommandsOut[newIndex].instanceCount = 1;
-            }
-
-            SetVisibility(gId, visible);
-        }
     }
 }
-
 float GetScaledRadius(float radius, mat4 transform) {
     // Extract the scale vectors from the transformation matrix
     vec3 scaleX = vec3(transform[0][0], transform[1][0], transform[2][0]); // X-axis scale
@@ -128,7 +132,7 @@ bool PrepassIsVisible(uint objectIndex)
     center = (camera.view * vec4(center, 1.f)).xyz;
 
     // Applies the scale of the instance to obtain world bounding radus. Perhaps a place to optmize later.
-    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model);//length(r.xyz);
+    float radius = GetScaledRadius(instances[objectIndex].boundingRadius, instances[objectIndex].model); //length(r.xyz);
 
     return VisibleInFrustum(center, radius);
 }
@@ -173,7 +177,7 @@ bool SecondPassIsVisible(uint objectIndex)
             float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
 
             vec2 uvs = 0.5 * (AABB.xy + AABB.zw);
-            float occluderDepth = textureLod(nonuniformEXT(bindless_color_textures[pushConstants.hzbIndex]), uvs, mipIndex).x;
+            float occluderDepth = textureLod(nonuniformEXT (bindless_color_textures[pushConstants.hzbIndex]), uvs, mipIndex).x;
 
             occlusionVisible = bool(pushConstants.isReverseZ) ? occluderDepth < nearestBoundsDepth : occluderDepth > nearestBoundsDepth;
         }

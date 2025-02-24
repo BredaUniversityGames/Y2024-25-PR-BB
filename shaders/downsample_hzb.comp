@@ -1,7 +1,7 @@
 #version 460
 
-layout (local_size_x = 8) in;
-layout (local_size_y = 8) in;
+layout (local_size_x = 16) in;
+layout (local_size_y = 16) in;
 layout (local_size_z = 1) in;
 
 layout (set = 0, binding = 0) uniform sampler2D inputTexture;
@@ -14,10 +14,11 @@ layout (push_constant) uniform PushConstant
 
 void main()
 {
-    ivec2 position = min(ivec2(gl_GlobalInvocationID.xy), ivec2(pushConstant.hzbMipSize - 1));
+    const uint mipSize = pushConstant.hzbMipSize;
+    const ivec2 position = min(ivec2(gl_GlobalInvocationID.xy), ivec2(mipSize - 1));
 
-    vec2 uv = (0.5 + vec2(position)) / float(pushConstant.hzbMipSize);
-    vec4 depth = texture(inputTexture, uv);
+    const vec2 uv = (0.5 + vec2(position)) / float(mipSize);
+    const vec4 depth = texture(inputTexture, uv);
 
     imageStore(outputTexture, position, depth);
 }
