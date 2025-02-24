@@ -106,8 +106,6 @@ private:
     const GPUModel& _gpuModel;
     AnimationControlComponent* _animationControl;
     std::unordered_map<uint32_t, entt::entity>& _entityLUT;
-
-    SkeletonComponent* _skeletonComponent;
 };
 
 class RecursiveSkeletonLoader
