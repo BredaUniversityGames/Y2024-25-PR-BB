@@ -5,6 +5,7 @@
 #include "gpu_resources.hpp"
 
 #include <array>
+#include <entt/entity/entity.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
@@ -13,6 +14,7 @@
 class GraphicsContext;
 struct TransformComponent;
 struct CameraComponent;
+class ECSModule;
 
 class CameraResource
 {
@@ -23,7 +25,7 @@ public:
     NON_COPYABLE(CameraResource);
     NON_MOVABLE(CameraResource);
 
-    void Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera, std::optional<glm::mat4> view = std::nullopt, std::optional<glm::mat4> proj = std::nullopt);
+    void Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<glm::mat4> view = std::nullopt, std::optional<glm::mat4> proj = std::nullopt);
 
     vk::DescriptorSet DescriptorSet(uint32_t frameIndex) const { return _descriptorSets[frameIndex]; }
     ResourceHandle<Buffer> BufferResource(uint32_t frameIndex) const { return _buffers[frameIndex]; }

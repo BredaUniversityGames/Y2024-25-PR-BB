@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 
 class PlayerMovement{
 
@@ -18,7 +18,10 @@ class PlayerMovement{
         dashForce = 22.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
         
-        
+        _lookSensitivity = 1.0
+        _freeCamSpeedMultiplier = 1.0
+
+        _lastMousePosition = Vec2.new(0.0 ,0.0)
     }
 
 
@@ -39,7 +42,9 @@ class PlayerMovement{
     gravityFactor {_gravityFactor} // A multiplier for the regular 9.8 gravity of the physics simulation
     playerHeight {_playerHeight}
     isGrounded {_isGrounded}
-    
+
+    // Input
+    lastMousePosition {_lastMousePosition}
 
 
 
@@ -62,19 +67,83 @@ class PlayerMovement{
     playerHeight=(value) { _playerHeight = value}
     isGrounded=(value) { _isGrounded = value}
 
+    // Input
+    lastMousePosition=(value) {_lastMousePosition = value}
 
 
-    Movement(engine, playerController, camera){
+    Rotation(engine, player) {
+        
+        var FORWARD = Vec3.new(0.0, 0.0, -1.0)
+
+        var MOUSE_SENSITIVITY = 0.003 * _lookSensitivity
+        var GAMEPAD_LOOK_SENSITIVITY = 0.025 * _lookSensitivity
+
+        var mousePosition = engine.GetInput().GetMousePosition()
+        var mouseDelta = _lastMousePosition - mousePosition
+        var rotationDelta = Vec2.new(-mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY)
+
+        var lookAnalogAction = engine.GetInput().GetAnalogAction("Look")
+        rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY
+        rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY
+
+        var rotation = player.GetTransformComponent().rotation
+
+        var euler = Math.ToEuler(rotation)
+        euler.x = euler.x + rotationDelta.y
+
+        var cameraForward = FORWARD.mulQuat(rotation).normalize()
+
+        if (cameraForward.z > 0.0) {
+            euler.y = euler.y + rotationDelta.x
+        } else {
+            euler.y = euler.y - rotationDelta.x
+        }
+
+        rotation = Math.ToQuat(euler)
+
+        player.GetTransformComponent().rotation = rotation
+    }
+
+    FlyCamMovement(engine, player) {
+
+        var RIGHT = Vec3.new(1.0, 0.0, 0.0)
+        var FORWARD = Vec3.new(0.0, 0.0, -1.0)
+
+        var CAM_SPEED = 0.03 * _freeCamSpeedMultiplier
+
+        var movementDir = Vec3.new(0.0, 0.0, 0.0)
+        var analogMovement = engine.GetInput().GetAnalogAction("Move")
+
+        movementDir = movementDir + RIGHT * Vec3.new(analogMovement.x, analogMovement.x, analogMovement.x)
+        movementDir = movementDir + FORWARD * Vec3.new(analogMovement.y, analogMovement.y, analogMovement.y)
+
+        if (movementDir.length() != 0.0) {
+            movementDir = movementDir.normalize()
+        }
+
+        var rotation = player.GetTransformComponent().GetWorldRotation()
+
+        var position = player.GetTransformComponent().GetWorldTranslation()
+        var scaled = engine.GetTime().GetDeltatime() * CAM_SPEED
+        position = position + movementDir.mulQuat(rotation) * Vec3.new(scaled, scaled, scaled)
+
+        player.GetTransformComponent().translation = position
+    }
+
+    Movement(engine, playerController, camera) {
+
+        this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
 
         var cheats = playerController.GetCheatsComponent()
         if(cheats.noClip == true){
+            this.FlyCamMovement(engine, engine.GetECS().GetEntityByName("Player"))
             return
         }
 
         var playerBody = playerController.GetRigidbodyComponent()
         var velocity = engine.GetPhysics().GetVelocity(playerBody)
 
-        var cameraRotation = camera.GetTransformComponent().rotation
+        var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
         var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
         forward.y = 0.0
 
@@ -197,7 +266,7 @@ class PlayerMovement{
         }else{
             pos.y = pos.y + playerHeight/2.0
         }
-        camera.GetTransformComponent().translation = pos
+        engine.GetECS().GetEntityByName("Player").GetTransformComponent().translation = pos
     }
 
     Dash(engine, dt, playerController, camera){
@@ -212,7 +281,7 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
 
             hasDashed = true
-            var cameraRotation = camera.GetTransformComponent().rotation
+            var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
             var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
@@ -249,7 +318,7 @@ class PlayerMovement{
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = engine.GetPhysics().GetVelocity(playerBody)
-            var cameraRotation = camera.GetTransformComponent().rotation
+            var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
             var right = cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0)).normalize()

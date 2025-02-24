@@ -58,11 +58,13 @@ class Pistol {
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var forward = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
-            var end = playerTransform.translation + forward * _rangeVector
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
@@ -169,11 +171,13 @@ class Shotgun {
             
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var forward = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
-            var end = playerTransform.translation + forward * _rangeVector
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             
             var i = 0
@@ -268,10 +272,12 @@ class Knife {
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var direction = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(direction, up)
-            var start = playerTransform.translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1) 
+            var start = translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1) 
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             var entity = engine.GetECS().NewEntity()

@@ -64,7 +64,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/monkey.gltf",
     };
     auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    auto gunEntity = entities[1];
+    // auto gunEntity = entities[1];
 
     entt::entity lightEntity = ECS.GetRegistry().create();
     ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
@@ -78,22 +78,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
     TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
-
-    entt::entity cameraEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-    ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
-    ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
-
-    RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
-
-    CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
-    cameraComponent.projection = CameraComponent::Projection::ePerspective;
-    cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.5f;
-    cameraComponent.farPlane = 600.0f;
-    cameraComponent.reversedZ = true;
-
-    ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
     glm::ivec2 mousePos;
     applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
@@ -158,61 +142,61 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
                 continue;
             }
 
-            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
-
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.03f;
-
-            glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
-            glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
-
-            glm::vec2 lookAnalogAction = actionManager.GetAnalogAction("Look");
-            rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
-            rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
-
-            glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
-            glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x += rotationDelta.y;
-
-            // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
-            // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
-
-            glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
-            if (cameraForward.z > 0.0f)
-                eulerRotation.y += rotationDelta.x;
-            else
-                eulerRotation.y -= rotationDelta.x;
-
-            rotation = glm::quat(eulerRotation);
-            TransformHelpers::SetLocalRotation(ECS.GetRegistry(), entity, rotation);
-
-            glm::vec3 movementDir {};
-            glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
-            movementDir += RIGHT * moveAnalogAction.x;
-            movementDir += FORWARD * moveAnalogAction.y;
-
-            if (glm::length(movementDir) != 0.0f)
-            {
-                movementDir = glm::normalize(movementDir);
-            }
-
-            glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
-            position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-
-            // Only update the position if the player is not in noclip mode
-            if (ECS.GetRegistry().all_of<CheatsComponent>(playerEntity))
-            {
-                CheatsComponent& cheatsComponent = ECS.GetRegistry().get<CheatsComponent>(playerEntity);
-                if (cheatsComponent.noClip == true)
-                {
-                    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), entity, position);
-                }
-            }
-
-            JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
-            physicsModule.debugRenderer->SetCameraPos(cameraPos);
+            // constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
+            // constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
+            //
+            // constexpr float MOUSE_SENSITIVITY = 0.003f;
+            // constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
+            // constexpr float CAM_SPEED = 0.03f;
+            //
+            // glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
+            // glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
+            //
+            // glm::vec2 lookAnalogAction = actionManager.GetAnalogAction("Look");
+            // rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
+            // rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
+            //
+            // glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
+            // glm::vec3 eulerRotation = glm::eulerAngles(rotation);
+            // eulerRotation.x += rotationDelta.y;
+            //
+            // // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
+            // // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
+            //
+            // glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
+            // if (cameraForward.z > 0.0f)
+            //     eulerRotation.y += rotationDelta.x;
+            // else
+            //     eulerRotation.y -= rotationDelta.x;
+            //
+            // rotation = glm::quat(eulerRotation);
+            // TransformHelpers::SetLocalRotation(ECS.GetRegistry(), entity, rotation);
+            //
+            // glm::vec3 movementDir {};
+            // glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
+            // movementDir += RIGHT * moveAnalogAction.x;
+            // movementDir += FORWARD * moveAnalogAction.y;
+            //
+            // if (glm::length(movementDir) != 0.0f)
+            // {
+            //     movementDir = glm::normalize(movementDir);
+            // }
+            //
+            // glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
+            // position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
+            //
+            // // Only update the position if the player is not in noclip mode
+            // if (ECS.GetRegistry().all_of<CheatsComponent>(playerEntity))
+            // {
+            //     CheatsComponent& cheatsComponent = ECS.GetRegistry().get<CheatsComponent>(playerEntity);
+            //     if (cheatsComponent.noClip == true)
+            //     {
+            //         TransformHelpers::SetLocalPosition(ECS.GetRegistry(), entity, position);
+            //     }
+            // }
+            //
+            // JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
+            // physicsModule.debugRenderer->SetCameraPos(cameraPos);
         }
     }
 

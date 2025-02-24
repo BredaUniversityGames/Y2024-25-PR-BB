@@ -13,6 +13,8 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
+
+        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(-18.3, 30.3, 193.8),1.7,0.5)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -20,7 +22,6 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(-18.3, 30.3, 193.8),1.7,0.5)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
@@ -28,9 +29,6 @@ class Main {
 
         if (__camera) {
             System.print("Player is online!")
-
-            var playerTransform = __camera.GetTransformComponent()
-            playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
             __camera.AddAudioEmitterComponent()
             __playerController.AddCheatsComponent()
@@ -122,50 +120,54 @@ class Main {
            cheats.noClip = !cheats.noClip
         }
 
-        __playerMovement.Update(engine,dt,__playerController, __camera)
+        if (engine.GetInput().DebugIsInputEnabled()) {
+            __playerMovement.Update(engine,dt,__playerController, __camera)
 
-        for (weapon in __armory) {
-            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+            for (weapon in __armory) {
+                weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
 
-            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
-            if (weapon != __activeWeapon) {
-                if (weapon.reloadTimer <= 0) {
-                    weapon.ammo = weapon.maxAmmo
+                weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+                if (weapon != __activeWeapon) {
+                    if (weapon.reloadTimer <= 0) {
+                        weapon.ammo = weapon.maxAmmo
+                    }
                 }
             }
-        }
 
-        if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
-            __activeWeapon.reload(engine)
-        }
+            if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
+                __activeWeapon.reload(engine)
+            }
 
-        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-            __activeWeapon.attack(engine, dt)
-        }
+            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
+                __activeWeapon.attack(engine, dt)
+            }
 
-        if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
-            System.print("Activate ultimate")
-            if (__ultimateCharge == 1000) {
+            if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
+                System.print("Activate ultimate")
+                if (__ultimateCharge == 1000) {
 
+                    __activeWeapon = __armory[Weapons.shotgun]
+                    __activeWeapon.equip()
+                }
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eV())) {
+                __armory[Weapons.knife].attack(engine, dt)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.e1())) {
+                __activeWeapon = __armory[Weapons.pistol]
+                __activeWeapon.equip(engine)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.e2())) {
                 __activeWeapon = __armory[Weapons.shotgun]
-                __activeWeapon.equip()
+                __activeWeapon.equip(engine)
             }
         }
 
-        if (engine.GetInput().DebugGetKey(Keycode.eV())) {
-            __armory[Weapons.knife].attack(engine, dt)
-        }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e1())) {
-            __activeWeapon = __armory[Weapons.pistol]
-            __activeWeapon.equip(engine)
-        }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e2())) {
-            __activeWeapon = __armory[Weapons.shotgun]
-            __activeWeapon.equip(engine)
-        }
-
+        var mousePosition = engine.GetInput().GetMousePosition()
+        __playerMovement.lastMousePosition = mousePosition
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

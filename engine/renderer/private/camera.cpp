@@ -10,6 +10,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <ecs_module.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;
@@ -116,12 +117,12 @@ glm::vec4 normalizePlane(glm::vec4 p)
     return p / glm::length(glm::vec3(p));
 }
 
-void CameraResource::Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera, std::optional<glm::mat4> view, std::optional<glm::mat4> proj)
+void CameraResource::Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<glm::mat4> view, std::optional<glm::mat4> proj)
 {
     GPUCamera cameraBuffer {};
 
-    glm::mat4 cameraRotation = glm::mat4_cast(TransformHelpers::GetLocalRotation(transform));
-    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, TransformHelpers::GetLocalPosition(transform));
+    glm::mat4 cameraRotation = glm::mat4_cast(TransformHelpers::GetWorldRotation(ecs.GetRegistry(), entity));
+    glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity));
 
     if (view.has_value())
     {
@@ -132,6 +133,8 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
         cameraBuffer.view = glm::inverse(cameraTranslation * cameraRotation);
     }
     cameraBuffer.inverseView = glm::inverse(cameraBuffer.view);
+
+    auto& camera = ecs.GetRegistry().get<CameraComponent>(entity);
 
     switch (camera.projection)
     {
@@ -200,7 +203,7 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
     cameraBuffer.inverseProj = glm::inverse(cameraBuffer.proj);
     cameraBuffer.inverseVP = glm::inverse(cameraBuffer.VP);
-    cameraBuffer.cameraPosition = TransformHelpers::GetLocalPosition(transform);
+    cameraBuffer.cameraPosition = TransformHelpers::GetWorldPosition(ecs.GetRegistry(), entity);
 
     cameraBuffer.skydomeMVP = cameraBuffer.view;
     cameraBuffer.skydomeMVP[3][0] = 0.0f;
