@@ -77,11 +77,10 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
     {
         ZoneScopedN("Calculate World Matrix");
-        const auto skeletonView = ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
+        const auto skeletonView = ecs.GetRegistry().view<SkeletonComponent>();
         for (auto entity : skeletonView)
         {
             const auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
-            const auto& matrix = skeletonView.get<WorldMatrixComponent>(entity);
             TraverseAndCalculateMatrix(skeleton.root, glm::identity<glm::mat4>(), ecs, skeleton);
         }
     }

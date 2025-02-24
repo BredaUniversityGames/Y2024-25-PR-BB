@@ -388,7 +388,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
-        skinMatrices[offset + joint.jointIndex] = jointWorldTransform * joint.inverseBindMatrix;
+        skinMatrices[offset + joint.jointIndex] = (skeletonWorldTransform * jointWorldTransform) * joint.inverseBindMatrix;
     }
 
     // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
