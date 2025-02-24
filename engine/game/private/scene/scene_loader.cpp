@@ -111,11 +111,10 @@ private:
 class RecursiveSkeletonLoader
 {
 public:
-    RecursiveSkeletonLoader(ECSModule& ecs, const Hierarchy& hierarchy, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLUT)
+    RecursiveSkeletonLoader(ECSModule& ecs, const Hierarchy& hierarchy, AnimationControlComponent* animationControl)
         : _ecs(ecs)
         , _hierarchy(hierarchy)
         , _animationControl(animationControl)
-        , _entityLUT(entityLUT)
     {
     }
 
@@ -131,7 +130,6 @@ private:
     ECSModule& _ecs;
     const Hierarchy& _hierarchy;
     AnimationControlComponent* _animationControl;
-    std::unordered_map<uint32_t, entt::entity>& _entityLUT;
 
     SkeletonComponent* _skeletonComponent;
 
@@ -200,7 +198,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
 
         auto firstChild = ecs.GetRegistry().get<RelationshipComponent>(rootEntity).first;
 
-        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl, entityLUT };
+        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl };
         recursiveSkeletonLoader.Load(skeletonEntity, hierarchy.skeletonRoot.value(), entt::null);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), firstChild, skeletonEntity);
     }
