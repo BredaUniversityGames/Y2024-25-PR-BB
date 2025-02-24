@@ -1,5 +1,6 @@
 ﻿#include "physics_module.hpp"
 
+#include "glm/gtx/rotate_vector.hpp"
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
@@ -8,10 +9,8 @@
 
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
+#include "physics/jolt_to_glm.hpp"
 #include "systems/physics_system.hpp"
-
-#include "application_module.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 #include "time_module.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
