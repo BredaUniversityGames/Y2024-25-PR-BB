@@ -16,6 +16,7 @@
 #include "vulkan_helper.hpp"
 
 #include <pipeline_builder.hpp>
+#include <random>
 
 ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
@@ -65,7 +66,7 @@ ParticlePass::~ParticlePass()
 
 void ParticlePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pass");
 
     UpdateEmitters(commandBuffer);
 
@@ -188,14 +189,14 @@ void ParticlePass::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const Re
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
     // HDR color
-    colorAttachmentInfos[0].imageView = resources->ImageResourceManager().Access(_hdrTarget)->views[0];
+    colorAttachmentInfos[0].imageView = resources->ImageResourceManager().Access(_hdrTarget)->view;
     colorAttachmentInfos[0].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[0].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[0].loadOp = vk::AttachmentLoadOp::eLoad;
     colorAttachmentInfos[0].clearValue.color = vk::ClearColorValue { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } };
 
     // HDR brightness for bloom
-    colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->views[0];
+    colorAttachmentInfos[1].imageView = _context->Resources()->ImageResourceManager().Access(_brightnessTarget)->view;
     colorAttachmentInfos[1].imageLayout = vk::ImageLayout::eAttachmentOptimalKHR;
     colorAttachmentInfos[1].storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachmentInfos[1].loadOp = vk::AttachmentLoadOp::eLoad;
@@ -255,10 +256,10 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
 
-    auto view = _ecs.GetRegistry().view<EmitterComponent, ActiveEmitterTag>();
+    auto view = _ecs.GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag>();
     for (auto entity : view)
     {
-        auto& component = view.get<EmitterComponent>(entity);
+        auto& component = view.get<ParticleEmitterComponent>(entity);
         if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             // TODO: do something with particle type later

@@ -1,24 +1,61 @@
 #include "pathfinding_module.hpp"
 
 #include "engine.hpp"
-#include "model_loader.hpp"
+#include "model_loading.hpp"
 #include "renderer_module.hpp"
+
+#include "components/static_mesh_component.hpp"
+#include "graphics_context.hpp"
+#include "passes/debug_pass.hpp"
+
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/model_resource_manager.hpp"
+#include "scene/scene_loader.hpp"
+
+#include "scripting_module.hpp"
+
 #include <set>
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    _renderer = engine.GetModule<RendererModule>().GetRenderer();
-
-    this->SetNavigationMesh("assets/models/NavmeshTest/NavMesh.gltf");
-    ComputedPath path = this->FindPath(
-        { 0.7f, 0.0f, -0.7f },
-        { -0.7f, 0.0f, 0.7f });
+#if 0
+    auto models = _renderer->FrontLoadModels({ mesh_path });
+    auto& ecs = engine.GetModule<ECSModule>();
+    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
+    SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
+        *modelResourceManager.Access(models[0].second),
+        models[0].first,
+        models[0].first.hierarchy,
+        models[0].first.animations);
+#endif
 
     return ModuleTickOrder::eTick;
 }
 
 void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    // Draws any path that was generated through the scripting language
+    if (_debugDraw)
+    {
+        _debugLines.clear();
+        for (const auto& path : _computedPaths)
+        {
+            for (size_t i = 0; i < path.waypoints.size() - 1; i++)
+            {
+                glm::vec3 from = path.waypoints[i].centre;
+                glm::vec3 to = path.waypoints[i + 1].centre;
+
+                from += glm::vec3 { 0.0f, 0.1f, 0.0f };
+                to += glm::vec3 { 0.0f, 0.1f, 0.0f };
+
+                _debugLines.push_back(from);
+                _debugLines.push_back(to);
+            }
+        }
+    }
+
+    _computedPaths.clear();
 }
 
 void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -33,10 +70,46 @@ PathfindingModule::~PathfindingModule()
 {
 }
 
-int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
+int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
 {
-    CPUModel navmesh = _renderer->GetModelLoader().ExtractModelFromGltfFile(mesh_path);
-    CPUMesh navmeshMesh = navmesh.meshes[0]; // GLTF model should consist of only a single mesh
+    CPUModel navmesh = ModelLoading::LoadGLTF(filePath);
+    uint32_t meshIndex = std::numeric_limits<uint32_t>::max();
+    glm::mat4 transform = glm::mat4(1.0f);
+
+    const Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
+
+    std::queue<std::pair<const Hierarchy::Node*, glm::mat4>> nodeStack;
+    nodeStack.push({ rootNode, rootNode->transform });
+    while (!nodeStack.empty())
+    {
+        const std::pair<const Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
+        nodeStack.pop();
+
+        if (topNodeTransform.first->meshIndex.has_value())
+        {
+            if (topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            {
+                meshIndex = topNodeTransform.first->meshIndex.value().second;
+                transform = topNodeTransform.second;
+                break;
+            }
+        }
+
+        for (size_t i = 0; i < topNodeTransform.first->children.size(); i++)
+        {
+            const Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
+            glm::mat4 transform = topNodeTransform.second * pNode->transform;
+
+            nodeStack.push({ pNode, transform });
+        }
+    }
+
+    if (meshIndex == std::numeric_limits<uint32_t>::max())
+        return {};
+
+    CPUMesh navmeshMesh = navmesh.meshes[meshIndex]; // GLTF model should consist of only a single mesh
+    _mesh = navmeshMesh;
+    _inverseTransform = glm::inverse(transform);
 
     _triangles.clear();
 
@@ -57,6 +130,7 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         glm::vec3 p2 = navmeshMesh.vertices[info.indices[2]].position;
 
         info.centre = (p0 + p1 + p2) / 3.0f;
+        info.centre = glm::vec3(transform * glm::vec4(info.centre, 1.0f));
 
         size_t triangleIdx = _triangles.size();
         _triangles.push_back(info);
@@ -79,10 +153,10 @@ int32_t PathfindingModule::SetNavigationMesh(const std::string& mesh_path)
         for (uint32_t j = 0; j < 3; j++)
         {
             // Get all triangles that use this index
-            const std::vector<uint32_t>& index_triangles = indicesToTriangles[triangle.indices[j]];
+            const std::vector<uint32_t>& indexTriangles = indicesToTriangles[triangle.indices[j]];
 
             // Loop over every triangle that shares this index
-            for (uint32_t triangleIdx : index_triangles)
+            for (uint32_t triangleIdx : indexTriangles)
             {
                 // Don't add current triangle to list, obviously
                 if (triangleIdx == i)
@@ -140,6 +214,9 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     IterablePriorityQueue<TriangleNode, std::vector<TriangleNode>, std::greater<TriangleNode>> openList;
     std::unordered_map<uint32_t, TriangleNode> closedList;
 
+    // startPos = glm::vec3(_inverseTransform * glm::vec4(startPos, 1.0f));
+    // endPos = glm::vec3(_inverseTransform * glm::vec4(endPos, 1.0f));
+
     // Find closest triangle // TODO: More efficient way of finding closes triangle
     float closestStartTriangleDistance = std::numeric_limits<float>::infinity(),
           closestDestinationTriangleDistance = std::numeric_limits<float>::infinity();
@@ -178,7 +255,9 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
         if (topNode.triangleIndex == closestDestinationTriangleIndex) // If we reached our goal
         {
             closedList[topNode.triangleIndex] = topNode;
-            return ReconstructPath(topNode.triangleIndex, closedList);
+            ComputedPath path = ReconstructPath(topNode.triangleIndex, closedList);
+            _computedPaths.push_back(path);
+            return path;
             break;
         }
 
@@ -240,17 +319,49 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
     pathNode.centre = _triangles[finalTriangleIndex].centre;
     path.waypoints.push_back(pathNode);
 
+    uint32_t previousTriangleIndex = finalTriangleIndex;
     uint32_t parentTriangleIndex = finalTriangleNode.parentTriangleIndex;
 
     while (true)
     {
         if (parentTriangleIndex == std::numeric_limits<uint32_t>::max())
+        {
+            pathNode.centre = _triangles[previousTriangleIndex].centre;
+            path.waypoints.push_back(pathNode);
             break;
+        }
 
         const TriangleNode& node = nodes[parentTriangleIndex];
-        pathNode.centre = _triangles[parentTriangleIndex].centre;
+        // pathNode.centre = _triangles[parentTriangleIndex].centre;
+        // path.waypoints.push_back(pathNode);
+
+        std::unordered_map<uint32_t, uint32_t> triangleIndices;
+        for (int32_t i = 0; i < 3; i++)
+        {
+            triangleIndices[_triangles[previousTriangleIndex].indices[i]]++;
+        }
+        for (int32_t i = 0; i < 3; i++)
+        {
+            triangleIndices[_triangles[parentTriangleIndex].indices[i]]++;
+        }
+
+        uint32_t adjacentEdgeIndices[2] = {};
+
+        uint32_t i = 0;
+        for (const auto& [index, count] : triangleIndices)
+        {
+            if (count == 2)
+            {
+                adjacentEdgeIndices[i++] = index;
+            }
+        }
+
+        pathNode.centre = (_mesh.vertices[adjacentEdgeIndices[0]].position + _mesh.vertices[adjacentEdgeIndices[1]].position) * 0.5f;
+        pathNode.centre = glm::vec3(glm::inverse(_inverseTransform) * glm::vec4(pathNode.centre, 1.0f));
+
         path.waypoints.push_back(pathNode);
 
+        previousTriangleIndex = parentTriangleIndex;
         parentTriangleIndex = node.parentTriangleIndex;
     }
 

@@ -4,15 +4,19 @@
 #include "bindless.glsl"
 #include "scene.glsl"
 #include "settings.glsl"
+#include "octahedron.glsl"
+#include "clusters.glsl"
 
 layout (push_constant) uniform PushConstants
 {
-    uint albedoMIndex;
-    uint normalRIndex;
-    uint emissiveAOIndex;
-    uint positionIndex;
+    uint albedoRMIndex;
+    uint normalIndex;
     uint ssaoIndex;
     uint depthIndex;
+    vec2 screenSize;
+    vec2 padding;
+    ivec3 clusterDimensions;
+    float shadowMapSize;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -34,12 +38,17 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
     BloomSettings bloomSettings;
 };
 
+layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
+layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
+layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec4 outBrightness;
 
 const float PI = 3.14159265359;
+
 
 float DistributionGGX(vec3 N, vec3 H, float roughness);
 float GeometrySchlickGGX(float NoV, float roughness);
@@ -53,25 +62,54 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
+vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition);
+
+// stackoverflow.com/questions/51108596/linearize-depth
+float LinearDepth(float z, float near, float far)
+{
+    return near * far / (far + z * (near - far));
+}
+
 void main()
 {
-    vec4 albedoMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoMIndex)], texCoords);
-    vec4 normalRSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalRIndex)], texCoords);
-    vec4 emissiveAOSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.emissiveAOIndex)], texCoords);
-    vec4 positionSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.positionIndex)], texCoords);
+    vec4 albedoRMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoRMIndex)], texCoords);
+    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.normalIndex)], texCoords);
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT(pushConstants.depthIndex)], texCoords).r;
     float ambientOcclusion = texture(bindless_color_textures[nonuniformEXT(pushConstants.ssaoIndex)], texCoords).r;
 
-    vec3 albedo = albedoMSample.rgb;
-    float metallic = albedoMSample.a;
-    vec3 normal = normalRSample.rgb;
-    vec3 position = positionSample.rgb;
-    //convert position to world space now
-    vec4 worldPos = camera.inverseView * vec4(position, 1.0);
-    position = worldPos.xyz / worldPos.w;
+    float linearDepthCulling = LinearDepth(1.0 - depthSample, camera.zNear, camera.zFar);
 
-    float roughness = normalRSample.a;
-    vec3 emissive = emissiveAOSample.rgb;
-    float ao = emissiveAOSample.a;
+    float zFloat = pushConstants.clusterDimensions.z;
+    float log2FarDivNear = log2(camera.zFar / camera.zNear);
+    float log2Near = log2(camera.zNear);
+
+    float sliceScaling = zFloat / log2FarDivNear;
+    float sliceBias = -(zFloat * log2Near / log2FarDivNear);
+    uint zIndex = uint(max(log2(linearDepthCulling) * sliceScaling + sliceBias, 0.0));
+    vec2 tileSize =
+    vec2(pushConstants.screenSize.x / float(16),
+    pushConstants.screenSize.y / float(9));
+
+    uvec3 cluster = uvec3(
+    gl_FragCoord.x / tileSize.x,
+    gl_FragCoord.y / tileSize.y,
+    zIndex);
+
+
+    uint clusterIndex =
+    cluster.x +
+    cluster.y * pushConstants.clusterDimensions.x +
+    cluster.z * pushConstants.clusterDimensions.x * pushConstants.clusterDimensions.y;
+
+    uint lightCount = lightCells[clusterIndex].count;
+    uint lightIndexOffset = lightCells[clusterIndex].offset;
+
+    vec3 albedo = albedoRMSample.rgb;
+    float roughness;
+    float metallic;
+    DecodeRM(albedoRMSample.a, roughness, metallic);
+    vec3 normal = OctDecode(normalSample.rg);
+    vec3 position = ReconstructWorldPosition(depthSample, texCoords, camera.inverseVP);
 
     if (normal == vec3(0.0))
     discard;
@@ -94,38 +132,51 @@ void main()
     float bias = CalculateShadowBias(cosTheta, scene.directionalLight.direction.w);
     Lo += CalculateBRDF(N, V, lightDir, albedo, F0, metallic, roughness, scene.directionalLight.color.rgb);
 
-    // Point Light Calculations
-    for (int i = 0; i < pointLights.count; i++) {
-        PointLight light = pointLights.lights[i];
-        vec3 L = normalize(light.position - position);
-        float attenuation = CalculateAttenuation(light.position, position, light.range);
-        vec3 lightColor = light.color * attenuation;
+    vec3 pointLightLo = vec3(0.0);
+    for (int i = 0; i < lightCount; i++)
+    {
+        uint lightIndex = lightIndices[i + lightIndexOffset];
+        PointLight light = pointLights.lights[lightIndex];
 
-        Lo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
+        vec3 lightPos = light.position.xyz;
+        vec3 L = normalize(lightPos - position);
+        float attenuation = CalculateAttenuation(lightPos, position, light.range);
+        vec3 lightColor = light.color.rgb * attenuation * light.intensity;
+
+        pointLightLo += CalculateBRDF(N, V, L, albedo, F0, metallic, roughness, lightColor);
     }
 
     // IBL Contributions
     vec3 diffuseIBL = CalculateDiffuseIBL(N, albedo, scene.irradianceIndex);
-    vec3 specularIBL = CalculateSpecularIBL(N, V, roughness, F, scene.prefilterIndex, scene.brdfLUTIndex);
-    vec3 ambient = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
+    vec3 ambient = (kD * diffuseIBL) * ambientOcclusion;
 
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
 
-    vec3 litColor = vec3((Lo * shadow) + ambient + emissive);
+    float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
 
-    const float fogDensity = 0.0025;
-    const vec3 fogColor = vec3(0.6, 0.7, 0.9);
+    vec3 litColor = vec3((Lo * shadow) + pointLightLo + ambient * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
-    float fogFactor = exp(-fogDensity * linearDepth);
+    outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
 
-    outColor = vec4(mix(fogColor, litColor, fogFactor), 1.0);
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
     vec3 brightnessColor = outColor.rgb * (brightnessStrength * bloomSettings.gradientStrength);
     brightnessColor = min(brightnessColor, bloomSettings.maxBrightnessExtraction);
     outBrightness = vec4(brightnessColor, 1.0);
+}
+
+vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition)
+{
+    float a = scene.fogHeight;
+    float b = scene.fogDensity;
+    float fogAmount = (a / b) * exp(-cameraPosition.y * b) * (1.0 - exp(-distanceToPoint * directionToCamera.y * b)) / directionToCamera.y;
+    float sunAmount = max(dot(directionToCamera, lightPosition), 0.0);
+    vec3 fogColor = mix(scene.fogColor,
+                        scene.directionalLight.color.rgb,
+                        pow(sunAmount, 8.0));
+    return mix(color, fogColor, clamp(fogAmount, 0.0, 0.5));
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -175,7 +226,7 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
     float distance = length(lightPos - position);
-    return clamp(1.0 - (distance / range), 0.0, 1.0);
+    return max(1.0 - (distance / range), 0.0) / (distance * distance);
 }
 
 float CalculateShadowBias(float cosTheta, float baseBias) {
@@ -198,18 +249,21 @@ vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, ui
 
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
 {
-    vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
-    vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
-    const float offset = 1.0 / (4096 * 1.6);// Assuming a 4096x4096 shadow map
+    const vec4 shadowCoord = scene.directionalLight.depthBiasMVP * vec4(position, 1.0);
+    const vec4 testCoord = scene.directionalLight.lightVP * vec4(position, 1.0);
 
-    float visibility = 1.0;
-    float depthFactor = testCoord.z - bias;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(-offset, offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, -offset), depthFactor)).r;
-    shadow += texture(bindless_shadowmap_textures[nonuniformEXT (scene.shadowMapIndex)], vec3(shadowCoord.xy + vec2(offset, offset), depthFactor)).r;
-    shadow *= 0.25;// Average the samples
+    float staticVisibility = 1.0;
+    float dynamicVisibility = 1.0;
+    const float depthFactor = testCoord.z - bias;
+
+    for (int i = 0;i < 4; i++) {
+        const int index = int(16.0 * randomIndex(floor(position.xyz * scene.directionalLight.poissonWorldOffset), i)) % 16;
+        staticVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.staticShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
+        dynamicVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.dynamicShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
+    }
+    shadow = min(staticVisibility, dynamicVisibility);
 }
+
 
 vec3 CalculateBRDF(vec3 normal, vec3 view, vec3 lightDir, vec3 albedo, vec3 F0, float metallic, float roughness, vec3 lightColor)
 {

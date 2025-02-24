@@ -1,8 +1,8 @@
 #include "performance_tracker.hpp"
 #include "profile_macros.hpp"
 
-#include "imgui/imgui.h"
-#include "implot/implot.h"
+#include <imgui.h>
+#include <implot.h>
 
 #include <algorithm>
 
@@ -17,7 +17,6 @@ PerformanceTracker::PerformanceTracker()
 
 void PerformanceTracker::Update()
 {
-    ZoneScoped;
     auto currentTime = std::chrono::steady_clock::now();
     float deltaTime = std::chrono::duration<float>(currentTime - _lastFrameTime).count();
     _lastFrameTime = currentTime;

@@ -48,18 +48,20 @@ std::tuple<vk::PipelineLayout, vk::Pipeline> PipelineBuilder::BuildPipeline()
     return { _pipelineLayout, _pipeline };
 }
 
-vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names)
+vk::DescriptorSetLayout PipelineBuilder::CacheDescriptorSetLayout(const VulkanContext& context, const std::vector<vk::DescriptorSetLayoutBinding>& bindings, const std::vector<std::string_view>& names, std::optional<vk::DescriptorSetLayoutCreateInfo> createInfo)
 {
     size_t hash = HashBindings(bindings, names);
 
     if (_cacheDescriptorSetLayouts.find(hash) == _cacheDescriptorSetLayouts.end())
     {
-        vk::DescriptorSetLayoutCreateInfo layoutInfo {
-            .bindingCount = static_cast<uint32_t>(bindings.size()),
-            .pBindings = bindings.data(),
-        };
-
-        vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(layoutInfo, nullptr) };
+        if (!createInfo.has_value())
+        {
+            createInfo = vk::DescriptorSetLayoutCreateInfo {
+                .bindingCount = static_cast<uint32_t>(bindings.size()),
+                .pBindings = bindings.data(),
+            };
+        }
+        vk::DescriptorSetLayout layout { context.Device().createDescriptorSetLayout(createInfo.value(), nullptr) };
 
         _cacheDescriptorSetLayouts[hash] = layout;
     }
@@ -119,6 +121,16 @@ void PipelineBuilder::ReflectDescriptorLayouts(const PipelineBuilder::ShaderStag
         for (size_t i = 0; i < set->binding_count; ++i)
         {
             const SpvReflectDescriptorBinding* reflectBinding = set->bindings[i];
+
+            if (std::find_if(bindings.begin(), bindings.end(),
+                    [reflectBinding](const auto& binding)
+                    { return reflectBinding->binding == binding.binding; })
+                != bindings.end())
+            {
+                // Skip if we already have the binding encountered.
+                continue;
+            }
+
             vk::DescriptorSetLayoutBinding binding {
                 .binding = reflectBinding->binding,
                 .descriptorType = static_cast<vk::DescriptorType>(reflectBinding->descriptor_type),

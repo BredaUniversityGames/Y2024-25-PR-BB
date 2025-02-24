@@ -9,12 +9,9 @@ class SDLActionManager final : public ActionManager
 public:
     SDLActionManager(const SDLInputDeviceManager& sdlInputDeviceManager);
 
-    // Axis actions.
-    virtual glm::vec2 GetAnalogAction(std::string_view actionName) const final;
-
 private:
     const SDLInputDeviceManager& _sdlInputDeviceManager;
 
-    glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
-    [[nodiscard]] virtual bool CheckInput(std::string_view actionName, GamepadButton button, DigitalActionType inputType) const final;
+    NO_DISCARD virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const final;
+    NO_DISCARD virtual glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadAnalog gamepadAnalog) const final;
 };

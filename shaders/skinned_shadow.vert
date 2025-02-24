@@ -12,13 +12,15 @@ layout (set = 1, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
-layout (std430, set = 2, binding = 0) readonly buffer SkinningMatrices {
-    mat4 skinningMatrices[];
+layout (set = 2, binding = 0) buffer RedirectBuffer
+{
+    uint count;
+    uint redirect[];
 };
 
-layout (push_constant) uniform PushConstants
+layout (std430, set = 3, binding = 0) readonly buffer SkinningMatrices
 {
-    uint instanceOffset;
+    mat4 skinningMatrices[];
 };
 
 layout (location = 0) in vec3 inPosition;
@@ -32,13 +34,13 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[gl_DrawID + instanceOffset];
+    const uint instanceBoneOffset = instances[redirect[gl_DrawID]].boneOffset;
 
-    mat4 skinMatrix =
-    inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
-    inWeights.y * skinningMatrices[int(inJoints.y) + instance.boneOffset] +
-    inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
-    inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
+    const mat4 skinMatrix =
+    inWeights.x * skinningMatrices[int(inJoints.x) + instanceBoneOffset] +
+    inWeights.y * skinningMatrices[int(inJoints.y) + instanceBoneOffset] +
+    inWeights.z * skinningMatrices[int(inJoints.z) + instanceBoneOffset] +
+    inWeights.w * skinningMatrices[int(inJoints.w) + instanceBoneOffset];
 
     position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
 

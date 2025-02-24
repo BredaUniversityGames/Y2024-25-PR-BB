@@ -9,13 +9,14 @@
 class BloomSettings;
 class GraphicsContext;
 class CameraResource;
+class GPUScene;
 struct GPUImage;
 struct RenderSceneDescription;
 
 class LightingPass final : public FrameGraphRenderPass
 {
 public:
-    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
+    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
     ~LightingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -28,10 +29,12 @@ private:
     {
         uint32_t albedoMIndex;
         uint32_t normalRIndex;
-        uint32_t emissiveAOIndex;
-        uint32_t positionIndex;
         uint32_t ssaoIndex;
         uint32_t depthIndex;
+        glm::vec2 screenSize;
+        glm::vec2 padding;
+        glm::ivec3 clusterDimensions;
+        float shadowMapSize;
     } _pushConstants;
 
     void CreatePipeline();

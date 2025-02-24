@@ -3,11 +3,15 @@
 #include "application_module.hpp"
 #include "bloom_settings.hpp"
 #include "cpu_resources.hpp"
+#include "data_store.hpp"
 #include "ecs_module.hpp"
+#include "settings.hpp"
 #include "swap_chain.hpp"
 
 #include <tracy/TracyVulkan.hpp>
 
+class BuildHzbPass;
+class GenerateDrawsPass;
 class UIModule;
 class DebugPass;
 class Application;
@@ -20,13 +24,14 @@ class FXAAPass;
 class UIPass;
 class GaussianBlurPass;
 class ShadowPass;
+class ClusterGenerationPass;
+class ClusterLightCullingPass;
 class IBLPass;
 class ParticlePass;
 class PresentationPass;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
-class ModelLoader;
 class Engine;
 class BatchBuffer;
 class GPUScene;
@@ -44,9 +49,8 @@ public:
 
     void Render(float deltaTime);
 
-    std::vector<std::pair<CPUModel, ResourceHandle<GPUModel>>> FrontLoadModels(const std::vector<std::string>& modelPaths);
+    std::vector<ResourceHandle<GPUModel>> LoadModels(const std::vector<CPUModel>& cpuModels);
 
-    ModelLoader& GetModelLoader() const { return *_modelLoader; }
     BatchBuffer& StaticBatchBuffer() const { return *_skinnedBatchBuffer; }
     BatchBuffer& SkinnedBatchBuffer() const { return *_staticBatchBuffer; }
     SwapChain& GetSwapChain() const { return *_swapChain; }
@@ -56,35 +60,45 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
+    ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
+    GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();
+
+    Settings& GetSettings() { return _settings.data; };
 
 private:
     friend class RendererModule;
     std::shared_ptr<GraphicsContext> _context;
-
-    std::unique_ptr<ModelLoader> _modelLoader;
 
     // TODO: Unavoidable currently, this needs to become a module
     ApplicationModule& _application;
     Viewport& _viewport;
     ECSModule& _ecs;
 
+    DataStore<Settings> _settings;
+
     std::array<vk::CommandBuffer, MAX_FRAMES_IN_FLIGHT> _commandBuffers;
 
+    std::unique_ptr<GenerateDrawsPass> _generateMainDrawsPass;
+    std::unique_ptr<GenerateDrawsPass> _generateShadowDrawsPass;
+    std::unique_ptr<BuildHzbPass> _buildMainHzbPass;
+    std::unique_ptr<BuildHzbPass> _buildShadowHzbPass;
     std::unique_ptr<GeometryPass> _geometryPass;
+    std::unique_ptr<ShadowPass> _shadowPass;
     std::unique_ptr<LightingPass> _lightingPass;
     std::unique_ptr<SkydomePass> _skydomePass;
     std::unique_ptr<TonemappingPass> _tonemappingPass;
     std::unique_ptr<FXAAPass> _fxaaPass;
     std::unique_ptr<UIPass> _uiPass;
     std::unique_ptr<GaussianBlurPass> _bloomBlurPass;
-    std::unique_ptr<ShadowPass> _shadowPass;
     std::unique_ptr<DebugPass> _debugPass;
     std::unique_ptr<IBLPass> _iblPass;
     std::unique_ptr<ParticlePass> _particlePass;
     std::unique_ptr<SSAOPass> _ssaoPass;
     std::unique_ptr<PresentationPass> _presentationPass;
+    std::unique_ptr<ClusterGenerationPass> _clusterGenerationPass;
+    std::unique_ptr<ClusterLightCullingPass> _clusterLightCullingPass;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;

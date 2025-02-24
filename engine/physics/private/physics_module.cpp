@@ -1,6 +1,11 @@
 ﻿#include "physics_module.hpp"
+#include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "systems/physics_system.hpp"
+
+#include "application_module.hpp"
+#include "glm/gtx/rotate_vector.hpp"
+#include "time_module.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
@@ -69,7 +74,7 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
 
-    return ModuleTickOrder::ePostTick;
+    return ModuleTickOrder::ePreTick;
 }
 
 void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -86,15 +91,14 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     // Step the world
-    // TODO: is this correct? We are ignoring deltatime?
-    physicsSystem->Update(1.0 / 60.0, _collisionSteps, _tempAllocator, _jobSystem);
+    physicsSystem->Update(engine.GetModule<TimeModule>().GetDeltatime().count() / 1000.0f, _collisionSteps, _tempAllocator, _jobSystem);
 
     engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
 }
 
-RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
+std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
 {
-    RayHitInfo hitInfo;
+    std::vector<RayHitInfo> hitInfos;
 
     const JPH::Vec3 start(origin.x, origin.y, origin.z);
     JPH::Vec3 dir(direction.x, direction.y, direction.z);
@@ -102,21 +106,126 @@ RayHitInfo PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& dir
     const JPH::RayCast ray(start, dir * distance);
     debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
 
-    JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
-    physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
-    const int numHits = static_cast<int>(collector.mHits.size());
-    if (numHits < 1)
+    // JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
+    JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector2;
+
+    // physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
+
+    JPH::RayCastSettings settings;
+    physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
+
+    hitInfos.resize(collector2.mHits.size());
+    int32_t iterator = 0;
+
+    for (auto hit : collector2.mHits)
     {
-        return hitInfo;
+
+        const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(hit.mBodyID));
+
+        if (hitEntity != entt::null)
+        {
+            hitInfos[iterator].entity = hitEntity;
+        }
+        hitInfos[iterator].position = origin + hit.mFraction * ((direction * distance));
+        hitInfos[iterator].hitFraction = hit.mFraction;
+
+        JPH::BodyLockRead bodyLock(physicsSystem->GetBodyLockInterface(), hit.mBodyID);
+
+        if (bodyLock.Succeeded())
+        {
+            const JPH::Body& body = bodyLock.GetBody();
+            const auto joltNormal = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction));
+            hitInfos[iterator].normal = glm::vec3(joltNormal.GetX(), joltNormal.GetY(), joltNormal.GetZ());
+        }
+        iterator++;
     }
 
-    const auto firstHit = collector.mHits[numHits - 1];
-    const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(firstHit.mBodyID));
-    const glm::vec3 hitPosition = origin + firstHit.mFraction * ((direction * distance));
+    return hitInfos;
+}
 
-    hitInfo.entity = hitEntity;
-    hitInfo.position = hitPosition;
-    hitInfo.hitFraction = firstHit.mFraction;
-    hitInfo.hasHit = true;
-    return hitInfo;
+std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, uint32_t numRays, float angle) const
+{
+    std::vector<RayHitInfo> results;
+
+    if (numRays == 1)
+    {
+        // Single ray shot straight forward
+        auto rayHit = ShootRay(origin, direction, distance);
+        if (!rayHit.empty())
+        {
+            results.insert(results.end(), rayHit.begin(), rayHit.end());
+        }
+        return results;
+    }
+
+    // Calculate the angle step based on the number of rays (ensuring symmetrical distribution)
+    float angleStep = glm::radians(angle) / (numRays / 2);
+
+    for (uint32_t i = 0; i < numRays; ++i)
+    {
+        float angleOffset = (i - (numRays - 1) / 2.0f) * angleStep;
+        glm::vec3 rotatedDirection = glm::rotateY(direction, angleOffset);
+
+        auto rayHit = ShootRay(origin, rotatedDirection, distance);
+
+        if (!rayHit.empty())
+        {
+            results.insert(results.end(), rayHit.begin(), rayHit.end());
+        }
+    }
+
+    return results;
+}
+glm::vec3 PhysicsModule::GetPosition(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 pos = bodyInterface->GetPosition(rigidBody.bodyID);
+    const glm::vec3 position = glm::vec3(pos.GetX(), pos.GetY(), pos.GetZ());
+    return position;
+}
+glm::vec3 PhysicsModule::GetRotation(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Quat rot = bodyInterface->GetRotation(rigidBody.bodyID);
+    const glm::vec3 rotation = glm::eulerAngles(glm::quat(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
+    return rotation;
+}
+
+void PhysicsModule::AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
+{
+    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
+    bodyInterface->AddForce(rigidBody.bodyID, forceDirection);
+}
+void PhysicsModule::AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
+{
+    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
+    bodyInterface->AddImpulse(rigidBody.bodyID, forceDirection);
+}
+glm::vec3 PhysicsModule::GetVelocity(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 vel = bodyInterface->GetLinearVelocity(rigidBody.bodyID);
+    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
+    return velocity;
+}
+glm::vec3 PhysicsModule::GetAngularVelocity(RigidbodyComponent& rigidBody) const
+{
+    const JPH::Vec3 vel = bodyInterface->GetAngularVelocity(rigidBody.bodyID);
+    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
+    return velocity;
+}
+void PhysicsModule::SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
+{
+    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
+    bodyInterface->SetLinearVelocity(rigidBody.bodyID, vel);
+}
+void PhysicsModule::SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
+{
+    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
+    bodyInterface->SetAngularVelocity(rigidBody.bodyID, vel);
+}
+void PhysicsModule::SetGravityFactor(RigidbodyComponent& rigidBody, const float factor) const
+{
+    bodyInterface->SetGravityFactor(rigidBody.bodyID, factor);
+}
+void PhysicsModule::SetFriction(RigidbodyComponent& rigidBody, const float friction) const
+{
+    bodyInterface->SetFriction(rigidBody.bodyID, friction);
 }

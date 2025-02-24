@@ -1,10 +1,11 @@
 #include "scripting_context.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
+#include "profile_macros.hpp"
 
 #include <filesystem>
 
-namespace ScriptLoading
+namespace detail
 {
 std::string ResolveImport(
     const std::vector<std::string>& paths,
@@ -42,6 +43,23 @@ std::string LoadFile(const std::string& path)
     }
     throw wren::NotFound();
 }
+
+void* ReallocFn(void* prev, size_t size, MAYBE_UNUSED void* user)
+{
+    TracyFree(prev);
+
+    if (size == 0)
+    {
+        std::free(prev);
+        return nullptr;
+    }
+
+    auto* result = std::realloc(prev, size);
+    TracyAlloc(result, size);
+
+    return result;
+}
+
 }
 
 ScriptingContext::ScriptingContext(const VMInitConfig& info)
@@ -67,13 +85,14 @@ void ScriptingContext::Reset()
         _vmInitConfig.includePaths,
         _vmInitConfig.initialHeapSize,
         _vmInitConfig.minHeapSize,
-        _vmInitConfig.heapGrowthPercent);
+        _vmInitConfig.heapGrowthPercent,
+        detail::ReallocFn);
 
     _vm->setPrintFunc([this](const char* message)
         { *this->_wrenOutStream << message; });
 
-    _vm->setPathResolveFunc(ScriptLoading::ResolveImport);
-    _vm->setLoadFileFunc(ScriptLoading::LoadFile);
+    _vm->setPathResolveFunc(detail::ResolveImport);
+    _vm->setLoadFileFunc(detail::LoadFile);
 }
 
 std::optional<std::string> ScriptingContext::RunScript(const std::string& path)
@@ -83,7 +102,7 @@ std::optional<std::string> ScriptingContext::RunScript(const std::string& path)
     try
     {
         _vm->runFromModule(correctedPath);
-        return ScriptLoading::ResolveImport(_vmInitConfig.includePaths, "", correctedPath);
+        return detail::ResolveImport(_vmInitConfig.includePaths, "", correctedPath);
     }
     catch (const wren::Exception& e)
     {

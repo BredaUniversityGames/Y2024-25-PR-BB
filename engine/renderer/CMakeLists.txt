@@ -7,13 +7,12 @@ target_link_libraries(Renderer
         PUBLIC Particles
         PUBLIC ECS
         PUBLIC UserInterface
+        PUBLIC Settings
 
         PUBLIC VulkanAPI
         PUBLIC VulkanMemoryAllocator
         PUBLIC spirv-reflect-static
-        PUBLIC fastgltf::fastgltf
 )
 
-target_include_directories(Renderer
-        PUBLIC "${PROJECT_SOURCE_DIR}/external/stb"
-)
+source_exclude_unity("private/lib/stbi_impl.cpp")
+source_exclude_unity("private/lib/vma_impl.cpp")

@@ -8,6 +8,7 @@ int MainEngine::Run()
     while (!_exitRequested)
     {
         MainLoopOnce();
+        FrameMark;
     }
 
     return _exitCode;
@@ -20,8 +21,7 @@ void MainEngine::MainLoopOnce()
         ZoneScoped;
 
         auto name = std::string(modulePriorityPair.module->GetName()) + " tick";
-
-        ZoneName(name.data(), 32);
+        ZoneName(name.c_str(), 32);
 
         modulePriorityPair.module->Tick(*this);
 

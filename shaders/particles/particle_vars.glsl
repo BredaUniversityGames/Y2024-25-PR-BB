@@ -1,4 +1,4 @@
-const uint MAX_PARTICLES = 1024 * 256;
+const uint MAX_PARTICLES = 1024 * 64;
 
 // particle rendering flags
 const uint UNLIT = 1 << 0;
@@ -15,6 +15,8 @@ struct Particle
     uint materialIndex;
     vec3 size;
     uint flags;
+    vec3 color;
+    vec3 velocityRandomness;
 };
 
 struct ParticleCounters
@@ -31,6 +33,7 @@ struct ParticleInstance
     vec2 size;
     float angle;
     uint flags;
+    vec3 color;
 };
 
 struct CulledInstances

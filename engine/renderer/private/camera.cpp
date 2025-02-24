@@ -14,8 +14,9 @@
 
 vk::DescriptorSetLayout CameraResource::_descriptorSetLayout;
 
-CameraResource::CameraResource(const std::shared_ptr<GraphicsContext>& context)
+CameraResource::CameraResource(const std::shared_ptr<GraphicsContext>& context, bool useReverseZ)
     : _context(context)
+    , _useReverseZ(useReverseZ)
 {
     CreateDescriptorSetLayout(context);
     CreateBuffers();
@@ -112,24 +113,35 @@ void CameraResource::CreateDescriptorSets()
 
 glm::vec4 normalizePlane(glm::vec4 p)
 {
-    return p / length(glm::vec3(p));
+    return p / glm::length(glm::vec3(p));
 }
 
-void CameraResource::Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera)
+void CameraResource::Update(uint32_t currentFrame, const TransformComponent& transform, const CameraComponent& camera, std::optional<glm::mat4> view, std::optional<glm::mat4> proj)
 {
     GPUCamera cameraBuffer {};
 
     glm::mat4 cameraRotation = glm::mat4_cast(TransformHelpers::GetLocalRotation(transform));
     glm::mat4 cameraTranslation = glm::translate(glm::mat4 { 1.0f }, TransformHelpers::GetLocalPosition(transform));
 
-    cameraBuffer.view = glm::inverse(cameraTranslation * cameraRotation);
+    if (view.has_value())
+    {
+        cameraBuffer.view = view.value();
+    }
+    else
+    {
+        cameraBuffer.view = glm::inverse(cameraTranslation * cameraRotation);
+    }
     cameraBuffer.inverseView = glm::inverse(cameraBuffer.view);
 
     switch (camera.projection)
     {
     case CameraComponent::Projection::ePerspective:
     {
-        if (camera.reversedZ)
+        if (proj.has_value())
+        {
+            cameraBuffer.proj = proj.value();
+        }
+        else if (camera.reversedZ)
         {
             // Swapped far and near plane, since reverse Z is used.
             cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.farPlane, camera.nearPlane);
@@ -157,7 +169,11 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
         float bottom = -camera.orthographicSize;
         float top = camera.orthographicSize;
 
-        if (camera.reversedZ)
+        if (proj.has_value())
+        {
+            cameraBuffer.proj = proj.value();
+        }
+        else if (camera.reversedZ)
         {
             // Swapped far and near plane, since reverse Z is used.
             cameraBuffer.proj = glm::ortho<float>(left, right, bottom, top, camera.farPlane, camera.nearPlane);
@@ -176,10 +192,14 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
     default:
         break;
     }
-    cameraBuffer.proj[1][1] *= -1;
+    if (!proj.has_value())
+    {
+        cameraBuffer.proj[1][1] *= -1;
+    }
     cameraBuffer.projectionType = static_cast<int32_t>(camera.projection);
-
     cameraBuffer.VP = cameraBuffer.proj * cameraBuffer.view;
+    cameraBuffer.inverseProj = glm::inverse(cameraBuffer.proj);
+    cameraBuffer.inverseVP = glm::inverse(cameraBuffer.VP);
     cameraBuffer.cameraPosition = TransformHelpers::GetLocalPosition(transform);
 
     cameraBuffer.skydomeMVP = cameraBuffer.view;

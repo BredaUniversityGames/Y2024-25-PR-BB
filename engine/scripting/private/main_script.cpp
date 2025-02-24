@@ -4,44 +4,60 @@
 
 #include <tracy/Tracy.hpp>
 
-void MainScript::SetMainScript(wren::VM& vm, const std::string& module, const std::string& className)
+MainScript::MainScript(Engine* e, wren::VM& vm, const std::string& module, const std::string& className)
 {
+    engine = e;
+    valid = true;
+
     try
     {
         mainClass = vm.find(module, className);
         mainUpdate = mainClass.func("Update(_,_)");
         mainInit = mainClass.func("Start(_)");
-
-        valid = true;
+        mainShutdown = mainClass.func("Shutdown(_)");
     }
-    catch (wren::NotFound& e)
+    catch (wren::Exception& e)
     {
         bblog::error(e.what());
         valid = false;
+        return;
     }
-}
 
-void MainScript::InitMainScript(Engine* e)
-{
     try
     {
-        mainInit(WrenEngine { e });
-        valid = true;
+        mainInit(WrenEngine { engine });
     }
     catch (wren::Exception& ex)
     {
         bblog::error(ex.what());
         valid = false;
+        return;
     }
 }
 
-void MainScript::Update(Engine* e, DeltaMS deltatime)
+MainScript::~MainScript()
 {
-    ZoneScoped;
+    if (valid == false)
+        return;
+
     try
     {
-        mainUpdate(WrenEngine { e }, deltatime.count());
-        valid = true;
+        mainShutdown(WrenEngine { engine });
+    }
+    catch (wren::Exception& ex)
+    {
+        bblog::error(ex.what());
+    }
+}
+
+void MainScript::Update(DeltaMS deltatime)
+{
+    if (valid == false)
+        return;
+
+    try
+    {
+        mainUpdate(WrenEngine { engine }, deltatime.count());
     }
     catch (wren::Exception& ex)
     {

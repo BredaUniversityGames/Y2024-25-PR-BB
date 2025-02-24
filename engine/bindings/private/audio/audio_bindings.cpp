@@ -3,8 +3,8 @@
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
+#include "entity/wren_entity.hpp"
 #include "log.hpp"
-#include "utility/wren_entity.hpp"
 
 namespace bindings
 {
@@ -43,19 +43,19 @@ bool IsSFXPlaying(AudioModule& self, const SoundInstance instance)
     return self.IsSFXPlaying(instance);
 }
 
-EventInstanceID PlayEventOnce(AudioModule& self, const std::string& path)
+EventInstance PlayEventOnce(AudioModule& self, const std::string& path)
 {
     return self.StartOneShotEvent(path);
 }
 
-EventInstanceID PlayEventLoop(AudioModule& self, const std::string& path)
+EventInstance PlayEventLoop(AudioModule& self, const std::string& path)
 {
     return self.StartLoopingEvent(path);
 }
 
-void StopEvent(AudioModule& self, EventInstanceID id)
+void StopEvent(AudioModule& self, EventInstance instance)
 {
-    self.StopEvent(id);
+    self.StopEvent(instance);
 }
 
 void AddSFX(WrenComponent<AudioEmitterComponent>& self, SoundInstance& instance)
@@ -63,7 +63,7 @@ void AddSFX(WrenComponent<AudioEmitterComponent>& self, SoundInstance& instance)
     self.component->_soundIds.emplace_back(instance);
 }
 
-void AddEvent(WrenComponent<AudioEmitterComponent>& self, EventInstanceID instance)
+void AddEvent(WrenComponent<AudioEmitterComponent>& self, EventInstance& instance)
 {
     self.component->_eventIds.emplace_back(instance);
 }
@@ -84,4 +84,7 @@ void BindAudioAPI(wren::ForeignModule& module)
     auto& audioEmitterComponentClass = module.klass<WrenComponent<AudioEmitterComponent>>("AudioEmitterComponent");
     audioEmitterComponentClass.funcExt<bindings::AddSFX>("AddSFX");
     audioEmitterComponentClass.funcExt<bindings::AddEvent>("AddEvent");
+
+    module.klass<SoundInstance>("SoundInstance");
+    module.klass<EventInstance>("EventInstance");
 }

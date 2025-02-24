@@ -2,7 +2,7 @@
 
 #include "ui_element.hpp"
 
-#include <fonts.hpp>
+#include "fonts.hpp"
 #include <glm/glm.hpp>
 #include <string>
 
@@ -16,7 +16,14 @@ public:
     {
         SetLocation(glm::vec2(0));
         SetScale(glm::vec2(0, font->characterHeight));
+        SetText(std::move(text));
+    }
 
+    UITextElement(const std::shared_ptr<UIFont>& font, std::string text, float textSize)
+        : _font(font)
+    {
+        SetLocation(glm::vec2(0));
+        SetScale(glm::vec2(0, textSize));
         SetText(std::move(text));
     }
 
@@ -44,5 +51,5 @@ private:
     float _horizontalTextSize = 0;
     std::shared_ptr<UIFont> _font;
     std::string _text;
-    glm::vec4 _color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 _color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 };

@@ -28,6 +28,7 @@ GaussianBlurPass::GaussianBlurPass(const std::shared_ptr<GraphicsContext>& conte
     };
     createInfo.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToBorder);
     _sampler = _context->Resources()->SamplerResourceManager().Create(createInfo);
+    CreateDescriptorSetLayout();
     CreatePipeline();
     CreateDescriptorSets();
 }
@@ -41,7 +42,7 @@ GaussianBlurPass::~GaussianBlurPass()
 
 void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian blur Pipeline");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Gaussian Blur Pass");
     //  The verticalTargetData target is created by this pass, so we need to transition it from undefined layout
     const GPUImage* verticalTarget = _context->Resources()->ImageResourceManager().Access(_targets[0]);
     util::TransitionImageLayout(commandBuffer, verticalTarget->image, verticalTarget->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
@@ -72,7 +73,7 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         }
 
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
-            .imageView = target->views[0],
+            .imageView = target->view,
             .imageLayout = vk::ImageLayout::eAttachmentOptimalKHR,
             .loadOp = vk::AttachmentLoadOp::eClear,
             .storeOp = vk::AttachmentStoreOp::eStore,
@@ -99,7 +100,6 @@ void GaussianBlurPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { descriptorSet }, {});
 
-        // Fullscreen triangle
         commandBuffer.draw(3, 1, 0, 0);
 
         _context->GetDrawStats().Draw(3);
@@ -142,21 +142,18 @@ void GaussianBlurPass::CreatePipeline()
 
 void GaussianBlurPass::CreateDescriptorSetLayout()
 {
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .pImmutableSamplers = nullptr,
+        },
+    };
 
-    vk::DescriptorSetLayoutBinding& samplerLayoutBinding { bindings[0] };
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-    samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    vk::DescriptorSetLayoutCreateInfo createInfo {};
-    createInfo.bindingCount = bindings.size();
-    createInfo.pBindings = bindings.data();
-
-    util::VK_ASSERT(_context->VulkanContext()->Device().createDescriptorSetLayout(&createInfo, nullptr, &_descriptorSetLayout),
-        "Failed creating gaussian blur descriptor set layout!");
+    _descriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "source" });
+    util::NameObject(_descriptorSetLayout, "Gaussian blur descriptor set layout", _context->VulkanContext());
 }
 
 void GaussianBlurPass::CreateDescriptorSets()
@@ -177,7 +174,7 @@ void GaussianBlurPass::CreateDescriptorSets()
     {
         vk::DescriptorImageInfo imageInfo {
             .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
-            .imageView = _context->Resources()->ImageResourceManager().Access(_source)->views[0],
+            .imageView = _context->Resources()->ImageResourceManager().Access(_source)->view,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         };
 
@@ -201,7 +198,7 @@ void GaussianBlurPass::CreateDescriptorSets()
         {
             vk::DescriptorImageInfo imageInfo {
                 .sampler = _context->Resources()->SamplerResourceManager().Access(_sampler)->sampler,
-                .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->views[0],
+                .imageView = _context->Resources()->ImageResourceManager().Access(_targets[i])->view,
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             };
 
