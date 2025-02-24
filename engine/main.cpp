@@ -21,6 +21,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
 
+    int i = 0;
+
     {
         ZoneScopedN("Engine Module Initialization");
 
