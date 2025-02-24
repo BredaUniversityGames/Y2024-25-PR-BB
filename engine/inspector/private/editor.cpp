@@ -100,7 +100,7 @@ void Editor::DrawHierarchy()
             {
                 RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
 
-                if (relationship == nullptr || relationship->parent == entt::null)
+                if (relationship != nullptr && relationship->parent == entt::null)
                 {
                     displayEntity(displayEntity, entity);
                 }

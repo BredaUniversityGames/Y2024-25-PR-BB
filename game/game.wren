@@ -21,15 +21,15 @@ class Main {
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
         __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
-        //__gun = engine.GetECS().GetEntityByName("AnimatedRifle")
-        //var gunAnimations = __gun.GetAnimationControlComponent()
-        //gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
-        //gunAnimations.Stop()
+        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gunAnimations = __gun.GetAnimationControlComponent()
+        gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        gunAnimations.Stop()
 
         var demons = engine.GetECS().GetEntitiesByName("Demon")
         for(demon in demons) {
             var demonAnimations = demon.GetAnimationControlComponent()
-            demonAnimations.Play("Armature|A_Run_F_Masc|BaseLayer.001", 1.0, true)
+            demonAnimations.Play("Armature.001|A_Run_F_Masc|BaseLayer", 1.0, true)
         }
 
         if (__camera) {
@@ -41,9 +41,9 @@ class Main {
             __camera.AddAudioEmitterComponent()
             __playerController.AddCheatsComponent()
 
-            //var gunTransform = __gun.GetTransformComponent()
-            //gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-            //gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+            var gunTransform = __gun.GetTransformComponent()
+            gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
+            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
         }
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
@@ -133,11 +133,11 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
-            //__activeWeapon.reload(engine)
+            __activeWeapon.reload(engine)
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-            //__activeWeapon.attack(engine, dt)
+            __activeWeapon.attack(engine, dt)
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {

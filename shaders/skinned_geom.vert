@@ -57,7 +57,7 @@ void main()
     inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
     inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
 
-    mat4 transform = modelTransform * skinMatrix;
+    mat4 transform = skinMatrix;
 
     position = (transform * vec4(inPosition, 1.0)).xyz;
 

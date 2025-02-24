@@ -82,7 +82,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         {
             const auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
             const auto& matrix = skeletonView.get<WorldMatrixComponent>(entity);
-            TraverseAndCalculateMatrix(skeleton.root, TransformHelpers::GetWorldMatrix(matrix), ecs, skeleton);
+            TraverseAndCalculateMatrix(skeleton.root, glm::identity<glm::mat4>(), ecs, skeleton);
         }
     }
 }

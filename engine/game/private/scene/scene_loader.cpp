@@ -197,9 +197,11 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
         ecs.GetRegistry().emplace<TransformComponent>(skeletonEntity);
         ecs.GetRegistry().emplace<RelationshipComponent>(skeletonEntity);
 
+        auto firstChild = ecs.GetRegistry().get<RelationshipComponent>(rootEntity).first;
+
         RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl, entityLUT };
         recursiveSkeletonLoader.Load(skeletonEntity, hierarchy.skeletonRoot.value(), entt::null);
-        RelationshipHelpers::AttachChild(ecs.GetRegistry(), rootEntity, skeletonEntity);
+        RelationshipHelpers::AttachChild(ecs.GetRegistry(), firstChild, skeletonEntity);
     }
 
     if (skeletonEntity != entt::null)

@@ -54,9 +54,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
-        "assets/models/Demon.glb"
+        //
         //"assets/models/Cathedral.glb",
-        //"assets/models/AnimatedRifle.glb",
+        "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
         //"assets/models/DamagedHelmet.glb",
@@ -66,17 +66,20 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
+    auto entities = SceneLoading::LoadModels(engine, modelPaths);
+    auto gunEntity = entities[0];
 
-    auto demon = ModelLoading::LoadGLTF(modelPaths[0]);
+    auto demon = ModelLoading::LoadGLTF("assets/models/Demon.glb");
     auto demonGpu = engine.GetModule<RendererModule>().LoadModels({ demon });
 
-    const size_t DIM = 14;
+    const size_t DIM = 10;
     for (size_t i = 0; i < DIM; ++i)
     {
         for (size_t j = 0; j < DIM; ++j)
         {
             auto ent = SceneLoading::LoadModels(engine, { demon }, demonGpu)[0];
             TransformHelpers::SetLocalPosition(ecs.GetRegistry(), ent, { i, 0, j });
+            TransformHelpers::SetLocalScale(ecs.GetRegistry(), ent, { 0.01f, 0.01f, 0.01f });
             NameComponent& name = ecs.GetRegistry().get<NameComponent>(ent);
             name.name = "Demon";
         }
@@ -99,6 +102,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
     ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+
+    RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
@@ -250,7 +255,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     int8_t physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
 
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
+    // rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
 
     if (physicsDebugDrawing || pathfindingDebugDrawing)
     {
