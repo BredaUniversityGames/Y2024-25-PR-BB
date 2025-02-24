@@ -34,7 +34,7 @@ layout (push_constant) uniform PushConstants
     float maxPixelSize;
     float pixelizationLevels;
     float pixelizationDepthBias;
-
+    vec4 palette[5];
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -72,6 +72,29 @@ float ComputeCircle(vec2 pos, vec2 center, float radius, float feather)
     return smoothstep(start, end, dist);
 }
 
+
+/* 4x4 Bayer (Ordered Dithering) Matrix
+float bayer[4][4] = float[4][4](
+float[4](0.0, 8.0, 2.0, 10.0),
+float[4](12.0, 4.0, 14.0, 6.0),
+float[4](3.0, 11.0, 1.0, 9.0),
+float[4](15.0, 7.0, 13.0, 5.0)
+);*/
+
+// 4x4 Bayer matrix with values 0..15
+float bayer[4][4] = float[4][4](
+float[4](0.0, 8.0, 2.0, 10.0),
+float[4](12.0, 4.0, 14.0, 6.0),
+float[4](3.0, 11.0, 1.0, 9.0),
+float[4](15.0, 7.0, 13.0, 5.0)
+);
+vec3 saturateColor(vec3 color, float saturationFactor)
+{
+    // Convert to "gray" by averaging
+    float gray = (color.r + color.g + color.b) / 3.0;
+    // Interpolate between gray and the original color
+    return mix(vec3(gray), color, saturationFactor);
+}
 void main()
 {
     vec2 newTexCoords = texCoords;
@@ -81,8 +104,8 @@ void main()
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
     }
     // Prepare the circle parameters, cycling the circle size over time.
-    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT(pc.bloomTargetIndex)], newTexCoords).rgb;
-    float depthSample = texture(bindless_depth_textures[nonuniformEXT(pc.depthIndex)], texCoords).r;
+    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
     // Number of discrete pixelation levels
     float levels = pc.pixelizationLevels;
@@ -111,7 +134,24 @@ void main()
     uv = clamp(uv, 0.0, 0.99);
     //uv.y = 1.0 - uv.y;
 
-    vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], uv, -32.0).rgb;
+    vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+    float ditherValue = ((bayer[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4] + 0.5) / 16.0) - 0.5;
+    hdrColor += ditherValue * 0.15;
+    //hdrColor = clamp(hdrColor, 0.0, 1.0);
+
+
+    float bestDistance = 1000.0;
+    vec3 bestColor = vec3(0.0);
+    for (int i = 0; i < 5; i++) {
+        float d = distance(hdrColor, pc.palette[i].rgb);
+        if (d < bestDistance) {
+            bestDistance = d;
+            bestColor = saturateColor(pc.palette[i].rgb, 1.2);
+        }
+    }
+
+    float blendFactor = 0.8; // 80% quantized, 20% original
+    hdrColor = mix(hdrColor, bestColor, blendFactor);;
 
 
     hdrColor += bloomColor * bloomSettings.strength;
@@ -276,7 +316,7 @@ vec3 Vibrance(vec3 inCol, float vibrance) //r,g,b 0.0 to 1.0,  vibrance 1.0 no c
         h = h * (1.0 - br1);
 
         hue_a = abs(h); // between h of -1 and 1 are skin tones
-        a = dlt;      // Reducing enhancements on small rgb differences
+        a = dlt; // Reducing enhancements on small rgb differences
 
         // Reduce the enhancements on skin tones.
         a = step(1.0, hue_a) * a * (hue_a * 0.67 + 0.33) + step(hue_a, 1.0) * a;
