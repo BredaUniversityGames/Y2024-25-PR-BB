@@ -375,7 +375,6 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
         const auto& skeletonMatrixComponent = skeletonView.get<WorldMatrixComponent>(joint.skeletonEntity);
         const glm::mat4& skeletonWorldTransform = TransformHelpers::GetWorldMatrix(skeletonMatrixComponent);
-        glm::mat4 invSkeletonWorldTransfrom = glm::inverse(skeletonWorldTransform);
 
         if (lastSkeleton != joint.skeletonEntity)
         {

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <entt/entt.hpp>
+#include <glm/mat4x4.hpp>
 
 struct SkeletonNodeComponent
 {

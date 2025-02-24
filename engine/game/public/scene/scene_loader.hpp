@@ -4,8 +4,11 @@
 #include <string>
 #include <vector>
 
+#include "resource_manager.hpp"
+
 class Engine;
 struct CPUModel;
+struct GPUModel;
 
 namespace SceneLoading
 {

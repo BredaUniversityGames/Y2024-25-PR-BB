@@ -16,11 +16,14 @@
 #include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "model_loading.hpp"
+#include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
 
 #include <entt/entity/entity.hpp>
+#include <tracy/Tracy.hpp>
 
 class RecursiveNodeLoader
 {

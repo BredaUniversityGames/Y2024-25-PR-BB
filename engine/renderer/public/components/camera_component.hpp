@@ -2,7 +2,7 @@
 
 #include "imgui_entt_entity_editor.hpp"
 #include <entt/entity/registry.hpp>
-#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 struct CameraComponent
 {
