@@ -184,7 +184,7 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     }
 }
 
-GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* commands)
+GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* const commands)
     : _context(context)
 {
     width = creation.width;
@@ -347,6 +347,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
         }
         else
         {
+            ZoneScopedN("Command upload dispatch");
             vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_context);
 
             util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, oldLayout);
@@ -355,6 +356,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
             if (creation.mips > 1)
             {
+                ZoneScopedN("Mip creation dispatch");
                 util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
 
                 for (uint32_t i = 1; i < creation.mips; ++i)
@@ -385,7 +387,10 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
             util::TransitionImageLayout(commandBuffer, image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
 
-            util::EndSingleTimeCommands(_context, commandBuffer);
+            {
+                ZoneScopedN("Waiting Image upload");
+                util::EndSingleTimeCommands(_context, commandBuffer);
+            }
 
             util::vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
         }

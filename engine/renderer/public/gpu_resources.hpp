@@ -98,7 +98,7 @@ struct CPUImage
 
 struct GPUImage
 {
-    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* commands = nullptr);
+    GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* const commands = nullptr);
     ~GPUImage();
 
     GPUImage(GPUImage&& other) noexcept;
