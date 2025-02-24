@@ -756,13 +756,13 @@ void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
 
     for (size_t j = 0; j < buffers.size(); j++)
     {
-        bufferInfos.at(j) = {
+        bufferInfos.at(j) = vk::DescriptorBufferInfo {
             .buffer = buffers.at(j)->buffer,
             .offset = 0,
             .range = vk::WholeSize,
         };
 
-        writeDescriptorSets.at(j) = {
+        writeDescriptorSets.at(j) = vk::WriteDescriptorSet {
             .dstSet = _clusterCullingData.descriptorSets[frameIndex],
             .dstBinding = static_cast<uint32_t>(j),
             .dstArrayElement = 0,
