@@ -2,6 +2,7 @@
 
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "profile_macros.hpp"
 #include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/material_resource_manager.hpp"
@@ -12,6 +13,8 @@
 GraphicsContext::GraphicsContext(const VulkanInitInfo& initInfo)
     : _drawStats()
 {
+    ZoneScopedN("Graphics Backend Initialization");
+
     _vulkanContext = std::make_shared<class VulkanContext>(initInfo);
     _graphicsResources = std::make_shared<GraphicsResources>(_vulkanContext);
 

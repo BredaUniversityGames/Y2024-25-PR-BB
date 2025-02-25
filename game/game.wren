@@ -75,11 +75,22 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
+        __testEmitter = engine.GetECS().NewEntity()
+        {   // Test emitter
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        }
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        var enemyTransform = enemyEntity.GetTransformComponent()
+        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {
@@ -141,6 +152,7 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
             __activeWeapon.attack(engine, dt)
+            //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
