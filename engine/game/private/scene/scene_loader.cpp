@@ -22,6 +22,7 @@
 #include "renderer_module.hpp"
 #include "resource_management/model_resource_manager.hpp"
 #include "systems/physics_system.hpp"
+#include "thread_module.hpp"
 
 #include <entt/entity/entity.hpp>
 
@@ -108,6 +109,7 @@ void LoadNodeRecursive(ECSModule& ecs,
 
 entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
 {
+    ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
 
     std::unordered_map<uint32_t, entt::entity> entityLUT;
@@ -163,9 +165,12 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
         throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
     }
 
-    for (uint32_t i = 0; i < cpuModels.size(); ++i)
     {
-        entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
+        ZoneScopedN("Instantiate Models in ECS");
+        for (uint32_t i = 0; i < cpuModels.size(); ++i)
+        {
+            entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
+        }
     }
 
     return entities;
@@ -176,17 +181,26 @@ std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::ve
     std::vector<CPUModel> cpuModels {};
     cpuModels.reserve(paths.size());
 
+    auto& threadPool = engine.GetModule<ThreadModule>().GetPool();
+
     for (const auto& path : paths)
     {
         {
             ZoneScoped;
 
-            std::string zone = path + " CPU upload";
+            std::string zone = path + " CPU parsing";
             ZoneName(zone.c_str(), 128);
 
-            cpuModels.push_back(ModelLoading::LoadGLTF(path));
+            cpuModels.push_back(ModelLoading::LoadGLTFFast(threadPool, path));
         }
     }
 
-    return LoadModels(engine, cpuModels);
+    auto entities = LoadModels(engine, cpuModels);
+
+    {
+        ZoneScopedN("CPU Model Free");
+        cpuModels.clear();
+    }
+
+    return entities;
 }

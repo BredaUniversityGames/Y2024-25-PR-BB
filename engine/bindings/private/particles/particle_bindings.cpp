@@ -14,6 +14,10 @@ void SpawnEmitter(ParticleModule& self, WrenEntity& entity, EmitterPresetID emit
 {
     self.SpawnEmitter(entity.entity, emitterPreset, static_cast<SpawnEmitterFlagBits>(flags), position, velocity);
 }
+void SpawnBurst(ParticleModule& self, WrenEntity& entity, uint32_t count, float maxInterval, float startTime = 0.0f, bool loop = true, uint32_t cycles = 0)
+{
+    self.SpawnBurst(entity.entity, count, maxInterval, startTime, loop, cycles);
+}
 }
 
 void BindParticleAPI(wren::ForeignModule& module)
@@ -21,7 +25,8 @@ void BindParticleAPI(wren::ForeignModule& module)
     bindings::BindEnum<EmitterPresetID>(module, "EmitterPresetID");
     bindings::BindBitflagEnum<SpawnEmitterFlagBits>(module, "SpawnEmitterFlagBits");
 
-    auto& wren_class = module.klass<ParticleModule>("Particles");
-    wren_class.funcExt<bindings::LoadEmitterPresets>("LoadEmitterPresets");
-    wren_class.funcExt<bindings::SpawnEmitter>("SpawnEmitter");
+    auto& wrenClass = module.klass<ParticleModule>("Particles");
+    wrenClass.funcExt<bindings::LoadEmitterPresets>("LoadEmitterPresets");
+    wrenClass.funcExt<bindings::SpawnEmitter>("SpawnEmitter");
+    wrenClass.funcExt<bindings::SpawnBurst>("SpawnBurst");
 }
