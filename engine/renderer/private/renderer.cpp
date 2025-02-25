@@ -53,34 +53,62 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _ecs(ecs)
     , _settings("settings.json")
 {
+    ZoneScopedN("Renderer Initialization");
     _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
 
-    auto vulkanInfo = application.GetVulkanInfo();
-    _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    {
+        ZoneScopedN("Swapchain creation");
+        auto vulkanInfo = application.GetVulkanInfo();
+        _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    }
 
-    InitializeHDRTarget();
-    InitializeBloomTargets();
-    InitializeSSAOTarget();
-    InitializeTonemappingTarget();
-    InitializeFXAATarget();
-    LoadEnvironmentMap();
+    {
+        ZoneScopedN("Post processing target Initialization");
+        InitializeHDRTarget();
+        InitializeBloomTargets();
+        InitializeSSAOTarget();
+        InitializeTonemappingTarget();
+        InitializeFXAATarget();
+    }
 
-    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
-    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    {
+        ZoneScopedN("Environment map loading");
+        LoadEnvironmentMap();
+    }
 
-    SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
-    commandBufferPrimitive.Submit();
+    {
+        ZoneScopedN("Batchbuffer allocation");
+        _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+        _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    }
 
-    _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
-    _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    ResourceHandle<GPUMesh> uvSphere;
+    {
+        ZoneScopedN("UV sphere render");
+        SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
+        uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
+        commandBufferPrimitive.Submit();
+    }
+
+    {
+        ZoneScopedN("GBuffer allocation");
+        _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
+    }
+
+    {
+        ZoneScopedN("IBL pass creation");
+        _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    }
 
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
-    _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
-    commandBufferIBL.Submit();
+    {
+        ZoneScopedN("IBL generation pass");
+        SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
+        _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
+        commandBufferIBL.Submit();
+    }
 
     GPUSceneCreation gpuSceneCreation {
         _context,
