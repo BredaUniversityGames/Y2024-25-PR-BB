@@ -66,7 +66,7 @@ int And(int a, int b);
 vec3 Vibrance(vec3 inCol, float vibrance);
 vec3 ShiftHue(in vec3 col, in float Shift);
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize);
-vec3 saturateColor(vec3 color, float saturationFactor);
+vec3 SaturateColor(vec3 color, float saturationFactor);
 vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor);
 
 // 4x4 Bayer matrix with values 0..15
@@ -154,7 +154,7 @@ void main()
     outColor = vec4(color, 1.0);
 }
 
-vec3 saturateColor(vec3 color, float saturationFactor)
+vec3 SaturateColor(vec3 color, float saturationFactor)
 {
     // Convert to "gray" by averaging
     float gray = (color.r + color.g + color.b) / 3.0;
@@ -174,7 +174,7 @@ vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor)
         float d = distance(color, pc.palette[i].rgb);
         if (d < bestDistance) {
             bestDistance = d;
-            bestColor = saturateColor(pc.palette[i].rgb, 1.2);
+            bestColor = SaturateColor(pc.palette[i].rgb, 1.2);
         }
     }
 

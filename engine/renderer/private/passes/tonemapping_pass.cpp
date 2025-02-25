@@ -47,27 +47,27 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     if (_settings.enableVignette)
     {
-        _pushConstants.enableFlags |= ENABLE_VIGNETTE;
+        _pushConstants.enableFlags |= eEnableVignette;
     }
 
     if (_settings.enableLensDistortion)
     {
-        _pushConstants.enableFlags |= ENABLE_LENS_DISTORTION;
+        _pushConstants.enableFlags |= eEnableLensDistortion;
     }
 
     if (_settings.enableToneAdjustments)
     {
-        _pushConstants.enableFlags |= ENABLE_TONE_ADJUSTMENTS;
+        _pushConstants.enableFlags |= eEnableToneAdjustments;
     }
 
     if (_settings.enablePixelization)
     {
-        _pushConstants.enableFlags |= ENABLE_PIXELIZATION;
+        _pushConstants.enableFlags |= eEnablePixelization;
     }
 
     if (_settings.enablePalette)
     {
-        _pushConstants.enableFlags |= ENABLE_PALETTE;
+        _pushConstants.enableFlags |= eEnablePalette;
     }
 
     _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
