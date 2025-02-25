@@ -1,32 +1,29 @@
-#include "passes/bloom_downsample_pass.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
-#include "pipeline_builder.hpp"
-#include "gpu_scene.hpp"
-#include "shaders/shader_loader.hpp"
-#include "vulkan_helper.hpp"
+#include "passes/bloom_upsample_pass.hpp"
 
-BloomDownsamplePass::BloomDownsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage)
+BloomUpsamplePass::BloomUpsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage)
     : _context(context), _bloomImage(bloomImage)
 {
     CreatPipeline();
 }
 
-BloomDownsamplePass::~BloomDownsamplePass()
+BloomUpsamplePass::~BloomUpsamplePass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
 }
 
-void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
-    TracyVkZone(scene.tracyContext, commandBuffer, "Bloom Downsample Pass");
+    TracyVkZone(scene.tracyContext, commandBuffer, "Bloom Upsample Pass");
 
     const GPUImage* image = _context->Resources()->ImageResourceManager().Access(_bloomImage);
+
     glm::uvec2 resolution = glm::uvec2(image->width, image->height);
-    resolution.x *= 0.5f;
-    resolution.y *= 0.5f;
+    for (uint32_t mip = 0; mip < image->mips - 1; ++mip)
+    {
+        resolution.x *= 0.5f;
+        resolution.y *= 0.5f;
+    }
 
     vk::ImageMemoryBarrier2 barrier {};
     util::InitializeImageMemoryBarrier(barrier, image->image, image->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eGeneral, 1, 0, image->mips);
@@ -41,9 +38,9 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
     commandBuffer.pipelineBarrier2(dependencyInfo);
 
-    for (uint32_t mip = 0; mip < image->mips - 1; ++mip)
+    for (uint32_t mip = image->mips - 1; mip > 0; --mip)
     {
-        uint32_t nextMip = mip + 1;
+        uint32_t nextMip = mip - 1;
 
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
             .imageView = image->layerViews[0].mipViews[nextMip],
@@ -71,13 +68,15 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
         struct PushConstants
         {
-            uint32_t sourceIndex;
-            uint32_t mip;
-            glm::uvec2 resolution;
+            uint32_t srcImageIndex;
+            uint32_t srcImageMip;
+            glm::vec2 srcImageResolution;
+            float filterRadius;
         } pushConstants {};
-        pushConstants.sourceIndex = _bloomImage.Index();
-        pushConstants.mip = mip;
-        pushConstants.resolution = resolution;
+        pushConstants.srcImageIndex = _bloomImage.Index();
+        pushConstants.srcImageMip = mip;
+        pushConstants.srcImageResolution = resolution;
+        pushConstants.filterRadius = 1.0f; // TODO: Make accessible
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
@@ -90,8 +89,8 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
         commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 
         // Prepare for next pass
-        resolution.x *= 0.5f;
-        resolution.y *= 0.5f;
+        resolution.x *= 2.0f;
+        resolution.y *= 2.0f;
 
         vk::ImageMemoryBarrier2 mipBarrier {};
         mipBarrier.oldLayout = vk::ImageLayout::eGeneral;
@@ -121,7 +120,7 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     util::TransitionImageLayout(commandBuffer, image->image, image->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eColorAttachmentOptimal , 1, 0, image->mips);
 }
 
-void BloomDownsamplePass::CreatPipeline()
+void BloomUpsamplePass::CreatPipeline()
 {
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
         .blendEnable = vk::False,
@@ -137,7 +136,7 @@ void BloomDownsamplePass::CreatPipeline()
     std::vector<vk::Format> formats { _context->Resources()->ImageResourceManager().Access(_bloomImage)->format };
 
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/fullscreen.vert.spv");
-    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/bloom_downsampling.frag.spv");
+    std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/bloom_upsampling.frag.spv");
 
     GraphicsPipelineBuilder pipelineBuilder { _context };
     pipelineBuilder.AddShaderStage(vk::ShaderStageFlagBits::eVertex, vertSpv);

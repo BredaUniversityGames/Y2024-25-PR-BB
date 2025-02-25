@@ -24,6 +24,7 @@
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
 #include "passes/bloom_downsample_pass.hpp"
+#include "passes/bloom_upsample_pass.hpp"
 #include "passes/generate_draws_pass.hpp"
 #include "passes/geometry_pass.hpp"
 #include "passes/ibl_pass.hpp"
@@ -133,6 +134,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomDownsamplePass = std::make_unique<BloomDownsamplePass>(_context, _bloomTarget);
+    _bloomUpsamplePass = std::make_unique<BloomUpsamplePass>(_context, _bloomTarget);
     _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings, _ssaoTarget);
@@ -270,6 +272,11 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Rose))
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation bloomUpsamplePass { *_bloomUpsamplePass };
+    bloomDownsamplePass.SetName("Bloom upsample pass")
+        .SetDebugLabelColor(GetColor(ColorType::Lavender))
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
+
     FrameGraphNodeCreation toneMappingPass { *_tonemappingPass };
     toneMappingPass.SetName("Tonemapping pass")
         .SetDebugLabelColor(GetColor(ColorType::Seafoam))
@@ -331,6 +338,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(skyDomePass)
         .AddNode(particlePass)
         .AddNode(bloomDownsamplePass)
+        .AddNode(bloomUpsamplePass)
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)

@@ -23,6 +23,7 @@ class TonemappingPass;
 class FXAAPass;
 class UIPass;
 class BloomDownsamplePass;
+class BloomUpsamplePass;
 class ShadowPass;
 class ClusterGenerationPass;
 class ClusterLightCullingPass;
@@ -92,6 +93,7 @@ private:
     std::unique_ptr<FXAAPass> _fxaaPass;
     std::unique_ptr<UIPass> _uiPass;
     std::unique_ptr<BloomDownsamplePass> _bloomDownsamplePass;
+    std::unique_ptr<BloomUpsamplePass> _bloomUpsamplePass;
     std::unique_ptr<DebugPass> _debugPass;
     std::unique_ptr<IBLPass> _iblPass;
     std::unique_ptr<ParticlePass> _particlePass;
