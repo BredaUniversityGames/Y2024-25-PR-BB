@@ -9,6 +9,8 @@
 #define ENABLE_VIGNETTE        (1 << 0)
 #define ENABLE_LENS_DISTORTION (1 << 1)
 #define ENABLE_TONE_ADJUSTMENTS (1 << 2)
+#define ENABLE_PIXELIZATION (1 << 3)
+#define ENABLE_PALETTE (1 << 4)
 
 layout (push_constant) uniform PushConstants
 {
@@ -80,6 +82,8 @@ void main()
     const bool vignetteEnabled = bool(enableFlags & ENABLE_VIGNETTE);
     const bool lensDistortionEnabled = bool(enableFlags & ENABLE_LENS_DISTORTION);
     const bool toneAdjustmentsEnabled = bool(enableFlags & ENABLE_TONE_ADJUSTMENTS);
+    const bool pixelizationEnabled = bool(enableFlags & ENABLE_PIXELIZATION);
+    const bool paletteEnabled = bool(enableFlags & ENABLE_PALETTE);
 
     if (lensDistortionEnabled)
     {
@@ -90,11 +94,21 @@ void main()
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
     const float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
-    const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
-    vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+    vec3 hdrColor = vec3(0.0);
+    if (pixelizationEnabled)
+    {
+        const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
+        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+    } else
+    {
+        hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
+    }
 
 
-    hdrColor = ComputeQuantizedColor(hdrColor, 0.15, 0.8);
+    if (paletteEnabled)
+    {
+        hdrColor = ComputeQuantizedColor(hdrColor, 0.15, 0.8);
+    }
 
 
     hdrColor += bloomColor * bloomSettings.strength;

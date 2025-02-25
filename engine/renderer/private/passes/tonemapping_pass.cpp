@@ -60,6 +60,16 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
         _pushConstants.enableFlags |= ENABLE_TONE_ADJUSTMENTS;
     }
 
+    if (_settings.enablePixelization)
+    {
+        _pushConstants.enableFlags |= ENABLE_PIXELIZATION;
+    }
+
+    if (_settings.enablePalette)
+    {
+        _pushConstants.enableFlags |= ENABLE_PALETTE;
+    }
+
     _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
 
     _pushConstants.lensDistortionIntensity = _settings.lensDistortionIntensity;

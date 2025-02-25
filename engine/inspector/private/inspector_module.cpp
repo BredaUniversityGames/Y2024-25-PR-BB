@@ -344,35 +344,29 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::DragFloat("Saturation", &tonemapping.saturation, 0.005f);
     ImGui::DragFloat("Vibrance", &tonemapping.vibrance, 0.005f);
     ImGui::SliderFloat("Hue", &tonemapping.hue, 0.0f, 1.0f);
+    ImGui::EndDisabled();
 
     // Pixelization
+    ImGui::Checkbox("##Pixelization", &tonemapping.enablePixelization);
+    ImGui::SameLine();
+    ImGui::SeparatorText("Pixelization");
+    ImGui::BeginDisabled(!tonemapping.enablePixelization);
     ImGui::DragFloat("Min Pixel Size", &tonemapping.minPixelSize, 0.01f);
     ImGui::DragFloat("Max Pixel Size", &tonemapping.maxPixelSize, 0.01f);
     ImGui::DragFloat("Pixelization Levels", &tonemapping.pixelizationLevels, 0.01f);
     ImGui::DragFloat("Pixelization Depth Bias", &tonemapping.pixelizationDepthBias, 1.0f);
+    ImGui::EndDisabled();
 
     // Fixed palette
+    ImGui::Checkbox("##Color Palette", &tonemapping.enablePalette);
+    ImGui::SameLine();
+    ImGui::SeparatorText("Color Palette");
+    ImGui::BeginDisabled(!tonemapping.enablePalette);
     for (int i = 0; i < 5; i++)
     {
         ImGui::PushID(i);
         ImGui::ColorEdit3("Palette", &tonemapping.palette[i].x);
         ImGui::PopID();
-    }
-
-    if (ImGui::Button("REset colors"))
-    {
-        glm::vec4 palette[5] = {
-            glm::vec4(14.0f, 193.0f, 4.0f, 256.0f) / 256.0f, // Black
-            glm::vec4(6.0f, 6.0f, 6.0f, 256.0f) / 256.0f, // White
-            glm::vec4(94.0f, 43.0f, 22.0f, 256.0f) / 256.0f, // Red
-            glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
-            glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
-        };
-        tonemapping.palette[0] = palette[0];
-        tonemapping.palette[1] = palette[1];
-        tonemapping.palette[2] = palette[2];
-        tonemapping.palette[3] = palette[3];
-        tonemapping.palette[4] = palette[4];
     }
     ImGui::EndDisabled();
 

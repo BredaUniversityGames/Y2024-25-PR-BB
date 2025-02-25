@@ -39,7 +39,7 @@
             "maxBrightnessExtraction": 5.0
         },
         "tonemapping": {
-            "cereal_class_version": 3,
+            "cereal_class_version": 4,
             "tonemappingFunction": 7,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
@@ -54,10 +54,12 @@
             "saturation": 0.8399999737739563,
             "vibrance": 0.9599999785423279,
             "hue": 0.0,
-            "minPixelSize": 1.0099999904632569,
+            "enablePixelization": true,
+            "minPixelSize": 2.009999990463257,
             "maxPixelSize": 4.010000228881836,
             "pixelizationLevels": 8.0,
             "pixelizationDepthBias": 20.0,
+            "enablePalette": true,
             "palette": {
                 "value0": {
                     "x": 0.47058823704719546,

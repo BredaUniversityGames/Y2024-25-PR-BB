@@ -28,6 +28,8 @@ private:
         ENABLE_VIGNETTE = 1 << 0,
         ENABLE_LENS_DISTORTION = 1 << 1,
         ENABLE_TONE_ADJUSTMENTS = 1 << 2,
+        ENABLE_PIXELIZATION = 1 << 3,
+        ENABLE_PALETTE = 1 << 4,
         // Add more flags as needed.
     };
 
