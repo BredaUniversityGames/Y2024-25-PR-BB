@@ -1,4 +1,6 @@
 #include "components/camera_component.hpp"
+
+#include "imgui_internal.h"
 #include "log.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -30,7 +32,7 @@ void CameraComponent::Inspect()
 
     ImGui::SliderInt("Projection##Camera", &currentProjection, 0, projectionElementCount - 1, currentProjectionName);
 
-    ImGui::DragFloat("Field of View##Camera", &fov, 1.0f);
+    ImGui::SliderAngle("Field of View##Camera", &fov, 1.0f);
     ImGui::DragFloat("Near Plane##Camera", &nearPlane, 0.1f);
     ImGui::DragFloat("Far Plane##Camera", &farPlane, 0.1f);
 }
