@@ -139,13 +139,11 @@ void ParticleEditor::RenderEmitterPresetEditor()
             ImGui::Text("Cycle");
             ImGui::TableNextColumn();
 
-            for (auto it = selectedPreset.bursts.begin(); it != selectedPreset.bursts.end();)
+            for (auto it = selectedPreset.bursts.begin(); it != selectedPreset.bursts.end(); it = it++)
             {
                 int32_t index = std::distance(selectedPreset.bursts.begin(), it);
                 ImGui::TableNextRow();
-                auto copyIt = it;
-                it++;
-                auto& burst = *copyIt;
+                auto& burst = *it;
 
                 ImGui::TableNextColumn();
                 ImGui::Text("Burst %i", index);
@@ -175,7 +173,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
                 if (ImGui::Button(std::string("x##Preset Burst Remove " + std::to_string(index)).c_str()))
                 {
-                    selectedPreset.bursts.erase(copyIt);
+                    it = selectedPreset.bursts.erase(it);
                 }
                 ImGui::PopStyleColor(3);
             }
