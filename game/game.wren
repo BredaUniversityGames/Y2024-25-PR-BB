@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 
@@ -22,6 +22,8 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
+        __shakeIntensity = 0
+        __shakeOffset = Vec2.new(0.0, 0.0)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
@@ -140,6 +142,7 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt)
+                __shakeIntensity = 0.3
             }
 
             if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
@@ -169,6 +172,18 @@ class Main {
             var transform = __camera.GetTransformComponent()
             transform.rotation = Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(-1.0 * movement.x)))
         }
+
+        
+        if (__shakeIntensity > 0.001) {
+            __shakeOffset = Vec2.new(Math.Sin(__timer * 200.0), Math.Cos(__timer * 200.0)).mulScalar(__shakeIntensity)
+            
+            __shakeIntensity = __shakeIntensity * 0.85 
+
+        } else {
+            __shakeOffset = Vec2.new(0.0, 0.0)
+        }
+
+        __camera.GetTransformComponent().translation = Vec3.new(__shakeOffset.x, 0.0, __shakeOffset.y)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

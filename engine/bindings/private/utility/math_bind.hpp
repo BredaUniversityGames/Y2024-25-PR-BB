@@ -88,6 +88,14 @@ public:
     {
         return glm::min(a, b);
     }
+    static float Sin(const float a)
+    {
+        return glm::sin(a);
+    }
+    static float Cos(const float a)
+    {
+        return glm::cos(a);
+    }
     static float Radians(const float a)
     {
         return glm::radians(a);
@@ -191,6 +199,8 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
         mathUtilClass.funcStatic<&MathUtil::Max>("Max");
         mathUtilClass.funcStatic<&MathUtil::Min>("Min");
+        mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
+        mathUtilClass.funcStatic<&MathUtil::Cos>("Cos");
         mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
         mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");

@@ -170,8 +170,6 @@ class PlayerMovement{
             }
         }
 
-
-
         var movement = engine.GetInput().GetAnalogAction("Move")
 
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
