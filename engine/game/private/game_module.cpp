@@ -53,7 +53,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        "assets/models/Mutant.glb",
+        "assets/models/Clown.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",

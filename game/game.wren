@@ -26,7 +26,7 @@ class Main {
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var mutant = engine.GetECS().GetEntityByName("Mutant")
+        var mutant = engine.GetECS().GetEntityByName("Clown")
         var mutantAnimations = mutant.GetAnimationControlComponent()
         mutantAnimations.Play("Armature|mixamo.com|Layer0", 1.0, true)
         mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
