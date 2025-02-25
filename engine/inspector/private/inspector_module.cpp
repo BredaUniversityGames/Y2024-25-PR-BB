@@ -295,7 +295,7 @@ void DrawFogSettings(Settings& settings)
     auto& fog = settings.fog;
 
     ImGui::SetNextWindowSize({ 0.f, 0.f });
-    ImGui::Begin("FXAA Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Fog Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::ColorPicker3("Color", &fog.color.x);
     ImGui::DragFloat("Density", &fog.density, 0.01f);
     ImGui::DragFloat("Height", &fog.height, 0.01f);

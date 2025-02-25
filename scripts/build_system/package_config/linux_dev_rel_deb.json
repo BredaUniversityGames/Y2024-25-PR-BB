@@ -1,0 +1,18 @@
+{
+  "output": "package/linux-dev-rel-deb",
+  "executables": [
+    "build/WSL-RelWithDebInfo/CustomTech"
+  ],
+  "assets": [
+    "assets",
+    "shaders/bin",
+    "game"
+  ],
+  "files": [
+    "settings.json",
+    "build/WSL-RelWithDebInfo/libsteam_api.so",
+    "build/WSL-RelWithDebInfo/libfmodL.so.14",
+    "build/WSL-RelWithDebInfo/libfmodstudioL.so.14",
+    "steam_appid.txt"
+  ]
+}
