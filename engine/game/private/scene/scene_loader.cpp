@@ -115,6 +115,7 @@ public:
         : _ecs(ecs)
         , _hierarchy(hierarchy)
         , _animationControl(animationControl)
+        , _skeletonComponent(nullptr)
     {
     }
 
@@ -123,7 +124,7 @@ public:
         _skeletonComponent = &_ecs.GetRegistry().emplace<SkeletonComponent>(entity);
         _skeletonComponent->root = entity;
 
-        LoadNode(entity, currentNodeIndex, parent);
+        RecursiveLoadNode(entity, currentNodeIndex, parent);
     }
 
 private:
@@ -133,12 +134,13 @@ private:
 
     SkeletonComponent* _skeletonComponent;
 
-    void LoadNode(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
+    void RecursiveLoadNode(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
         const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name;
         _ecs.GetRegistry().emplace<AnimationTransformComponent>(entity);
+        _ecs.GetRegistry().emplace<HideOrphan>(entity);
         auto& skeletonNode = _ecs.GetRegistry().emplace<SkeletonNodeComponent>(entity);
         SkeletonHelpers::InitializeSkeletonNode(skeletonNode);
 
@@ -169,7 +171,7 @@ private:
         for (const auto& nodeIndex : currentNode.children)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
-            LoadNode(childEntity, nodeIndex, entity);
+            RecursiveLoadNode(childEntity, nodeIndex, entity);
         }
     }
 };

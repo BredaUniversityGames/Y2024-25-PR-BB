@@ -48,18 +48,13 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
-    auto& ecs = engine.GetModule<ECSModule>();
     particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        //"assets/models/BrainStem.glb",
-        //"assets/models/Adventure.glb",
+        "assets/models/Mutant.glb",
         //"assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
@@ -68,22 +63,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         ZoneScopedN("Scene models");
         auto entities = SceneLoading::LoadModels(engine, modelPaths);
         gunEntity = entities[1];
-
-        auto demon = ModelLoading::LoadGLTF("assets/models/Mutant.glb");
-        auto demonGpu = engine.GetModule<RendererModule>().LoadModels({ demon });
-
-        const size_t DIM = 10;
-        for (size_t i = 0; i < DIM; ++i)
-        {
-            for (size_t j = 0; j < DIM; ++j)
-            {
-                auto ent = SceneLoading::LoadModels(engine, { demon }, demonGpu)[0];
-                TransformHelpers::SetLocalPosition(ecs.GetRegistry(), ent, { i, 0, j });
-                TransformHelpers::SetLocalScale(ecs.GetRegistry(), ent, { 0.01f, 0.01f, 0.01f });
-                NameComponent& name = ecs.GetRegistry().get<NameComponent>(ent);
-                name.name = "Demon";
-            }
-        }
     }
 
     {
@@ -257,8 +236,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
     int8_t physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
-
-    // rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
 
     if (physicsDebugDrawing || pathfindingDebugDrawing)
     {

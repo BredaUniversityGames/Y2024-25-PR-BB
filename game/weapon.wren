@@ -242,9 +242,9 @@ class Knife {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Armature|Armature|Shoot"
-        _reloadAnim = "Armature|Armature|Reload"
-        _equipAnim = "" 
+        _attackAnim = "Shoot"
+        _reloadAnim = "Reload"
+        _equipAnim = ""
 
         _mesh = ""
     }

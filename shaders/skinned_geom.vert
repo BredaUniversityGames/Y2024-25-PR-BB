@@ -49,7 +49,6 @@ void main()
 {
     Instance instance = instances[redirect[gl_DrawID]];
     drawID = redirect[gl_DrawID];
-    mat4 modelTransform = instance.model;
 
     mat4 skinMatrix =
     inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
@@ -57,11 +56,9 @@ void main()
     inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
     inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
 
-    mat4 transform = skinMatrix;
+    position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
 
-    position = (transform * vec4(inPosition, 1.0)).xyz;
-
-    mat3 normalTransform = Adjoint(transform);
+    mat3 normalTransform = Adjoint(skinMatrix);
     normal = normalize(normalTransform * inNormal).xyz;
     vec3 tangent = normalize((normalTransform * inTangent.xyz).xyz);
     vec3 bitangent = normalize(normalTransform * (inTangent.w * cross(inNormal, inTangent.xyz)));

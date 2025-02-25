@@ -26,17 +26,17 @@ class Main {
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var demons = engine.GetECS().GetEntitiesByName("Demon")
-        for(demon in demons) {
-            var demonAnimations = demon.GetAnimationControlComponent()
-            demonAnimations.Play("Armature|mixamo.com|Layer0", 1.0, true)
-        }
+        var mutant = engine.GetECS().GetEntityByName("Mutant")
+        var mutantAnimations = mutant.GetAnimationControlComponent()
+        mutantAnimations.Play("Armature|mixamo.com|Layer0", 1.0, true)
+        mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         if (__camera) {
             System.print("Player is online!")
 
             var playerTransform = __camera.GetTransformComponent()
-            //playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+            playerTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
             __camera.AddAudioEmitterComponent()
             __playerController.AddCheatsComponent()

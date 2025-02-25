@@ -23,5 +23,5 @@ public:
 private:
     RendererModule& _rendererModule;
 
-    void TraverseAndCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton);
+    void RecursiveCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton);
 };

@@ -80,7 +80,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         for (auto entity : skeletonView)
         {
             const auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
-            TraverseAndCalculateMatrix(skeleton.root, glm::identity<glm::mat4>(), ecs, skeleton);
+            RecursiveCalculateMatrix(skeleton.root, glm::identity<glm::mat4>(), ecs, skeleton);
         }
     }
 }
@@ -110,7 +110,7 @@ void AnimationSystem::Inspect()
 {
 }
 
-void AnimationSystem::TraverseAndCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton)
+void AnimationSystem::RecursiveCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton)
 {
     const auto& view = ecs.GetRegistry().view<SkeletonNodeComponent, AnimationTransformComponent>();
 
@@ -131,6 +131,6 @@ void AnimationSystem::TraverseAndCalculateMatrix(entt::entity entity, const glm:
             break;
         }
 
-        TraverseAndCalculateMatrix(node.children[i], matrix.world, ecs, skeleton);
+        RecursiveCalculateMatrix(node.children[i], matrix.world, ecs, skeleton);
     }
 }

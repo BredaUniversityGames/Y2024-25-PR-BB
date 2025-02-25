@@ -99,8 +99,9 @@ void Editor::DrawHierarchy()
             for (const auto [entity] : _ecs.GetRegistry().storage<entt::entity>().each())
             {
                 RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
+                bool shouldHideOrphan = _ecs.GetRegistry().any_of<HideOrphan>(entity);
 
-                if (relationship != nullptr && relationship->parent == entt::null)
+                if (!shouldHideOrphan && (relationship == nullptr || relationship->parent == entt::null))
                 {
                     displayEntity(displayEntity, entity);
                 }

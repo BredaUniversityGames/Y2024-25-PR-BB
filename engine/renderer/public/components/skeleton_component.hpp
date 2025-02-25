@@ -6,23 +6,23 @@
 
 struct SkeletonNodeComponent
 {
-    entt::entity parent;
-    std::array<entt::entity, 7> children; // TODO: Check optimal size.
+    entt::entity parent { entt::null };
+    std::array<entt::entity, 7> children;
 };
 
 struct SkeletonComponent
 {
-    entt::entity root;
+    entt::entity root { entt::null };
 };
 
 struct JointWorldTransformComponent
 {
-    glm::mat4 world;
+    glm::mat4 world { glm::identity<glm::mat4>() };
 };
 
 struct JointSkinDataComponent
 {
-    glm::mat4 inverseBindMatrix {}; // TODO: Is constant over each mesh
+    glm::mat4 inverseBindMatrix {};
     uint32_t jointIndex {};
     entt::entity skeletonEntity { entt::null };
 };
