@@ -85,7 +85,7 @@ void ParticleEmitterComponent::Inspect()
 
         for (auto it = bursts.begin(); it != bursts.end();)
         {
-            int index = std::distance(bursts.begin(), it);
+            int32_t index = std::distance(bursts.begin(), it);
             ImGui::TableNextRow();
             auto copyIt = it;
             it++;

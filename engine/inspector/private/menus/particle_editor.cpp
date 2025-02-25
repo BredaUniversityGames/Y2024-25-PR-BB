@@ -141,14 +141,14 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
             for (auto it = selectedPreset.bursts.begin(); it != selectedPreset.bursts.end();)
             {
-                std::size_t index = std::distance(selectedPreset.bursts.begin(), it);
+                int32_t index = std::distance(selectedPreset.bursts.begin(), it);
                 ImGui::TableNextRow();
                 auto copyIt = it;
                 it++;
                 auto& burst = *copyIt;
 
                 ImGui::TableNextColumn();
-                ImGui::Text(std::string("Burst " + std::to_string(index)).c_str());
+                ImGui::Text("Burst %i", index);
 
                 ImGui::TableNextColumn();
                 int32_t burstCount = static_cast<int32_t>(burst.count);
