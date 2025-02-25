@@ -24,7 +24,7 @@ class Main {
         __camera = engine.GetECS().GetEntityByName("Camera")
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
         if (__camera) {

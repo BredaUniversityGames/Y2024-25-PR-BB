@@ -38,6 +38,9 @@ T Normalized(T& v) { return glm::normalize(v); }
 template <typename T>
 float Length(T& v) { return glm::length(v); }
 
+template <typename T>
+float Distance(T& v) { return glm::distance(v); }
+
 class MathUtil
 {
 public:

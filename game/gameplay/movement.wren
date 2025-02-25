@@ -106,26 +106,30 @@ class PlayerMovement{
 
     FlyCamMovement(engine, player) {
 
-        var RIGHT = Vec3.new(1.0, 0.0, 0.0)
-        var FORWARD = Vec3.new(0.0, 0.0, -1.0)
+        var rotation = player.GetTransformComponent().GetWorldRotation()
+
+        var forward = Math.ToVector(rotation)
+        var up = rotation.mulVec3(Vec3.new(0, 1, 0))
+        var right = Math.Cross(forward, up)
 
         var CAM_SPEED = 0.03 * _freeCamSpeedMultiplier
 
         var movementDir = Vec3.new(0.0, 0.0, 0.0)
         var analogMovement = engine.GetInput().GetAnalogAction("Move")
 
-        movementDir = movementDir + RIGHT * Vec3.new(analogMovement.x, analogMovement.x, analogMovement.x)
-        movementDir = movementDir + FORWARD * Vec3.new(analogMovement.y, analogMovement.y, analogMovement.y)
+        movementDir = movementDir + right.mulScalar(analogMovement.x)
+        movementDir = movementDir + forward.mulScalar(analogMovement.y)
 
-        if (movementDir.length() != 0.0) {
+        if (movementDir.length() != 0) {
             movementDir = movementDir.normalize()
         }
 
-        var rotation = player.GetTransformComponent().GetWorldRotation()
-
-        var position = player.GetTransformComponent().GetWorldTranslation()
+        var position = player.GetTransformComponent().translation
         var scaled = engine.GetTime().GetDeltatime() * CAM_SPEED
-        position = position + movementDir.mulQuat(rotation) * Vec3.new(scaled, scaled, scaled)
+
+        position = position + movementDir.mulScalar(scaled)
+
+        // position = position + rotation.mulVec3(movementDir).mulScalar(scaled)
 
         player.GetTransformComponent().translation = position
     }

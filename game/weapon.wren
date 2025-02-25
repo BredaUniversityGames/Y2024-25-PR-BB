@@ -22,8 +22,8 @@ class Pistol {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Armature|Armature|Shoot"
-        _reloadAnim = "Armature|Armature|Reload"
+        _attackAnim = "Shoot"
+        _reloadAnim = "Reload"
         _equipAnim = "" 
 
         _mesh = ""
@@ -136,8 +136,8 @@ class Shotgun {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Armature|Armature|Shoot"
-        _reloadAnim = "Armature|Armature|Reload"
+        _attackAnim = "Shoot"
+        _reloadAnim = "Reload"
         _equipAnim = "" 
 
         _mesh = ""
@@ -246,8 +246,8 @@ class Knife {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Armature|Armature|Shoot"
-        _reloadAnim = "Armature|Armature|Reload"
+        _attackAnim = "Shoot"
+        _reloadAnim = "Reload"
         _equipAnim = "" 
 
         _mesh = ""
