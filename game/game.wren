@@ -1,6 +1,6 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
+import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -75,11 +75,32 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
+        __testEmitter = engine.GetECS().NewEntity()
+        {   // Test emitter
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        }
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        var enemyTransform = enemyEntity.GetTransformComponent()
+        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+
+        System.print("\nRandom numbers in range 0 to 1\n")
+        for(i in 0..10) {
+            System.print(Random.RandomFloat())
+        }
+
+        System.print("\nRandom numbers in range -10 to 10\n")
+        for(i in 0..10) {
+            System.print(Random.RandomFloat(-10, 10))
+        }
     }
 
     static Shutdown(engine) {
@@ -141,6 +162,7 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
             __activeWeapon.attack(engine, dt)
+            //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
