@@ -92,8 +92,14 @@ class Main {
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
+        System.print("\nRandom numbers in range 0 to 1\n")
         for(i in 0..10) {
             System.print(Random.RandomFloat())
+        }
+
+        System.print("\nRandom numbers in range -10 to 10\n")
+        for(i in 0..10) {
+            System.print(Random.RandomFloat(-10, 10))
         }
     }
 
