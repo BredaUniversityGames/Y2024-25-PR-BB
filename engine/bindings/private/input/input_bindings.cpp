@@ -47,6 +47,11 @@ bool GetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
 {
     return self.GetInputDeviceManager().IsKeyPressed(code);
 }
+
+bool GetRawKeyHeld(ApplicationModule& self, KeyboardCode code)
+{
+    return self.GetInputDeviceManager().IsKeyHeld(code);
+}
 }
 
 void BindInputAPI(wren::ForeignModule& module)
@@ -55,6 +60,7 @@ void BindInputAPI(wren::ForeignModule& module)
     wrenClass.funcExt<bindings::GetDigitalAction>("GetDigitalAction");
     wrenClass.funcExt<bindings::GetAnalogAction>("GetAnalogAction");
     wrenClass.funcExt<bindings::GetRawKeyOnce>("DebugGetKey");
+    wrenClass.funcExt<bindings::GetRawKeyHeld>("DebugGetHeldKey");
     wrenClass.funcExt<bindings::GetMousePosition>("GetMousePosition");
     wrenClass.funcExt<bindings::IsInputEnabled>("DebugIsInputEnabled");
 

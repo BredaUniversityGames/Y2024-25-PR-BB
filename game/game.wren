@@ -164,6 +164,10 @@ class Main {
                 __activeWeapon = __armory[Weapons.shotgun]
                 __activeWeapon.equip(engine)
             }
+
+            var movement = engine.GetInput().GetAnalogAction("Move")
+            var transform = __camera.GetTransformComponent()
+            transform.rotation = Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(-1.0 * movement.x)))
         }
 
         var mousePosition = engine.GetInput().GetMousePosition()

@@ -164,6 +164,7 @@ inline void BindMath(wren::ForeignModule& module)
         BindVectorTypeOperations(vector3);
 
         vector3.funcExt<LeftRetMul<glm::vec3, glm::quat>>("mulQuat");
+        vector3.funcExt<RightRetMul<glm::vec3, glm::quat>>("mulQuatRetQuat");
     }
 
     {
@@ -176,6 +177,7 @@ inline void BindMath(wren::ForeignModule& module)
         BindVectorTypeOperations(quat);
 
         quat.funcExt<RightRetMul<glm::quat, glm::vec3>>("mulVec3");
+        quat.funcExt<LeftRetMul<glm::quat, glm::vec3>>("mulVec3RetQuat");
     }
 
     {
