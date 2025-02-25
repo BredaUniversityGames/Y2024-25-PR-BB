@@ -93,7 +93,8 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::DragInt("Count##Emitter Preset", &emitterCount, 1, 0, 1024);
         selectedPreset.count = emitterCount;
         ImGui::DragFloat("Mass##Emitter Preset", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
-        ImGui::DragFloat2("Rotation velocity##Emitter Preset", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat("Rotation##Particle Emitter", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat("Rotation velocity##Emitter Preset", &selectedPreset.rotationVelocity.y, 1.0f, -100.0f, 100.0f);
         ImGui::DragFloat2("Size##Emitter Preset", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Size velocity##Emitter Preset", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("Max life##Emitter Preset", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
