@@ -61,9 +61,9 @@ private:
         uint32_t screenWidth;
         uint32_t screenHeight;
 
-        uint32_t pad0; // offset 84
-        uint32_t pad1; // offset 88
-        uint32_t pad2; // offset 92
+        float ditherAmount;
+        float paletteAmount;
+        uint32_t pad0;
 
         glm::vec4 palette[5];
     } _pushConstants;

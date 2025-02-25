@@ -85,6 +85,9 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.maxPixelSize = _settings.maxPixelSize;
     _pushConstants.pixelizationLevels = _settings.pixelizationLevels;
     _pushConstants.pixelizationDepthBias = _settings.pixelizationDepthBias;
+    _pushConstants.ditherAmount = _settings.ditherAmount;
+    _pushConstants.paletteAmount = _settings.paletteAmount;
+
     for (int i = 0; i < 5; i++)
     {
         _pushConstants.palette[i] = _settings.palette[i];

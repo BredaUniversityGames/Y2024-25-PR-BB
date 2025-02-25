@@ -71,7 +71,7 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(4);
+        VERSION(5);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -100,6 +100,8 @@ struct Settings
 
         // fixed palette
         bool enablePalette;
+        float ditherAmount = 0.15f;
+        float paletteAmount = 0.8f;
         glm::vec4 palette[5] = {
             glm::vec4(14.0f, 193.0f, 4.0f, 256.0f) / 256.0f, // Black
             glm::vec4(6.0f, 6.0f, 6.0f, 256.0f) / 256.0f, // White
@@ -126,7 +128,7 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, palette);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

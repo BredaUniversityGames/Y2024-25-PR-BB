@@ -41,6 +41,9 @@ layout (push_constant) uniform PushConstants
     float pixelizationDepthBias;
     uint screenWidth;
     uint screenHeight;
+
+    float ditherAmount;
+    float paletteAmount;
     vec4 palette[5];
 } pc;
 
@@ -107,7 +110,7 @@ void main()
 
     if (paletteEnabled)
     {
-        hdrColor = ComputeQuantizedColor(hdrColor, 0.15, 0.8);
+        hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
     }
 
 

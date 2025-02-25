@@ -362,6 +362,8 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::SameLine();
     ImGui::SeparatorText("Color Palette");
     ImGui::BeginDisabled(!tonemapping.enablePalette);
+    ImGui::DragFloat("Dither Amount", &tonemapping.ditherAmount, 0.01f);
+    ImGui::DragFloat("Palette Amount", &tonemapping.paletteAmount, 0.01f);
     for (int i = 0; i < 5; i++)
     {
         ImGui::PushID(i);
