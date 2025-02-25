@@ -85,14 +85,14 @@ void ParticleEmitterComponent::Inspect()
 
         for (auto it = bursts.begin(); it != bursts.end();)
         {
-            std::size_t index = std::distance(bursts.begin(), it);
+            int index = std::distance(bursts.begin(), it);
             ImGui::TableNextRow();
             auto copyIt = it;
             it++;
             auto& burst = *copyIt;
 
             ImGui::TableNextColumn();
-            ImGui::Text(std::string("Burst " + std::to_string(index)).c_str());
+            ImGui::Text("Burst %i", index);
 
             ImGui::TableNextColumn();
             int32_t burstCount = static_cast<int32_t>(burst.count);
