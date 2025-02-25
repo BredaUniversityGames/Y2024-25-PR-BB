@@ -55,31 +55,8 @@ int Modi(int x, int y);
 int And(int a, int b);
 vec3 Vibrance(vec3 inCol, float vibrance);
 vec3 ShiftHue(in vec3 col, in float Shift);
+vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize);
 
-#define MIN_SIZE 1.0
-#define MAX_SIZE 4.0
-
-
-float ComputeCircle(vec2 pos, vec2 center, float radius, float feather)
-{
-    // Determine the distance to the center of the circle.
-    float dist = length(center - pos);
-
-    // Use the distance and the specified feather factor to determine where the distance lies
-    // relative to the circle border.
-    float start = radius - feather;
-    float end = radius + feather;
-    return smoothstep(start, end, dist);
-}
-
-
-/* 4x4 Bayer (Ordered Dithering) Matrix
-float bayer[4][4] = float[4][4](
-float[4](0.0, 8.0, 2.0, 10.0),
-float[4](12.0, 4.0, 14.0, 6.0),
-float[4](3.0, 11.0, 1.0, 9.0),
-float[4](15.0, 7.0, 13.0, 5.0)
-);*/
 
 // 4x4 Bayer matrix with values 0..15
 float bayer[4][4] = float[4][4](
@@ -104,37 +81,15 @@ void main()
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
     }
     // Prepare the circle parameters, cycling the circle size over time.
-    vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
-    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
+    const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
+    const float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
-    // Number of discrete pixelation levels
-    float levels = pc.pixelizationLevels;
 
-    // Clamp and quantize the depth sample to one of the discrete levels.
-    float t = clamp(depthSample * pc.pixelizationDepthBias, 0.0, 1.0);
-    t = floor(t * levels) / (levels - 1.0);
-
-    // Now use the quantized value in the mix function.
-    float diameter = mix(pc.minPixelSize, pc.maxPixelSize, t);
-
-    vec2 center = vec2(0.0);
-    vec2 iResolution = vec2(1920.0, 1080.0);
-
-    // Compute "pixelated" (stepped) texture coordinates using the floor() function.
-    // The position is adjusted to match the circles, i.e. so a pixelated block is at the center of the
-    // display.
-    vec2 count = iResolution.xy / diameter;
-    vec2 shift = vec2(0.5) - fract(count / 2.0);
-    vec2 uv = floor(count * texCoords + shift) / count;
-
-    // Sample the texture, using an offset to the center of the pixelated block.
-    // NOTE: Use a large negative bias to effectively disable mipmapping, which would otherwise lead
-    // to sampling artifacts where the UVs change abruptly at the pixelated block boundaries.
-    uv += vec2(0.5) / count;
-    uv = clamp(uv, 0.0, 0.99);
-    //uv.y = 1.0 - uv.y;
+    const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(1920.0, 1080.0));
 
     vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+
+
     float ditherValue = ((bayer[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4] + 0.5) / 16.0) - 0.5;
     hdrColor += ditherValue * 0.15;
     //hdrColor = clamp(hdrColor, 0.0, 1.0);
@@ -193,6 +148,31 @@ void main()
 
     outColor = vec4(color, 1.0);
 }
+
+vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize)
+{
+    // Clamp and quantize the depth sample to one of the discrete levels.
+    float t = clamp(depthSample * pc.pixelizationDepthBias, 0.0, 1.0);
+    t = floor(t * levels) / (levels - 1.0);
+
+    // Now use the quantized value in the mix function.
+    const float diameter = mix(pc.minPixelSize, pc.maxPixelSize, t);
+
+    // Compute "pixelated" (stepped) texture coordinates using the floor() function.
+    // The position is adjusted to match the circles, i.e. so a pixelated block is at the center of the
+    // display.
+    const vec2 count = screenSize.xy / diameter;
+    const vec2 shift = vec2(0.5) - fract(count / 2.0);
+    vec2 uv = floor(count * texCoords + shift) / count;
+
+    // Sample the texture, using an offset to the center of the pixelated block.
+    // NOTE: Use a large negative bias to effectively disable mipmapping, which would otherwise lead
+    // to sampling artifacts where the UVs change abruptly at the pixelated block boundaries.
+    uv += vec2(0.5) / count;
+    uv = clamp(uv, 0.0, 0.99);
+    return uv;
+}
+
 
 vec3 Vignette(in vec3 color, in vec2 uv, in float intensity)
 {
