@@ -1,5 +1,6 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "gameplay/movement.wren" for PlayerMovement, EnemyMovement
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "gameplay/movement.wren" for PlayerMovement
+import "gameplay/enemies/spawner.wren" for Spawner
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
@@ -13,7 +14,6 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
-        __enemyMovement = EnemyMovement.new(engine)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -92,6 +92,13 @@ class Main {
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+
+
+        __spawner = Spawner.new()
+        __spawner.SpawnEnemies(5)
+        for(enemy in __spawner.GetEnemies()) {
+            System.print(enemy.position)
+        }
     }
 
     static Shutdown(engine) {
@@ -135,7 +142,6 @@ class Main {
         }
 
         __playerMovement.Update(engine,dt,__playerController, __camera)
-        __enemyMovement.Update(engine)
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
