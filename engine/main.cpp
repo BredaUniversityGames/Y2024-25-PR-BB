@@ -26,9 +26,9 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
         instance
             .AddModule<ThreadModule>()
-            .AddModule<ScriptingModule>()
             .AddModule<InspectorModule>()
             .AddModule<ECSModule>()
+            .AddModule<ScriptingModule>()
             .AddModule<TimeModule>()
             .AddModule<SteamModule>()
             .AddModule<ApplicationModule>()

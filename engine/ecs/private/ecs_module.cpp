@@ -74,4 +74,21 @@ void ECSModule::DestroyEntity(entt::entity entity)
 {
     assert(registry.valid(entity));
     registry.emplace_or_replace<DeleteTag>(entity);
+    RelationshipComponent* relationship = registry.try_get<RelationshipComponent>(entity);
+    if (relationship != nullptr)
+    {
+        if (relationship->childrenCount > 0)
+        {
+            entt::entity child = relationship->first;
+            for (size_t i = 0; i < relationship->childrenCount; ++i)
+            {
+                RelationshipComponent* childRelationship = registry.try_get<RelationshipComponent>(child);
+                if (childRelationship != nullptr)
+                {
+                    DestroyEntity(child);
+                    child = childRelationship->next;
+                }
+            }
+        }
+    }
 }

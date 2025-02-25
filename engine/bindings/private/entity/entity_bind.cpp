@@ -5,9 +5,9 @@
 #include "animation.hpp"
 #include "audio_emitter_component.hpp"
 #include "cheats_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
-#include "components/directional_light_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -117,8 +117,6 @@ float DirectionalLightComponentGetOrthographicSize(WrenComponent<DirectionalLigh
     return component.component->orthographicSize;
 }
 
-
-
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
 
 void BindEntity(wren::ForeignModule& module)
@@ -160,7 +158,9 @@ WrenEntity CreateEntity(ECSModule& self)
 
 void FreeEntity(ECSModule& self, WrenEntity& entity)
 {
-    self.GetRegistry().destroy(entity.entity);
+    if (!self.GetRegistry().valid(entity.entity))
+        return;
+    self.DestroyEntity(entity.entity);
 }
 
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
@@ -196,7 +196,7 @@ void BindEntityAPI(wren::ForeignModule& module)
     {
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
-        //nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+        // nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
         nameClass.propExt<bindings::NameComponentGetName, bindings::NameComponentSetName>("name");
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");

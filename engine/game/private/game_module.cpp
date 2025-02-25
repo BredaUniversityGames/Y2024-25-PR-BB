@@ -27,10 +27,13 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
+#include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
+
+#include <components/static_mesh_component.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -64,14 +67,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/monkey.gltf",
     };
     auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    //auto gunEntity = entities[1];
+    // auto gunEntity = entities[1];
 
     entt::entity cameraEntity = ECS.GetRegistry().create();
     ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
     ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
     ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-    //RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
+    // RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
     CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
     cameraComponent.projection = CameraComponent::Projection::ePerspective;
@@ -113,6 +116,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
+    auto& scriptingModule = engine.GetModule<ScriptingModule>();
 
     float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
@@ -212,6 +216,14 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
         physicsModule.debugRenderer->SetState(!physicsModule.debugRenderer->GetState());
+    }
+
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eP))
+        scriptingModule.SetMainScript(engine, "swap_test.wren");
+
+    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
+    {
+        scriptingModule.SetMainScript(engine, "swap_test_2.wren");
     }
 
     // Toggle pathfinding debug drawing
