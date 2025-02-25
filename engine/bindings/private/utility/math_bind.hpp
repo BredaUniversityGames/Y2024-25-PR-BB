@@ -61,6 +61,10 @@ public:
     {
         return glm::dot(a, b);
     }
+    static glm::vec3 Cross(glm::vec3 a, glm::vec3 b)
+    {
+        return glm::cross(a, b);
+    }
     static float Clamp(float a, float min, float max)
     {
         return glm::clamp(a, min, max);
@@ -72,6 +76,37 @@ public:
     static float Abs(float a)
     {
         return glm::abs(a);
+    }
+    static float Max(const float a, const float b)
+    {
+        return glm::max(a, b);
+    }
+    static float Min(const float a, const float b)
+    {
+        return glm::min(a, b);
+    }
+    static float Radians(const float a)
+    {
+        return glm::radians(a);
+    }
+    static glm::quat AngleAxis(const float a, glm::vec3 vec)
+    {
+        return glm::angleAxis(a, vec);
+    }
+    static glm::vec3 RotateForwardVector(glm::vec3 forward, glm::vec2 rotation, glm::vec3 up)
+    {
+        glm::vec3 normalizedForward = glm::normalize(forward);
+        glm::vec3 normalizedUp = glm::normalize(up);
+
+        glm::quat yawQuat = glm::angleAxis(glm::radians(rotation.x), normalizedUp);
+        glm::vec3 rotatedForward = yawQuat * normalizedForward;
+
+        glm::vec3 right = glm::normalize(glm::cross(normalizedUp, rotatedForward));
+
+        glm::quat pitchQuat = glm::angleAxis(glm::radians(rotation.y), right);
+        rotatedForward = pitchQuat * rotatedForward;
+
+        return glm::normalize(rotatedForward);
     }
     static float PI()
     {
@@ -145,7 +180,13 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
         mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+        mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
+        mathUtilClass.funcStatic<&MathUtil::Max>("Max");
+        mathUtilClass.funcStatic<&MathUtil::Min>("Min");
+        mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
+        mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
+        mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
         mathUtilClass.funcStatic<&MathUtil::PI>("PI");

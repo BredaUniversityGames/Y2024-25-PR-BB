@@ -110,7 +110,9 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
 
-    ResourceHandle<GPUImage> Shadow() const { return _shadowImage; }
+    ResourceHandle<GPUImage> StaticShadow() const { return _staticShadowImage; }
+    ResourceHandle<GPUImage> DynamicShadow() const { return _dynamicShadowImage; }
+    bool ShouldUpdateShadows() const { return _shouldUpdateShadows; }
 
     const CameraResource& DirectionalLightShadowCamera() const { return _directionalLightShadowCamera; }
     CameraBatch& ShadowCameraBatch() const { return *_shadowCameraBatch; }
@@ -127,6 +129,8 @@ private:
 
         glm::vec4 direction;
         glm::vec4 color;
+        float poissonWorldOffset;
+        float poissonConstant;
     };
 
     struct alignas(16) PointLightData
@@ -150,20 +154,22 @@ private:
         uint32_t irradianceIndex;
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
-        uint32_t shadowMapIndex;
+        uint32_t staticShadowMapIndex;
+        uint32_t dynamicShadowMapIndex;
 
         glm::vec3 fogColor;
         float fogDensity;
         float fogHeight;
     };
 
-    struct alignas(16) InstanceData
+    struct alignas(32) InstanceData
     {
         glm::mat4 model;
 
         uint32_t materialIndex;
         float boundingRadius;
         uint32_t boneOffset;
+        bool isStaticDraw;
     };
 
     struct FrameData
@@ -214,6 +220,7 @@ private:
 
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
+    bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
     CameraResource _directionalLightShadowCamera;
@@ -221,7 +228,8 @@ private:
     std::unique_ptr<CameraBatch> _mainCameraBatch;
     std::unique_ptr<CameraBatch> _shadowCameraBatch;
 
-    ResourceHandle<GPUImage> _shadowImage;
+    ResourceHandle<GPUImage> _staticShadowImage;
+    ResourceHandle<GPUImage> _dynamicShadowImage;
     ResourceHandle<Sampler> _shadowSampler;
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;

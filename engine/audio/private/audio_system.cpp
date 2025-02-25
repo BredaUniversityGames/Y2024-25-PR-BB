@@ -64,6 +64,14 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 
         if (!ecs.GetRegistry().all_of<TransformComponent>(entity))
         {
+            for (auto& eventInstance : emitter._eventIds)
+            {
+                if (eventInstance.startDuringSystemUpdate)
+                {
+                    _audioModule.StartEventInstance(eventInstance);
+                    eventInstance.startDuringSystemUpdate = false;
+                }
+            }
             return;
         }
 
@@ -80,7 +88,7 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
             velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID));
         }
         // Update 3D position of sounds
-        for (auto soundInstance : emitter._soundIds)
+        for (auto& soundInstance : emitter._soundIds)
         {
             if (soundInstance.is3D)
             {
@@ -92,13 +100,19 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
             }
         }
         // Update 3D position of events
-        for (auto eventInstance : emitter._eventIds)
+        for (auto& eventInstance : emitter._eventIds)
         {
             _audioModule.SetEvent3DAttributes(eventInstance, position, velocity, forward, up);
             _audioModule.AddDebugLine(position + glm::vec3(-1.f, 1.f, -1.f), position + glm::vec3(-1.f, 1.f, 1.f));
             _audioModule.AddDebugLine(position + glm::vec3(1.f, 1.f, -1.f), position + glm::vec3(1.f, 1.f, 1.f));
             _audioModule.AddDebugLine(position + glm::vec3(-1.f, -1.f, -1.f), position + glm::vec3(-1.f, -1.f, 1.f));
             _audioModule.AddDebugLine(position + glm::vec3(1.f, -1.f, -1.f), position + glm::vec3(1.f, -1.f, 1.f));
+
+            if (eventInstance.startDuringSystemUpdate)
+            {
+                _audioModule.StartEventInstance(eventInstance);
+                eventInstance.startDuringSystemUpdate = false;
+            }
         }
     }
 }

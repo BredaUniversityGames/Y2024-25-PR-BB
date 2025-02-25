@@ -34,13 +34,13 @@ layout (location = 0) out vec3 position;
 
 void main()
 {
-    Instance instance = instances[redirect[gl_DrawID]];
+    const uint instanceBoneOffset = instances[redirect[gl_DrawID]].boneOffset;
 
-    mat4 skinMatrix =
-    inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
-    inWeights.y * skinningMatrices[int(inJoints.y) + instance.boneOffset] +
-    inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
-    inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
+    const mat4 skinMatrix =
+    inWeights.x * skinningMatrices[int(inJoints.x) + instanceBoneOffset] +
+    inWeights.y * skinningMatrices[int(inJoints.y) + instanceBoneOffset] +
+    inWeights.z * skinningMatrices[int(inJoints.z) + instanceBoneOffset] +
+    inWeights.w * skinningMatrices[int(inJoints.w) + instanceBoneOffset];
 
     position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
 
