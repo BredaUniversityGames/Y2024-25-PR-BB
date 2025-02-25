@@ -5,24 +5,27 @@
 #include "settings.glsl"
 #include "tonemapping.glsl"
 
+
+#define ENABLE_VIGNETTE        (1 << 0)
+#define ENABLE_LENS_DISTORTION (1 << 1)
+#define ENABLE_TONE_ADJUSTMENTS (1 << 2)
+
 layout (push_constant) uniform PushConstants
 {
     uint hdrTargetIndex;
     uint bloomTargetIndex;
     uint depthIndex;
 
+    uint enableFlags;
+
     uint tonemappingFunction;
     float exposure;
 
-    bool enableVignette;
     float vignetteIntensity;
-
-    bool enableLensDistortion;
     float lensDistortionIntensity;
     float lensDistortionCubicIntensity;
     float screenScale;
 
-    bool enableToneAdjustments;
     float brightness;
     float contrast;
     float saturation;
@@ -73,7 +76,12 @@ float[4](15.0, 7.0, 13.0, 5.0)
 void main()
 {
     vec2 newTexCoords = texCoords;
-    if (pc.enableLensDistortion)
+    const uint enableFlags = pc.enableFlags;
+    const bool vignetteEnabled = bool(enableFlags & ENABLE_VIGNETTE);
+    const bool lensDistortionEnabled = bool(enableFlags & ENABLE_LENS_DISTORTION);
+    const bool toneAdjustmentsEnabled = bool(enableFlags & ENABLE_TONE_ADJUSTMENTS);
+
+    if (lensDistortionEnabled)
     {
         newTexCoords = LensDistortionUV(texCoords, pc.lensDistortionIntensity, pc.lensDistortionCubicIntensity);
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
@@ -110,7 +118,7 @@ void main()
     // Gamma correction
     color = pow(color, vec3(1.0 / 2.2));
 
-    if (pc.enableToneAdjustments)
+    if (toneAdjustmentsEnabled)
     {
         color = (SaturationMatrix(pc.saturation) * vec4(color, 1.0)).rgb;
         BrightnessAdjust(color, pc.brightness);
@@ -119,7 +127,7 @@ void main()
         color = ShiftHue(color, pc.hue);
     }
 
-    if (pc.enableVignette)
+    if (vignetteEnabled)
     {
         color = Vignette(color, texCoords, pc.vignetteIntensity);
     }

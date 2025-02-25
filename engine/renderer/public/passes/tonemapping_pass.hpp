@@ -23,39 +23,46 @@ public:
     NON_MOVABLE(TonemappingPass);
 
 private:
+    enum TonemappingFlags : uint32_t
+    {
+        ENABLE_VIGNETTE = 1 << 0,
+        ENABLE_LENS_DISTORTION = 1 << 1,
+        ENABLE_TONE_ADJUSTMENTS = 1 << 2,
+        // Add more flags as needed.
+    };
+
     struct PushConstants
     {
         uint32_t hdrTargetIndex;
         uint32_t bloomTargetIndex;
         uint32_t depthIndex;
+        uint32_t enableFlags;
 
         uint32_t tonemappingFunction { 0 };
         float exposure { 1.0f };
 
-        uint32_t enableVignette;
         float vignetteIntensity;
-
-        uint32_t enableLensDistortion;
         float lensDistortionIntensity;
         float lensDistortionCubicIntensity;
         float screenScale;
 
-        uint32_t enableToneAdjustments;
         float brightness;
         float contrast;
         float saturation;
         float vibrance;
         float hue;
 
-        // pixelization
         float minPixelSize;
         float maxPixelSize;
         float pixelizationLevels;
         float pixelizationDepthBias;
-
         uint32_t screenWidth;
         uint32_t screenHeight;
-        uint32_t pad2;
+
+        uint32_t pad0; // offset 84
+        uint32_t pad1; // offset 88
+        uint32_t pad2; // offset 92
+
         glm::vec4 palette[5];
     } _pushConstants;
 
@@ -73,4 +80,18 @@ private:
     const GBuffers& _gBuffers;
 
     void CreatePipeline();
+
+    // Helper functions to set and query flags.
+    inline void setFlag(uint32_t& flags, TonemappingFlags flag, bool enabled)
+    {
+        if (enabled)
+            flags |= flag;
+        else
+            flags &= ~flag;
+    }
+
+    inline bool isFlagSet(uint32_t flags, TonemappingFlags flag)
+    {
+        return (flags & flag) != 0;
+    }
 };

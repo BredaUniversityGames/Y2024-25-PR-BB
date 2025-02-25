@@ -43,15 +43,29 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.exposure = _settings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
 
-    _pushConstants.enableVignette = _settings.enableVignette;
+    _pushConstants.enableFlags = 0;
+
+    if (_settings.enableVignette)
+    {
+        _pushConstants.enableFlags |= ENABLE_VIGNETTE;
+    }
+
+    if (_settings.enableLensDistortion)
+    {
+        _pushConstants.enableFlags |= ENABLE_LENS_DISTORTION;
+    }
+
+    if (_settings.enableToneAdjustments)
+    {
+        _pushConstants.enableFlags |= ENABLE_TONE_ADJUSTMENTS;
+    }
+
     _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
 
-    _pushConstants.enableLensDistortion = _settings.enableLensDistortion;
     _pushConstants.lensDistortionIntensity = _settings.lensDistortionIntensity;
     _pushConstants.lensDistortionCubicIntensity = _settings.lensDistortionCubicIntensity;
     _pushConstants.screenScale = _settings.screenScale;
 
-    _pushConstants.enableToneAdjustments = _settings.enableToneAdjustments;
     _pushConstants.brightness = _settings.brightness;
     _pushConstants.contrast = _settings.contrast;
     _pushConstants.saturation = _settings.saturation;
