@@ -3,7 +3,6 @@
 #include "animation.hpp"
 #include "components/animation_channel_component.hpp"
 #include "components/animation_transform_component.hpp"
-#include "components/joint_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/transform_component.hpp"
@@ -89,15 +88,15 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
     // Draw skeletons as debug lines
-    const auto debugView = ecs.GetRegistry().view<const JointComponent, const SkeletonNodeComponent, const SkeletonMatrixTransform>();
+    const auto debugView = ecs.GetRegistry().view<const JointSkinDataComponent, const SkeletonNodeComponent, const JointWorldTransformComponent>();
     for (auto entity : debugView)
     {
         const auto& node = debugView.get<SkeletonNodeComponent>(entity);
-        const auto& transform = debugView.get<SkeletonMatrixTransform>(entity);
+        const auto& transform = debugView.get<JointWorldTransformComponent>(entity);
 
         if (node.parent != entt::null)
         {
-            const auto& parentTransform = debugView.get<SkeletonMatrixTransform>(node.parent);
+            const auto& parentTransform = debugView.get<JointWorldTransformComponent>(node.parent);
 
             glm::vec3 position { transform.world[3][0], transform.world[3][1], transform.world[3][2] };
             glm::vec3 parentPosition { parentTransform.world[3][0], parentTransform.world[3][1], parentTransform.world[3][2] };
@@ -117,7 +116,7 @@ void AnimationSystem::TraverseAndCalculateMatrix(entt::entity entity, const glm:
 
     auto [node, transform] = view[entity];
 
-    auto& matrix = ecs.GetRegistry().get_or_emplace<SkeletonMatrixTransform>(entity);
+    auto& matrix = ecs.GetRegistry().get_or_emplace<JointWorldTransformComponent>(entity);
 
     const glm::mat4 translationMatrix = glm::translate(glm::mat4 { 1.0f }, transform.position);
     const glm::mat4 rotationMatrix = glm::toMat4(transform.rotation);

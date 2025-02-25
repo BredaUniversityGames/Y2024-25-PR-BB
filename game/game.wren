@@ -29,7 +29,7 @@ class Main {
         var demons = engine.GetECS().GetEntitiesByName("Demon")
         for(demon in demons) {
             var demonAnimations = demon.GetAnimationControlComponent()
-            demonAnimations.Play("Armature.001|A_Run_F_Masc|BaseLayer", 1.0, true)
+            demonAnimations.Play("Armature|mixamo.com|Layer0", 1.0, true)
         }
 
         if (__camera) {

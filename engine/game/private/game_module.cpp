@@ -35,8 +35,6 @@
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    ZoneScopedN("Game Module Initialization");
-
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
@@ -54,8 +52,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     std::vector<std::string> modelPaths = {
-        //
-        //"assets/models/Cathedral.glb",
+        "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         //"assets/models/BrainStem.glb",
         //"assets/models/Adventure.glb",
@@ -66,60 +63,66 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-    auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    auto gunEntity = entities[0];
-
-    auto demon = ModelLoading::LoadGLTF("assets/models/Demon.glb");
-    auto demonGpu = engine.GetModule<RendererModule>().LoadModels({ demon });
-
-    const size_t DIM = 10;
-    for (size_t i = 0; i < DIM; ++i)
+    entt::entity gunEntity;
     {
-        for (size_t j = 0; j < DIM; ++j)
+        ZoneScopedN("Scene models");
+        auto entities = SceneLoading::LoadModels(engine, modelPaths);
+        gunEntity = entities[1];
+
+        auto demon = ModelLoading::LoadGLTF("assets/models/Mutant.glb");
+        auto demonGpu = engine.GetModule<RendererModule>().LoadModels({ demon });
+
+        const size_t DIM = 10;
+        for (size_t i = 0; i < DIM; ++i)
         {
-            auto ent = SceneLoading::LoadModels(engine, { demon }, demonGpu)[0];
-            TransformHelpers::SetLocalPosition(ecs.GetRegistry(), ent, { i, 0, j });
-            TransformHelpers::SetLocalScale(ecs.GetRegistry(), ent, { 0.01f, 0.01f, 0.01f });
-            NameComponent& name = ecs.GetRegistry().get<NameComponent>(ent);
-            name.name = "Demon";
+            for (size_t j = 0; j < DIM; ++j)
+            {
+                auto ent = SceneLoading::LoadModels(engine, { demon }, demonGpu)[0];
+                TransformHelpers::SetLocalPosition(ecs.GetRegistry(), ent, { i, 0, j });
+                TransformHelpers::SetLocalScale(ecs.GetRegistry(), ent, { 0.01f, 0.01f, 0.01f });
+                NameComponent& name = ecs.GetRegistry().get<NameComponent>(ent);
+                name.name = "Demon";
+            }
         }
     }
 
-    entt::entity lightEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-    ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
+    {
+        ZoneScopedN("ECS Additional Scene Setup");
+        entt::entity lightEntity = ECS.GetRegistry().create();
+        ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
+        ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
 
-    DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-    directionalLightComponent.nearPlane = 0.1f;
-    directionalLightComponent.farPlane = 200.0f;
-    directionalLightComponent.orthographicSize = 75.0f;
+        DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
+        directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+        directionalLightComponent.nearPlane = 0.1f;
+        directionalLightComponent.farPlane = 200.0f;
+        directionalLightComponent.orthographicSize = 75.0f;
 
-    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
-    TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+        TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
+        TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    entt::entity cameraEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-    ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
-    ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+        entt::entity cameraEntity = ECS.GetRegistry().create();
+        ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
+        ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
+        ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-    RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
+        RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
-    CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
-    cameraComponent.projection = CameraComponent::Projection::ePerspective;
-    cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.5f;
-    cameraComponent.farPlane = 600.0f;
-    cameraComponent.reversedZ = true;
+        CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
+        cameraComponent.projection = CameraComponent::Projection::ePerspective;
+        cameraComponent.fov = 45.0f;
+        cameraComponent.nearPlane = 0.5f;
+        cameraComponent.farPlane = 600.0f;
+        cameraComponent.reversedZ = true;
 
-    ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
+        ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
-    glm::ivec2 mousePos;
-    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-    _lastMousePos = mousePos;
+        glm::ivec2 mousePos;
+        applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
+        _lastMousePos = mousePos;
 
-    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-
+        applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+    }
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;

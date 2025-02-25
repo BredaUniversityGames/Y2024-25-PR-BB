@@ -13,17 +13,22 @@ struct SkeletonNodeComponent
 struct SkeletonComponent
 {
     entt::entity root;
-    uint32_t boneOffset = 0;
 };
 
-struct SkeletonMatrixTransform
+struct JointWorldTransformComponent
 {
     glm::mat4 world;
 };
 
+struct JointSkinDataComponent
+{
+    glm::mat4 inverseBindMatrix {}; // TODO: Is constant over each mesh
+    uint32_t jointIndex {};
+    entt::entity skeletonEntity { entt::null };
+};
+
 namespace SkeletonHelpers
 {
-
 void AttachChild(entt::registry& registry, entt::entity parent, entt::entity child);
 void InitializeSkeletonNode(SkeletonNodeComponent& node);
 }

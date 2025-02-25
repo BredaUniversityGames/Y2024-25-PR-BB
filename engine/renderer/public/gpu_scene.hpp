@@ -7,6 +7,7 @@
 #include "settings.hpp"
 #include "vulkan_include.hpp"
 
+#include <entt/entity/entity.hpp>
 #include <memory>
 #include <tracy/TracyVulkan.hpp>
 
@@ -239,6 +240,8 @@ private:
     vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSetLayout _redirectDSL;
     vk::DescriptorSetLayout _hzbImageDSL;
+
+    std::unordered_map<entt::entity, uint32_t> _skeletonBoneOffset {};
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);

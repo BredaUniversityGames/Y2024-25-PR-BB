@@ -5,7 +5,6 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/is_static_draw.hpp"
-#include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
@@ -225,7 +224,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         skinnedInstances[count].materialIndex = mesh->material.Index();
         skinnedInstances[count].boundingRadius = mesh->boundingRadius;
-        skinnedInstances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        skinnedInstances[count].boneOffset = _skeletonBoneOffset[skinnedMeshComponent.skeletonEntity];
         skinnedInstances[count].isStaticDraw = true;
 
         _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
@@ -235,7 +234,6 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
-
             },
         });
 
@@ -351,14 +349,12 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
-    auto jointView = _ecs.GetRegistry().view<JointComponent, SkeletonMatrixTransform>();
+    auto jointView = _ecs.GetRegistry().view<JointSkinDataComponent, JointWorldTransformComponent>();
     auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
     static std::array<glm::mat4, MAX_BONES> skinMatrices {};
-    static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
-    skeletonBoneOffset.clear();
 
     // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
-    _ecs.GetRegistry().sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
+    _ecs.GetRegistry().sort<JointSkinDataComponent>([](const JointSkinDataComponent& a, const JointSkinDataComponent& b)
         { return a.skeletonEntity < b.skeletonEntity; });
 
     // While traversing all joints we keep track of skeleton we're on, this helps for determining when we switch to another skeleton.
@@ -369,8 +365,8 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     uint32_t highestIndex = 0;
     for (entt::entity entity : jointView)
     {
-        const auto& joint = jointView.get<JointComponent>(entity);
-        const auto& jointMatrixComponent = jointView.get<SkeletonMatrixTransform>(entity);
+        const auto& joint = jointView.get<JointSkinDataComponent>(entity);
+        const auto& jointMatrixComponent = jointView.get<JointWorldTransformComponent>(entity);
         const glm::mat4& jointWorldTransform = jointMatrixComponent.world;
 
         const auto& skeletonMatrixComponent = skeletonView.get<WorldMatrixComponent>(joint.skeletonEntity);
@@ -381,20 +377,13 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
             lastSkeleton = joint.skeletonEntity;
             offset += highestIndex + 1;
 
-            skeletonBoneOffset[lastSkeleton] = offset;
+            _skeletonBoneOffset[lastSkeleton] = offset;
             highestIndex = 0;
         }
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
         skinMatrices[offset + joint.jointIndex] = (skeletonWorldTransform * jointWorldTransform) * joint.inverseBindMatrix;
-    }
-
-    // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
-    for (auto [entity, offset] : skeletonBoneOffset)
-    {
-        auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
-        skeleton.boneOffset = offset;
     }
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
