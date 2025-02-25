@@ -28,7 +28,7 @@ class Main {
 
         var mutant = engine.GetECS().GetEntityByName("Clown")
         var mutantAnimations = mutant.GetAnimationControlComponent()
-        mutantAnimations.Play("Armature|mixamo.com|Layer0", 1.0, true)
+        mutantAnimations.Play("Walk", 1.0, true)
         mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
         mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
@@ -97,16 +97,6 @@ class Main {
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
-
-        System.print("\nRandom numbers in range 0 to 1\n")
-        for(i in 0..10) {
-            System.print(Random.RandomFloat())
-        }
-
-        System.print("\nRandom numbers in range -10 to 10\n")
-        for(i in 0..10) {
-            System.print(Random.RandomFloat(-10, 10))
-        }
     }
 
     static Shutdown(engine) {
