@@ -34,6 +34,8 @@ layout (push_constant) uniform PushConstants
     float maxPixelSize;
     float pixelizationLevels;
     float pixelizationDepthBias;
+    uint screenWidth;
+    uint screenHeight;
     vec4 palette[5];
 } pc;
 
@@ -84,9 +86,7 @@ void main()
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
     const float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
-
-    const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(1920.0, 1080.0));
-
+    const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
     vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
 
 

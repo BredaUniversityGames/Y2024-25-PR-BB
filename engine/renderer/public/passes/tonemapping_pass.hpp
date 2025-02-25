@@ -53,8 +53,8 @@ private:
         float pixelizationLevels;
         float pixelizationDepthBias;
 
-        uint32_t pad0;
-        uint32_t pad1;
+        uint32_t screenWidth;
+        uint32_t screenHeight;
         uint32_t pad2;
         glm::vec4 palette[5];
     } _pushConstants;

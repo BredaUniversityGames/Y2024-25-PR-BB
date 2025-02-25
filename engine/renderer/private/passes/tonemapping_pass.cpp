@@ -26,6 +26,8 @@ TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context
     _pushConstants.hdrTargetIndex = hdrTarget.Index();
     _pushConstants.bloomTargetIndex = bloomTarget.Index();
     _pushConstants.depthIndex = gBuffers.Depth().Index();
+    _pushConstants.screenWidth = _gBuffers.Size().x;
+    _pushConstants.screenHeight = _gBuffers.Size().y;
 }
 
 TonemappingPass::~TonemappingPass()
