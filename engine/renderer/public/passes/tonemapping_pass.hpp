@@ -14,7 +14,7 @@ class GraphicsContext;
 class TonemappingPass final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const GBuffers& gBuffers, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings);
+    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings);
     ~TonemappingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -71,6 +71,7 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     const Settings::Tonemapping& _settings;
     const SwapChain& _swapChain;
+    const GBuffers& _gBuffers;
     ResourceHandle<GPUImage> _hdrTarget;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _outputTarget;
@@ -79,21 +80,6 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
-    const GBuffers& _gBuffers;
 
     void CreatePipeline();
-
-    // Helper functions to set and query flags.
-    inline void setFlag(uint32_t& flags, TonemappingFlags flag, bool enabled)
-    {
-        if (enabled)
-            flags |= flag;
-        else
-            flags &= ~flag;
-    }
-
-    inline bool isFlagSet(uint32_t flags, TonemappingFlags flag)
-    {
-        return (flags & flag) != 0;
-    }
 };

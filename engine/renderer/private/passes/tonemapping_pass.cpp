@@ -11,13 +11,13 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, const GBuffers& gBuffers, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
     , _settings(settings)
     , _swapChain(_swapChain)
+    , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
-    , _gBuffers(gBuffers)
     , _outputTarget(outputTarget)
     , _bloomSettings(bloomSettings)
 {
