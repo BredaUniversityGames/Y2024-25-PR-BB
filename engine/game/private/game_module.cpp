@@ -20,6 +20,7 @@
 #include "input/input_device_manager.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/shadow_pass.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
@@ -33,8 +34,6 @@
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    ZoneScopedN("Game Module Initialization");
-
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
@@ -62,44 +61,51 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         "assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-    auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    auto gunEntity = entities[1];
 
-    entt::entity lightEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-    ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
+    entt::entity gunEntity;
+    {
+        ZoneScopedN("Scene models");
+        auto entities = SceneLoading::LoadModels(engine, modelPaths);
+        gunEntity = entities[1];
+    }
 
-    DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-    directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-    directionalLightComponent.nearPlane = 0.1f;
-    directionalLightComponent.farPlane = 200.0f;
-    directionalLightComponent.orthographicSize = 75.0f;
+    {
+        ZoneScopedN("ECS Additional Scene Setup");
+        entt::entity lightEntity = ECS.GetRegistry().create();
+        ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
+        ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
 
-    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
-    TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
+        DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
+        directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
+        directionalLightComponent.nearPlane = 0.1f;
+        directionalLightComponent.farPlane = 200.0f;
+        directionalLightComponent.orthographicSize = 75.0f;
 
-    entt::entity cameraEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-    ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
-    ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
+        TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
+        TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
+        entt::entity cameraEntity = ECS.GetRegistry().create();
+        ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
+        ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
+        ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-    CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
-    cameraComponent.projection = CameraComponent::Projection::ePerspective;
-    cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.5f;
-    cameraComponent.farPlane = 600.0f;
-    cameraComponent.reversedZ = true;
+        RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
-    ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
+        CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
+        cameraComponent.projection = CameraComponent::Projection::ePerspective;
+        cameraComponent.fov = 45.0f;
+        cameraComponent.nearPlane = 0.5f;
+        cameraComponent.farPlane = 600.0f;
+        cameraComponent.reversedZ = true;
 
-    glm::ivec2 mousePos;
-    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-    _lastMousePos = mousePos;
+        ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
 
-    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+        glm::ivec2 mousePos;
+        applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
+        _lastMousePos = mousePos;
 
+        applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+    }
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;

@@ -6,7 +6,8 @@
 #include <memory>
 #include <vector>
 #include <vk_mem_alloc.h>
-#include <vulkan/vulkan.hpp>
+
+#include "vulkan_include.hpp"
 
 class GraphicsContext;
 struct Texture;
@@ -21,6 +22,12 @@ public:
     void Submit();
     void CreateLocalBuffer(const std::byte* vec, uint32_t count, vk::Buffer& buffer, VmaAllocation& allocation, vk::BufferUsageFlags usage, std::string_view name);
     void CopyIntoLocalBuffer(const std::byte* vec, uint32_t count, uint32_t offset, vk::Buffer buffer);
+
+    void TrackAllocation(VmaAllocation allocation, vk::Buffer buffer)
+    {
+        _stagingAllocations.push_back(allocation);
+        _stagingBuffers.push_back(buffer);
+    }
 
     template <typename T>
     void CreateLocalBuffer(const std::vector<T>& vec, vk::Buffer& buffer, VmaAllocation& allocation, vk::BufferUsageFlags usage, std::string_view name)

@@ -20,12 +20,24 @@ void ParticleEmitterComponent::Inspect()
     // emitter variables
     ImGui::Text("Emitter");
     ImGui::DragFloat3("Position##Particle Emitter", &emitter.position.x, 0.1f);
-    int32_t emitterCount = static_cast<int32_t>(emitter.count);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+    {
+        ImGui::TextUnformatted("Only applied when there is no rigidBody or transform.");
+        ImGui::EndTooltip();
+    }
+    ImGui::DragFloat3("Position Offset##Particle Emitter", &positionOffset.x, 0.1f);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+    {
+        ImGui::TextUnformatted("Offset to the position of the entity's rigidBody or transform.");
+        ImGui::EndTooltip();
+    }
+    int32_t emitterCount = static_cast<int32_t>(count);
     ImGui::DragInt("Count##Particle Emitter", &emitterCount, 1, 0, 1024);
-    emitter.count = static_cast<uint32_t>(emitterCount);
+    count = static_cast<uint32_t>(emitterCount);
     ImGui::DragFloat3("Velocity##Particle Emitter", &emitter.velocity.x, 0.1f, -100.0f, 100.0f);
     ImGui::DragFloat("Mass##Particle Emitter", &emitter.mass, 1.0f, -100.0f, 100.0f);
-    ImGui::DragFloat2("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+    ImGui::DragFloat("Rotation##Particle Emitter", &emitter.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+    ImGui::DragFloat("Rotation velocity##Particle Emitter", &emitter.rotationVelocity.y, 1.0f, -100.0f, 100.0f);
     ImGui::DragFloat2("Size##Particle Emitter", &emitter.size.x, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Size velocity##Particle Emitter", &emitter.size.z, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Max life##Particle Emitter", &emitter.maxLife, 0.1f, 0.0f, 100.0f);
@@ -53,5 +65,67 @@ void ParticleEmitterComponent::Inspect()
         ImGui::EndTooltip();
     }
     ImGui::ColorPicker3("Color##Particle Emitter", &emitter.color.x);
-    ImGui::DragFloat("Color Multiplier#Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
+    ImGui::DragFloat("Color Multiplier##Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
+
+    if (ImGui::BeginTable("Bursts##Particle Emitter", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::TableNextColumn();
+        ImGui::Text("Count");
+        ImGui::TableNextColumn();
+        ImGui::Text("Start Time");
+        ImGui::TableNextColumn();
+        ImGui::Text("Max Interval");
+        ImGui::TableNextColumn();
+        ImGui::Text("Loop");
+        ImGui::TableNextColumn();
+        ImGui::Text("Cycle");
+        ImGui::TableNextColumn();
+
+        for (auto it = bursts.begin(); it != bursts.end(); it = it++)
+        {
+            int32_t index = std::distance(bursts.begin(), it);
+            auto& burst = *it;
+
+            ImGui::TableNextRow();
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Burst %i", index);
+
+            ImGui::TableNextColumn();
+            int32_t burstCount = static_cast<int32_t>(burst.count);
+            ImGui::DragInt(std::string("##Emitter Burst Count " + std::to_string(index)).c_str(), &burstCount);
+            burst.count = static_cast<uint32_t>(burstCount);
+
+            ImGui::TableNextColumn();
+            ImGui::DragFloat(std::string("##Emitter Burst Start Time " + std::to_string(index)).c_str(), &burst.startTime, 0.1f, 0.0f, 100.0f);
+
+            ImGui::TableNextColumn();
+            ImGui::DragFloat(std::string("##Emitter Burst Max Interval " + std::to_string(index)).c_str(), &burst.maxInterval, 0.1f, 0.0f, 100.0f);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(std::string("##Emitter Burst Loop " + std::to_string(index)).c_str(), &burst.loop);
+
+            ImGui::TableNextColumn();
+            int32_t burstCycles = static_cast<int32_t>(burst.cycles);
+            ImGui::DragInt(std::string("##Emitter Burst Cycles " + std::to_string(index)).c_str(), &burstCycles);
+            burst.cycles = static_cast<uint32_t>(burstCycles);
+
+            ImGui::TableNextColumn();
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.65f, 0.15f, 0.15f, 1.f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.3f, 0.3f, 1.f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
+            if (ImGui::Button(std::string("x##Emitter Burst Remove " + std::to_string(index)).c_str()))
+            {
+                it = bursts.erase(it);
+            }
+            ImGui::PopStyleColor(3);
+        }
+        ImGui::EndTable();
+    }
+    if (ImGui::Button("+ Add Burst##Emitter Burst Add"))
+    {
+        bursts.emplace_back(ParticleBurst());
+    }
 }

@@ -53,34 +53,62 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _ecs(ecs)
     , _settings("settings.json")
 {
+    ZoneScopedN("Renderer Initialization");
     _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
 
-    auto vulkanInfo = application.GetVulkanInfo();
-    _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    {
+        ZoneScopedN("Swapchain creation");
+        auto vulkanInfo = application.GetVulkanInfo();
+        _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    }
 
-    InitializeHDRTarget();
-    InitializeBloomTargets();
-    InitializeSSAOTarget();
-    InitializeTonemappingTarget();
-    InitializeFXAATarget();
-    LoadEnvironmentMap();
+    {
+        ZoneScopedN("Post processing target Initialization");
+        InitializeHDRTarget();
+        InitializeBloomTargets();
+        InitializeSSAOTarget();
+        InitializeTonemappingTarget();
+        InitializeFXAATarget();
+    }
 
-    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
-    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    {
+        ZoneScopedN("Environment map loading");
+        LoadEnvironmentMap();
+    }
 
-    SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
-    commandBufferPrimitive.Submit();
+    {
+        ZoneScopedN("Batchbuffer allocation");
+        _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+        _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    }
 
-    _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
-    _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    ResourceHandle<GPUMesh> uvSphere;
+    {
+        ZoneScopedN("UV sphere render");
+        SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
+        uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
+        commandBufferPrimitive.Submit();
+    }
+
+    {
+        ZoneScopedN("GBuffer allocation");
+        _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
+    }
+
+    {
+        ZoneScopedN("IBL pass creation");
+        _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    }
 
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
-    _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
-    commandBufferIBL.Submit();
+    {
+        ZoneScopedN("IBL generation pass");
+        SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
+        _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
+        commandBufferIBL.Submit();
+    }
 
     GPUSceneCreation gpuSceneCreation {
         _context,
@@ -94,8 +122,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
 
     _gpuScene = std::make_shared<GPUScene>(gpuSceneCreation, _settings.data.fog);
 
-    _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch());
-    _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch());
+    _generateMainDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->MainCameraBatch(), true, true);
+    _generateShadowDrawsPass = std::make_unique<GenerateDrawsPass>(_context, _gpuScene->ShadowCameraBatch(), true, true);
     _buildMainHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->MainCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
     _buildShadowHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->ShadowCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
@@ -191,7 +219,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
+        .AddOutput(_gpuScene->StaticShadow(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation shadowSecondPass { *_shadowPass };
     shadowSecondPass.SetName("Shadow second pass")
@@ -200,7 +229,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->ShadowCameraBatch().StaticDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().drawBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
         .AddInput(_gpuScene->ShadowCameraBatch().SkinnedDraw().redirectBuffer, FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eDrawIndirect)
-        .AddOutput(_gpuScene->Shadow(), FrameGraphResourceType::eAttachment);
+        .AddOutput(_gpuScene->StaticShadow(), FrameGraphResourceType::eAttachment)
+        .AddOutput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation ssaoPass { *_ssaoPass };
     ssaoPass.SetName("SSAO pass")
@@ -216,7 +246,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddInput(_ssaoTarget, FrameGraphResourceType::eTexture)
-        .AddInput(_gpuScene->Shadow(), FrameGraphResourceType::eTexture)
+        .AddInput(_gpuScene->StaticShadow(), FrameGraphResourceType::eTexture)
+        .AddInput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
         .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
 

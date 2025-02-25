@@ -60,6 +60,7 @@ public:
     BloomSettings& GetBloomSettings() { return *_bloomSettings; }
     SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
+    ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
     GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();
