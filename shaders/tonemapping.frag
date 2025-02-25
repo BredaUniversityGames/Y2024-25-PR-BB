@@ -58,22 +58,18 @@ int And(int a, int b);
 vec3 Vibrance(vec3 inCol, float vibrance);
 vec3 ShiftHue(in vec3 col, in float Shift);
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize);
-
+vec3 saturateColor(vec3 color, float saturationFactor);
+vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor);
 
 // 4x4 Bayer matrix with values 0..15
-float bayer[4][4] = float[4][4](
+const float bayer[4][4] = float[4][4](
 float[4](0.0, 8.0, 2.0, 10.0),
 float[4](12.0, 4.0, 14.0, 6.0),
 float[4](3.0, 11.0, 1.0, 9.0),
 float[4](15.0, 7.0, 13.0, 5.0)
 );
-vec3 saturateColor(vec3 color, float saturationFactor)
-{
-    // Convert to "gray" by averaging
-    float gray = (color.r + color.g + color.b) / 3.0;
-    // Interpolate between gray and the original color
-    return mix(vec3(gray), color, saturationFactor);
-}
+
+
 void main()
 {
     vec2 newTexCoords = texCoords;
@@ -90,23 +86,7 @@ void main()
     vec3 hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
 
 
-    float ditherValue = ((bayer[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4] + 0.5) / 16.0) - 0.5;
-    hdrColor += ditherValue * 0.15;
-    //hdrColor = clamp(hdrColor, 0.0, 1.0);
-
-
-    float bestDistance = 1000.0;
-    vec3 bestColor = vec3(0.0);
-    for (int i = 0; i < 5; i++) {
-        float d = distance(hdrColor, pc.palette[i].rgb);
-        if (d < bestDistance) {
-            bestDistance = d;
-            bestColor = saturateColor(pc.palette[i].rgb, 1.2);
-        }
-    }
-
-    float blendFactor = 0.8; // 80% quantized, 20% original
-    hdrColor = mix(hdrColor, bestColor, blendFactor);;
+    hdrColor = ComputeQuantizedColor(hdrColor, 0.15, 0.8);
 
 
     hdrColor += bloomColor * bloomSettings.strength;
@@ -147,6 +127,35 @@ void main()
 
 
     outColor = vec4(color, 1.0);
+}
+
+vec3 saturateColor(vec3 color, float saturationFactor)
+{
+    // Convert to "gray" by averaging
+    float gray = (color.r + color.g + color.b) / 3.0;
+    // Interpolate between gray and the original color
+    return mix(vec3(gray), color, saturationFactor);
+}
+
+vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor)
+{
+    const float ditherValue = ((bayer[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4] + 0.5) / 16.0) - 0.5;
+    color += ditherValue * ditherAmount;
+
+    // Snap to the closest color from the palette
+    float bestDistance = 1000.0;
+    vec3 bestColor = vec3(0.0);
+    for (int i = 0; i < 5; i++) {
+        float d = distance(color, pc.palette[i].rgb);
+        if (d < bestDistance) {
+            bestDistance = d;
+            bestColor = saturateColor(pc.palette[i].rgb, 1.2);
+        }
+    }
+
+    // Blend the color with the best color from the palette
+    color = mix(color, bestColor, blendFactor);
+    return color;
 }
 
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize)
