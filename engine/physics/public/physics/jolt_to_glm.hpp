@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
@@ -26,7 +27,18 @@ inline glm::mat4 ToGLMMat4(const JPH::RMat44& mat)
 
     return glmMat;
 }
+
 inline glm::vec3 ToGLMVec3(const JPH::Vec3& vec)
 {
     return glm::vec3(vec.GetX(), vec.GetY(), vec.GetZ());
+}
+
+inline JPH::Vec3 ToJoltVec3(const glm::vec3& vec)
+{
+    return { vec.x, vec.y, vec.z };
+}
+
+inline JPH::Quat ToJoltQuat(const glm::quat& q)
+{
+    return { q.x, q.y, q.z, q.w };
 }

@@ -3,11 +3,7 @@
 #include "physics/jolt_to_glm.hpp"
 
 #include <Jolt/Jolt.h>
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
-#include <Jolt/Physics/Collision/Shape/MeshShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 // Collection of functions to easily create shapes
 // Really only a class so that it is easily reflected into wren

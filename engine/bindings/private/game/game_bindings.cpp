@@ -6,8 +6,11 @@
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"
+#include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
+
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 namespace bindings
 {
@@ -50,7 +53,7 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
         ecs.DestroyEntity(entity);
     }
     entt::entity playerEntity = ecs.GetRegistry().create();
-    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height / 2.0, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
+    JPH::BodyCreationSettings bodyCreationSettings(ShapeFactory::MakeCapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
     bodyCreationSettings.mAllowDynamicOrKinematic = true;
 
     bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
