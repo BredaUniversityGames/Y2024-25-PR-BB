@@ -54,7 +54,7 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
         vk::Rect2D renderArea {
             .offset = { 0, 0 },
-            .extent = { static_cast<uint16_t>(resolution.x), static_cast<uint16_t>(resolution.y) },
+            .extent = { static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y) },
         };
 
         vk::RenderingInfoKHR renderingInfo {
@@ -65,6 +65,11 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
             .pDepthAttachment = nullptr,
             .pStencilAttachment = nullptr,
         };
+
+        vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, resolution.x, resolution.y, 0.0f,
+                1.0f };
+        commandBuffer.setViewport(0, 1, &viewport);
+        commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
         commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 

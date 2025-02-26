@@ -25,11 +25,10 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
 
     const GPUImage* image = _context->Resources()->ImageResourceManager().Access(_bloomImage);
 
-    glm::uvec2 resolution = glm::uvec2(image->width, image->height);
+    glm::vec2 resolution = glm::vec2(image->width, image->height);
     for (uint32_t mip = 0; mip < image->mips - 1; ++mip)
     {
-        resolution.x *= 0.5f;
-        resolution.y *= 0.5f;
+        resolution *= 0.5f;
     }
 
     vk::ImageMemoryBarrier2 barrier {};
@@ -54,12 +53,11 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
             .imageLayout = vk::ImageLayout::eGeneral,
             .loadOp = vk::AttachmentLoadOp::eLoad,
             .storeOp = vk::AttachmentStoreOp::eStore,
-            .clearValue = { { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } } },
         };
 
         vk::Rect2D renderArea {
             .offset = { 0, 0 },
-            .extent = { resolution.x, resolution.y },
+            .extent = { static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y) },
         };
 
         vk::RenderingInfoKHR renderingInfo {
@@ -70,6 +68,10 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
             .pDepthAttachment = nullptr,
             .pStencilAttachment = nullptr,
         };
+
+        vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, resolution.x, resolution.y, 0.0f, 1.0f };
+        commandBuffer.setViewport(0, 1, &viewport);
+        commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
         commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
 
@@ -96,8 +98,7 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 
         // Prepare for next pass
-        resolution.x *= 2.0f;
-        resolution.y *= 2.0f;
+        resolution *= 2.0f;
 
         vk::ImageMemoryBarrier2 mipBarrier {};
         mipBarrier.oldLayout = vk::ImageLayout::eGeneral;
