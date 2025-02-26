@@ -144,11 +144,11 @@ void CameraResource::Update(uint32_t currentFrame, const TransformComponent& tra
         else if (camera.reversedZ)
         {
             // Swapped far and near plane, since reverse Z is used.
-            cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.farPlane, camera.nearPlane);
+            cameraBuffer.proj = glm::perspective(camera.fov, camera.aspectRatio, camera.farPlane, camera.nearPlane);
         }
         else
         {
-            cameraBuffer.proj = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, camera.nearPlane, camera.farPlane);
+            cameraBuffer.proj = glm::perspective(camera.fov, camera.aspectRatio, camera.nearPlane, camera.farPlane);
         }
 
         glm::mat4 projT = glm::transpose(cameraBuffer.proj);
