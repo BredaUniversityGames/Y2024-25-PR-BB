@@ -10,6 +10,8 @@
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/static_mesh_component.hpp"
+#include "components/skinned_mesh_component.hpp"
 #include "systems/lifetime_component.hpp"
 
 namespace bindings
@@ -104,11 +106,18 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddComponent<CheatsComponent>>("AddCheatsComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+    entityClass.func<&WrenEntity::AddComponent<AnimationControlComponent>>("AddAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<StaticMeshComponent>>("GetStaticMeshComponent");
+    entityClass.func<&WrenEntity::AddComponent<StaticMeshComponent>>("AddStaticMeshComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<SkinnedMeshComponent>>("GetSkinnedMeshComponent");
+    entityClass.func<&WrenEntity::AddComponent<SkinnedMeshComponent>>("AddSkinnedMeshComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)

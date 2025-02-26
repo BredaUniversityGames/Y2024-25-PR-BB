@@ -16,6 +16,7 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
 #include "scripting_module.hpp"
@@ -23,6 +24,8 @@
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
+
+#include <model_loading.hpp>
 
 namespace bindings
 {
@@ -37,7 +40,7 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
     engine.instance->GetModule<ScriptingModule>().SetMainScript(*engine.instance, path);
 }
 
-std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string& path)
+std::vector<WrenEntity> LoadModelIntoECS(WrenEngine& engine, const std::string& path)
 {
     std::vector<entt::entity> entities = SceneLoading::LoadModels(*engine.instance, { path });
     std::vector<WrenEntity> wrentities(static_cast<size_t>(entities.size()));
@@ -51,6 +54,11 @@ std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string
     }
 
     return wrentities;
+}
+
+CPUModel LoadCPUModel(MAYBE_UNUSED WrenEngine& engine, const std::string& path)
+{
+    return ModelLoading::LoadGLTF(path);
 }
 
 }
@@ -72,7 +80,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
-        engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
+        engineAPI.funcExt<bindings::LoadModelIntoECS>("LoadModelIntoECS");
+        engineAPI.funcExt<bindings::LoadCPUModel>("LoadCPUModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 
@@ -100,6 +109,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Animations
     {
         BindAnimationAPI(module);
+    }
+
+    // Renderer
+    {
+        BindRendererAPI(module);
     }
 
     // Particles

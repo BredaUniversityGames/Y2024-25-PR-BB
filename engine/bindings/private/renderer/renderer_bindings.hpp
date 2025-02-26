@@ -1,8 +1,5 @@
-//
-// Created by larsp on 25/02/2025.
-//
+#pragma once
 
-#ifndef RENDERER_BINDINGS_HPP
-#define RENDERER_BINDINGS_HPP
+#include "wren_common.hpp"
 
-#endif //RENDERER_BINDINGS_HPP
+void BindRendererAPI(wren::ForeignModule& module);
