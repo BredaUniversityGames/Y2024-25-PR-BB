@@ -10,18 +10,14 @@ void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
     {
     case ButtonState::eNormal:
         state = ButtonState::eHovered;
-        onBeginHoverCallBack();
-
         [[fallthrough]];
 
     case ButtonState::eHovered:
         if (inputActionPressed)
         {
             state = ButtonState::ePressed;
-            onMouseDownCallBack();
         }
         break;
-
     case ButtonState::ePressed:
         if (inputActionReleased)
         {
@@ -36,6 +32,7 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
     UIElement::Update(inputManagers, inputContext);
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
     {
+        previousState = state;
         if (inputContext.HasInputBeenConsumed() == true)
         {
             state = ButtonState::eNormal;

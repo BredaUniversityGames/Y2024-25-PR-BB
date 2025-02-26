@@ -4,6 +4,9 @@ class Main {
 
     static Start(engine) {
         System.print("Start main menu")
+        engine.GetInput().SetMouseHidden(false)
+        engine.GetGame().SetMainMenuVisible(true)
+        
     }
 
     static Shutdown(engine) {
@@ -11,9 +14,10 @@ class Main {
     }
 
     static Update(engine, dt) {
-        if (engine.GetInput().GetDigitalAction("Shoot").IsPressed()) {
+       if(engine.GetGame().GetMainMenu().PlayButtonPressedOnce()){
+            engine.GetGame().SetMainMenuVisible(false)
             engine.TransitionToScript("game/game.wren")
             return
-        }
+       }
     }
 }

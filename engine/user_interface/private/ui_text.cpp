@@ -40,12 +40,12 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         elementTranslation.y += GetAbsoluteScale().y / 2.0;
     }
 
-    glm::vec2 elementTranslation = GetAbsoluteLocation();
-    if (anchorPoint == AnchorPoint::eMiddle)
-    {
-        elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
-        elementTranslation.y += GetAbsoluteScale().y / 3.0f;
-    }
+    /* glm::vec2 elementTranslation = GetAbsoluteLocation();
+     if (anchorPoint == AnchorPoint::eMiddle)
+     {
+         elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
+         elementTranslation.y += GetAbsoluteScale().y / 3.0f;
+     }*/
 
     for (const auto& character : _text)
     {
@@ -60,7 +60,6 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             const UIFont::Character& fontChar = _font->characters.at(character);
 
             QuadDrawInfo info;
-
 
             glm::vec2 correctedBearing = (glm::vec2(fontChar.bearing) / static_cast<float>(_font->characterHeight)) * (GetAbsoluteScale().y / 2.0f);
 

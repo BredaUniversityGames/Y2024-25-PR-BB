@@ -35,11 +35,7 @@ std::unique_ptr<Canvas> CreateNavigationTestMenu(UIInputContext& uiInputContext,
     canvas->SetAbsoluteTransform(canvas->GetAbsoluteLocation(), canvas->GetRelativeScale());
 
     auto button1 = canvas->AddChild<UIButton>(buttonStyle, glm::vec2(0), glm::vec2(239, 36) * 2.0f).lock();
-    button1->onMouseDownCallBack = []()
-    { bblog::debug("b1 clicked"); };
     auto button2 = canvas->AddChild<UIButton>(buttonStyle, glm::vec2(0, 85), glm::vec2(239, 36) * 2.0f).lock();
-    button2->onMouseDownCallBack = []()
-    { bblog::debug("b2 clicked"); };
 
     button1->navigationTargets.down = button2;
     button1->navigationTargets.up = button2;
@@ -51,7 +47,6 @@ std::unique_ptr<Canvas> CreateNavigationTestMenu(UIInputContext& uiInputContext,
 
     uiInputContext.focusedUIElement = button1;
     return canvas;
-
 }
 std::unique_ptr<Canvas> CreateMainMenu(UIInputContext& uiInputContext, const glm::ivec2& canvasBounds, std::shared_ptr<GraphicsContext> graphicsContext)
 {
@@ -73,7 +68,7 @@ std::unique_ptr<Canvas> CreateMainMenu(UIInputContext& uiInputContext, const glm
         return buttonStyle;
     };
 
-    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, *graphicsContext);
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
 
     std::unique_ptr<Canvas> canvas = std::make_unique<Canvas>(canvasBounds);
@@ -109,5 +104,4 @@ std::unique_ptr<Canvas> CreateMainMenu(UIInputContext& uiInputContext, const glm
 
     uiInputContext.focusedUIElement = playButton;
     return canvas;
-
 }

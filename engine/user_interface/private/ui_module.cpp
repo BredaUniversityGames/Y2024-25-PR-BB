@@ -25,10 +25,3 @@ void UIModule::Tick(Engine& engine)
     _viewport->Update(inputManagers, _uiInputContext);
     _uiInputContext._hasInputBeenConsumed = false;
 }
-
-void UIModule::CreateNavigationTest()
-{
-
-    GetViewport().AddElement<Canvas>(CreateMainMenu(_uiInputContext, _viewport->GetExtend(), _graphicsContext));
-
-}

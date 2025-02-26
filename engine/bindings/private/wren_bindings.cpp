@@ -50,6 +50,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
+        engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetApplication");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 

@@ -8,6 +8,7 @@
 #include "game_module.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
+#include "ui/game_ui_bindings.hpp"
 
 namespace bindings
 {
@@ -96,4 +97,8 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
+    game.func<&GameModule::GetMainMenu>("GetMainMenu");
+    game.func<&GameModule::SetMainMenuVisible>("SetMainMenuVisible");
+    game.func<&GameModule::SetHUDVisible>("SetHUDVisible");
+    BindMainMenu(module);
 }

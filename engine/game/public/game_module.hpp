@@ -16,12 +16,17 @@ class GameModule : public ModuleInterface
     std::string_view GetName() override { return "Game Module"; }
 
     HUD _hud;
+    std::weak_ptr<MainMenu> _mainMenu;
     glm::ivec2 _lastMousePos {};
     bool _updateHud = false;
 
 public:
     GameModule() = default;
     ~GameModule() override = default;
+
+    void SetMainMenuVisible(bool val);
+    void SetHUDVisible(bool val);
+    MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
