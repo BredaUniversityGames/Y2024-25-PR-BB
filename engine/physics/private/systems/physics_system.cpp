@@ -131,7 +131,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     return entity;
 }
 
-RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo)
+RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType)
 {
     const bool validation = shapeType != PhysicsShapes::eMESH && shapeType != PhysicsShapes::eCONVEXHULL;
     if (validation)

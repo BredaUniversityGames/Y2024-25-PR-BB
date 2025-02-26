@@ -3,6 +3,8 @@
 #include "cheats_component.hpp"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"

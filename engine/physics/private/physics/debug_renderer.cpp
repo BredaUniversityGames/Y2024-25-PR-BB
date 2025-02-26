@@ -1,6 +1,6 @@
 #include "physics/debug_renderer.hpp"
 
-void PhysicsDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
+void PhysicsDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
 {
     if (!_isEnabled)
     {
@@ -13,7 +13,7 @@ void PhysicsDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JP
     linePositions.push_back(toPos);
 }
 
-void PhysicsDebugRenderer::AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
+void PhysicsDebugRenderer::AddPersistentLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, MAYBE_UNUSED JPH::ColorArg inColor)
 {
     if (!_isEnabled)
     {

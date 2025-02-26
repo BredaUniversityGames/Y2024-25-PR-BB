@@ -124,7 +124,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
     auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
-    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
 
