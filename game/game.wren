@@ -106,8 +106,6 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-
-
         __spawner = Spawner.new(engine)
         __spawner.SpawnEnemies(5)
     }
@@ -162,7 +160,6 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
             __activeWeapon.attack(engine, dt)
-            //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
