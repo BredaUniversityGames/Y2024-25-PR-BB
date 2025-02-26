@@ -1,7 +1,10 @@
 #include "ecs_module.hpp"
+
 #include "components/name_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/transform_helpers.hpp"
+#include <components/skeleton_component.hpp>
 #include "scripting_module.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
@@ -68,4 +71,33 @@ void ECSModule::DestroyEntity(entt::entity entity)
 {
     assert(registry.valid(entity));
     registry.emplace_or_replace<DeleteTag>(entity);
+    RelationshipComponent* relationship = registry.try_get<RelationshipComponent>(entity);
+    SkeletonNodeComponent* skeleton = registry.try_get<SkeletonNodeComponent>(entity);
+
+    if (skeleton != nullptr)
+    {
+        for (const auto& child : skeleton->children)
+        {
+            if (child != entt::null)
+            {
+                DestroyEntity(child);
+            }
+        }
+    }
+    if (relationship != nullptr)
+    {
+        if (relationship->childrenCount > 0)
+        {
+            entt::entity child = relationship->first;
+            for (size_t i = 0; i < relationship->childrenCount; ++i)
+            {
+                RelationshipComponent* childRelationship = registry.try_get<RelationshipComponent>(child);
+                if (childRelationship != nullptr)
+                {
+                    DestroyEntity(child);
+                    child = childRelationship->next;
+                }
+            }
+        }
+    }
 }
