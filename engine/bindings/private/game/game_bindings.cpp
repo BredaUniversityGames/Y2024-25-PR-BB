@@ -180,6 +180,14 @@ void UpdateScoreText(HUD& self, const int score)
     }
 }
 
+void UpdateGrenadeBar(HUD& self, const float charge)
+{
+    if (auto locked = self.grenadeBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(charge);
+    }
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -201,4 +209,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
     hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
+    hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar");
 }

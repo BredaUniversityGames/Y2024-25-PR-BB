@@ -10,6 +10,9 @@ class PlayerVariables {
         _ultMaxCharge = 100
         _ultCharge = 0
         _ultActive = false
+        _grenadeMaxCharge = 100
+        _grenadeChargeRate = 20
+        _grenadeCharge = 0
     }
 
     health {_health}
@@ -20,11 +23,15 @@ class PlayerVariables {
     ultChargeRate {_ultChargeRate}
     ultDecayRate {_ultDecayRate}
     ultActive {_ultActive}
+    grenadeCharge {_grenadeCharge}
+    grenadeChargeRate {_grenadeChargeRate}
+    grenadeMaxCharge {_grenadeMaxCharge}
 
     health=(value) {_health = value}
     score=(value) {_score = value}
     ultCharge=(value) {_ultCharge = value}
     ultActive=(value) {_ultActive = value}
+    grenadeCharge=(value) {_grenadeCharge = value}
     
     DecreaseHealth(value) {
         _health = Math.Max(_health - value, 0)

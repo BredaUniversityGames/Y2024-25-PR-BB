@@ -50,7 +50,7 @@ class Main {
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
-        __activeWeapon = __armory[Weapons.shotgun]
+        __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
         // Inside cathedral: pentagram scene
         {   // Fire emitter 1
@@ -125,6 +125,8 @@ class Main {
             __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
 
+        __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
+
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
         }
@@ -158,6 +160,13 @@ class Main {
                     __activeWeapon = __armory[Weapons.shotgun]
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
+                }
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eG())) {
+                if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
+                    // Throw grenade
+                    __playerVariables.grenadeCharge = 0
                 }
             }
 
@@ -208,6 +217,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
         engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
+        engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
