@@ -14,6 +14,10 @@ struct RelationshipComponent
     entt::entity parent = entt::null;
 };
 
+struct HideOrphan
+{
+};
+
 namespace EnttEditor
 {
 template <>

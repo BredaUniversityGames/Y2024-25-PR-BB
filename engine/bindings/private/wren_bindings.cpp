@@ -5,6 +5,7 @@
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
 #include "entity/entity_bind.hpp"
+#include "entity/wren_entity.hpp"
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
 #include "input/input_bindings.hpp"
@@ -15,9 +16,12 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "renderer_module.hpp"
+#include "scene/scene_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
+#include "utility/random_util.hpp"
 #include "wren_engine.hpp"
 
 namespace bindings
@@ -33,11 +37,28 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
     engine.instance->GetModule<ScriptingModule>().SetMainScript(*engine.instance, path);
 }
 
+std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string& path)
+{
+    std::vector<entt::entity> entities = SceneLoading::LoadModels(*engine.instance, { path });
+    std::vector<WrenEntity> wrentities(static_cast<size_t>(entities.size()));
+
+    auto& registry = engine.GetModule<ECSModule>().value()->GetRegistry();
+
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        wrentities[i].entity = entities[i];
+        wrentities[i].registry = &registry;
+    }
+
+    return wrentities;
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
 {
     bindings::BindMath(module);
+    bindings::BindRandom(module);
 
     // Add modules here to expose them in scripting
     {
@@ -50,7 +71,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<PhysicsModule>>("GetPhysics");
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
-        engineAPI.func<&WrenEngine::GetModule<ApplicationModule>>("GetApplication");
+        engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
+        engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 
