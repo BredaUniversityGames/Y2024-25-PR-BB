@@ -52,7 +52,7 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
             .imageView = image->layerViews[0].mipViews[nextMip],
             .imageLayout = vk::ImageLayout::eGeneral,
-            .loadOp = vk::AttachmentLoadOp::eClear,
+            .loadOp = vk::AttachmentLoadOp::eLoad,
             .storeOp = vk::AttachmentStoreOp::eStore,
             .clearValue = { { .float32 = { { 0.0f, 0.0f, 0.0f, 0.0f } } } },
         };

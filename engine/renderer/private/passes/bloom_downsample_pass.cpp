@@ -24,9 +24,8 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
     TracyVkZone(scene.tracyContext, commandBuffer, "Bloom Downsample Pass");
 
     const GPUImage* image = _context->Resources()->ImageResourceManager().Access(_bloomImage);
-    glm::uvec2 resolution = glm::uvec2(image->width, image->height);
-    resolution.x *= 0.5f;
-    resolution.y *= 0.5f;
+    glm::vec2 resolution = glm::vec2(image->width, image->height);
+    resolution *= 0.5f; // The first resolution we write to will be mip 1
 
     vk::ImageMemoryBarrier2 barrier {};
     util::InitializeImageMemoryBarrier(barrier, image->image, image->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eGeneral, 1, 0, image->mips);
@@ -55,7 +54,7 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
 
         vk::Rect2D renderArea {
             .offset = { 0, 0 },
-            .extent = { resolution.x, resolution.y },
+            .extent = { static_cast<uint16_t>(resolution.x), static_cast<uint16_t>(resolution.y) },
         };
 
         vk::RenderingInfoKHR renderingInfo {
@@ -73,11 +72,11 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
         {
             uint32_t sourceIndex;
             uint32_t mip;
-            glm::uvec2 resolution;
+            glm::vec2 resolution;
         } pushConstants {};
         pushConstants.sourceIndex = _bloomImage.Index();
         pushConstants.mip = mip;
-        pushConstants.resolution = resolution;
+        pushConstants.resolution = resolution * 2.0f;
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
@@ -90,8 +89,7 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32
         commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
 
         // Prepare for next pass
-        resolution.x *= 0.5f;
-        resolution.y *= 0.5f;
+        resolution *= 0.5f;
 
         vk::ImageMemoryBarrier2 mipBarrier {};
         mipBarrier.oldLayout = vk::ImageLayout::eGeneral;
