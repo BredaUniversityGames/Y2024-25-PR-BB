@@ -14,7 +14,13 @@ struct WrenEntity
     std::optional<WrenComponent<T>> GetComponent();
 
     template <typename T>
-    WrenComponent<T> AddComponent();
+    WrenComponent<T> AddDefaultComponent();
+
+    template <typename T>
+    WrenComponent<T> AddComponent(const T& component);
+
+    template <typename T>
+    void AddTag();
 };
 
 template <typename T>
@@ -25,11 +31,24 @@ struct WrenComponent
 };
 
 template <typename T>
-WrenComponent<T> WrenEntity::AddComponent()
+WrenComponent<T> WrenEntity::AddDefaultComponent()
 {
     registry->emplace_or_replace<T>(entity);
     return WrenComponent<T> { WrenEntity { entity, registry }, &registry->get<T>(entity) };
+}
+
+template <typename T>
+WrenComponent<T> WrenEntity::AddComponent(const T& component)
+{
+    registry->emplace_or_replace<T>(entity, component);
+    return WrenComponent<T> { WrenEntity { entity, registry }, &registry->get<T>(entity) };
 };
+
+template <typename T>
+void WrenEntity::AddTag()
+{
+    registry->emplace_or_replace<T>(entity);
+}
 
 template <typename T>
 std::optional<WrenComponent<T>> WrenEntity::GetComponent()
