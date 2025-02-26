@@ -260,6 +260,8 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     for (auto entity : view)
     {
         auto& component = view.get<ParticleEmitterComponent>(entity);
+
+        // continuous emission
         if (component.currentEmitDelay < 0.0f || component.emitOnce)
         {
             component.emitter.randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -267,13 +269,9 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
             _emitters.emplace_back(component.emitter);
 
             component.currentEmitDelay = component.maxEmitDelay;
-
-            if (component.emitOnce)
-            {
-                _ecs.GetRegistry().remove<ParticleEmitterComponent>(entity);
-                _ecs.GetRegistry().remove<ActiveEmitterTag>(entity);
-            }
         }
+
+        // burst emission
         for (auto it = component.bursts.begin(); it != component.bursts.end();)
         {
             auto copyIt = it;
@@ -298,6 +296,13 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
                     component.bursts.erase(copyIt);
                 }
             }
+        }
+
+        // remove after emitting once
+        if (component.emitOnce)
+        {
+            _ecs.GetRegistry().remove<ParticleEmitterComponent>(entity);
+            _ecs.GetRegistry().remove<ActiveEmitterTag>(entity);
         }
     }
 

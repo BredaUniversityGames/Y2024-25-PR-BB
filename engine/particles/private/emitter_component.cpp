@@ -84,10 +84,13 @@ void ParticleEmitterComponent::Inspect()
         ImGui::Text("Cycle");
         ImGui::TableNextColumn();
 
-        for (auto it = bursts.begin(); it != bursts.end(); it = it++)
+        for (auto it = bursts.begin(); it != bursts.end();)
         {
             int32_t index = std::distance(bursts.begin(), it);
-            auto& burst = *it;
+
+            auto copyIt = it;
+            it++;
+            auto& burst = *copyIt;
 
             ImGui::TableNextRow();
 
@@ -119,7 +122,7 @@ void ParticleEmitterComponent::Inspect()
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
             if (ImGui::Button(std::string("x##Emitter Burst Remove " + std::to_string(index)).c_str()))
             {
-                it = bursts.erase(it);
+                bursts.erase(copyIt);
             }
             ImGui::PopStyleColor(3);
         }
