@@ -29,6 +29,8 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/dual_quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
 
@@ -351,7 +353,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
     auto jointView = _ecs.GetRegistry().view<JointSkinDataComponent, JointWorldTransformComponent>();
     auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
-    static std::array<glm::mat4, MAX_BONES> skinMatrices {};
+    static std::array<glm::mat2x4, MAX_BONES> skinMatrices {};
 
     // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
     _ecs.GetRegistry().sort<JointSkinDataComponent>([](const JointSkinDataComponent& a, const JointSkinDataComponent& b)
@@ -383,11 +385,24 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
-        skinMatrices[offset + joint.jointIndex] = (skeletonWorldTransform * jointWorldTransform) * joint.inverseBindMatrix;
+        glm::mat4 skinMatrix = (skeletonWorldTransform * jointWorldTransform) * joint.inverseBindMatrix;
+        glm::quat orientation;
+        glm::vec3 scale;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::dquat dquat;
+        if (glm::decompose(skinMatrix, orientation, scale, translation, skew, perspective))
+        {
+            dquat[0] = orientation;
+            dquat[1] = glm::quat(0.0, translation.x, translation.y, translation.z) * orientation * 0.5f;
+        }
+
+        skinMatrices[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
     }
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
-    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat4) * skinMatrices.size());
+    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat2x4) * skinMatrices.size());
 }
 
 void GPUScene::InitializeSceneBuffers()
@@ -927,7 +942,7 @@ void GPUScene::CreateSkinBuffers()
     for (uint32_t i = 0; i < _skinBuffers.size(); ++i)
     {
         BufferCreation creation {
-            .size = sizeof(glm::mat4) * MAX_BONES,
+            .size = sizeof(glm::mat2x4) * MAX_BONES,
             .usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
             .isMappable = true,
             .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
@@ -938,8 +953,9 @@ void GPUScene::CreateSkinBuffers()
         const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
         for (uint32_t j = 0; j < MAX_BONES; ++j)
         {
-            glm::mat4 data { 1.0f };
-            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+            // TODO: maybe different identity required, or this can be removed even.
+            glm::mat2x4 data { 1.0f };
+            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat2x4) * j, &data, sizeof(glm::mat2x4));
         }
     }
 }
