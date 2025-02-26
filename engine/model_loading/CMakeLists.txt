@@ -4,7 +4,7 @@ module_default_init(ModelLoading)
 target_link_libraries(ModelLoading
         PUBLIC Core
         PUBLIC Renderer
-
+        PUBLIC Thread
         PUBLIC fastgltf::fastgltf
 )
 

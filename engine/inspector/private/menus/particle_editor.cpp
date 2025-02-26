@@ -21,7 +21,7 @@ void ParticleEditor::Render()
 {
     ImGui::Begin("Particle preset editor", nullptr);
     auto region = ImGui::GetContentRegionAvail();
-    if (ImGui::BeginChild("List##ParticlePresetEditor", { 150, region.y }, true))
+    if (ImGui::BeginChild("List##Emitter Preset", { 150, region.y }, true))
     {
         RenderEmitterPresetList();
     }
@@ -29,7 +29,7 @@ void ParticleEditor::Render()
 
     ImGui::SameLine();
 
-    if (ImGui::BeginChild("Editor##ParticlePresetEditor", { region.x - 150, region.y }, true))
+    if (ImGui::BeginChild("Editor##Emitter Preset", { region.x - 150, region.y }, true))
     {
         RenderEmitterPresetEditor();
     }
@@ -40,7 +40,7 @@ void ParticleEditor::Render()
 
 void ParticleEditor::RenderEmitterPresetList()
 {
-    if (ImGui::Button("+ new preset##EmitterPresetEditor"))
+    if (ImGui::Button("+ New Preset##Emitter Preset"))
     {
         ParticleModule::EmitterPreset newPreset;
         newPreset.name += " " + std::to_string(_particleModule._emitterPresets.size());
@@ -71,14 +71,14 @@ void ParticleEditor::RenderEmitterPresetEditor()
     {
         auto& selectedPreset = _particleModule._emitterPresets[_selectedPresetIndex];
 
-        ImGui::InputText("Name##EmitterPresetEditor", &selectedPreset.name);
+        ImGui::InputText("Name##Emitter Preset", &selectedPreset.name);
 
         // image loading (scuffed for now)
         ImGui::Text("assets/textures/");
         ImGui::SameLine();
-        ImGui::InputText("Image##EmitterPresetEditor", &_currentImage);
+        ImGui::InputText("Image##Emitter Preset", &_currentImage);
 
-        if (ImGui::Button("Load Image##EmitterPresetEditor"))
+        if (ImGui::Button("Load Image##Emitter Preset"))
         {
             auto image = _particleModule.GetEmitterImage(_currentImage);
             _particleModule.SetEmitterPresetImage(selectedPreset, image);
@@ -88,16 +88,17 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::Text("%s", _imageLoadMessage.c_str());
 
         // parameter editors
-        ImGui::DragFloat("Emit delay##EmitterPresetEditor", &selectedPreset.emitDelay, 0.0f, 50.0f);
+        ImGui::DragFloat("Emit delay##Emitter Preset", &selectedPreset.emitDelay, 0.0f, 50.0f);
         int emitterCount = static_cast<int>(selectedPreset.count);
-        ImGui::DragInt("Count##EmitterPresetEditor", &emitterCount, 1, 0, 1024);
+        ImGui::DragInt("Count##Emitter Preset", &emitterCount, 1, 0, 1024);
         selectedPreset.count = emitterCount;
-        ImGui::DragFloat("Mass##EmitterPresetEditor", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
-        ImGui::DragFloat2("Rotation velocity##EmitterPresetEditor", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
-        ImGui::DragFloat2("Size##EmitterPresetEditor", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat("Size velocity##EmitterPresetEditor", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat("Max life##EmitterPresetEditor", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat3("Spawn Randomness##EmitterPresetEditor", &selectedPreset.spawnRandomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Mass##Emitter Preset", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
+        ImGui::DragFloat("Rotation##Particle Emitter", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat("Rotation velocity##Emitter Preset", &selectedPreset.rotationVelocity.y, 1.0f, -100.0f, 100.0f);
+        ImGui::DragFloat2("Size##Emitter Preset", &selectedPreset.size.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Size velocity##Emitter Preset", &selectedPreset.size.z, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Max life##Emitter Preset", &selectedPreset.maxLife, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Spawn Randomness##Emitter Preset", &selectedPreset.spawnRandomness.x, 0.1f, 0.0f, 100.0f);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
         {
             ImGui::TextUnformatted("Adjusts how much the initial velocity of the spawned particles is randomized");
@@ -108,7 +109,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
             ImGui::EndTooltip();
         }
-        ImGui::DragFloat3("Velocity Randomness##EmitterPresetEditor", &selectedPreset.velocityRandomness.x, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat3("Velocity Randomness##Emitter Preset", &selectedPreset.velocityRandomness.x, 0.1f, 0.0f, 100.0f);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
         {
             ImGui::TextUnformatted("Adjusts how much the velocity of the particles during simulation is randomized");
@@ -120,10 +121,71 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
             ImGui::EndTooltip();
         }
-        ImGui::ColorPicker3("Color##EmitterPresetEditor", &selectedPreset.color.x);
-        ImGui::DragFloat("Color Multiplier#EmitterPresetEditor", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
+        ImGui::ColorPicker3("Color##Emitter Preset", &selectedPreset.color.x);
+        ImGui::DragFloat("Color Multiplier##Emitter Preset", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 
-        if (ImGui::Button("Spawn##EmitterPresetEditor"))
+        if (ImGui::BeginTable("Bursts##Emitter Preset", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
+        {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::TableNextColumn();
+            ImGui::Text("Count");
+            ImGui::TableNextColumn();
+            ImGui::Text("Start Time");
+            ImGui::TableNextColumn();
+            ImGui::Text("Max Interval");
+            ImGui::TableNextColumn();
+            ImGui::Text("Loop");
+            ImGui::TableNextColumn();
+            ImGui::Text("Cycle");
+            ImGui::TableNextColumn();
+
+            for (auto it = selectedPreset.bursts.begin(); it != selectedPreset.bursts.end(); it = it++)
+            {
+                int32_t index = std::distance(selectedPreset.bursts.begin(), it);
+                ImGui::TableNextRow();
+                auto& burst = *it;
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Burst %i", index);
+
+                ImGui::TableNextColumn();
+                int32_t burstCount = static_cast<int32_t>(burst.count);
+                ImGui::DragInt(std::string("##Preset Burst Count " + std::to_string(index)).c_str(), &burstCount);
+                burst.count = static_cast<uint32_t>(burstCount);
+
+                ImGui::TableNextColumn();
+                ImGui::DragFloat(std::string("##Preset Burst Start Time " + std::to_string(index)).c_str(), &burst.startTime, 0.1f, 0.0f, 100.0f);
+
+                ImGui::TableNextColumn();
+                ImGui::DragFloat(std::string("##Preset Burst Max Interval " + std::to_string(index)).c_str(), &burst.maxInterval, 0.1f, 0.0f, 100.0f);
+
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(std::string("##Preset Burst Loop " + std::to_string(index)).c_str(), &burst.loop);
+
+                ImGui::TableNextColumn();
+                int32_t burstCycles = static_cast<int32_t>(burst.cycles);
+                ImGui::DragInt(std::string("##Preset Burst Cycles " + std::to_string(index)).c_str(), &burstCycles);
+                burst.cycles = static_cast<uint32_t>(burstCycles);
+
+                ImGui::TableNextColumn();
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.65f, 0.15f, 0.15f, 1.f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.3f, 0.3f, 1.f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
+                if (ImGui::Button(std::string("x##Preset Burst Remove " + std::to_string(index)).c_str()))
+                {
+                    it = selectedPreset.bursts.erase(it);
+                }
+                ImGui::PopStyleColor(3);
+            }
+            ImGui::EndTable();
+        }
+        if (ImGui::Button("+ Add Burst##Preset Burst Add"))
+        {
+            selectedPreset.bursts.emplace_back(ParticleBurst());
+        }
+
+        if (ImGui::Button("Spawn Emitter##Emitter Preset"))
         {
             entt::entity entity = _ecsModule.GetRegistry().create();
             NameComponent node;
@@ -147,7 +209,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.65f, 0.15f, 0.15f, 1.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.3f, 0.3f, 1.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
-        if (ImGui::Button("Delete##EmitterPresetEditor"))
+        if (ImGui::Button("Delete Preset##Emitter Preset"))
         {
             _particleModule._emitterPresets.erase(_particleModule._emitterPresets.begin() + _selectedPresetIndex);
             _selectedPresetIndex = -1;

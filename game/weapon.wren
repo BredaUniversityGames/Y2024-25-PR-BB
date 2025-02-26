@@ -63,7 +63,7 @@ class Pistol {
             var forward = Math.ToVector(rotation)
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
@@ -176,7 +176,7 @@ class Shotgun {
             var forward = Math.ToVector(rotation)
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             
@@ -277,7 +277,7 @@ class Knife {
             var direction = Math.ToVector(rotation)
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(direction, up)
-            var start = translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1) 
+            var start = translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             var entity = engine.GetECS().NewEntity()

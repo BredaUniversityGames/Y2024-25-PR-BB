@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 
@@ -14,7 +14,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
 
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(-18.3, 30.3, 193.8),1.7,0.5)
+        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -28,6 +28,12 @@ class Main {
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
+
+        var mutant = engine.GetECS().GetEntityByName("Clown")
+        var mutantAnimations = mutant.GetAnimationControlComponent()
+        mutantAnimations.Play("Walk", 1.0, true)
+        mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         if (__camera) {
             System.print("Player is online!")
@@ -75,11 +81,22 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
+        __testEmitter = engine.GetECS().NewEntity()
+        {   // Test emitter
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        }
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        var enemyTransform = enemyEntity.GetTransformComponent()
+        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {
@@ -105,25 +122,16 @@ class Main {
         }
 
         if (__frameTimer > 1000.0) {
-            //System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
-
-
-
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            //System.print("Player Jumped!")
-
-        }
-
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
-            __playerMovement.Update(engine,dt,__playerController, __camera)
+            __playerMovement.Update(engine, dt, __playerController, __camera)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -143,6 +151,7 @@ class Main {
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt)
                 __shakeIntensity = 0.3
+                //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
             }
 
             if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
@@ -173,11 +182,11 @@ class Main {
             transform.rotation = Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(-1.0 * movement.x)))
         }
 
-        
+
         if (__shakeIntensity > 0.001) {
             __shakeOffset = Vec2.new(Math.Sin(__timer * 200.0), Math.Cos(__timer * 200.0)).mulScalar(__shakeIntensity)
-            
-            __shakeIntensity = __shakeIntensity * 0.85 
+
+            __shakeIntensity = __shakeIntensity * 0.85
 
         } else {
             __shakeOffset = Vec2.new(0.0, 0.0)
