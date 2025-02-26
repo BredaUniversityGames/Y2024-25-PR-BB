@@ -173,9 +173,6 @@ class Main {
             __activeWeapon.equip(engine)
         }
 
-        var playerPos = __playerController.GetTransformComponent().translation
-        System.print("%(playerPos.x) %(playerPos.y) %(playerPos.z)")
-
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }
