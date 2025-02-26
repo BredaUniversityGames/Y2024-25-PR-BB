@@ -134,7 +134,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomDownsamplePass = std::make_unique<BloomDownsamplePass>(_context, _bloomTarget);
-    _bloomUpsamplePass = std::make_unique<BloomUpsamplePass>(_context, _bloomTarget);
+    _bloomUpsamplePass = std::make_unique<BloomUpsamplePass>(_context, _bloomTarget, *_bloomSettings);
     _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
     _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings, _ssaoTarget);

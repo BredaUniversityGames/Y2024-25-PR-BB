@@ -6,9 +6,10 @@
 #include "gpu_scene.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
+#include "bloom_settings.hpp"
 
-BloomUpsamplePass::BloomUpsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage)
-    : _context(context), _bloomImage(bloomImage)
+BloomUpsamplePass::BloomUpsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage, const BloomSettings& bloomSettings)
+    : _context(context), _bloomImage(bloomImage), _bloomSettings(bloomSettings)
 {
     CreatPipeline();
 }
@@ -74,17 +75,16 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
 
         struct PushConstants
         {
-            uint32_t srcImageIndex;
-            uint32_t srcImageMip;
-            float filterRadius;
+            uint32_t sourceIndex;
+            uint32_t mip;
         } pushConstants {};
-        pushConstants.srcImageIndex = _bloomImage.Index();
-        pushConstants.srcImageMip = mip;
-        pushConstants.filterRadius = 1.0f; // TODO: Make accessible
+        pushConstants.sourceIndex = _bloomImage.Index();
+        pushConstants.mip = mip;
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
         commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
 
         commandBuffer.draw(3, 1, 0, 0);
 

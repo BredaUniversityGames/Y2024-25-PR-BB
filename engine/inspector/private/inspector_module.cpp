@@ -257,6 +257,7 @@ void DrawBloomSettings(Settings& settings)
     ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::InputFloat("Strength", &bloom.strength, 0.5f, 2.0f);
     ImGui::InputFloat("Gradient strength", &bloom.gradientStrength, 0.05f, 0.1f, "%.00005f");
+    ImGui::InputFloat("Filter radius", &bloom.filterRadius, 0.005f, 0.02f, "%.0005f");
     ImGui::InputFloat("Max brightness extraction", &bloom.maxBrightnessExtraction, 1.0f, 5.0f);
     ImGui::InputFloat3("Color weights", &bloom.colorWeights[0], "%.00005f");
     ImGui::End();
