@@ -12,7 +12,6 @@ layout (push_constant) uniform PushConstants
 
 layout (location = 0) in vec2 texCoord;
 
-// TODO: Use vec3
 layout (location = 0) out vec4 outColor;
 
 void main()

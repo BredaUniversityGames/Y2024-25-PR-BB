@@ -17,7 +17,6 @@ layout (set = 1, binding = 0) uniform BloomSettingsUBO
 
 layout (location = 0) in vec2 texCoord;
 
-// TODO: Use vec3
 layout (location = 0) out vec4 outColor;
 
 void main()
