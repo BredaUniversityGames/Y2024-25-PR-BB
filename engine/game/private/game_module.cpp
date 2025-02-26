@@ -80,9 +80,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
         TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
 
-    glm::ivec2 mousePos;
-    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-    _lastMousePos = mousePos;
+        glm::ivec2 mousePos;
+        applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
+        _lastMousePos = mousePos;
 
         applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
     }
@@ -142,6 +142,10 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
                 continue;
             }
 
+            glm::vec3 cameraPos = TransformHelpers::GetWorldPosition(ECS.GetRegistry(), entity);
+
+            physicsModule._debugRenderer->SetCameraPos(cameraPos);
+
             // constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
             // constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
             //
@@ -198,7 +202,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             // JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             // physicsModule.debugRenderer->SetCameraPos(cameraPos);
 
-            //physicsModule._debugRenderer->SetCameraPos(cameraPos);
+            //
         }
     }
 
