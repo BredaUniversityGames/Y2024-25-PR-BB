@@ -2,6 +2,7 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, 
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 import "camera.wren" for CameraVariables
+import "player.wren" for PlayerVariables
 
 class Main {
 
@@ -15,6 +16,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
 
+        __playerVariables = PlayerVariables.new()
         __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
@@ -191,6 +193,17 @@ class Main {
             }
             if (engine.GetInput().DebugGetKey(Keycode.eRIGHTBRACKET())) {
                 __playerMovement.lookSensitivity = Math.Min(__playerMovement.lookSensitivity + 0.01, 10)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eCOMMA())) {
+                __playerVariables.DecreaseHealth(5)
+            }
+            if (engine.GetInput().DebugGetKey(Keycode.ePERIOD())) {
+                __playerVariables.IncreaseHealth(5)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eL())) {
+                __playerVariables.IncreaseScore(1)
             }
         }
 
