@@ -3,6 +3,7 @@ const uint MAX_PARTICLES = 1024 * 64;
 // particle rendering flags
 const uint UNLIT = 1 << 0;
 const uint NOSHADOW = 1 << 1;
+const uint FRAMEBLEND = 1 << 2;
 
 struct Particle
 {
@@ -38,6 +39,7 @@ struct ParticleInstance
     float angle;
     uint flags;
     vec3 color;
+    float frameBlend;
     ivec2 frameOffsetCurrent;
     ivec2 frameOffsetNext;
     vec2 textureMultiplier;

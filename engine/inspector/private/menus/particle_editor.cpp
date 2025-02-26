@@ -86,10 +86,18 @@ void ParticleEditor::RenderEmitterPresetEditor()
         }
         ImGui::SameLine();
         ImGui::Text("%s", _imageLoadMessage.c_str());
-        ImGui::DragInt2("Frame Count##Emitter Preset", &selectedPreset.maxFrames.x);
+        ImGui::DragInt2("Sprite Dimensions##Emitter Preset", &selectedPreset.spriteDimensions.x);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
         {
-            ImGui::TextUnformatted("Manually specify the amount of frames present over the x and y axis in the loaded image.");
+            ImGui::TextUnformatted("Manually specify the amount of frames that can be present over the x and y axis in the loaded image.");
+            ImGui::EndTooltip();
+        }
+        int frameCount = static_cast<int>(selectedPreset.frameCount);
+        ImGui::DragInt("Frame Count##Emitter Preset", &frameCount);
+        selectedPreset.frameCount = frameCount;
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Manually specify the amount of frames present in the loaded image.");
             ImGui::EndTooltip();
         }
 
@@ -131,6 +139,14 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::ColorPicker3("Color##Emitter Preset", &selectedPreset.color.x);
         ImGui::DragFloat("Color Multiplier##Emitter Preset", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 
+        // flag dropdown
+        ImGui::Text("Rendering Flags:");
+        ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
+        ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
+        ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+
+        // burst table
+        ImGui::Text("Bursts:");
         if (ImGui::BeginTable("Bursts##Emitter Preset", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
         {
             ImGui::TableNextRow();

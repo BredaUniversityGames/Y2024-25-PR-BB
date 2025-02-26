@@ -68,6 +68,15 @@ void ParticleEmitterComponent::Inspect()
     ImGui::ColorPicker3("Color##Particle Emitter", &emitter.color.x);
     ImGui::DragFloat("Color Multiplier##Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
 
+    // flag dropdown
+    ImGui::Text("Rendering Flags:");
+    uint32_t flags = emitter.flags;
+    ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
+    ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
+    ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+    emitter.flags = flags;
+
+    ImGui::Text("Bursts:");
     if (ImGui::BeginTable("Bursts##Particle Emitter", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
     {
         ImGui::TableNextRow();

@@ -225,7 +225,7 @@ void ParticleModule::LoadEmitterPresets()
     }
 
     {
-        auto image = GetEmitterImage("Sparks-Sheet.png");
+        auto image = GetEmitterImage("star.png");
 
         // hardcoded test emitter preset for now
         EmitterPreset preset;
@@ -239,7 +239,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
         preset.name = "Stab";
         SetEmitterPresetImage(preset, image);
-        preset.maxFrames = glm::ivec2(3, 3);
+        preset.size = glm::vec3(0.2f, 0.2f, -0.03f);
 
         _emitterPresets.emplace_back(preset);
     }
@@ -261,6 +261,25 @@ void ParticleModule::LoadEmitterPresets()
         preset.name = "ShotgunShoot";
         SetEmitterPresetImage(preset, image);
         preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // FIRE SHEET
+        auto image = GetEmitterImage("Fire+Sparks-Sheet.png");
+
+        // hardcoded test emitter preset for now
+        EmitterPreset preset;
+        preset.emitDelay = 2.0f;
+        preset.mass = 0.0f;
+        preset.maxLife = 2.0f;
+        preset.count = 1;
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend);
+        preset.name = "SpriteSheetTest";
+        SetEmitterPresetImage(preset, image);
+        preset.size *= 2.0f;
+        preset.spriteDimensions = glm::ivec2(4, 5);
+        preset.frameCount = 19;
 
         _emitterPresets.emplace_back(preset);
     }
@@ -289,8 +308,9 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.spawnRandomness = preset.spawnRandomness;
     emitter.velocityRandomness = preset.velocityRandomness;
     emitter.color = preset.color;
-    emitter.maxFrames = preset.maxFrames;
+    emitter.maxFrames = preset.spriteDimensions;
     emitter.frameRate = preset.frameRate;
+    emitter.frameCount = preset.frameCount;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))

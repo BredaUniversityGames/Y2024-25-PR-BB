@@ -54,7 +54,7 @@ class Main {
         {   // Fire emitter 1
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFireAnimated(), emitterFlags, Vec3.new(-18.3, 31.4, 193.8), Vec3.new(0.0, 0.0, 0.0))
         }
 
         {   // Fire emitter 2
