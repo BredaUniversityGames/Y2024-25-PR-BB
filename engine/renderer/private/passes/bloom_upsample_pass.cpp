@@ -1,15 +1,17 @@
 #include "passes/bloom_upsample_pass.hpp"
+#include "bloom_settings.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
 #include "pipeline_builder.hpp"
-#include "gpu_scene.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
-#include "bloom_settings.hpp"
 
 BloomUpsamplePass::BloomUpsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage, const BloomSettings& bloomSettings)
-    : _context(context), _bloomImage(bloomImage), _bloomSettings(bloomSettings)
+    : _context(context)
+    , _bloomImage(bloomImage)
+    , _bloomSettings(bloomSettings)
 {
     CreatPipeline();
 }

@@ -1,14 +1,15 @@
 #include "passes/bloom_downsample_pass.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
 #include "pipeline_builder.hpp"
-#include "gpu_scene.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_helper.hpp"
 
 BloomDownsamplePass::BloomDownsamplePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> bloomImage)
-    : _context(context), _bloomImage(bloomImage)
+    : _context(context)
+    , _bloomImage(bloomImage)
 {
     CreatPipeline();
 }
@@ -67,7 +68,7 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_
         };
 
         vk::Viewport viewport = vk::Viewport { 0.0f, 0.0f, resolution.x, resolution.y, 0.0f,
-                1.0f };
+            1.0f };
         commandBuffer.setViewport(0, 1, &viewport);
         commandBuffer.setScissor(0, { renderingInfo.renderArea });
 
