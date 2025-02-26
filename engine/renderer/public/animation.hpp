@@ -74,7 +74,7 @@ struct Animation
 
         if (time > duration && looping)
         {
-            time = 0.0f;
+            time = std::fmod(time, duration);
         }
     }
 };

@@ -2,7 +2,7 @@
 
 #include "imgui_entt_entity_editor.hpp"
 #include <entt/entity/registry.hpp>
-#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 struct CameraComponent
 {
@@ -15,8 +15,7 @@ struct CameraComponent
     };
 
     Projection projection = Projection::ePerspective;
-    // Field of View in degrees
-    float fov = 45.0f;
+    float fov = glm::half_pi<float>();
     float nearPlane = 0.01f;
     float farPlane = 600.0f;
 

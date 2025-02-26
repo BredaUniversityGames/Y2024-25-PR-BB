@@ -575,8 +575,6 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 
             const auto& sampler = gltfAnimation.samplers[channel.samplerIndex];
 
-            assert(sampler.interpolation == fastgltf::AnimationInterpolation::Linear && "Only linear interpolation supported!");
-
             std::span<const float> timestamps;
             {
                 const auto& accessor = gltf.accessors[sampler.inputAccessor];
