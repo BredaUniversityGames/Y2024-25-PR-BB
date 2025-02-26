@@ -353,7 +353,7 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
     auto jointView = _ecs.GetRegistry().view<JointSkinDataComponent, JointWorldTransformComponent>();
     auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
-    static std::array<glm::mat2x4, MAX_BONES> skinMatrices {};
+    static std::array<glm::mat2x4, MAX_BONES> skinDualQuats {};
 
     // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
     _ecs.GetRegistry().sort<JointSkinDataComponent>([](const JointSkinDataComponent& a, const JointSkinDataComponent& b)
@@ -397,12 +397,12 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
         {
             dquat[0] = orientation;
             dquat[1] = glm::quat(0.0, translation.x, translation.y, translation.z) * orientation * 0.5f;
-            skinMatrices[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
+            skinDualQuats[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
         }
     }
 
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
-    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat2x4) * skinMatrices.size());
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[frameIndex]);
+    std::memcpy(buffer->mappedPtr, skinDualQuats.data(), sizeof(glm::mat2x4) * skinDualQuats.size());
 }
 
 void GPUScene::InitializeSceneBuffers()
@@ -813,7 +813,7 @@ void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
 {
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[frameIndex]);
 
     vk::DescriptorBufferInfo bufferInfo {
         .buffer = buffer->buffer,
@@ -939,7 +939,7 @@ void GPUScene::CreateObjectInstancesBuffers()
 }
 void GPUScene::CreateSkinBuffers()
 {
-    for (uint32_t i = 0; i < _skinBuffers.size(); ++i)
+    for (uint32_t i = 0; i < _skinTransformBuffers.size(); ++i)
     {
         BufferCreation creation {
             .size = sizeof(glm::mat2x4) * MAX_BONES,
@@ -948,9 +948,9 @@ void GPUScene::CreateSkinBuffers()
             .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             .name = "Skin matrices buffer",
         };
-        _skinBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+        _skinTransformBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
 
-        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[i]);
         for (uint32_t j = 0; j < MAX_BONES; ++j)
         {
             glm::mat2x4 data { glm::mat2x4_cast(glm::dualquat {}) };
