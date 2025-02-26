@@ -21,6 +21,7 @@
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
+#include "utility/random_util.hpp"
 #include "wren_engine.hpp"
 
 namespace bindings
@@ -57,6 +58,7 @@ std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string
 void BindEngineAPI(wren::ForeignModule& module)
 {
     bindings::BindMath(module);
+    bindings::BindRandom(module);
 
     // Add modules here to expose them in scripting
     {

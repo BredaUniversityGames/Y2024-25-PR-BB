@@ -18,6 +18,7 @@
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
+#include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/shadow_pass.hpp"
@@ -52,16 +53,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        //"assets/models/BrainStem.glb",
-        //"assets/models/Adventure.glb",
+        "assets/models/Clown.glb",
         //"assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-
     entt::entity gunEntity;
     {
         ZoneScopedN("Scene models");
@@ -240,8 +236,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
     int8_t physicsDebugDrawing = physicsModule._debugRenderer->GetState(),
            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
-
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
 
     if (physicsDebugDrawing || pathfindingDebugDrawing)
     {
