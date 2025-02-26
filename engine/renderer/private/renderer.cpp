@@ -273,7 +273,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomUpsamplePass { *_bloomUpsamplePass };
-    bloomDownsamplePass.SetName("Bloom upsample pass")
+    bloomUpsamplePass.SetName("Bloom upsample pass")
         .SetDebugLabelColor(GetColor(ColorType::Lavender))
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 

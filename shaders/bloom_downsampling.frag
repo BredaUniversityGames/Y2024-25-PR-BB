@@ -17,9 +17,6 @@ layout (location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor = vec4(texCoord, 0.0, 1.0);
-    return;
-
     vec2 sourceTexelSize = 1.0 / sourceImage.resolution;
     float x = sourceTexelSize.x;
     float y = sourceTexelSize.y;
