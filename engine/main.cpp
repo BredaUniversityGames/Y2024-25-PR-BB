@@ -20,13 +20,13 @@
 int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 {
     MainEngine instance;
+    Stopwatch startupTimer {};
 
     {
         ZoneScopedN("Engine Module Initialization");
 
         instance
             .AddModule<ThreadModule>()
-            .AddModule<InspectorModule>()
             .AddModule<ECSModule>()
             .AddModule<ScriptingModule>()
             .AddModule<TimeModule>()
@@ -38,16 +38,21 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<AudioModule>()
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
-            .AddModule<GameModule>();
+            .AddModule<GameModule>()
+            .AddModule<InspectorModule>();
     }
 
-    instance.MainLoopOnce();
-    auto& scripting = instance.GetModule<ScriptingModule>();
+    {
+        ZoneScopedN("Game Script Setup");
+        auto& scripting = instance.GetModule<ScriptingModule>();
 
-    BindEngineAPI(scripting.GetForeignAPI());
-    scripting.GenerateEngineBindingsFile();
+        BindEngineAPI(scripting.GetForeignAPI());
+        scripting.GenerateEngineBindingsFile();
 
-    scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/game.wren");
+    }
 
+    instance.GetModule<TimeModule>().ResetTimer();
+    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }

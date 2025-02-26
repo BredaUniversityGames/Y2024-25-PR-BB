@@ -1,5 +1,6 @@
 #include "gpu_resources.hpp"
 
+#include "profile_macros.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
@@ -183,7 +184,7 @@ vk::ImageViewType ImageViewTypeConversion(ImageType type)
     }
 }
 
-GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context)
+GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* const commands)
     : _context(context)
 {
     width = creation.width;
@@ -222,12 +223,16 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     {
         imageCreateInfo.flags |= vk::ImageCreateFlagBits::eCubeCompatible;
     }
-    VmaAllocationCreateInfo allocCreateInfo {};
-    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    util::vmaCreateImage(_context->MemoryAllocator(), reinterpret_cast<VkImageCreateInfo*>(&imageCreateInfo), &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
-    std::string allocName = creation.name + " texture allocation";
-    vmaSetAllocationName(_context->MemoryAllocator(), allocation, allocName.c_str());
+    {
+        ZoneScopedN("VMA Image allocation");
+        VmaAllocationCreateInfo allocCreateInfo {};
+        allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+        util::vmaCreateImage(_context->MemoryAllocator(), reinterpret_cast<VkImageCreateInfo*>(&imageCreateInfo), &allocCreateInfo, reinterpret_cast<VkImage*>(&image), &allocation, nullptr);
+        std::string allocName = creation.name + " texture allocation";
+        vmaSetAllocationName(_context->MemoryAllocator(), allocation, allocName.c_str());
+    }
 
     vk::ImageViewCreateInfo viewCreateInfo {};
     viewCreateInfo.image = image;
@@ -273,7 +278,9 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
     if (creation.initialData.data())
     {
+        ZoneScopedN("Image data Upload");
         vk::DeviceSize imageSize = width * height * depth * 4;
+
         if (format == vk::Format::eR8Unorm)
         {
             imageSize = width * height * depth;
@@ -286,81 +293,138 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
         vk::Buffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
 
-        util::CreateBuffer(_context, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
-
-        vmaCopyMemoryToAllocation(_context->MemoryAllocator(), creation.initialData.data(), stagingBufferAllocation, 0, imageSize);
+        {
+            ZoneScopedN("Image buffer allocation");
+            util::CreateBuffer(_context, imageSize, vk::BufferUsageFlagBits::eTransferSrc, stagingBuffer, true, stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Texture staging buffer");
+            vmaCopyMemoryToAllocation(_context->MemoryAllocator(), creation.initialData.data(), stagingBufferAllocation, 0, imageSize);
+        }
 
         vk::ImageLayout oldLayout = vk::ImageLayout::eTransferDstOptimal;
 
-        vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_context);
-
-        util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, oldLayout);
-
-        util::CopyBufferToImage(commandBuffer, stagingBuffer, image, width, height);
-
-        if (creation.mips > 1)
+        if (commands)
         {
-            util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+            ZoneScopedN("Command upload dispatch");
+            const vk::CommandBuffer& commandBuffer = commands->CommandBuffer();
 
-            for (uint32_t i = 1; i < creation.mips; ++i)
+            util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, oldLayout);
+
+            util::CopyBufferToImage(commandBuffer, stagingBuffer, image, width, height);
+
+            if (creation.mips > 1)
             {
-                vk::ImageBlit blit {};
-                blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-                blit.srcSubresource.layerCount = 1;
-                blit.srcSubresource.mipLevel = i - 1;
-                blit.srcOffsets[1].x = width >> (i - 1);
-                blit.srcOffsets[1].y = height >> (i - 1);
-                blit.srcOffsets[1].z = 1;
+                ZoneScopedN("Mip creation dispatch");
+                util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
 
-                blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-                blit.dstSubresource.layerCount = 1;
-                blit.dstSubresource.mipLevel = i;
-                blit.dstOffsets[1].x = width >> i;
-                blit.dstOffsets[1].y = height >> i;
-                blit.dstOffsets[1].z = 1;
+                for (uint32_t i = 1; i < creation.mips; ++i)
+                {
+                    vk::ImageBlit blit {};
+                    blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                    blit.srcSubresource.layerCount = 1;
+                    blit.srcSubresource.mipLevel = i - 1;
+                    blit.srcOffsets[1].x = width >> (i - 1);
+                    blit.srcOffsets[1].y = height >> (i - 1);
+                    blit.srcOffsets[1].z = 1;
 
-                util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
+                    blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                    blit.dstSubresource.layerCount = 1;
+                    blit.dstSubresource.mipLevel = i;
+                    blit.dstOffsets[1].x = width >> i;
+                    blit.dstOffsets[1].y = height >> i;
+                    blit.dstOffsets[1].z = 1;
 
-                commandBuffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+                    util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
 
-                util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
+                    commandBuffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+
+                    util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
+                }
+                oldLayout = vk::ImageLayout::eTransferSrcOptimal;
             }
-            oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+
+            util::TransitionImageLayout(commandBuffer, image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
+
+            commands->TrackAllocation(stagingBufferAllocation, stagingBuffer);
         }
-
-        util::TransitionImageLayout(commandBuffer, image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
-
-        util::EndSingleTimeCommands(_context, commandBuffer);
-
-        util::vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
-    }
-
-    if (!creation.name.empty())
-    {
-        std::stringstream ss {};
-        ss << "[IMAGE] ";
-        ss << creation.name;
-        std::string imageStr = ss.str();
-        util::NameObject(image, imageStr, _context);
-        ss.str("");
-
-        for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
+        else
         {
-            ss << "[VIEW " << i << "] ";
-            ss << creation.name;
-            std::string viewStr = ss.str();
-            util::NameObject(layerViews[i].view, viewStr, _context);
-            ss.str("");
-        }
+            ZoneScopedN("Command upload dispatch");
+            vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_context);
 
-        ss << "[ALLOCATION] ";
-        ss << creation.name;
-        std::string str = ss.str();
-        vmaSetAllocationName(_context->MemoryAllocator(), allocation, str.c_str());
+            util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, oldLayout);
+
+            util::CopyBufferToImage(commandBuffer, stagingBuffer, image, width, height);
+
+            if (creation.mips > 1)
+            {
+                ZoneScopedN("Mip creation dispatch");
+                util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+
+                for (uint32_t i = 1; i < creation.mips; ++i)
+                {
+                    vk::ImageBlit blit {};
+                    blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                    blit.srcSubresource.layerCount = 1;
+                    blit.srcSubresource.mipLevel = i - 1;
+                    blit.srcOffsets[1].x = width >> (i - 1);
+                    blit.srcOffsets[1].y = height >> (i - 1);
+                    blit.srcOffsets[1].z = 1;
+
+                    blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                    blit.dstSubresource.layerCount = 1;
+                    blit.dstSubresource.mipLevel = i;
+                    blit.dstOffsets[1].x = width >> i;
+                    blit.dstOffsets[1].y = height >> i;
+                    blit.dstOffsets[1].z = 1;
+
+                    util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
+
+                    commandBuffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+
+                    util::TransitionImageLayout(commandBuffer, image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
+                }
+                oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+            }
+
+            util::TransitionImageLayout(commandBuffer, image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
+
+            {
+                ZoneScopedN("Waiting Image upload");
+                util::EndSingleTimeCommands(_context, commandBuffer);
+            }
+
+            util::vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
+        }
     }
-    else
+
     {
-        bblog::warn("Creating an unnamed image!");
+        ZoneScopedN("Name Settings");
+        if (!creation.name.empty())
+        {
+            std::stringstream ss {};
+            ss << "[IMAGE] ";
+            ss << creation.name;
+            std::string imageStr = ss.str();
+            util::NameObject(image, imageStr, _context);
+            ss.str("");
+
+            for (size_t i = 0; i < imageCreateInfo.arrayLayers; ++i)
+            {
+                ss << "[VIEW " << i << "] ";
+                ss << creation.name;
+                std::string viewStr = ss.str();
+                util::NameObject(layerViews[i].view, viewStr, _context);
+                ss.str("");
+            }
+
+            ss << "[ALLOCATION] ";
+            ss << creation.name;
+            std::string str = ss.str();
+            vmaSetAllocationName(_context->MemoryAllocator(), allocation, str.c_str());
+        }
+        else
+        {
+            bblog::warn("Creating an unnamed image!");
+        }
     }
 }
 

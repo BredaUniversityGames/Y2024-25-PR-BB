@@ -1,4 +1,6 @@
 #include "engine.hpp"
+#include "profile_macros.hpp"
+
 #include <algorithm>
 
 void Engine::SetExit(int code)
@@ -52,6 +54,11 @@ void Engine::AddModuleToTickList(ModuleInterface* module, ModuleTickOrder priori
 
 void Engine::RegisterNewModule(std::type_index moduleType, ModuleInterface* module)
 {
+    ZoneScoped;
+
+    auto name = std::string(module->GetName()) + " init";
+    ZoneName(name.c_str(), 32);
+
     auto [it, success] = _modules.emplace(moduleType, module);
     auto priority = it->second->Init(*this);
 

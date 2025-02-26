@@ -53,34 +53,62 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _ecs(ecs)
     , _settings("settings.json")
 {
+    ZoneScopedN("Renderer Initialization");
     _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
 
-    auto vulkanInfo = application.GetVulkanInfo();
-    _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    {
+        ZoneScopedN("Swapchain creation");
+        auto vulkanInfo = application.GetVulkanInfo();
+        _swapChain = std::make_unique<SwapChain>(_context, glm::uvec2 { vulkanInfo.width, vulkanInfo.height });
+    }
 
-    InitializeHDRTarget();
-    InitializeBloomTargets();
-    InitializeSSAOTarget();
-    InitializeTonemappingTarget();
-    InitializeFXAATarget();
-    LoadEnvironmentMap();
+    {
+        ZoneScopedN("Post processing target Initialization");
+        InitializeHDRTarget();
+        InitializeBloomTargets();
+        InitializeSSAOTarget();
+        InitializeTonemappingTarget();
+        InitializeFXAATarget();
+    }
 
-    _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
-    _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    {
+        ZoneScopedN("Environment map loading");
+        LoadEnvironmentMap();
+    }
 
-    SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
-    ResourceHandle<GPUMesh> uvSphere = _context->Resources()->MeshResourceManager().Create(GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
-    commandBufferPrimitive.Submit();
+    {
+        ZoneScopedN("Batchbuffer allocation");
+        _staticBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+        _skinnedBatchBuffer = std::make_shared<BatchBuffer>(_context, 128_mb, 128_mb);
+    }
 
-    _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
-    _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    ResourceHandle<GPUMesh> uvSphere;
+    {
+        ZoneScopedN("UV sphere render");
+        SingleTimeCommands commandBufferPrimitive { _context->VulkanContext() };
+        uvSphere = _context->Resources()->MeshResourceManager().Create(commandBufferPrimitive, GenerateUVSphere(32, 32), ResourceHandle<GPUMaterial>::Null(), *_staticBatchBuffer);
+        commandBufferPrimitive.Submit();
+    }
+
+    {
+        ZoneScopedN("GBuffer allocation");
+        _gBuffers = std::make_unique<GBuffers>(_context, _swapChain->GetImageSize());
+    }
+
+    {
+        ZoneScopedN("IBL pass creation");
+        _iblPass = std::make_unique<IBLPass>(_context, _environmentMap);
+    }
 
     // Makes sure previously created textures are available to be sampled in the IBL pipeline
     UpdateBindless();
 
-    SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
-    _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
-    commandBufferIBL.Submit();
+    {
+        ZoneScopedN("IBL generation pass");
+        SingleTimeCommands commandBufferIBL { _context->VulkanContext() };
+        _iblPass->RecordCommands(commandBufferIBL.CommandBuffer());
+        commandBufferIBL.Submit();
+    }
 
     GPUSceneCreation gpuSceneCreation {
         _context,
@@ -101,7 +129,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_bloomSettings);
+    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_gBuffers, *_bloomSettings);
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomBlurPass = std::make_unique<GaussianBlurPass>(_context, _brightnessTarget, _bloomTarget);
@@ -248,6 +276,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Seafoam))
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation fxaaPass { *_fxaaPass };

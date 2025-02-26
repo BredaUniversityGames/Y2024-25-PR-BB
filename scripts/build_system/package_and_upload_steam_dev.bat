@@ -1,6 +1,6 @@
 @echo off
-call package_dist_linux.bat
-call package_dist_windows.bat
+call package_linux_dist.bat
+call package_windows_dist.bat
 echo Uploading to the development branch.
 set /p username="Steam username: "
 set /p password="Steam password: "
