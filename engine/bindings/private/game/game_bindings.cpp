@@ -46,18 +46,18 @@ void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
 
 WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
 {
-
     auto playerView = ecs.GetRegistry().view<PlayerTag>();
     for (auto entity : playerView)
     {
         ecs.DestroyEntity(entity);
     }
-    entt::entity playerEntity = ecs.GetRegistry().create();
-    JPH::BodyCreationSettings bodyCreationSettings(ShapeFactory::MakeCapsuleShape(height, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, eMOVING_OBJECT);
-    bodyCreationSettings.mAllowDynamicOrKinematic = true;
 
-    bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
-    RigidbodyComponent rb(physicsModule.GetBodyInterface(), playerEntity, bodyCreationSettings);
+    entt::entity playerEntity = ecs.GetRegistry().create();
+    ecs.GetRegistry().emplace<TransformComponent>(playerEntity);
+    TransformHelpers::SetLocalPosition(ecs.GetRegistry(), playerEntity, position);
+
+    auto degreesOfFreedom = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    RigidbodyComponent rb(physicsModule.GetBodyInterface(), ShapeFactory::MakeCapsuleShape(height, radius), true, degreesOfFreedom);
 
     NameComponent node;
     PlayerTag playerTag;

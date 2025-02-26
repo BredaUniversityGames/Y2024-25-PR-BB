@@ -8,6 +8,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 
 #include "common.hpp"
+#include "components/rigidbody_component.hpp"
 #include "module_interface.hpp"
 #include "physics/collision.hpp"
 #include "physics/constants.hpp"
@@ -26,7 +27,6 @@ struct RayHitInfo
     float hitFraction = 0.0f; // Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
 };
 
-struct RigidbodyComponent;
 class PhysicsModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) final;

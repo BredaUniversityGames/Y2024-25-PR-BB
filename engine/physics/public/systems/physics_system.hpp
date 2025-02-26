@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "common.hpp"
+#include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
 #include "physics_module.hpp"
@@ -7,7 +8,6 @@
 struct Vertex;
 struct Hierarchy;
 class PhysicsModule;
-struct RigidbodyComponent;
 struct CPUModel;
 template <typename T>
 struct CPUMesh;

@@ -220,7 +220,7 @@ glm::quat TransformHelpers::GetWorldRotation(entt::registry& reg, entt::entity e
     assert(reg.valid(entity));
     auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
 
-    return glm::quat_cast(m);
+    return glm::normalize(glm::quat_cast(m));
 }
 glm::vec3 TransformHelpers::GetWorldScale(entt::registry& reg, entt::entity entity)
 {

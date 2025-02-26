@@ -86,41 +86,41 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
             triangles.push_back(tri);
         }
 
-        const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
-        RigidbodyComponent rb;
-        if (shape == PhysicsShapes::eMESH)
-            rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices, triangles);
-
-        if (shape == PhysicsShapes::eCONVEXHULL)
-            rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices);
-
-        // Assume worldMatrix is your 4x4 transformation matrix
-        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
-
-        // Variables to store the decomposed components
-        glm::vec3 scale;
-        glm::quat rotationQuat;
-        glm::vec3 translation;
-        glm::vec3 skew;
-        glm::vec4 perspective;
-
-        // Decompose the matrix
-        glm::decompose(
-            worldMatrix,
-            scale,
-            rotationQuat,
-            translation,
-            skew,
-            perspective);
-
-        auto result = _physicsModule.GetBodyInterface().GetShape(rb.bodyID)->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
-        if (result.HasError())
-            bblog::error(result.GetError().c_str());
-
-        _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
-        _physicsModule.GetBodyInterface().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
-        _ecs.GetRegistry()
-            .emplace<RigidbodyComponent>(entity, rb);
+        // const glm::vec3 position = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity)[3];
+        // RigidbodyComponent rb;
+        // if (shape == PhysicsShapes::eMESH)
+        //     rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices, triangles);
+        //
+        // if (shape == PhysicsShapes::eCONVEXHULL)
+        //     rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entt::null, position, vertices);
+        //
+        // // Assume worldMatrix is your 4x4 transformation matrix
+        // glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
+        //
+        // // Variables to store the decomposed components
+        // glm::vec3 scale;
+        // glm::quat rotationQuat;
+        // glm::vec3 translation;
+        // glm::vec3 skew;
+        // glm::vec4 perspective;
+        //
+        // // Decompose the matrix
+        // glm::decompose(
+        //     worldMatrix,
+        //     scale,
+        //     rotationQuat,
+        //     translation,
+        //     skew,
+        //     perspective);
+        //
+        // auto result = _physicsModule.GetBodyInterface().GetShape(rb.bodyID)->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
+        // if (result.HasError())
+        //     bblog::error(result.GetError().c_str());
+        //
+        // _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
+        // _physicsModule.GetBodyInterface().SetShape(rb.bodyID, result.Get(), true, JPH::EActivation::Activate);
+        // _ecs.GetRegistry()
+        //     .emplace<RigidbodyComponent>(entity, rb);
     }
 
     for (const auto& nodeIndex : currentNode.children)
@@ -139,34 +139,22 @@ RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& 
         assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
     }
 
-    JPH::VertexList vertices;
-    JPH::IndexedTriangleList triangles;
+    std::vector<glm::vec3> vertices;
 
-    // set verticies
+    // set vertices
     for (auto vertex : mesh.vertices)
     {
-        vertices.push_back(JPH::Float3(vertex.position.x, vertex.position.y, vertex.position.z));
+        vertices.emplace_back(vertex.position.x, vertex.position.y, vertex.position.z);
     }
 
-    // set trinagles
-    if (shapeType == PhysicsShapes::eMESH)
-    {
-        for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
-        {
-            JPH::IndexedTriangle tri;
-            tri.mIdx[0] = mesh.indices[i + 0];
-            tri.mIdx[1] = mesh.indices[i + 1];
-            tri.mIdx[2] = mesh.indices[i + 2];
+    JPH::ShapeRefC shape {};
 
-            triangles.push_back(tri);
-        }
-    }
-
-    RigidbodyComponent rb;
-    if (shapeType == PhysicsShapes::eMESH)
-        rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices, triangles);
     if (shapeType == PhysicsShapes::eCONVEXHULL)
-        rb = RigidbodyComponent(_physicsModule.GetBodyInterface(), entityToAttachTo, glm::vec3(0.0), vertices);
+        shape = ShapeFactory::MakeConvexHullShape(vertices);
+    if (shapeType == PhysicsShapes::eMESH)
+        shape = ShapeFactory::MakeMeshHullShape(vertices, mesh.indices);
+
+    RigidbodyComponent rb { _physicsModule.GetBodyInterface(), shape, false };
     return rb;
 }
 
@@ -179,6 +167,7 @@ void PhysicsSystem::CreateCollision(const std::string& path, const PhysicsShapes
 void PhysicsSystem::CleanUp()
 {
     const auto toDestroy = _ecs.GetRegistry().view<DeleteTag, RigidbodyComponent>();
+
     for (const entt::entity entity : toDestroy)
     {
         const RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
@@ -228,7 +217,7 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         }
     }
 
-    // We now update our transform system to match jolt's since the loop bellow us handles the dynamic objects that are being simulated by physics
+    // We now update our transform system to match jolt's since the loop below us handles the dynamic objects that are being simulated by physics
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
@@ -277,7 +266,7 @@ void PhysicsSystem::Inspect()
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = PhysicsShapes::eSPHERE;
-    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
+    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size_hint()));
     ImGui::Text("Active bodies: %u", _physicsModule._physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
 
     ImGui::DragInt("Amount", &amount, 1, 1, 100);
@@ -298,38 +287,38 @@ void PhysicsSystem::Inspect()
         }
         ImGui::EndCombo();
     }
-    if (ImGui::Button("Create Physics Entities"))
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            entt::entity entity = _ecs.GetRegistry().create();
-            RigidbodyComponent rb(_physicsModule.GetBodyInterface(), entity, currentShape);
-
-            NameComponent node;
-            node.name = "Physics Entity";
-            _ecs.GetRegistry().emplace<NameComponent>(entity, node);
-            _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-            _physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
-        }
-    }
-
-    if (ImGui::Button("Create Plane Entity"))
-    {
-        JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
-
-        entt::entity entity = _ecs.GetRegistry().create();
-        RigidbodyComponent newRigidBody(_physicsModule.GetBodyInterface(), entity, plane_settings);
-        NameComponent node;
-        node.name = "Plane Entity";
-        _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, newRigidBody);
-        _ecs.GetRegistry().emplace<NameComponent>(entity, node);
-    }
-
-    if (ImGui::Button("Clear Physics Entities"))
-    {
-        _ecs.GetRegistry().view<RigidbodyComponent>().each([&](auto entity, auto&)
-            { _ecs.DestroyEntity(entity); });
-    }
+    // if (ImGui::Button("Create Physics Entities"))
+    // {
+    //     for (int i = 0; i < amount; i++)
+    //     {
+    //         entt::entity entity = _ecs.GetRegistry().create();
+    //         RigidbodyComponent rb(_physicsModule.GetBodyInterface(), entity, currentShape);
+    //
+    //         NameComponent node;
+    //         node.name = "Physics Entity";
+    //         _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+    //         _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+    //         _physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(0.6f, 0.0f, 0.0f));
+    //     }
+    // }
+    //
+    // if (ImGui::Button("Create Plane Entity"))
+    // {
+    //     JPH::BodyCreationSettings plane_settings(new JPH::BoxShape(JPH::Vec3(10.0f, 0.1f, 10.0f)), JPH::Vec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, eNON_MOVING_OBJECT);
+    //
+    //     entt::entity entity = _ecs.GetRegistry().create();
+    //     RigidbodyComponent newRigidBody(_physicsModule.GetBodyInterface(), entity, plane_settings);
+    //     NameComponent node;
+    //     node.name = "Plane Entity";
+    //     _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, newRigidBody);
+    //     _ecs.GetRegistry().emplace<NameComponent>(entity, node);
+    // }
+    //
+    // if (ImGui::Button("Clear Physics Entities"))
+    // {
+    //     _ecs.GetRegistry().view<RigidbodyComponent>().each([&](auto entity, auto&)
+    //         { _ecs.DestroyEntity(entity); });
+    // }
     ImGui::End();
 }
 
@@ -353,36 +342,36 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
     }
 
-    if (rb.shapeType == PhysicsShapes::eSPHERE)
-    {
-        const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
-        float radius = shape->GetInnerRadius();
-
-        if (ImGui::DragFloat("Radius", &radius, 0.1f))
-        {
-            radius = glm::max(radius, 0.01f);
-            _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::SphereShape(radius), true, JPH::EActivation::Activate);
-        }
-    }
-
-    if (rb.shapeType == PhysicsShapes::eBOX)
-    {
-        const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
-        auto boxShape = JPH::StaticCast<JPH::BoxShape>(shape);
-        if (boxShape == nullptr)
-        {
-            return;
-        }
-        const auto joltSize = boxShape->GetHalfExtent();
-        float size[3] = { joltSize.GetX(), joltSize.GetY(), joltSize.GetZ() };
-        if (ImGui::DragFloat3("Size", size, 0.1f))
-        {
-            size[0] = glm::max(size[0], 0.1f);
-            size[1] = glm::max(size[1], 0.1f);
-            size[2] = glm::max(size[2], 0.1f);
-            _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
-        }
-    }
+    // if (rb.shapeType == PhysicsShapes::eSPHERE)
+    // {
+    //     const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
+    //     float radius = shape->GetInnerRadius();
+    //
+    //     if (ImGui::DragFloat("Radius", &radius, 0.1f))
+    //     {
+    //         radius = glm::max(radius, 0.01f);
+    //         _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::SphereShape(radius), true, JPH::EActivation::Activate);
+    //     }
+    // }
+    //
+    // if (rb.shapeType == PhysicsShapes::eBOX)
+    // {
+    //     const auto& shape = _physicsModule.GetBodyInterface().GetShape(rb.bodyID);
+    //     auto boxShape = JPH::StaticCast<JPH::BoxShape>(shape);
+    //     if (boxShape == nullptr)
+    //     {
+    //         return;
+    //     }
+    //     const auto joltSize = boxShape->GetHalfExtent();
+    //     float size[3] = { joltSize.GetX(), joltSize.GetY(), joltSize.GetZ() };
+    //     if (ImGui::DragFloat3("Size", size, 0.1f))
+    //     {
+    //         size[0] = glm::max(size[0], 0.1f);
+    //         size[1] = glm::max(size[1], 0.1f);
+    //         size[2] = glm::max(size[2], 0.1f);
+    //         _physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::BoxShape(JPH::Vec3(size[0], size[1], size[2])), true, JPH::EActivation::Activate);
+    //     }
+    // }
 
     JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
     const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };

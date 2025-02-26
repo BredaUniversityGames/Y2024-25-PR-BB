@@ -54,6 +54,8 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
 
+    RigidbodyComponent::SetupRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
+
     return ModuleTickOrder::ePreTick;
 }
 
@@ -63,7 +65,8 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
     delete JPH::Factory::sInstance;
     JPH::Factory::sInstance = nullptr;
-    JPH::DebugRenderer::sInstance = nullptr;
+
+    RigidbodyComponent::DisconnectRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
 }
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
