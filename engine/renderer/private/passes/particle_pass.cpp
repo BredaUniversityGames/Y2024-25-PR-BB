@@ -272,9 +272,11 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
         }
 
         // burst emission
-        for (auto it = component.bursts.begin(); it != component.bursts.end(); it = it++)
+        for (auto it = component.bursts.begin(); it != component.bursts.end();)
         {
-            auto& burst = *it;
+            auto copyIt = it;
+            it++;
+            auto& burst = *copyIt;
             if (burst.currentInterval < 0.0f)
             {
                 if (burst.cycles > 0 || burst.loop)
@@ -291,7 +293,7 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
                 }
                 else
                 {
-                    it = component.bursts.erase(it);
+                    component.bursts.erase(copyIt);
                 }
             }
         }
