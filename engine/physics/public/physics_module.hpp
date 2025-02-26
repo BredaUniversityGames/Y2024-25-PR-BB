@@ -44,17 +44,6 @@ public:
     JPH::BodyInterface& GetBodyInterface() { return _physicsSystem->GetBodyInterface(); }
     const JPH::BodyInterface& GetBodyInterface() const { return _physicsSystem->GetBodyInterface(); }
 
-    glm::vec3 GetPosition(RigidbodyComponent& rigidBody) const;
-    glm::vec3 GetRotation(RigidbodyComponent& rigidBody) const;
-    void AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount);
-    void AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount);
-    glm::vec3 GetVelocity(RigidbodyComponent& rigidBody) const;
-    glm::vec3 GetAngularVelocity(RigidbodyComponent& rigidBody) const;
-    void SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity);
-    void SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity);
-    void SetGravityFactor(RigidbodyComponent& rigidBody, const float factor);
-    void SetFriction(RigidbodyComponent& rigidBody, const float friction);
-
     std::unique_ptr<JPH::PhysicsSystem> _physicsSystem {};
     std::unique_ptr<PhysicsDebugRenderer> _debugRenderer {};
 

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <entt/entity/registry.hpp>
+#include <physics/jolt_to_glm.hpp>
 
 #include <Jolt/Jolt.h>
 
@@ -19,6 +20,22 @@ public:
 
     static void SetupRegistryCallbacks(entt::registry& registry);
     static void DisconnectRegistryCallbacks(entt::registry& registry);
+
+    // Getters
+    glm::vec3 GetPosition() const { return ToGLMVec3(bodyInterface.GetPosition(bodyID)); }
+    glm::quat GetRotation() const { return ToGLMQuat(bodyInterface.GetRotation(bodyID)); }
+    glm::vec3 GetVelocity() const { return ToGLMVec3(bodyInterface.GetLinearVelocity(bodyID)); }
+    glm::vec3 GetAngularVelocity() const { return ToGLMVec3(bodyInterface.GetLinearVelocity(bodyID)); };
+
+    // Setters
+    void SetVelocity(const glm::vec3& velocity) { bodyInterface.SetLinearVelocity(bodyID, ToJoltVec3(velocity)); };
+    void SetAngularVelocity(const glm::vec3& velocity) { bodyInterface.SetAngularVelocity(bodyID, ToJoltVec3(velocity)); };
+    void SetGravityFactor(float factor) { bodyInterface.SetGravityFactor(bodyID, factor); }
+    void SetFriction(float friction) { bodyInterface.SetFriction(bodyID, friction); }
+
+    // Adders
+    void AddForce(const glm::vec3& force) { bodyInterface.AddForce(bodyID, ToJoltVec3(force)); }
+    void AddImpulse(const glm::vec3& force) { bodyInterface.AddImpulse(bodyID, ToJoltVec3(force)); }
 
     JPH::BodyID bodyID;
     JPH::ShapeRefC shape;

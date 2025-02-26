@@ -2,7 +2,6 @@
 
 #include "components/transform_helpers.hpp"
 #include "physics/collision.hpp"
-#include "physics/jolt_to_glm.hpp"
 
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -11,10 +10,10 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface,
     JPH::ShapeRefC shape,
     bool dynamic,
     JPH::EAllowedDOFs freedom)
-    : bodyInterface(bodyInterface)
-    , shape(shape)
+    : shape(shape)
     , dynamic(dynamic)
     , dofs(freedom)
+    , bodyInterface(bodyInterface)
 {
 }
 

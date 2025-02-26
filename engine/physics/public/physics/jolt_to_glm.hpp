@@ -42,3 +42,8 @@ inline JPH::Quat ToJoltQuat(const glm::quat& q)
 {
     return { q.x, q.y, q.z, q.w };
 }
+
+inline glm::quat ToGLMQuat(const JPH::Quat& quat)
+{
+    return glm::quat { quat.GetW(), quat.GetX(), quat.GetY(), quat.GetZ() };
+}
