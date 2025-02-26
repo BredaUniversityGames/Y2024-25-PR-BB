@@ -131,7 +131,6 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBody.funcStaticExt<bindings::RigidbodyNew>("new");
 
     auto& rigidBodyComponent = module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent");
-
     rigidBodyComponent.propReadonlyExt<bindings::GetBodyID>("GetBodyID");
 
     rigidBodyComponent.funcExt<bindings::AddForce>("AddForce");
