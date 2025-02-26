@@ -26,11 +26,11 @@ class Main {
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var mutant = engine.GetECS().GetEntityByName("Clown")
-        var mutantAnimations = mutant.GetAnimationControlComponent()
-        mutantAnimations.Play("NarutoRun", 1.0, true)
-        mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
-        mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+        var clown = engine.GetECS().GetEntityByName("Clown")
+        var clownAnimations = clown.GetAnimationControlComponent()
+        clownAnimations.Play("NarutoRun", 1.0, true)
+        clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         if (__camera) {
             System.print("Player is online!")
