@@ -108,12 +108,19 @@ float hash12(vec2 p) {
 }
 
 #define RAIN_DENSITY .00006      // density of drop
-#define BRIGTHNESS  .3        // raindrop brightness contrast
-#define BLUR_LENGTH 50.0       // max length of raindrop blured line
-#define SPEED 1.1
+#define BRIGTHNESS  .9        // raindrop brightness contrast
+#define BLUR_LENGTH 20.0       // max length of raindrop blured line
+#define SPEED 0.5
 
 
 #define rnd(p, s)   fract(sin(((p) + .01 * (s)) * 12.9898) * 43758.5453)
+
+
+float linearize_depth(float d, float zNear, float zFar)
+{
+    return zNear * zFar / (zFar + d * (zNear - zFar));
+}
+
 void main()
 {
     vec2 newTexCoords = texCoords;
@@ -131,7 +138,7 @@ void main()
     }
     // Prepare the circle parameters, cycling the circle size over time.
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
-    const float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
     vec3 hdrColor = vec3(0.0);
     if (pixelizationEnabled)
@@ -178,26 +185,61 @@ void main()
     vec2 R = vec2(pc.screenWidth, pc.screenHeight);
     vec2 U = gl_FragCoord.xy;
 
-    U -= .5;
-    U.x += 500.0;
+    // Define the world gravity (rain falls downward in world space)
+    vec3 worldGravity = vec3(0.0, -1.0, 0.0);
+    // Transform gravity into view space (rotation only)
+    vec3 viewGravity = mat3(camera.view) * worldGravity;
+
+    // Compute a tilt factor that goes from 0 (when viewGravity.y is 1.0 in magnitude, i.e. camera level)
+    // to 1 (when viewGravity.y is 0, i.e. extreme tilt)
+    float tilt = 1.0 - clamp(abs(viewGravity.y), 0.0, 1.0);
+    // Compute the drop stretch: when tilt is 0, dropStretch is 1; as tilt increases, so does dropStretch.
+    // Adjust the multiplier (here 2.0) to control how pronounced the effect is.
+    float dropStretch = 1.0 + tilt * 20.0;
+
+
+
+    // Extract the camera's right vector from the view matrix.
+    vec3 right = vec3(camera.view[0][0], camera.view[1][0], camera.view[2][0]);
+    // Compute the camera yaw angle. This angle represents the left/right rotation.
+    float camYaw = atan(right.z, right.x);
+    // Apply a scale factor to determine how much the rain pattern should shift to cancel the yaw.
+    // (Adjust the 50.0 multiplier until it feels right in your scene.)
+    float rotationOffset = camYaw * 50.0;
+    U.x += rotationOffset;
 
     float Ny = RAIN_DENSITY * R.y; // number of drop per column
 
+    vec3 auxHdrColor = hdrColor;
+
     float layerDisplacement = 1.0f;
+    //depthSample = linearize_depth(depthSample, camera.zNear, camera.zFar);
     //layers
-    for (float l = 0.; l < 8.; l++)
+    for (float l = 0.; l < 4.; l++)
     {
+        vec2 worldOffset = - vec2(camera.cameraPosition.x, camera.cameraPosition.z) * 0.001f;
         U.x += l * 1.2;
+        U.x -= worldOffset.x;
+        layerDisplacement -= worldOffset.y;
         for (float i = 0.; i <= floor(Ny); i++) {
             // to deal with more than one drop per column
             float y = floor(mod(rnd(U.x, 2. * i) * R.y + (SPEED * pc.time), R.y)); // drop altitude
-            if (rnd(U.x, 2. * i + 1.) < (Ny - i) && abs(U.y - y) < (BLUR_LENGTH / layerDisplacement) * U.x / R.x)
-            hdrColor += BRIGTHNESS; //  / (U.x/R.x); // variant: keep total drop brightness. attention: saturated on the left 5%
+            if (rnd(U.x, 2. * i + 1.) < (Ny - i) && abs(U.y - y) < ((BLUR_LENGTH * layerDisplacement) / dropStretch) * U.x / R.x)
+            {
+                if (depthSample * 20 < layerDisplacement - 1.0)
+                {
+                    hdrColor += BRIGTHNESS; //  / (U.x/R.x); // variant: keep total drop brightness. attention: saturated on the left 5%
+
+                } else
+                {
+                    hdrColor = auxHdrColor;
+                }
+
+            }
         }
 
-        layerDisplacement += 1.0f;
+        layerDisplacement += 0.25f;
     }
-
 
 
     hdrColor += bloomColor * bloomSettings.strength;
