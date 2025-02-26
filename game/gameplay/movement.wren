@@ -73,7 +73,7 @@ class PlayerMovement{
     lookSensitivity=(value) {_lookSensitivity = value}
 
     Rotation(engine, player) {
-        
+
         var FORWARD = Vec3.new(0.0, 0.0, -1.0)
 
         var MOUSE_SENSITIVITY = 0.003 * _lookSensitivity
@@ -146,7 +146,7 @@ class PlayerMovement{
         }
 
         var playerBody = playerController.GetRigidbodyComponent()
-        var velocity = engine.GetPhysics().GetVelocity(playerBody)
+        var velocity = playerBody.GetVelocity()
 
         var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
         var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
@@ -155,7 +155,7 @@ class PlayerMovement{
         var right = (cameraRotation.mulVec3( Vec3.new(1.0, 0.0, 0.0))).normalize()
 
         // lets test for ground here
-        var playerControllerPos = engine.GetPhysics().GetPosition(playerBody)
+        var playerControllerPos = playerBody.GetPosition()
         var rayDirection = Vec3.new(0.0, -1.0, 0.0)
         var rayLength = 2.0
 
@@ -178,17 +178,15 @@ class PlayerMovement{
         moveInputDir = moveInputDir.normalize()
 
         if(movement.length() > 0.1){
-            engine.GetPhysics().SetFriction(playerBody, 0.0)
+            playerBody.SetFriction(0.0)
         }else{
-            engine.GetPhysics().SetFriction(playerBody, 12.0)
+            playerBody.SetFriction(12.0)
         }
-        engine.GetPhysics().SetGravityFactor(playerBody,gravityFactor) 
 
+        playerBody.SetGravityFactor(gravityFactor)
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
-
-
 
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
@@ -262,8 +260,10 @@ class PlayerMovement{
         // }
         // }
 
-        engine.GetPhysics().SetVelocity(playerBody, velocity)
-        var pos = engine.GetPhysics().GetPosition(playerBody)
+        playerBody.SetVelocity(velocity)
+
+        var pos = playerBody.GetPosition()
+
         if(isSliding == true){
             pos.y = pos.y + (playerHeight/4.0)/2.0
         }else{
@@ -273,8 +273,10 @@ class PlayerMovement{
     }
 
     Dash(engine, dt, playerController, camera){
+
         var playerBody = playerController.GetRigidbodyComponent()
-        var velocity = engine.GetPhysics().GetVelocity(playerBody)
+        var velocity = playerBody.GetVelocity()
+
         var dashAmount = dashForce
         if(isGrounded==false){
             dashAmount = dashForce/1.6
@@ -296,10 +298,10 @@ class PlayerMovement{
 
             if(moveInputDir.length() > 0.01){
                 velocity = velocity + moveInputDir.mulScalar(dashAmount)
-                engine.GetPhysics().SetVelocity(playerBody, velocity)
+                playerBody.SetVelocity(velocity)
             }else{
                 velocity = velocity + forward.mulScalar(2.0 * dashAmount)
-                engine.GetPhysics().SetVelocity(playerBody, velocity)
+                playerBody.SetVelocity(velocity)
             }
         }
 
@@ -319,11 +321,14 @@ class PlayerMovement{
             isSliding = true
             //crouch first
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
+
             var playerBody = playerController.GetRigidbodyComponent()
-            var velocity = engine.GetPhysics().GetVelocity(playerBody)
+            var velocity = playerBody.GetVelocity()
+
             var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
             var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
             forward.y = 0.0
+
             var right = cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0)).normalize()
             var movement = engine.GetInput().GetAnalogAction("Move")
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
@@ -337,7 +342,8 @@ class PlayerMovement{
             if(slideWishDirection.length() > 0.01){
                 velocity = velocity + slideWishDirection.mulScalar(slideAmount)
             }
-            engine.GetPhysics().SetVelocity(playerBody, velocity)
+
+            playerBody.SetVelocity(velocity)
 
         }else{
             isSliding = false

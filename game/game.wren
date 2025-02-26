@@ -152,7 +152,6 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
-                //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
             }
 
             if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {

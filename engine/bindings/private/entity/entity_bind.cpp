@@ -131,7 +131,9 @@ WrenEntity CreateEntity(ECSModule& self)
 
 void FreeEntity(ECSModule& self, WrenEntity& entity)
 {
-    self.GetRegistry().destroy(entity.entity);
+    if (!self.GetRegistry().valid(entity.entity))
+        return;
+    self.DestroyEntity(entity.entity);
 }
 
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)

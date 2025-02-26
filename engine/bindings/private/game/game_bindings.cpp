@@ -3,11 +3,16 @@
 #include "cheats_component.hpp"
 #include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"
+#include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
+
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -71,11 +76,11 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
     }
 
     entt::entity playerEntity = ecs.GetRegistry().create();
-    JPH::BodyCreationSettings bodyCreationSettings(new JPH::CapsuleShape(height / 2.0, radius), JPH::Vec3(position.x, position.y, position.z), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
-    bodyCreationSettings.mAllowDynamicOrKinematic = true;
+    ecs.GetRegistry().emplace<TransformComponent>(playerEntity);
+    TransformHelpers::SetLocalPosition(ecs.GetRegistry(), playerEntity, position);
 
-    bodyCreationSettings.mAllowedDOFs = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
-    RigidbodyComponent rb(*physicsModule.bodyInterface, playerEntity, bodyCreationSettings);
+    auto degreesOfFreedom = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    RigidbodyComponent rb(physicsModule.GetBodyInterface(), ShapeFactory::MakeCapsuleShape(height, radius), true, degreesOfFreedom);
 
     NameComponent node;
     PlayerTag playerTag;
@@ -130,14 +135,14 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     for (auto entity : playerView)
     {
         auto& rb = ecs.GetRegistry().get<RigidbodyComponent>(entity);
-        const auto& shape = physicsModule.bodyInterface->GetShape(rb.bodyID);
+        const auto& shape = physicsModule.GetBodyInterface().GetShape(rb.bodyID);
         auto capsuleShape = JPH::StaticCast<JPH::CapsuleShape>(shape);
         if (capsuleShape == nullptr)
         {
             return;
         }
         const float radius = capsuleShape->GetRadius();
-        physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::CapsuleShape(height / 2.0, radius), true, JPH::EActivation::Activate);
+        physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::CapsuleShape(height / 2.0, radius), true, JPH::EActivation::Activate);
     }
 }
 
