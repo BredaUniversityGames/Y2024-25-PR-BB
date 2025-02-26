@@ -57,12 +57,6 @@ void ECSModule::RenderSystems() const
 }
 void ECSModule::RemovedDestroyed()
 {
-    // TODO: should be somewhere else
-    if (auto* physics = GetSystem<PhysicsSystem>())
-    {
-        physics->CleanUp();
-    }
-
     const auto toDestroy = registry.view<DeleteTag>();
     for (const entt::entity entity : toDestroy)
     {

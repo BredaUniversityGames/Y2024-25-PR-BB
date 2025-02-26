@@ -60,16 +60,19 @@ public:
             switch (currentNode.meshIndex.value().first)
             {
             case MeshType::eSTATIC:
+            {
                 _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(currentNode.meshIndex.value().second);
                 _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
 
-                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL, entity));
+                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL);
+                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
 
                 // add collider recursively
 
                 break;
+            }
             case MeshType::eSKINNED:
                 _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(currentNode.meshIndex.value().second);
                 break;
