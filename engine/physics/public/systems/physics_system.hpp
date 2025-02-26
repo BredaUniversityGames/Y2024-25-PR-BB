@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "common.hpp"
+#include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "entt/entity/entity.hpp"
 #include "physics_module.hpp"
@@ -7,7 +8,6 @@
 struct Vertex;
 struct Hierarchy;
 class PhysicsModule;
-struct RigidbodyComponent;
 struct CPUModel;
 template <typename T>
 struct CPUMesh;
@@ -20,11 +20,10 @@ public:
     NON_COPYABLE(PhysicsSystem);
     NON_MOVABLE(PhysicsSystem);
 
-    RigidbodyComponent CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType, entt::entity entityToAttachTo = entt::null);
+    RigidbodyComponent CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType);
 
     void CreateCollision(const std::string& path, const PhysicsShapes shapeType);
 
-    void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
     void Render(const ECSModule& ecs) const override;
     void Inspect() override;
