@@ -153,7 +153,6 @@ class Main {
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
             __activeWeapon.attack(engine, dt)
-            //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
@@ -176,7 +175,6 @@ class Main {
             __activeWeapon = __armory[Weapons.shotgun]
             __activeWeapon.equip(engine)
         }
-
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
