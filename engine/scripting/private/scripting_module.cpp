@@ -46,9 +46,6 @@ void ScriptingModule::Tick(Engine& engine)
 
 void ScriptingModule::SetMainScript(Engine& e, const std::string& path)
 {
-    _mainModule.reset();
-    _context->Reset();
-    BindEngineAPI(GetForeignAPI());
     _mainEngineScript = path;
     if (auto result = _context->RunScript(_mainEngineScript))
     {
