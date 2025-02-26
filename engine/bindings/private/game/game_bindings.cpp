@@ -14,6 +14,9 @@
 
 #include "components/camera_component.hpp"
 
+#include "ui_progress_bar.hpp"
+#include "ui_text.hpp"
+
 namespace bindings
 {
 void SetLifetimePaused(WrenComponent<LifetimeComponent>& self, bool paused)
@@ -137,6 +140,28 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
         physicsModule.bodyInterface->SetShape(rb.bodyID, new JPH::CapsuleShape(height / 2.0, radius), true, JPH::EActivation::Activate);
     }
 }
+
+HUD& GetHUD(GameModule& self)
+{
+    return self._hud;
+}
+
+void UpdateHealthBar(HUD& self, const float health)
+{
+    if (auto locked = self.healthBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(health);
+    }
+}
+
+void UpdateAmmoText(HUD& self, const int ammo, const int maxAmmo)
+{
+    if (auto locked = self.ammoCounter.lock(); locked != nullptr)
+    {
+        locked->SetText(std::to_string(ammo) + "/" + std::to_string(maxAmmo));
+    }
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -151,4 +176,9 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
+    game.funcExt<bindings::GetHUD>("GetHUD");
+
+    auto& hud = module.klass<HUD>("HUD");
+    hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
+    hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
 }

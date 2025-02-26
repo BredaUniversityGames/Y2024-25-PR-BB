@@ -8,6 +8,7 @@ class PlayerVariables {
     }
 
     health {_health}
+    maxHealth {_maxHealth}
     score {_score}
 
     health=(value) {_health = value}

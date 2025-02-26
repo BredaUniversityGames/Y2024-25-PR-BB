@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random, HUD
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 import "camera.wren" for CameraVariables
@@ -206,6 +206,9 @@ class Main {
                 __playerVariables.IncreaseScore(1)
             }
         }
+
+        engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
+        engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
