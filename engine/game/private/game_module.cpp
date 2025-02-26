@@ -58,11 +58,10 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-    entt::entity gunEntity;
+
     {
         ZoneScopedN("Scene models");
         auto entities = SceneLoading::LoadModels(engine, modelPaths);
-        gunEntity = entities[1];
     }
 
     {
@@ -106,12 +105,9 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
-    auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
-
-    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -131,7 +127,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = ECS.GetRegistry().view<CameraComponent, TransformComponent>();
-        auto playerEntity = ECS.GetRegistry().view<PlayerTag>().front();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
             auto windowSize = applicationModule.DisplaySize();
@@ -142,8 +137,9 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
                 continue;
             }
 
-            glm::vec3 cameraPos = TransformHelpers::GetWorldPosition(ECS.GetRegistry(), entity);
+            glm::vec3 position = TransformHelpers::GetWorldPosition(ECS.GetRegistry(), entity);
 
+            JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
 
             // constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };

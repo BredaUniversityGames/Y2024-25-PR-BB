@@ -130,8 +130,6 @@ class PlayerMovement{
 
         position = position + movementDir.mulScalar(scaled)
 
-        // position = position + rotation.mulVec3(movementDir).mulScalar(scaled)
-
         player.GetTransformComponent().translation = position
     }
 

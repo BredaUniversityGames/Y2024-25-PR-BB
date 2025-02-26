@@ -88,15 +88,12 @@ WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& 
     ecs.GetRegistry().emplace<NameComponent>(playerEntity, node);
     ecs.GetRegistry().emplace<RigidbodyComponent>(playerEntity, rb);
     ecs.GetRegistry().emplace<PlayerTag>(playerEntity, playerTag);
-    ecs.GetRegistry().emplace<TransformComponent>(playerEntity);
     ecs.GetRegistry().emplace<RelationshipComponent>(playerEntity);
 
     entt::entity entity = ecs.GetRegistry().create();
     ecs.GetRegistry().emplace<NameComponent>(entity, "Player");
     ecs.GetRegistry().emplace<TransformComponent>(entity);
     ecs.GetRegistry().emplace<RelationshipComponent>(entity);
-
-    RelationshipHelpers::AttachChild(ecs.GetRegistry(), playerEntity, entity);
 
     entt::entity cameraEntity = ecs.GetRegistry().create();
     ecs.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
