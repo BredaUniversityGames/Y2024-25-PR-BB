@@ -24,7 +24,6 @@ public:
 
     void CreateCollision(const std::string& path, const PhysicsShapes shapeType);
 
-    void CleanUp();
     void Update(ECSModule& ecs, float deltaTime) override;
     void Render(const ECSModule& ecs) const override;
     void Inspect() override;

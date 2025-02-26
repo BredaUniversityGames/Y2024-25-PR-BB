@@ -1,5 +1,23 @@
 ﻿#include "components/rigidbody_component.hpp"
 
+#include "components/transform_helpers.hpp"
+#include "physics/collision.hpp"
+#include "physics/jolt_to_glm.hpp"
+
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+
+RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface,
+    JPH::ShapeRefC shape,
+    bool dynamic,
+    JPH::EAllowedDOFs freedom)
+    : bodyInterface(bodyInterface)
+    , shape(shape)
+    , dynamic(dynamic)
+    , dofs(freedom)
+{
+}
+
 void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::entity entity)
 {
     auto& rb = registry.get<RigidbodyComponent>(entity);
@@ -29,4 +47,27 @@ void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::ent
 
     rb.bodyID = rb.bodyInterface.CreateAndAddBody(creation, activation);
     rb.bodyInterface.SetUserData(rb.bodyID, static_cast<uint64_t>(entity));
+}
+
+void RigidbodyComponent::OnDestroyCallback(entt::registry& registry, entt::entity entity)
+{
+    auto& rb = registry.get<RigidbodyComponent>(entity);
+
+    if (!rb.bodyID.IsInvalid())
+    {
+        rb.bodyInterface.RemoveBody(rb.bodyID);
+        rb.bodyInterface.DestroyBody(rb.bodyID);
+    }
+}
+
+void RigidbodyComponent::SetupRegistryCallbacks(entt::registry& registry)
+{
+    registry.on_construct<RigidbodyComponent>().connect<OnConstructCallback>();
+    registry.on_destroy<RigidbodyComponent>().connect<OnDestroyCallback>();
+}
+
+void RigidbodyComponent::DisconnectRegistryCallbacks(entt::registry& registry)
+{
+    registry.on_construct<RigidbodyComponent>().disconnect<OnConstructCallback>();
+    registry.on_destroy<RigidbodyComponent>().disconnect<OnDestroyCallback>();
 }

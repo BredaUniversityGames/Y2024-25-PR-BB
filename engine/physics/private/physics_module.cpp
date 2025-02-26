@@ -61,12 +61,11 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 
 void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+    RigidbodyComponent::DisconnectRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
     JPH::UnregisterTypes();
 
     delete JPH::Factory::sInstance;
     JPH::Factory::sInstance = nullptr;
-
-    RigidbodyComponent::DisconnectRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
 }
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
@@ -83,8 +82,6 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         bblog::error("[PHYSICS] Simulation step error has occurred");
     }
-
-    engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
 
     JPH::BodyManager::DrawSettings drawSettings;
 

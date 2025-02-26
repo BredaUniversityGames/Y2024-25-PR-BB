@@ -164,19 +164,6 @@ void PhysicsSystem::CreateCollision(const std::string& path, const PhysicsShapes
     LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, shapeType);
 }
 
-void PhysicsSystem::CleanUp()
-{
-    const auto toDestroy = _ecs.GetRegistry().view<DeleteTag, RigidbodyComponent>();
-
-    for (const entt::entity entity : toDestroy)
-    {
-        const RigidbodyComponent& rb = toDestroy.get<RigidbodyComponent>(entity);
-        _physicsModule.GetBodyInterface().RemoveBody(rb.bodyID);
-        _physicsModule.GetBodyInterface().DestroyBody(rb.bodyID);
-        _ecs.GetRegistry().remove<RigidbodyComponent>(entity);
-    }
-}
-
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
     // let's check priority first between transforms and physics
