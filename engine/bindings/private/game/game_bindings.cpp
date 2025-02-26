@@ -164,6 +164,14 @@ void UpdateAmmoText(HUD& self, const int ammo, const int maxAmmo)
     }
 }
 
+void UpdateUltBar(HUD& self, const float ult)
+{
+    if (auto locked = self.ultBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(ult);
+    }
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -183,4 +191,5 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& hud = module.klass<HUD>("HUD");
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
+    hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
 }

@@ -92,9 +92,6 @@ class Main {
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
-        __ultimateCharge = 0
-        __ultimateActive = false
-
         var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
@@ -112,20 +109,20 @@ class Main {
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
 
-        if (__ultimateActive) {
-            __ultimateCharge = __ultimateCharge - dt
-            if (__ultimateCharge == 0) {
-                __activeWeapon = __armory[Weapons.pistol]
-                __activeWeapon.equip()
-                __ultimateActive = false
-            }
-        } else {
-            __ultimateCharge = __ultimateCharge + dt
-        }
-
         if (__frameTimer > 1000.0) {
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
+        }
+
+        if (__playerVariables.ultActive) {
+            __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
+            if (__playerVariables.ultCharge <= 0) {
+                __activeWeapon = __armory[Weapons.pistol]
+                __activeWeapon.equip(engine)
+                __playerVariables.ultActive = false
+            }
+        } else {
+            __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
@@ -154,12 +151,13 @@ class Main {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
             }
 
-            if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
-                System.print("Activate ultimate")
-                if (__ultimateCharge == 1000) {
-
+            // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
+            if (engine.GetInput().DebugGetKey(Keycode.eU())) {
+                if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+                    System.print("Activate ultimate")
                     __activeWeapon = __armory[Weapons.shotgun]
-                    __activeWeapon.equip()
+                    __activeWeapon.equip(engine)
+                    __playerVariables.ultActive = true
                 }
             }
 
@@ -208,6 +206,7 @@ class Main {
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
         engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
+        engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
