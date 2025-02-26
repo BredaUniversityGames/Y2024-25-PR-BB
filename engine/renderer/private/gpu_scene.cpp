@@ -352,7 +352,6 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
     auto jointView = _ecs.GetRegistry().view<JointSkinDataComponent, JointWorldTransformComponent>();
-    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent, WorldMatrixComponent>();
     static std::array<glm::mat2x4, MAX_BONES> skinDualQuats {};
 
     // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
@@ -370,9 +369,6 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
         const auto& joint = jointView.get<JointSkinDataComponent>(entity);
         const auto& jointMatrixComponent = jointView.get<JointWorldTransformComponent>(entity);
         const glm::mat4& jointWorldTransform = jointMatrixComponent.world;
-
-        const auto& skeletonMatrixComponent = skeletonView.get<WorldMatrixComponent>(joint.skeletonEntity);
-        const glm::mat4& skeletonWorldTransform = TransformHelpers::GetWorldMatrix(skeletonMatrixComponent);
 
         if (lastSkeleton != joint.skeletonEntity)
         {
@@ -538,7 +534,7 @@ void GPUScene::CreateSkinDescriptorSetLayout()
     };
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
-    std::vector<std::string_view> names { "SkinningMatrices" };
+    std::vector<std::string_view> names { "SkinningTransforms" };
     _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
