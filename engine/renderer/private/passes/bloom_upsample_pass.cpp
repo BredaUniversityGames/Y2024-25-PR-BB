@@ -25,11 +25,8 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
 
     const GPUImage* image = _context->Resources()->ImageResourceManager().Access(_bloomImage);
 
-    glm::vec2 resolution = glm::vec2(image->width, image->height);
-    for (uint32_t mip = 0; mip < image->mips - 1; ++mip)
-    {
-        resolution *= 0.5f;
-    }
+    uint32_t startTargetMip = image->mips - 2;
+    glm::vec2 resolution = glm::vec2(image->width >> startTargetMip, image->height >> startTargetMip);
 
     vk::ImageMemoryBarrier2 barrier {};
     util::InitializeImageMemoryBarrier(barrier, image->image, image->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eGeneral, 1, 0, image->mips);
@@ -79,12 +76,10 @@ void BloomUpsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
         {
             uint32_t srcImageIndex;
             uint32_t srcImageMip;
-            glm::vec2 srcImageResolution;
             float filterRadius;
         } pushConstants {};
         pushConstants.srcImageIndex = _bloomImage.Index();
         pushConstants.srcImageMip = mip;
-        pushConstants.srcImageResolution = resolution;
         pushConstants.filterRadius = 1.0f; // TODO: Make accessible
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);

@@ -7,7 +7,6 @@ layout (push_constant) uniform PushConstants
 {
     uint srcImageIndex;
     uint srcImageMip;
-    vec2 srcImageResolution;
     float filterRadius;
 } pushConstants;
 
