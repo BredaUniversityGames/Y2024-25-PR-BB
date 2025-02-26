@@ -63,7 +63,7 @@ private:
 
         float ditherAmount;
         float paletteAmount;
-        uint32_t pad0;
+        float time;
 
         glm::vec4 palette[5];
     } _pushConstants;
@@ -80,6 +80,7 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
+    float timePassed = 0.0f;
 
     void CreatePipeline();
 };

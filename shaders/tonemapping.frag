@@ -4,6 +4,7 @@
 #include "bindless.glsl"
 #include "settings.glsl"
 #include "tonemapping.glsl"
+#include "scene.glsl"
 
 
 #define ENABLE_VIGNETTE        (1 << 0)
@@ -44,12 +45,17 @@ layout (push_constant) uniform PushConstants
 
     float ditherAmount;
     float paletteAmount;
+    float time;
     vec4 palette[5];
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
 {
     BloomSettings bloomSettings;
+};
+layout (set = 2, binding = 0) uniform CameraUBO
+{
+    Camera camera;
 };
 
 layout (location = 0) in vec2 texCoords;
@@ -78,6 +84,36 @@ float[4](15.0, 7.0, 13.0, 5.0)
 );
 
 
+float Rain(in vec2 fragCoord, in float time)
+{
+    // cell size in pixels (controls raindrop density)
+    float cellSize = 50.0;
+    // rain speed in pixels per second
+    float rainSpeed = 200.0;
+    // Determine which grid cell we're in and the fractional position within that cell
+    vec2 cell = floor(fragCoord / cellSize);
+    vec2 uvCell = fract(fragCoord / cellSize);
+    // Generate a random value per cell for a different drop offset
+    float randVal = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+    // Compute the drop's vertical position in the cell (animated by time)
+    float dropPos = fract(randVal - (time * rainSpeed / cellSize));
+    // How wide (in cell fraction) the drop is
+    float dropWidth = 0.1;
+    // Intensity is high when the fragment’s y coordinate (within the cell) is near the dropPos
+    float intensity = 1.0 - smoothstep(0.0, dropWidth, abs(uvCell.y - dropPos));
+    return intensity;
+}
+float hash12(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+#define RAIN_DENSITY .00006      // density of drop
+#define BRIGTHNESS  .3        // raindrop brightness contrast
+#define BLUR_LENGTH 50.0       // max length of raindrop blured line
+#define SPEED 1.1
+
+
+#define rnd(p, s)   fract(sin(((p) + .01 * (s)) * 12.9898) * 43758.5453)
 void main()
 {
     vec2 newTexCoords = texCoords;
@@ -112,6 +148,56 @@ void main()
     {
         hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
     }
+
+/**
+// --- Begin Rain Effect (Screen-space) ---
+    // Use the fragment coordinate normalized by screen resolution.
+    vec2 q = texCoords;
+
+    float dis = 1.0;
+    for (int i = 0; i < 12; i++)
+    {
+        vec3 plane = camera.cameraPosition + vec3(0.0, 0.0, 1.0) * dis;
+        // Scale factor to vary the drop spacing with layer distance.
+        //if (plane.z < depthSample)
+        {
+            float f = pow(dis, 0.45) + 0.25;
+            // Create a shifting coordinate based on screen coord, time and layer.
+            vec2 st = f * (q * vec2(1.5, 0.05) + vec2(-pc.time * 0.1 + q.y * 0.5, pc.time * 0.12));
+            // Instead of sampling a noise texture, sum two hash values at different scales.
+            f = hash12(st * 0.5) + hash12(st * 0.284);
+            // Sharpen the noise into streaks (the exponent creates very tight peaks).
+            f = clamp(pow(abs(f * 0.5), 29.0) * 140.0, 0.0, q.y * 0.4 + 0.05);
+            // A constant brightness for the rain streak.
+            vec3 rain = vec3(0.25);
+            hdrColor += rain * f;
+        }
+
+        dis += 3.5;
+    }*/
+    vec2 R = vec2(pc.screenWidth, pc.screenHeight);
+    vec2 U = gl_FragCoord.xy;
+
+    U -= .5;
+    U.x += 500.0;
+
+    float Ny = RAIN_DENSITY * R.y; // number of drop per column
+
+    float layerDisplacement = 1.0f;
+    //layers
+    for (float l = 0.; l < 8.; l++)
+    {
+        U.x += l * 1.2;
+        for (float i = 0.; i <= floor(Ny); i++) {
+            // to deal with more than one drop per column
+            float y = floor(mod(rnd(U.x, 2. * i) * R.y + (SPEED * pc.time), R.y)); // drop altitude
+            if (rnd(U.x, 2. * i + 1.) < (Ny - i) && abs(U.y - y) < (BLUR_LENGTH / layerDisplacement) * U.x / R.x)
+            hdrColor += BRIGTHNESS; //  / (U.x/R.x); // variant: keep total drop brightness. attention: saturated on the left 5%
+        }
+
+        layerDisplacement += 1.0f;
+    }
+
 
 
     hdrColor += bloomColor * bloomSettings.strength;
