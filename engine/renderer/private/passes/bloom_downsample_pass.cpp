@@ -27,18 +27,18 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_
     glm::vec2 resolution = glm::vec2(image->width, image->height);
     resolution *= 0.5f; // The first resolution we write to will be mip 1
 
-    vk::ImageMemoryBarrier2 barrier {};
-    util::InitializeImageMemoryBarrier(barrier, image->image, image->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eGeneral, 1, 0, image->mips);
-    barrier.srcStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
-    barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
-    barrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
-    barrier.dstAccessMask = vk::AccessFlagBits2::eShaderWrite;
+    vk::ImageMemoryBarrier2 startBarrier {};
+    util::InitializeImageMemoryBarrier(startBarrier, image->image, image->format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eGeneral, 1, 0, image->mips);
+    startBarrier.srcStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+    startBarrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+    startBarrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
+    startBarrier.dstAccessMask = vk::AccessFlagBits2::eShaderWrite;
 
-    vk::DependencyInfo dependencyInfo {};
-    dependencyInfo.setImageMemoryBarrierCount(1)
-        .setPImageMemoryBarriers(&barrier);
+    vk::DependencyInfo startDependencyInfo {};
+    startDependencyInfo.setImageMemoryBarrierCount(1)
+        .setPImageMemoryBarriers(&startBarrier);
 
-    commandBuffer.pipelineBarrier2(dependencyInfo);
+    commandBuffer.pipelineBarrier2(startDependencyInfo);
 
     for (uint32_t mip = 0; mip < image->mips - 1; ++mip)
     {
@@ -119,9 +119,19 @@ void BloomDownsamplePass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_
         commandBuffer.pipelineBarrier2(mipDependencyInfo);
     }
 
-    // TODO: Maybe not needed
     // Make sure frame graph can transition properly
-    util::TransitionImageLayout(commandBuffer, image->image, image->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eColorAttachmentOptimal , 1, 0, image->mips);
+    vk::ImageMemoryBarrier2 endBarrier {};
+    util::InitializeImageMemoryBarrier(endBarrier, image->image, image->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eColorAttachmentOptimal, 1, 0, image->mips);
+    endBarrier.srcStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+    endBarrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+    endBarrier.srcAccessMask = vk::AccessFlagBits2::eShaderWrite;
+    endBarrier.dstAccessMask = vk::AccessFlagBits2::eShaderWrite;
+
+    vk::DependencyInfo endDependencyInfo {};
+    endDependencyInfo.setImageMemoryBarrierCount(1)
+        .setPImageMemoryBarriers(&endBarrier);
+
+    commandBuffer.pipelineBarrier2(endDependencyInfo);
 }
 
 void BloomDownsamplePass::CreatPipeline()
