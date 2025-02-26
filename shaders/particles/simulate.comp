@@ -39,6 +39,8 @@ void main()
 
     if (particle.life > 0)
     {
+        const float lifeLerp = 1 - particle.life / particle.maxLife;
+
         // simulate size
         particle.size.xy += vec2(particle.size.z) * deltaTime;
         if ((particle.size.x < 0) || (particle.size.y < 0))
@@ -61,6 +63,16 @@ void main()
         // simulate angle
         particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
 
+        // simulate frame
+        const bool animateOverTime = particle.frameRate == 0;
+        const float spriteFrame = animateOverTime ?
+        mix(0, particle.frameCount - 1, lifeLerp) :
+        mod(((particle.maxLife - particle.life) * particle.frameRate), particle.frameCount);
+        const uint currentFrame = uint(floor(spriteFrame));
+        const uint nextFrame = animateOverTime ? uint(min(ceil(spriteFrame), particle.frameCount - 1)) : uint(mod(ceil(spriteFrame), particle.frameCount - 1));// animateOverTime doesn't wrap around
+        ivec2 offset = ivec2(currentFrame % particle.maxFrames.x, currentFrame / particle.maxFrames.x);
+        ivec2 offset2 = ivec2(nextFrame % particle.maxFrames.x, nextFrame / particle.maxFrames.x);
+
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
 
@@ -80,6 +92,9 @@ void main()
             instance.angle = particle.rotationVelocity.x;
             instance.flags = particle.flags;
             instance.color = particle.color;
+            instance.frameOffsetCurrent = offset;
+            instance.frameOffsetNext = offset2;
+            instance.textureMultiplier = particle.textureMultiplier;
             culledInstances.instances[culledIndex] = instance;
         }
     }

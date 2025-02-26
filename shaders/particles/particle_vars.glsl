@@ -16,7 +16,11 @@ struct Particle
     vec3 size;
     uint flags;
     vec3 color;
+    float frameRate;
     vec3 velocityRandomness;
+    uint frameCount;
+    ivec2 maxFrames;
+    vec2 textureMultiplier;
 };
 
 struct ParticleCounters
@@ -34,6 +38,9 @@ struct ParticleInstance
     float angle;
     uint flags;
     vec3 color;
+    ivec2 frameOffsetCurrent;
+    ivec2 frameOffsetNext;
+    vec2 textureMultiplier;
 };
 
 struct CulledInstances

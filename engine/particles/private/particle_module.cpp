@@ -92,12 +92,12 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName)
 
     if (got == _emitterImages.end())
     {
-        if (std::filesystem::exists("assets/textures/" + fileName))
+        if (std::filesystem::exists("assets/textures/particles/" + fileName))
         {
             CPUImage creation;
             creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
             creation.SetName(fileName);
-            creation.FromPNG("assets/textures/" + fileName);
+            creation.FromPNG("assets/textures/particles/" + fileName);
             creation.isHDR = false;
             auto image = _context->Resources()->ImageResourceManager().Create(creation);
             auto& resource = _emitterImages.emplace(fileName, image).first->second;
@@ -225,7 +225,7 @@ void ParticleModule::LoadEmitterPresets()
     }
 
     {
-        auto image = GetEmitterImage("star.png");
+        auto image = GetEmitterImage("Sparks-Sheet.png");
 
         // hardcoded test emitter preset for now
         EmitterPreset preset;
@@ -239,7 +239,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
         preset.name = "Stab";
         SetEmitterPresetImage(preset, image);
-        preset.size = glm::vec3(0.2f, 0.2f, -0.03f);
+        preset.maxFrames = glm::ivec2(3, 3);
 
         _emitterPresets.emplace_back(preset);
     }
@@ -289,6 +289,8 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.spawnRandomness = preset.spawnRandomness;
     emitter.velocityRandomness = preset.velocityRandomness;
     emitter.color = preset.color;
+    emitter.maxFrames = preset.maxFrames;
+    emitter.frameRate = preset.frameRate;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))

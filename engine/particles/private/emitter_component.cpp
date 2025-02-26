@@ -31,6 +31,7 @@ void ParticleEmitterComponent::Inspect()
         ImGui::TextUnformatted("Offset to the position of the entity's rigidBody or transform.");
         ImGui::EndTooltip();
     }
+    ImGui::DragFloat("Frame Rate##Emitter Preset", &emitter.frameRate, 0.0f, 50.0f);
     int32_t emitterCount = static_cast<int32_t>(count);
     ImGui::DragInt("Count##Particle Emitter", &emitterCount, 1, 0, 1024);
     count = static_cast<uint32_t>(emitterCount);

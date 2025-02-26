@@ -70,6 +70,8 @@ private:
         glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
         uint32_t flags = 0;
         glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+        glm::ivec2 maxFrames = { 1.0f, 1.0f };
+        float frameRate = 0.0f;
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
         std::list<ParticleBurst> bursts = {};
         std::string name = "Emitter Preset";

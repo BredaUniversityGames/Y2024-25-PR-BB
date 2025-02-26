@@ -28,6 +28,7 @@ void main()
 {
     ParticleInstance instance = culledInstances.instances[gl_InstanceIndex];
 
+    // rotate towards camera + simulated rotation and size
     vec3 quadPos = inPosition;
     mat2 rot = mat2(
     cos(instance.angle), -sin(instance.angle),
@@ -38,9 +39,18 @@ void main()
     quadPos *= mat3(camera.view);
     position = instance.position + quadPos;
 
+    // sprite sheet uv offsets calculation
+    vec2 uv = inTexCoord;
+    uv += instance.frameOffsetCurrent;
+    uv *= instance.textureMultiplier;
+    texCoord = uv;
+    //vec2 uv2 = inTexCoord;
+    //uv += instance.frameOffsetNext;
+    //uv *= instance.textureMultiplier;
+    //texCoord2 = uv2;
+
     normal = normalize((camera.view * vec4(inNormal, 0.0)).xyz);
     materialIndex = instance.materialIndex;
-    texCoord = inTexCoord;
     flags = instance.flags;
     outColor = instance.color;
 

@@ -17,6 +17,8 @@ struct Emitter
     uint flags;
     vec4 color;
     vec3 velocityRandomness;
+    float frameRate;
+    ivec2 maxFrames;
 };
 
 const uint MAX_EMITTERS = 256;
@@ -55,6 +57,10 @@ void main()
     particle.flags = emitter.flags;
     particle.color = emitter.color.xyz * emitter.color.w;
     particle.velocityRandomness = emitter.velocityRandomness;
+    particle.maxFrames = emitter.maxFrames;
+    particle.frameRate = emitter.frameRate;
+    particle.frameCount = uint(particle.maxFrames.x * particle.maxFrames.y);
+    particle.textureMultiplier = vec2(1.0f / particle.maxFrames.x, 1.0f / particle.maxFrames.y);
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);

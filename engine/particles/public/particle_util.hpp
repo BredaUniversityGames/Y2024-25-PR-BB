@@ -31,6 +31,8 @@ struct alignas(16) Emitter
     uint8_t flags = 0;
     glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
     glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+    float frameRate = 0.0f;
+    glm::ivec2 maxFrames = { 1, 1 };
 };
 
 struct alignas(16) Particle
@@ -45,7 +47,11 @@ struct alignas(16) Particle
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint8_t flags = 0;
     glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    float frameRate = 0.0f;
     glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+    uint32_t frameCount = 1;
+    glm::ivec2 maxFrames = { 1, 1 };
+    glm::vec2 textureMultiplier = { 1.0f, 1.0f };
 };
 
 struct alignas(16) ParticleCounters
@@ -63,6 +69,9 @@ struct alignas(16) ParticleInstance
     float angle = 0.0f;
     uint8_t flags = 0;
     glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    glm::ivec2 frameOffsetCurrent = { 0, 0 };
+    glm::ivec2 frameOffsetNext = { 0, 0 };
+    glm::vec2 textureMultiplier = { 1.0f, 1.0f };
 };
 
 struct alignas(16) CulledInstances

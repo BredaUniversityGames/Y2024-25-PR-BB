@@ -38,6 +38,8 @@ void main()
 {
     vec4 color = pow(texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord), vec4(2.2));
 
+    // TODO: give option for blending
+
     if (color.a < 0.2f)
     {
         discard;

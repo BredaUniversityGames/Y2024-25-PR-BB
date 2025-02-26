@@ -74,7 +74,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::InputText("Name##Emitter Preset", &selectedPreset.name);
 
         // image loading (scuffed for now)
-        ImGui::Text("assets/textures/");
+        ImGui::Text("assets/textures/particles/");
         ImGui::SameLine();
         ImGui::InputText("Image##Emitter Preset", &_currentImage);
 
@@ -86,8 +86,15 @@ void ParticleEditor::RenderEmitterPresetEditor()
         }
         ImGui::SameLine();
         ImGui::Text("%s", _imageLoadMessage.c_str());
+        ImGui::DragInt2("Frame Count##Emitter Preset", &selectedPreset.maxFrames.x);
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Manually specify the amount of frames present over the x and y axis in the loaded image.");
+            ImGui::EndTooltip();
+        }
 
         // parameter editors
+        ImGui::DragFloat("Frame Rate##Emitter Preset", &selectedPreset.frameRate, 0.0f, 50.0f);
         ImGui::DragFloat("Emit delay##Emitter Preset", &selectedPreset.emitDelay, 0.0f, 50.0f);
         int emitterCount = static_cast<int>(selectedPreset.count);
         ImGui::DragInt("Count##Emitter Preset", &emitterCount, 1, 0, 1024);
