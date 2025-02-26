@@ -28,7 +28,7 @@ class Main {
 
         var mutant = engine.GetECS().GetEntityByName("Clown")
         var mutantAnimations = mutant.GetAnimationControlComponent()
-        mutantAnimations.Play("Walk", 1.0, true)
+        mutantAnimations.Play("NarutoRun", 1.0, true)
         mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
         mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
@@ -93,10 +93,10 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
-        var enemyTransform = enemyEntity.GetTransformComponent()
-        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+        //var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        //var enemyTransform = enemyEntity.GetTransformComponent()
+        //enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        //enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {

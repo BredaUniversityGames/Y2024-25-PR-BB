@@ -385,20 +385,20 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
-        glm::mat4 skinMatrix = (skeletonWorldTransform * jointWorldTransform) * joint.inverseBindMatrix;
-        glm::quat orientation;
+        glm::mat4 skinMatrix = jointWorldTransform * joint.inverseBindMatrix;
+
         glm::vec3 scale;
+        glm::quat orientation;
         glm::vec3 translation;
         glm::vec3 skew;
         glm::vec4 perspective;
-        glm::dquat dquat;
-        if (glm::decompose(skinMatrix, orientation, scale, translation, skew, perspective))
+        glm::dualquat dquat;
+        if (glm::decompose(skinMatrix, scale, orientation, translation, skew, perspective))
         {
             dquat[0] = orientation;
             dquat[1] = glm::quat(0.0, translation.x, translation.y, translation.z) * orientation * 0.5f;
+            skinMatrices[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
         }
-
-        skinMatrices[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
     }
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
@@ -953,8 +953,7 @@ void GPUScene::CreateSkinBuffers()
         const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
         for (uint32_t j = 0; j < MAX_BONES; ++j)
         {
-            // TODO: maybe different identity required, or this can be removed even.
-            glm::mat2x4 data { 1.0f };
+            glm::mat2x4 data { glm::mat2x4_cast(glm::dualquat {}) };
             std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat2x4) * j, &data, sizeof(glm::mat2x4));
         }
     }

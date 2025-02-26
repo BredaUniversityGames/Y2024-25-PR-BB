@@ -45,17 +45,13 @@ mat3 Adjoint(in mat4 m)
     );
 }
 
-void main()
+mat2x4 GetJointTransform(ivec4 joints, vec4 weights, uint boneOffset)
 {
-    Instance instance = instances[redirect[gl_DrawID]];
-    drawID = redirect[gl_DrawID];
+    mat2x4 dq0 = skinningMatrices[joints.x + boneOffset];
+    mat2x4 dq1 = skinningMatrices[joints.y + boneOffset];
+    mat2x4 dq2 = skinningMatrices[joints.z + boneOffset];
+    mat2x4 dq3 = skinningMatrices[joints.w + boneOffset];
 
-    mat2x4 dq0 = skinningMatrices[int(inJoints.x)];
-    mat2x4 dq1 = skinningMatrices[int(inJoints.y)];
-    mat2x4 dq2 = skinningMatrices[int(inJoints.z)];
-    mat2x4 dq3 = skinningMatrices[int(inJoints.w)];
-
-    vec4 weights = inWeights;
     weights.y *= sign(dot(dq0[0], dq1[0]));
     weights.z *= sign(dot(dq0[0], dq2[0]));
     weights.w *= sign(dot(dq0[0], dq3[0]));
@@ -67,13 +63,44 @@ void main()
     weights.w * dq3;
 
     float norm = length(result[0]);
-    result /= norm;
+    return result / norm;
+}
 
-    mat4 skinMatrix =
-    inWeights.x * skinningMatrices[int(inJoints.x) + instance.boneOffset] +
-    inWeights.y * skinningMatrices[int(inJoints.y) + instance.boneOffset] +
-    inWeights.z * skinningMatrices[int(inJoints.z) + instance.boneOffset] +
-    inWeights.w * skinningMatrices[int(inJoints.w) + instance.boneOffset];
+mat4 GetSkinMatrix(Instance instance)
+{
+    mat2x4 bone = GetJointTransform(ivec4(inJoints), inWeights, instance.boneOffset);
+
+    vec4 r = bone[0];
+    vec4 t = bone[1];
+
+    return mat4(
+    1.0 - (2.0 * r.y * r.y) - (2.0 * r.z * r.z),
+    (2.0 * r.x * r.y) + (2.0 * r.w * r.z),
+    (2.0 * r.x * r.z) - (2.0 * r.w * r.y),
+    0.0,
+
+    (2.0 * r.x * r.y) - (2.0 * r.w * r.z),
+    1.0 - (2.0 * r.x * r.x) - (2.0 * r.z * r.z),
+    (2.0 * r.y * r.z) + (2.0 * r.w * r.x),
+    0.0,
+
+    (2.0 * r.x * r.z) + (2.0 * r.w * r.y),
+    (2.0 * r.y * r.z) - (2.0 * r.w * r.x),
+    1.0 - (2.0 * r.x * r.x) - (2.0 * r.y * r.y),
+    0.0,
+
+    2.0 * (-t.w * r.x + t.x * r.w - t.y * r.z + t.z * r.y),
+    2.0 * (-t.w * r.y + t.x * r.z + t.y * r.w - t.z * r.x),
+    2.0 * (-t.w * r.z - t.x * r.y + t.y * r.x + t.z * r.w),
+    1);
+}
+
+void main()
+{
+    Instance instance = instances[redirect[gl_DrawID]];
+    drawID = redirect[gl_DrawID];
+
+    mat4 skinMatrix = instance.model * GetSkinMatrix(instance);
 
     position = (skinMatrix * vec4(inPosition, 1.0)).xyz;
 
