@@ -5,6 +5,7 @@
 #include "animation.hpp"
 #include "audio_emitter_component.hpp"
 #include "cheats_component.hpp"
+#include "components/camera_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
 #include "components/rigidbody_component.hpp"
@@ -80,6 +81,16 @@ glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& compon
     return component.component->color;
 }
 
+float CameraGetFOV(WrenComponent<CameraComponent>& component)
+{
+    return component.component->fov;
+}
+
+void CameraSetFOV(WrenComponent<CameraComponent>& component, const float fov)
+{
+    component.component->fov = fov;
+}
+
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
 
 void BindEntity(wren::ForeignModule& module)
@@ -109,6 +120,8 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -193,5 +206,8 @@ void BindEntityAPI(wren::ForeignModule& module)
         transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
 
         transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
+
+        auto& cameraClass = module.klass<WrenComponent<CameraComponent>>("CameraComponent");
+        cameraClass.propExt<bindings::CameraGetFOV, bindings::CameraSetFOV>("fov");
     }
 }

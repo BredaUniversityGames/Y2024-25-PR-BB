@@ -1,6 +1,7 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
+import "camera.wren" for CameraVariables
 
 class Main {
 
@@ -22,9 +23,8 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-        __shakeIntensity = 0
-        __shakeOffset = Vec2.new(0.0, 0.0)
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        __cameraVariables = CameraVariables.new()
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
@@ -149,8 +149,7 @@ class Main {
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-                __activeWeapon.attack(engine, dt)
-                __shakeIntensity = 0.3
+                __activeWeapon.attack(engine, dt, __cameraVariables)
                 //engine.GetParticles().SpawnBurst(__testEmitter, 100, 1.0, 0.0, false, 1)
             }
 
@@ -164,7 +163,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eV())) {
-                __armory[Weapons.knife].attack(engine, dt)
+                __armory[Weapons.knife].attack(engine, dt, __cameraVariables)
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.e1())) {
@@ -177,22 +176,23 @@ class Main {
                 __activeWeapon.equip(engine)
             }
 
-            var movement = engine.GetInput().GetAnalogAction("Move")
-            var transform = __camera.GetTransformComponent()
-            transform.rotation = Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(-1.0 * movement.x)))
+            __cameraVariables.Tilt(engine, __camera, deltaTime)
+            __cameraVariables.Shake(engine, __camera, __timer)
+
+            if (engine.GetInput().DebugGetKey(Keycode.eMINUS())) {
+                __camera.GetCameraComponent().fov = __camera.GetCameraComponent().fov - Math.Radians(1)
+            }
+            if (engine.GetInput().DebugGetKey(Keycode.eEQUALS())) {
+                __camera.GetCameraComponent().fov = __camera.GetCameraComponent().fov + Math.Radians(1)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eLEFTBRACKET())) {
+                __playerMovement.lookSensitivity = Math.Max(__playerMovement.lookSensitivity - 0.01, 0.01)
+            }
+            if (engine.GetInput().DebugGetKey(Keycode.eRIGHTBRACKET())) {
+                __playerMovement.lookSensitivity = Math.Min(__playerMovement.lookSensitivity + 0.01, 10)
+            }
         }
-
-
-        if (__shakeIntensity > 0.001) {
-            __shakeOffset = Vec2.new(Math.Sin(__timer * 200.0), Math.Cos(__timer * 200.0)).mulScalar(__shakeIntensity)
-
-            __shakeIntensity = __shakeIntensity * 0.85
-
-        } else {
-            __shakeOffset = Vec2.new(0.0, 0.0)
-        }
-
-        __camera.GetTransformComponent().translation = Vec3.new(__shakeOffset.x, 0.0, __shakeOffset.y)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

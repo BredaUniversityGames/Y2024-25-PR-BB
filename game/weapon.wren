@@ -1,4 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "camera.wren" for CameraVariables
 
 class Weapons {
     static pistol {0}
@@ -17,6 +18,8 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 1.2 * 1000
+
+        _cameraShakeIntensity = 0.3
         
         _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = ""
@@ -42,11 +45,15 @@ class Pistol {
         _ammo = _maxAmmo
     }
 
-    attack(engine, deltaTime) {
+    attack(engine, deltaTime, cameraVariables) {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Pistol shoot")
+
+            // Shake the camera
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -131,6 +138,7 @@ class Shotgun {
         _reloadTimer = 0
         _reloadSpeed = 0.4 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
+        _cameraShakeIntensity = 0.5
 
         _attackSFX = "event:/Weapons/Explosion"
         _reloadSFX = ""
@@ -156,10 +164,12 @@ class Shotgun {
         _ammo = _maxAmmo
     }
 
-    attack(engine, deltaTime) {   
+    attack(engine, deltaTime, cameraVariables) {   
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Shotgun shoot")
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -241,6 +251,7 @@ class Knife {
         _ammo = _maxAmmo
         _reloadTimer = 0
         _reloadSpeed = 0
+        _cameraShakeIntensity = 0.2
 
         _attackSFX = "event:/Weapons/Machine Gun"
         _reloadSFX = ""
@@ -258,9 +269,11 @@ class Knife {
         System.print("Knife reload")
     }
 
-    attack(engine, deltaTime) {
+    attack(engine, deltaTime, cameraVariables) {
         if (_cooldown <= 0) {
             System.print("Knife Stab")
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")

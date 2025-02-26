@@ -45,6 +45,7 @@ class PlayerMovement{
 
     // Input
     lastMousePosition {_lastMousePosition}
+    lookSensitivity {_lookSensitivity}
 
 
 
@@ -69,7 +70,7 @@ class PlayerMovement{
 
     // Input
     lastMousePosition=(value) {_lastMousePosition = value}
-
+    lookSensitivity=(value) {_lookSensitivity = value}
 
     Rotation(engine, player) {
         
