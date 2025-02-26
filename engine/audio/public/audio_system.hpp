@@ -21,6 +21,6 @@ public:
     std::string_view GetName() override { return "AudioSystem"; }
 
 private:
-    ECSModule& _ecs;
+    MAYBE_UNUSED ECSModule& _ecs;
     AudioModule& _audioModule;
 };
