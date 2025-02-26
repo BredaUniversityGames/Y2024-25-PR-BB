@@ -11,6 +11,7 @@ struct HUD
     std::weak_ptr<UIProgressBar> sprintBar;
     std::weak_ptr<UIProgressBar> grenadeBar;
     std::weak_ptr<UITextElement> ammoCounter;
+    std::weak_ptr<UITextElement> scoreText;
 };
 
 std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);

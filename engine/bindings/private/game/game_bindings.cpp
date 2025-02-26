@@ -172,6 +172,14 @@ void UpdateUltBar(HUD& self, const float ult)
     }
 }
 
+void UpdateScoreText(HUD& self, const int score)
+{
+    if (auto locked = self.scoreText.lock(); locked != nullptr)
+    {
+        locked->SetText(std::string("Score: ") + std::to_string(score));
+    }
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -192,4 +200,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
     hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
+    hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
 }
