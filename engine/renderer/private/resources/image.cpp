@@ -147,7 +147,6 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     }
 
     {
-
         ZoneScopedN("VMA Image allocation");
         VmaAllocationCreateInfo allocCreateInfo {};
         allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -316,7 +315,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
             util::EndSingleTimeCommands(_context, commandBuffer);
 
-            util::vmaDestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
+            vma::DestroyBuffer(_context->MemoryAllocator(), stagingBuffer, stagingBufferAllocation);
         }
     }
 

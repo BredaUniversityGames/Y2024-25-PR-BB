@@ -102,7 +102,7 @@ Buffer::~Buffer()
         vmaUnmapMemory(_context->MemoryAllocator(), allocation);
     }
 
-    util::vmaDestroyBuffer(_context->MemoryAllocator(), buffer, allocation);
+    vma::DestroyBuffer(_context->MemoryAllocator(), buffer, allocation);
 }
 
 Buffer::Buffer(Buffer&& other) noexcept
