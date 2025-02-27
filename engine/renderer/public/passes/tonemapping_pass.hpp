@@ -35,36 +35,51 @@ private:
 
     struct PushConstants
     {
+        // Register 0 (16 bytes)
         uint32_t hdrTargetIndex;
         uint32_t bloomTargetIndex;
         uint32_t depthIndex;
         uint32_t enableFlags;
 
-        uint32_t tonemappingFunction { 0 };
-        float exposure { 1.0f };
+        // Register 1 (16 bytes)
+        uint32_t normalRIndex;
+        uint32_t tonemappingFunction;
+        uint32_t padding0; // added padding for alignment
+        float exposure;
 
+        // Register 2 (16 bytes)
         float vignetteIntensity;
         float lensDistortionIntensity;
         float lensDistortionCubicIntensity;
         float screenScale;
 
+        // Register 3 (16 bytes)
         float brightness;
         float contrast;
         float saturation;
         float vibrance;
-        float hue;
 
+        // Register 4 (16 bytes)
+        float hue;
         float minPixelSize;
         float maxPixelSize;
         float pixelizationLevels;
+
+        // Register 5 (16 bytes)
         float pixelizationDepthBias;
         uint32_t screenWidth;
         uint32_t screenHeight;
-
         float ditherAmount;
+
+        // Register 6 (16 bytes)
         float paletteAmount;
         float time;
+        float padding1;
+        float padding2;
 
+        // 2 floats of padding can be added here if needed, depending on shader expectations
+
+        // Registers 7+ (each 16 bytes)
         glm::vec4 palette[5];
     } _pushConstants;
 

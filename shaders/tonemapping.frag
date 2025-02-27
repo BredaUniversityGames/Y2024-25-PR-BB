@@ -5,6 +5,7 @@
 #include "settings.glsl"
 #include "tonemapping.glsl"
 #include "scene.glsl"
+#include "octahedron.glsl"
 
 
 #define ENABLE_VIGNETTE        (1 << 0)
@@ -18,10 +19,11 @@ layout (push_constant) uniform PushConstants
     uint hdrTargetIndex;
     uint bloomTargetIndex;
     uint depthIndex;
-
     uint enableFlags;
 
+    uint normalIndex;
     uint tonemappingFunction;
+    float padding0;
     float exposure;
 
     float vignetteIntensity;
@@ -33,19 +35,22 @@ layout (push_constant) uniform PushConstants
     float contrast;
     float saturation;
     float vibrance;
-    float hue;
 
-    //pixelization
+    float hue;
     float minPixelSize;
     float maxPixelSize;
     float pixelizationLevels;
+
     float pixelizationDepthBias;
     uint screenWidth;
     uint screenHeight;
-
     float ditherAmount;
+
     float paletteAmount;
     float time;
+    float padding1;
+    float padding2;
+
     vec4 palette[5];
 } pc;
 
@@ -56,6 +61,11 @@ layout (set = 1, binding = 0) uniform BloomSettingsUBO
 layout (set = 2, binding = 0) uniform CameraUBO
 {
     Camera camera;
+};
+
+layout (set = 3, binding = 0) uniform SceneUBO
+{
+    Scene scene;
 };
 
 layout (location = 0) in vec2 texCoords;
@@ -84,33 +94,10 @@ float[4](15.0, 7.0, 13.0, 5.0)
 );
 
 
-float Rain(in vec2 fragCoord, in float time)
-{
-    // cell size in pixels (controls raindrop density)
-    float cellSize = 50.0;
-    // rain speed in pixels per second
-    float rainSpeed = 200.0;
-    // Determine which grid cell we're in and the fractional position within that cell
-    vec2 cell = floor(fragCoord / cellSize);
-    vec2 uvCell = fract(fragCoord / cellSize);
-    // Generate a random value per cell for a different drop offset
-    float randVal = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
-    // Compute the drop's vertical position in the cell (animated by time)
-    float dropPos = fract(randVal - (time * rainSpeed / cellSize));
-    // How wide (in cell fraction) the drop is
-    float dropWidth = 0.1;
-    // Intensity is high when the fragment’s y coordinate (within the cell) is near the dropPos
-    float intensity = 1.0 - smoothstep(0.0, dropWidth, abs(uvCell.y - dropPos));
-    return intensity;
-}
 float hash12(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-#define RAIN_DENSITY .00006      // density of drop
-#define BRIGTHNESS  .9        // raindrop brightness contrast
-#define BLUR_LENGTH 20.0       // max length of raindrop blured line
-#define SPEED 0.5
 
 
 #define rnd(p, s)   fract(sin(((p) + .01 * (s)) * 12.9898) * 43758.5453)
@@ -119,6 +106,81 @@ float hash12(vec2 p) {
 float linearize_depth(float d, float zNear, float zFar)
 {
     return zNear * zFar / (zFar + d * (zNear - zFar));
+}
+
+
+float hash(vec2 p)
+{
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float noise(in vec2 uv)
+{
+    vec2 i = floor(uv);
+    vec2 f = fract(uv);
+    f = f * f * (3. - 2. * f);
+
+    float lb = hash(i + vec2(0., 0.));
+    float rb = hash(i + vec2(1., 0.));
+    float lt = hash(i + vec2(0., 1.));
+    float rt = hash(i + vec2(1., 1.));
+
+    return mix(mix(lb, rb, f.x),
+               mix(lt, rt, f.x), f.y);
+}
+
+#define OCTAVES 8
+float fbm(in vec2 uv)
+{
+    float v = 0.;
+    float amplitude = .5;
+
+    for (int i = 0; i < OCTAVES; i++)
+    {
+        v += noise(uv) * amplitude;
+
+        amplitude *= .5;
+
+        uv *= 2.;
+    }
+
+    return v;
+}
+
+vec3 Sky(in vec3 ro, in vec3 rd)
+{
+    const float SC = 1e5;
+
+    // Calculate sky plane
+    float dist = (SC - ro.z) / rd.z;
+    vec2 p = (ro + dist * rd).xy;
+    p *= 2.4 / SC;
+
+    // from iq's shader, https://www.shadertoy.com/view/MdX3Rr
+    vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
+    float sundot = clamp(dot(rd, lightDir), 0.0, 1.0);
+
+    vec3 cloudCol = vec3(0.9, 0.9, 0.9);
+    vec3 skyCol = vec3(.6, .71, .85) - rd.z * .2 * vec3(1., .5, 1.) + .15 * .5;
+    //float3 skyCol = float3(0.3, 0.5, 0.85) - rd.z * rd.z * 0.5;
+    skyCol = mix(skyCol, 0.85 * vec3(0.7, 0.75, 0.85), pow(1.0 - max(rd.z, 0.0), 4.0));
+
+    // sun
+    vec3 sun = 0.2 * vec3(1.0, 0.7, 0.4) * pow(sundot, 8.0);
+    sun += 0.45 * vec3(1.0, 0.8, 0.4) * pow(sundot, 2048.0);
+    sun += 0.2 * vec3(1.0, 0.8, 0.4) * pow(sundot, 128.0);
+    sun = clamp(sun, 0.0, 1.0);
+    skyCol += sun;
+
+    // clouds
+    float t = pc.time * 0.001;
+    float den = fbm(vec2(p.x - t, p.y - t));
+    skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
+
+    // horizon
+    skyCol = mix(skyCol, vec3(0.6, 0.086, 0.294), pow(1.0 - max(rd.z, 0.0), 16.0));
+
+    return skyCol;
 }
 
 void main()
@@ -156,95 +218,38 @@ void main()
         hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
     }
 
-/**
-// --- Begin Rain Effect (Screen-space) ---
-    // Use the fragment coordinate normalized by screen resolution.
-    vec2 q = texCoords;
 
-    float dis = 1.0;
-    for (int i = 0; i < 12; i++)
-    {
-        vec3 plane = camera.cameraPosition + vec3(0.0, 0.0, 1.0) * dis;
-        // Scale factor to vary the drop spacing with layer distance.
-        //if (plane.z < depthSample)
-        {
-            float f = pow(dis, 0.45) + 0.25;
-            // Create a shifting coordinate based on screen coord, time and layer.
-            vec2 st = f * (q * vec2(1.5, 0.05) + vec2(-pc.time * 0.1 + q.y * 0.5, pc.time * 0.12));
-            // Instead of sampling a noise texture, sum two hash values at different scales.
-            f = hash12(st * 0.5) + hash12(st * 0.284);
-            // Sharpen the noise into streaks (the exponent creates very tight peaks).
-            f = clamp(pow(abs(f * 0.5), 29.0) * 140.0, 0.0, q.y * 0.4 + 0.05);
-            // A constant brightness for the rain streak.
-            vec3 rain = vec3(0.25);
-            hdrColor += rain * f;
-        }
-
-        dis += 3.5;
-    }*/
-    vec2 R = vec2(pc.screenWidth, pc.screenHeight);
-    vec2 U = gl_FragCoord.xy;
-
-    // Define the world gravity (rain falls downward in world space)
-    vec3 worldGravity = vec3(0.0, -1.0, 0.0);
-    // Transform gravity into view space (rotation only)
-    vec3 viewGravity = mat3(camera.view) * worldGravity;
-
-    // Compute a tilt factor that goes from 0 (when viewGravity.y is 1.0 in magnitude, i.e. camera level)
-    // to 1 (when viewGravity.y is 0, i.e. extreme tilt)
-    float tilt = 1.0 - clamp(abs(viewGravity.y), 0.0, 1.0);
-    // Compute the drop stretch: when tilt is 0, dropStretch is 1; as tilt increases, so does dropStretch.
-    // Adjust the multiplier (here 2.0) to control how pronounced the effect is.
-    float dropStretch = 1.0 + tilt * 20.0;
-
-
-
-    // Extract the camera's right vector from the view matrix.
-    vec3 right = vec3(camera.view[0][0], camera.view[1][0], camera.view[2][0]);
-    // Compute the camera yaw angle. This angle represents the left/right rotation.
-    float camYaw = atan(right.z, right.x);
-    // Apply a scale factor to determine how much the rain pattern should shift to cancel the yaw.
-    // (Adjust the 50.0 multiplier until it feels right in your scene.)
-    float rotationOffset = camYaw * 50.0;
-    U.x += rotationOffset;
-
-    float Ny = RAIN_DENSITY * R.y; // number of drop per column
-
-    vec3 auxHdrColor = hdrColor;
-
-    float layerDisplacement = 1.0f;
-    //depthSample = linearize_depth(depthSample, camera.zNear, camera.zFar);
-    //layers
-    for (float l = 0.; l < 4.; l++)
-    {
-        vec2 worldOffset = - vec2(camera.cameraPosition.x, camera.cameraPosition.z) * 0.001f;
-        U.x += l * 1.2;
-        U.x -= worldOffset.x;
-        layerDisplacement -= worldOffset.y;
-        for (float i = 0.; i <= floor(Ny); i++) {
-            // to deal with more than one drop per column
-            float y = floor(mod(rnd(U.x, 2. * i) * R.y + (SPEED * pc.time), R.y)); // drop altitude
-            if (rnd(U.x, 2. * i + 1.) < (Ny - i) && abs(U.y - y) < ((BLUR_LENGTH * layerDisplacement) / dropStretch) * U.x / R.x)
-            {
-                if (depthSample * 20 < layerDisplacement - 1.0)
-                {
-                    hdrColor += BRIGTHNESS; //  / (U.x/R.x); // variant: keep total drop brightness. attention: saturated on the left 5%
-
-                } else
-                {
-                    hdrColor = auxHdrColor;
-                }
-
-            }
-        }
-
-        layerDisplacement += 0.25f;
-    }
 
 
     hdrColor += bloomColor * bloomSettings.strength;
 
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
+
+    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pc.normalIndex)], newTexCoords);
+    vec3 normal = OctDecode(normalSample.rg);
+    if (depthSample <= 0.0f)
+    {
+        vec2 uv = newTexCoords;
+        uv -= 0.5;
+        uv.x *= (16.0 / 9.0);
+        uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
+        uv.y = -uv.y;
+
+
+
+        const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
+        const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
+        //vec3 rayDir = normalize(mat3(camera.view) * vec3(uv.x, curve, uv.y));
+        vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
+        vec3 auxRayDir = rayDir;
+        rayDir.y = auxRayDir.z;
+        rayDir.z = auxRayDir.y;
+        const vec3 ro = vec3(0, 0.0, 0);
+        outColor = vec4(Sky(ro, rayDir), 1.0);
+
+        return;
+    }
+
 
     switch (pc.tonemappingFunction)
     {
