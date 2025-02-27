@@ -5,5 +5,6 @@ struct BloomSettings
 
     float gradientStrength;
     float maxBrightnessExtraction;
-    vec2 _padding;
+    float filterRadius;
+    float _padding;
 };
