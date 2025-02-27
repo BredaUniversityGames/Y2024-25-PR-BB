@@ -4,25 +4,37 @@ import "enemies.wren" for MeleeEnemy
 class Spawner {
 
     construct new(engine) {
-        __engine = engine
-        __rangeMin = Vec3.new(-44.8, 19.3, 264.6)
-        __rangeMax = Vec3.new(-40.8, 20.1, 270.6)
+        System.print(__engine)
+        if(__engine == null) {
+            __engine = engine
+        }
+        _rangeMin = Vec3.new(-44.8, 19.0, 264.6)
+        _rangeMax = Vec3.new(-40.8, 19.0, 270.6)
+        _meleeEnemies = [null]
+        _meleeEnemies.clear()
     }
 
     SpawnEnemies(count) {
-        var startCount = 1
-        if(__meleeEnemies == null) {
-            __meleeEnemies = [MeleeEnemy.new(Random.RandomVec3VectorRange(__rangeMin, __rangeMax), __engine)]
-            startCount = 2
+        if(count == 0) {
+            return
         }
 
-        for(i in startCount..count) {
-            __meleeEnemies.add(MeleeEnemy.new(Random.RandomVec3VectorRange(__rangeMin, __rangeMax), __engine))
+        for(i in 0...count) {
+             _meleeEnemies.add(MeleeEnemy.new(Random.RandomVec3VectorRange(_rangeMin, _rangeMax), __engine))
+        }
+
+        System.print(_meleeEnemies)
+    }
+
+    ClearAllEnemies() {
+        for(enemy in _meleeEnemies) {
+            enemy.Destroy()
         }
     }
 
-    GetEnemies() {
-        return __meleeEnemies
+    Destroy() {
+        this.ClearAllEnemies()
+        __engine = null
     }
 
 }

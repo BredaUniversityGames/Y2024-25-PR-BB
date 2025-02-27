@@ -107,10 +107,11 @@ class Main {
         __ultimateActive = false
 
         __spawner = Spawner.new(engine)
-        __spawner.SpawnEnemies(5)
+        __spawner.SpawnEnemies(4)
     }
 
     static Shutdown(engine) {
+        __spawner.Destroy()
         System.print("Shutdown script!")
     }
 
