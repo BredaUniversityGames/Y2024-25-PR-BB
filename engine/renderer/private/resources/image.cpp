@@ -2,6 +2,8 @@
 #include "vulkan_context.hpp"
 
 #include "profile_macros.hpp"
+#include "vulkan_helper.hpp"
+
 #include <stb_image.h>
 
 CPUImage& CPUImage::FromPNG(std::string_view path)
@@ -153,17 +155,17 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
 
         std::string allocName = "[IMAGE] " + creation.name;
 
-        imageAlloc = vma::AllocateImage(
+        _imageAlloc = vma::AllocateImage(
             _context->MemoryAllocator(),
             &static_cast<VkImageCreateInfo&>(imageCreateInfo),
             &allocCreateInfo,
             allocName.c_str());
 
-        util::NameObject<vk::Image>(imageAlloc.image, allocName, _context);
+        util::NameObject<vk::Image>(_imageAlloc.image, allocName, _context);
     }
 
     vk::ImageViewCreateInfo viewCreateInfo {};
-    viewCreateInfo.image = imageAlloc.image;
+    viewCreateInfo.image = _imageAlloc.image;
     viewCreateInfo.viewType = vk::ImageViewType::e2D;
     viewCreateInfo.format = creation.format;
     viewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(format);
@@ -192,7 +194,7 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
     if (creation.type == ImageType::eCubeMap)
     {
         vk::ImageViewCreateInfo cubeViewCreateInfo {};
-        cubeViewCreateInfo.image = imageAlloc.image;
+        cubeViewCreateInfo.image = _imageAlloc.image;
         cubeViewCreateInfo.viewType = ImageViewTypeConversion(creation.type);
         cubeViewCreateInfo.format = creation.format;
         cubeViewCreateInfo.subresourceRange.aspectMask = util::GetImageAspectFlags(format);
@@ -234,14 +236,14 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
             ZoneScopedN("Command upload dispatch");
             const vk::CommandBuffer& commandBuffer = commands->CommandBuffer();
 
-            util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eUndefined, oldLayout);
+            util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eUndefined, oldLayout);
 
-            util::CopyBufferToImage(commandBuffer, stagingBuffer, imageAlloc.image, width, height);
+            util::CopyBufferToImage(commandBuffer, stagingBuffer, _imageAlloc.image, width, height);
 
             if (creation.mips > 1)
             {
                 ZoneScopedN("Mip creation dispatch");
-                util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+                util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
 
                 for (uint32_t i = 1; i < creation.mips; ++i)
                 {
@@ -260,16 +262,16 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
                     blit.dstOffsets[1].y = height >> i;
                     blit.dstOffsets[1].z = 1;
 
-                    util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
+                    util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
 
-                    commandBuffer.blitImage(imageAlloc.image, vk::ImageLayout::eTransferSrcOptimal, imageAlloc.image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+                    commandBuffer.blitImage(_imageAlloc.image, vk::ImageLayout::eTransferSrcOptimal, _imageAlloc.image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
 
-                    util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
+                    util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
                 }
                 oldLayout = vk::ImageLayout::eTransferSrcOptimal;
             }
 
-            util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
+            util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
 
             commands->TrackAllocation(stagingBufferAllocation, stagingBuffer);
         }
@@ -277,13 +279,13 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
         {
             vk::CommandBuffer commandBuffer = util::BeginSingleTimeCommands(_context);
 
-            util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eUndefined, oldLayout);
+            util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eUndefined, oldLayout);
 
-            util::CopyBufferToImage(commandBuffer, stagingBuffer, imageAlloc.image, width, height);
+            util::CopyBufferToImage(commandBuffer, stagingBuffer, _imageAlloc.image, width, height);
 
             if (creation.mips > 1)
             {
-                util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
+                util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, 0, 1);
 
                 for (uint32_t i = 1; i < creation.mips; ++i)
                 {
@@ -302,16 +304,16 @@ GPUImage::GPUImage(const CPUImage& creation, ResourceHandle<Sampler> textureSamp
                     blit.dstOffsets[1].y = height >> i;
                     blit.dstOffsets[1].z = 1;
 
-                    util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
+                    util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, 1, i);
 
-                    commandBuffer.blitImage(imageAlloc.image, vk::ImageLayout::eTransferSrcOptimal, imageAlloc.image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+                    commandBuffer.blitImage(_imageAlloc.image, vk::ImageLayout::eTransferSrcOptimal, _imageAlloc.image, vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
 
-                    util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
+                    util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, 1, i);
                 }
                 oldLayout = vk::ImageLayout::eTransferSrcOptimal;
             }
 
-            util::TransitionImageLayout(commandBuffer, imageAlloc.image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
+            util::TransitionImageLayout(commandBuffer, _imageAlloc.image, format, oldLayout, vk::ImageLayout::eShaderReadOnlyOptimal, 1, 0, mips);
 
             util::EndSingleTimeCommands(_context, commandBuffer);
 

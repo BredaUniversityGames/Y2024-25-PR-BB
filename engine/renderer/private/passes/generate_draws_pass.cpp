@@ -46,8 +46,8 @@ void GenerateDrawsPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t
     skinnedPc.drawStaticDraws = static_cast<uint32_t>(_shouldDrawDynamic);
 
     std::array<vk::Buffer, 2> buffers;
-    buffers[0] = bufferResourceManager.Access(_cameraBatch.StaticDraw().redirectBuffer)->buffer;
-    buffers[1] = bufferResourceManager.Access(_cameraBatch.SkinnedDraw().redirectBuffer)->buffer;
+    buffers[0] = bufferResourceManager.Access(_cameraBatch.StaticDraw().redirectBuffer)->Get();
+    buffers[1] = bufferResourceManager.Access(_cameraBatch.SkinnedDraw().redirectBuffer)->Get();
     commandBuffer.fillBuffer(buffers[0], 0, sizeof(uint32_t), 0);
     commandBuffer.fillBuffer(buffers[1], 0, sizeof(uint32_t), 0);
 
@@ -132,7 +132,7 @@ void GenerateDrawsPass::RecordPrepassCommands(vk::CommandBuffer commandBuffer, u
         .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = bufferResourceManager.Access(draw.visibilityBuffer)->buffer,
+        .buffer = bufferResourceManager.Access(draw.visibilityBuffer)->Get(),
         .offset = 0,
         .size = vk::WholeSize,
     };
@@ -164,7 +164,7 @@ void GenerateDrawsPass::RecordSecondPassCommands(vk::CommandBuffer commandBuffer
         .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = bufferResourceManager.Access(draw.visibilityBuffer)->buffer,
+        .buffer = bufferResourceManager.Access(draw.visibilityBuffer)->Get(),
         .offset = 0,
         .size = vk::WholeSize,
     };

@@ -94,7 +94,7 @@ void CameraResource::CreateDescriptorSets()
         const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_buffers[i]);
 
         vk::DescriptorBufferInfo bufferInfo {
-            .buffer = buffer->buffer,
+            .buffer = buffer->Get(),
             .offset = 0,
             .range = vk::WholeSize,
         };

@@ -3,6 +3,9 @@
 #include "memory/vma_helper.hpp"
 #include "resources/sampler.hpp"
 
+#include "commands/single_time_commands.hpp"
+#include "resource_manager.hpp"
+
 enum class ImageType
 {
     e2D,
@@ -50,13 +53,14 @@ struct GPUImage
     DEFAULT_MOVABLE(GPUImage);
     NON_COPYABLE(GPUImage);
 
+    vk::Image Get() const { return _imageAlloc.image; }
+
     struct Layer
     {
         vk::ImageView view;
         std::vector<vk::ImageView> mipViews {};
     };
 
-    vma::ImageAllocation imageAlloc {};
     std::vector<Layer> layerViews {};
     vk::ImageView view; // Same as first view in view, or refers to a cubemap view
     ResourceHandle<Sampler> sampler {};
@@ -76,5 +80,6 @@ struct GPUImage
     std::string name;
 
 private:
+    vma::ImageAllocation _imageAlloc {};
     std::shared_ptr<VulkanContext> _context;
 };

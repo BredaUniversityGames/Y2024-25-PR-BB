@@ -193,7 +193,7 @@ void GraphicsContext::UpdateBindlessMaterials()
     const Buffer* buffer = bufferResourceManager.Access(_bindlessMaterialBuffer);
     std::memcpy(buffer->mappedPtr, materialGPUData.data(), materialResourceManager.Resources().size() * sizeof(GPUMaterial::GPUInfo));
 
-    _bindlessMaterialInfo.buffer = buffer->buffer;
+    _bindlessMaterialInfo.buffer = buffer->Get();
     _bindlessMaterialInfo.offset = 0;
     _bindlessMaterialInfo.range = sizeof(GPUMaterial::GPUInfo) * materialResourceManager.Resources().size();
 

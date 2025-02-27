@@ -360,28 +360,28 @@ void FrameGraph::CreateColorImageBarrier(const GPUImage& image, ResourceState st
     {
     case ResourceState::eFirstOuput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterOutput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
@@ -398,28 +398,28 @@ void FrameGraph::CreateDepthImageBarrier(const GPUImage& image, ResourceState st
     {
     case ResourceState::eFirstOuput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
         break;
     }
     case ResourceState::eReusedOutputAfterOutput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
         break;
     }
     case ResourceState::eInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eDepth);
         break;
@@ -436,28 +436,28 @@ void FrameGraph::CreateGeneralImageBarrier(const GPUImage& image, ResourceState 
     {
     case ResourceState::eFirstOuput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterOutput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eReusedOutputAfterInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
     }
     case ResourceState::eInput:
     {
-        util::InitializeImageMemoryBarrier(barrier, image.imageAlloc.image, image.format,
+        util::InitializeImageMemoryBarrier(barrier, image.Get(), image.format,
             vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
             image.layers, 0, image.mips, vk::ImageAspectFlagBits::eColor);
         break;
@@ -491,7 +491,7 @@ void FrameGraph::CreateBufferBarrier(const FrameGraphResource& resource, Resourc
         barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead; // TODO: Distinguish between VK_ACCESS_INDIRECT_COMMAND_READ_BIT and VK_ACCESS_SHADER_READ_BIT
         barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
         barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-        barrier.buffer = buffer->buffer;
+        barrier.buffer = buffer->Get();
         barrier.offset = 0;
         barrier.size = vk::WholeSize;
         break;

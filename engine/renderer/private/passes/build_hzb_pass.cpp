@@ -49,7 +49,7 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
         vk::ImageView inputTexture = i == 0 ? depth->view : hzb->layerViews[0].mipViews[i - 1];
         vk::ImageView outputTexture = hzb->layerViews[0].mipViews[i];
 
-        util::TransitionImageLayout(commandBuffer, hzb->imageAlloc.image, hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
+        util::TransitionImageLayout(commandBuffer, hzb->Get(), hzb->format, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, 1, i, 1);
 
         vk::DescriptorImageInfo inputImageInfo {
             .sampler = _context->Resources()->SamplerResourceManager().Access(_hzbSampler)->sampler,
@@ -70,10 +70,10 @@ void BuildHzbPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED 
         uint32_t groupSize = math::DivideRoundingUp(mipSize, 16);
         commandBuffer.dispatch(groupSize, groupSize, 1);
 
-        util::TransitionImageLayout(commandBuffer, hzb->imageAlloc.image, hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i, 1);
+        util::TransitionImageLayout(commandBuffer, hzb->Get(), hzb->format, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, 1, i, 1);
     }
 
-    util::TransitionImageLayout(commandBuffer, hzb->imageAlloc.image, hzb->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral, 1, 0, hzb->mips);
+    util::TransitionImageLayout(commandBuffer, hzb->Get(), hzb->format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral, 1, 0, hzb->mips);
 }
 
 void BuildHzbPass::CreateSampler()

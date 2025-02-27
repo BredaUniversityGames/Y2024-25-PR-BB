@@ -162,7 +162,7 @@ void SSAOPass::CreateBuffers()
             .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
         _sampleKernelBuffer = resources->BufferResourceManager().Create(creation);
-        cmdBuffer.CopyIntoLocalBuffer(ssaoKernel, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->buffer);
+        cmdBuffer.CopyIntoLocalBuffer(ssaoKernel, 0, resources->BufferResourceManager().Access(_sampleKernelBuffer)->Get());
     }
 
     std::vector<std::byte> byteData;
@@ -238,7 +238,7 @@ void SSAOPass::CreateDescriptorSets()
     }
 
     vk::DescriptorBufferInfo sampleKernelBufferInfo {
-        .buffer = _context->Resources()->BufferResourceManager().Access(_sampleKernelBuffer)->buffer,
+        .buffer = _context->Resources()->BufferResourceManager().Access(_sampleKernelBuffer)->Get(),
         .offset = 0,
         .range = vk::WholeSize,
     };

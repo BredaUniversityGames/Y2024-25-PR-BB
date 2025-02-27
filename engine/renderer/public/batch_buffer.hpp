@@ -39,7 +39,7 @@ public:
         uint32_t originalOffset = _vertexOffset;
 
         const Buffer* buffer = resources->BufferResourceManager().Access(_vertexBuffer);
-        commandBuffer.CopyIntoLocalBuffer(vertices, _vertexOffset, buffer->buffer);
+        commandBuffer.CopyIntoLocalBuffer(vertices, _vertexOffset, buffer->Get());
 
         _vertexOffset += vertices.size();
 

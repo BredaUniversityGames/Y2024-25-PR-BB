@@ -144,7 +144,7 @@ void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
 {
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterCullingData.globalIndexBuffer);
 
-    currentCommandBuffer.fillBuffer(buffer->buffer, 0, vk::WholeSize, 0);
+    currentCommandBuffer.fillBuffer(buffer->Get(), 0, vk::WholeSize, 0);
 
     // Memory Barrier
     vk::BufferMemoryBarrier barrier {
@@ -152,7 +152,7 @@ void GPUScene::UpdateGlobalIndexBuffer(vk::CommandBuffer& currentCommandBuffer)
         .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-        .buffer = buffer->buffer,
+        .buffer = buffer->Get(),
         .offset = 0,
         .size = buffer->size,
     };
@@ -612,7 +612,7 @@ void GPUScene::CreateClusterDescriptorSet()
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_clusterData.buffer);
 
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.buffer = buffer->Get();
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
@@ -692,7 +692,7 @@ void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
 
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.buffer = buffer->Get();
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
@@ -714,7 +714,7 @@ void GPUScene::UpdatePointLightDescriptorSet(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_pointLightFrameData[frameIndex].buffer);
 
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.buffer = buffer->Get();
     bufferInfo.offset = 0;
     bufferInfo.range = vk::WholeSize;
 
@@ -746,7 +746,7 @@ void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
     for (size_t j = 0; j < buffers.size(); j++)
     {
         bufferInfos.at(j) = vk::DescriptorBufferInfo {
-            .buffer = buffers.at(j)->buffer,
+            .buffer = buffers.at(j)->Get(),
             .offset = 0,
             .range = vk::WholeSize,
         };
@@ -766,12 +766,12 @@ void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
 void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 {
     vk::DescriptorBufferInfo staticBufferInfo {};
-    staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticInstancesFrameData[frameIndex].buffer)->buffer;
+    staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticInstancesFrameData[frameIndex].buffer)->Get();
     staticBufferInfo.offset = 0;
     staticBufferInfo.range = vk::WholeSize;
 
     vk::DescriptorBufferInfo skinnedBufferInfo {};
-    skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer)->buffer;
+    skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedInstancesFrameData[frameIndex].buffer)->Get();
     skinnedBufferInfo.offset = 0;
     skinnedBufferInfo.range = vk::WholeSize;
 
@@ -801,7 +801,7 @@ void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
 
     vk::DescriptorBufferInfo bufferInfo {
-        .buffer = buffer->buffer,
+        .buffer = buffer->Get(),
         .offset = 0,
         .range = vk::WholeSize,
     };
@@ -1002,7 +1002,7 @@ void GPUScene::InitializeIndirectDrawDescriptor()
         _staticDraws[i].descriptorSet = descriptorSets[i];
 
         vk::DescriptorBufferInfo& staticBufferInfo { bufferInfos[i] };
-        staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticDraws[i].buffer)->buffer;
+        staticBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_staticDraws[i].buffer)->Get();
         staticBufferInfo.offset = 0;
         staticBufferInfo.range = vk::WholeSize;
 
@@ -1022,7 +1022,7 @@ void GPUScene::InitializeIndirectDrawDescriptor()
         _skinnedDraws[i].descriptorSet = descriptorSets[i];
 
         vk::DescriptorBufferInfo& skinnedBufferInfo { bufferInfos[i] };
-        skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedDraws[i].buffer)->buffer;
+        skinnedBufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_skinnedDraws[i].buffer)->Get();
         skinnedBufferInfo.offset = 0;
         skinnedBufferInfo.range = vk::WholeSize;
 

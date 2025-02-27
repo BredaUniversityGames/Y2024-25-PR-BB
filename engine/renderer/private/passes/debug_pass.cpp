@@ -82,7 +82,9 @@ void DebugPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t current
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_vertexBuffer);
     const std::array<vk::DeviceSize, 1> offsets = { 0 };
-    commandBuffer.bindVertexBuffers(0, 1, &buffer->buffer, offsets.data());
+
+    auto buf = buffer->Get();
+    commandBuffer.bindVertexBuffers(0, 1, &buf, offsets.data());
 
     uint32_t vertexCount = static_cast<uint32_t>(_linesData.size());
     commandBuffer.draw(vertexCount, 1, 0, 0);

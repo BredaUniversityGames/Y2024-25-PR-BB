@@ -100,7 +100,7 @@ void BloomSettings::UpdateDescriptorSet(uint32_t currentFrame)
     const Buffer* buffer = resources->BufferResourceManager().Access(_frameData.buffers.at(currentFrame));
 
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.buffer = buffer->buffer;
+    bufferInfo.buffer = buffer->Get();
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(SettingsData);
 

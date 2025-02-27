@@ -49,7 +49,7 @@ uint32_t BatchBuffer::AppendIndices(const std::vector<uint32_t>& indices, Single
     uint32_t originalOffset = _indexOffset;
 
     const Buffer* buffer = resources->BufferResourceManager().Access(_indexBuffer);
-    commandBuffer.CopyIntoLocalBuffer(indices, _indexOffset, buffer->buffer);
+    commandBuffer.CopyIntoLocalBuffer(indices, _indexOffset, buffer->Get());
 
     _indexOffset += indices.size();
 
