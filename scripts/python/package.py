@@ -2,7 +2,7 @@ import shutil
 import sys
 import os
 import argparse
-
+import json
 
 def copy_dir(folder, dest):
     shutil.copytree(folder, dest, dirs_exist_ok=True)
@@ -14,27 +14,23 @@ def copy_file(file, dest_folder):
 
 def main():
     parser = argparse.ArgumentParser(description='Packages the project to /package/')
-    parser.add_argument('-o', '--output', help="Output directory", type=str, required=True)
-    parser.add_argument('-e', '--executables', help='Execulatble to copy over', type=str, nargs='*')
-    parser.add_argument('-a', '--assets', help='Asset folders to copy over', type=str, nargs='*')
-    parser.add_argument('-f', '--files', help='Extra files to copy over', type=str, nargs='*')
+    parser.add_argument('-c', '--config', help="JSON config for packaging", type=str, required=True)
 
     args = parser.parse_args()
-    output_dir = str(args.output)
+    config_file = open(args.config)
+    config_data = json.load(config_file)
 
-    os.makedirs(args.output, exist_ok=True)
+    output_dir = config_data['output']
+    os.makedirs(output_dir, exist_ok=True)
 
-    if args.assets:
-        for dir in args.assets:
-            copy_dir(dir, output_dir + "/" + dir)
+    for executable in config_data['executables']:
+        copy_file(executable, output_dir)
 
-    if args.executables:
-        for executable in args.executables:
-            copy_file(executable, output_dir)
+    for dir in config_data['assets']:
+        copy_dir(dir, output_dir + "/" + dir)
 
-    if args.files:
-        for file in args.files:
-            copy_file(file, output_dir)
+    for file in config_data['files']:
+        copy_file(file, output_dir)
 
 
 if __name__ == "__main__":

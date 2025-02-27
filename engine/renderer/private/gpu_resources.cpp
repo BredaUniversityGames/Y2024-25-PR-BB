@@ -1,5 +1,6 @@
 #include "gpu_resources.hpp"
 
+#include "profile_macros.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 

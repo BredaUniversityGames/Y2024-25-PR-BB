@@ -2,7 +2,6 @@
 
 #include "cpu_resources.hpp"
 #include "resource_manager.hpp"
-
 #include <memory>
 
 class ImageResourceManager;

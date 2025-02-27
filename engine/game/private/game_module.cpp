@@ -18,6 +18,7 @@
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
+#include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/shadow_pass.hpp"
@@ -52,13 +53,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        //"assets/models/BrainStem.glb",
-        //"assets/models/Adventure.glb",
+        "assets/models/Clown.glb",
         //"assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        "assets/models/MetalRoughSpheres.glb",
+        //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
 
@@ -128,7 +125,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
     auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
-    auto& particleModule = engine.GetModule<ParticleModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
 
@@ -217,7 +213,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             }
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
-            physicsModule.debugRenderer->SetCameraPos(cameraPos);
+            physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
 
@@ -229,7 +225,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
-        physicsModule.debugRenderer->SetState(!physicsModule.debugRenderer->GetState());
+        physicsModule._debugRenderer->SetState(!physicsModule._debugRenderer->GetState());
     }
 
     // Toggle pathfinding debug drawing
@@ -238,10 +234,8 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
     }
 
-    int8_t physicsDebugDrawing = physicsModule.debugRenderer->GetState(),
+    int8_t physicsDebugDrawing = physicsModule._debugRenderer->GetState(),
            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
-
-    rendererModule.GetRenderer()->GetDebugPipeline().ClearLines();
 
     if (physicsDebugDrawing || pathfindingDebugDrawing)
     {
@@ -254,9 +248,9 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
     if (physicsDebugDrawing)
     {
-        auto linesData = physicsModule.debugRenderer->GetLinesData();
-        auto persistentLinesData = physicsModule.debugRenderer->GetPersistentLinesData();
-        physicsModule.debugRenderer->ClearLines();
+        auto linesData = physicsModule._debugRenderer->GetLinesData();
+        auto persistentLinesData = physicsModule._debugRenderer->GetPersistentLinesData();
+        physicsModule._debugRenderer->ClearLines();
         rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
         rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
     }
@@ -273,28 +267,21 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
     audioModule.ClearLines();
 
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
-    {
-        entt::entity entity = ECS.GetRegistry().create();
-        RigidbodyComponent rb(*physicsModule.bodyInterface, entity, eSPHERE);
-
-        NameComponent node;
-        node.name = "Physics Entity";
-        ECS.GetRegistry().emplace<NameComponent>(entity, node);
-        ECS.GetRegistry().emplace<TransformComponent>(entity);
-        ECS.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-        auto& audioEmitter = ECS.GetRegistry().emplace<AudioEmitterComponent>(entity);
-
-        physicsModule.bodyInterface->SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
-
-        particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-        audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
-    }
-
-    JPH::BodyManager::DrawSettings drawSettings;
-
-    if (physicsModule.debugRenderer->GetState())
-        physicsModule.physicsSystem->DrawBodies(drawSettings, physicsModule.debugRenderer);
-
-    physicsModule.debugRenderer->NextFrame();
+    // if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
+    // {
+    //     entt::entity entity = ECS.GetRegistry().create();
+    //     RigidbodyComponent rb(physicsModule.GetBodyInterface(), entity, PhysicsShapes::eSPHERE);
+    //
+    //     NameComponent node;
+    //     node.name = "Physics Entity";
+    //     ECS.GetRegistry().emplace<NameComponent>(entity, node);
+    //     ECS.GetRegistry().emplace<TransformComponent>(entity);
+    //     ECS.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
+    //     auto& audioEmitter = ECS.GetRegistry().emplace<AudioEmitterComponent>(entity);
+    //
+    //     physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
+    //
+    //     particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
+    //     audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
+    // }
 }

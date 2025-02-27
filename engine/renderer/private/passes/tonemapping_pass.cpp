@@ -11,10 +11,11 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const BloomSettings& bloomSettings)
+TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
     , _settings(settings)
     , _swapChain(_swapChain)
+    , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
     , _outputTarget(outputTarget)
@@ -24,6 +25,9 @@ TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context
 
     _pushConstants.hdrTargetIndex = hdrTarget.Index();
     _pushConstants.bloomTargetIndex = bloomTarget.Index();
+    _pushConstants.depthIndex = gBuffers.Depth().Index();
+    _pushConstants.screenWidth = _gBuffers.Size().x;
+    _pushConstants.screenHeight = _gBuffers.Size().y;
 }
 
 TonemappingPass::~TonemappingPass()
@@ -39,20 +43,55 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.exposure = _settings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
 
-    _pushConstants.enableVignette = _settings.enableVignette;
+    _pushConstants.enableFlags = 0;
+
+    if (_settings.enableVignette)
+    {
+        _pushConstants.enableFlags |= eEnableVignette;
+    }
+
+    if (_settings.enableLensDistortion)
+    {
+        _pushConstants.enableFlags |= eEnableLensDistortion;
+    }
+
+    if (_settings.enableToneAdjustments)
+    {
+        _pushConstants.enableFlags |= eEnableToneAdjustments;
+    }
+
+    if (_settings.enablePixelization)
+    {
+        _pushConstants.enableFlags |= eEnablePixelization;
+    }
+
+    if (_settings.enablePalette)
+    {
+        _pushConstants.enableFlags |= eEnablePalette;
+    }
+
     _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
 
-    _pushConstants.enableLensDistortion = _settings.enableLensDistortion;
     _pushConstants.lensDistortionIntensity = _settings.lensDistortionIntensity;
     _pushConstants.lensDistortionCubicIntensity = _settings.lensDistortionCubicIntensity;
     _pushConstants.screenScale = _settings.screenScale;
 
-    _pushConstants.enableToneAdjustments = _settings.enableToneAdjustments;
     _pushConstants.brightness = _settings.brightness;
     _pushConstants.contrast = _settings.contrast;
     _pushConstants.saturation = _settings.saturation;
     _pushConstants.vibrance = _settings.vibrance;
     _pushConstants.hue = _settings.hue;
+    _pushConstants.minPixelSize = _settings.minPixelSize;
+    _pushConstants.maxPixelSize = _settings.maxPixelSize;
+    _pushConstants.pixelizationLevels = _settings.pixelizationLevels;
+    _pushConstants.pixelizationDepthBias = _settings.pixelizationDepthBias;
+    _pushConstants.ditherAmount = _settings.ditherAmount;
+    _pushConstants.paletteAmount = _settings.paletteAmount;
+
+    for (int i = 0; i < 5; i++)
+    {
+        _pushConstants.palette[i] = _settings.palette[i];
+    }
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,

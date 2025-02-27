@@ -10,7 +10,7 @@ ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>&
 {
 }
 
-ResourceHandle<GPUImage> ImageResourceManager::Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler, SingleTimeCommands* commands)
+ResourceHandle<GPUImage> ImageResourceManager::Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler, SingleTimeCommands* const commands)
 {
     return ResourceManager::Create(GPUImage { cpuImage, sampler, _context, commands });
 }

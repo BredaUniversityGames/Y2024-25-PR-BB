@@ -3,6 +3,7 @@
 #include "commands/single_time_commands.hpp"
 #include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "single_time_commands.hpp"
 #include <memory>
 
 class VulkanContext;
@@ -12,7 +13,7 @@ class ImageResourceManager final : public ResourceManager<GPUImage>
 public:
     explicit ImageResourceManager(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Sampler> defaultSampler);
 
-    ResourceHandle<GPUImage> Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler, SingleTimeCommands* commands = nullptr);
+    ResourceHandle<GPUImage> Create(const CPUImage& cpuImage, ResourceHandle<Sampler> sampler, SingleTimeCommands* const commands = nullptr);
 
     // Create an image with the default sampler
     ResourceHandle<GPUImage> Create(const CPUImage& cpuImage, SingleTimeCommands* commands = nullptr)

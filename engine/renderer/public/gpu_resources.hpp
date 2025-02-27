@@ -3,6 +3,7 @@
 #include "commands/single_time_commands.hpp"
 #include "math_util.hpp"
 #include "resource_manager.hpp"
+#include "single_time_commands.hpp"
 #include "vulkan_include.hpp"
 
 #include "resources/image.hpp"

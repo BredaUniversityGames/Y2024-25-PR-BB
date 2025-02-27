@@ -1,40 +1,50 @@
 ﻿#pragma once
-#include "math_util.hpp"
-#include "physics_module.hpp"
+
+#include <entt/entity/registry.hpp>
+#include <physics/jolt_to_glm.hpp>
+
+#include <Jolt/Jolt.h>
+
+#include <Jolt/Physics/Body/AllowedDOFs.h>
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 struct UpdateMeshAndPhysics
 {
 };
-struct RigidbodyComponent
+
+class RigidbodyComponent
 {
-    // default creates a sphere at 0,2,0
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType = eSPHERE, BodyType type = eDYNAMIC);
+public:
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, JPH::ShapeRefC shape, bool dynamic, JPH::EAllowedDOFs freedom = JPH::EAllowedDOFs::All);
 
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings);
+    static void SetupRegistryCallbacks(entt::registry& registry);
+    static void DisconnectRegistryCallbacks(entt::registry& registry);
 
-    // for mesh collisions
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices, JPH::IndexedTriangleList& triangles);
+    // Getters
+    glm::vec3 GetPosition() const { return ToGLMVec3(bodyInterface.GetPosition(bodyID)); }
+    glm::quat GetRotation() const { return ToGLMQuat(bodyInterface.GetRotation(bodyID)); }
+    glm::vec3 GetVelocity() const { return ToGLMVec3(bodyInterface.GetLinearVelocity(bodyID)); }
+    glm::vec3 GetAngularVelocity() const { return ToGLMVec3(bodyInterface.GetLinearVelocity(bodyID)); };
 
-    // for convex collisions
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices);
+    // Setters
+    void SetVelocity(const glm::vec3& velocity) { bodyInterface.SetLinearVelocity(bodyID, ToJoltVec3(velocity)); };
+    void SetAngularVelocity(const glm::vec3& velocity) { bodyInterface.SetAngularVelocity(bodyID, ToJoltVec3(velocity)); };
+    void SetGravityFactor(float factor) { bodyInterface.SetGravityFactor(bodyID, factor); }
+    void SetFriction(float friction) { bodyInterface.SetFriction(bodyID, friction); }
 
-    // for AABB collisions
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type = eSTATIC);
-
-    void SetOwnerEntity(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity)
-    {
-        bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
-    }
-
-    entt::entity GetOwnerEntity(JPH::BodyInterface& bodyInterface)
-    {
-        return static_cast<entt::entity>(bodyInterface.GetUserData(bodyID));
-    }
-
-    RigidbodyComponent() = default;
+    // Adders
+    void AddForce(const glm::vec3& force) { bodyInterface.AddForce(bodyID, ToJoltVec3(force)); }
+    void AddImpulse(const glm::vec3& force) { bodyInterface.AddImpulse(bodyID, ToJoltVec3(force)); }
 
     JPH::BodyID bodyID;
-    PhysicsShapes shapeType;
     JPH::ShapeRefC shape;
-    BodyType bodyType;
+
+private:
+    bool dynamic = false;
+    JPH::EAllowedDOFs dofs {};
+    JPH::BodyInterface& bodyInterface;
+
+    static void OnDestroyCallback(entt::registry& registry, entt::entity entity);
+    static void OnConstructCallback(entt::registry& registry, entt::entity entity);
 };
