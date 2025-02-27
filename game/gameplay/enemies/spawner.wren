@@ -4,7 +4,6 @@ import "enemies.wren" for MeleeEnemy
 class Spawner {
 
     construct new(engine) {
-        System.print(__engine)
         if(__engine == null) {
             __engine = engine
         }
@@ -22,8 +21,6 @@ class Spawner {
         for(i in 0...count) {
              _meleeEnemies.add(MeleeEnemy.new(Random.RandomVec3VectorRange(_rangeMin, _rangeMax), __engine))
         }
-
-        System.print(_meleeEnemies)
     }
 
     ClearAllEnemies() {

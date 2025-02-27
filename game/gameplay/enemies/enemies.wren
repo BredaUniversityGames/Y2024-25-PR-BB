@@ -34,10 +34,7 @@ class MeleeEnemy {
     Destroy() {
         if(!this.IsValid()) {
             return
-            System.print("Enemy is invalid")
         }
-
-        System.print(_rootEntity)
 
         var ecs = __engine.GetECS()
         ecs.DestroyEntity(_rootEntity)

@@ -107,7 +107,7 @@ class Main {
         __ultimateActive = false
 
         __spawner = Spawner.new(engine)
-        __spawner.SpawnEnemies(4)
+        __spawner.SpawnEnemies(10)
     }
 
     static Shutdown(engine) {
