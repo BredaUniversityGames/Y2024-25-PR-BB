@@ -39,7 +39,7 @@ void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::ent
     // Look into mass settings
     if (rb.shape->GetMassProperties().mMass <= 0.0f)
     {
-        creation.mMassPropertiesOverride = JPH::MassProperties(1.0f);
+        creation.mMassPropertiesOverride = JPH::MassProperties { 1.0f, JPH::Mat44::sZero() };
         creation.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
     }
 
