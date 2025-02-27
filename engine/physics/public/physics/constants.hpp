@@ -27,4 +27,4 @@ constexpr JPH::uint PHYSICS_TEMP_ALLOCATOR_SIZE = 10 * 1024 * 1024;
 constexpr float PHYSICS_STEPS_PER_SECOND = 1.0f / 60.0f;
 
 // If the game runs at 1 FPS then physics is the least of our concerns
-constexpr int PHYSICS_MAX_STEPS_PER_FRAME = 40;
+constexpr int PHYSICS_MAX_STEPS_PER_FRAME = 10;
