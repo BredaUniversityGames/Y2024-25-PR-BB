@@ -253,7 +253,7 @@ void PhysicsSystem::Inspect()
     const auto view = _ecs.GetRegistry().view<RigidbodyComponent>();
     static int amount = 1;
     static PhysicsShapes currentShape = PhysicsShapes::eSPHERE;
-    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size_hint()));
+    ImGui::Text("Physics Entities: %u", static_cast<unsigned int>(view.size()));
     ImGui::Text("Active bodies: %u", _physicsModule._physicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody));
 
     ImGui::DragInt("Amount", &amount, 1, 1, 100);

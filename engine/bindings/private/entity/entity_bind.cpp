@@ -10,8 +10,7 @@
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-#include "components/static_mesh_component.hpp"
-#include "components/skinned_mesh_component.hpp"
+#include "game_module.hpp"
 #include "systems/lifetime_component.hpp"
 
 namespace bindings
@@ -72,6 +71,11 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
+void NameComponentSetName(WrenComponent<NameComponent>& nameComponent, const std::string& name)
+{
+    nameComponent.component->name = name;
+}
+
 void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, const glm::vec3& color)
 {
     component.component->color = color;
@@ -90,28 +94,31 @@ void BindEntity(wren::ForeignModule& module)
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
 
+    entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
+
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
-    entityClass.func<&WrenEntity::AddComponent<TransformComponent>>("AddTransformComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<TransformComponent>>("AddTransformComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
-    entityClass.func<&WrenEntity::AddComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
-    entityClass.func<&WrenEntity::AddComponent<NameComponent>>("AddNameComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
 
     entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
-    entityClass.func<&WrenEntity::AddComponent<LifetimeComponent>>("AddLifetimeComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<LifetimeComponent>>("AddLifetimeComponent");
 
     entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
-    entityClass.func<&WrenEntity::AddComponent<CheatsComponent>>("AddCheatsComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<CheatsComponent>>("AddCheatsComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
     entityClass.func<&WrenEntity::AddComponent<AnimationControlComponent>>("AddAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
+    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
-    entityClass.func<&WrenEntity::AddComponent<PointLightComponent>>("AddPointLightComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
 
     entityClass.func<&WrenEntity::GetComponent<StaticMeshComponent>>("GetStaticMeshComponent");
     entityClass.func<&WrenEntity::AddComponent<StaticMeshComponent>>("AddStaticMeshComponent");
@@ -181,7 +188,7 @@ void BindEntityAPI(wren::ForeignModule& module)
     {
         // Name class
         auto& nameClass = module.klass<WrenComponent<NameComponent>>("NameComponent");
-        nameClass.propReadonlyExt<bindings::NameComponentGetName>("name");
+        nameClass.propExt<bindings::NameComponentGetName, bindings::NameComponentSetName>("name");
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
         pointLightClass.propExt<

@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
@@ -21,7 +21,25 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
+
+        //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
+      
+        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
+        if (previousPlayer) {
+            engine.GetECS().DestroyEntity(previousPlayer)
+        }
+        
+        __playerController = engine.GetECS().NewEntity()
+
+        __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
+        __playerController.AddPlayerTag()
+        __playerController.AddNameComponent().name = "PlayerController"
+
+        var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
+        __playerController.AddRigidbodyComponent(rb)
+    
+        
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
