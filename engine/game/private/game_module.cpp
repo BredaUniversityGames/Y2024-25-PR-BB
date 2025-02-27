@@ -54,7 +54,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
         "assets/models/Clown.glb",
-        "assets/models/dq.gltf",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",

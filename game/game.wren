@@ -26,10 +26,6 @@ class Main {
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var test = engine.GetECS().GetEntityByName("dq")
-        var testAnimations = test.GetAnimationControlComponent()
-        testAnimations.Play("Twisting", 1.0, true)
-
         var clown = engine.GetECS().GetEntityByName("Clown")
         var clownAnimations = clown.GetAnimationControlComponent()
         clownAnimations.Play("NarutoRun", 1.0, true)
@@ -97,10 +93,10 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-        //var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
-        //var enemyTransform = enemyEntity.GetTransformComponent()
-        //enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        //enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
+        var enemyTransform = enemyEntity.GetTransformComponent()
+        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {
