@@ -1,6 +1,7 @@
 ﻿#include "components/rigidbody_component.hpp"
 
 #include "components/transform_helpers.hpp"
+#include "log.hpp"
 #include "physics/collision.hpp"
 
 #include <Jolt/Jolt.h>
@@ -13,7 +14,7 @@ RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface,
     : shape(shape)
     , dynamic(dynamic)
     , dofs(freedom)
-    , bodyInterface(bodyInterface)
+    , bodyInterface(&bodyInterface)
 {
 }
 
@@ -38,14 +39,20 @@ void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::ent
     // Look into mass settings
     if (rb.shape->GetMassProperties().mMass <= 0.0f)
     {
-        creation.mMassPropertiesOverride = JPH::MassProperties { 1.0f };
+        creation.mMassPropertiesOverride = JPH::MassProperties { 1.0f, JPH::Mat44::sZero() };
         creation.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
     }
 
     JPH::EActivation activation = rb.dynamic ? JPH::EActivation::Activate : JPH::EActivation::DontActivate;
 
-    rb.bodyID = rb.bodyInterface.CreateAndAddBody(creation, activation);
-    rb.bodyInterface.SetUserData(rb.bodyID, static_cast<uint64_t>(entity));
+    rb.bodyID = rb.bodyInterface->CreateAndAddBody(creation, activation);
+    rb.bodyInterface->SetUserData(rb.bodyID, static_cast<uint64_t>(entity));
+}
+
+void RigidbodyComponent::SetColliderShape(JPH::ShapeRefC newShape)
+{
+    bodyInterface->SetShape(bodyID, shape, true, JPH::EActivation::Activate);
+    shape = newShape;
 }
 
 void RigidbodyComponent::OnDestroyCallback(entt::registry& registry, entt::entity entity)
@@ -54,8 +61,8 @@ void RigidbodyComponent::OnDestroyCallback(entt::registry& registry, entt::entit
 
     if (!rb.bodyID.IsInvalid())
     {
-        rb.bodyInterface.RemoveBody(rb.bodyID);
-        rb.bodyInterface.DestroyBody(rb.bodyID);
+        rb.bodyInterface->RemoveBody(rb.bodyID);
+        rb.bodyInterface->DestroyBody(rb.bodyID);
     }
 }
 
