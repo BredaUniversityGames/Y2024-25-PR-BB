@@ -207,6 +207,8 @@ void InspectorModule::Tick(Engine& engine)
         }
     }
 
+    // ImGuizmo::DrawCubes();
+
     {
         ZoneNamedN(zz, "ImGui Render", true);
         ImGui::Render();

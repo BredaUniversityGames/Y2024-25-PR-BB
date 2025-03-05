@@ -17,3 +17,6 @@
 [submodule "external/visit_struct"]
 	path = external/visit_struct
 	url = https://github.com/cbeck88/visit_struct
+[submodule "external/imguizmo"]
+	path = external/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo

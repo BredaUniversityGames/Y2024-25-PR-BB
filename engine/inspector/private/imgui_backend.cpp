@@ -1,5 +1,6 @@
 #include "imgui_backend.hpp"
 
+#include <ImGuizmo.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
 
@@ -67,6 +68,7 @@ void ImGuiBackend::NewFrame()
     ZoneScoped;
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();
+    // ImGuizmo::BeginFrame();
 }
 
 ImTextureID ImGuiBackend::GetTexture(const ResourceHandle<GPUImage>& image)
