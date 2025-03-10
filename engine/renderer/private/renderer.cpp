@@ -137,7 +137,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _bloomUpsamplePass = std::make_unique<BloomUpsamplePass>(_context, _bloomTarget, *_bloomSettings);
     _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
-    _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings, _ssaoTarget);
+    _lightingPass = std::make_unique<LightingPass>(_context, _settings.data.lighting, *_gpuScene, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings, _ssaoTarget);
     _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings);
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
     _clusterGenerationPass = std::make_unique<ClusterGenerationPass>(_context, *_gBuffers, *_swapChain, *_gpuScene);

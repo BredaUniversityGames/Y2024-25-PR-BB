@@ -17,6 +17,8 @@ layout (push_constant) uniform PushConstants
     vec2 padding;
     ivec3 clusterDimensions;
     float shadowMapSize;
+    float ambientStrength;
+    float ambientShadowStrength;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -124,7 +126,7 @@ void main()
     vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kS = F;
     vec3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
+    //kD *= 1.0 - metallic;
 
     // Directional Light Calculations
     vec3 lightDir = scene.directionalLight.direction.xyz;
@@ -153,9 +155,9 @@ void main()
     float shadow = 0.0;
     DirectionalShadowMap(position, bias, shadow);
 
-    float ambientShadow = (1.0 - (1.0 - shadow) * 0.5);
+    float ambientShadow = (1.0 - (1.0 - shadow) * pushConstants.ambientShadowStrength);
 
-    vec3 litColor = vec3((Lo * shadow) + pointLightLo + ambient * ambientShadow);
+    vec3 litColor = vec3((Lo * shadow) + pointLightLo + (ambient * pushConstants.ambientStrength) * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
