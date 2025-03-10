@@ -245,6 +245,12 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         rendererModule.GetRenderer()->GetDebugPipeline().SetState(false);
     }
 
+    if (applicationModule.GetActionManager().GetDigitalAction("Ultimate").IsPressed())
+    {
+        applicationModule.GetActionManager().GetDigitalActionControllerGlyphImagePath("Ultimate");
+    }
+
+
     if (physicsDebugDrawing)
     {
         auto linesData = physicsModule._debugRenderer->GetLinesData();
