@@ -50,20 +50,20 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
-        "assets/models/AnimatedRifle.glb",
-        "assets/models/Clown.glb",
-        //"assets/models/DamagedHelmet.glb",
-        //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-    };
-    entt::entity gunEntity;
-    {
-        ZoneScopedN("Scene models");
-        auto entities = SceneLoading::LoadModels(engine, modelPaths);
-        gunEntity = entities[1];
-    }
+    // std::vector<std::string> modelPaths = {
+    //     "assets/models/Cathedral.glb",
+    //     "assets/models/AnimatedRifle.glb",
+    //     "assets/models/Clown.glb",
+    //     //"assets/models/DamagedHelmet.glb",
+    //     //"assets/models/MetalRoughSpheres.glb",
+    //     //"assets/models/monkey.gltf",
+    // };
+    // entt::entity gunEntity;
+    // {
+    //     ZoneScopedN("Scene models");
+    //     auto entities = SceneLoading::LoadModels(engine, modelPaths);
+    //     gunEntity = entities[1];
+    // }
 
     {
         ZoneScopedN("ECS Additional Scene Setup");
@@ -85,7 +85,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
         ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
 
-        RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
+        // RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
 
         CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
         cameraComponent.projection = CameraComponent::Projection::ePerspective;

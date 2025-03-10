@@ -161,6 +161,8 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
     return entities;
 }
 
+void DestroyAllEntities(ECSModule& self) { self.GetRegistry().clear(); }
+
 }
 
 void BindEntityAPI(wren::ForeignModule& module)
@@ -176,6 +178,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
+        wrenClass.funcExt<bindings::DestroyAllEntities>("DestroyAllEntities");
     }
     // Components
     {

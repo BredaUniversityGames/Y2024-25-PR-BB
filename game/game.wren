@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
