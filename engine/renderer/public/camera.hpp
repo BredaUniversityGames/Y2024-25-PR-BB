@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "components/camera_component.hpp"
 #include "constants.hpp"
 #include "gpu_resources.hpp"
 
@@ -25,7 +26,7 @@ public:
     NON_COPYABLE(CameraResource);
     NON_MOVABLE(CameraResource);
 
-    void Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<glm::mat4> view = std::nullopt, std::optional<glm::mat4> proj = std::nullopt);
+    void Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<CameraComponent> cameraComponent = std::nullopt, std::optional<glm::mat4> view = std::nullopt, std::optional<glm::mat4> proj = std::nullopt);
 
     vk::DescriptorSet DescriptorSet(uint32_t frameIndex) const { return _descriptorSets[frameIndex]; }
     ResourceHandle<Buffer> BufferResource(uint32_t frameIndex) const { return _buffers[frameIndex]; }

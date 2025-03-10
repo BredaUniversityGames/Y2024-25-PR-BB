@@ -1,8 +1,8 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
-import "camera.wren" for CameraVariables
-import "player.wren" for PlayerVariables
+import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "gameplay/camera.wren" for CameraVariables
+import "gameplay/player.wren" for PlayerVariables
 
 class Main {
 
@@ -53,7 +53,7 @@ class Main {
 
         __camera.AddTransformComponent()
         __camera.AddNameComponent().name = "Camera"
-        __camera.AddAudioListenerComponent()
+        __camera.AddAudioListenerTag()
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = 45.0
         cameraProperties.nearPlane = 0.5

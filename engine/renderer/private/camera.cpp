@@ -117,7 +117,7 @@ glm::vec4 normalizePlane(glm::vec4 p)
     return p / glm::length(glm::vec3(p));
 }
 
-void CameraResource::Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<glm::mat4> view, std::optional<glm::mat4> proj)
+void CameraResource::Update(uint32_t currentFrame, ECSModule& ecs, entt::entity entity, std::optional<CameraComponent> cameraComponent, std::optional<glm::mat4> view, std::optional<glm::mat4> proj)
 {
     GPUCamera cameraBuffer {};
 
@@ -134,7 +134,7 @@ void CameraResource::Update(uint32_t currentFrame, ECSModule& ecs, entt::entity 
     }
     cameraBuffer.inverseView = glm::inverse(cameraBuffer.view);
 
-    auto& camera = ecs.GetRegistry().get<CameraComponent>(entity);
+    auto& camera = cameraComponent.has_value() ? cameraComponent.value() : ecs.GetRegistry().get<CameraComponent>(entity);
 
     switch (camera.projection)
     {

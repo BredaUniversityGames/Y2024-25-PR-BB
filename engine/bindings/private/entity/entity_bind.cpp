@@ -179,8 +179,7 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
 
-    entityClass.func<&WrenEntity::GetComponent<AudioListenerComponent>>("GetAudioListenerComponent");
-    entityClass.func<&WrenEntity::AddDefaultComponent<AudioListenerComponent>>("AddAudioListenerComponent");
+    entityClass.func<&WrenEntity::AddTag<AudioListenerComponent>>("AddAudioListenerTag");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
