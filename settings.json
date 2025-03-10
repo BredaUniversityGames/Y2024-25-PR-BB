@@ -28,18 +28,19 @@
             "iterations": 12
         },
         "bloom": {
-            "cereal_class_version": 0,
+            "cereal_class_version": 1,
             "colorWeights": {
                 "x": 0.2125999927520752,
                 "y": 0.7152000069618225,
                 "z": 0.0722000002861023
             },
-            "strength": 0.4000000059604645,
-            "gradientStrength": 0.05000000819563866,
-            "maxBrightnessExtraction": 5.0
+            "strength": 0.5,
+            "gradientStrength": 0.05000000074505806,
+            "maxBrightnessExtraction": 5.0,
+            "filterRadius": 0.004999999888241291
         },
         "tonemapping": {
-            "cereal_class_version": 0,
+            "cereal_class_version": 5,
             "tonemappingFunction": 7,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
@@ -49,11 +50,51 @@
             "lensDistortionCubicIntensity": -0.23399999737739564,
             "screenScale": 0.9879999756813049,
             "enableToneAdjustments": true,
-            "brightness": 0.014999999664723874,
-            "contrast": 1.0399999618530274,
-            "saturation": 0.8899999856948853,
+            "brightness": 0.0,
+            "contrast": 1.2000000476837159,
+            "saturation": 0.8399999737739563,
             "vibrance": 0.9599999785423279,
-            "hue": 0.0
+            "hue": 0.0,
+            "enablePixelization": true,
+            "minPixelSize": 2.009999990463257,
+            "maxPixelSize": 4.010000228881836,
+            "pixelizationLevels": 8.0,
+            "pixelizationDepthBias": 20.0,
+            "enablePalette": true,
+            "ditherAmount": 0.15000000596046449,
+            "paletteAmount": 0.800000011920929,
+            "palette": {
+                "value0": {
+                    "x": 0.47058823704719546,
+                    "y": 0.47058823704719546,
+                    "z": 0.47058823704719546,
+                    "w": 1.0
+                },
+                "value1": {
+                    "x": 0.0235294122248888,
+                    "y": 0.0235294122248888,
+                    "z": 0.0235294122248888,
+                    "w": 1.0
+                },
+                "value2": {
+                    "x": 0.3686274588108063,
+                    "y": 0.16862745583057404,
+                    "z": 0.08627451211214066,
+                    "w": 1.0
+                },
+                "value3": {
+                    "x": 0.6745098233222961,
+                    "y": 0.07058823853731156,
+                    "z": 0.07058823853731156,
+                    "w": 1.0
+                },
+                "value4": {
+                    "x": 0.05882352963089943,
+                    "y": 0.05882352963089943,
+                    "z": 0.05882352963089943,
+                    "w": 1.0
+                }
+            }
         }
     }
 }

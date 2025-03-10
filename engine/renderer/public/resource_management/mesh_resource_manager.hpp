@@ -24,7 +24,7 @@ public:
     ~MeshResourceManager() = default;
 
     template <typename TVertex>
-    ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
+    ResourceHandle<GPUMesh> Create(SingleTimeCommands& uploadCommands, const CPUMesh<TVertex>& cpuMesh, const std::vector<ResourceHandle<GPUMaterial>>& materials, BatchBuffer& batchBuffer)
     {
         uint32_t correctedIndex = cpuMesh.materialIndex;
 
@@ -35,15 +35,16 @@ public:
         }
 
         const ResourceHandle<GPUMaterial> material = materials.at(correctedIndex);
+        GPUMesh gpuMesh {};
 
-        GPUMesh gpuMesh = CreateMesh(cpuMesh, material, batchBuffer);
+        gpuMesh = CreateMesh(uploadCommands, cpuMesh, material, batchBuffer);
         return ResourceManager::Create(std::move(gpuMesh));
     }
 
     template <typename TVertex>
-    ResourceHandle<GPUMesh> Create(const CPUMesh<TVertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+    ResourceHandle<GPUMesh> Create(SingleTimeCommands& uploadCommands, const CPUMesh<TVertex>& data, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
     {
-        GPUMesh mesh = CreateMesh(data, material, batchBuffer);
+        GPUMesh mesh = CreateMesh(uploadCommands, data, material, batchBuffer);
         return ResourceManager::Create(std::move(mesh));
     }
 
@@ -52,18 +53,16 @@ private:
     std::shared_ptr<VulkanContext> _vkContext;
 
     template <typename TVertex>
-    GPUMesh CreateMesh(const CPUMesh<TVertex>& cpuMesh, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
+    GPUMesh CreateMesh(SingleTimeCommands& uploadCommands, const CPUMesh<TVertex>& cpuMesh, ResourceHandle<GPUMaterial> material, BatchBuffer& batchBuffer)
     {
         GPUMesh gpuMesh;
         gpuMesh.material = material;
         gpuMesh.count = cpuMesh.indices.empty() ? cpuMesh.vertices.size() : cpuMesh.indices.size();
 
-        SingleTimeCommands commands { _vkContext };
-
-        gpuMesh.vertexOffset = batchBuffer.AppendVertices(cpuMesh.vertices, commands);
+        gpuMesh.vertexOffset = batchBuffer.AppendVertices(cpuMesh.vertices, uploadCommands);
         if (!cpuMesh.indices.empty())
         {
-            gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, commands);
+            gpuMesh.indexOffset = batchBuffer.AppendIndices(cpuMesh.indices, uploadCommands);
         }
         gpuMesh.boundingRadius = cpuMesh.boundingRadius;
         gpuMesh.boundingBox = cpuMesh.boundingBox;

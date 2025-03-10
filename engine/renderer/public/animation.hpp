@@ -14,6 +14,21 @@ using Rotation = glm::quat;
 using Scale = glm::vec3;
 
 template <typename T>
+inline T interpolate(const T& a, const T& b, float t);
+
+template <>
+inline glm::vec3 interpolate<glm::vec3>(const glm::vec3& a, const glm::vec3& b, float t)
+{
+    return glm::mix(a, b, t);
+}
+
+template <>
+inline glm::quat interpolate<glm::quat>(const glm::quat& a, const glm::quat& b, float t)
+{
+    return glm::slerp(a, b, t);
+}
+
+template <typename T>
 struct AnimationSpline
 {
     T Sample(float time)
@@ -29,12 +44,10 @@ struct AnimationSpline
         {
             return values.back();
         }
-
         uint32_t i = it - timestamps.begin();
 
         float t = (time - timestamps[i - 1]) / (timestamps[i] - timestamps[i - 1]);
-
-        return glm::mix(values[i - 1], values[i], t);
+        return interpolate(values[i - 1], values[i], t);
     }
 
     std::vector<float> timestamps;
@@ -74,7 +87,7 @@ struct Animation
 
         if (time > duration && looping)
         {
-            time = 0.0f;
+            time = std::fmod(time, duration);
         }
     }
 };

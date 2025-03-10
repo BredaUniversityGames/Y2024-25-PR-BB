@@ -5,7 +5,6 @@
 #include "components/transform_helpers.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
-#include "emitter_component.hpp"
 #include "engine.hpp"
 #include "gpu_resources.hpp"
 #include "graphics_context.hpp"
@@ -24,7 +23,7 @@ ModuleTickOrder ParticleModule::Init(Engine& engine)
     _context = engine.GetModule<RendererModule>().GetRenderer()->GetContext();
     _ecs = &engine.GetModule<ECSModule>();
 
-    return ModuleTickOrder::ePostRender;
+    return ModuleTickOrder::ePreRender;
 }
 
 void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
@@ -33,7 +32,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for (const auto entity : emitterView)
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
-        if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+        if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
@@ -44,44 +43,46 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
 
-        // first remove active tags from inactive emitters and continue
-        if (emitter.emitOnce)
-        {
-            _ecs->GetRegistry().remove<ParticleEmitterComponent>(entity);
-            _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
-            continue;
-        }
-
         // update position and velocity
         if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
-            const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+            const auto joltTranslation = _physics->GetBodyInterface().GetWorldTransform(rb.bodyID).GetTranslation();
             emitter.emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
+            emitter.emitter.position += emitter.positionOffset;
 
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
+            if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             {
                 _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
                 continue;
             }
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+            if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
             {
-                JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+                JPH::Vec3 rbVelocity = _physics->GetBodyInterface().GetLinearVelocity(rb.bodyID);
                 emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             }
         }
         else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
         {
             emitter.emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
+            emitter.emitter.position += emitter.positionOffset;
         }
 
         // update timers
-        if (emitter.currentEmitDelay < 0.0f)
+        const float deltaTime = static_cast<double>(engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3);
+        emitter.currentEmitDelay -= deltaTime;
+        for (auto& burst : emitter.bursts)
         {
-            emitter.currentEmitDelay = emitter.maxEmitDelay;
+            if (burst.startTime > 0.0f)
+            {
+                burst.startTime -= deltaTime;
+            }
+            else
+            {
+                burst.currentInterval -= deltaTime;
+            }
         }
-        emitter.currentEmitDelay -= engine.GetModule<TimeModule>().GetDeltatime().count() * 1e-3;
     }
 }
 
@@ -168,7 +169,7 @@ void ParticleModule::LoadEmitterPresets()
         auto image = GetEmitterImage("point_03.png");
 
         EmitterPreset preset;
-        preset.emitDelay = 1.0f;
+        preset.emitDelay = 0.5f;
         preset.mass = 0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
@@ -184,7 +185,6 @@ void ParticleModule::LoadEmitterPresets()
     }
 
     {
-        // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("star.png");
 
         // hardcoded test emitter preset for now
@@ -205,7 +205,6 @@ void ParticleModule::LoadEmitterPresets()
     }
 
     {
-        // TODO: serialize emitter presets and load from file
         auto image = GetEmitterImage("swoosh.png");
 
         // hardcoded test emitter preset for now
@@ -296,12 +295,12 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
-        const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+        const auto joltTranslation = _physics->GetBodyInterface().GetWorldTransform(rb.bodyID).GetTranslation();
         emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
 
-        if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+        if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
-            JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+            JPH::Vec3 rbVelocity = _physics->GetBodyInterface().GetLinearVelocity(rb.bodyID);
             emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
@@ -332,10 +331,36 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     component.maxEmitDelay = preset.emitDelay;
     component.currentEmitDelay = preset.emitDelay;
     component.emitOnce = emitOnce;
+    component.count = emitter.count;
+    std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
 
     _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eIsActive) || emitOnce)
     {
         _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
+    }
+}
+
+void ParticleModule::SpawnBurst(entt::entity entity, uint32_t count, float maxInterval, float startTime, bool loop, uint32_t cycles)
+{
+    ParticleBurst burst;
+    burst.count = count;
+    burst.maxInterval = maxInterval;
+    burst.loop = loop;
+    burst.cycles = cycles;
+    burst.startTime = startTime;
+    SpawnBurst(entity, std::move(burst));
+}
+
+void ParticleModule::SpawnBurst(entt::entity entity, const ParticleBurst& burst)
+{
+    if (_ecs->GetRegistry().all_of<ParticleEmitterComponent>(entity))
+    {
+        auto& emitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
+        emitter.bursts.emplace_back(burst);
+    }
+    else
+    {
+        bblog::error("Particle Emitter component from entity %i not found!", static_cast<size_t>(entity));
     }
 }

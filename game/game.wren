@@ -1,6 +1,6 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
+import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -20,11 +20,35 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(),engine.GetECS(),Vec3.new(-18.3, 30.3, 193.8),1.7,0.5)
+
+        //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
+      
+        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
+        if (previousPlayer) {
+            engine.GetECS().DestroyEntity(previousPlayer)
+        }
+        
+        __playerController = engine.GetECS().NewEntity()
+
+        __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
+        __playerController.AddPlayerTag()
+        __playerController.AddNameComponent().name = "PlayerController"
+
+        var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
+        __playerController.AddRigidbodyComponent(rb)
+    
+        
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Armature|Armature|Reload", 1.0, false)
+        gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
+
+        var clown = engine.GetECS().GetEntityByName("Clown")
+        var clownAnimations = clown.GetAnimationControlComponent()
+        clownAnimations.Play("NarutoRun", 1.0, true)
+        clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         if (__camera) {
             System.print("Player is online!")
@@ -75,13 +99,19 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
+        __testEmitter = engine.GetECS().NewEntity()
+        {   // Test emitter
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        }
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
         __ultimateCharge = 0
         __ultimateActive = false
 
-        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
@@ -110,24 +140,15 @@ class Main {
         }
 
         if (__frameTimer > 1000.0) {
-            //System.print("%(__counter) Frames per second")
             __frameTimer = __frameTimer - 1000.0
             __counter = 0
         }
-
-
-
-        if (engine.GetInput().GetDigitalAction("Jump").IsPressed()) {
-            //System.print("Player Jumped!")
-
-        }
-
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
         }
 
-        __playerMovement.Update(engine,dt,__playerController, __camera)
+        __playerMovement.Update(engine, dt, __playerController, __camera)
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -149,9 +170,7 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
-            System.print("Activate ultimate")
             if (__ultimateCharge == 1000) {
-
                 __activeWeapon = __armory[Weapons.shotgun]
                 __activeWeapon.equip()
             }
@@ -170,7 +189,6 @@ class Main {
             __activeWeapon = __armory[Weapons.shotgun]
             __activeWeapon.equip(engine)
         }
-
 
         var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

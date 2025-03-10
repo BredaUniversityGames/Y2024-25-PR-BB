@@ -61,17 +61,18 @@ struct Settings
 
     struct Bloom
     {
-        VERSION(0);
+        VERSION(1);
 
         glm::vec3 colorWeights { 0.2126f, 0.7152f, 0.0722f };
         float strength { 0.8f };
         float gradientStrength { 0.2f };
         float maxBrightnessExtraction { 5.0f };
+        float filterRadius { 0.005f };
     } bloom;
 
     struct Tonemapping
     {
-        VERSION(0);
+        VERSION(5);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -90,6 +91,25 @@ struct Settings
         float saturation;
         float vibrance;
         float hue;
+
+        // pixelization
+        bool enablePixelization;
+        float minPixelSize;
+        float maxPixelSize;
+        float pixelizationLevels;
+        float pixelizationDepthBias;
+
+        // fixed palette
+        bool enablePalette;
+        float ditherAmount = 0.15f;
+        float paletteAmount = 0.8f;
+        glm::vec4 palette[5] = {
+            glm::vec4(14.0f, 193.0f, 4.0f, 256.0f) / 256.0f, // Black
+            glm::vec4(6.0f, 6.0f, 6.0f, 256.0f) / 256.0f, // White
+            glm::vec4(94.0f, 43.0f, 22.0f, 256.0f) / 256.0f, // Red
+            glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
+            glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
+        };
     } tonemapping;
 };
 
@@ -105,11 +125,11 @@ VISITABLE_STRUCT(Settings::FXAA, enableFXAA, edgeThresholdMin, edgeThresholdMax,
 CLASS_SERIALIZE_VERSION(Settings::FXAA);
 CLASS_VERSION(Settings::FXAA);
 
-VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction);
+VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction, filterRadius);
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

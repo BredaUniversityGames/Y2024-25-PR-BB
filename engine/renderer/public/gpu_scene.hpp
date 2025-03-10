@@ -7,6 +7,7 @@
 #include "settings.hpp"
 #include "vulkan_include.hpp"
 
+#include <entt/entity/entity.hpp>
 #include <memory>
 #include <tracy/TracyVulkan.hpp>
 
@@ -41,10 +42,10 @@ struct RenderSceneDescription
 };
 
 constexpr uint32_t MAX_STATIC_INSTANCES = 1 << 14;
-constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 10;
+constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 13;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
+constexpr uint32_t MAX_BONES = 1 << 14;
 constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 256;
-constexpr uint32_t MAX_BONES = 1 << 11;
 
 constexpr uint32_t CLUSTER_X = 16, CLUSTER_Y = 9, CLUSTER_Z = 24;
 constexpr uint32_t CLUSTER_SIZE = CLUSTER_X * CLUSTER_Y * CLUSTER_Z;
@@ -234,11 +235,13 @@ private:
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinTransformBuffers;
 
     vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSetLayout _redirectDSL;
     vk::DescriptorSetLayout _hzbImageDSL;
+
+    std::unordered_map<entt::entity, uint32_t> _skeletonBoneOffset {};
 
     void UpdateSceneData(uint32_t frameIndex);
     void UpdatePointLightArray(uint32_t frameIndex);

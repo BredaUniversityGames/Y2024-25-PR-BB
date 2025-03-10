@@ -22,8 +22,8 @@ RendererModule::RendererModule()
 ModuleTickOrder RendererModule::Init(Engine& engine)
 {
     auto& ecs = engine.GetModule<ECSModule>();
-    _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
 
+    _context = std::make_shared<GraphicsContext>(engine.GetModule<ApplicationModule>().GetVulkanInfo());
     _renderer = std::make_shared<Renderer>(engine.GetModule<ApplicationModule>(), engine.GetModule<UIModule>().GetViewport(), _context, ecs);
 
     ecs.AddSystem<AnimationSystem>(*this);
@@ -50,6 +50,7 @@ void RendererModule::Tick(MAYBE_UNUSED Engine& engine)
 
 std::vector<ResourceHandle<GPUModel>> RendererModule::LoadModels(const std::vector<CPUModel>& cpuModels)
 {
+    ZoneScopedN("Loading models into Renderer");
     auto result = _renderer->LoadModels(cpuModels);
     _renderer->UpdateBindless();
 

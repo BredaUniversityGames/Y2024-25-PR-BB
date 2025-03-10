@@ -3,6 +3,8 @@
 #include "common.hpp"
 #include "system_interface.hpp"
 
+#include "physics_module.hpp"
+
 class AudioModule;
 class AudioSystem final : public SystemInterface
 {
@@ -19,6 +21,6 @@ public:
     std::string_view GetName() override { return "AudioSystem"; }
 
 private:
-    ECSModule& _ecs;
+    MAYBE_UNUSED ECSModule& _ecs;
     AudioModule& _audioModule;
 };

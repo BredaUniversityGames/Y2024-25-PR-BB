@@ -5,7 +5,6 @@
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/is_static_draw.hpp"
-#include "components/joint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
@@ -30,6 +29,8 @@
 #include "vulkan_helper.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/dual_quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
 
@@ -225,7 +226,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
         skinnedInstances[count].materialIndex = mesh->material.Index();
         skinnedInstances[count].boundingRadius = mesh->boundingRadius;
-        skinnedInstances[count].boneOffset = _ecs.GetRegistry().get<SkeletonComponent>(skinnedMeshComponent.skeletonEntity).boneOffset;
+        skinnedInstances[count].boneOffset = _skeletonBoneOffset[skinnedMeshComponent.skeletonEntity];
         skinnedInstances[count].isStaticDraw = true;
 
         _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
@@ -235,7 +236,6 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
                 .firstInstance = 0,
-
             },
         });
 
@@ -351,13 +351,11 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 {
-    auto jointView = _ecs.GetRegistry().view<JointComponent, WorldMatrixComponent>();
-    static std::array<glm::mat4, MAX_BONES> skinMatrices {};
-    static std::unordered_map<entt::entity, uint32_t> skeletonBoneOffset {};
-    skeletonBoneOffset.clear();
+    auto jointView = _ecs.GetRegistry().view<JointSkinDataComponent, JointWorldTransformComponent>();
+    static std::array<glm::mat2x4, MAX_BONES> skinDualQuats {};
 
     // Sort joints based on their skeletons. This means that all joints that share a skeleton will be kept together.
-    _ecs.GetRegistry().sort<JointComponent>([](const JointComponent& a, const JointComponent& b)
+    _ecs.GetRegistry().sort<JointSkinDataComponent>([](const JointSkinDataComponent& a, const JointSkinDataComponent& b)
         { return a.skeletonEntity < b.skeletonEntity; });
 
     // While traversing all joints we keep track of skeleton we're on, this helps for determining when we switch to another skeleton.
@@ -368,34 +366,39 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     uint32_t highestIndex = 0;
     for (entt::entity entity : jointView)
     {
-        const auto& joint = jointView.get<JointComponent>(entity);
-        const auto& matrixComponent = jointView.get<WorldMatrixComponent>(entity);
-        const glm::mat4& worldTransform = TransformHelpers::GetWorldMatrix(matrixComponent);
+        const auto& joint = jointView.get<JointSkinDataComponent>(entity);
+        const auto& jointMatrixComponent = jointView.get<JointWorldTransformComponent>(entity);
+        const glm::mat4& jointWorldTransform = jointMatrixComponent.world;
 
         if (lastSkeleton != joint.skeletonEntity)
         {
             lastSkeleton = joint.skeletonEntity;
             offset += highestIndex + 1;
 
-            skeletonBoneOffset[lastSkeleton] = offset;
+            _skeletonBoneOffset[lastSkeleton] = offset;
             highestIndex = 0;
         }
 
         highestIndex = glm::max(highestIndex, joint.jointIndex);
 
-        skinMatrices[offset + joint.jointIndex] = worldTransform * joint.inverseBindMatrix;
+        glm::mat4 skinMatrix = jointWorldTransform * joint.inverseBindMatrix;
+
+        glm::vec3 scale;
+        glm::quat orientation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::dualquat dquat;
+        if (glm::decompose(skinMatrix, scale, orientation, translation, skew, perspective))
+        {
+            dquat[0] = orientation;
+            dquat[1] = glm::quat(0.0, translation.x, translation.y, translation.z) * orientation * 0.5f;
+            skinDualQuats[offset + joint.jointIndex] = glm::mat2x4_cast(dquat);
+        }
     }
 
-    // Apply all the offsets, to the skeletons, so we know their respective offsets for in the shader.
-    auto skeletonView = _ecs.GetRegistry().view<SkeletonComponent>();
-    for (auto [entity, offset] : skeletonBoneOffset)
-    {
-        auto& skeleton = skeletonView.get<SkeletonComponent>(entity);
-        skeleton.boneOffset = offset;
-    }
-
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
-    std::memcpy(buffer->mappedPtr, skinMatrices.data(), sizeof(glm::mat4) * skinMatrices.size());
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[frameIndex]);
+    std::memcpy(buffer->mappedPtr, skinDualQuats.data(), sizeof(glm::mat2x4) * skinDualQuats.size());
 }
 
 void GPUScene::InitializeSceneBuffers()
@@ -531,7 +534,7 @@ void GPUScene::CreateSkinDescriptorSetLayout()
     };
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
-    std::vector<std::string_view> names { "SkinningMatrices" };
+    std::vector<std::string_view> names { "SkinningTransforms" };
     _skinDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
@@ -753,13 +756,13 @@ void GPUScene::UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex)
 
     for (size_t j = 0; j < buffers.size(); j++)
     {
-        bufferInfos.at(j) = {
+        bufferInfos.at(j) = vk::DescriptorBufferInfo {
             .buffer = buffers.at(j)->buffer,
             .offset = 0,
             .range = vk::WholeSize,
         };
 
-        writeDescriptorSets.at(j) = {
+        writeDescriptorSets.at(j) = vk::WriteDescriptorSet {
             .dstSet = _clusterCullingData.descriptorSets[frameIndex],
             .dstBinding = static_cast<uint32_t>(j),
             .dstArrayElement = 0,
@@ -806,7 +809,7 @@ void GPUScene::UpdateObjectInstancesDescriptorSet(uint32_t frameIndex)
 
 void GPUScene::UpdateSkinDescriptorSet(uint32_t frameIndex)
 {
-    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[frameIndex]);
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[frameIndex]);
 
     vk::DescriptorBufferInfo bufferInfo {
         .buffer = buffer->buffer,
@@ -932,22 +935,22 @@ void GPUScene::CreateObjectInstancesBuffers()
 }
 void GPUScene::CreateSkinBuffers()
 {
-    for (uint32_t i = 0; i < _skinBuffers.size(); ++i)
+    for (uint32_t i = 0; i < _skinTransformBuffers.size(); ++i)
     {
         BufferCreation creation {
-            .size = sizeof(glm::mat4) * MAX_BONES,
+            .size = sizeof(glm::mat2x4) * MAX_BONES,
             .usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
             .isMappable = true,
             .memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             .name = "Skin matrices buffer",
         };
-        _skinBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
+        _skinTransformBuffers[i] = _context->Resources()->BufferResourceManager().Create(creation);
 
-        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinBuffers[i]);
+        const Buffer* skinBuffer = _context->Resources()->BufferResourceManager().Access(_skinTransformBuffers[i]);
         for (uint32_t j = 0; j < MAX_BONES; ++j)
         {
-            glm::mat4 data { 1.0f };
-            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat4) * j, &data, sizeof(glm::mat4));
+            glm::mat2x4 data { glm::mat2x4_cast(glm::dualquat {}) };
+            std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat2x4) * j, &data, sizeof(glm::mat2x4));
         }
     }
 }
