@@ -2,6 +2,7 @@
 
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
+#include "settings.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -16,7 +17,7 @@ struct RenderSceneDescription;
 class LightingPass final : public FrameGraphRenderPass
 {
 public:
-    LightingPass(const std::shared_ptr<GraphicsContext>& context, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
+    LightingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Lighting& lightingSettings, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget);
     ~LightingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -35,6 +36,8 @@ private:
         glm::vec2 padding;
         glm::ivec3 clusterDimensions;
         float shadowMapSize;
+        float ambientStrength;
+        float ambientShadowStrength;
     } _pushConstants;
 
     void CreatePipeline();
@@ -48,4 +51,5 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
+    const Settings::Lighting& _lightingSettings;
 };

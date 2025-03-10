@@ -10,8 +10,9 @@
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
 
-LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
+LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Lighting& lightingSettings, const GPUScene& scene, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings, const ResourceHandle<GPUImage>& ssaoTarget)
     : _pushConstants()
+    , _lightingSettings(lightingSettings)
     , _context(context)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
@@ -34,6 +35,9 @@ LightingPass::LightingPass(const std::shared_ptr<GraphicsContext>& context, cons
 
 void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
 {
+    _pushConstants.ambientStrength = _lightingSettings.ambientStrength;
+    _pushConstants.ambientShadowStrength = _lightingSettings.ambientShadowStrength;
+
     TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pass");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
 
