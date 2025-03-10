@@ -7,6 +7,7 @@
 #include "cheats_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -162,6 +163,21 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
     return entities;
 }
 
+std::vector<WrenEntity> GetChildren(ECSModule& self, const WrenEntity& entity)
+{
+    auto& relationship = self.GetRegistry().get<RelationshipComponent>(entity.entity);
+
+    std::vector<WrenEntity> entities {};
+    for (entt::entity entity = relationship.first; entity != entt::null;)
+    {
+        entities.emplace_back(WrenEntity { entity, &self.GetRegistry() });
+
+        entity = self.GetRegistry().get<RelationshipComponent>(entity).next;
+    }
+
+    return entities;
+}
+
 }
 
 void BindEntityAPI(wren::ForeignModule& module)
@@ -176,6 +192,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
+        wrenClass.funcExt<bindings::GetChildren>("GetChildren");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
     }
     // Components

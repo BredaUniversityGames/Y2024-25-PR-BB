@@ -51,7 +51,7 @@ class MeleeEnemy {
             body.SetVelocity(velocity)
 
             // Set forward rotation
-            _rootEntity.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(forwardVector.y, 0, forwardVector.z))
+            _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
         }
     }
 
@@ -78,6 +78,9 @@ class MeleeEnemy {
         var rb = Rigidbody.new(__engine.GetPhysics(), __physicsShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetFriction(0)
+
+        var animations = _rootEntity.GetAnimationControlComponent()
+        animations.Play("Run", 1.0, true)
     }
 
     Destroy() {

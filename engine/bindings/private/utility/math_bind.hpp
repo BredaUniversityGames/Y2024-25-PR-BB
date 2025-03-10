@@ -57,6 +57,10 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static glm::quat Slerp(glm::quat start, glm::quat end, float t)
+    {
+        return glm::slerp(start, end, t);
+    }
     static float Dot(glm::vec3 a, glm::vec3 b)
     {
         return glm::dot(a, b);
@@ -92,6 +96,15 @@ public:
     static glm::quat AngleAxis(const float a, glm::vec3 vec)
     {
         return glm::angleAxis(a, vec);
+    }
+    static glm::quat LookAt(const glm::vec3& direction, const glm::vec3& up)
+    {
+        glm::vec3 forward = glm::normalize(direction);
+        glm::vec3 right = glm::normalize(glm::cross(up, forward));
+        glm::vec3 newUp = glm::cross(forward, right);
+
+        glm::mat3 rotationMatrix(right, newUp, forward);
+        return glm::quat_cast(rotationMatrix);
     }
     static glm::vec3 RotateForwardVector(glm::vec3 forward, glm::vec2 rotation, glm::vec3 up)
     {
@@ -179,6 +192,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
         mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
         mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+        mathUtilClass.funcStatic<&MathUtil::Slerp>("Slerp");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
@@ -186,6 +200,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Min>("Min");
         mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
+        mathUtilClass.funcStatic<&MathUtil::LookAt>("LookAt");
         mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
