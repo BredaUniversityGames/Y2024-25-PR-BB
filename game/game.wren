@@ -146,6 +146,8 @@ class Main {
     }
 
     static Shutdown(engine) {
+
+        __camera.DetachChild(__gun)
         System.print("Shutdown script!")
     }
 
