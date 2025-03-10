@@ -78,7 +78,7 @@ void main()
 
         // only visible particles go into the rendering buffer after frustum culling
         float biggestSize = max(particle.size.x, particle.size.y);
-        if (IsVisible(particle.position, biggestSize))
+        if (IsVisible(particle.position, biggestSize * 0.5))
         {
             uint culledIndex = atomicAdd(culledInstances.count, 1);
             ParticleInstance instance;
