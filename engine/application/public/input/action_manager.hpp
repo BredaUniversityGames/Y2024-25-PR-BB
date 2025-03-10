@@ -61,11 +61,11 @@ using GameActions = std::vector<ActionSet>;
 struct DigitalActionResult
 {
     // True once upon pressed.
-    bool IsPressed() const { return HasAnyFlags(value, DigitalActionType::ePressed); }
+    NO_DISCARD bool IsPressed() const { return HasAnyFlags(value, DigitalActionType::ePressed); }
     // True all the time upon held.
-    bool IsHeld() const { return HasAnyFlags(value, DigitalActionType::eHeld); }
+    NO_DISCARD bool IsHeld() const { return HasAnyFlags(value, DigitalActionType::eHeld); }
     // True once upon released.
-    bool IsReleased() const { return HasAnyFlags(value, DigitalActionType::eReleased); }
+    NO_DISCARD bool IsReleased() const { return HasAnyFlags(value, DigitalActionType::eReleased); }
 
     DigitalActionType value = DigitalActionType::eNone;
 };
@@ -90,6 +90,9 @@ public:
 
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
+
+    // Gets the path to the image containing the controller glyph to be shown for the action given.
+    NO_DISCARD virtual std::string GetDigitalActionControllerGlyphImagePath(std::string_view actionName) const = 0;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;
