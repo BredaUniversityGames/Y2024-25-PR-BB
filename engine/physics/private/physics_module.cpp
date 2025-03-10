@@ -1,99 +1,95 @@
 ﻿#include "physics_module.hpp"
+
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/RegisterTypes.h>
+#include <cmath>
+#include <glm/gtx/rotate_vector.hpp>
+
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
+#include "physics/jolt_to_glm.hpp"
 #include "systems/physics_system.hpp"
-
-#include "application_module.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 #include "time_module.hpp"
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
-
-    // Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
-    // This needs to be done before any other Jolt function is called.
+    // Register allocators for Jolt, uses malloc and free by default
     JPH::RegisterDefaultAllocator();
 
-    // Create a factory, this class is responsible for creating instances of classes based on their name or hash and is mainly used for deserialization of saved data.
-    // It is not directly used in this example but still required.
+    // Create a factory, used for making objects out of serialization data
     JPH::Factory::sInstance = new JPH::Factory();
 
-    // Register all physics types with the factory and install their collision handlers with the CollisionDispatch class.
-    // If you have your own custom shape types you probably need to register their handlers with the CollisionDispatch before calling this function.
-    // If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
+    _debugRenderer = std::make_unique<PhysicsDebugRenderer>();
+    JPH::DebugRenderer::sInstance = _debugRenderer.get();
+
+    // Register all physics types with the factory and install their collision handlers with the CollisionDispatch class
     JPH::RegisterTypes();
 
-    // We need a temp allocator for temporary allocations during the physics update. We're
-    // pre-allocating 10 MB to avoid having to do allocations during the physics update.
-    // If you don't want to pre-allocate you can also use TempAllocatorMalloc to fall back to
-    // malloc / free.
-    _tempAllocator = new JPH::TempAllocatorImpl(10 * 1024 * 1024);
+    _tempAllocator = std::make_unique<JPH::TempAllocatorImpl>(PHYSICS_TEMP_ALLOCATOR_SIZE);
 
-    // We need a job system that will execute physics jobs on multiple threads. Typically
-    // you would implement the JobSystem interface yourself and let Jolt Physics run on top
-    // of your own job scheduler. JobSystemThreadPool is an example implementation.
-    _jobSystem = new JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, JPH::thread::hardware_concurrency() - 1);
+    _jobSystem = std::make_unique<JPH::JobSystemThreadPool>(
+        JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, JPH::thread::hardware_concurrency() - 1);
 
-    // Create mapping table from object layer to broadphase layer
-    // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    _broadPhaseLayerInterface = new BPLayerInterfaceImpl();
-
-    // Create class that filters object vs broadphase layers
-    // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    _objectVsBroadphaseLayerFilter = new ObjectVsBroadPhaseLayerFilterImpl();
-
-    // Create class that filters object vs object layers
-    // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
-    _objectVsObjectLayerFilter = new ObjectLayerPairFilterImpl();
+    _broadphaseLayerInterface = MakeBroadPhaseLayerImpl();
+    _objectVsBroadphaseLayerFilter = MakeObjectVsBroadPhaseLayerFilterImpl();
+    _objectVsObjectLayerFilter = MakeObjectPairFilterImpl();
 
     // Now we can create the actual physics system.
-    physicsSystem = new JPH::PhysicsSystem();
-    physicsSystem->Init(_maxBodies, _numBodyMutexes, _maxBodyPairs, _maxContactConstraints, *_broadPhaseLayerInterface, *_objectVsBroadphaseLayerFilter, *_objectVsObjectLayerFilter);
-    physicsSystem->SetGravity(JPH::Vec3Arg(0, -9.81, 0));
+    _physicsSystem = std::make_unique<JPH::PhysicsSystem>();
 
-    debugRenderer = new DebugRendererSimpleImpl();
-    JPH::DebugRenderer::sInstance = debugRenderer;
-    // A body activation listener gets notified when bodies activate and go to sleep
-    // Note that this is called from a job so whatever you do here needs to be thread safe.
-    // Registering one is entirely optional.
-    _bodyActivationListener
-        = new MyBodyActivationListener();
-    physicsSystem->SetBodyActivationListener(_bodyActivationListener);
+    _physicsSystem->Init(
+        PHYSICS_MAX_BODIES, PHYSICS_MUTEX_COUNT,
+        PHYSICS_MAX_BODY_PAIRS, PHYSICS_MAX_CONTACT_CONSTRAINTS,
+        *_broadphaseLayerInterface, *_objectVsBroadphaseLayerFilter, *_objectVsObjectLayerFilter);
+
+    _physicsSystem->SetGravity(JPH::Vec3(0, -PHYSICS_GRAVITATIONAL_CONSTANT, 0));
 
     // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
     // Note that this is called from a job so whatever you do here needs to be thread safe.
-    // Registering one is entirely optional.
-    _contactListener = new MyContactListener();
-    physicsSystem->SetContactListener(_contactListener);
-
-    // The main way to interact with the bodies in the physics system is through the body interface. There is a locking and a non-locking
-    // variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
-    bodyInterface = &physicsSystem->GetBodyInterface();
-    // just for testing now
+    _contactListener = std::make_unique<PhysicsContactListener>();
+    _physicsSystem->SetContactListener(_contactListener.get());
 
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
+
+    RigidbodyComponent::SetupRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
 
     return ModuleTickOrder::ePreTick;
 }
 
 void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+    RigidbodyComponent::DisconnectRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
     JPH::UnregisterTypes();
-    // Destroy the factory
+
     delete JPH::Factory::sInstance;
     JPH::Factory::sInstance = nullptr;
-
-    delete _tempAllocator;
-    delete _jobSystem;
 }
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    // Step the world
-    physicsSystem->Update(engine.GetModule<TimeModule>().GetDeltatime().count() / 1000.0f, _collisionSteps, _tempAllocator, _jobSystem);
+    float deltatimeSeconds = engine.GetModule<TimeModule>().GetDeltatime().count() * 0.001f;
 
-    engine.GetModule<ECSModule>().GetSystem<PhysicsSystem>()->CleanUp();
+    // This is being optimistic: we always do one collision step no matter how small the dt
+    float updatesNeeded = static_cast<int>(glm::ceil(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND));
+
+    // Step the world
+    auto error = _physicsSystem->Update(deltatimeSeconds, updatesNeeded, _tempAllocator.get(), _jobSystem.get());
+
+    if (error != JPH::EPhysicsUpdateError::None)
+    {
+        bblog::error("[PHYSICS] Simulation step error has occurred");
+    }
+
+    JPH::BodyManager::DrawSettings drawSettings;
+
+    if (_debugRenderer->GetState())
+        _physicsSystem->DrawBodies(drawSettings, _debugRenderer.get());
+
+    _debugRenderer->NextFrame();
 }
 
 std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
@@ -104,7 +100,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     JPH::Vec3 dir(direction.x, direction.y, direction.z);
     dir = dir.Normalized();
     const JPH::RayCast ray(start, dir * distance);
-    debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+    _debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
 
     // JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
     JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector2;
@@ -112,7 +108,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     // physicsSystem->GetBroadPhaseQuery().CastRay(ray, collector);
 
     JPH::RayCastSettings settings;
-    physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
+    _physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
 
     hitInfos.resize(collector2.mHits.size());
     int32_t iterator = 0;
@@ -120,7 +116,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     for (auto hit : collector2.mHits)
     {
 
-        const entt::entity hitEntity = static_cast<entt::entity>(bodyInterface->GetUserData(hit.mBodyID));
+        const entt::entity hitEntity = static_cast<entt::entity>(GetBodyInterface().GetUserData(hit.mBodyID));
 
         if (hitEntity != entt::null)
         {
@@ -129,7 +125,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
         hitInfos[iterator].position = origin + hit.mFraction * ((direction * distance));
         hitInfos[iterator].hitFraction = hit.mFraction;
 
-        JPH::BodyLockRead bodyLock(physicsSystem->GetBodyLockInterface(), hit.mBodyID);
+        JPH::BodyLockRead bodyLock(_physicsSystem->GetBodyLockInterface(), hit.mBodyID);
 
         if (bodyLock.Succeeded())
         {
@@ -175,57 +171,4 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
     }
 
     return results;
-}
-glm::vec3 PhysicsModule::GetPosition(RigidbodyComponent& rigidBody) const
-{
-    const JPH::Vec3 pos = bodyInterface->GetPosition(rigidBody.bodyID);
-    const glm::vec3 position = glm::vec3(pos.GetX(), pos.GetY(), pos.GetZ());
-    return position;
-}
-glm::vec3 PhysicsModule::GetRotation(RigidbodyComponent& rigidBody) const
-{
-    const JPH::Quat rot = bodyInterface->GetRotation(rigidBody.bodyID);
-    const glm::vec3 rotation = glm::eulerAngles(glm::quat(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
-    return rotation;
-}
-
-void PhysicsModule::AddForce(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
-{
-    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
-    bodyInterface->AddForce(rigidBody.bodyID, forceDirection);
-}
-void PhysicsModule::AddImpulse(RigidbodyComponent& rigidBody, const glm::vec3& direction, const float amount) const
-{
-    const JPH::Vec3 forceDirection = JPH::Vec3(direction.x, direction.y, direction.z) * amount;
-    bodyInterface->AddImpulse(rigidBody.bodyID, forceDirection);
-}
-glm::vec3 PhysicsModule::GetVelocity(RigidbodyComponent& rigidBody) const
-{
-    const JPH::Vec3 vel = bodyInterface->GetLinearVelocity(rigidBody.bodyID);
-    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
-    return velocity;
-}
-glm::vec3 PhysicsModule::GetAngularVelocity(RigidbodyComponent& rigidBody) const
-{
-    const JPH::Vec3 vel = bodyInterface->GetAngularVelocity(rigidBody.bodyID);
-    const glm::vec3 velocity = glm::vec3(vel.GetX(), vel.GetY(), vel.GetZ());
-    return velocity;
-}
-void PhysicsModule::SetVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
-{
-    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
-    bodyInterface->SetLinearVelocity(rigidBody.bodyID, vel);
-}
-void PhysicsModule::SetAngularVelocity(RigidbodyComponent& rigidBody, const glm::vec3& velocity) const
-{
-    const JPH::Vec3 vel = JPH::Vec3(velocity.x, velocity.y, velocity.z);
-    bodyInterface->SetAngularVelocity(rigidBody.bodyID, vel);
-}
-void PhysicsModule::SetGravityFactor(RigidbodyComponent& rigidBody, const float factor) const
-{
-    bodyInterface->SetGravityFactor(rigidBody.bodyID, factor);
-}
-void PhysicsModule::SetFriction(RigidbodyComponent& rigidBody, const float friction) const
-{
-    bodyInterface->SetFriction(rigidBody.bodyID, friction);
 }

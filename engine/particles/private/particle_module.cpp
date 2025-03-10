@@ -32,7 +32,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for (const auto entity : emitterView)
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
-        if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+        if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }
@@ -48,18 +48,18 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
         {
             const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
-            const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+            const auto joltTranslation = _physics->GetBodyInterface().GetWorldTransform(rb.bodyID).GetTranslation();
             emitter.emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
             emitter.emitter.position += emitter.positionOffset;
 
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
+            if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
             {
                 _ecs->GetRegistry().remove<ActiveEmitterTag>(entity);
                 continue;
             }
-            if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+            if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
             {
-                JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+                JPH::Vec3 rbVelocity = _physics->GetBodyInterface().GetLinearVelocity(rb.bodyID);
                 emitter.emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             }
         }
@@ -317,12 +317,12 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     {
         const auto& rb = _ecs->GetRegistry().get<RigidbodyComponent>(entity);
 
-        const auto joltTranslation = _physics->bodyInterface->GetWorldTransform(rb.bodyID).GetTranslation();
+        const auto joltTranslation = _physics->GetBodyInterface().GetWorldTransform(rb.bodyID).GetTranslation();
         emitter.position = glm::vec3(joltTranslation.GetX(), joltTranslation.GetY(), joltTranslation.GetZ());
 
-        if (_physics->bodyInterface->GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
+        if (_physics->GetBodyInterface().GetMotionType(rb.bodyID) != JPH::EMotionType::Static)
         {
-            JPH::Vec3 rbVelocity = _physics->bodyInterface->GetLinearVelocity(rb.bodyID);
+            JPH::Vec3 rbVelocity = _physics->GetBodyInterface().GetLinearVelocity(rb.bodyID);
             emitter.velocity = -glm::vec3(rbVelocity.GetX(), rbVelocity.GetY(), rbVelocity.GetZ());
             _ecs->GetRegistry().emplace_or_replace<ActiveEmitterTag>(entity);
         }

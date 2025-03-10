@@ -17,6 +17,13 @@ inline void QuatXYZWtoWXYZ(glm::quat& quat)
     std::swap(quat.y, quat.z);
 }
 
+inline void QuatWXYZtoXYZW(glm::quat& quat)
+{
+    std::swap(quat.x, quat.z);
+    std::swap(quat.y, quat.z);
+    std::swap(quat.w, quat.z);
+}
+
 struct Vec3Range
 {
     Vec3Range(const glm::vec3& newMin, const glm::vec3& newMax)

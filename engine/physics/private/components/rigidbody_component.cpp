@@ -1,161 +1,79 @@
 ﻿#include "components/rigidbody_component.hpp"
 
-// default creates a sphere at 0,2,0
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, PhysicsShapes shapeType, BodyType type)
-    : shapeType(shapeType)
-    , bodyType(type)
+#include "components/transform_helpers.hpp"
+#include "log.hpp"
+#include "physics/collision.hpp"
+
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+
+RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface,
+    JPH::ShapeRefC shape,
+    bool dynamic,
+    JPH::EAllowedDOFs freedom)
+    : shape(shape)
+    , dynamic(dynamic)
+    , dofs(freedom)
+    , bodyInterface(&bodyInterface)
 {
-    JPH::BodyCreationSettings bodySettings;
-
-    if (shapeType == eSPHERE)
-    {
-        if (bodyType == eDYNAMIC)
-        {
-            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
-        }
-        else if (bodyType == eSTATIC)
-        {
-            bodySettings = JPH::BodyCreationSettings(new JPH::SphereShape(0.5f), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
-        }
-
-        bodySettings.mAllowDynamicOrKinematic = true;
-        bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-    }
-    else if (shapeType == eBOX)
-    {
-        if (bodyType == eDYNAMIC)
-        {
-            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PhysicsLayers::MOVING);
-        }
-        else if (bodyType == eSTATIC)
-        {
-            bodySettings = JPH::BodyCreationSettings(new JPH::BoxShape(JPH::Vec3(0.5, 0.5, 0.5)), JPH::Vec3(0.0, 2.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PhysicsLayers::NON_MOVING);
-        }
-
-        // lets save thes shape reference
-        shape = bodySettings.GetShape();
-
-        bodySettings.mAllowDynamicOrKinematic = true;
-        bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-    }
-
-    // set the owner entity so we can query it later from physics objects if needed
-    bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
 }
 
-// for mesh collisions
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices, JPH::IndexedTriangleList& triangles)
-    : shapeType(eMESH)
-    , bodyType(eSTATIC)
+void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::entity entity)
 {
-    JPH::BodyCreationSettings bodySettings;
+    auto& rb = registry.get<RigidbodyComponent>(entity);
 
-    JPH::MeshShapeSettings meshSettings;
+    JPH::EMotionType motionType = rb.dynamic ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static;
+    JPH::ObjectLayer layer = rb.dynamic ? eMOVING_OBJECT : eNON_MOVING_OBJECT;
 
-    if (bodyType == eSTATIC)
+    auto scaledShape = rb.shape->ScaleShape(ToJoltVec3(TransformHelpers::GetWorldScale(registry, entity)));
+
+    JPH::BodyCreationSettings creation { scaledShape.Get(),
+        ToJoltVec3(TransformHelpers::GetWorldPosition(registry, entity)),
+        ToJoltQuat(TransformHelpers::GetWorldRotation(registry, entity)),
+        motionType, layer };
+
+    // Needed if we change from a static object to dynamic
+    creation.mAllowDynamicOrKinematic = true;
+    creation.mAllowedDOFs = rb.dofs;
+
+    // Look into mass settings
+    if (rb.shape->GetMassProperties().mMass <= 0.0f)
     {
-        bodySettings = JPH::BodyCreationSettings(
-            new JPH::MeshShapeSettings(vertices, triangles),
-            JPH::Vec3Arg(position.x, position.y, position.z),
-            JPH::QuatArg::sIdentity(),
-            JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
+        creation.mMassPropertiesOverride = JPH::MassProperties { 1.0f, JPH::Mat44::sZero() };
+        creation.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
     }
 
-    JPH::MassProperties msp;
-    msp.ScaleToMass(10.0f); // actual mass in kg
-    bodySettings.mMassPropertiesOverride = msp;
-    bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-    // lets save thes shape reference
-    shape = bodySettings.GetShape();
+    JPH::EActivation activation = rb.dynamic ? JPH::EActivation::Activate : JPH::EActivation::DontActivate;
 
-    bodySettings.mAllowDynamicOrKinematic = false;
-    bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-    // set the owner entity so we can query it later from physics objects if needed
-    bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
+    rb.bodyID = rb.bodyInterface->CreateAndAddBody(creation, activation);
+    rb.bodyInterface->SetUserData(rb.bodyID, static_cast<uint64_t>(entity));
 }
 
-// for convex collisions
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, JPH::VertexList& vertices)
-    : shapeType(eCONVEXHULL)
-    , bodyType(eSTATIC)
+void RigidbodyComponent::SetColliderShape(JPH::ShapeRefC newShape)
 {
-    JPH::BodyCreationSettings bodySettings;
-
-    JPH::MeshShapeSettings meshSettings;
-
-    if (bodyType == eSTATIC)
-    {
-        JPH::Array<JPH::Vec3> hull;
-
-        for (auto vert : vertices)
-        {
-            hull.push_back(JPH::Vec3(vert.x, vert.y, vert.z));
-        }
-        bodySettings = JPH::BodyCreationSettings(
-            new JPH::ConvexHullShapeSettings(hull),
-            JPH::Vec3Arg(position.x, position.y, position.z),
-            JPH::QuatArg::sIdentity(),
-            JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
-    }
-    JPH::MassProperties msp;
-    msp.ScaleToMass(10.0f); // actual mass in kg
-    bodySettings.mMassPropertiesOverride = msp;
-    bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-
-    // lets save thes shape reference
-    shape = bodySettings.GetShape();
-    bodySettings.mAllowDynamicOrKinematic = true;
-    bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-
-    // set the owner entity so we can query it later from physics objects if needed
-    bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
+    bodyInterface->SetShape(bodyID, shape, true, JPH::EActivation::Activate);
+    shape = newShape;
 }
 
-// for AABB collisions
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, glm::vec3 position, math::Vec3Range boundingBox, BodyType type)
-    : shapeType(eBOX)
-    , bodyType(type)
+void RigidbodyComponent::OnDestroyCallback(entt::registry& registry, entt::entity entity)
 {
-    glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
-    JPH::BodyCreationSettings bodySettings;
-    halfExtents = glm::abs(halfExtents);
-    if (bodyType == eSTATIC)
-    {
-        bodySettings = JPH::BodyCreationSettings(
-            new JPH::BoxShape(JPH::Vec3Arg(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
-            JPH::Vec3Arg(position.x, position.y, position.z),
-            JPH::QuatArg::sIdentity(),
-            JPH::EMotionType::Static,
-            PhysicsLayers::NON_MOVING);
-    }
-    else if (bodyType == eDYNAMIC)
-    {
-        bodySettings = JPH::BodyCreationSettings(
-            new JPH::BoxShape(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z), 0.01f),
-            JPH::Vec3(position.x, position.y, position.z),
-            JPH::Quat::sIdentity(),
-            JPH::EMotionType::Dynamic,
-            PhysicsLayers::MOVING);
-    }
+    auto& rb = registry.get<RigidbodyComponent>(entity);
 
-    // lets save thes shape reference
-    shape = bodySettings.GetShape();
-    bodySettings.mAllowDynamicOrKinematic = true;
-    bodyID = bodyInterface.CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
-
-    // set the owner entity so we can query it later from physics objects if needed
-    bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
+    if (!rb.bodyID.IsInvalid())
+    {
+        rb.bodyInterface->RemoveBody(rb.bodyID);
+        rb.bodyInterface->DestroyBody(rb.bodyID);
+    }
 }
 
-RigidbodyComponent::RigidbodyComponent(JPH::BodyInterface& bodyInterface, entt::entity ownerEntity, JPH::BodyCreationSettings& bodyCreationSettings)
-    : shapeType(eCUSTOM)
+void RigidbodyComponent::SetupRegistryCallbacks(entt::registry& registry)
 {
-    // lets save thes shape reference
-    shape = bodyCreationSettings.GetShape();
-    bodyID = bodyInterface.CreateAndAddBody(bodyCreationSettings, JPH::EActivation::Activate);
+    registry.on_construct<RigidbodyComponent>().connect<OnConstructCallback>();
+    registry.on_destroy<RigidbodyComponent>().connect<OnDestroyCallback>();
+}
 
-    // set the owner entity so we can querry it later from physics ohbejcts if needed
-    bodyInterface.SetUserData(bodyID, static_cast<uintptr_t>(ownerEntity));
+void RigidbodyComponent::DisconnectRegistryCallbacks(entt::registry& registry)
+{
+    registry.on_construct<RigidbodyComponent>().disconnect<OnConstructCallback>();
+    registry.on_destroy<RigidbodyComponent>().disconnect<OnDestroyCallback>();
 }
