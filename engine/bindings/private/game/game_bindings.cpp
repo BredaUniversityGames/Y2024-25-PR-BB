@@ -200,7 +200,7 @@ void BindGameAPI(wren::ForeignModule& module)
     cheatsComponent.propExt<bindings::GetNoClipStatus, bindings::SetNoClip>("noClip");
 
     auto& game = module.klass<GameModule>("Game");
-    game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
+    // game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
     game.funcExt<bindings::GetHUD>("GetHUD");
 

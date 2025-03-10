@@ -235,7 +235,7 @@ private:
 
     vk::DescriptorSetLayout _skinDescriptorSetLayout;
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _skinDescriptorSets;
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinBuffers;
+    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _skinTransformBuffers;
 
     vk::DescriptorSetLayout _visibilityDSL;
     vk::DescriptorSetLayout _redirectDSL;

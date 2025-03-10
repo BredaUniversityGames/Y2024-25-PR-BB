@@ -61,12 +61,13 @@ struct Settings
 
     struct Bloom
     {
-        VERSION(0);
+        VERSION(1);
 
         glm::vec3 colorWeights { 0.2126f, 0.7152f, 0.0722f };
         float strength { 0.8f };
         float gradientStrength { 0.2f };
         float maxBrightnessExtraction { 5.0f };
+        float filterRadius { 0.005f };
     } bloom;
 
     struct Tonemapping
@@ -124,7 +125,7 @@ VISITABLE_STRUCT(Settings::FXAA, enableFXAA, edgeThresholdMin, edgeThresholdMax,
 CLASS_SERIALIZE_VERSION(Settings::FXAA);
 CLASS_VERSION(Settings::FXAA);
 
-VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction);
+VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction, filterRadius);
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 

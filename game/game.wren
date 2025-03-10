@@ -1,4 +1,5 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random, HUD
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "gameplay/movement.wren" for PlayerMovement
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/movement.wren" for PlayerMovement
 import "camera.wren" for CameraVariables
@@ -17,7 +18,7 @@ class Main {
 
 
         __playerVariables = PlayerVariables.new()
-        __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
+        // __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -25,17 +26,36 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
+
+        //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
+
+        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
+        if (previousPlayer) {
+            engine.GetECS().DestroyEntity(previousPlayer)
+        }
+
+        __playerController = engine.GetECS().NewEntity()
+
+        __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
+        __playerController.AddPlayerTag()
+        __playerController.AddNameComponent().name = "PlayerController"
+
+        var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
+        __playerController.AddRigidbodyComponent(rb)
+
+
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         __cameraVariables = CameraVariables.new()
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var mutant = engine.GetECS().GetEntityByName("Clown")
-        var mutantAnimations = mutant.GetAnimationControlComponent()
-        mutantAnimations.Play("Walk", 1.0, true)
-        mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
-        mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+        var clown = engine.GetECS().GetEntityByName("Clown")
+        var clownAnimations = clown.GetAnimationControlComponent()
+        clownAnimations.Play("NarutoRun", 1.0, true)
+        clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         if (__camera) {
             System.print("Player is online!")
@@ -92,7 +112,7 @@ class Main {
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
-        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
