@@ -5,6 +5,7 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/RegisterTypes.h>
+#include <cmath>
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "components/rigidbody_component.hpp"
