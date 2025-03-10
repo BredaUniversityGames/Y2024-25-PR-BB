@@ -43,6 +43,7 @@ private:
     void CreatePipeline();
 
     std::shared_ptr<GraphicsContext> _context;
+    const Settings::Lighting& _lightingSettings;
     const GBuffers& _gBuffers;
     const ResourceHandle<GPUImage> _hdrTarget;
     const ResourceHandle<GPUImage> _brightnessTarget;
@@ -51,5 +52,4 @@ private:
     vk::Pipeline _pipeline;
 
     const BloomSettings& _bloomSettings;
-    const Settings::Lighting& _lightingSettings;
 };
