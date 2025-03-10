@@ -77,11 +77,6 @@ std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
     return nameComponent.component->name;
 }
 
-void NameComponentSetName(WrenComponent<NameComponent>& nameComponent, const std::string& name)
-{
-    nameComponent.component->name = name;
-}
-
 void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, const glm::vec3& color)
 {
     component.component->color = color;
@@ -172,6 +167,11 @@ void FreeEntity(ECSModule& self, WrenEntity& entity)
     self.DestroyEntity(entity.entity);
 }
 
+void Clear(ECSModule& self)
+{
+    self.GetRegistry().clear();
+}
+
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
 {
     auto view = self.GetRegistry().view<NameComponent>();
@@ -216,6 +216,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
+        wrenClass.funcExt<bindings::Clear>("DestroyAllEntities");
     }
     // Components
     {

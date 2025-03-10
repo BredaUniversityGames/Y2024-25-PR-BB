@@ -22,6 +22,8 @@ public:
     ScriptingModule() = default;
     ~ScriptingModule() override = default;
 
+    void ResetVM(Engine& e);
+
     // Used for tests, stick with default
     void SetEngineBindingsPath(const std::string& p)
     {
@@ -54,6 +56,7 @@ public:
 private:
     std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
+    std::string _nextScript {}; // Used for transitions
 
     std::unique_ptr<ScriptingContext> _context {};
     std::unique_ptr<MainScript> _mainModule {};

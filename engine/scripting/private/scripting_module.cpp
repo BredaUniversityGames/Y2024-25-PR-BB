@@ -3,6 +3,13 @@
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
+void ScriptingModule::ResetVM(Engine& e)
+{
+    _mainModule.reset();
+    _context->Reset();
+    BindEngineAPI(GetForeignAPI());
+}
+
 void ScriptingModule::GenerateEngineBindingsFile()
 {
     if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
@@ -37,6 +44,17 @@ void ScriptingModule::Tick(Engine& engine)
 {
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
 
+    if (!_nextScript.empty())
+    {
+        ResetVM(engine);
+        if (auto result = _context->RunScript(_nextScript))
+        {
+            _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
+            _mainEngineScript = result.value();
+        }
+        _nextScript.clear();
+    }
+
     if (_mainModule)
     {
         _mainModule->Update(dt);
@@ -44,26 +62,24 @@ void ScriptingModule::Tick(Engine& engine)
     }
 }
 
-void ScriptingModule::SetMainScript(Engine& e, const std::string& path)
+void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
 {
-    _mainModule.reset();
-    _context->Reset();
-    BindEngineAPI(GetForeignAPI());
-    _mainEngineScript = path;
-    if (auto result = _context->RunScript(_mainEngineScript))
+    if (_mainEngineScript.empty())
     {
-        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
+        ResetVM(engine);
+        if (auto result = _context->RunScript(path))
+        {
+            _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
+            _mainEngineScript = result.value();
+        }
+    }
+    else
+    {
+        _nextScript = path;
     }
 }
 
 void ScriptingModule::HotReload(Engine& e)
 {
-    _mainModule.reset();
-    _context->Reset();
-    BindEngineAPI(GetForeignAPI());
-
-    if (auto result = _context->RunScript(_mainEngineScript))
-    {
-        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
-    }
+    SetMainScript(e, _mainEngineScript);
 };
