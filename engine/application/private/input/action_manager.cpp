@@ -39,7 +39,7 @@ DigitalActionResult ActionManager::GetDigitalAction(std::string_view actionName)
         { return action.name == actionName; });
     if (itr == actionSet.digitalActions.end())
     {
-        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        bblog::error("[Input] Failed to find digital action: \"{}\"", actionName);
         return DigitalActionResult {};
     }
 
