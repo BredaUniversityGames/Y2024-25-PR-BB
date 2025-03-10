@@ -17,6 +17,5 @@ class Main {
             engine.TransitionToScript("game/scenes/swap_test.wren")
             return
         }
-
     }
 }

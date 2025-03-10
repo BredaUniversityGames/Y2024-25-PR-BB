@@ -56,7 +56,6 @@ public:
 private:
     std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
-    std::string _nextScript {}; // Used for transitions
 
     std::unique_ptr<ScriptingContext> _context {};
     std::unique_ptr<MainScript> _mainModule {};

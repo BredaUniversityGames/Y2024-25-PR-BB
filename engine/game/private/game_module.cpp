@@ -65,8 +65,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
     };
-    auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    // auto gunEntity = entities[1];
+
+    for (auto& path : modelPaths)
+    {
+        SceneLoading::LoadModel(engine, path);
+    }
 
     entt::entity cameraEntity = ECS.GetRegistry().create();
     ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
@@ -98,8 +101,20 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
 
+void GameModule::TransitionScene(const std::string& scriptFile)
+{
+    _nextScene = scriptFile;
+}
+
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    if (!_nextScene.empty())
+    {
+        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextScene);
+    }
+
+    _nextScene.clear();
+
     if (_updateHud == true)
     {
         float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();

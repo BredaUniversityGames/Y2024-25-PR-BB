@@ -44,17 +44,6 @@ void ScriptingModule::Tick(Engine& engine)
 {
     auto dt = engine.GetModule<TimeModule>().GetDeltatime();
 
-    if (!_nextScript.empty())
-    {
-        ResetVM(engine);
-        if (auto result = _context->RunScript(_nextScript))
-        {
-            _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
-            _mainEngineScript = result.value();
-        }
-        _nextScript.clear();
-    }
-
     if (_mainModule)
     {
         _mainModule->Update(dt);
@@ -64,18 +53,11 @@ void ScriptingModule::Tick(Engine& engine)
 
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
 {
-    if (_mainEngineScript.empty())
+    ResetVM(engine);
+    if (auto result = _context->RunScript(path))
     {
-        ResetVM(engine);
-        if (auto result = _context->RunScript(path))
-        {
-            _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
-            _mainEngineScript = result.value();
-        }
-    }
-    else
-    {
-        _nextScript = path;
+        _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
+        _mainEngineScript = result.value();
     }
 }
 

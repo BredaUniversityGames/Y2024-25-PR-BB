@@ -9,10 +9,12 @@ class Main {
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
+        // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
+        // Player Setup
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
@@ -20,13 +22,6 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
-
-        //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
-      
-        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
-        if (previousPlayer) {
-            engine.GetECS().DestroyEntity(previousPlayer)
-        }
         
         __playerController = engine.GetECS().NewEntity()
 
@@ -37,18 +32,29 @@ class Main {
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
         var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
         __playerController.AddRigidbodyComponent(rb)
-    
-        
-        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+
+        // Cathedral
+        engine.LoadModel("assets/models/Cathedral.glb")
+
+        // Gun Setup
+        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var clown = engine.GetECS().GetEntityByName("Clown")
+        // Clown setup
+        var clown = engine.LoadModel("assets/models/Clown.glb")
         var clownAnimations = clown.GetAnimationControlComponent()
+
         clownAnimations.Play("NarutoRun", 1.0, true)
         clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
         clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+
+        // Demon Setup
+        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")
+        var enemyTransform = enemyEntity.GetTransformComponent()
+        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
         if (__camera) {
             System.print("Player is online!")
@@ -68,6 +74,7 @@ class Main {
 
         __activeWeapon = __armory[Weapons.shotgun]
         __activeWeapon.equip(engine)
+
         // Inside cathedral: pentagram scene
         {   // Fire emitter 1
             var emitter = engine.GetECS().NewEntity()
@@ -110,15 +117,11 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
-
-        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
-        var enemyTransform = enemyEntity.GetTransformComponent()
-        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {
         System.print("Shutdown script!")
+        engine.GetECS().DestroyEntity(__playerController)
     }
 
     static Update(engine, dt) {
