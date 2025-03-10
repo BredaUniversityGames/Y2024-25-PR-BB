@@ -55,7 +55,7 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    //_computedPaths.clear();
+    _computedPaths.clear();
 }
 
 void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
