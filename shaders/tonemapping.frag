@@ -186,6 +186,7 @@ vec3 Sky(in vec3 ro, in vec3 rd)
 void main()
 {
     vec2 newTexCoords = texCoords;
+    vec2 pixelatedUV = texCoords;
     const uint enableFlags = pc.enableFlags;
     const bool vignetteEnabled = bool(enableFlags & ENABLE_VIGNETTE);
     const bool lensDistortionEnabled = bool(enableFlags & ENABLE_LENS_DISTORTION);
@@ -205,8 +206,11 @@ void main()
     vec3 hdrColor = vec3(0.0);
     if (pixelizationEnabled)
     {
+
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
+        pixelatedUV = uv;
         hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+        //depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], uv, -32.0).r;
     } else
     {
         hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
@@ -225,16 +229,21 @@ void main()
 
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
 
-    vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pc.normalIndex)], newTexCoords);
-    vec3 normal = OctDecode(normalSample.rg);
-    if (depthSample <= 0.0f)
+    //vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pc.normalIndex)], newTexCoords);
+    //vec3 normal = OctDecode(normalSample.rg);
+    float pixelatedDepthSample = texture(bindless_color_textures[nonuniformEXT (pc.depthIndex)], pixelatedUV, -256.0).r;
+    //outColor = vec4(pixelatedDepthSample.xxx,1.0);
+    //return;
+    if (pixelatedDepthSample <= 0.0f)
     {
+        // vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
+
         vec2 uv = newTexCoords;
         uv -= 0.5;
         uv.x *= (16.0 / 9.0);
-        uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
+        // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
         uv.y = -uv.y;
-
+        //if (pixelizationEnabled) uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, uv, vec2(pc.screenWidth, pc.screenHeight));
 
 
         const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
@@ -245,9 +254,15 @@ void main()
         rayDir.y = auxRayDir.z;
         rayDir.z = auxRayDir.y;
         const vec3 ro = vec3(0, 0.0, 0);
-        outColor = vec4(Sky(ro, rayDir), 1.0);
+        color = Sky(ro, rayDir);
 
-        return;
+    /**if (paletteEnabled)
+        {
+            outColor = vec4(ComputeQuantizedColor(outColor.xyz, pc.ditherAmount, pc.paletteAmount),1.0);
+        }*/
+
+
+        //return;
     }
 
 
