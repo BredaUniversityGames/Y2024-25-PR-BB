@@ -28,8 +28,6 @@ public:
     uint32_t VertexBufferSize() const { return _vertexBufferSize; }
     uint32_t IndexBufferSize() const { return _indexBufferSize; }
 
-    ResourceHandle<Buffer> IndirectDrawBuffer(uint32_t frameIndex) const { return _indirectDrawBuffers[frameIndex]; }
-
     template <typename T>
     uint32_t AppendVertices(const std::vector<T>& vertices, SingleTimeCommands& commandBuffer)
     {
@@ -58,7 +56,6 @@ private:
 
     ResourceHandle<Buffer> _vertexBuffer;
     ResourceHandle<Buffer> _indexBuffer;
-    std::array<ResourceHandle<Buffer>, MAX_FRAMES_IN_FLIGHT> _indirectDrawBuffers;
 
     uint32_t _vertexOffset { 0 };
     uint32_t _indexOffset { 0 };
