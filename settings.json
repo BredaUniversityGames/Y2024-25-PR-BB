@@ -1,6 +1,6 @@
 {
     "data": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "fog": {
             "cereal_class_version": 0,
             "color": {
@@ -95,6 +95,11 @@
                     "w": 1.0
                 }
             }
+        },
+        "lighting": {
+            "cereal_class_version": 0,
+            "ambientStrength": 1.9500000476837159,
+            "ambientShadowStrength": 0.4099999964237213
         }
     }
 }

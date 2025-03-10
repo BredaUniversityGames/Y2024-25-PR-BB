@@ -30,6 +30,7 @@ void DrawSSAOSettings(Settings& settings);
 void DrawFXAASettings(Settings& settings);
 void DrawFogSettings(Settings& settings);
 void DrawTonemappingSettings(Settings& settings);
+void DrawLightingSettings(Settings& settings);
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -115,6 +116,7 @@ void InspectorModule::Tick(Engine& engine)
             ImGui::MenuItem("FXAA Settings", nullptr, &_openWindows["FXAA"]);
             ImGui::MenuItem("Fog Settings", nullptr, &_openWindows["Fog"]);
             ImGui::MenuItem("Tonemapping Settings", nullptr, &_openWindows["Tonemapping"]);
+            ImGui::MenuItem("Lighting Settings", nullptr, &_openWindows["Lighting"]);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Editor"))
@@ -194,6 +196,11 @@ void InspectorModule::Tick(Engine& engine)
     if (_openWindows["Tonemapping"])
     {
         DrawTonemappingSettings(settings);
+    }
+
+    if (_openWindows["Lighting"])
+    {
+        DrawLightingSettings(settings);
     }
 
     {
@@ -372,6 +379,18 @@ void DrawTonemappingSettings(Settings& settings)
         ImGui::PopID();
     }
     ImGui::EndDisabled();
+
+    ImGui::End();
+}
+
+void DrawLightingSettings(Settings& settings)
+{
+    auto& lighting = settings.lighting;
+
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Lighting Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::DragFloat("Ambient Strength", &lighting.ambientStrength, 0.01f, 0.0f, 16.0f);
+    ImGui::DragFloat("Ambient Shadow Strength", &lighting.ambientShadowStrength, 0.01f, 0.0f, 1.0f);
 
     ImGui::End();
 }
