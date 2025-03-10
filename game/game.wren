@@ -17,15 +17,12 @@ class Main {
 
 
         __playerVariables = PlayerVariables.new()
-        // __playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-
-        //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
 
         var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
         if (previousPlayer) {
