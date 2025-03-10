@@ -51,18 +51,6 @@ class Main {
         clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
         clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
-        //var enemyCPUModel = engine.LoadCPUModel("assets/models/demon.glb")
-        //var enemyGPUModelHandle = engine.GetRenderer().LoadCPUModelIntoRenderer(enemyCPUModel)
-        //var enemyGPUModel = engine.GetRenderer().GetModelResourceManager().Access(enemyGPUModelHandle)
-
-        // var enemyEntity = engine.GetECS().NewEntity()
-        // var enemyTransform = enemyEntity.AddTransformComponent()
-        // var enemyMeshComponent = enemyEntity.AddSkinnedMeshComponent()
-        // var enemyAnimationComponent = enemyEntity.AddAnimationControlComponent()
-        // enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        // enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
-        // enemyMeshComponent.mesh = enemyGPUModel.skinnedMeshes[0]
-
         if (__camera) {
             System.print("Player is online!")
 
@@ -125,7 +113,7 @@ class Main {
         __ultimateActive = false
 
         __spawner = Spawner.new(engine)
-        __spawner.SpawnEnemies(10)
+        __spawner.SpawnEnemies(1)
     }
 
     static Shutdown(engine) {
@@ -139,6 +127,8 @@ class Main {
         var deltaTime = engine.GetTime().GetDeltatime()
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
+
+        __spawner.Update()
 
         if (__ultimateActive) {
             __ultimateCharge = __ultimateCharge - dt
@@ -201,7 +191,5 @@ class Main {
             __activeWeapon = __armory[Weapons.shotgun]
             __activeWeapon.equip(engine)
         }
-
-        var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }

@@ -119,12 +119,6 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
-
-    entityClass.func<&WrenEntity::GetComponent<StaticMeshComponent>>("GetStaticMeshComponent");
-    entityClass.func<&WrenEntity::AddComponent<StaticMeshComponent>>("AddStaticMeshComponent");
-
-    entityClass.func<&WrenEntity::GetComponent<SkinnedMeshComponent>>("GetSkinnedMeshComponent");
-    entityClass.func<&WrenEntity::AddComponent<SkinnedMeshComponent>>("AddSkinnedMeshComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)

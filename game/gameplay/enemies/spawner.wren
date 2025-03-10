@@ -7,8 +7,8 @@ class Spawner {
         if(__engine == null) {
             __engine = engine
         }
-        _rangeMin = Vec3.new(-44.8, 19.0, 264.6)
-        _rangeMax = Vec3.new(-40.8, 19.0, 270.6)
+        _rangeMin = Vec3.new(-43.8, 19.0, 265.6)
+        _rangeMax = Vec3.new(-41.8, 19.0, 269.6)
         _meleeEnemies = [null]
         _meleeEnemies.clear()
     }
@@ -19,7 +19,15 @@ class Spawner {
         }
 
         for(i in 0...count) {
-             _meleeEnemies.add(MeleeEnemy.new(Random.RandomVec3VectorRange(_rangeMin, _rangeMax), __engine))
+            var enemy = _meleeEnemies.add(MeleeEnemy.new(Vec3.new(-42.8, 19.3, 267.6), __engine))
+             //var enemy = _meleeEnemies.add(MeleeEnemy.new(Random.RandomVec3VectorRange(_rangeMin, _rangeMax), __engine))
+             enemy.FindNewPath()
+        }
+    }
+
+    Update() {
+        for(enemy in _meleeEnemies) {
+            enemy.Update()
         }
     }
 
