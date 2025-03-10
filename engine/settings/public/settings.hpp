@@ -71,7 +71,7 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(5);
+        VERSION(6);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -109,6 +109,12 @@ struct Settings
             glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
             glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
         };
+
+        glm::vec4 skyColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 sunColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 cloudsColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 voidColor { 0.0f, 0.0f, 0.0f, 1.0f };
+
     } tonemapping;
 };
 
@@ -128,7 +134,7 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

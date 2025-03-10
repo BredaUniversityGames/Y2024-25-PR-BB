@@ -52,6 +52,10 @@ layout (push_constant) uniform PushConstants
     float padding2;
 
     vec4 palette[5];
+    vec4 skyColor;
+    vec4 sunColor;
+    vec4 cloudsColor;
+    vec4 voidColor;
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -100,8 +104,6 @@ float hash12(vec2 p) {
 
 
 
-#define rnd(p, s)   fract(sin(((p) + .01 * (s)) * 12.9898) * 43758.5453)
-
 
 float linearize_depth(float d, float zNear, float zFar)
 {
@@ -113,6 +115,12 @@ float hash(vec2 p)
 {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
 }
+float hashwithoutsine12(vec2 p)
+{
+    vec3 p3 = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
 
 float noise(in vec2 uv)
 {
@@ -120,10 +128,10 @@ float noise(in vec2 uv)
     vec2 f = fract(uv);
     f = f * f * (3. - 2. * f);
 
-    float lb = hash(i + vec2(0., 0.));
-    float rb = hash(i + vec2(1., 0.));
-    float lt = hash(i + vec2(0., 1.));
-    float rt = hash(i + vec2(1., 1.));
+    float lb = hashwithoutsine12(i + vec2(0., 0.));
+    float rb = hashwithoutsine12(i + vec2(1., 0.));
+    float lt = hashwithoutsine12(i + vec2(0., 1.));
+    float rt = hashwithoutsine12(i + vec2(1., 1.));
 
     return mix(mix(lb, rb, f.x),
                mix(lt, rt, f.x), f.y);
@@ -132,19 +140,19 @@ float noise(in vec2 uv)
 #define OCTAVES 8
 float fbm(in vec2 uv)
 {
-    float v = 0.;
+    float value = 0.0;
     float amplitude = .5;
 
     for (int i = 0; i < OCTAVES; i++)
     {
-        v += noise(uv) * amplitude;
+        value += noise(uv) * amplitude;
 
         amplitude *= .5;
 
         uv *= 2.;
     }
 
-    return v;
+    return value;
 }
 
 vec3 Sky(in vec3 ro, in vec3 rd)
@@ -152,23 +160,23 @@ vec3 Sky(in vec3 ro, in vec3 rd)
     const float SC = 1e5;
 
     // Calculate sky plane
-    float dist = (SC - ro.z) / rd.z;
-    vec2 p = (ro + dist * rd).xy;
-    p *= 2.4 / SC;
+    float dist = (SC - ro.y) / rd.y;
+    vec2 p = (ro + dist * rd).xz;
+    p *= 4.4 / SC;
 
     // from iq's shader, https://www.shadertoy.com/view/MdX3Rr
     vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
     float sundot = clamp(dot(rd, lightDir), 0.0, 1.0);
 
-    vec3 cloudCol = vec3(0.9, 0.9, 0.9);
-    vec3 skyCol = vec3(.6, .71, .85) - rd.z * .2 * vec3(1., .5, 1.) + .15 * .5;
-    //float3 skyCol = float3(0.3, 0.5, 0.85) - rd.z * rd.z * 0.5;
-    skyCol = mix(skyCol, 0.85 * vec3(0.7, 0.75, 0.85), pow(1.0 - max(rd.z, 0.0), 4.0));
+    vec3 cloudCol = pc.cloudsColor.rgb;
+    vec3 skyCol = pc.skyColor.rgb - rd.y * .2 * vec3(1., .5, 1.) + .15 * .5;
+    //vec3 skyCol = pc.skyColor.rgb - rd.y * rd.y * 0.5;
+    skyCol = mix(skyCol, 0.85 * pc.skyColor.rgb, pow(1.0 - max(rd.y, 0.0), 4.0));
 
     // sun
-    vec3 sun = 0.2 * vec3(1.0, 0.7, 0.4) * pow(sundot, 8.0);
-    sun += 0.45 * vec3(1.0, 0.8, 0.4) * pow(sundot, 2048.0);
-    sun += 0.2 * vec3(1.0, 0.8, 0.4) * pow(sundot, 128.0);
+    vec3 sun = 0.2 * pc.sunColor.rgb * pow(sundot, 8.0);
+    sun += 0.95 * pc.sunColor.rgb * pow(sundot, 2048.0);
+    sun += 0.2 * pc.sunColor.rgb * pow(sundot, 128.0);
     sun = clamp(sun, 0.0, 1.0);
     skyCol += sun;
 
@@ -177,8 +185,9 @@ vec3 Sky(in vec3 ro, in vec3 rd)
     float den = fbm(vec2(p.x - t, p.y - t));
     skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
 
+
     // horizon
-    skyCol = mix(skyCol, vec3(0.6, 0.086, 0.294), pow(1.0 - max(rd.z, 0.0), 16.0));
+    skyCol = mix(skyCol, pc.voidColor.rgb, pow(1.0 - max(rd.y, 0.0), 16.0));
 
     return skyCol;
 }
@@ -198,6 +207,7 @@ void main()
     {
         newTexCoords = LensDistortionUV(texCoords, pc.lensDistortionIntensity, pc.lensDistortionCubicIntensity);
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
+        pixelatedUV = newTexCoords;
     }
     // Prepare the circle parameters, cycling the circle size over time.
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
@@ -217,10 +227,7 @@ void main()
     }
 
 
-    if (paletteEnabled)
-    {
-        hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
-    }
+
 
 
 
@@ -238,7 +245,7 @@ void main()
     {
         // vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
 
-        vec2 uv = newTexCoords;
+        vec2 uv = pixelatedUV;
         uv -= 0.5;
         uv.x *= (16.0 / 9.0);
         // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
@@ -251,20 +258,20 @@ void main()
         //vec3 rayDir = normalize(mat3(camera.view) * vec3(uv.x, curve, uv.y));
         vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
         vec3 auxRayDir = rayDir;
-        rayDir.y = auxRayDir.z;
-        rayDir.z = auxRayDir.y;
-        const vec3 ro = vec3(0, 0.0, 0);
+        //rayDir.y = auxRayDir.z;
+        //rayDir.z = auxRayDir.y;
+        const vec3 ro = vec3(0.0, 0.0, 0.0);
         color = Sky(ro, rayDir);
 
-    /**if (paletteEnabled)
-        {
-            outColor = vec4(ComputeQuantizedColor(outColor.xyz, pc.ditherAmount, pc.paletteAmount),1.0);
-        }*/
 
 
         //return;
     }
 
+    if (paletteEnabled)
+    {
+        color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
+    }
 
     switch (pc.tonemappingFunction)
     {

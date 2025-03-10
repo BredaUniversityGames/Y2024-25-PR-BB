@@ -372,6 +372,11 @@ void DrawTonemappingSettings(Settings& settings)
     }
     ImGui::EndDisabled();
 
+    ImGui::ColorEdit3("Sky Color", &tonemapping.skyColor.x);
+    ImGui::ColorEdit3("Sun Color", &tonemapping.sunColor.x);
+    ImGui::ColorEdit3("Clouds Color", &tonemapping.cloudsColor.x);
+    ImGui::ColorEdit3("Void Color", &tonemapping.voidColor.x);
+
     ImGui::End();
 }
 

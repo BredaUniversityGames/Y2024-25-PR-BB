@@ -81,6 +81,12 @@ private:
 
         // Registers 7+ (each 16 bytes)
         glm::vec4 palette[5];
+
+        glm::vec4 skyColor;
+        glm::vec4 sunColor;
+        glm::vec4 cloudsColor;
+        glm::vec4 voidColor;
+
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

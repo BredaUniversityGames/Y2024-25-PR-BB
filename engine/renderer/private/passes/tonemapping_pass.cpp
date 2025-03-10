@@ -89,6 +89,11 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.paletteAmount = _settings.paletteAmount;
     _pushConstants.time = timePassed;
 
+    _pushConstants.skyColor = _settings.skyColor;
+    _pushConstants.sunColor = _settings.sunColor;
+    _pushConstants.cloudsColor = _settings.cloudsColor;
+    _pushConstants.voidColor = _settings.voidColor;
+
     for (int i = 0; i < 5; i++)
     {
         _pushConstants.palette[i] = _settings.palette[i];
