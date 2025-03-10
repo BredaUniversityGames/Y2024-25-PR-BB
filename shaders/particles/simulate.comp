@@ -1,6 +1,9 @@
 #version 460
 
+#extension GL_EXT_nonuniform_qualifier: enable
+
 #include "../scene.glsl"
+#include "../bindless.glsl"
 #include "particle_binds.glsl"
 #include "rng_helper.glsl"
 
@@ -14,14 +17,19 @@ layout (set = 3, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (push_constant) uniform DeltaTime
+layout (push_constant) uniform PushConstants
 {
     float deltaTime;
-};
+    float hzbSize;
+    uint hzbIndex;
+    uint isReverseZ;
+} pushConstants;
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 bool IsVisible(vec3 position, float size);
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB);
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB);
 
 void main()
 {
@@ -35,12 +43,12 @@ void main()
     uint particleIndex = aliveBufferCURRENT[index];
     Particle particle = particles[particleIndex];
 
-    particle.life -= deltaTime;
+    particle.life -= pushConstants.deltaTime;
 
     if (particle.life > 0)
     {
         // simulate size
-        particle.size.xy += vec2(particle.size.z) * deltaTime;
+        particle.size.xy += vec2(particle.size.z) * pushConstants.deltaTime;
         if ((particle.size.x < 0) || (particle.size.y < 0))
         {
             // add to dead buffer if too small
@@ -52,14 +60,14 @@ void main()
         // simulate movement
         vec3 force = vec3(0.0);
         force.y -= particle.mass;
-        vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, deltaTime));
+        vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, pushConstants.deltaTime));
         force += particle.velocityRandomness * rng;
 
         particle.velocity += force;
-        particle.position += particle.velocity * deltaTime;
+        particle.position += particle.velocity * pushConstants.deltaTime;
 
         // simulate angle
-        particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;
+        particle.rotationVelocity.x += particle.rotationVelocity.y * pushConstants.deltaTime;
 
         // write simulated particle back into particle buffer
         particles[particleIndex] = particle;
@@ -95,29 +103,117 @@ bool IsVisible(vec3 position, float size)
 {
     vec3 center = (camera.view * vec4(position, 1.f)).xyz;
     float radius = size;
-    bool visible = true;
+
+    bool frustumVisible = true;
+    bool projectionVisible = false;
+    bool occlusionVisible = false;
 
     // Test against frustum.
     if (camera.projectionType == 0)
     {
-        visible = visible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
-        visible = visible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
+        frustumVisible = frustumVisible && center.z * camera.frustum[1] - abs(center.x) * camera.frustum[0] > -radius;
+        frustumVisible = frustumVisible && center.z * camera.frustum[3] - abs(center.y) * camera.frustum[2] > -radius;
     }
     else if (camera.projectionType == 1)
     {
-        visible = visible && center.x + radius > camera.frustum[0];// Left plane
-        visible = visible && center.x - radius < camera.frustum[1];// Right plane
-        visible = visible && center.y + radius > camera.frustum[2];// Bottom plane
-        visible = visible && center.y - radius < camera.frustum[3];// Top plane
+        frustumVisible = frustumVisible && center.x + radius > camera.frustum[0];// Left plane
+        frustumVisible = frustumVisible && center.x - radius < camera.frustum[1];// Right plane
+        frustumVisible = frustumVisible && center.y + radius > camera.frustum[2];// Bottom plane
+        frustumVisible = frustumVisible && center.y - radius < camera.frustum[3];// Top plane
     }
 
     if (camera.distanceCullingEnabled != 0)
     {
         // Test against near and far plane.
-        visible = visible && -center.z + radius > camera.zNear && -center.z - radius < camera.zFar;
+        frustumVisible = frustumVisible && -center.z + radius > camera.zNear && -center.z - radius < camera.zFar;
     }
 
-    visible = visible && camera.cullingEnabled != 0;
+    frustumVisible = frustumVisible && camera.cullingEnabled != 0;
+
+    // Test against hzb.
+    if (frustumVisible)
+    {
+        float P00 = camera.proj[0][0];
+        float P11 = camera.proj[1][1];
+        float nearestBoundsDepth = 0.0;
+
+        vec4 AABB;
+        if (camera.projectionType == 0)
+        {
+            projectionVisible = TryCalculateSphereBoundsPerspective(center, radius, camera.zNear, P00, P11, AABB);
+            nearestBoundsDepth = camera.zNear / (-center.z - radius);
+        }
+        else if (camera.projectionType == 1)
+        {
+            projectionVisible = TryCalculateSphereBoundsOrtho(center, radius, P00, P11, AABB);
+
+            float nearestZ = center.z - radius;
+            nearestBoundsDepth = (-nearestZ - camera.zNear) / (camera.zFar - camera.zNear);
+            nearestBoundsDepth = min(nearestBoundsDepth, 0.999);
+        }
+        if (projectionVisible)
+        {
+            float boundsWidth = (AABB.x - AABB.z) * pushConstants.hzbSize;
+            float boundsHeight = (AABB.w - AABB.y) * pushConstants.hzbSize;
+            float mipIndex = floor(log2(max(boundsWidth, boundsHeight)));
+
+            vec2 uvs = 0.5 * (AABB.xy + AABB.zw);
+            float occluderDepth = textureLod(nonuniformEXT (bindless_color_textures[pushConstants.hzbIndex]), uvs, mipIndex).x;
+
+            occlusionVisible = bool(pushConstants.isReverseZ) ? occluderDepth < nearestBoundsDepth : occluderDepth > nearestBoundsDepth;
+        }
+    }
+
+    // The draw has to be visible inside the frustum.
+    // If we can't project the draw, we assum to draw it (handles cases where you are inside the mesh).
+    // If it is visible during the occlusion cull, we draw it.
+    bool visible = frustumVisible && (occlusionVisible || !projectionVisible);
 
     return visible;
+}
+
+bool TryCalculateSphereBoundsOrtho(vec3 center, float radius, float P00, float P11, out vec4 AABB)
+{
+    vec4 centerClip = camera.proj * vec4(center, 1.0);
+    vec3 centerNDC = centerClip.xyz / centerClip.w;
+
+    vec2 radiusNDC = vec2(
+    radius * (2.0 * (P00 * centerClip.w)),
+    radius * (2.0 * (P11 * centerClip.w))
+    );
+
+    AABB.x = centerNDC.x - radiusNDC.x;
+    AABB.y = centerNDC.y + radiusNDC.y;
+    AABB.z = centerNDC.x + radiusNDC.x;
+    AABB.w = centerNDC.y - radiusNDC.y;
+
+    AABB = AABB * 0.5 + 0.5;
+
+    return true;
+}
+
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere
+// https://jcgt.org/published/0002/02/05/
+bool TryCalculateSphereBoundsPerspective(vec3 center, float radius, float zNear, float P00, float P11, out vec4 AABB)
+{
+    if (-center.z < radius + zNear)
+    {
+        return false;
+    }
+
+    vec2 centerXZ = -center.xz;
+    vec2 vX = vec2(sqrt(dot(centerXZ, centerXZ) - radius * radius), radius);
+    vec2 minX = mat2(vX.x, vX.y, -vX.y, vX.x) * centerXZ;
+    vec2 maxX = mat2(vX.x, -vX.y, vX.y, vX.x) * centerXZ;
+
+    vec2 centerYZ = -center.yz;
+    vec2 vY = vec2(sqrt(dot(centerYZ, centerYZ) - radius * radius), radius);
+    vec2 minY = mat2(vY.x, vY.y, -vY.y, vY.x) * centerYZ;
+    vec2 maxY = mat2(vY.x, -vY.y, vY.y, vY.x) * centerYZ;
+
+    AABB = 0.5 - 0.5 * vec4(
+    minX.x / minX.y * P00, minY.x / minY.y * P11,
+    maxX.x / maxX.y * P00, maxY.x / maxY.y * P11);
+
+    return true;
 }

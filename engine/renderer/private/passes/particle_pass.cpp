@@ -1,7 +1,7 @@
 #include "passes/particle_pass.hpp"
 
 #include "bloom_settings.hpp"
-#include "camera.hpp"
+#include "camera_batch.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "glm/glm.hpp"
@@ -18,10 +18,11 @@
 #include <pipeline_builder.hpp>
 #include <random>
 
-ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
+ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const CameraBatch& cameraBatch, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
+    , _cameraBatch(cameraBatch)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _bloomSettings(bloomSettings)
@@ -154,11 +155,16 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eSimulate)]);
 
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
 
+    const auto* depthImage = _context->Resources()->ImageResourceManager().Access(_cameraBatch.DepthImage());
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
+    _simulatePushConstant.hzbSize = std::fmax(static_cast<float>(depthImage->width), static_cast<float>(depthImage->height));
+    _simulatePushConstant.hzbIndex = _cameraBatch.HZBImage().Index();
+    _simulatePushConstant.isReverseZ = _cameraBatch.Camera().UsesReverseZ();
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
