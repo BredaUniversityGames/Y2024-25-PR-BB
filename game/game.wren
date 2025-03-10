@@ -50,41 +50,39 @@ class Main {
 
         __activeWeapon = __armory[Weapons.shotgun]
         __activeWeapon.equip(engine)
+
         // Inside cathedral: pentagram scene
         {   // Fire emitter 1
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFireAnimated(), emitterFlags, Vec3.new(-18.3, 31.4, 193.8), Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
         }
-
         {   // Fire emitter 2
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
         }
-
         {   // Fire emitter 3
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
         }
-
         {   // Fire emitter 4
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
         }
-
         {   // Dust emitter
             var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
         }
 
-        __testEmitter = engine.GetECS().NewEntity()
-        {   // Test emitter
+        // Attached mini island: pentagram scene (sprite sheet showcase)
+        {   // Fire emitter 1
+            var emitter = engine.GetECS().NewEntity()
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFireAnimated(), emitterFlags, Vec3.new(30.5, 31.0, 168.0), Vec3.new(0.0, 0.0, 0.0))
         }
 
         __rayDistance = 1000.0
