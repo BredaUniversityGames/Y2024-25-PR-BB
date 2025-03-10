@@ -1,7 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
-import "gameplay/movement.wren" for PlayerMovement
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables
 
@@ -25,7 +24,6 @@ class Main {
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-        __camera = engine.GetECS().GetEntityByName("Camera")
 
         //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
 
@@ -34,7 +32,19 @@ class Main {
             engine.GetECS().DestroyEntity(previousPlayer)
         }
 
+        var previousCamera = engine.GetECS().GetEntityByName("Camera")
+        if (previousCamera) {
+            engine.GetECS().DestroyEntity(previousCamera)
+        }
+
+        var previousDummy = engine.GetECS().GetEntityByName("Player")
+        if (previousDummy) {
+            engine.GetECS().DestroyEntity(previousDummy)
+        }
+
         __playerController = engine.GetECS().NewEntity()
+        __camera = engine.GetECS().NewEntity()
+        __player = engine.GetECS().NewEntity()
 
         __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
         __playerController.AddPlayerTag()
@@ -44,9 +54,26 @@ class Main {
         var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
         __playerController.AddRigidbodyComponent(rb)
 
+        __camera.AddTransformComponent()
+        __camera.AddNameComponent().name = "Camera"
+        __camera.AddAudioListenerComponent()
+        var cameraProperties = __camera.AddCameraComponent()
+        cameraProperties.fov = 45.0
+        cameraProperties.nearPlane = 0.5
+        cameraProperties.farPlane = 600.0
+        cameraProperties.reversedZ = true
+        
+        __cameraVariables = CameraVariables.new()
+        
+        __player.AddTransformComponent()
+        __player.AddNameComponent().name = "Player"
+
+        __player.AttachChild(__camera)
 
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
-        __cameraVariables = CameraVariables.new()
+
+        __camera.AttachChild(__gun)
+
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
