@@ -71,6 +71,7 @@ private:
         glm::vec3 spawnRandomness = { 0.0f, 0.0f, 0.0f };
         uint32_t flags = 0;
         glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 startingVelocity = { 1.0f, 5.0f, 1.0f };
         glm::ivec2 spriteDimensions = { 1.0f, 1.0f };
         uint32_t frameCount = 1;
         float frameRate = 0.0f;

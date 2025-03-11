@@ -264,6 +264,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.count = 1;
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY);
         preset.name = "SpriteSheetTest";
+        preset.startingVelocity = glm::vec3(0.0f);
         SetEmitterPresetImage(preset, "Fire+Sparks-Sheet.png");
         preset.size *= 2.0f;
         preset.spriteDimensions = glm::ivec2(4, 5);
@@ -295,6 +296,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.flags = preset.flags;
     emitter.spawnRandomness = preset.spawnRandomness;
     emitter.velocityRandomness = preset.velocityRandomness;
+    emitter.velocity = preset.startingVelocity;
     emitter.color = preset.color;
     emitter.maxFrames = preset.spriteDimensions;
     emitter.frameRate = preset.frameRate;
@@ -318,12 +320,10 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     else if (_ecs->GetRegistry().all_of<WorldMatrixComponent>(entity))
     {
         emitter.position = TransformHelpers::GetWorldPosition(_ecs->GetRegistry(), entity);
-        emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     }
     else
     {
         emitter.position = glm::vec3(0.0f, 0.0f, 0.0f);
-        emitter.velocity = glm::vec3(1.0f, 5.0f, 1.0f);
     }
 
     if (HasAnyFlags(flags, SpawnEmitterFlagBits::eSetCustomPosition))

@@ -112,6 +112,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         int emitterCount = static_cast<int>(selectedPreset.count);
         ImGui::DragInt("Count##Emitter Preset", &emitterCount, 1, 0, 1024);
         selectedPreset.count = emitterCount;
+        ImGui::DragFloat3("Starting Velocity##Emitter Preset", &selectedPreset.startingVelocity.x, 0.1f, -100.0f, 100.0f);
         ImGui::DragFloat("Mass##Emitter Preset", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
         ImGui::DragFloat("Rotation##Particle Emitter", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
         ImGui::DragFloat("Rotation velocity##Emitter Preset", &selectedPreset.rotationVelocity.y, 1.0f, -100.0f, 100.0f);
@@ -232,7 +233,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(cameraEntity);
                 TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
             }
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomVelocity, { 8.0f, 35.0f, 300.0f });
+            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive, { 8.0f, 35.0f, 300.0f });
         }
 
         ImGui::SameLine();
