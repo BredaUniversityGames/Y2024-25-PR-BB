@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/grenade.wren" for Grenade
 
 class Main {
 
@@ -53,6 +54,8 @@ class Main {
         __player.AttachChild(__camera)
 
         __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+
+        __grenade = null
 
         __camera.AttachChild(__gun)
 
@@ -116,9 +119,6 @@ class Main {
             engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFireAnimated(), emitterFlags, Vec3.new(30.5, 31.0, 168.0), Vec3.new(0.0, 0.0, 0.0))
         }
 
-        __rayDistance = 1000.0
-        __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
-
         var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
@@ -162,6 +162,20 @@ class Main {
            cheats.noClip = !cheats.noClip
         }
 
+        if (__grenade) {
+            __grenade.delay = Math.Max(__grenade.delay - dt / 1000, 0)
+
+            if (__grenade.delay == 0) {
+                
+                // for enemies in radius deal damage
+
+                __grenade.Explode(engine)
+                __grenade.Destroy(engine)
+
+                __grenade = null
+            }
+        }
+
         if (engine.GetInput().DebugIsInputEnabled()) {
             __playerMovement.Update(engine, dt, __playerController, __camera)
 
@@ -196,7 +210,9 @@ class Main {
 
             if (engine.GetInput().DebugGetKey(Keycode.eG())) {
                 if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
-                    // Throw grenade
+                    
+                    __grenade = Grenade.new(engine, __player)
+
                     __playerVariables.grenadeCharge = 0
                 }
             }

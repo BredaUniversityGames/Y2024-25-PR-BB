@@ -12,6 +12,7 @@
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "game_module.hpp"
@@ -115,14 +116,14 @@ bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
     return component.component->reversedZ;
 }
 
-void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float nearPlane)
 {
-    component.component->nearPlane = near;
+    component.component->nearPlane = nearPlane;
 }
 
-void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float farPlane)
 {
-    component.component->farPlane = far;
+    component.component->farPlane = farPlane;
 }
 
 void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
@@ -200,6 +201,8 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
+
+    entityClass.func<&WrenEntity::AddDefaultComponent<StaticMeshComponent>>("AddStaticMeshComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -292,5 +295,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         cameraClass.propExt<bindings::CameraGetNearPlane, bindings::CameraSetNearPlane>("nearPlane");
         cameraClass.propExt<bindings::CameraGetFarPlane, bindings::CameraSetFarPlane>("farPlane");
         cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
+
+        module.klass<WrenComponent<StaticMeshComponent>>("StaticMeshComponent");
     }
 }

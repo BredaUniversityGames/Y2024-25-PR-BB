@@ -21,6 +21,9 @@ struct WrenEntity
 
     template <typename T>
     void AddTag();
+
+    template <typename T>
+    void DeleteComponent();
 };
 
 template <typename T>
@@ -59,3 +62,12 @@ std::optional<WrenComponent<T>> WrenEntity::GetComponent()
     }
     return std::nullopt;
 };
+
+template <typename T>
+void WrenEntity::DeleteComponent()
+{
+    if (registry->all_of<T>(entity))
+    {
+        registry->erase<T>(entity);
+    }
+}
