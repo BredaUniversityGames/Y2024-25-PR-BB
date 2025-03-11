@@ -17,6 +17,45 @@ void SteamInputDeviceManager::Update()
     UpdateControllerConnectivity();
 }
 
+GamepadType SteamInputDeviceManager::GetGamepadType() const
+{
+    auto ConvertGamepadType = [](ESteamInputType steamType) -> GamepadType
+    {
+        switch (steamType)
+        {
+        case k_ESteamInputType_SteamController:
+            return GamepadType::eSteamController;
+        case k_ESteamInputType_XBox360Controller:
+            return GamepadType::eXBox360Controller;
+        case k_ESteamInputType_XBoxOneController:
+            return GamepadType::eXBoxOneController;
+        case k_ESteamInputType_GenericGamepad:
+            return GamepadType::eGenericXInput;
+        case k_ESteamInputType_PS4Controller:
+            return GamepadType::ePS4Controller;
+        case k_ESteamInputType_PS5Controller:
+            return GamepadType::ePS5Controller;
+        case k_ESteamInputType_SwitchProController:
+            return GamepadType::eSwitchProController;
+        case k_ESteamInputType_MobileTouch:
+            return GamepadType::eMobileTouch;
+        case k_ESteamInputType_PS3Controller:
+            return GamepadType::ePS3Controller;
+        default:
+            return GamepadType::eUnknown;
+        }
+    };
+
+    if (!IsGamepadAvailable())
+    {
+        bblog::error("[Input] No gamepad available while trying to get it's type!");
+        return GamepadType::eUnknown;
+    }
+
+    const ESteamInputType type = SteamInput()->GetInputTypeForHandle(_inputHandle);
+    return ConvertGamepadType(type);
+}
+
 void SteamInputDeviceManager::UpdateControllerConnectivity()
 {
     std::array<InputHandle_t, STEAM_CONTROLLER_MAX_COUNT> handles {};

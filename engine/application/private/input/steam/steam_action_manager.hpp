@@ -14,8 +14,8 @@ public:
     virtual void SetGameActions(const GameActions& gameActions) final;
     virtual void SetActiveActionSet(std::string_view actionSetName) final;
 
-    NO_DISCARD virtual std::vector<std::string> GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const final;
-    NO_DISCARD virtual std::vector<std::string> GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;

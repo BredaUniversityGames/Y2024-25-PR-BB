@@ -2,6 +2,7 @@
 #include "input/input_codes/gamepad.hpp"
 #include "input_codes/keys.hpp"
 #include "input_codes/mousebuttons.hpp"
+#include "common.hpp"
 #include <unordered_map>
 
 union SDL_Event;
@@ -17,16 +18,17 @@ public:
     virtual void Update();
     virtual void UpdateEvent(const SDL_Event& event);
 
-    [[nodiscard]] bool IsKeyPressed(KeyboardCode key) const;
-    [[nodiscard]] bool IsKeyHeld(KeyboardCode key) const;
-    [[nodiscard]] bool IsKeyReleased(KeyboardCode key) const;
+    NO_DISCARD bool IsKeyPressed(KeyboardCode key) const;
+    NO_DISCARD bool IsKeyHeld(KeyboardCode key) const;
+    NO_DISCARD bool IsKeyReleased(KeyboardCode key) const;
 
-    [[nodiscard]] bool IsMouseButtonPressed(MouseButton button) const;
-    [[nodiscard]] bool IsMouseButtonHeld(MouseButton button) const;
-    [[nodiscard]] bool IsMouseButtonReleased(MouseButton button) const;
+    NO_DISCARD bool IsMouseButtonPressed(MouseButton button) const;
+    NO_DISCARD bool IsMouseButtonHeld(MouseButton button) const;
+    NO_DISCARD bool IsMouseButtonReleased(MouseButton button) const;
     void GetMousePosition(int32_t& x, int32_t& y) const;
 
-    [[nodiscard]] virtual bool IsGamepadAvailable() const = 0;
+    NO_DISCARD virtual bool IsGamepadAvailable() const = 0;
+    NO_DISCARD virtual GamepadType GetGamepadType() const = 0;
     float ClampGamepadAxisDeadzone(float input) const;
 
 protected:

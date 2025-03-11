@@ -68,7 +68,7 @@ void SteamActionManager::SetActiveActionSet(std::string_view actionSetName)
     SteamInput()->RunFrame(); // Make sure a set is immediately used
 }
 
-std::vector<std::string> SteamActionManager::GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const
+std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {
@@ -105,7 +105,7 @@ std::vector<std::string> SteamActionManager::GetDigitalActionControllerGlyphImag
     return glyphPaths;
 }
 
-std::vector<std::string> SteamActionManager::GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const
+std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {

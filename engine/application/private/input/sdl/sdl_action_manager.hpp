@@ -15,6 +15,6 @@ private:
     NO_DISCARD virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const final;
     NO_DISCARD virtual glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, GamepadAnalog gamepadAnalog) const final;
 
-    NO_DISCARD virtual std::vector<std::string> GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const final;
-    NO_DISCARD virtual std::vector<std::string> GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const final;
 };

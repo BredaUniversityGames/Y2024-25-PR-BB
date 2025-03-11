@@ -51,3 +51,17 @@ enum class GamepadAnalog : uint32_t
     eAXIS_RIGHT,
     eDPAD,
 };
+
+enum class GamepadType : uint32_t
+{
+    eUnknown, // Catch-all for unrecognized devices
+    eSteamController, // Valve's Steam Controller
+    eXBox360Controller, // Microsoft's XBox 360 Controller
+    eXBoxOneController, // Microsoft's XBox One Controller
+    eGenericXInput, // Any generic 3rd-party XInput device
+    ePS4Controller, // Sony's PlayStation 4 Controller
+    ePS5Controller, // Sony's PlayStation 5 Controller
+    eSwitchProController, // Nintendo's Switch Pro Controller
+    eMobileTouch, // Steam Link App's Mobile Touch Controller
+    ePS3Controller, // Sony's PlayStation 3 Controller
+};
