@@ -19,8 +19,6 @@ public:
     GameModule() = default;
     ~GameModule() override = default;
 
-    HUD _hud;
-
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
 
