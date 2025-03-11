@@ -157,9 +157,7 @@ void BindVectorTypeOperations(wren::ForeignKlassImpl<T>& klass)
     klass.template funcExt<Normalized<T>>("normalize");
     klass.template funcExt<Length<T>>("length");
     klass.template funcExt<LeftRetMul<T, float>>("mulScalar");
-    // klass.template funcExt<RightRetMul<float, T>>("mulScalar");
     klass.template funcExt<LeftRetDiv<T, float>>("divScalar");
-    // klass.template funcExt<RightRetDiv<float, T>>("divScalar");
 }
 
 inline void BindMath(wren::ForeignModule& module)
