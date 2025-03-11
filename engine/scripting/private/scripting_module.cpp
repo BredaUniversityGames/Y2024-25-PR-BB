@@ -3,7 +3,7 @@
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
-void ScriptingModule::ResetVM(Engine& e)
+void ScriptingModule::ResetVM()
 {
     _mainModule.reset();
     _context->Reset();
@@ -53,7 +53,7 @@ void ScriptingModule::Tick(Engine& engine)
 
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
 {
-    ResetVM(engine);
+    ResetVM();
     if (auto result = _context->RunScript(path))
     {
         _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");

@@ -66,7 +66,7 @@ public:
 
                 // check if it should have collider
 
-                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL);
+                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eMESH);
                 _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
 
                 // add collider recursively

@@ -45,7 +45,9 @@ class Main {
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-        __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
+        var startPos = Vec3.new(25.0, 10.0, 50.0)
+
+        __playerController.AddTransformComponent().translation = startPos
         __playerController.AddPlayerTag()
         __playerController.AddNameComponent().name = "PlayerController"
         __playerController.AddCheatsComponent().noClip = false
@@ -67,14 +69,13 @@ class Main {
         __camera.AddNameComponent().name = "Camera"
         __camera.AddAudioListenerTag()
 
-        __player.AddTransformComponent()
+        __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        // Cathedral
-        engine.LoadModel("assets/models/Cathedral.glb")
+        // Load Map
+        engine.LoadModel("assets/models/blockoutv4.glb")
 
         // Gun Setup
-
         __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
 
         var gunTransform = __gun.GetTransformComponent()
@@ -89,18 +90,18 @@ class Main {
         __camera.AttachChild(__gun)
 
         // Clown setup
-        var clown = engine.LoadModel("assets/models/Clown.glb")
-        var clownAnimations = clown.GetAnimationControlComponent()
+        // var clown = engine.LoadModel("assets/models/Clown.glb")
+        // var clownAnimations = clown.GetAnimationControlComponent()
 
-        clownAnimations.Play("NarutoRun", 1.0, true)
-        clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
-        clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+        // clownAnimations.Play("NarutoRun", 1.0, true)
+        // clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
+        // clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         // Demon Setup
-        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")
-        var enemyTransform = enemyEntity.GetTransformComponent()
-        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+        // var enemyEntity = engine.LoadModel("assets/models/Demon.glb")
+        // var enemyTransform = enemyEntity.GetTransformComponent()
+        // enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+        // enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
@@ -108,41 +109,41 @@ class Main {
         __activeWeapon.equip(engine)
 
         // Inside cathedral: pentagram scene
-        {   // Fire emitter 1
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
-        }
+        // {   // Fire emitter 1
+        //     var emitter = engine.GetECS().NewEntity()
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        // }
 
-        {   // Fire emitter 2
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
-        }
+        // {   // Fire emitter 2
+        //     var emitter = engine.GetECS().NewEntity()
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        // }
 
-        {   // Fire emitter 3
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
-        }
+        // {   // Fire emitter 3
+        //     var emitter = engine.GetECS().NewEntity()
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
+        // }
 
-        {   // Fire emitter 4
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
-        }
+        // {   // Fire emitter 4
+        //     var emitter = engine.GetECS().NewEntity()
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
+        // }
 
-        {   // Dust emitter
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
-        }
+        // {   // Dust emitter
+        //     var emitter = engine.GetECS().NewEntity()
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
+        // }
 
-        __testEmitter = engine.GetECS().NewEntity()
-        {   // Test emitter
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
-        }
+        // __testEmitter = engine.GetECS().NewEntity()
+        // {   // Test emitter
+        //     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        //     engine.GetParticles().SpawnEmitter(__testEmitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 1.0, 0.0))
+        // }
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
@@ -179,6 +180,7 @@ class Main {
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
+
             __playerMovement.Update(engine, dt, __playerController, __camera)
 
             for (weapon in __armory) {
@@ -269,6 +271,6 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
+        // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }

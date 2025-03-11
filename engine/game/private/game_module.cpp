@@ -73,6 +73,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (!_nextScene.empty())
     {
         engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextScene);
+        engine.GetModule<TimeModule>().ResetTimer();
     }
 
     _nextScene.clear();

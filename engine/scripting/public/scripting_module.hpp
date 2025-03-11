@@ -22,7 +22,7 @@ public:
     ScriptingModule() = default;
     ~ScriptingModule() override = default;
 
-    void ResetVM(Engine& e);
+    void ResetVM();
 
     // Used for tests, stick with default
     void SetEngineBindingsPath(const std::string& p)
