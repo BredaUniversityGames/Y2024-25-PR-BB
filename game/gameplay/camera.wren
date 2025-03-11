@@ -16,6 +16,9 @@ class CameraVariables {
     shakeOffset=(value) {_shakeOffset = value}
     tiltFactor=(value) {_tiltFactor = value}
 
+    SetShake(shake) {
+        _shakeIntensity = Math.Max(_shakeIntensity, shake)
+    }
 
     Shake(engine, cameraEntity, timer) {
         if (_shakeIntensity > 0.001) {

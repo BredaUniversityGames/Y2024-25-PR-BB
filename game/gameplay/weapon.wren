@@ -53,7 +53,7 @@ class Pistol {
 
             // Shake the camera
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity            
+            cameraVariables.SetShake(_cameraShakeIntensity)            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -169,7 +169,7 @@ class Shotgun {
             _ammo = _ammo - 1
             System.print("Shotgun shoot")
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity
+            cameraVariables.SetShake(_cameraShakeIntensity)         
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -273,7 +273,7 @@ class Knife {
         if (_cooldown <= 0) {
             System.print("Knife Stab")
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity
+            cameraVariables.SetShake(_cameraShakeIntensity)         
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")

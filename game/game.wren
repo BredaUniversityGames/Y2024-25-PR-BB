@@ -169,6 +169,8 @@ class Main {
                 
                 // for enemies in radius deal damage
 
+                __cameraVariables.SetShake(__grenade.cameraShakeIntensity)
+
                 __grenade.Explode(engine)
                 __grenade.Destroy(engine)
 

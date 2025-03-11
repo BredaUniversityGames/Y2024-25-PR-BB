@@ -32,8 +32,6 @@ class Grenade {
 
     damage {_damage}
 
-
-
     Explode(engine) {
         var translation = _entity.GetTransformComponent().GetWorldTranslation()
 
