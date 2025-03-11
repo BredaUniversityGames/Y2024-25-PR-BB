@@ -33,6 +33,7 @@ enum class EmitterPresetID : uint8_t
     eRay,
     eStab,
     eShotgunShoot,
+    eFireAnimated,
     eNone
 };
 
@@ -67,16 +68,21 @@ private:
         float emitDelay = 1.0f;
         uint32_t count = 0;
         uint32_t materialIndex = 0;
-        glm::vec3 spawnRandomness = { 1.0f, 1.0f, 1.0f };
+        glm::vec3 spawnRandomness = { 0.0f, 0.0f, 0.0f };
         uint32_t flags = 0;
         glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 startingVelocity = { 1.0f, 5.0f, 1.0f };
+        glm::ivec2 spriteDimensions = { 1.0f, 1.0f };
+        uint32_t frameCount = 1;
+        float frameRate = 0.0f;
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
         std::list<ParticleBurst> bursts = {};
         std::string name = "Emitter Preset";
+        std::string imageName = "null";
     };
 
-    ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName);
-    void SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle<GPUImage> image);
+    ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName, bool& imageFound);
+    bool SetEmitterPresetImage(EmitterPreset& preset, std::string fileName);
 
     std::vector<EmitterPreset> _emitterPresets;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
