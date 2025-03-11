@@ -122,7 +122,7 @@ bool ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, std::string fi
     bool imageFound;
     auto image = GetEmitterImage(fileName, imageFound);
 
-    preset.imageName = fileName;
+    preset.imageName = std::move(fileName);
     preset.materialIndex = image.Index();
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
