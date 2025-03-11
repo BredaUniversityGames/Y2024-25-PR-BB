@@ -53,39 +53,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    std::vector<std::string> modelPaths = {
-        //"assets/models/Cathedral.glb",
-        //"assets/models/AnimatedRifle.glb",
-        //"assets/models/BrainStem.glb",
-        //"assets/models/Adventure.glb",
-        //"assets/models/DamagedHelmet.glb",
-        //"assets/models/CathedralGLB_GLTF.glb",
-        //"assets/models/Terrain/scene.gltf",
-        //"assets/models/ABeautifulGame/ABeautifulGame.gltf",
-        //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-    };
-
-    for (auto& path : modelPaths)
-    {
-        SceneLoading::LoadModel(engine, path);
-    }
-
-    entt::entity cameraEntity = ECS.GetRegistry().create();
-    ECS.GetRegistry().emplace<NameComponent>(cameraEntity, "Camera");
-    ECS.GetRegistry().emplace<TransformComponent>(cameraEntity);
-    ECS.GetRegistry().emplace<RelationshipComponent>(cameraEntity);
-
-    // RelationshipHelpers::AttachChild(ECS.GetRegistry(), cameraEntity, gunEntity);
-
-    CameraComponent& cameraComponent = ECS.GetRegistry().emplace<CameraComponent>(cameraEntity);
-    cameraComponent.projection = CameraComponent::Projection::ePerspective;
-    cameraComponent.fov = 45.0f;
-    cameraComponent.nearPlane = 0.5f;
-    cameraComponent.farPlane = 600.0f;
-    cameraComponent.reversedZ = true;
-
-    ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
     bblog::info("Successfully initialized engine!");
 
@@ -160,8 +127,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    _lastMousePos = { mouseX, mouseY };
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);

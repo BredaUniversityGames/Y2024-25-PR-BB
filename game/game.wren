@@ -16,7 +16,21 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
+        // Directional Light
+        __directionalLight = engine.GetECS().NewEntity()
+        __directionalLight.AddNameComponent().name = "Directional Light"
+
+        var comp = __directionalLight.AddDirectionalLightComponent()
+        comp.color = Vec3.new(4.0, 3.2, 1.2)
+        comp.planes = Vec2.new(0.1, 1000.0)
+        comp.orthographicSize = 75.0
+
+        var transform = __directionalLight.AddTransformComponent()
+        transform.translation = Vec3.new(-105.0, 68.0, 168.0)
+        transform.rotation = Quat.new(-0.29, 0.06, -0.93, -0.19)
+
         // Player Setup
+
         __playerVariables = PlayerVariables.new()
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
@@ -25,20 +39,7 @@ class Main {
         __hasDashed = false
         __timer = 0
 
-        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
-        if (previousPlayer) {
-            engine.GetECS().DestroyEntity(previousPlayer)
-        }
-
-        var previousCamera = engine.GetECS().GetEntityByName("Camera")
-        if (previousCamera) {
-            engine.GetECS().DestroyEntity(previousCamera)
-        }
-
-        var previousDummy = engine.GetECS().GetEntityByName("Player")
-        if (previousDummy) {
-            engine.GetECS().DestroyEntity(previousDummy)
-        }
+        // Player stuff
 
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
@@ -47,39 +48,45 @@ class Main {
         __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
         __playerController.AddPlayerTag()
         __playerController.AddNameComponent().name = "PlayerController"
+        __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
         var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
         __playerController.AddRigidbodyComponent(rb)
 
-        // Cathedral
-        engine.LoadModel("assets/models/Cathedral.glb")
+        __cameraVariables = CameraVariables.new()
 
-        // Gun Setup
-        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
-        __camera.AddTransformComponent()
-        __camera.AddNameComponent().name = "Camera"
-        __camera.AddAudioListenerTag()
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = 45.0
         cameraProperties.nearPlane = 0.5
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
-        
-        __cameraVariables = CameraVariables.new()
-        
+
+        __camera.AddTransformComponent()
+        __camera.AddAudioEmitterComponent()
+        __camera.AddNameComponent().name = "Camera"
+        __camera.AddAudioListenerTag()
+
         __player.AddTransformComponent()
         __player.AddNameComponent().name = "Player"
 
-        __player.AttachChild(__camera)
+        // Cathedral
+        engine.LoadModel("assets/models/Cathedral.glb")
 
-        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        // Gun Setup
 
-        __camera.AttachChild(__gun)
+        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
+
+        var gunTransform = __gun.GetTransformComponent()
+        gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
 
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
+
+        __player.AttachChild(__camera)
+        __camera.AttachChild(__gun)
 
         // Clown setup
         var clown = engine.LoadModel("assets/models/Clown.glb")
@@ -94,17 +101,6 @@ class Main {
         var enemyTransform = enemyEntity.GetTransformComponent()
         enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
         enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
-
-        if (__camera) {
-            System.print("Player is online!")
-
-            __camera.AddAudioEmitterComponent()
-            __playerController.AddCheatsComponent()
-
-            var gunTransform = __gun.GetTransformComponent()
-            gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
-        }
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
@@ -156,23 +152,14 @@ class Main {
     }
 
     static Shutdown(engine) {
-
-        __camera.DetachChild(__gun)
-        System.print("Shutdown script!")
-        engine.GetECS().DestroyEntity(__playerController)
+        engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
-        __counter = __counter + 1
+
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
-        __frameTimer = __frameTimer + dt
         __timer = __timer + dt
-
-        if (__frameTimer > 1000.0) {
-            __frameTimer = __frameTimer - 1000.0
-            __counter = 0
-        }
 
         if (__playerVariables.ultActive) {
             __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)

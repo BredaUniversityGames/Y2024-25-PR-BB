@@ -120,165 +120,166 @@ void DirectionalLightComponentSetOrthographicSize(WrenComponent<DirectionalLight
 float DirectionalLightComponentGetOrthographicSize(WrenComponent<DirectionalLightComponent>& component)
 {
     return component.component->orthographicSize;
-    == == == = float CameraGetFOV(WrenComponent<CameraComponent> & component)
+}
+float CameraGetFOV(WrenComponent<CameraComponent>& component)
+{
+    return component.component->fov;
+}
+
+void CameraSetFOV(WrenComponent<CameraComponent>& component, const float fov)
+{
+    component.component->fov = fov;
+}
+
+float CameraGetNearPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->nearPlane;
+}
+
+float CameraGetFarPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->farPlane;
+}
+
+bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
+{
+    return component.component->reversedZ;
+}
+
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+{
+    component.component->nearPlane = near;
+}
+
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+{
+    component.component->farPlane = far;
+}
+
+void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
+{
+    component.component->reversedZ = reversedZ;
+}
+
+uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
+
+void AttachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
     {
-        return component.component->fov;
+        self.registry->emplace<RelationshipComponent>(self.entity);
     }
 
-    void CameraSetFOV(WrenComponent<CameraComponent> & component, const float fov)
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
     {
-        component.component->fov = fov;
+        child.registry->emplace<RelationshipComponent>(child.entity);
     }
 
-    float CameraGetNearPlane(WrenComponent<CameraComponent> & component)
+    RelationshipHelpers::AttachChild(*self.registry, self.entity, child.entity);
+}
+
+void DetachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
     {
-        return component.component->nearPlane;
+        self.registry->emplace<RelationshipComponent>(self.entity);
     }
 
-    float CameraGetFarPlane(WrenComponent<CameraComponent> & component)
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
     {
-        return component.component->farPlane;
+        child.registry->emplace<RelationshipComponent>(child.entity);
     }
 
-    bool CameraGetReversedZ(WrenComponent<CameraComponent> & component)
-    {
-        return component.component->reversedZ;
-    }
+    RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
+}
 
-    void CameraSetNearPlane(WrenComponent<CameraComponent> & component, const float near)
-    {
-        component.component->nearPlane = near;
-    }
+void BindEntity(wren::ForeignModule& module)
+{
+    // Entity class
+    auto& entityClass = module.klass<WrenEntity>("Entity");
+    entityClass.funcExt<GetEntity>("GetEnttEntity");
 
-    void CameraSetFarPlane(WrenComponent<CameraComponent> & component, const float far)
-    {
-        component.component->farPlane = far;
-    }
+    entityClass.funcExt<AttachChild>("AttachChild");
+    entityClass.funcExt<DetachChild>("DetachChild");
 
-    void CameraSetReversedZ(WrenComponent<CameraComponent> & component, const bool reversedZ)
-    {
-        component.component->reversedZ = reversedZ;
-    }
+    entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
 
-    uint32_t GetEntity(WrenEntity & self) { return static_cast<uint32_t>(self.entity); }
+    entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<TransformComponent>>("AddTransformComponent");
 
-    void AttachChild(WrenEntity & self, WrenEntity & child)
+    entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
+
+    entityClass.func<&WrenEntity::AddTag<AudioListenerComponent>>("AddAudioListenerTag");
+
+    entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<LifetimeComponent>>("AddLifetimeComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<CheatsComponent>>("AddCheatsComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
+    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<DirectionalLightComponent>>("GetDirectionalLightComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
+    entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
+}
+
+WrenEntity CreateEntity(ECSModule& self)
+{
+    return { self.GetRegistry().create(), &self.GetRegistry() };
+}
+
+void FreeEntity(ECSModule& self, WrenEntity& entity)
+{
+    if (!self.GetRegistry().valid(entity.entity))
+        return;
+    self.DestroyEntity(entity.entity);
+}
+
+void Clear(ECSModule& self)
+{
+    self.GetRegistry().clear();
+}
+
+std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
+{
+    auto view = self.GetRegistry().view<NameComponent>();
+    for (auto&& [e, n] : view.each())
     {
-        if (!self.registry->all_of<RelationshipComponent>(self.entity))
+        if (n.name == name)
         {
-            self.registry->emplace<RelationshipComponent>(self.entity);
+            return WrenEntity { e, &self.GetRegistry() };
         }
+    }
 
-        if (!child.registry->all_of<RelationshipComponent>(child.entity))
+    return std::nullopt;
+}
+
+std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& name)
+{
+    std::vector<WrenEntity> entities {};
+    auto view = self.GetRegistry().view<NameComponent>();
+    for (auto&& [e, n] : view.each())
+    {
+        if (n.name == name)
         {
-            child.registry->emplace<RelationshipComponent>(child.entity);
+            entities.emplace_back(WrenEntity { e, &self.GetRegistry() });
         }
-
-        RelationshipHelpers::AttachChild(*self.registry, self.entity, child.entity);
     }
 
-    void DetachChild(WrenEntity & self, WrenEntity & child)
-    {
-        if (!self.registry->all_of<RelationshipComponent>(self.entity))
-        {
-            self.registry->emplace<RelationshipComponent>(self.entity);
-        }
-
-        if (!child.registry->all_of<RelationshipComponent>(child.entity))
-        {
-            child.registry->emplace<RelationshipComponent>(child.entity);
-        }
-
-        RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
-    }
-
-    void BindEntity(wren::ForeignModule & module)
-    {
-        // Entity class
-        auto& entityClass = module.klass<WrenEntity>("Entity");
-        entityClass.funcExt<GetEntity>("GetEnttEntity");
-
-        entityClass.funcExt<AttachChild>("AttachChild");
-        entityClass.funcExt<DetachChild>("DetachChild");
-
-        entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
-
-        entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<TransformComponent>>("AddTransformComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
-
-        entityClass.func<&WrenEntity::AddTag<AudioListenerComponent>>("AddAudioListenerTag");
-
-        entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<LifetimeComponent>>("GetLifetimeComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<LifetimeComponent>>("AddLifetimeComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<CheatsComponent>>("GetCheatsComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<CheatsComponent>>("AddCheatsComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
-        entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
-
-        entityClass.func<&WrenEntity::GetComponent<DirectionalLightComponent>>("GetDirectionalLightComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
-        entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
-        entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
-    }
-
-    WrenEntity CreateEntity(ECSModule & self)
-    {
-        return { self.GetRegistry().create(), &self.GetRegistry() };
-    }
-
-    void FreeEntity(ECSModule & self, WrenEntity & entity)
-    {
-        if (!self.GetRegistry().valid(entity.entity))
-            return;
-        self.DestroyEntity(entity.entity);
-    }
-
-    void Clear(ECSModule & self)
-    {
-        self.GetRegistry().clear();
-    }
-
-    std::optional<WrenEntity> GetEntityByName(ECSModule & self, const std::string& name)
-    {
-        auto view = self.GetRegistry().view<NameComponent>();
-        for (auto&& [e, n] : view.each())
-        {
-            if (n.name == name)
-            {
-                return WrenEntity { e, &self.GetRegistry() };
-            }
-        }
-
-        return std::nullopt;
-    }
-
-    std::vector<WrenEntity> GetEntitiesByName(ECSModule & self, const std::string& name)
-    {
-        std::vector<WrenEntity> entities {};
-        auto view = self.GetRegistry().view<NameComponent>();
-        for (auto&& [e, n] : view.each())
-        {
-            if (n.name == name)
-            {
-                entities.emplace_back(WrenEntity { e, &self.GetRegistry() });
-            }
-        }
-
-        return entities;
-    }
+    return entities;
+}
 }
 
 void BindEntityAPI(wren::ForeignModule& module)
