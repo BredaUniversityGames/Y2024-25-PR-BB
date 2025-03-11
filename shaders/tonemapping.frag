@@ -181,7 +181,7 @@ vec3 Sky(in vec3 ro, in vec3 rd)
     skyCol += sun;
 
     // clouds
-    float t = pc.time * 0.001;
+    float t = pc.time * 0.1;
     float den = fbm(vec2(p.x - t, p.y - t));
     skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
 
