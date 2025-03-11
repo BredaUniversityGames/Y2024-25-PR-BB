@@ -3,7 +3,7 @@
 #include "resource_manager.hpp"
 
 #include "common.hpp"
-#include "emitter_component.hpp"
+#include "components/emitter_component.hpp"
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"

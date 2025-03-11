@@ -1,4 +1,4 @@
-#include "emitter_component.hpp"
+#include "components/emitter_component.hpp"
 
 #include <magic_enum.hpp>
 
