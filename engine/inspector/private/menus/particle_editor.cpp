@@ -76,13 +76,18 @@ void ParticleEditor::RenderEmitterPresetEditor()
         // image loading (scuffed for now)
         ImGui::Text("assets/textures/particles/");
         ImGui::SameLine();
-        ImGui::InputText("Image##Emitter Preset", &_currentImage);
+        ImGui::InputText("Image##Emitter Preset", &selectedPreset.imageName);
 
         if (ImGui::Button("Load Image##Emitter Preset"))
         {
-            auto image = _particleModule.GetEmitterImage(_currentImage);
-            _particleModule.SetEmitterPresetImage(selectedPreset, image);
-            _imageLoadMessage = "Loaded successfully!";
+            if (_particleModule.SetEmitterPresetImage(selectedPreset, selectedPreset.imageName))
+            {
+                _imageLoadMessage = "Loaded successfully!";
+            }
+            else
+            {
+                _imageLoadMessage = "Error loading image...";
+            }
         }
         ImGui::SameLine();
         ImGui::Text("%s", _imageLoadMessage.c_str());
@@ -144,6 +149,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
         ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
         ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+        ImGui::CheckboxFlags("Lock Y##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eLockY));
 
         // burst table
         ImGui::Text("Bursts:");

@@ -74,7 +74,7 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal * Vec3.new(10, 10, 10))
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal)
             }
 
             var length = (end - start).length()

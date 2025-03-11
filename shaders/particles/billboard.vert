@@ -38,7 +38,21 @@ void main()
     );
     quadPos.xy *= rot;
     quadPos.xy *= instance.size;
-    quadPos *= mat3(camera.view);
+
+    mat3 rotToCam = mat3(1.0f);
+
+    if ((instance.flags & LOCKY) == LOCKY)
+    {
+        rotToCam[0][0] = camera.view[0][0];
+        rotToCam[1][0] = camera.view[1][0];
+        rotToCam[2][0] = camera.view[2][0];
+    }
+    else
+    {
+        rotToCam = mat3(camera.view);
+    }
+
+    quadPos *= mat3(rotToCam);
     position = instance.position + quadPos;
 
     // sprite sheet uv offsets calculation

@@ -4,6 +4,7 @@ const uint MAX_PARTICLES = 1024 * 64;
 const uint UNLIT = 1 << 0;
 const uint NOSHADOW = 1 << 1;
 const uint FRAMEBLEND = 1 << 2;
+const uint LOCKY = 1 << 3;
 
 struct Particle
 {

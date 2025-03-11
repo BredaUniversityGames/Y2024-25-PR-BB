@@ -74,6 +74,7 @@ void ParticleEmitterComponent::Inspect()
     ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
     ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
     ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+    ImGui::CheckboxFlags("Lock Y##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eLockY));
     emitter.flags = flags;
 
     ImGui::Text("Bursts:");

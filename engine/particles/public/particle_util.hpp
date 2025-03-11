@@ -12,7 +12,8 @@ enum class ParticleRenderFlagBits : uint8_t
 {
     eUnlit = 1 << 0,
     eNoShadow = 1 << 1,
-    eFrameBlend = 1 << 2
+    eFrameBlend = 1 << 2,
+    eLockY = 1 << 3, // lock y-axis when rotating to camera
 };
 GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)
 

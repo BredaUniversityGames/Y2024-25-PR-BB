@@ -77,10 +77,11 @@ private:
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
         std::list<ParticleBurst> bursts = {};
         std::string name = "Emitter Preset";
+        std::string imageName = "null";
     };
 
-    ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName);
-    void SetEmitterPresetImage(EmitterPreset& preset, ResourceHandle<GPUImage> image);
+    ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName, bool& imageFound);
+    bool SetEmitterPresetImage(EmitterPreset& preset, std::string fileName);
 
     std::vector<EmitterPreset> _emitterPresets;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
