@@ -41,15 +41,17 @@ void main()
 
     mat3 rotToCam = mat3(1.0f);
 
-    if ((instance.flags & LOCKY) == LOCKY)
+    // rotate with camera's right vector
+    rotToCam[0][0] = camera.view[0][0];
+    rotToCam[1][0] = camera.view[1][0];
+    rotToCam[2][0] = camera.view[2][0];
+
+    if ((instance.flags & LOCKY) != LOCKY)
     {
-        rotToCam[0][0] = camera.view[0][0];
-        rotToCam[1][0] = camera.view[1][0];
-        rotToCam[2][0] = camera.view[2][0];
-    }
-    else
-    {
-        rotToCam = mat3(camera.view);
+        // rotate with camera's up vector
+        rotToCam[0][1] = camera.view[0][1];
+        rotToCam[1][1] = camera.view[1][1];
+        rotToCam[2][1] = camera.view[2][1];
     }
 
     quadPos *= mat3(rotToCam);
