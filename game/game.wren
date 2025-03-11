@@ -24,21 +24,6 @@ class Main {
         __hasDashed = false
         __timer = 0
 
-        var previousPlayer = engine.GetECS().GetEntityByName("PlayerController")
-        if (previousPlayer) {
-            engine.GetECS().DestroyEntity(previousPlayer)
-        }
-
-        var previousCamera = engine.GetECS().GetEntityByName("Camera")
-        if (previousCamera) {
-            engine.GetECS().DestroyEntity(previousCamera)
-        }
-
-        var previousDummy = engine.GetECS().GetEntityByName("Player")
-        if (previousDummy) {
-            engine.GetECS().DestroyEntity(previousDummy)
-        }
-
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
@@ -145,6 +130,8 @@ class Main {
     static Shutdown(engine) {
 
         __camera.DetachChild(__gun)
+        engine.GetECS().DestroyEntity(__playerController)
+        engine.GetECS().DestroyEntity(__player)
         System.print("Shutdown script!")
     }
 

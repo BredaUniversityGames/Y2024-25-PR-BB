@@ -2,8 +2,6 @@
 
 #include "imgui_entt_entity_editor.hpp"
 
-#include <entt/entt.hpp>
-
 struct AudioListenerComponent
 {
 };
