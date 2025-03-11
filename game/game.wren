@@ -162,6 +162,8 @@ class Main {
         var deltaTime = engine.GetTime().GetDeltatime()
         __timer = __timer + dt
 
+        __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
+
         if (__playerVariables.ultActive) {
             __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
             if (__playerVariables.ultCharge <= 0) {

@@ -102,9 +102,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         return;
     }
 
-    int32_t mouseX, mouseY;
-    inputDeviceManager.GetMousePosition(mouseX, mouseY);
-
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 

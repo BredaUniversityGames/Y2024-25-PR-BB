@@ -11,7 +11,9 @@ static constexpr int32_t MAX_PARTICLES = 1024 * 64;
 enum class ParticleRenderFlagBits : uint8_t
 {
     eUnlit = 1 << 0,
-    eNoShadow = 1 << 1
+    eNoShadow = 1 << 1,
+    eFrameBlend = 1 << 2,
+    eLockY = 1 << 3, // lock y-axis when rotating to camera
 };
 GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)
 
@@ -31,6 +33,9 @@ struct alignas(16) Emitter
     uint8_t flags = 0;
     glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
     glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+    float frameRate = 0.0f;
+    glm::ivec2 maxFrames = { 1, 1 };
+    uint32_t frameCount = 1;
 };
 
 struct alignas(16) Particle
@@ -45,7 +50,11 @@ struct alignas(16) Particle
     glm::vec3 size = { 1.0f, 1.0f, 0.0f };
     uint8_t flags = 0;
     glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    float frameRate = 0.0f;
     glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
+    uint32_t frameCount = 1;
+    glm::ivec2 maxFrames = { 1, 1 };
+    glm::vec2 textureMultiplier = { 1.0f, 1.0f };
 };
 
 struct alignas(16) ParticleCounters
@@ -63,6 +72,10 @@ struct alignas(16) ParticleInstance
     float angle = 0.0f;
     uint8_t flags = 0;
     glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    float frameBlend = 0.0f;
+    glm::ivec2 frameOffsetCurrent = { 0, 0 };
+    glm::ivec2 frameOffsetNext = { 0, 0 };
+    glm::vec2 textureMultiplier = { 1.0f, 1.0f };
 };
 
 struct alignas(16) CulledInstances
