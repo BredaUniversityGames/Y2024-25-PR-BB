@@ -91,8 +91,11 @@ public:
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
-    // Gets the path to the image containing the controller glyph to be shown for the action given.
-    NO_DISCARD virtual std::string GetDigitalActionControllerGlyphImagePath(std::string_view actionName) const = 0;
+    // Gets the path to the image containing the controller glyph to be shown for the digital action given.
+    NO_DISCARD virtual std::vector<std::string> GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const = 0;
+
+    // Gets the path to the image containing the controller glyph to be shown for the analog action given.
+    NO_DISCARD virtual std::vector<std::string> GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const = 0;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;

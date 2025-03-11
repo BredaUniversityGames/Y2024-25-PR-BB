@@ -73,7 +73,12 @@ glm::vec2 SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName,
     return result;
 }
 
-std::string SDLActionManager::GetDigitalActionControllerGlyphImagePath(std::string_view actionName) const
+std::vector<std::string> SDLActionManager::GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const
 {
-    return {};
+    return {}; // TODO
+}
+
+std::vector<std::string> SDLActionManager::GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const
+{
+    return {}; // TODO
 }

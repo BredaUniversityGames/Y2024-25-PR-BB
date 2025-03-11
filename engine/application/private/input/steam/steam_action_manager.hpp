@@ -13,7 +13,8 @@ public:
     virtual void Update() final;
     virtual void SetGameActions(const GameActions& gameActions) final;
 
-    NO_DISCARD virtual std::string GetDigitalActionControllerGlyphImagePath(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const final;
+    NO_DISCARD virtual std::vector<std::string> GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;

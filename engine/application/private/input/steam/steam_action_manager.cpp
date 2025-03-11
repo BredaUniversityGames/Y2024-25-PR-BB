@@ -58,11 +58,10 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
-std::string SteamActionManager::GetDigitalActionControllerGlyphImagePath(std::string_view actionName) const // TODO: Multiple paths possible
+std::vector<std::string> SteamActionManager::GetDigitalActionControllerGlyphImagePaths(std::string_view actionName) const
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {
-        // TODO: Check for keyboard
         return {};
     }
 
@@ -71,28 +70,76 @@ std::string SteamActionManager::GetDigitalActionControllerGlyphImagePath(std::st
     auto itr = actionSetCache.gamepadDigitalActionsCache.find(actionName.data());
     if (itr == actionSetCache.gamepadDigitalActionsCache.end())
     {
-        bblog::error("[Input] Failed to find analog action cache \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
+        bblog::error("[Input] Failed to find digital action cache \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
         return {};
     }
 
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
     SteamInput()->GetDigitalActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
-    EInputActionOrigin firstOrigin = origins[0];
-
-    if (firstOrigin == k_EInputActionOrigin_None)
+    if (origins[0] == k_EInputActionOrigin_None)
     {
-        bblog::error("[Input] Action '{}' is not bound to any input, couldn't find any input glyph path", actionName);
+        bblog::error("[Input] Action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
         return {};
     }
 
+    std::vector<std::string> glyphPaths{};
+
     // TODO: Load our own first, if none are available, get defaults from Steam
 
-    std::string localGlyphPath = SteamInput()->GetGlyphPNGForActionOrigin(firstOrigin, k_ESteamInputGlyphSize_Large, 0);
+    for (uint32_t i = 0; i < STEAM_INPUT_MAX_ORIGINS; ++i)
+    {
+        if (origins[i] == k_EInputActionOrigin_None)
+        {
+            break;
+        }
 
-    bblog::error("[Input] Glyph path: \"{}\"", localGlyphPath);
+        glyphPaths.push_back(SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0));
+    }
 
-    return localGlyphPath;
+    return glyphPaths;
+}
+
+std::vector<std::string> SteamActionManager::GetAnalogActionControllerGlyphImagePaths(std::string_view actionName) const
+{
+    if (!_steamInputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
+    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find analog action cache \"{}\" in the current active action set \"{}\"", actionName, _gameActions[_activeActionSet].name);
+        return {};
+    }
+
+    std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
+    SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
+
+    if (origins[0] == k_EInputActionOrigin_None)
+    {
+        bblog::error("[Input] Action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
+        return {};
+    }
+
+    std::vector<std::string> glyphPaths{};
+
+    // TODO: Load our own first, if none are available, get defaults from Steam
+
+    for (uint32_t i = 0; i < STEAM_INPUT_MAX_ORIGINS; ++i)
+    {
+        if (origins[i] == k_EInputActionOrigin_None)
+        {
+            break;
+        }
+
+        glyphPaths.push_back(SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0));
+    }
+
+    return glyphPaths;
 }
 
 DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
