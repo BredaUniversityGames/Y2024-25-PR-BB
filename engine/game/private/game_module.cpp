@@ -86,11 +86,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     cameraComponent.reversedZ = true;
 
     ECS.GetRegistry().emplace<AudioListenerComponent>(cameraEntity);
-
-    glm::ivec2 mousePos;
-    applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-    _lastMousePos = mousePos;
-
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
     bblog::info("Successfully initialized engine!");
 
@@ -126,13 +121,10 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
-    auto& actionManager = applicationModule.GetActionManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
     auto& scriptingModule = engine.GetModule<ScriptingModule>();
-
-    float deltaTimeMS = engine.GetModule<TimeModule>().GetDeltatime().count();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -152,7 +144,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         ZoneNamedN(updateCamera, "Update Camera", true);
 
         auto cameraView = ECS.GetRegistry().view<CameraComponent, TransformComponent>();
-        auto playerEntity = ECS.GetRegistry().view<PlayerTag>().front();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
             auto windowSize = applicationModule.DisplaySize();
@@ -163,58 +154,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
                 continue;
             }
 
-            constexpr glm::vec3 RIGHT = { 1.0f, 0.0f, 0.0f };
-            constexpr glm::vec3 FORWARD = { 0.0f, 0.0f, -1.0f };
-
-            constexpr float MOUSE_SENSITIVITY = 0.003f;
-            constexpr float GAMEPAD_LOOK_SENSITIVITY = 0.025f;
-            constexpr float CAM_SPEED = 0.03f;
-
-            glm::ivec2 mouseDelta = _lastMousePos - glm::ivec2 { mouseX, mouseY };
-            glm::vec2 rotationDelta = { -mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY };
-
-            glm::vec2 lookAnalogAction = actionManager.GetAnalogAction("Look");
-            rotationDelta.x += lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY;
-            rotationDelta.y += lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY;
-
-            glm::quat rotation = TransformHelpers::GetLocalRotation(transformComponent);
-            glm::vec3 eulerRotation = glm::eulerAngles(rotation);
-            eulerRotation.x += rotationDelta.y;
-
-            // At 90 or -90 degrees yaw rotation, pitch snaps to 90 or -90 when using clamp here
-            // eulerRotation.x = std::clamp(eulerRotation.x, glm::radians(-90.0f), glm::radians(90.0f));
-
-            glm::vec3 cameraForward = glm::normalize(rotation * FORWARD);
-            if (cameraForward.z > 0.0f)
-                eulerRotation.y += rotationDelta.x;
-            else
-                eulerRotation.y -= rotationDelta.x;
-
-            rotation = glm::quat(eulerRotation);
-            TransformHelpers::SetLocalRotation(ECS.GetRegistry(), entity, rotation);
-
-            glm::vec3 movementDir {};
-            glm::vec2 moveAnalogAction = actionManager.GetAnalogAction("Move");
-            movementDir += RIGHT * moveAnalogAction.x;
-            movementDir += FORWARD * moveAnalogAction.y;
-
-            if (glm::length(movementDir) != 0.0f)
-            {
-                movementDir = glm::normalize(movementDir);
-            }
-
-            glm::vec3 position = TransformHelpers::GetLocalPosition(transformComponent);
-            position += rotation * movementDir * deltaTimeMS * CAM_SPEED;
-
-            // Only update the position if the player is not in noclip mode
-            if (ECS.GetRegistry().all_of<CheatsComponent>(playerEntity))
-            {
-                CheatsComponent& cheatsComponent = ECS.GetRegistry().get<CheatsComponent>(playerEntity);
-                if (cheatsComponent.noClip == true)
-                {
-                    TransformHelpers::SetLocalPosition(ECS.GetRegistry(), entity, position);
-                }
-            }
+            glm::vec3 position = TransformHelpers::GetWorldPosition(ECS.GetRegistry(), entity);
 
             JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
