@@ -26,7 +26,7 @@
 
 struct Settings
 {
-    VERSION(0);
+    VERSION(1);
 
     struct Fog
     {
@@ -61,12 +61,13 @@ struct Settings
 
     struct Bloom
     {
-        VERSION(0);
+        VERSION(1);
 
         glm::vec3 colorWeights { 0.2126f, 0.7152f, 0.0722f };
         float strength { 0.8f };
         float gradientStrength { 0.2f };
         float maxBrightnessExtraction { 5.0f };
+        float filterRadius { 0.005f };
     } bloom;
 
     struct Tonemapping
@@ -116,6 +117,14 @@ struct Settings
         glm::vec4 voidColor { 0.0f, 0.0f, 0.0f, 1.0f };
 
     } tonemapping;
+
+    struct Lighting
+    {
+        VERSION(0);
+
+        float ambientStrength { 1.0 };
+        float ambientShadowStrength { 0.3 };
+    } lighting;
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density, height);
@@ -130,7 +139,7 @@ VISITABLE_STRUCT(Settings::FXAA, enableFXAA, edgeThresholdMin, edgeThresholdMax,
 CLASS_SERIALIZE_VERSION(Settings::FXAA);
 CLASS_VERSION(Settings::FXAA);
 
-VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction);
+VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction, filterRadius);
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
@@ -138,6 +147,10 @@ VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVig
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 
-VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping);
+VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength);
+CLASS_SERIALIZE_VERSION(Settings::Lighting);
+CLASS_VERSION(Settings::Lighting);
+
+VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping, lighting);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);

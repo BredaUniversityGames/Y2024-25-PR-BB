@@ -22,7 +22,8 @@ class SkydomePass;
 class TonemappingPass;
 class FXAAPass;
 class UIPass;
-class GaussianBlurPass;
+class BloomDownsamplePass;
+class BloomUpsamplePass;
 class ShadowPass;
 class ClusterGenerationPass;
 class ClusterLightCullingPass;
@@ -91,7 +92,8 @@ private:
     std::unique_ptr<TonemappingPass> _tonemappingPass;
     std::unique_ptr<FXAAPass> _fxaaPass;
     std::unique_ptr<UIPass> _uiPass;
-    std::unique_ptr<GaussianBlurPass> _bloomBlurPass;
+    std::unique_ptr<BloomDownsamplePass> _bloomDownsamplePass;
+    std::unique_ptr<BloomUpsamplePass> _bloomUpsamplePass;
     std::unique_ptr<DebugPass> _debugPass;
     std::unique_ptr<IBLPass> _iblPass;
     std::unique_ptr<ParticlePass> _particlePass;
@@ -102,7 +104,6 @@ private:
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;
-    ResourceHandle<GPUImage> _brightnessTarget;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
     ResourceHandle<GPUImage> _fxaaTarget;

@@ -993,7 +993,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
     {
         const auto& skin = gltf.skins[i];
 
-        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
+        std::function<bool(uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](uint32_t nodeIndex)
         {
             auto it = std::find_if(skin.joints.begin(), skin.joints.end(), [&nodeLUT, nodeIndex](uint32_t index)
                 { return nodeLUT[index] == nodeIndex; });
@@ -1004,11 +1004,11 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
             }
 
             std::vector<uint32_t> baseJoints {};
-            for (size_t i = 0; i < node.children.size(); ++i)
+            for (size_t i = 0; i < model.hierarchy.nodes[nodeIndex].children.size(); ++i)
             {
-                if (traverse(model.hierarchy.nodes[node.children[i]], node.children[i]))
+                if (traverse(model.hierarchy.nodes[nodeIndex].children[i]))
                 {
-                    baseJoints.emplace_back(node.children[i]);
+                    baseJoints.emplace_back(model.hierarchy.nodes[nodeIndex].children[i]);
                 }
             }
 
@@ -1017,8 +1017,9 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
                 Hierarchy::Node& skeletonNode = model.hierarchy.nodes.emplace_back();
                 model.hierarchy.skeletonRoot = model.hierarchy.nodes.size() - 1;
                 skeletonNode.name = "Skeleton Node";
+
                 std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.children));
-                std::erase_if(node.children, [&baseJoints](auto index)
+                std::erase_if(model.hierarchy.nodes[nodeIndex].children, [&baseJoints](auto index)
                     { return std::find(baseJoints.begin(), baseJoints.end(), index) != baseJoints.end(); });
 
                 return false;
@@ -1027,7 +1028,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
             return false;
         };
 
-        traverse(model.hierarchy.nodes[model.hierarchy.root], model.hierarchy.root);
+        traverse(model.hierarchy.root);
     }
 
     // After instantiating hierarchy, we do another pass to apply missing child references.

@@ -31,6 +31,7 @@ void ParticleEmitterComponent::Inspect()
         ImGui::TextUnformatted("Offset to the position of the entity's rigidBody or transform.");
         ImGui::EndTooltip();
     }
+    ImGui::DragFloat("Frame Rate##Emitter Preset", &emitter.frameRate, 0.0f, 50.0f);
     int32_t emitterCount = static_cast<int32_t>(count);
     ImGui::DragInt("Count##Particle Emitter", &emitterCount, 1, 0, 1024);
     count = static_cast<uint32_t>(emitterCount);
@@ -67,6 +68,16 @@ void ParticleEmitterComponent::Inspect()
     ImGui::ColorPicker3("Color##Particle Emitter", &emitter.color.x);
     ImGui::DragFloat("Color Multiplier##Particle Emitter", &emitter.color.w, 0.1f, 0.0f, 100.0f);
 
+    // flag dropdown
+    ImGui::Text("Rendering Flags:");
+    uint32_t flags = emitter.flags;
+    ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
+    ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
+    ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+    ImGui::CheckboxFlags("Lock Y##Emitter Preset Flag", &flags, static_cast<uint32_t>(ParticleRenderFlagBits::eLockY));
+    emitter.flags = flags;
+
+    ImGui::Text("Bursts:");
     if (ImGui::BeginTable("Bursts##Particle Emitter", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
     {
         ImGui::TableNextRow();
@@ -83,10 +94,13 @@ void ParticleEmitterComponent::Inspect()
         ImGui::Text("Cycle");
         ImGui::TableNextColumn();
 
-        for (auto it = bursts.begin(); it != bursts.end(); it = it++)
+        for (auto it = bursts.begin(); it != bursts.end();)
         {
             int32_t index = std::distance(bursts.begin(), it);
-            auto& burst = *it;
+
+            auto copyIt = it;
+            it++;
+            auto& burst = *copyIt;
 
             ImGui::TableNextRow();
 
@@ -118,7 +132,7 @@ void ParticleEmitterComponent::Inspect()
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
             if (ImGui::Button(std::string("x##Emitter Burst Remove " + std::to_string(index)).c_str()))
             {
-                it = bursts.erase(it);
+                bursts.erase(copyIt);
             }
             ImGui::PopStyleColor(3);
         }

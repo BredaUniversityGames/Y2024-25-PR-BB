@@ -1,6 +1,6 @@
 {
     "data": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "fog": {
             "cereal_class_version": 0,
             "color": {
@@ -28,15 +28,16 @@
             "iterations": 12
         },
         "bloom": {
-            "cereal_class_version": 0,
+            "cereal_class_version": 1,
             "colorWeights": {
                 "x": 0.2125999927520752,
                 "y": 0.7152000069618225,
                 "z": 0.0722000002861023
             },
-            "strength": 0.4000000059604645,
-            "gradientStrength": 0.05000000819563866,
-            "maxBrightnessExtraction": 5.0
+            "strength": 0.5,
+            "gradientStrength": 0.05000000074505806,
+            "maxBrightnessExtraction": 5.0,
+            "filterRadius": 0.004999999888241291
         },
         "tonemapping": {
             "cereal_class_version": 6,
@@ -118,6 +119,11 @@
                 "z": 0.2435501664876938,
                 "w": 1.0
             }
+        },
+        "lighting": {
+            "cereal_class_version": 0,
+            "ambientStrength": 1.9500000476837159,
+            "ambientShadowStrength": 0.4099999964237213
         }
     }
 }

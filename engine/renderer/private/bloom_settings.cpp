@@ -31,6 +31,7 @@ void BloomSettings::Update(uint32_t currentFrame)
     _data.colorWeights = _settings.colorWeights;
     _data.gradientStrength = _settings.gradientStrength;
     _data.maxBrightnessExtraction = _settings.maxBrightnessExtraction;
+    _data.filterRadius = _settings.filterRadius;
 
     auto resources { _context->Resources() };
 

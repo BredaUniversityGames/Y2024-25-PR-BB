@@ -45,7 +45,7 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
         if (ecs.GetRegistry().all_of<RigidbodyComponent>(entity))
         {
             const auto& body = ecs.GetRegistry().get<RigidbodyComponent>(entity);
-            velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(body.bodyID));
+            velocity = ToGLMVec3(_audioModule._physics->GetBodyInterface().GetLinearVelocity(body.bodyID));
         }
 
         _audioModule.SetListener3DAttributes(position, velocity, forward, up);
@@ -85,7 +85,7 @@ void AudioSystem::Update(ECSModule& ecs, MAYBE_UNUSED float dt)
 
         if (RigidbodyComponent* rigidBody = ecs.GetRegistry().try_get<RigidbodyComponent>(entity))
         {
-            velocity = ToGLMVec3(_audioModule._physics->bodyInterface->GetLinearVelocity(rigidBody->bodyID));
+            velocity = ToGLMVec3(_audioModule._physics->GetBodyInterface().GetLinearVelocity(rigidBody->bodyID));
         }
         // Update 3D position of sounds
         for (auto& soundInstance : emitter._soundIds)

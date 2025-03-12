@@ -18,12 +18,13 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "mesh_primitives.hpp"
+#include "passes/bloom_downsample_pass.hpp"
+#include "passes/bloom_upsample_pass.hpp"
 #include "passes/build_hzb_pass.hpp"
 #include "passes/cluster_generation_pass.hpp"
 #include "passes/cluster_lightculling_pass.hpp"
 #include "passes/debug_pass.hpp"
 #include "passes/fxaa_pass.hpp"
-#include "passes/gaussian_blur_pass.hpp"
 #include "passes/generate_draws_pass.hpp"
 #include "passes/geometry_pass.hpp"
 #include "passes/ibl_pass.hpp"
@@ -128,15 +129,16 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _buildShadowHzbPass = std::make_unique<BuildHzbPass>(_context, _gpuScene->ShadowCameraBatch(), _gpuScene->GetHZBDescriptorSetLayout());
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
-    _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _brightnessTarget, _environmentMap, *_gBuffers, *_bloomSettings);
+    _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _bloomTarget, _environmentMap, *_gBuffers, *_bloomSettings);
     _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_gBuffers, *_bloomSettings);
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
-    _bloomBlurPass = std::make_unique<GaussianBlurPass>(_context, _brightnessTarget, _bloomTarget);
+    _bloomDownsamplePass = std::make_unique<BloomDownsamplePass>(_context, _bloomTarget);
+    _bloomUpsamplePass = std::make_unique<BloomUpsamplePass>(_context, _bloomTarget, *_bloomSettings);
     _ssaoPass = std::make_unique<SSAOPass>(_context, _settings.data.ssao, *_gBuffers, _ssaoTarget);
     _debugPass = std::make_unique<DebugPass>(_context, *_swapChain, *_gBuffers, _fxaaTarget);
-    _lightingPass = std::make_unique<LightingPass>(_context, *_gpuScene, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings, _ssaoTarget);
-    _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _brightnessTarget, *_bloomSettings);
+    _lightingPass = std::make_unique<LightingPass>(_context, _settings.data.lighting, *_gpuScene, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings, _ssaoTarget);
+    _particlePass = std::make_unique<ParticlePass>(_context, _ecs, *_gBuffers, _hdrTarget, _bloomTarget, *_bloomSettings);
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
     _clusterGenerationPass = std::make_unique<ClusterGenerationPass>(_context, *_gBuffers, *_swapChain, *_gpuScene);
     _clusterLightCullingPass = std::make_unique<ClusterLightCullingPass>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
@@ -249,26 +251,30 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gpuScene->StaticShadow(), FrameGraphResourceType::eTexture)
         .AddInput(_gpuScene->DynamicShadow(), FrameGraphResourceType::eTexture)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation skyDomePass { *_skydomePass };
     skyDomePass.SetName("Sky dome pass")
         .SetDebugLabelColor(GetColor(ColorType::Pistachio))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment, true)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment, true);
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment, true);
 
     FrameGraphNodeCreation particlePass { *_particlePass };
     particlePass.SetName("Particle pass")
         .SetDebugLabelColor(GetColor(ColorType::Plum))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
-        .AddOutput(_brightnessTarget, FrameGraphResourceType::eAttachment);
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
-    FrameGraphNodeCreation bloomBlurPass { *_bloomBlurPass };
-    bloomBlurPass.SetName("Bloom gaussian blur pass")
+    FrameGraphNodeCreation bloomDownsamplePass { *_bloomDownsamplePass };
+    bloomDownsamplePass.SetName("Bloom downsample pass")
         .SetDebugLabelColor(GetColor(ColorType::Rose))
-        .AddInput(_brightnessTarget, FrameGraphResourceType::eTexture)
+        .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
+
+    FrameGraphNodeCreation bloomUpsamplePass { *_bloomUpsamplePass };
+    bloomUpsamplePass.SetName("Bloom upsample pass")
+        .SetDebugLabelColor(GetColor(ColorType::Lavender))
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation toneMappingPass { *_tonemappingPass };
@@ -314,8 +320,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(glm::vec3 { 0.0f, 1.0f, 1.0f })
         .AddInput(_gpuScene->GetClusterBuffer(), FrameGraphResourceType::eBuffer, vk::PipelineStageFlagBits2::eComputeShader);
 
-    _frameGraph
-        = std::make_unique<FrameGraph>(_context, *_swapChain);
+    _frameGraph = std::make_unique<FrameGraph>(_context, *_swapChain);
     FrameGraph& frameGraph = *_frameGraph;
     frameGraph
         .AddNode(generateMainDrawsPrepass)
@@ -334,7 +339,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(lightingPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
-        .AddNode(bloomBlurPass)
+        .AddNode(bloomDownsamplePass)
+        .AddNode(bloomUpsamplePass)
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)
@@ -497,14 +503,9 @@ void Renderer::InitializeBloomTargets()
 {
     auto size = _swapChain->GetImageSize();
 
-    CPUImage hdrBloomCreation {};
-    hdrBloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-
-    CPUImage hdrBlurredBloomCreation {};
-    hdrBlurredBloomCreation.SetName("HDR Blurred Bloom Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-
-    _brightnessTarget = _context->Resources()->ImageResourceManager().Create(hdrBloomCreation);
-    _bloomTarget = _context->Resources()->ImageResourceManager().Create(hdrBlurredBloomCreation);
+    CPUImage bloomCreation {};
+    bloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetMips(4).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+    _bloomTarget = _context->Resources()->ImageResourceManager().Create(bloomCreation);
 }
 void Renderer::InitializeTonemappingTarget()
 {

@@ -30,6 +30,7 @@ void DrawSSAOSettings(Settings& settings);
 void DrawFXAASettings(Settings& settings);
 void DrawFogSettings(Settings& settings);
 void DrawTonemappingSettings(Settings& settings);
+void DrawLightingSettings(Settings& settings);
 void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend);
 
 inline void SetupImGuiStyle();
@@ -115,6 +116,7 @@ void InspectorModule::Tick(Engine& engine)
             ImGui::MenuItem("FXAA Settings", nullptr, &_openWindows["FXAA"]);
             ImGui::MenuItem("Fog Settings", nullptr, &_openWindows["Fog"]);
             ImGui::MenuItem("Tonemapping Settings", nullptr, &_openWindows["Tonemapping"]);
+            ImGui::MenuItem("Lighting Settings", nullptr, &_openWindows["Lighting"]);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Editor"))
@@ -196,6 +198,11 @@ void InspectorModule::Tick(Engine& engine)
         DrawTonemappingSettings(settings);
     }
 
+    if (_openWindows["Lighting"])
+    {
+        DrawLightingSettings(settings);
+    }
+
     {
         ZoneNamedN(zz, "System inspect", true);
         for (const auto& system : engine.GetModule<ECSModule>().GetSystems())
@@ -257,6 +264,7 @@ void DrawBloomSettings(Settings& settings)
     ImGui::Begin("Bloom Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::InputFloat("Strength", &bloom.strength, 0.5f, 2.0f);
     ImGui::InputFloat("Gradient strength", &bloom.gradientStrength, 0.05f, 0.1f, "%.00005f");
+    ImGui::InputFloat("Filter radius", &bloom.filterRadius, 0.005f, 0.02f, "%.0005f");
     ImGui::InputFloat("Max brightness extraction", &bloom.maxBrightnessExtraction, 1.0f, 5.0f);
     ImGui::InputFloat3("Color weights", &bloom.colorWeights[0], "%.00005f");
     ImGui::End();
@@ -376,6 +384,18 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::ColorEdit3("Sun Color", &tonemapping.sunColor.x);
     ImGui::ColorEdit3("Clouds Color", &tonemapping.cloudsColor.x);
     ImGui::ColorEdit3("Void Color", &tonemapping.voidColor.x);
+
+    ImGui::End();
+}
+
+void DrawLightingSettings(Settings& settings)
+{
+    auto& lighting = settings.lighting;
+
+    ImGui::SetNextWindowSize({ 0.f, 0.f });
+    ImGui::Begin("Lighting Settings", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::DragFloat("Ambient Strength", &lighting.ambientStrength, 0.01f, 0.0f, 16.0f);
+    ImGui::DragFloat("Ambient Shadow Strength", &lighting.ambientShadowStrength, 0.01f, 0.0f, 1.0f);
 
     ImGui::End();
 }
