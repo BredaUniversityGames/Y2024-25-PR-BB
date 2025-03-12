@@ -113,7 +113,6 @@ float linearize_depth(float d, float zNear, float zFar)
 void main()
 {
     vec2 newTexCoords = texCoords;
-    vec2 pixelatedUV = texCoords;
     const uint enableFlags = pc.enableFlags;
     const bool vignetteEnabled = bool(enableFlags & ENABLE_VIGNETTE);
     const bool lensDistortionEnabled = bool(enableFlags & ENABLE_LENS_DISTORTION);
@@ -125,7 +124,6 @@ void main()
     {
         newTexCoords = LensDistortionUV(texCoords, pc.lensDistortionIntensity, pc.lensDistortionCubicIntensity);
         newTexCoords = (newTexCoords - 0.5) * pc.screenScale + 0.5;
-        pixelatedUV = newTexCoords;
     }
     // Prepare the circle parameters, cycling the circle size over time.
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
@@ -136,7 +134,7 @@ void main()
     {
 
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
-        pixelatedUV = uv;
+        newTexCoords = uv;
         hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
         //depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], uv, -32.0).r;
     } else
@@ -145,45 +143,25 @@ void main()
     }
 
 
-
-
-
-
-
     hdrColor += bloomColor * bloomSettings.strength;
-
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
 
-    //vec4 normalSample = texture(bindless_color_textures[nonuniformEXT(pc.normalIndex)], newTexCoords);
-    //vec3 normal = OctDecode(normalSample.rg);
-    float pixelatedDepthSample = texture(bindless_color_textures[nonuniformEXT (pc.depthIndex)], pixelatedUV, -256.0).r;
-    //outColor = vec4(pixelatedDepthSample.xxx,1.0);
-    //return;
+    //sample the depth again, maybe we now need to use pixelization
+    float pixelatedDepthSample = texture(bindless_color_textures[nonuniformEXT (pc.depthIndex)], newTexCoords, -256.0).r;
     if (pixelatedDepthSample <= 0.0f)
     {
-        // vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
-
-        vec2 uv = pixelatedUV;
+        vec2 uv = newTexCoords;
         uv -= 0.5;
         uv.x *= (16.0 / 9.0);
+        // we can control the horizon by altering the aspect ration
         // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
         uv.y = -uv.y;
-        //if (pixelizationEnabled) uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, uv, vec2(pc.screenWidth, pc.screenHeight));
-
 
         const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
         const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
-        //vec3 rayDir = normalize(mat3(camera.view) * vec3(uv.x, curve, uv.y));
-        vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
-        vec3 auxRayDir = rayDir;
-        //rayDir.y = auxRayDir.z;
-        //rayDir.z = auxRayDir.y;
+        const vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
         const vec3 ro = vec3(0.0, 0.0, 0.0);
         color = Sky(ro, rayDir);
-
-
-
-        //return;
     }
 
     if (paletteEnabled)
@@ -222,8 +200,7 @@ void main()
         color = Vignette(color, texCoords, pc.vignetteIntensity);
     }
 
-
-
+    
     outColor = vec4(color, 1.0);
 }
 
