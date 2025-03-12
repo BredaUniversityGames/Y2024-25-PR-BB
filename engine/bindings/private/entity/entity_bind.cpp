@@ -4,9 +4,14 @@
 
 #include "animation.hpp"
 #include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "cheats_component.hpp"
+#include "components/camera_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
+#include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -66,14 +71,14 @@ void TransformComponentSetScale(WrenComponent<TransformComponent>& component, co
     TransformHelpers::SetLocalScale(*component.entity.registry, component.entity.entity, scale);
 }
 
-std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
-{
-    return nameComponent.component->name;
-}
-
 void NameComponentSetName(WrenComponent<NameComponent>& nameComponent, const std::string& name)
 {
     nameComponent.component->name = name;
+}
+
+std::string NameComponentGetName(WrenComponent<NameComponent>& nameComponent)
+{
+    return nameComponent.component->name;
 }
 
 void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, const glm::vec3& color)
@@ -86,13 +91,116 @@ glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& compon
     return component.component->color;
 }
 
+void DirectionalLightComponentSetColor(WrenComponent<DirectionalLightComponent>& component, const glm::vec3& color)
+{
+    component.component->color = color;
+}
+
+glm::vec3 DirectionalLightComponentGetColor(WrenComponent<DirectionalLightComponent>& component)
+{
+    return component.component->color;
+}
+
+void DirectionalLightComponentSetViewPlanes(WrenComponent<DirectionalLightComponent>& component, const glm::vec2& planes)
+{
+    component.component->nearPlane = planes.x;
+    component.component->farPlane = planes.y;
+}
+
+glm::vec2 DirectionalLightComponentGetViewPlanes(WrenComponent<DirectionalLightComponent>& component)
+{
+    return { component.component->nearPlane, component.component->farPlane };
+}
+
+void DirectionalLightComponentSetOrthographicSize(WrenComponent<DirectionalLightComponent>& component, float orthographicSize)
+{
+    component.component->orthographicSize = orthographicSize;
+}
+
+float DirectionalLightComponentGetOrthographicSize(WrenComponent<DirectionalLightComponent>& component)
+{
+    return component.component->orthographicSize;
+}
+float CameraGetFOV(WrenComponent<CameraComponent>& component)
+{
+    return component.component->fov;
+}
+
+void CameraSetFOV(WrenComponent<CameraComponent>& component, const float fov)
+{
+    component.component->fov = fov;
+}
+
+float CameraGetNearPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->nearPlane;
+}
+
+float CameraGetFarPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->farPlane;
+}
+
+bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
+{
+    return component.component->reversedZ;
+}
+
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+{
+    component.component->nearPlane = near;
+}
+
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+{
+    component.component->farPlane = far;
+}
+
+void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
+{
+    component.component->reversedZ = reversedZ;
+}
+
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
+
+void AttachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
+    {
+        self.registry->emplace<RelationshipComponent>(self.entity);
+    }
+
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
+    {
+        child.registry->emplace<RelationshipComponent>(child.entity);
+    }
+
+    RelationshipHelpers::AttachChild(*self.registry, self.entity, child.entity);
+}
+
+void DetachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
+    {
+        self.registry->emplace<RelationshipComponent>(self.entity);
+    }
+
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
+    {
+        child.registry->emplace<RelationshipComponent>(child.entity);
+    }
+
+    RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
+}
 
 void BindEntity(wren::ForeignModule& module)
 {
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+
+    entityClass.funcExt<AttachChild>("AttachChild");
+    entityClass.funcExt<DetachChild>("DetachChild");
 
     entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
 
@@ -101,6 +209,8 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
+
+    entityClass.func<&WrenEntity::AddTag<AudioListenerComponent>>("AddAudioListenerTag");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
@@ -118,6 +228,11 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<DirectionalLightComponent>>("GetDirectionalLightComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
+    entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -130,6 +245,11 @@ void FreeEntity(ECSModule& self, WrenEntity& entity)
     if (!self.GetRegistry().valid(entity.entity))
         return;
     self.DestroyEntity(entity.entity);
+}
+
+void Clear(ECSModule& self)
+{
+    self.GetRegistry().clear();
 }
 
 std::optional<WrenEntity> GetEntityByName(ECSModule& self, const std::string& name)
@@ -160,7 +280,6 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
 
     return entities;
 }
-
 }
 
 void BindEntityAPI(wren::ForeignModule& module)
@@ -176,6 +295,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
         wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
+        wrenClass.funcExt<bindings::Clear>("DestroyAllEntities");
     }
     // Components
     {
@@ -184,8 +304,12 @@ void BindEntityAPI(wren::ForeignModule& module)
         nameClass.propExt<bindings::NameComponentGetName, bindings::NameComponentSetName>("name");
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
-        pointLightClass.propExt<
-            bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
+        pointLightClass.propExt<bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
+
+        auto& directionalLightClass = module.klass<WrenComponent<DirectionalLightComponent>>("DirectionalLightComponent");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetColor, bindings::DirectionalLightComponentSetColor>("color");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetViewPlanes, bindings::DirectionalLightComponentSetViewPlanes>("planes");
+        directionalLightClass.propExt<bindings::DirectionalLightComponentGetOrthographicSize, bindings::DirectionalLightComponentSetOrthographicSize>("orthographicSize");
 
         // Transform component
         auto& transformClass = module.klass<WrenComponent<TransformComponent>>("TransformComponent");
@@ -204,5 +328,11 @@ void BindEntityAPI(wren::ForeignModule& module)
         transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
 
         transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
+
+        auto& cameraClass = module.klass<WrenComponent<CameraComponent>>("CameraComponent");
+        cameraClass.propExt<bindings::CameraGetFOV, bindings::CameraSetFOV>("fov");
+        cameraClass.propExt<bindings::CameraGetNearPlane, bindings::CameraSetNearPlane>("nearPlane");
+        cameraClass.propExt<bindings::CameraGetFarPlane, bindings::CameraSetFarPlane>("farPlane");
+        cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
     }
 }

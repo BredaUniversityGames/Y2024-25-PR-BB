@@ -3,6 +3,8 @@ const uint MAX_PARTICLES = 1024 * 64;
 // particle rendering flags
 const uint UNLIT = 1 << 0;
 const uint NOSHADOW = 1 << 1;
+const uint FRAMEBLEND = 1 << 2;
+const uint LOCKY = 1 << 3;
 
 struct Particle
 {
@@ -16,7 +18,11 @@ struct Particle
     vec3 size;
     uint flags;
     vec3 color;
+    float frameRate;
     vec3 velocityRandomness;
+    uint frameCount;
+    ivec2 maxFrames;
+    vec2 textureMultiplier;
 };
 
 struct ParticleCounters
@@ -34,6 +40,10 @@ struct ParticleInstance
     float angle;
     uint flags;
     vec3 color;
+    float frameBlend;
+    ivec2 frameOffsetCurrent;
+    ivec2 frameOffsetNext;
+    vec2 textureMultiplier;
 };
 
 struct CulledInstances

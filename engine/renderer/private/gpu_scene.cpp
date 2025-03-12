@@ -290,7 +290,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
         directionalLightData.poissonConstant = directionalLightComponent.poissonConstant;
         directionalLightData.poissonWorldOffset = directionalLightComponent.poissonWorldOffset;
 
-        CameraComponent camera {
+        auto camera = CameraComponent {
             .projection = CameraComponent::Projection::eOrthographic,
             .nearPlane = directionalLightComponent.nearPlane,
             .farPlane = directionalLightComponent.farPlane,
@@ -299,7 +299,7 @@ void GPUScene::UpdateDirectionalLightData(SceneData& scene, uint32_t frameIndex)
             .reversedZ = _directionalLightShadowCamera.UsesReverseZ(),
         };
 
-        _directionalLightShadowCamera.Update(frameIndex, transformComponent, camera, lightView, depthProjectionMatrix);
+        _directionalLightShadowCamera.Update(frameIndex, camera, lightView, depthProjectionMatrix, position);
 
         directionalLightIsSet = true;
     }
@@ -343,7 +343,12 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
             return;
         }
 
-        _mainCamera.Update(frameIndex, transformComponent, cameraComponent);
+        auto view = CameraResource::CalculateViewMatrix(TransformHelpers::GetWorldRotation(_ecs.GetRegistry(), entity), TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity));
+        auto proj = CameraResource::CalculateProjectionMatrix(cameraComponent);
+
+        auto position = TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity);
+
+        _mainCamera.Update(frameIndex, cameraComponent, view, proj, position);
 
         mainCameraIsSet = true;
     }
