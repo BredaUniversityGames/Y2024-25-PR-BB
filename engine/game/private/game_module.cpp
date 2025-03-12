@@ -11,6 +11,7 @@
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -33,8 +34,6 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-
-#include <components/static_mesh_component.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -65,18 +64,18 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
-    _nextScene = scriptFile;
+    _nextSceneToExecute = scriptFile;
 }
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    if (!_nextScene.empty())
+    if (!_nextSceneToExecute.empty())
     {
-        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextScene);
+        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
         engine.GetModule<TimeModule>().ResetTimer();
     }
 
-    _nextScene.clear();
+    _nextSceneToExecute.clear();
 
     if (_updateHud == true)
     {

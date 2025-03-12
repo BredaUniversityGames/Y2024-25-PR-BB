@@ -26,5 +26,5 @@ public:
 
     HUD _hud;
     bool _updateHud = false;
-    std::string _nextScene {};
+    std::string _nextSceneToExecute {};
 };
