@@ -21,7 +21,7 @@ void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
     case ButtonState::ePressed:
         if (inputActionReleased)
         {
-            state = ButtonState::eNormal;
+            state = ButtonState::eHovered;
         }
         break;
     }

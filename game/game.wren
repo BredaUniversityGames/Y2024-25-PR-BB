@@ -12,7 +12,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
-        engine.GetGame().SetHUDVisible(true)
+        engine.GetGame().SetHUDEnabled(true)
           
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
@@ -27,12 +27,7 @@ class Main {
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-        var mutant = engine.GetECS().GetEntityByName("Clown")
-        var mutantAnimations = mutant.GetAnimationControlComponent()
-        mutantAnimations.Play("Walk", 1.0, true)
-        mutant.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
-        mutant.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
-
+   
         if (__camera) {
             System.print("Player is online!")
 
@@ -94,10 +89,10 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-        var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
-        var enemyTransform = enemyEntity.GetTransformComponent()
-        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+       // var enemyEntity = engine.LoadModel("assets/models/demon.glb")[0]
+       // var enemyTransform = enemyEntity.GetTransformComponent()
+       // enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
+       // enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
     }
 
     static Shutdown(engine) {

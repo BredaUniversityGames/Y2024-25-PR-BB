@@ -40,6 +40,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
+    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
     _mainMenu = mainMenu;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
@@ -57,7 +58,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     std::vector<std::string> modelPaths = {
         // "assets/models/Cathedral.glb",
         "assets/models/AnimatedRifle.glb",
-        "assets/models/Clown.glb",
+        //"assets/models/Clown.glb",
         //"assets/models/DamagedHelmet.glb",
         //"assets/models/MetalRoughSpheres.glb",
         //"assets/models/monkey.gltf",
@@ -68,7 +69,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         auto entities = SceneLoading::LoadModels(engine, modelPaths);
         gunEntity = entities[0];
     }
-
 
     {
         ZoneScopedN("ECS Additional Scene Setup");
@@ -114,7 +114,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
-void GameModule::SetMainMenuVisible(bool val)
+void GameModule::SetMainMenuEnabled(bool val)
 {
     if (val)
     {
@@ -125,7 +125,7 @@ void GameModule::SetMainMenuVisible(bool val)
         _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
     }
 }
-void GameModule::SetHUDVisible(bool val)
+void GameModule::SetHUDEnabled(bool val)
 {
     if (val)
     {

@@ -98,7 +98,7 @@ void BindGameAPI(wren::ForeignModule& module)
     game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
-    game.func<&GameModule::SetMainMenuVisible>("SetMainMenuVisible");
-    game.func<&GameModule::SetHUDVisible>("SetHUDVisible");
+    game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
+    game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
     BindMainMenu(module);
 }

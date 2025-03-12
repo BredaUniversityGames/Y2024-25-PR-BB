@@ -53,6 +53,11 @@ std::vector<WrenEntity> LoadModelScripting(WrenEngine& engine, const std::string
     return wrentities;
 }
 
+void SetExit(WrenEngine& engine, int code)
+{
+    engine.instance->SetExit(code);
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -74,6 +79,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
+        engineAPI.funcExt<bindings::SetExit>("SetExit");
     }
 
     // Time Module

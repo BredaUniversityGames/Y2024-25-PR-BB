@@ -48,9 +48,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
         BindEngineAPI(scripting.GetForeignAPI());
         scripting.GenerateEngineBindingsFile();
+        scripting.SetMainScript(instance, "game/main_menu.wren");
     }
-    scripting.SetMainScript(instance, "game/main_menu.wren");
-
     instance.GetModule<TimeModule>().ResetTimer();
     bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();

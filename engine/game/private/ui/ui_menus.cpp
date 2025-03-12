@@ -160,6 +160,7 @@ void HudUpdate(HUD& hud, float timePassed)
         locked->SetText(std::to_string(int(ammo)) + "/8");
     }
 }
+
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
 {
     MainMenu mainMenu(screenResolution);
@@ -182,33 +183,42 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     };
 
     auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
+
     // temporary
     mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), mainMenu.GetRelativeScale());
-    constexpr float xMargin = 100;
-    auto playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 400), glm::vec2(878, 243) * .5f).lock();
-    playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    playButton->AddChild<UITextElement>(font, "play");
 
-    auto settingsButton
-        = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 500), glm::vec2(878, 243) * .5f).lock();
-    settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    settingsButton->AddChild<UITextElement>(font, "settings");
+    constexpr float xMargin = 50;
+    mainMenu.playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.playButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    mainMenu.playButton.lock()->AddChild<UITextElement>(font, "play", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
-    auto openQuitModalButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 600), glm::vec2(878, 243) * .5f).lock();
-    openQuitModalButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    openQuitModalButton->AddChild<UITextElement>(font, "quit");
+    mainMenu.settingsButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 250), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.settingsButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    mainMenu.settingsButton.lock()->AddChild<UITextElement>(font, "settings", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
-    playButton->navigationTargets.down = settingsButton;
-    playButton->navigationTargets.up = openQuitModalButton;
+    mainMenu.quitButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 300), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.quitButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    mainMenu.quitButton.lock()->AddChild<UITextElement>(font, "quit", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
-    settingsButton->navigationTargets.down = openQuitModalButton;
-    settingsButton->navigationTargets.up = playButton;
+    mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
+    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
 
-    openQuitModalButton->navigationTargets.down = playButton;
-    openQuitModalButton->navigationTargets.up = settingsButton;
+    mainMenu.settingsButton.lock()->navigationTargets.down = mainMenu.quitButton;
+    mainMenu.settingsButton.lock()->navigationTargets.up = mainMenu.playButton;
 
-    mainMenu.playButton = playButton;
+    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.quitButton.lock()->navigationTargets.up = mainMenu.settingsButton;
+
+    CPUImage commonImageData;
+    commonImageData.format
+        = vk::Format::eR8G8B8A8Unorm;
+    commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
+    ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/blightspire_logo.png"));
+    auto logoElement = mainMenu.AddChild<UIImage>(logo, glm::vec2(xMargin - 20, 100), glm::vec2(618, 217) * 0.4f);
+    logoElement.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
     mainMenu.UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 

@@ -24,8 +24,8 @@ public:
     GameModule() = default;
     ~GameModule() override = default;
 
-    void SetMainMenuVisible(bool val);
-    void SetHUDVisible(bool val);
+    void SetMainMenuEnabled(bool val);
+    void SetHUDEnabled(bool val);
     MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
 
     NON_COPYABLE(GameModule);

@@ -74,7 +74,7 @@ struct CPUImage
     uint16_t layers { 1 };
     uint8_t mips { 1 };
     vk::ImageUsageFlags flags { 0 };
-    bool isHDR;
+    bool isHDR = false;
 
     vk::Format format { vk::Format::eUndefined };
     ImageType type { ImageType::e2D };

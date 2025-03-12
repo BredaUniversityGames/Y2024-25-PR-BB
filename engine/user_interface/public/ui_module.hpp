@@ -17,10 +17,11 @@ public:
     NO_DISCARD Viewport& GetViewport() { return *_viewport; };
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
+    UIInputContext uiInputContext;
+
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
 
-    UIInputContext _uiInputContext;
     std::unique_ptr<Viewport> _viewport;
     std::shared_ptr<GraphicsContext> _graphicsContext;
 
