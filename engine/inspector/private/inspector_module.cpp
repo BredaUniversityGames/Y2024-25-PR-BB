@@ -138,6 +138,10 @@ void InspectorModule::Tick(Engine& engine)
 
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Save Settings"))
+        {
+            engine.GetModule<RendererModule>().GetRenderer()->GetSettings().Write();
+        }
         ImGui::EndMainMenuBar();
     }
 
@@ -171,7 +175,7 @@ void InspectorModule::Tick(Engine& engine)
         DrawShadowMapInspect(engine, *_imguiBackend);
     }
 
-    Settings& settings = engine.GetModule<RendererModule>().GetRenderer()->GetSettings();
+    Settings& settings = engine.GetModule<RendererModule>().GetRenderer()->GetSettingsData();
 
     if (_openWindows["Bloom"])
     {

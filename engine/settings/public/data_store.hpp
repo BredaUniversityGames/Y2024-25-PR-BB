@@ -35,7 +35,7 @@ public:
 
     ~DataStore()
     {
-        Write();
+        // Write();
     }
 
     T data;
