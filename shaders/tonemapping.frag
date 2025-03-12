@@ -136,7 +136,6 @@ void main()
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
         newTexCoords = uv;
         hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
-        //depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], uv, -32.0).r;
     } else
     {
         hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
@@ -172,7 +171,7 @@ void main()
             color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
         }
     }
-    
+
     switch (pc.tonemappingFunction)
     {
         case ACES: color = aces(color); break;
