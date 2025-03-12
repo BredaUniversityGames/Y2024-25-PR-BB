@@ -72,6 +72,13 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
+        var demon = engine.LoadModel("assets/models/Demon.glb")
+        var demonAnimations = demon.GetAnimationControlComponent()
+        demonAnimations.Transition(0, 1, 0.5, 1.0, true)
+        //demonAnimations.Play("Run", 1.0, true)
+        demon.GetTransformComponent().translation = Vec3.new(0.0, 0.0, 0.0)
+        demon.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+
         // Load Map
         engine.LoadModel("assets/models/blockoutv4.glb")
 

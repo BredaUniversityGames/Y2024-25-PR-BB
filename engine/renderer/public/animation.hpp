@@ -96,9 +96,12 @@ struct AnimationControlComponent
 {
     std::vector<Animation> animations;
     std::optional<uint32_t> activeAnimation { std::nullopt };
+    std::optional<uint32_t> transitionAnimation { std::nullopt };
+    float blendRatio;
 
     void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false);
     void Play(const std::string& name, float speed = 1.0f, bool looping = false);
+    void Transition(uint32_t source, uint32_t target, float ratio, float speed = 1.0f, bool looping = false);
     void Stop();
     void Pause();
     void Resume();

@@ -32,10 +32,20 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         {
             auto& animationControl = animationControlView.get<AnimationControlComponent>(entity);
 
-            if (animationControl.activeAnimation.has_value())
+            if (animationControl.activeAnimation.has_value() && !animationControl.transitionAnimation.has_value())
             {
                 Animation& currentAnimation = animationControl.animations[animationControl.activeAnimation.value()];
                 currentAnimation.Update(dt / 1000.0f);
+            }
+            else if (animationControl.activeAnimation.has_value() && animationControl.transitionAnimation.has_value())
+            {
+                Animation& activeAnimation = animationControl.animations[animationControl.activeAnimation.value()];
+                Animation& transitionAnimation = animationControl.animations[animationControl.transitionAnimation.value()];
+
+                activeAnimation.Update(dt / 1000.0f);
+
+                float scaledTime = activeAnimation.time * (transitionAnimation.duration / activeAnimation.duration);
+                transitionAnimation.time = scaledTime;
             }
         }
     }
@@ -47,29 +57,60 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         {
             auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
             auto* animationControl = animationChannel.animationControl;
+            auto& transform = animationView.get<AnimationTransformComponent>(entity);
+
+            AnimationTransformComponent activeTransform = transform;
+            std::optional<AnimationTransformComponent> transitionTransform = std::nullopt;
+
             if (animationControl->activeAnimation.has_value())
             {
-                auto& transform = animationView.get<AnimationTransformComponent>(entity);
                 auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
                 float time = animationControl->animations[animationControl->activeAnimation.value()].time;
+
                 if (activeAnimation.translation.has_value())
                 {
-                    glm::vec3 position = activeAnimation.translation.value().Sample(time);
-
-                    transform.position = position;
+                    activeTransform.position = activeAnimation.translation.value().Sample(time);
                 }
                 if (activeAnimation.rotation.has_value())
                 {
-                    glm::quat rotation = activeAnimation.rotation.value().Sample(time);
-
-                    transform.rotation = rotation;
+                    activeTransform.rotation = activeAnimation.rotation.value().Sample(time);
                 }
                 if (activeAnimation.scaling.has_value())
                 {
-                    glm::vec3 scale = activeAnimation.scaling.value().Sample(time);
-
-                    transform.scale = scale;
+                    activeTransform.scale = activeAnimation.scaling.value().Sample(time);
                 }
+            }
+
+            if (animationControl->transitionAnimation.has_value())
+            {
+                transitionTransform = transform;
+
+                auto& transitionAnimation = animationChannel.animationSplines[animationControl->transitionAnimation.value()];
+                float time = animationControl->animations[animationControl->transitionAnimation.value()].time;
+
+                if (transitionAnimation.translation.has_value())
+                {
+                    transitionTransform.value().position = transitionAnimation.translation.value().Sample(time);
+                }
+                if (transitionAnimation.rotation.has_value())
+                {
+                    transitionTransform.value().rotation = transitionAnimation.rotation.value().Sample(time);
+                }
+                if (transitionAnimation.scaling.has_value())
+                {
+                    transitionTransform.value().scale = transitionAnimation.scaling.value().Sample(time);
+                }
+            }
+
+            if (transitionTransform.has_value())
+            {
+                transform.position = glm::mix(transitionTransform.value().position, activeTransform.position, animationControl->blendRatio);
+                transform.scale = glm::mix(transitionTransform.value().scale, activeTransform.scale, animationControl->blendRatio);
+                transform.rotation = glm::slerp(transitionTransform.value().rotation, activeTransform.rotation, animationControl->blendRatio);
+            }
+            else
+            {
+                transform = activeTransform;
             }
         }
     }

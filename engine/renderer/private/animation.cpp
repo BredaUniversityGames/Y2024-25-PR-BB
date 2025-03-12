@@ -28,6 +28,23 @@ void AnimationControlComponent::Play(const std::string& name, float speed, bool 
     }
 }
 
+void AnimationControlComponent::Transition(uint32_t source, uint32_t target, float ratio, float speed, bool looping)
+{
+    transitionAnimation = source;
+    animations[source].time = 0.0f;
+    animations[source].looping = looping;
+    animations[source].speed = speed;
+    animations[source].playbackOption = Animation::PlaybackOptions::ePlaying;
+
+    activeAnimation = target;
+    animations[target].time = 0.0f;
+    animations[target].looping = looping;
+    animations[target].speed = speed;
+    animations[target].playbackOption = Animation::PlaybackOptions::ePlaying;
+
+    blendRatio = ratio;
+}
+
 void AnimationControlComponent::Stop()
 {
     if (!activeAnimation.has_value())
