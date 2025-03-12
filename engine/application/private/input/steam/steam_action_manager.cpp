@@ -148,7 +148,7 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
     }
 
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
-    SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
+    uint32_t originsNum = SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
     if (origins[0] == k_EInputActionOrigin_None)
     {
@@ -156,7 +156,7 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
         return {};
     }
 
-    for (uint32_t i = 0; i < STEAM_INPUT_MAX_ORIGINS; ++i)
+    for (uint32_t i = 0; i < originsNum; ++i)
     {
         if (origins[i] == k_EInputActionOrigin_None)
         {
