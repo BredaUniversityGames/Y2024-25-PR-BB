@@ -6,6 +6,7 @@
 #include "tonemapping.glsl"
 #include "scene.glsl"
 #include "octahedron.glsl"
+#include "hashes.glsl"
 
 
 #define ENABLE_VIGNETTE        (1 << 0)
@@ -88,6 +89,11 @@ vec3 ShiftHue(in vec3 col, in float Shift);
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize);
 vec3 SaturateColor(vec3 color, float saturationFactor);
 vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor);
+float noise(in vec2 uv);
+float fbm(in vec2 uv);
+vec3 Sky(in vec3 ro, in vec3 rd);
+
+
 
 // 4x4 Bayer matrix with values 0..15
 const float bayer[4][4] = float[4][4](
@@ -98,99 +104,11 @@ float[4](15.0, 7.0, 13.0, 5.0)
 );
 
 
-float hash12(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-
-
-
 float linearize_depth(float d, float zNear, float zFar)
 {
     return zNear * zFar / (zFar + d * (zNear - zFar));
 }
 
-
-float hash(vec2 p)
-{
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-}
-float hashwithoutsine12(vec2 p)
-{
-    vec3 p3 = fract(vec3(p.xyx) * .1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise(in vec2 uv)
-{
-    vec2 i = floor(uv);
-    vec2 f = fract(uv);
-    f = f * f * (3. - 2. * f);
-
-    float lb = hashwithoutsine12(i + vec2(0., 0.));
-    float rb = hashwithoutsine12(i + vec2(1., 0.));
-    float lt = hashwithoutsine12(i + vec2(0., 1.));
-    float rt = hashwithoutsine12(i + vec2(1., 1.));
-
-    return mix(mix(lb, rb, f.x),
-               mix(lt, rt, f.x), f.y);
-}
-
-#define OCTAVES 8
-float fbm(in vec2 uv)
-{
-    float value = 0.0;
-    float amplitude = .5;
-
-    for (int i = 0; i < OCTAVES; i++)
-    {
-        value += noise(uv) * amplitude;
-
-        amplitude *= .5;
-
-        uv *= 2.;
-    }
-
-    return value;
-}
-
-vec3 Sky(in vec3 ro, in vec3 rd)
-{
-    const float SC = 1e5;
-
-    // Calculate sky plane
-    float dist = (SC - ro.y) / rd.y;
-    vec2 p = (ro + dist * rd).xz;
-    p *= 4.4 / SC;
-
-    // from iq's shader, https://www.shadertoy.com/view/MdX3Rr
-    vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
-    float sundot = clamp(dot(rd, lightDir), 0.0, 1.0);
-
-    vec3 cloudCol = pc.cloudsColor.rgb;
-    vec3 skyCol = pc.skyColor.rgb - rd.y * .2 * vec3(1., .5, 1.) + .15 * .5;
-    //vec3 skyCol = pc.skyColor.rgb - rd.y * rd.y * 0.5;
-    skyCol = mix(skyCol, 0.85 * pc.skyColor.rgb, pow(1.0 - max(rd.y, 0.0), 4.0));
-
-    // sun
-    vec3 sun = 0.2 * pc.sunColor.rgb * pow(sundot, 8.0);
-    sun += 0.95 * pc.sunColor.rgb * pow(sundot, 2048.0);
-    sun += 0.2 * pc.sunColor.rgb * pow(sundot, 128.0);
-    sun = clamp(sun, 0.0, 1.0);
-    skyCol += sun;
-
-    // clouds
-    float t = pc.time * 0.1;
-    float den = fbm(vec2(p.x - t, p.y - t));
-    skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
-
-
-    // horizon
-    skyCol = mix(skyCol, pc.voidColor.rgb, pow(1.0 - max(rd.y, 0.0), 16.0));
-
-    return skyCol;
-}
 
 void main()
 {
@@ -307,6 +225,79 @@ void main()
 
 
     outColor = vec4(color, 1.0);
+}
+
+
+
+
+float noise(in vec2 uv)
+{
+    vec2 i = floor(uv);
+    vec2 f = fract(uv);
+    f = f * f * (3. - 2. * f);
+
+    float lb = hashwithoutsine12(i + vec2(0., 0.));
+    float rb = hashwithoutsine12(i + vec2(1., 0.));
+    float lt = hashwithoutsine12(i + vec2(0., 1.));
+    float rt = hashwithoutsine12(i + vec2(1., 1.));
+
+    return mix(mix(lb, rb, f.x),
+               mix(lt, rt, f.x), f.y);
+}
+
+#define OCTAVES 8
+float fbm(in vec2 uv)
+{
+    float value = 0.0;
+    float amplitude = .5;
+
+    for (int i = 0; i < OCTAVES; i++)
+    {
+        value += noise(uv) * amplitude;
+
+        amplitude *= .5;
+
+        uv *= 2.;
+    }
+
+    return value;
+}
+
+vec3 Sky(in vec3 ro, in vec3 rd)
+{
+    const float SC = 1e5;
+
+    // Calculate sky plane
+    float dist = (SC - ro.y) / rd.y;
+    vec2 p = (ro + dist * rd).xz;
+    p *= 4.4 / SC;
+
+    // from iq's shader, https://www.shadertoy.com/view/MdX3Rr
+    vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
+    float sundot = clamp(dot(rd, lightDir), 0.0, 1.0);
+
+    vec3 cloudCol = pc.cloudsColor.rgb;
+    vec3 skyCol = pc.skyColor.rgb - rd.y * .2 * vec3(1., .5, 1.) + .15 * .5;
+    //vec3 skyCol = pc.skyColor.rgb - rd.y * rd.y * 0.5;
+    skyCol = mix(skyCol, 0.85 * pc.skyColor.rgb, pow(1.0 - max(rd.y, 0.0), 4.0));
+
+    // sun
+    vec3 sun = 0.2 * pc.sunColor.rgb * pow(sundot, 8.0);
+    sun += 0.95 * pc.sunColor.rgb * pow(sundot, 2048.0);
+    sun += 0.2 * pc.sunColor.rgb * pow(sundot, 128.0);
+    sun = clamp(sun, 0.0, 1.0);
+    skyCol += sun;
+
+    // clouds
+    float t = pc.time * 0.1;
+    float den = fbm(vec2(p.x - t, p.y - t));
+    skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
+
+
+    // horizon
+    skyCol = mix(skyCol, pc.voidColor.rgb, pow(1.0 - max(rd.y, 0.0), 16.0));
+
+    return skyCol;
 }
 
 vec3 SaturateColor(vec3 color, float saturationFactor)

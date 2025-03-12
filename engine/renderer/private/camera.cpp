@@ -116,7 +116,6 @@ glm::vec4 normalizePlane(glm::vec4 p)
 {
     return p / glm::length(glm::vec3(p));
 }
-static glm::vec2 oldPosition = glm::vec2(0.0f);
 
 void CameraResource::Update(uint32_t currentFrame, const CameraComponent& camera, const glm::mat4& view, const glm::mat4& proj, const glm::vec3& position)
 {
@@ -159,12 +158,6 @@ void CameraResource::Update(uint32_t currentFrame, const CameraComponent& camera
     cameraBuffer.inverseProj = glm::inverse(cameraBuffer.proj);
     cameraBuffer.inverseVP = glm::inverse(cameraBuffer.VP);
     cameraBuffer.cameraPosition = position;
-
-    if (camera.projection == CameraComponent::Projection::ePerspective)
-    {
-        cameraBuffer._padding = glm::vec2(cameraBuffer.cameraPosition.x, cameraBuffer.cameraPosition.z) - oldPosition;
-        oldPosition = glm::vec2(cameraBuffer.cameraPosition.x, cameraBuffer.cameraPosition.z);
-    }
 
     cameraBuffer.skydomeMVP = cameraBuffer.view;
     cameraBuffer.skydomeMVP[3][0] = 0.0f;

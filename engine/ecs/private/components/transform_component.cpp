@@ -14,10 +14,9 @@ void ComponentEditorWidget<TransformComponent>(entt::registry& reg, entt::regist
 void TransformComponent::Inspect(entt::registry& reg, entt::entity entity)
 {
     bool changed = false;
-    // TODO use euler angles for rotation
+
     changed |= ImGui::DragFloat3("Position##Transform", &_localPosition[0], 0.1f);
 
-    // Rotation: now showing/storing Euler angles instead of quaternion
     changed |= ImGui::DragFloat3("Rotation##Transform", &_editorEulerAngles[0], 0.1f);
 
     changed |= ImGui::DragFloat3("Scale##Transform", &_localScale[0], 0.1f);
@@ -25,11 +24,7 @@ void TransformComponent::Inspect(entt::registry& reg, entt::entity entity)
     // If the user changed anything, update the internal quaternion
     if (changed)
     {
-
-        // Convert that matrix to a quaternion
-        _localRotation = glm::quat { glm::radians(_editorEulerAngles) }; // glm::quat_cast(rotMat);
-
-        // Then notify the rest of the engine to update the world matrix
+        _localRotation = glm::quat { glm::radians(_editorEulerAngles) };
         TransformHelpers::UpdateWorldMatrix(reg, entity);
     }
     else
