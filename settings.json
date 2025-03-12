@@ -61,7 +61,7 @@
             "pixelizationLevels": 8.0,
             "pixelizationDepthBias": 20.0,
             "enablePalette": true,
-            "ditherAmount": 0.15000000596046449,
+            "ditherAmount": 0.08500000089406967,
             "paletteAmount": 0.800000011920929,
             "palette": {
                 "value0": {
