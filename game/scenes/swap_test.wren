@@ -19,6 +19,20 @@ class Main {
 
         // Models
         engine.LoadModel("assets/models/MetalRoughSpheres.glb")
+
+        // Camera
+        __camera = engine.GetECS().NewEntity()
+
+        var cameraProperties = __camera.AddCameraComponent()
+        cameraProperties.fov = 45.0
+        cameraProperties.nearPlane = 0.5
+        cameraProperties.farPlane = 600.0
+        cameraProperties.reversedZ = true
+
+         __camera.AddTransformComponent()
+        __camera.AddAudioEmitterComponent()
+        __camera.AddNameComponent().name = "Camera"
+        __camera.AddAudioListenerTag()
     }
 
     static Shutdown(engine) {

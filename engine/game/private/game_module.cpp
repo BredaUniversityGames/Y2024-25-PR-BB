@@ -134,14 +134,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         physicsModule._debugRenderer->SetState(!physicsModule._debugRenderer->GetState());
     }
 
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eP))
-        scriptingModule.SetMainScript(engine, "swap_test.wren");
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eO))
-    {
-        scriptingModule.SetMainScript(engine, "swap_test_2.wren");
-    }
-
     // Toggle pathfinding debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
     {

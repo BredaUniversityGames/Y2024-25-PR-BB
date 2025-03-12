@@ -4,7 +4,22 @@ import "gameplay/movement.wren" for PlayerMovement
 class Main {
 
     static Start(engine) {
-       
+       // Camera
+       __camera = engine.GetECS().NewEntity()
+
+       var cameraProperties = __camera.AddCameraComponent()
+       cameraProperties.fov = 45.0
+       cameraProperties.nearPlane = 0.5
+       cameraProperties.farPlane = 600.0
+       cameraProperties.reversedZ = true
+
+        __camera.AddTransformComponent()
+       __camera.AddAudioEmitterComponent()
+       __camera.AddNameComponent().name = "Camera"
+       __camera.AddAudioListenerTag()
+
+       var entity = engine.LoadModel("assets/models/Clown.glb")
+       entity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, -300.0)
     }
 
     static Shutdown(engine) {
