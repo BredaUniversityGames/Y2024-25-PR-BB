@@ -1,7 +1,6 @@
 #include "game_bindings.hpp"
 
 #include "cheats_component.hpp"
-#include "components/name_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
@@ -17,6 +16,9 @@
 #include "systems/lifetime_component.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+
+#include "ui_progress_bar.hpp"
+#include "ui_text.hpp"
 
 namespace bindings
 {
@@ -50,30 +52,6 @@ void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
     self.component->noClip = noClip;
 }
 
-// WrenEntity CreatePlayerController(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const glm::vec3& position, const float height, const float radius)
-// {
-//     auto playerView = ecs.GetRegistry().view<PlayerTag>();
-//     for (auto entity : playerView)
-//     {
-//         ecs.DestroyEntity(entity);
-//     }
-//
-//     entt::entity playerEntity = ecs.GetRegistry().create();
-//     ecs.GetRegistry().emplace<TransformComponent>(playerEntity);
-//     TransformHelpers::SetLocalPosition(ecs.GetRegistry(), playerEntity, position);
-//
-//     auto degreesOfFreedom = JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
-//     RigidbodyComponent rb(physicsModule.GetBodyInterface(), ShapeFactory::MakeCapsuleShape(height, radius), true, degreesOfFreedom);
-//
-//     NameComponent node;
-//     PlayerTag playerTag;
-//     node.name = "Player entity";
-//     ecs.GetRegistry().emplace<NameComponent>(playerEntity, node);
-//     ecs.GetRegistry().emplace<RigidbodyComponent>(playerEntity, rb);
-//     ecs.GetRegistry().emplace<PlayerTag>(playerEntity, playerTag);
-//     return { playerEntity, &ecs.GetRegistry() };
-// }
-
 // Do not pass heights smaller than 0.1f, it will get clamped for saftey to 0.1f
 void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModule, ECSModule& ecs, const float height)
 {
@@ -91,6 +69,52 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
         physicsModule.GetBodyInterface().SetShape(rb.bodyID, new JPH::CapsuleShape(height / 2.0, radius), true, JPH::EActivation::Activate);
     }
 }
+
+HUD& GetHUD(GameModule& self)
+{
+    return self._hud;
+}
+
+void UpdateHealthBar(HUD& self, const float health)
+{
+    if (auto locked = self.healthBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(health);
+    }
+}
+
+void UpdateAmmoText(HUD& self, const int ammo, const int maxAmmo)
+{
+    if (auto locked = self.ammoCounter.lock(); locked != nullptr)
+    {
+        locked->SetText(std::to_string(ammo) + "/" + std::to_string(maxAmmo));
+    }
+}
+
+void UpdateUltBar(HUD& self, const float ult)
+{
+    if (auto locked = self.ultBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(ult);
+    }
+}
+
+void UpdateScoreText(HUD& self, const int score)
+{
+    if (auto locked = self.scoreText.lock(); locked != nullptr)
+    {
+        locked->SetText(std::string("Score: ") + std::to_string(score));
+    }
+}
+
+void UpdateGrenadeBar(HUD& self, const float charge)
+{
+    if (auto locked = self.grenadeBar.lock(); locked != nullptr)
+    {
+        locked->SetFractionFilled(charge);
+    }
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -103,6 +127,13 @@ void BindGameAPI(wren::ForeignModule& module)
     cheatsComponent.propExt<bindings::GetNoClipStatus, bindings::SetNoClip>("noClip");
 
     auto& game = module.klass<GameModule>("Game");
-    // game.funcExt<bindings::CreatePlayerController>("CreatePlayerController");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
+    game.funcExt<bindings::GetHUD>("GetHUD");
+
+    auto& hud = module.klass<HUD>("HUD");
+    hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
+    hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
+    hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
+    hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
+    hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar");
 }
