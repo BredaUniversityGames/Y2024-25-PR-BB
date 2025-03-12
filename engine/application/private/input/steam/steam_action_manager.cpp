@@ -75,6 +75,12 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
         return {};
     }
 
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return {};
+    }
+
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
 
     auto itr = actionSetCache.gamepadDigitalActionsCache.find(actionName.data());
@@ -97,6 +103,7 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
 
     // TODO: Load our own first, if none are available, get defaults from Steam
 
+
     for (uint32_t i = 0; i < originsNum; ++i)
     {
         glyphPaths.emplace_back(SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0));
@@ -109,6 +116,12 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {
+        return {};
+    }
+
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
         return {};
     }
 
