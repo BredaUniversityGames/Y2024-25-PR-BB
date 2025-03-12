@@ -27,7 +27,7 @@ class Main {
         comp.orthographicSize = 75.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-105.0, 68.0, 168.0)
+        transform.translation = Vec3.new(0.0, 0.0, 0.0)
         transform.rotation = Quat.new(-0.29, 0.06, -0.93, -0.19)
 
         // Player Setup
@@ -39,9 +39,6 @@ class Main {
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-
-        __enemyList = []
-        __spawner = Spawner.new(Vec3.new(-41.8, 19.0, 269.6), 1000.0)
 
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
@@ -102,8 +99,15 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-        __enemyShape = ShapeFactory.MakeCapsuleShape(1.7, 0.5)
-        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, 1)
+        // Enemy setup
+
+        var enemyPos = Vec3.new(-5.0, 3.0, 60.0)
+
+        __enemyList = []
+        __spawner = Spawner.new(enemyPos, 1000.0)
+
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 3.5, "assets/models/demon.glb", __enemyShape, 1)
     }
 
     static Shutdown(engine) {
@@ -111,6 +115,8 @@ class Main {
     }
 
     static Update(engine, dt) {
+
+        // __spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, dt)
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -227,8 +233,10 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
+        var playerPos = __player.GetTransformComponent().translation
+
         for (enemy in __enemyList) {
-            enemy.Update(dt)
+            enemy.Update(playerPos, dt)
         }
     }
 }

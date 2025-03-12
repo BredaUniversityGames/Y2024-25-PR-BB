@@ -10,13 +10,13 @@ class MeleeEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
 
-        _rootEntity = engine.LoadModelIntoECS(enemyModel)[0]
+        _rootEntity = engine.LoadModel(enemyModel)
         _rootEntity.GetTransformComponent().translation = spawnPosition
         _rootEntity.GetTransformComponent().scale = size
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
-        body.SetFriction(0)
+        // body.SetFriction(2.0)
 
         var animations = _rootEntity.GetAnimationControlComponent()
         animations.Play("Run", 1.0, true)
@@ -35,47 +35,50 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(dt) {
+    Update(playerPos, dt) {
 
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
 
+        var forwardVector = (playerPos - pos).normalize()
+        var velocity = _rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector.mulScalar(_maxVelocity * dt)
+
+        _rootEntity.GetRigidbodyComponent().SetVelocity(velocity)
+        _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+
+        // Pathfinding is unused due to lack of navmesh for blockout
+
         // Pathfinding logic
-        if(_currentPath != null) {
+        // if(_currentPath != null) {
             
-            var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+        //     var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
 
-            if((waypoint.center - pos).length() < 0.3) {
-                _currentPathNodeIdx = _currentPathNodeIdx + 1
-                if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
-                    body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-                    _currentPath = null
-                    return
-                }
-                waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-            }
+        //     if((waypoint.center - pos).length() < 0.3) {
+        //         _currentPathNodeIdx = _currentPathNodeIdx + 1
+        //         if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
+        //             body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
+        //             _currentPath = null
+        //             return
+        //         }
+        //         waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+        //     }
 
-            var forwardVector = (waypoint.center - pos).normalize()
-            var velocity = _maxVelocity * dt
-            System.print(velocity)
+        //     var forwardVector = (waypoint.center - pos).normalize()
+        //     var velocity = _maxVelocity * dt
+        //     System.print(velocity)
 
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(velocity))
+        //     _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(velocity))
 
-            // Set forward rotation
-            _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-        }
+        //     // Set forward rotation
+        //     _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        // }
     }
 
     FindNewPath(engine) {
-        var body = _rootEntity.GetRigidbodyComponent()
-        var startPos = body.GetPosition()
+        var startPos = position
         _currentPath = engine.GetPathfinding().FindPath(startPos, Vec3.new(-16.0, 29.0, 195.1))
         _currentPathNodeIdx = 0
-
-        var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-        var velocity = (waypoint.center - startPos).normalize() * Vec3.new(_maxVelocity, _maxVelocity, _maxVelocity)
-        body.SetVelocity(velocity)
     }
 
     Destroy(engine) {
