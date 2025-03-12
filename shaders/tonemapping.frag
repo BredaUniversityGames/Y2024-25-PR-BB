@@ -142,6 +142,10 @@ void main()
         hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
     }
 
+    if (paletteEnabled)
+    {
+        hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
+    }
 
     hdrColor += bloomColor * bloomSettings.strength;
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
@@ -162,13 +166,13 @@ void main()
         const vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
         const vec3 ro = vec3(0.0, 0.0, 0.0);
         color = Sky(ro, rayDir);
-    }
 
-    if (paletteEnabled)
-    {
-        color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
+        if (paletteEnabled)
+        {
+            color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
+        }
     }
-
+    
     switch (pc.tonemappingFunction)
     {
         case ACES: color = aces(color); break;
@@ -200,7 +204,7 @@ void main()
         color = Vignette(color, texCoords, pc.vignetteIntensity);
     }
 
-    
+
     outColor = vec4(color, 1.0);
 }
 
