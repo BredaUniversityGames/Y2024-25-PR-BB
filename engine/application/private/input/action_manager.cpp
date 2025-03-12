@@ -107,7 +107,7 @@ std::vector<std::string> ActionManager::GetDigitalActionGamepadGlyphImagePaths(s
 
         const GamepadButton button = std::get<GamepadButton>(inputBinding);
         const auto digitalGlyph = customGlyphs->second.digitals.find(button);
-        if (digitalGlyph == customGlyphs->second.digitals.end())
+        if (digitalGlyph != customGlyphs->second.digitals.end())
         {
             glyphPaths.push_back(digitalGlyph->second);
         }
@@ -154,7 +154,7 @@ std::vector<std::string> ActionManager::GetAnalogActionGamepadGlyphImagePaths(st
 
         const GamepadAnalog analog = std::get<GamepadAnalog>(inputBinding);
         const auto analogGlyph = customGlyphs->second.analogs.find(analog);
-        if (analogGlyph == customGlyphs->second.analogs.end())
+        if (analogGlyph != customGlyphs->second.analogs.end())
         {
             glyphPaths.push_back(analogGlyph->second);
         }
