@@ -44,8 +44,11 @@ private:
         // The maximum amount of brightness that can be extracted per pixel.
         float maxBrightnessExtraction = 5.0f;
 
+        // How big the sample radius is during up-scaling of the bloom image.
+        float filterRadius = 0.005f;
+
     private:
-        MAYBE_UNUSED glm::vec2 _padding;
+        MAYBE_UNUSED float _padding;
     } _data;
 
     std::shared_ptr<GraphicsContext> _context;

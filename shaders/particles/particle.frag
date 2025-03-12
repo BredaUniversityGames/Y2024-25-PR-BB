@@ -24,9 +24,11 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normalIn;
 layout (location = 2) in vec2 texCoord;
-layout (location = 3) flat in uint materialIndex;
-layout (location = 4) flat in uint flags;
-layout (location = 5) in vec3 colorIn;
+layout (location = 3) in vec2 texCoord2;
+layout (location = 4) flat in uint materialIndex;
+layout (location = 5) flat in uint flags;
+layout (location = 6) in vec3 colorIn;
+layout (location = 7) in float frameBlend;
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec4 outBrightness;
@@ -37,6 +39,13 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 void main()
 {
     vec4 color = pow(texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord), vec4(2.2));
+
+    if ((flags & FRAMEBLEND) == FRAMEBLEND)
+    {
+        vec4 color2 = pow(texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord2), vec4(2.2));
+
+        color = mix(color, color2, frameBlend);
+    }
 
     if (color.a < 0.2f)
     {

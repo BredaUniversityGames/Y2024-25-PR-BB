@@ -38,6 +38,9 @@ T Normalized(T& v) { return glm::normalize(v); }
 template <typename T>
 float Length(T& v) { return glm::length(v); }
 
+template <typename T>
+float Distance(T& v) { return glm::distance(v); }
+
 class MathUtil
 {
 public:
@@ -84,6 +87,14 @@ public:
     static float Min(const float a, const float b)
     {
         return glm::min(a, b);
+    }
+    static float Sin(const float a)
+    {
+        return glm::sin(a);
+    }
+    static float Cos(const float a)
+    {
+        return glm::cos(a);
     }
     static float Radians(const float a)
     {
@@ -159,6 +170,9 @@ inline void BindMath(wren::ForeignModule& module)
         vector3.var<&glm::vec3::y>("y");
         vector3.var<&glm::vec3::z>("z");
         BindVectorTypeOperations(vector3);
+
+        vector3.funcExt<LeftRetMul<glm::vec3, glm::quat>>("mulQuat");
+        vector3.funcExt<RightRetMul<glm::vec3, glm::quat>>("mulQuatRetQuat");
     }
 
     {
@@ -171,6 +185,7 @@ inline void BindMath(wren::ForeignModule& module)
         BindVectorTypeOperations(quat);
 
         quat.funcExt<RightRetMul<glm::quat, glm::vec3>>("mulVec3");
+        quat.funcExt<LeftRetMul<glm::quat, glm::vec3>>("mulVec3RetQuat");
     }
 
     {
@@ -184,6 +199,8 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
         mathUtilClass.funcStatic<&MathUtil::Max>("Max");
         mathUtilClass.funcStatic<&MathUtil::Min>("Min");
+        mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
+        mathUtilClass.funcStatic<&MathUtil::Cos>("Cos");
         mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
         mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");

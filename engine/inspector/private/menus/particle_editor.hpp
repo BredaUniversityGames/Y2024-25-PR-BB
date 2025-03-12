@@ -17,7 +17,6 @@ private:
     ECSModule& _ecsModule;
 
     int _selectedPresetIndex = -1;
-    std::string _currentImage = "null";
     std::string _imageLoadMessage = "Ready to load...";
 
     void RenderEmitterPresetList();
