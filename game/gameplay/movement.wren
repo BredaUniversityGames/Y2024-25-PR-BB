@@ -16,9 +16,7 @@ class PlayerMovement{
         isSliding = false
         slideForce = 3.5
         dashForce = 22.0
-        slideWishDirection = Vec3.new(0.0,0.0,0.0)
-        
-        
+        slideWishDirection = Vec3.new(0.0,0.0,0.0)    
     }
 
 

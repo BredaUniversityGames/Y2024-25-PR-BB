@@ -1,7 +1,7 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
-import "weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 
 class Main {
 
@@ -21,6 +21,9 @@ class Main {
         __hasDashed = false
         __timer = 0
         __camera = engine.GetECS().GetEntityByName("Camera")
+
+        __enemyList = []
+        __spawner = Spawner.new(Vec3.new(-41.8, 19.0, 269.6), 1000.0)
 
         //__playerController = engine.GetGame().CreatePlayerController(engine.GetPhysics(), engine.GetECS(), Vec3.new(-18.3, 30.3, 193.8), 1.7, 0.5)
       
@@ -112,13 +115,17 @@ class Main {
         __ultimateCharge = 0
         __ultimateActive = false
 
-        __spawner = Spawner.new(engine)
-        __spawner.SpawnEnemies(1)
+        __enemyShape = ShapeFactory.MakeCapsuleShape(1.7, 0.5)
+        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, 1)
     }
 
     static Shutdown(engine) {
-        __spawner.Destroy()
         System.print("Shutdown script!")
+
+        for (enemy in __enemyList) {
+            engine.GetECS().DestroyEntity(enemy.entity)
+        }
+        __enemyList.clear()
     }
 
     static Update(engine, dt) {
@@ -127,8 +134,6 @@ class Main {
         var deltaTime = engine.GetTime().GetDeltatime()
         __frameTimer = __frameTimer + dt
         __timer = __timer + dt
-
-        __spawner.Update()
 
         if (__ultimateActive) {
             __ultimateCharge = __ultimateCharge - dt
@@ -190,6 +195,10 @@ class Main {
         if (engine.GetInput().DebugGetKey(Keycode.e2())) {
             __activeWeapon = __armory[Weapons.shotgun]
             __activeWeapon.equip(engine)
+        }
+
+        for (enemy in __enemyList) {
+            enemy.Update(dt)
         }
     }
 }
