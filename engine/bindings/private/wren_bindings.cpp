@@ -37,28 +37,13 @@ float TimeModuleGetDeltatime(TimeModule& self)
 
 void TransitionToScript(WrenEngine& engine, const std::string& path)
 {
-    engine.instance->GetModule<ScriptingModule>().SetMainScript(*engine.instance, path);
+    engine.instance->GetModule<GameModule>().TransitionScene(path);
 }
 
-std::vector<WrenEntity> LoadModelIntoECS(WrenEngine& engine, const std::string& path)
+WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
 {
-    std::vector<entt::entity> entities = SceneLoading::LoadModels(*engine.instance, { path });
-    std::vector<WrenEntity> wrentities(static_cast<size_t>(entities.size()));
-
-    auto& registry = engine.GetModule<ECSModule>().value()->GetRegistry();
-
-    for (size_t i = 0; i < entities.size(); i++)
-    {
-        wrentities[i].entity = entities[i];
-        wrentities[i].registry = &registry;
-    }
-
-    return wrentities;
-}
-
-CPUModel LoadCPUModel(MAYBE_UNUSED WrenEngine& engine, const std::string& path)
-{
-    return ModelLoading::LoadGLTF(path);
+    auto entity = SceneLoading::LoadModel(*engine.instance, path);
+    return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
 }
 
 }
@@ -80,8 +65,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
-        engineAPI.funcExt<bindings::LoadModelIntoECS>("LoadModelIntoECS");
-        engineAPI.funcExt<bindings::LoadCPUModel>("LoadCPUModel");
+
+        engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
     }
 

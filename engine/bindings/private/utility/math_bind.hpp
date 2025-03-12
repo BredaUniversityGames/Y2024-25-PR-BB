@@ -21,6 +21,12 @@ template <typename T>
 T Mul(T& lhs, const T& rhs) { return lhs * rhs; }
 
 template <typename T, typename U>
+T LeftRetDiv(T& lhs, const U& rhs) { return lhs / rhs; }
+
+template <typename T, typename U>
+U RightRetDiv(T& lhs, const U& rhs) { return lhs / rhs; }
+
+template <typename T, typename U>
 T LeftRetMul(T& lhs, const U& rhs) { return lhs * rhs; }
 
 template <typename T, typename U>
@@ -164,6 +170,7 @@ void BindVectorTypeOperations(wren::ForeignKlassImpl<T>& klass)
     klass.template funcExt<Normalized<T>>("normalize");
     klass.template funcExt<Length<T>>("length");
     klass.template funcExt<LeftRetMul<T, float>>("mulScalar");
+    klass.template funcExt<LeftRetDiv<T, float>>("divScalar");
 }
 
 inline void BindMath(wren::ForeignModule& module)
