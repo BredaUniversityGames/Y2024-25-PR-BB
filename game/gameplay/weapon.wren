@@ -1,4 +1,5 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "camera.wren" for CameraVariables
 
 class Weapons {
     static pistol {0}
@@ -17,6 +18,8 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 1.2 * 1000
+
+        _cameraShakeIntensity = 0.3
         
         _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = ""
@@ -42,11 +45,15 @@ class Pistol {
         _ammo = _maxAmmo
     }
 
-    attack(engine, deltaTime) {
+    attack(engine, deltaTime, cameraVariables) {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Pistol shoot")
+
+            // Shake the camera
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -58,11 +65,13 @@ class Pistol {
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var forward = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
-            var end = playerTransform.translation + forward * _rangeVector
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
@@ -74,7 +83,7 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal * Vec3.new(10, 10, 10))
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal)
             }
 
             var length = (end - start).length()
@@ -129,6 +138,7 @@ class Shotgun {
         _reloadTimer = 0
         _reloadSpeed = 0.4 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
+        _cameraShakeIntensity = 0.5
 
         _attackSFX = "event:/Weapons/Explosion"
         _reloadSFX = ""
@@ -154,10 +164,12 @@ class Shotgun {
         _ammo = _maxAmmo
     }
 
-    attack(engine, deltaTime) {   
+    attack(engine, deltaTime, cameraVariables) {   
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
             System.print("Shotgun shoot")
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -169,11 +181,13 @@ class Shotgun {
             
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var forward = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
-            var start = playerTransform.translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12) 
-            var end = playerTransform.translation + forward * _rangeVector
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             
             var i = 0
@@ -237,6 +251,7 @@ class Knife {
         _ammo = _maxAmmo
         _reloadTimer = 0
         _reloadSpeed = 0
+        _cameraShakeIntensity = 0.2
 
         _attackSFX = "event:/Weapons/Machine Gun"
         _reloadSFX = ""
@@ -244,7 +259,7 @@ class Knife {
         
         _attackAnim = "Shoot"
         _reloadAnim = "Reload"
-        _equipAnim = ""
+        _equipAnim = "" 
 
         _mesh = ""
     }
@@ -254,9 +269,11 @@ class Knife {
         System.print("Knife reload")
     }
 
-    attack(engine, deltaTime) {
+    attack(engine, deltaTime, cameraVariables) {
         if (_cooldown <= 0) {
             System.print("Knife Stab")
+
+            cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
@@ -268,10 +285,12 @@ class Knife {
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
-            var direction = Math.ToVector(playerTransform.rotation)
-            var up = playerTransform.rotation.mulVec3(Vec3.new(0, 1, 0))
+            var translation = playerTransform.GetWorldTranslation()
+            var rotation = playerTransform.GetWorldRotation()
+            var direction = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(direction, up)
-            var start = playerTransform.translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1) 
+            var start = translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             var entity = engine.GetECS().NewEntity()

@@ -17,7 +17,11 @@ public:
     ~TimeModule() override = default;
     DeltaMS GetDeltatime() const { return current_deltatime; }
     DeltaMS GetTotalTime() const { return total_time; }
-    void ResetTimer() { delta_timer.Reset(); }
+    void ResetTimer()
+    {
+        delta_timer.Reset();
+        current_deltatime = {};
+    }
 
 private:
     DeltaMS current_deltatime {};

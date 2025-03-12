@@ -1,11 +1,12 @@
 ﻿#include "physics_module.hpp"
 
-#include "glm/gtx/rotate_vector.hpp"
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/RegisterTypes.h>
+#include <cmath>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
@@ -73,7 +74,7 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
     float deltatimeSeconds = engine.GetModule<TimeModule>().GetDeltatime().count() * 0.001f;
 
     // This is being optimistic: we always do one collision step no matter how small the dt
-    float updatesNeeded = static_cast<int>(std::ceilf(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND));
+    const int updatesNeeded = std::min(static_cast<int>(glm::ceil(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND)), PHYSICS_MAX_STEPS_PER_FRAME);
 
     // Step the world
     auto error = _physicsSystem->Update(deltatimeSeconds, updatesNeeded, _tempAllocator.get(), _jobSystem.get());

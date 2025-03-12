@@ -4,6 +4,9 @@
 #include "bindless.glsl"
 #include "settings.glsl"
 #include "tonemapping.glsl"
+#include "scene.glsl"
+#include "octahedron.glsl"
+#include "hashes.glsl"
 
 
 #define ENABLE_VIGNETTE        (1 << 0)
@@ -17,10 +20,11 @@ layout (push_constant) uniform PushConstants
     uint hdrTargetIndex;
     uint bloomTargetIndex;
     uint depthIndex;
-
     uint enableFlags;
 
+    uint normalIndex;
     uint tonemappingFunction;
+    float padding0;
     float exposure;
 
     float vignetteIntensity;
@@ -32,24 +36,41 @@ layout (push_constant) uniform PushConstants
     float contrast;
     float saturation;
     float vibrance;
-    float hue;
 
-    //pixelization
+    float hue;
     float minPixelSize;
     float maxPixelSize;
     float pixelizationLevels;
+
     float pixelizationDepthBias;
     uint screenWidth;
     uint screenHeight;
-
     float ditherAmount;
+
     float paletteAmount;
+    float time;
+    float padding1;
+    float padding2;
+
     vec4 palette[5];
+    vec4 skyColor;
+    vec4 sunColor;
+    vec4 cloudsColor;
+    vec4 voidColor;
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
 {
     BloomSettings bloomSettings;
+};
+layout (set = 2, binding = 0) uniform CameraUBO
+{
+    Camera camera;
+};
+
+layout (set = 3, binding = 0) uniform SceneUBO
+{
+    Scene scene;
 };
 
 layout (location = 0) in vec2 texCoords;
@@ -68,6 +89,11 @@ vec3 ShiftHue(in vec3 col, in float Shift);
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize);
 vec3 SaturateColor(vec3 color, float saturationFactor);
 vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor);
+float noise(in vec2 uv);
+float fbm(in vec2 uv);
+vec3 Sky(in vec3 ro, in vec3 rd);
+
+
 
 // 4x4 Bayer matrix with values 0..15
 const float bayer[4][4] = float[4][4](
@@ -76,6 +102,12 @@ float[4](12.0, 4.0, 14.0, 6.0),
 float[4](3.0, 11.0, 1.0, 9.0),
 float[4](15.0, 7.0, 13.0, 5.0)
 );
+
+
+float linearize_depth(float d, float zNear, float zFar)
+{
+    return zNear * zFar / (zFar + d * (zNear - zFar));
+}
 
 
 void main()
@@ -95,28 +127,50 @@ void main()
     }
     // Prepare the circle parameters, cycling the circle size over time.
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
-    const float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
     vec3 hdrColor = vec3(0.0);
     if (pixelizationEnabled)
     {
+
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
+        newTexCoords = uv;
         hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
     } else
     {
         hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
     }
 
-
     if (paletteEnabled)
     {
         hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
     }
 
-
     hdrColor += bloomColor * bloomSettings.strength;
-
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
+
+    //sample the depth again, maybe we now need to use pixelization
+    float pixelatedDepthSample = texture(bindless_color_textures[nonuniformEXT (pc.depthIndex)], newTexCoords, -256.0).r;
+    if (pixelatedDepthSample <= 0.0f)
+    {
+        vec2 uv = newTexCoords;
+        uv -= 0.5;
+        uv.x *= (16.0 / 9.0);
+        // we can control the horizon by altering the aspect ration
+        // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
+        uv.y = -uv.y;
+
+        const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
+        const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
+        const vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
+        const vec3 ro = vec3(0.0, 0.0, 0.0);
+        color = Sky(ro, rayDir);
+
+        if (paletteEnabled)
+        {
+            color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
+        }
+    }
 
     switch (pc.tonemappingFunction)
     {
@@ -150,8 +204,80 @@ void main()
     }
 
 
-
     outColor = vec4(color, 1.0);
+}
+
+
+
+
+float noise(in vec2 uv)
+{
+    vec2 i = floor(uv);
+    vec2 f = fract(uv);
+    f = f * f * (3. - 2. * f);
+
+    float lb = hashwithoutsine12(i + vec2(0., 0.));
+    float rb = hashwithoutsine12(i + vec2(1., 0.));
+    float lt = hashwithoutsine12(i + vec2(0., 1.));
+    float rt = hashwithoutsine12(i + vec2(1., 1.));
+
+    return mix(mix(lb, rb, f.x),
+               mix(lt, rt, f.x), f.y);
+}
+
+#define OCTAVES 8
+float fbm(in vec2 uv)
+{
+    float value = 0.0;
+    float amplitude = .5;
+
+    for (int i = 0; i < OCTAVES; i++)
+    {
+        value += noise(uv) * amplitude;
+
+        amplitude *= .5;
+
+        uv *= 2.;
+    }
+
+    return value;
+}
+
+vec3 Sky(in vec3 ro, in vec3 rd)
+{
+    const float SC = 1e5;
+
+    // Calculate sky plane
+    float dist = (SC - ro.y) / rd.y;
+    vec2 p = (ro + dist * rd).xz;
+    p *= 4.4 / SC;
+
+    // from iq's shader, https://www.shadertoy.com/view/MdX3Rr
+    vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
+    float sundot = clamp(dot(rd, lightDir), 0.0, 1.0);
+
+    vec3 cloudCol = pc.cloudsColor.rgb;
+    vec3 skyCol = pc.skyColor.rgb - rd.y * .2 * vec3(1., .5, 1.) + .15 * .5;
+    //vec3 skyCol = pc.skyColor.rgb - rd.y * rd.y * 0.5;
+    skyCol = mix(skyCol, 0.85 * pc.skyColor.rgb, pow(1.0 - max(rd.y, 0.0), 4.0));
+
+    // sun
+    vec3 sun = 0.2 * pc.sunColor.rgb * pow(sundot, 8.0);
+    sun += 0.95 * pc.sunColor.rgb * pow(sundot, 2048.0);
+    sun += 0.2 * pc.sunColor.rgb * pow(sundot, 128.0);
+    sun = clamp(sun, 0.0, 1.0);
+    skyCol += sun;
+
+    // clouds
+    float t = pc.time * 0.1;
+    float den = fbm(vec2(p.x - t, p.y - t));
+    skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
+
+
+    // horizon
+    skyCol = mix(skyCol, pc.voidColor.rgb, pow(1.0 - max(rd.y, 0.0), 16.0));
+
+    return skyCol;
 }
 
 vec3 SaturateColor(vec3 color, float saturationFactor)

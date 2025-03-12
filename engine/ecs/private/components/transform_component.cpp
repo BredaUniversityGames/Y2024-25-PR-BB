@@ -1,8 +1,6 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
-
-#include <glm/gtx/quaternion.hpp>
-#include <glm/vec4.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace EnttEditor
 {
@@ -19,19 +17,18 @@ void TransformComponent::Inspect(entt::registry& reg, entt::entity entity)
 
     changed |= ImGui::DragFloat3("Position##Transform", &_localPosition[0], 0.1f);
 
-    glm::vec3 eulerAngles = glm::degrees(glm::eulerAngles(glm::quat(_localRotation)));
-
-    changed |= ImGui::DragFloat3("Rotation##Transform (Euler)", &eulerAngles[0], 0.1f);
-
-    if (changed)
-    {
-        _localRotation = glm::quat(glm::radians(eulerAngles));
-    }
+    changed |= ImGui::DragFloat3("Rotation##Transform", &_editorEulerAngles[0], 0.1f);
 
     changed |= ImGui::DragFloat3("Scale##Transform", &_localScale[0], 0.1f);
 
+    // If the user changed anything, update the internal quaternion
     if (changed)
     {
+        _localRotation = glm::quat { glm::radians(_editorEulerAngles) };
         TransformHelpers::UpdateWorldMatrix(reg, entity);
+    }
+    else
+    {
+        _editorEulerAngles = glm::degrees(glm::eulerAngles(_localRotation));
     }
 }

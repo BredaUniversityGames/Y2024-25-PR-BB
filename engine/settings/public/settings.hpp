@@ -26,7 +26,7 @@
 
 struct Settings
 {
-    VERSION(0);
+    VERSION(1);
 
     struct Fog
     {
@@ -72,7 +72,7 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(5);
+        VERSION(6);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -110,7 +110,21 @@ struct Settings
             glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
             glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
         };
+
+        glm::vec4 skyColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 sunColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 cloudsColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 voidColor { 0.0f, 0.0f, 0.0f, 1.0f };
+
     } tonemapping;
+
+    struct Lighting
+    {
+        VERSION(0);
+
+        float ambientStrength { 1.0 };
+        float ambientShadowStrength { 0.3 };
+    } lighting;
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density, height);
@@ -129,10 +143,14 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 
-VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping);
+VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength);
+CLASS_SERIALIZE_VERSION(Settings::Lighting);
+CLASS_VERSION(Settings::Lighting);
+
+VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping, lighting);
 CLASS_SERIALIZE_VERSION(Settings);
 CLASS_VERSION(Settings);

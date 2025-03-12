@@ -2,12 +2,14 @@
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
+#include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 
 #include <optional>
 
 namespace bindings
 {
+
 std::vector<RayHitInfo> ShootRay(PhysicsModule& self, const glm::vec3& origin, const glm::vec3& direction, const float distance)
 {
     return self.ShootRay(origin, direction, distance);
@@ -87,6 +89,13 @@ JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
 {
     return self.component->bodyID;
 }
+
+RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, bool dynamic, bool allowRotation)
+{
+    JPH::EAllowedDOFs dofs = allowRotation ? JPH::EAllowedDOFs::All : JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
+    return RigidbodyComponent { physics.GetBodyInterface(), shape, dynamic, dofs };
+}
+
 }
 void BindPhysicsAPI(wren::ForeignModule& module)
 {
@@ -102,10 +111,25 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
     rayHitInfo.propReadonlyExt<bindings::GetRayHitNormal>("normal");
 
-    // Body ID (why is this needed?)
+    // Body ID
     module.klass<JPH::BodyID>("BodyID");
 
-    // Rigidbody component
+    // Shape Ref
+    module.klass<JPH::ShapeRefC>("CollisionShape");
+
+    // Shape factory
+    auto& shapeFactory = module.klass<ShapeFactory>("ShapeFactory");
+    shapeFactory.funcStaticExt<ShapeFactory::MakeBoxShape>("MakeBoxShape");
+    shapeFactory.funcStaticExt<ShapeFactory::MakeCapsuleShape>("MakeCapsuleShape");
+    shapeFactory.funcStaticExt<ShapeFactory::MakeSphereShape>("MakeSphereShape");
+    shapeFactory.funcStaticExt<ShapeFactory::MakeConvexHullShape>("MakeConvexHullShape");
+    shapeFactory.funcStaticExt<ShapeFactory::MakeMeshHullShape>("MakeMeshHullShape");
+
+    // Rigidbody component (a bit hacky, since we cannot add a default constructed rb to the ECS)
+
+    auto& rigidBody = module.klass<RigidbodyComponent>("Rigidbody");
+    rigidBody.funcStaticExt<bindings::RigidbodyNew>("new");
+
     auto& rigidBodyComponent = module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent");
     rigidBodyComponent.propReadonlyExt<bindings::GetBodyID>("GetBodyID");
 
