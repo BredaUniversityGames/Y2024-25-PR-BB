@@ -15,7 +15,7 @@
 #include <stb_image.h>
 
 constexpr static auto DEFAULT_LOAD_FLAGS = fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
-static fastgltf::Parser parser = fastgltf::Parser();
+static fastgltf::Parser parser = fastgltf::Parser(fastgltf::Extensions::KHR_lights_punctual);
 
 namespace detail
 {
@@ -752,6 +752,33 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
                 jointIndex,
             };
         }
+    }
+
+    if (gltfNode.lightIndex.has_value())
+    {
+        const auto& light = gltf.lights[gltfNode.lightIndex.value()];
+
+        Hierarchy::LightData lightData;
+        lightData.color = detail::ToVec3(light.color);
+        lightData.range = light.range.has_value() ? light.range.value() : Hierarchy::LightData::DEFAULT_LIGHT_RANGE;
+        lightData.intensity = 683.f * light.intensity / 4 * glm::pi<float>(); // Conversion from W to candela
+        switch (light.type)
+        {
+        case fastgltf::LightType::Directional:
+            lightData.type = Hierarchy::LightData::LightType::Directional;
+            break;
+        case fastgltf::LightType::Point:
+            lightData.type = Hierarchy::LightData::LightType::Point;
+            break;
+        case fastgltf::LightType::Spot:
+            lightData.type = Hierarchy::LightData::LightType::Spot;
+            break;
+        default:
+            lightData.type = Hierarchy::LightData::LightType::Point;
+            break;
+        }
+
+        model.hierarchy.nodes[nodeIndex].light = lightData;
     }
 
     for (size_t childNodeIndex : gltfNode.children)
