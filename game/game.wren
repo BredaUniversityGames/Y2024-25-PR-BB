@@ -72,12 +72,11 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        var demon = engine.LoadModel("assets/models/Demon.glb")
-        var demonAnimations = demon.GetAnimationControlComponent()
-        demonAnimations.Transition(0, 1, 0.5, 1.0, true)
-        //demonAnimations.Play("Run", 1.0, true)
-        demon.GetTransformComponent().translation = Vec3.new(0.0, 0.0, 0.0)
-        demon.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
+        __demon = engine.LoadModel("assets/models/Demon.glb")
+        var demonAnimations = __demon.GetAnimationControlComponent()
+        demonAnimations.Play("Run", 0.0, 1.0, true)
+        __demon.GetTransformComponent().translation = Vec3.new(0.0, 0.0, 0.0)
+        __demon.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
 
         // Load Map
         engine.LoadModel("assets/models/blockoutv4.glb")
@@ -90,7 +89,7 @@ class Main {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false)
+        gunAnimations.Play("Reload", 0.0, 1.0, false)
         gunAnimations.Stop()
 
         __player.AttachChild(__camera)
@@ -158,6 +157,15 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
+            }
+
+            if(engine.GetInput().DebugGetKey(Keycode.eK())) {
+                var demonAnimations = __demon.GetAnimationControlComponent()
+                demonAnimations.Play("Walk", 0.3, 1.0, true)
+            }
+            if(engine.GetInput().DebugGetKey(Keycode.eL())) {
+                var demonAnimations = __demon.GetAnimationControlComponent()
+                demonAnimations.Play("Run", 0.3, 1.0, true)
             }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()

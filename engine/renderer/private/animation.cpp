@@ -4,45 +4,37 @@
 
 #include "log.hpp"
 
-void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float speed, bool looping)
+void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float blendTime, float speed, bool looping)
 {
+    bool useBlend = blendTime > 0.0f && activeAnimation.has_value();
+    if (useBlend)
+    {
+        transitionAnimation = activeAnimation;
+
+        this->blendTime = blendTime;
+        this->remainingBlendTime = blendTime;
+    }
+
     activeAnimation = animationIndex;
-    animations[animationIndex].time = 0.0f;
+    animations[animationIndex].time = useBlend ? animations[transitionAnimation.value()].time * (animations[animationIndex].duration / animations[transitionAnimation.value()].duration) : 0.0f;
     animations[animationIndex].looping = looping;
     animations[animationIndex].speed = speed;
     animations[animationIndex].playbackOption = Animation::PlaybackOptions::ePlaying;
 }
 
-void AnimationControlComponent::Play(const std::string& name, float speed, bool looping)
+void AnimationControlComponent::Play(const std::string& name, float blendTime, float speed, bool looping)
 {
     auto it = std::find_if(animations.begin(), animations.end(), [&name](const auto& anim)
         { return anim.name == name; });
 
     if (it != animations.end())
     {
-        PlayByIndex(std::distance(animations.begin(), it), speed, looping);
+        PlayByIndex(std::distance(animations.begin(), it), blendTime, speed, looping);
     }
     else
     {
         bblog::warn("Tried to use invalid animation name: {}", name);
     }
-}
-
-void AnimationControlComponent::Transition(uint32_t source, uint32_t target, float ratio, float speed, bool looping)
-{
-    transitionAnimation = source;
-    animations[source].time = 0.0f;
-    animations[source].looping = looping;
-    animations[source].speed = speed;
-    animations[source].playbackOption = Animation::PlaybackOptions::ePlaying;
-
-    activeAnimation = target;
-    animations[target].time = 0.0f;
-    animations[target].looping = looping;
-    animations[target].speed = speed;
-    animations[target].playbackOption = Animation::PlaybackOptions::ePlaying;
-
-    blendRatio = ratio;
 }
 
 void AnimationControlComponent::Stop()
@@ -109,4 +101,32 @@ bool AnimationControlComponent::AnimationFinished()
     }
 
     return animations[activeAnimation.value()].time > animations[activeAnimation.value()].duration || animations[activeAnimation.value()].playbackOption == Animation::PlaybackOptions::eStopped;
+}
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<AnimationControlComponent>(entt::registry& reg, entt::registry::entity_type e)
+{
+    auto& comp = reg.get<AnimationControlComponent>(e);
+    // ImGui::SliderFloat("Blend Ratio##AnimationControl", &comp.blendRatio, 0.0, 1.0);
+
+    ImGui::LabelText("Blend time", "%f", comp.blendTime);
+    ImGui::LabelText("Remaining blend time", "%f", comp.remainingBlendTime);
+
+    if (comp.activeAnimation.has_value())
+    {
+        const Animation& activeAnimation = comp.animations[comp.activeAnimation.value()];
+        ImGui::LabelText("Active animation", "%s", activeAnimation.name.c_str());
+        ImGui::LabelText("Time", "%f", activeAnimation.time);
+        ImGui::LabelText("Duration", "%f", activeAnimation.duration);
+    }
+    if (comp.transitionAnimation.has_value())
+    {
+        const Animation& transitionAnimation = comp.animations[comp.transitionAnimation.value()];
+        ImGui::LabelText("Active animation", "%s", transitionAnimation.name.c_str());
+        ImGui::LabelText("Time", "%f", transitionAnimation.time);
+        ImGui::LabelText("Duration", "%f", transitionAnimation.duration);
+    }
+}
 }

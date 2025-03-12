@@ -10,13 +10,9 @@ int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationContro
 {
     return component.component->animations.size();
 }
-void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
+void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float blendTime, float speed, bool looping)
 {
-    component.component->Play(name, speed, looping);
-}
-void AnimationControlComponentTransition(WrenComponent<AnimationControlComponent>& component, uint32_t source, uint32_t target, float ratio, float speed, bool looping)
-{
-    component.component->Transition(source, target, ratio, speed, looping);
+    component.component->Play(name, blendTime, speed, looping);
 }
 void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
 {
@@ -55,7 +51,6 @@ void BindAnimationAPI(wren::ForeignModule& module)
     auto& animationControlClass = module.klass<WrenComponent<AnimationControlComponent>>("AnimationControlComponent");
     animationControlClass.funcExt<bindings::AnimationControlComponentGetAnimationCount>("GetAnimationCount");
     animationControlClass.funcExt<bindings::AnimationControlComponentPlay>("Play");
-    animationControlClass.funcExt<bindings::AnimationControlComponentTransition>("Transition");
     animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
     animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
     animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");

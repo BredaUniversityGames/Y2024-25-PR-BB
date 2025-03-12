@@ -40,6 +40,7 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<ParticleEmitterComponent>("Particle Emitter");
     _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
     _entityEditor.registerComponent<CheatsComponent>("Cheats");
+    _entityEditor.registerComponent<AnimationControlComponent>("Animation Control");
 }
 
 void Editor::DrawHierarchy()
