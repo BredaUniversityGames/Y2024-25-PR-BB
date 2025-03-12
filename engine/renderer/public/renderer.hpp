@@ -108,6 +108,8 @@ private:
     ResourceHandle<GPUImage> _tonemappingTarget;
     ResourceHandle<GPUImage> _fxaaTarget;
 
+    ResourceHandle<Sampler> _bloomSampler;
+
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;
     std::unique_ptr<GBuffers> _gBuffers;
