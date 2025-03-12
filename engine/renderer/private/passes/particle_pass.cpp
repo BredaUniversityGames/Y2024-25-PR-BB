@@ -160,9 +160,9 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
 
-    const auto* depthImage = _context->Resources()->ImageResourceManager().Access(_cameraBatch.DepthImage());
+    const auto* hzbImage = _context->Resources()->ImageResourceManager().Access(_cameraBatch.HZBImage());
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
-    _simulatePushConstant.hzbSize = std::fmax(static_cast<float>(depthImage->width), static_cast<float>(depthImage->height));
+    _simulatePushConstant.hzbSize = std::fmax(static_cast<float>(hzbImage->width), static_cast<float>(hzbImage->height));
     _simulatePushConstant.hzbIndex = _cameraBatch.HZBImage().Index();
     _simulatePushConstant.isReverseZ = _cameraBatch.Camera().UsesReverseZ();
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
