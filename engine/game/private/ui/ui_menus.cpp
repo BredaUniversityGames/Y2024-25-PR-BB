@@ -104,6 +104,9 @@ std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsConte
     hud.ammoCounter = canvas->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 100), 50);
     hud.ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
+    hud.scoreText = canvas->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 50);
+    hud.scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
     // common image data.
     CPUImage imageData;
     imageData.format

@@ -15,13 +15,14 @@ class GameModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
     std::string_view GetName() override { return "Game Module"; }
 
-    HUD _hud;
     glm::ivec2 _lastMousePos {};
     bool _updateHud = false;
 
 public:
     GameModule() = default;
     ~GameModule() override = default;
+
+    HUD _hud;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

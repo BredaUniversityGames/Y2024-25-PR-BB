@@ -74,24 +74,45 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::InputText("Name##Emitter Preset", &selectedPreset.name);
 
         // image loading (scuffed for now)
-        ImGui::Text("assets/textures/");
+        ImGui::Text("assets/textures/particles/");
         ImGui::SameLine();
-        ImGui::InputText("Image##Emitter Preset", &_currentImage);
+        ImGui::InputText("Image##Emitter Preset", &selectedPreset.imageName);
 
         if (ImGui::Button("Load Image##Emitter Preset"))
         {
-            auto image = _particleModule.GetEmitterImage(_currentImage);
-            _particleModule.SetEmitterPresetImage(selectedPreset, image);
-            _imageLoadMessage = "Loaded successfully!";
+            if (_particleModule.SetEmitterPresetImage(selectedPreset, selectedPreset.imageName))
+            {
+                _imageLoadMessage = "Loaded successfully!";
+            }
+            else
+            {
+                _imageLoadMessage = "Error loading image...";
+            }
         }
         ImGui::SameLine();
         ImGui::Text("%s", _imageLoadMessage.c_str());
+        ImGui::DragInt2("Sprite Dimensions##Emitter Preset", &selectedPreset.spriteDimensions.x);
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Manually specify the amount of frames that can be present over the x and y axis in the loaded image.");
+            ImGui::EndTooltip();
+        }
+        int frameCount = static_cast<int>(selectedPreset.frameCount);
+        ImGui::DragInt("Frame Count##Emitter Preset", &frameCount);
+        selectedPreset.frameCount = frameCount;
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Manually specify the amount of frames present in the loaded image.");
+            ImGui::EndTooltip();
+        }
 
         // parameter editors
+        ImGui::DragFloat("Frame Rate##Emitter Preset", &selectedPreset.frameRate, 0.0f, 50.0f);
         ImGui::DragFloat("Emit delay##Emitter Preset", &selectedPreset.emitDelay, 0.0f, 50.0f);
         int emitterCount = static_cast<int>(selectedPreset.count);
         ImGui::DragInt("Count##Emitter Preset", &emitterCount, 1, 0, 1024);
         selectedPreset.count = emitterCount;
+        ImGui::DragFloat3("Starting Velocity##Emitter Preset", &selectedPreset.startingVelocity.x, 0.1f, -100.0f, 100.0f);
         ImGui::DragFloat("Mass##Emitter Preset", &selectedPreset.mass, 0.1f, -100.0f, 100.0f);
         ImGui::DragFloat("Rotation##Particle Emitter", &selectedPreset.rotationVelocity.x, 1.0f, -100.0f, 100.0f);
         ImGui::DragFloat("Rotation velocity##Emitter Preset", &selectedPreset.rotationVelocity.y, 1.0f, -100.0f, 100.0f);
@@ -124,6 +145,15 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::ColorPicker3("Color##Emitter Preset", &selectedPreset.color.x);
         ImGui::DragFloat("Color Multiplier##Emitter Preset", &selectedPreset.color.w, 0.1f, 0.0f, 100.0f);
 
+        // flag dropdown
+        ImGui::Text("Rendering Flags:");
+        ImGui::CheckboxFlags("Unlit##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eUnlit));
+        ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
+        ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
+        ImGui::CheckboxFlags("Lock Y##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eLockY));
+
+        // burst table
+        ImGui::Text("Bursts:");
         if (ImGui::BeginTable("Bursts##Emitter Preset", 7, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter))
         {
             ImGui::TableNextRow();
@@ -203,7 +233,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(cameraEntity);
                 TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
             }
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive | SpawnEmitterFlagBits::eSetCustomVelocity, { 8.0f, 35.0f, 300.0f });
+            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive, { 8.0f, 35.0f, 300.0f });
         }
 
         ImGui::SameLine();

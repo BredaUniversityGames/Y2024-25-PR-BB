@@ -4,9 +4,13 @@
 
 #include "animation.hpp"
 #include "audio_emitter_component.hpp"
+#include "audio_listener_component.hpp"
 #include "cheats_component.hpp"
+#include "components/camera_component.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
+#include "components/relationship_component.hpp"
+#include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -86,13 +90,86 @@ glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& compon
     return component.component->color;
 }
 
+float CameraGetFOV(WrenComponent<CameraComponent>& component)
+{
+    return component.component->fov;
+}
+
+void CameraSetFOV(WrenComponent<CameraComponent>& component, const float fov)
+{
+    component.component->fov = fov;
+}
+
+float CameraGetNearPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->nearPlane;
+}
+
+float CameraGetFarPlane(WrenComponent<CameraComponent>& component)
+{
+    return component.component->farPlane;
+}
+
+bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
+{
+    return component.component->reversedZ;
+}
+
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+{
+    component.component->nearPlane = near;
+}
+
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+{
+    component.component->farPlane = far;
+}
+
+void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
+{
+    component.component->reversedZ = reversedZ;
+}
+
 uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
+
+void AttachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
+    {
+        self.registry->emplace<RelationshipComponent>(self.entity);
+    }
+
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
+    {
+        child.registry->emplace<RelationshipComponent>(child.entity);
+    }
+
+    RelationshipHelpers::AttachChild(*self.registry, self.entity, child.entity);
+}
+
+void DetachChild(WrenEntity& self, WrenEntity& child)
+{
+    if (!self.registry->all_of<RelationshipComponent>(self.entity))
+    {
+        self.registry->emplace<RelationshipComponent>(self.entity);
+    }
+
+    if (!child.registry->all_of<RelationshipComponent>(child.entity))
+    {
+        child.registry->emplace<RelationshipComponent>(child.entity);
+    }
+
+    RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
+}
 
 void BindEntity(wren::ForeignModule& module)
 {
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+
+    entityClass.funcExt<AttachChild>("AttachChild");
+    entityClass.funcExt<DetachChild>("DetachChild");
 
     entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
 
@@ -101,6 +178,8 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<AudioEmitterComponent>>("GetAudioEmitterComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<AudioEmitterComponent>>("AddAudioEmitterComponent");
+
+    entityClass.func<&WrenEntity::AddTag<AudioListenerComponent>>("AddAudioListenerTag");
 
     entityClass.func<&WrenEntity::GetComponent<NameComponent>>("GetNameComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<NameComponent>>("AddNameComponent");
@@ -118,6 +197,9 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -204,5 +286,11 @@ void BindEntityAPI(wren::ForeignModule& module)
         transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
 
         transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
+
+        auto& cameraClass = module.klass<WrenComponent<CameraComponent>>("CameraComponent");
+        cameraClass.propExt<bindings::CameraGetFOV, bindings::CameraSetFOV>("fov");
+        cameraClass.propExt<bindings::CameraGetNearPlane, bindings::CameraSetNearPlane>("nearPlane");
+        cameraClass.propExt<bindings::CameraGetFarPlane, bindings::CameraSetFarPlane>("farPlane");
+        cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
     }
 }
