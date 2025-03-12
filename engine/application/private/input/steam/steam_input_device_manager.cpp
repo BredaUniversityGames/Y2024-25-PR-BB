@@ -1,4 +1,5 @@
 #include "input/steam/steam_input_device_manager.hpp"
+#include "log.hpp"
 #include <array>
 
 SteamInputDeviceManager::SteamInputDeviceManager()
