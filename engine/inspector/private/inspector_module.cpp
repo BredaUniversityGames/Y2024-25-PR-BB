@@ -372,11 +372,40 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::BeginDisabled(!tonemapping.enablePalette);
     ImGui::DragFloat("Dither Amount", &tonemapping.ditherAmount, 0.01f);
     ImGui::DragFloat("Palette Amount", &tonemapping.paletteAmount, 0.01f);
-    for (int32_t i = 0; i < 5; i++)
+
+    // Iterate over the palette vector
+    for (size_t i = 0; i < tonemapping.palette.size();)
     {
-        ImGui::PushID(i);
-        ImGui::ColorEdit3("Palette", &tonemapping.palette[i].x);
+        // Push a unique ID so that ImGui can differentiate each item
+        ImGui::PushID(static_cast<int>(i));
+
+        // Display a color editor for the current palette color
+        // Casting the glm::vec4 pointer to a float pointer is safe if glm::vec4 is 4 floats.
+        ImGui::ColorEdit4("Color", reinterpret_cast<float*>(&tonemapping.palette[i]), ImGuiColorEditFlags_NoInputs);
+
+        ImGui::SameLine();
+
+        // "X" button for removal
+        if (ImGui::Button("X"))
+        {
+            // Erase the element at the current index and continue without incrementing i,
+            // since the next element shifts into the current index.
+            tonemapping.palette.erase(tonemapping.palette.begin() + i);
+            ImGui::PopID();
+            continue;
+        }
+
         ImGui::PopID();
+        i++; // Only increment when no deletion occurs
+    }
+
+    // A separator for clarity
+    ImGui::Separator();
+
+    // Button to add the new color to the palette
+    if (ImGui::Button("Add Color"))
+    {
+        tonemapping.palette.push_back(glm::vec4(1.0f));
     }
     ImGui::EndDisabled();
 

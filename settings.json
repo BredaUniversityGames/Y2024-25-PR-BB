@@ -13,7 +13,7 @@
         },
         "ssao": {
             "cereal_class_version": 0,
-            "strength": 2.0,
+            "strength": 4.0,
             "bias": 0.009999999776482582,
             "radius": 0.20000000298023225,
             "minDistance": 1.0,
@@ -40,7 +40,7 @@
             "filterRadius": 0.004999999888241291
         },
         "tonemapping": {
-            "cereal_class_version": 6,
+            "cereal_class_version": 7,
             "tonemappingFunction": 7,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
@@ -58,43 +58,43 @@
             "enablePixelization": true,
             "minPixelSize": 2.0,
             "maxPixelSize": 4.0,
-            "pixelizationLevels": 8.0,
-            "pixelizationDepthBias": 20.0,
+            "pixelizationLevels": 5.210000038146973,
+            "pixelizationDepthBias": 313.0,
             "enablePalette": true,
             "ditherAmount": 0.125,
             "paletteAmount": 0.800000011920929,
-            "palette": {
-                "value0": {
+            "palette": [
+                {
                     "x": 0.47058823704719546,
                     "y": 0.47058823704719546,
                     "z": 0.47058823704719546,
                     "w": 1.0
                 },
-                "value1": {
+                {
                     "x": 0.0235294122248888,
                     "y": 0.0235294122248888,
                     "z": 0.0235294122248888,
                     "w": 1.0
                 },
-                "value2": {
+                {
                     "x": 0.3686274588108063,
                     "y": 0.16862745583057404,
                     "z": 0.08627451211214066,
                     "w": 1.0
                 },
-                "value3": {
+                {
                     "x": 0.6745098233222961,
                     "y": 0.07058823853731156,
                     "z": 0.07058823853731156,
                     "w": 1.0
                 },
-                "value4": {
+                {
                     "x": 0.05882352963089943,
                     "y": 0.05882352963089943,
                     "z": 0.05882352963089943,
                     "w": 1.0
                 }
-            },
+            ],
             "skyColor": {
                 "x": 0.6010363101959229,
                 "y": 0.07474026829004288,

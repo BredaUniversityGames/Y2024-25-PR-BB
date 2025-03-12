@@ -50,7 +50,7 @@ layout (push_constant) uniform PushConstants
     float paletteAmount;
     float time;
     float padding1;
-    float padding2;
+    int paletteSize;
 
     vec4 palette[5];
     vec4 skyColor;
@@ -73,6 +73,10 @@ layout (set = 3, binding = 0) uniform SceneUBO
     Scene scene;
 };
 
+layout (set = 4, binding = 0) uniform ColorPaletteUBO {
+    vec4 palette[64];
+};
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -92,7 +96,6 @@ vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor);
 float noise(in vec2 uv);
 float fbm(in vec2 uv);
 vec3 Sky(in vec3 ro, in vec3 rd);
-
 
 
 // 4x4 Bayer matrix with values 0..15
@@ -135,10 +138,10 @@ void main()
 
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
         newTexCoords = uv;
-        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -32.0).rgb;
+        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -256.0).rgb;
     } else
     {
-        hdrColor = texture(bindless_color_textures[nonuniformEXT(pc.hdrTargetIndex)], newTexCoords).rgb;
+        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], newTexCoords).rgb;
     }
 
     if (paletteEnabled)
@@ -296,11 +299,11 @@ vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor)
     // Snap to the closest color from the palette
     float bestDistance = 1000.0;
     vec3 bestColor = vec3(0.0);
-    for (int i = 0; i < 5; i++) {
-        float d = distance(color, pc.palette[i].rgb);
+    for (int i = 0; i < pc.paletteSize; i++) {
+        float d = distance(color, palette[i].rgb);
         if (d < bestDistance) {
             bestDistance = d;
-            bestColor = SaturateColor(pc.palette[i].rgb, 1.2);
+            bestColor = SaturateColor(palette[i].rgb, 1.2);
         }
     }
 

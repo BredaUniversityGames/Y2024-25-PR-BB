@@ -75,7 +75,7 @@ private:
         float paletteAmount;
         float time;
         float padding1;
-        float padding2;
+        int paletteSize;
 
         // 2 floats of padding can be added here if needed, depending on shader expectations
 
@@ -100,8 +100,17 @@ private:
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
+    ResourceHandle<Buffer> _colorPaletteBuffer;
+    vk::DescriptorSetLayout _paletteDescriptorSetLayout;
+    vk::DescriptorSet _paletteDescriptorSet;
+    const int _maxColorsInPalette = 64;
+
     const BloomSettings& _bloomSettings;
     float timePassed = 0.0f;
 
     void CreatePipeline();
+    void UpdatePaletteBuffer(const std::vector<glm::vec4>& paletteColors);
+    void CreatePaletteBuffer();
+    void CreateDescriptorSetLayouts();
+    void CreateDescriptorSets();
 };
