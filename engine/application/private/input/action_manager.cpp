@@ -69,6 +69,100 @@ glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
     return CheckAnalogInput(*itr);
 }
 
+std::vector<std::string> ActionManager::GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const
+{
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return {};
+    }
+
+    const ActionSet& actionSet = _gameActions[_activeActionSet];
+    const auto& digitalActions = actionSet.digitalActions;
+
+    const auto actionItr = std::find_if(digitalActions.begin(), digitalActions.end(),
+        [actionName](const DigitalAction& action)
+        { return action.name == actionName; });
+    if (actionItr == actionSet.digitalActions.end())
+    {
+        bblog::error("[Input] Failed to find digital action: \"{}\"", actionName);
+        return {};
+    }
+
+    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
+    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
+    if (customGlyphs == _gamepadGlyphs.end())
+    {
+        return {};
+    }
+
+    std::vector<std::string> glyphPaths {};
+
+    for (const auto& inputBinding : actionItr->inputs)
+    {
+        if (!std::holds_alternative<GamepadButton>(inputBinding))
+        {
+            continue;
+        }
+
+        const GamepadButton button = std::get<GamepadButton>(inputBinding);
+        const auto digitalGlyph = customGlyphs->second.digitals.find(button);
+        if (digitalGlyph == customGlyphs->second.digitals.end())
+        {
+            glyphPaths.push_back(digitalGlyph->second);
+        }
+    }
+
+    return glyphPaths;
+}
+
+std::vector<std::string> ActionManager::GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const
+{
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
+        return {};
+    }
+
+    const ActionSet& actionSet = _gameActions[_activeActionSet];
+    const auto& analogActions = actionSet.analogActions;
+
+    const auto actionItr = std::find_if(analogActions.begin(), analogActions.end(),
+        [actionName](const AnalogAction& action)
+        { return action.name == actionName; });
+    if (actionItr == actionSet.analogActions.end())
+    {
+        bblog::error("[Input] Failed to find analog action: \"{}\"", actionName);
+        return {};
+    }
+
+    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
+    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
+    if (customGlyphs == _gamepadGlyphs.end())
+    {
+        return {};
+    }
+
+    std::vector<std::string> glyphPaths {};
+
+    for (const auto& inputBinding : actionItr->inputs)
+    {
+        if (!std::holds_alternative<GamepadAnalog>(inputBinding))
+        {
+            continue;
+        }
+
+        const GamepadAnalog analog = std::get<GamepadAnalog>(inputBinding);
+        const auto analogGlyph = customGlyphs->second.analogs.find(analog);
+        if (analogGlyph == customGlyphs->second.analogs.end())
+        {
+            glyphPaths.push_back(analogGlyph->second);
+        }
+    }
+
+    return glyphPaths;
+}
+
 DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const
 {
     DigitalActionType result {};

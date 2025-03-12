@@ -6,17 +6,15 @@ const GamepadGlyphs INPUT_GLYPHS =
     {
         GamepadType::eUnknown,
         {
-            // Digital
+            // Digital glyphs
             {
-                {
-                    GamepadButton::eBACK,
-                    "path/to/file"
-                },
+                // Add button glyphs...
             },
-            // Analog
+            // Analog glyphs
             {
-
+                // Add analog glyphs...
             }
         }
     },
+    // Add other controller types...
 };

@@ -81,6 +81,15 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
         return {};
     }
 
+    std::vector<std::string> glyphPaths = ActionManager::GetDigitalActionGamepadGlyphImagePaths(actionName);
+
+    // There is a chance we could only find 1 custom glyph for the input binding, but not for others bindings for the same action.
+    // In that case we return anyway as we also don't want to have multiple glyphs from different styles.
+    if (!glyphPaths.empty())
+    {
+        return glyphPaths;
+    }
+
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
 
     auto itr = actionSetCache.gamepadDigitalActionsCache.find(actionName.data());
@@ -98,11 +107,6 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
         bblog::error("[Input] Digital action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
         return {};
     }
-
-    std::vector<std::string> glyphPaths {};
-
-    // TODO: Load our own first, if none are available, get defaults from Steam
-
 
     for (uint32_t i = 0; i < originsNum; ++i)
     {
@@ -125,6 +129,15 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
         return {};
     }
 
+    std::vector<std::string> glyphPaths = ActionManager::GetAnalogActionGamepadGlyphImagePaths(actionName);
+
+    // There is a chance we could only find 1 custom glyph for the input binding, but not for others bindings for the same action.
+    // In that case we return anyway as we also don't want to have multiple glyphs from different styles.
+    if (!glyphPaths.empty())
+    {
+        return glyphPaths;
+    }
+
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
 
     auto itr = actionSetCache.gamepadAnalogActionsCache.find(actionName.data());
@@ -142,10 +155,6 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
         bblog::error("[Input] Analog action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
         return {};
     }
-
-    std::vector<std::string> glyphPaths {};
-
-    // TODO: Load our own first, if none are available, get defaults from Steam
 
     for (uint32_t i = 0; i < STEAM_INPUT_MAX_ORIGINS; ++i)
     {
