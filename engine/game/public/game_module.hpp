@@ -20,10 +20,10 @@ class GameModule : public ModuleInterface
     glm::ivec2 _lastMousePos {};
     bool _updateHud = false;
 
+ main
 public:
     GameModule() = default;
     ~GameModule() override = default;
-
 
     void SetMainMenuEnabled(bool val);
     void SetHUDEnabled(bool val);
@@ -31,7 +31,12 @@ public:
 
     HUD _hud;
 
-
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
+
+    void TransitionScene(const std::string& scriptFile);
+
+    HUD _hud;
+    bool _updateHud = false;
+    std::string _nextSceneToExecute {};
 };

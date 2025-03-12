@@ -10,12 +10,27 @@ class Main {
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
-        engine.GetInput().SetMouseHidden(true)
+
+        // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
-        engine.GetGame().SetHUDEnabled(true)
-          
+
+        // Directional Light
+        __directionalLight = engine.GetECS().NewEntity()
+        __directionalLight.AddNameComponent().name = "Directional Light"
+
+        var comp = __directionalLight.AddDirectionalLightComponent()
+        comp.color = Vec3.new(4.0, 3.2, 1.2)
+        comp.planes = Vec2.new(0.1, 1000.0)
+        comp.orthographicSize = 75.0
+
+        var transform = __directionalLight.AddTransformComponent()
+        transform.translation = Vec3.new(-105.0, 68.0, 168.0)
+        transform.rotation = Quat.new(-0.29, 0.06, -0.93, -0.19)
+
+        // Player Setup
+
         __playerVariables = PlayerVariables.new()
         __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
@@ -24,127 +39,79 @@ class Main {
         __hasDashed = false
         __timer = 0
 
+        // Player stuff
+
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-        __playerController.AddTransformComponent().translation = Vec3.new(-18.3, 30.3, 193.8)
+        var startPos = Vec3.new(25.0, 10.0, 50.0)
+
+        __playerController.AddTransformComponent().translation = startPos
         __playerController.AddPlayerTag()
         __playerController.AddNameComponent().name = "PlayerController"
+        __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
         var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
         __playerController.AddRigidbodyComponent(rb)
 
-        __camera.AddTransformComponent()
-        __camera.AddNameComponent().name = "Camera"
-        __camera.AddAudioListenerTag()
+        __cameraVariables = CameraVariables.new()
+
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = 45.0
         cameraProperties.nearPlane = 0.5
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
-        
-        __cameraVariables = CameraVariables.new()
-        
-        __player.AddTransformComponent()
+
+        __camera.AddTransformComponent()
+        __camera.AddAudioEmitterComponent()
+        __camera.AddNameComponent().name = "Camera"
+        __camera.AddAudioListenerTag()
+
+        __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        __player.AttachChild(__camera)
+        // Load Map
+        engine.LoadModel("assets/models/blockoutv4.glb")
 
-        __gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        // Gun Setup
+        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
 
-        __camera.AttachChild(__gun)
+        var gunTransform = __gun.GetTransformComponent()
+        gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
 
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false)
         gunAnimations.Stop()
 
-
-        var clown = engine.GetECS().GetEntityByName("Clown")
-        var clownAnimations = clown.GetAnimationControlComponent()
-        clownAnimations.Play("NarutoRun", 1.0, true)
-        clown.GetTransformComponent().translation = Vec3.new(7.5, 35.0, 285.0)
-        clown.GetTransformComponent().scale = Vec3.new(0.01, 0.01, 0.01)
-
-        if (__camera) {
-            System.print("Player is online!")
-
-            __camera.AddAudioEmitterComponent()
-            __playerController.AddCheatsComponent()
-
-            var gunTransform = __gun.GetTransformComponent()
-            gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
-        }
+        __player.AttachChild(__camera)
+        __camera.AttachChild(__gun)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
 
-        // Inside cathedral: pentagram scene
-        {   // Fire emitter 1
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
-        }
-        {   // Fire emitter 2
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-18.3, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
-        }
-        {   // Fire emitter 3
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 190.4), Vec3.new(0.0, 0.0, 0.0))
-        }
-        {   // Fire emitter 4
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFlame(), emitterFlags, Vec3.new(-14.9, 30.3, 193.8), Vec3.new(0.0, 0.0, 0.0))
-        }
-        {   // Dust emitter
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
-        }
-
-        // Attached mini island: pentagram scene (sprite sheet showcase)
-        {   // Fire emitter 1
-            var emitter = engine.GetECS().NewEntity()
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eFireAnimated(), emitterFlags, Vec3.new(30.5, 31.0, 168.0), Vec3.new(0.0, 0.0, 0.0))
-        }
-
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
-        var enemyEntity = engine.LoadModel("assets/models/Demon.glb")[0]
-        var enemyTransform = enemyEntity.GetTransformComponent()
-        enemyTransform.scale = Vec3.new(0.03, 0.03, 0.03)
-        enemyTransform.translation = Vec3.new(4.5, 35.0, 285.0)
+        __ultimateCharge = 0
+        __ultimateActive = false
     }
 
     static Shutdown(engine) {
-
-        __camera.DetachChild(__gun)
-        engine.GetECS().DestroyEntity(__playerController)
-        engine.GetECS().DestroyEntity(__player)
-        System.print("Shutdown script!")
+        engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
-        __counter = __counter + 1
+
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
-        __frameTimer = __frameTimer + dt
         __timer = __timer + dt
 
-        if (__frameTimer > 1000.0) {
-            __frameTimer = __frameTimer - 1000.0
-            __counter = 0
-        }
+        __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
         if (__playerVariables.ultActive) {
             __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
@@ -164,6 +131,7 @@ class Main {
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
+
             __playerMovement.Update(engine, dt, __playerController, __camera)
 
             for (weapon in __armory) {
@@ -254,6 +222,6 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
+        // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }
 }

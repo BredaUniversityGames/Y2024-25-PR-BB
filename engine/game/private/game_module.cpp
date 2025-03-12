@@ -11,6 +11,7 @@
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -28,6 +29,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
+#include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
@@ -55,48 +57,17 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    std::vector<std::string> modelPaths = {
-        // "assets/models/Cathedral.glb",
-        "assets/models/AnimatedRifle.glb",
-        //"assets/models/Clown.glb",
-        //"assets/models/DamagedHelmet.glb",
-        //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-    };
+    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
 
-    {
-        ZoneScopedN("Scene models");
-        auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    }
-
-    {
-        ZoneScopedN("ECS Additional Scene Setup");
-        entt::entity lightEntity = ECS.GetRegistry().create();
-        ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-        ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
-
-        DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-        directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-        directionalLightComponent.nearPlane = 0.1f;
-        directionalLightComponent.farPlane = 200.0f;
-        directionalLightComponent.orthographicSize = 75.0f;
-
-        TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
-        TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
-
-        glm::ivec2 mousePos;
-        applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-        _lastMousePos = mousePos;
-
-        applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-    }
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
 }
+
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
+
 void GameModule::SetMainMenuEnabled(bool val)
 {
     if (val)
@@ -118,10 +89,23 @@ void GameModule::SetHUDEnabled(bool val)
     {
         _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
     }
+
+    void GameModule::TransitionScene(const std::string& scriptFile)
+{
+    _nextSceneToExecute = scriptFile;
+
 }
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    if (!_nextSceneToExecute.empty())
+    {
+        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
+        engine.GetModule<TimeModule>().ResetTimer();
+    }
+
+    _nextSceneToExecute.clear();
+
     if (_updateHud == true)
     {
         float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
@@ -136,6 +120,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
+    auto& scriptingModule = engine.GetModule<ScriptingModule>();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -144,9 +129,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         std::this_thread::sleep_for(16ms);
         return;
     }
-
-    int32_t mouseX, mouseY;
-    inputDeviceManager.GetMousePosition(mouseX, mouseY);
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
@@ -171,8 +153,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    _lastMousePos = { mouseX, mouseY };
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
@@ -221,22 +201,4 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     // Update audio module debug lines
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
     audioModule.ClearLines();
-
-    // if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
-    // {
-    //     entt::entity entity = ECS.GetRegistry().create();
-    //     RigidbodyComponent rb(physicsModule.GetBodyInterface(), entity, PhysicsShapes::eSPHERE);
-    //
-    //     NameComponent node;
-    //     node.name = "Physics Entity";
-    //     ECS.GetRegistry().emplace<NameComponent>(entity, node);
-    //     ECS.GetRegistry().emplace<TransformComponent>(entity);
-    //     ECS.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-    //     auto& audioEmitter = ECS.GetRegistry().emplace<AudioEmitterComponent>(entity);
-    //
-    //     physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
-    //
-    //     particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-    //     audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
-    // }
 }

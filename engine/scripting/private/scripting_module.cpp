@@ -3,6 +3,13 @@
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
+void ScriptingModule::ResetVM()
+{
+    _mainModule.reset();
+    _context->Reset();
+    BindEngineAPI(GetForeignAPI());
+}
+
 void ScriptingModule::GenerateEngineBindingsFile()
 {
     if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
@@ -44,23 +51,17 @@ void ScriptingModule::Tick(Engine& engine)
     }
 }
 
-void ScriptingModule::SetMainScript(Engine& e, const std::string& path)
+void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
 {
-    _mainEngineScript = path;
-    if (auto result = _context->RunScript(_mainEngineScript))
+    ResetVM();
+    if (auto result = _context->RunScript(path))
     {
-        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
+        _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
+        _mainEngineScript = result.value();
     }
 }
 
 void ScriptingModule::HotReload(Engine& e)
 {
-    _mainModule.reset();
-    _context->Reset();
-    BindEngineAPI(GetForeignAPI());
-
-    if (auto result = _context->RunScript(_mainEngineScript))
-    {
-        _mainModule = std::make_unique<MainScript>(&e, _context->GetVM(), result.value(), "Main");
-    }
+    SetMainScript(e, _mainEngineScript);
 };
