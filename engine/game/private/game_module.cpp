@@ -11,6 +11,7 @@
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
@@ -28,6 +29,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
+#include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
@@ -50,51 +52,31 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    std::vector<std::string> modelPaths = {
-        "assets/models/Cathedral.glb",
-        "assets/models/AnimatedRifle.glb",
-        "assets/models/Clown.glb",
-        "assets/models/light_test.glb",
-        //"assets/models/DamagedHelmet.glb",
-        //"assets/models/MetalRoughSpheres.glb",
-        //"assets/models/monkey.gltf",
-    };
-
-    {
-        ZoneScopedN("Scene models");
-        auto entities = SceneLoading::LoadModels(engine, modelPaths);
-    }
-
-    {
-        ZoneScopedN("ECS Additional Scene Setup");
-        entt::entity lightEntity = ECS.GetRegistry().create();
-        ECS.GetRegistry().emplace<NameComponent>(lightEntity, "Directional Light");
-        ECS.GetRegistry().emplace<TransformComponent>(lightEntity);
-
-        DirectionalLightComponent& directionalLightComponent = ECS.GetRegistry().emplace<DirectionalLightComponent>(lightEntity);
-        directionalLightComponent.color = glm::vec3(244.0f, 183.0f, 64.0f) / 255.0f * 4.0f;
-        directionalLightComponent.nearPlane = 0.1f;
-        directionalLightComponent.farPlane = 200.0f;
-        directionalLightComponent.orthographicSize = 75.0f;
-
-        TransformHelpers::SetLocalPosition(ECS.GetRegistry(), lightEntity, glm::vec3(-105.0f, 68.0f, 168.0f));
-        TransformHelpers::SetLocalRotation(ECS.GetRegistry(), lightEntity, glm::quat(-0.29f, 0.06f, -0.93f, -0.19f));
-
-        glm::ivec2 mousePos;
-        applicationModule.GetInputDeviceManager().GetMousePosition(mousePos.x, mousePos.y);
-        _lastMousePos = mousePos;
-
-        applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-    }
+    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
 }
+
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
+
+void GameModule::TransitionScene(const std::string& scriptFile)
+{
+    _nextSceneToExecute = scriptFile;
+}
+
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    if (!_nextSceneToExecute.empty())
+    {
+        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
+        engine.GetModule<TimeModule>().ResetTimer();
+    }
+
+    _nextSceneToExecute.clear();
+
     if (_updateHud == true)
     {
         float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
@@ -109,6 +91,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
+    auto& scriptingModule = engine.GetModule<ScriptingModule>();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
@@ -117,9 +100,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         std::this_thread::sleep_for(16ms);
         return;
     }
-
-    int32_t mouseX, mouseY;
-    inputDeviceManager.GetMousePosition(mouseX, mouseY);
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
@@ -144,8 +124,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    _lastMousePos = { mouseX, mouseY };
 
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
         engine.SetExit(0);
