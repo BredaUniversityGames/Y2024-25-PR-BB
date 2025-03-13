@@ -1,0 +1,1 @@
+void BindMainMenu(wren::ForeignModule& module);

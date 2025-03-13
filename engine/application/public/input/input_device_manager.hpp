@@ -24,6 +24,8 @@ public:
     [[nodiscard]] bool IsMouseButtonPressed(MouseButton button) const;
     [[nodiscard]] bool IsMouseButtonHeld(MouseButton button) const;
     [[nodiscard]] bool IsMouseButtonReleased(MouseButton button) const;
+
+    void SetMousePositionToAbsoluteMousePosition();
     void GetMousePosition(int32_t& x, int32_t& y) const;
 
     [[nodiscard]] virtual bool IsGamepadAvailable() const = 0;

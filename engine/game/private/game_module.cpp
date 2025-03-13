@@ -40,9 +40,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
-    auto hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
-    _hud = hud.second;
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(std::move(hud.first));
+    _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
+    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
+    _mainMenu = mainMenu;
+    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
+    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
 
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -53,6 +58,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
@@ -62,6 +68,28 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
 
+void GameModule::SetMainMenuEnabled(bool val)
+{
+    if (val)
+    {
+        _mainMenu.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+    else
+    {
+        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+    }
+}
+void GameModule::SetHUDEnabled(bool val)
+{
+    if (val)
+    {
+        _hud.canvas->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+    else
+    {
+        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+    }
+}
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;

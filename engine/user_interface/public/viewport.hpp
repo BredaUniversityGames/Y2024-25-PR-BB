@@ -30,8 +30,8 @@ public:
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
     T& AddElement(Args&&... args)
     {
-        UIElement& addedChild = *_baseElements.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+        UIElement& addedChild = *_baseElements.emplace_back(std::shared_ptr<T>(std::forward<Args>(args)...));
+        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
         return static_cast<T&>(addedChild);
@@ -39,10 +39,10 @@ public:
 
     template <typename T>
         requires(std::derived_from<T, UIElement>)
-    T& AddElement(std::unique_ptr<T> typePtr)
+    T& AddElement(std::shared_ptr<T> typePtr)
     {
         UIElement& addedChild = *_baseElements.emplace_back(std::move(typePtr));
-        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::unique_ptr<UIElement>& v1, const std::unique_ptr<UIElement>& v2)
+        std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
         return static_cast<T&>(addedChild);
@@ -53,8 +53,8 @@ public:
         _clearAtEndOfFrame = true;
     }
 
-    NO_DISCARD std::vector<std::unique_ptr<UIElement>>& GetElements() { return _baseElements; }
-    NO_DISCARD const std::vector<std::unique_ptr<UIElement>>& GetElements() const { return _baseElements; }
+    NO_DISCARD std::vector<std::shared_ptr<UIElement>>& GetElements() { return _baseElements; }
+    NO_DISCARD const std::vector<std::shared_ptr<UIElement>>& CGetElements() const { return _baseElements; }
 
     const glm::uvec2& GetExtend() { return _extend; }
     const glm::uvec2& GetOffset() { return _offset; }
@@ -72,5 +72,5 @@ private:
     /**
      * \brief Base elements present in viewport.
      */
-    std::vector<std::unique_ptr<UIElement>> _baseElements;
+    std::vector<std::shared_ptr<UIElement>> _baseElements;
 };
