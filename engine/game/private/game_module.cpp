@@ -172,22 +172,4 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     // Update audio module debug lines
     rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
     audioModule.ClearLines();
-
-    // if (inputDeviceManager.IsKeyPressed(KeyboardCode::e0))
-    // {
-    //     entt::entity entity = ECS.GetRegistry().create();
-    //     RigidbodyComponent rb(physicsModule.GetBodyInterface(), entity, PhysicsShapes::eSPHERE);
-    //
-    //     NameComponent node;
-    //     node.name = "Physics Entity";
-    //     ECS.GetRegistry().emplace<NameComponent>(entity, node);
-    //     ECS.GetRegistry().emplace<TransformComponent>(entity);
-    //     ECS.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-    //     auto& audioEmitter = ECS.GetRegistry().emplace<AudioEmitterComponent>(entity);
-    //
-    //     physicsModule.GetBodyInterface().SetLinearVelocity(rb.bodyID, JPH::Vec3(1.0f, 0.5f, 0.9f));
-    //
-    //     particleModule.SpawnEmitter(entity, EmitterPresetID::eTest, SpawnEmitterFlagBits::eIsActive);
-    //     audioEmitter._soundIds.emplace_back(audioModule.PlaySFX(audioModule.GetSFX("assets/sounds/fallback.mp3"), 1.0f, false));
-    // }
 }
