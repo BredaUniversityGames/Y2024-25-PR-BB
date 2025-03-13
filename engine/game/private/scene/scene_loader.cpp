@@ -2,6 +2,7 @@
 
 #include "animation.hpp"
 #include "components/animation_transform_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/is_static_draw.hpp"
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
@@ -103,7 +104,7 @@ public:
             case Hierarchy::LightData::LightType::Directional:
             {
                 auto& directionalLight = _ecs.GetRegistry().emplace<DirectionalLightComponent>(entity);
-                directionalLight.color = currentNode.light->color;
+                directionalLight.color = currentNode.light->color * currentNode.light->intensity;
                 break;
             }
             case Hierarchy::LightData::LightType::Point:

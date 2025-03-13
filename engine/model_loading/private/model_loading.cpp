@@ -761,7 +761,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         Hierarchy::LightData lightData;
         lightData.color = detail::ToVec3(light.color);
         lightData.range = light.range.has_value() ? light.range.value() : Hierarchy::LightData::DEFAULT_LIGHT_RANGE;
-        lightData.intensity = light.intensity;
+        lightData.intensity = light.intensity / (4.f * glm::pi<float>()) / 100.f;
         switch (light.type)
         {
         case fastgltf::LightType::Directional:
