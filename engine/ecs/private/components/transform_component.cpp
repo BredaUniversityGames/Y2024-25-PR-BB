@@ -1,5 +1,6 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include <glm/gtx/euler_angles.hpp>
 
 namespace EnttEditor
 {
@@ -13,13 +14,21 @@ void ComponentEditorWidget<TransformComponent>(entt::registry& reg, entt::regist
 void TransformComponent::Inspect(entt::registry& reg, entt::entity entity)
 {
     bool changed = false;
-    // TODO use euler angles for rotation
+
     changed |= ImGui::DragFloat3("Position##Transform", &_localPosition[0], 0.1f);
-    changed |= ImGui::DragFloat4("Rotation##Transform", &_localRotation[0], 0.1f);
+
+    changed |= ImGui::DragFloat3("Rotation##Transform", &_editorEulerAngles[0], 0.1f);
+
     changed |= ImGui::DragFloat3("Scale##Transform", &_localScale[0], 0.1f);
 
+    // If the user changed anything, update the internal quaternion
     if (changed)
     {
+        _localRotation = glm::quat { glm::radians(_editorEulerAngles) };
         TransformHelpers::UpdateWorldMatrix(reg, entity);
+    }
+    else
+    {
+        _editorEulerAngles = glm::degrees(glm::eulerAngles(_localRotation));
     }
 }

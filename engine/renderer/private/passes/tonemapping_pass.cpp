@@ -28,6 +28,7 @@ TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context
     _pushConstants.depthIndex = gBuffers.Depth().Index();
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
+    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
 }
 
 TonemappingPass::~TonemappingPass()
@@ -39,7 +40,7 @@ TonemappingPass::~TonemappingPass()
 void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pass");
-
+    timePassed += scene.deltaTime / 1000.0f;
     _pushConstants.exposure = _settings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
 
@@ -71,7 +72,6 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     }
 
     _pushConstants.vignetteIntensity = _settings.vignetteIntensity;
-
     _pushConstants.lensDistortionIntensity = _settings.lensDistortionIntensity;
     _pushConstants.lensDistortionCubicIntensity = _settings.lensDistortionCubicIntensity;
     _pushConstants.screenScale = _settings.screenScale;
@@ -87,6 +87,12 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.pixelizationDepthBias = _settings.pixelizationDepthBias;
     _pushConstants.ditherAmount = _settings.ditherAmount;
     _pushConstants.paletteAmount = _settings.paletteAmount;
+    _pushConstants.time = timePassed;
+
+    _pushConstants.skyColor = _settings.skyColor;
+    _pushConstants.sunColor = _settings.sunColor;
+    _pushConstants.cloudsColor = _settings.cloudsColor;
+    _pushConstants.voidColor = _settings.voidColor;
 
     for (int i = 0; i < 5; i++)
     {
@@ -122,6 +128,8 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
