@@ -18,9 +18,7 @@ class GameModule : public ModuleInterface
     std::weak_ptr<MainMenu> _mainMenu;
 
     glm::ivec2 _lastMousePos {};
-    bool _updateHud = false;
 
- main
 public:
     GameModule() = default;
     ~GameModule() override = default;
@@ -36,7 +34,6 @@ public:
 
     void TransitionScene(const std::string& scriptFile);
 
-    HUD _hud;
     bool _updateHud = false;
     std::string _nextSceneToExecute {};
 };

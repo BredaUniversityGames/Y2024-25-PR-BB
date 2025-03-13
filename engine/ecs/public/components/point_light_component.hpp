@@ -7,8 +7,8 @@
 struct PointLightComponent
 {
     glm::vec3 color { 1.0f };
-    float range = 10.0f;
-    float intensity = 20.0f;
+    float range = 5.0f;
+    float intensity = 10.0f;
 
     void Inspect();
 };

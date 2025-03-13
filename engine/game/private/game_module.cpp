@@ -89,11 +89,10 @@ void GameModule::SetHUDEnabled(bool val)
     {
         _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
     }
-
-    void GameModule::TransitionScene(const std::string& scriptFile)
+}
+void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
-
 }
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
