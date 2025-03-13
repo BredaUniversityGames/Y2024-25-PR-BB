@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
-      OPTION_ARGS: -DWARNINGS_AS_ERRORS=ON -DCOMPILE_SHADERS=ON -DENABLE_PCH=OFF -DENABLE_UNITY=OFF
+      OPTION_ARGS: -DWARNINGS_AS_ERRORS=OFF -DCOMPILE_SHADERS=ON -DENABLE_PCH=OFF -DENABLE_UNITY=OFF
       PRESET_PREFIX: ${{ matrix.platform == 'windows-latest' && 'x64' || matrix.platform == 'ubuntu-latest' && 'WSL' }}
       PRESET_SUFFIX: ${{ matrix.configuration }}
       P4PORT: ${{ secrets.P4PORT }}

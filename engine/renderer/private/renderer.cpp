@@ -501,11 +501,21 @@ void Renderer::InitializeHDRTarget()
 
 void Renderer::InitializeBloomTargets()
 {
+    auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
+    SamplerCreation samplerCreation {
+        .name = "Bloom Sampler",
+        .mipmapMode = vk::SamplerMipmapMode::eLinear,
+        .minLod = 0.0f,
+        .maxLod = vk::LodClampNone,
+    };
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+    _bloomSampler = samplerResourceManager.Create(samplerCreation);
+
     auto size = _swapChain->GetImageSize();
 
     CPUImage bloomCreation {};
     bloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetMips(4).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-    _bloomTarget = _context->Resources()->ImageResourceManager().Create(bloomCreation);
+    _bloomTarget = _context->Resources()->ImageResourceManager().Create(bloomCreation, _bloomSampler);
 }
 void Renderer::InitializeTonemappingTarget()
 {
