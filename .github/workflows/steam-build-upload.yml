@@ -39,7 +39,7 @@ jobs:
         uses: ashutoshvarma/setup-ninja@master
 
       - name: Install Vulkan SDK
-        uses: humbletim/install-vulkan-sdk@v1.1.1
+        uses: humbletim/install-vulkan-sdk@main
         with:
           version: latest
           cache: true
