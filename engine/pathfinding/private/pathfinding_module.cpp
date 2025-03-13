@@ -19,17 +19,6 @@
 
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
-#if 0
-    auto models = _renderer->FrontLoadModels({ mesh_path });
-    auto& ecs = engine.GetModule<ECSModule>();
-    auto modelResourceManager = _renderer->GetContext()->Resources()->ModelResourceManager();
-    SceneLoading::LoadModelIntoECSAsHierarchy(ecs,
-        *modelResourceManager.Access(models[0].second),
-        models[0].first,
-        models[0].first.hierarchy,
-        models[0].first.animations);
-#endif
-
     return ModuleTickOrder::eTick;
 }
 
@@ -364,6 +353,8 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
         previousTriangleIndex = parentTriangleIndex;
         parentTriangleIndex = node.parentTriangleIndex;
     }
+
+    std::reverse(path.waypoints.begin(), path.waypoints.end());
 
     return path;
 }

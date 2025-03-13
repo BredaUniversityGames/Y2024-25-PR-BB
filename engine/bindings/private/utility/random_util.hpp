@@ -38,6 +38,11 @@ public:
     {
         return { RandomFloatRange(min, max), RandomFloatRange(min, max), RandomFloatRange(min, max) };
     }
+
+    static glm::vec3 RandomVec3VectorRange(glm::vec3 min, glm::vec3 max)
+    {
+        return { RandomFloatRange(min.x, max.x), RandomFloatRange(min.y, max.y), RandomFloatRange(min.z, max.z) };
+    }
 };
 
 inline void BindRandom(wren::ForeignModule& module)
@@ -45,9 +50,10 @@ inline void BindRandom(wren::ForeignModule& module)
     auto& randomUtilClass = module.klass<RandomUtil>("Random");
     randomUtilClass.funcStatic<&RandomUtil::Random>("Random");
     randomUtilClass.funcStatic<&RandomUtil::RandomFloat>("RandomFloat");
-    randomUtilClass.funcStatic<&RandomUtil::RandomFloatRange>("RandomFloat");
+    randomUtilClass.funcStatic<&RandomUtil::RandomFloatRange>("RandomFloatRange");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3>("RandomVec3");
-    randomUtilClass.funcStatic<&RandomUtil::RandomVec3Range>("RandomVec3");
+    randomUtilClass.funcStatic<&RandomUtil::RandomVec3Range>("RandomVec3Range");
+    randomUtilClass.funcStatic<&RandomUtil::RandomVec3VectorRange>("RandomVec3VectorRange");
 }
 
 }

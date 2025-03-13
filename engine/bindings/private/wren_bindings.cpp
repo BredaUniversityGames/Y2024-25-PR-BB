@@ -16,6 +16,7 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/scene_loader.hpp"
 #include "scripting_module.hpp"
@@ -23,6 +24,8 @@
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
+
+#include <model_loading.hpp>
 
 namespace bindings
 {
@@ -91,6 +94,11 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Animations
     {
         BindAnimationAPI(module);
+    }
+
+    // Renderer
+    {
+        BindRendererAPI(module);
     }
 
     // Particles

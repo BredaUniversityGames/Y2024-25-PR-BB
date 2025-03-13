@@ -1,5 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
+import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
@@ -26,7 +27,7 @@ class Main {
         comp.orthographicSize = 75.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-105.0, 68.0, 168.0)
+        transform.translation = Vec3.new(0.0, 0.0, 0.0)
         transform.rotation = Quat.new(-0.29, 0.06, -0.93, -0.19)
 
         // Player Setup
@@ -38,8 +39,6 @@ class Main {
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-
-        // Player stuff
 
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
@@ -99,6 +98,16 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        // Enemy setup
+
+        var enemyPos = Vec3.new(-5.0, 3.0, 60.0)
+
+        __enemyList = []
+        __spawner = Spawner.new(enemyPos, 1000.0)
+
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 3.5, "assets/models/demon.glb", __enemyShape, 1)
     }
 
     static Shutdown(engine) {
@@ -106,6 +115,8 @@ class Main {
     }
 
     static Update(engine, dt) {
+
+        // __spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, dt)
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -222,6 +233,10 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
+        var playerPos = __player.GetTransformComponent().translation
+
+        for (enemy in __enemyList) {
+            enemy.Update(playerPos, dt)
+        }
     }
 }
