@@ -2,8 +2,10 @@
 
 #include "animation.hpp"
 #include "components/animation_transform_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/is_static_draw.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
@@ -93,6 +95,32 @@ public:
         if (currentNode.joint.has_value())
         {
             assert(!"Joints should only appear in the skeleton");
+        }
+
+        if (currentNode.light.has_value())
+        {
+            switch (currentNode.light->type)
+            {
+            case Hierarchy::LightData::LightType::Directional:
+            {
+                auto& directionalLight = _ecs.GetRegistry().emplace<DirectionalLightComponent>(entity);
+                directionalLight.color = currentNode.light->color * currentNode.light->intensity;
+                break;
+            }
+            case Hierarchy::LightData::LightType::Point:
+            {
+                auto& pointLight = _ecs.GetRegistry().emplace<PointLightComponent>(entity);
+                pointLight.color = currentNode.light->color;
+                pointLight.intensity = currentNode.light->intensity;
+                pointLight.range = currentNode.light->range;
+                break;
+            }
+            case Hierarchy::LightData::LightType::Spot:
+            {
+                assert(!"Spot lights are not supported!");
+                break;
+            }
+            }
         }
 
         for (const auto& nodeIndex : currentNode.children)
