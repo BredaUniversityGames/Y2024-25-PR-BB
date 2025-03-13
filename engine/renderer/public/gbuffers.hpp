@@ -40,6 +40,7 @@ private:
     std::array<ResourceHandle<GPUImage>, DEFERRED_ATTACHMENT_COUNT> _attachments;
 
     ResourceHandle<GPUImage> _depthImage;
+    ResourceHandle<Sampler> _depthSampler;
 
     vk::Format _depthFormat;
 

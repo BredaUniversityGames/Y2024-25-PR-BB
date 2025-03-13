@@ -66,7 +66,7 @@ public:
 
                 // check if it should have collider
 
-                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eCONVEXHULL);
+                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eMESH);
                 _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
 
                 // add collider recursively
@@ -226,70 +226,24 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
     return rootEntity;
 }
 
-entt::entity LoadModel(Engine& engine, const CPUModel& cpuModel, ResourceHandle<GPUModel> gpuModel)
+entt::entity SceneLoading::LoadModel(Engine& engine, const std::string& path)
 {
-    auto& ecsModule = engine.GetModule<ECSModule>();
-    auto& rendererModule = engine.GetModule<RendererModule>();
-    auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
-    const GPUModel& gpuModelResource = *modelResourceManager.Access(gpuModel);
-
-    return LoadModelIntoECSAsHierarchy(ecsModule, gpuModelResource, cpuModel, cpuModel.hierarchy, cpuModel.animations);
-}
-
-std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels)
-{
-    auto& rendererModule = engine.GetModule<RendererModule>();
-    auto gpuModels = rendererModule.LoadModels(cpuModels);
-
-    if (cpuModels.size() != gpuModels.size())
-    {
-        throw std::runtime_error("[Scene Loading] The amount of models loaded onto te GPU does not equal the amount of loaded cpu models. This probably means sending data to the GPU failed.");
-    }
-
-    return LoadModels(engine, cpuModels, gpuModels);
-}
-
-std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<CPUModel>& cpuModels, const std::vector<ResourceHandle<GPUModel>>& gpuModels)
-{
-    std::vector<entt::entity> entities {};
-    entities.reserve(cpuModels.size());
-
-    {
-        ZoneScopedN("Instantiate Models in ECS");
-        for (uint32_t i = 0; i < cpuModels.size(); ++i)
-        {
-            entities.push_back(LoadModel(engine, cpuModels[i], gpuModels[i]));
-        }
-    }
-
-    return entities;
-}
-
-std::vector<entt::entity> SceneLoading::LoadModels(Engine& engine, const std::vector<std::string>& paths)
-{
-    std::vector<CPUModel> cpuModels {};
-    cpuModels.reserve(paths.size());
-
     auto& threadPool = engine.GetModule<ThreadModule>().GetPool();
-
-    for (const auto& path : paths)
-    {
-        {
-            ZoneScoped;
-
-            std::string zone = path + " CPU parsing";
-            ZoneName(zone.c_str(), 128);
-
-            cpuModels.push_back(ModelLoading::LoadGLTFFast(threadPool, path));
-        }
-    }
-
-    auto entities = LoadModels(engine, cpuModels);
+    CPUModel cpuData {};
 
     {
-        ZoneScopedN("CPU Model Free");
-        cpuModels.clear();
+        ZoneScoped;
+        std::string zone = path + " CPU parsing";
+        ZoneName(zone.c_str(), 128);
+
+        cpuData = ModelLoading::LoadGLTFFast(threadPool, path);
     }
 
-    return entities;
+    auto& rendererModule = engine.GetModule<RendererModule>();
+    auto gpuHandle = rendererModule.LoadModels({ cpuData }).front();
+
+    auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    const GPUModel& gpuModel = *modelResourceManager.Access(gpuHandle);
+
+    return LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), gpuModel, cpuData, cpuData.hierarchy, cpuData.animations);
 }
