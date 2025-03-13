@@ -6,12 +6,16 @@
 class SteamInputDeviceManager final : public InputDeviceManager
 {
 public:
+    SteamInputDeviceManager();
     virtual void Update() final;
 
     // Returns whether a controller is connected and can be used for input.
-    [[nodiscard]] virtual bool IsGamepadAvailable() const final { return _inputHandle != 0; }
-    [[nodiscard]] InputHandle_t GetGamepadHandle() const { return _inputHandle; }
+    NO_DISCARD virtual bool IsGamepadAvailable() const final { return _inputHandle != 0; }
+    NO_DISCARD virtual GamepadType GetGamepadType() const final;
+    NO_DISCARD InputHandle_t GetGamepadHandle() const { return _inputHandle; }
 
 private:
+    void UpdateControllerConnectivity();
+
     InputHandle_t _inputHandle {};
 };

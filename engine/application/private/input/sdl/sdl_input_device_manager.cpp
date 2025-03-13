@@ -141,6 +141,41 @@ float SDLInputDeviceManager::GetRawGamepadAxis(GamepadAxis axis) const
     return value;
 }
 
+GamepadType SDLInputDeviceManager::GetGamepadType() const
+{
+    auto ConvertGamepadType = [](SDL_GamepadType sdlType) -> GamepadType
+    {
+        switch (sdlType)
+        {
+        case SDL_GAMEPAD_TYPE_STANDARD:
+            return GamepadType::eGenericXInput;
+        case SDL_GAMEPAD_TYPE_XBOX360:
+            return GamepadType::eXBox360Controller;
+        case SDL_GAMEPAD_TYPE_XBOXONE:
+            return GamepadType::eXBoxOneController;
+        case SDL_GAMEPAD_TYPE_PS3:
+            return GamepadType::ePS3Controller;
+        case SDL_GAMEPAD_TYPE_PS4:
+            return GamepadType::ePS4Controller;
+        case SDL_GAMEPAD_TYPE_PS5:
+            return GamepadType::ePS5Controller;
+        case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+            return GamepadType::eSwitchProController;
+        default:
+            return GamepadType::eUnknown;
+        }
+    };
+
+    if (!IsGamepadAvailable())
+    {
+        bblog::error("[Input] No gamepad available while trying to get it's type!");
+        return GamepadType::eUnknown;
+    }
+
+    const SDL_GamepadType type = SDL_GetGamepadType(_gamepad.sdlHandle);
+    return ConvertGamepadType(type);
+}
+
 void SDLInputDeviceManager::CloseGamepad()
 {
     SDL_CloseGamepad(_gamepad.sdlHandle);
