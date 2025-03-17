@@ -61,14 +61,22 @@ using GameActions = std::vector<ActionSet>;
 struct DigitalActionResult
 {
     // True once upon pressed.
-    bool IsPressed() const { return HasAnyFlags(value, DigitalActionType::ePressed); }
+    NO_DISCARD bool IsPressed() const { return HasAnyFlags(value, DigitalActionType::ePressed); }
     // True all the time upon held.
-    bool IsHeld() const { return HasAnyFlags(value, DigitalActionType::eHeld); }
+    NO_DISCARD bool IsHeld() const { return HasAnyFlags(value, DigitalActionType::eHeld); }
     // True once upon released.
-    bool IsReleased() const { return HasAnyFlags(value, DigitalActionType::eReleased); }
+    NO_DISCARD bool IsReleased() const { return HasAnyFlags(value, DigitalActionType::eReleased); }
 
     DigitalActionType value = DigitalActionType::eNone;
 };
+
+struct GamepadTypeGlyphs
+{
+    std::unordered_map<GamepadButton, std::string> digitals {};
+    std::unordered_map<GamepadAnalog, std::string> analogs {};
+};
+
+using GamepadGlyphs = std::unordered_map<GamepadType, GamepadTypeGlyphs>;
 
 // Abstract class, which manages keyboard and mouse actions.
 // Inherit to handle gamepad actions.
@@ -84,6 +92,8 @@ public:
     virtual void SetGameActions(const GameActions& gameActions) { _gameActions = gameActions; }
     // Change the currently used action set in the game actions.
     virtual void SetActiveActionSet(std::string_view actionSetName);
+    // Sets custom gamepad glyph paths to be taken into account
+    void SetCustomInputGlyphs(const GamepadGlyphs& gamepadGlyphs) { _gamepadGlyphs = gamepadGlyphs; }
 
     // Button actions.
     NO_DISCARD DigitalActionResult GetDigitalAction(std::string_view actionName) const;
@@ -91,10 +101,17 @@ public:
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
+    // Gets the path to the images containing the controller glyphs to be shown for the digital action given.
+    NO_DISCARD virtual std::vector<std::string> GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const;
+
+    // Gets the path to the images containing the controller glyphs to be shown for the analog action given.
+    NO_DISCARD virtual std::vector<std::string> GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const;
+
 protected:
     const InputDeviceManager& _inputDeviceManager;
     GameActions _gameActions {};
     uint32_t _activeActionSet = 0;
+    GamepadGlyphs _gamepadGlyphs {};
 
     NO_DISCARD DigitalActionType CheckDigitalInput(const DigitalAction& action) const;
     NO_DISCARD DigitalActionType CheckInput(MAYBE_UNUSED std::string_view actionName, KeyboardCode code) const;

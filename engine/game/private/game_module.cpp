@@ -19,6 +19,7 @@
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
+#include "input_glyphs.hpp"
 #include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
@@ -39,7 +40,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 {
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
-
+  
     _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
@@ -49,11 +50,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
     _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
 
+
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
     spdlog::info("Starting engine...");
 
-    auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
@@ -119,7 +120,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
-    auto& scriptingModule = engine.GetModule<ScriptingModule>();
 
     // Slow down application when minimized.
     if (applicationModule.isMinimized())
