@@ -144,6 +144,7 @@ void InspectorModule::Tick(Engine& engine)
         if (ImGui::BeginMenu("Save Settings"))
         {
             engine.GetModule<RendererModule>().GetRenderer()->GetSettings().Write();
+            ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
