@@ -18,6 +18,22 @@ struct Hierarchy
         uint32_t index;
     };
 
+    struct LightData
+    {
+        static constexpr float DEFAULT_LIGHT_RANGE = 16.f;
+        enum class LightType
+        {
+            Directional,
+            Point,
+            Spot
+        };
+
+        glm::vec3 color;
+        LightType type;
+        float range;
+        float intensity;
+    };
+
     struct Node
     {
         Node() = default;
@@ -36,6 +52,8 @@ struct Hierarchy
         std::unordered_map<uint32_t, TransformAnimationSpline> animationSplines {};
         std::optional<Joint> joint {};
         std::optional<uint32_t> skeletonNode {};
+
+        std::optional<LightData> light {};
     };
 
     uint32_t root {};

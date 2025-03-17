@@ -75,6 +75,9 @@ class Main {
         // Load Map
         engine.LoadModel("assets/models/blockoutv4.glb")
 
+        // Loading lights from gltf, uncomment to test
+        // engine.LoadModel("assets/models/light_test.glb")
+
         // Gun Setup
         __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
 
