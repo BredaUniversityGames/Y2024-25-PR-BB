@@ -19,6 +19,7 @@
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
+#include "input_glyphs.hpp"
 #include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
@@ -40,6 +41,10 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
+    auto& applicationModule = engine.GetModule<ApplicationModule>();
+    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+    applicationModule.GetActionManager().SetCustomInputGlyphs(INPUT_GLYPHS);
+
     auto hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
     _hud = hud.second;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(std::move(hud.first));
@@ -48,11 +53,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     spdlog::info("Current path: {}", path.string());
     spdlog::info("Starting engine...");
 
-    auto& applicationModule = engine.GetModule<ApplicationModule>();
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
-
-    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+    
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
