@@ -7,14 +7,14 @@ class PlayerMovement{
         hasDoubleJumped = false
         dashTimer = newDashTimer
 
-        maxSpeed = 7.0
-        sv_accelerate = 5.5
+        maxSpeed = 9.0
+        sv_accelerate = 10.0
         jumpForce = 8.20
         gravityFactor = 2.2
         playerHeight = 1.7
         isGrounded = false
         isSliding = false
-        slideForce = 3.5
+        slideForce = 3.0
         dashForce = 22.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
         
@@ -175,6 +175,7 @@ class PlayerMovement{
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
 
+
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
         }else{
@@ -202,7 +203,6 @@ class PlayerMovement{
         var wishVel = moveInputDir.mulScalar(maxSpeed)
 
         if(isGrounded && !hasDashed){
-
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
             var addSpeed = maxSpeed - currentSpeed
@@ -216,13 +216,12 @@ class PlayerMovement{
             }
 
             var speed = velocity.length()
-            if (speed > maxSpeed) {
+            if (speed > maxSpeed ) {
                 var factor = maxSpeed / speed
-                velocity.x = velocity.x * factor
-
-                velocity.z = velocity.z * factor
+                var newVel  =  Vec3.new(velocity.x * factor, velocity.y, velocity.z * factor)
+                velocity = Math.Mix(velocity, newVel, 0.2)
             }
-                
+            
         }else{
             
             var wishSpeed = wishVel.length()
@@ -314,7 +313,7 @@ class PlayerMovement{
     }
 
     Slide(engine, dt, playerController, camera){
-        var slideAmount = slideForce * dt
+        var slideAmount = slideForce
         if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
             //crouch first
