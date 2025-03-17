@@ -1,4 +1,6 @@
 #include "game/ui/game_ui_bindings.hpp"
+#include "ui/ui_menus.hpp"
+
 namespace bindings
 {
 
