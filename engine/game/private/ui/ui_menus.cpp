@@ -74,7 +74,7 @@ std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsConte
     std::unique_ptr<Canvas> canvas = std::make_unique<Canvas>(screenResolution);
 
     // temporary
-    canvas->SetAbsoluteTransform(canvas->GetAbsoluteLocation(), canvas->GetRelativeScale());
+    canvas->SetAbsoluteTransform(canvas->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
     commonImageData.format
