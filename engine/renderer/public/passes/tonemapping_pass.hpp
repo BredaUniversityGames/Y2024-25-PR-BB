@@ -77,10 +77,6 @@ private:
         float padding1;
         int paletteSize;
 
-        // 2 floats of padding can be added here if needed, depending on shader expectations
-
-        // Registers 7+ (each 16 bytes)
-
         glm::vec4 skyColor;
         glm::vec4 sunColor;
         glm::vec4 cloudsColor;
