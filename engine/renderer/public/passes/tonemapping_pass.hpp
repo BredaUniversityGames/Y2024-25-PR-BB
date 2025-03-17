@@ -80,7 +80,6 @@ private:
         // 2 floats of padding can be added here if needed, depending on shader expectations
 
         // Registers 7+ (each 16 bytes)
-        glm::vec4 palette[5];
 
         glm::vec4 skyColor;
         glm::vec4 sunColor;

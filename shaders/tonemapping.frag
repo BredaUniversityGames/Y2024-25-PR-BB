@@ -51,8 +51,7 @@ layout (push_constant) uniform PushConstants
     float time;
     float padding1;
     int paletteSize;
-
-    vec4 palette[5];
+    
     vec4 skyColor;
     vec4 sunColor;
     vec4 cloudsColor;
