@@ -7,6 +7,7 @@ import "gameplay/player.wren" for PlayerVariables
 class Main {
 
     static Start(engine) {
+        engine.GetInput().SetActiveActionSet("Shooter")
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
