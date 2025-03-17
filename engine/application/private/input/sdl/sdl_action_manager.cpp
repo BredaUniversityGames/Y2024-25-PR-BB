@@ -72,3 +72,23 @@ glm::vec2 SDLActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName,
 
     return result;
 }
+
+std::vector<std::string> SDLActionManager::GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const
+{
+    if (!_sdlInputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    return ActionManager::GetDigitalActionGamepadGlyphImagePaths(actionName);
+}
+
+std::vector<std::string> SDLActionManager::GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const
+{
+    if (!_sdlInputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    return ActionManager::GetAnalogActionGamepadGlyphImagePaths(actionName);
+}
