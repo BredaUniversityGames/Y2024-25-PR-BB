@@ -6,9 +6,14 @@
 
 namespace bindings
 {
-DigitalActionResult GetDigitalAction(ApplicationModule& self, const std::string& action_name)
+void SetActiveActionSet(ApplicationModule& self, const std::string& actionSetName)
 {
-    return self.GetActionManager().GetDigitalAction(action_name);
+    self.GetActionManager().SetActiveActionSet(actionSetName);
+}
+
+DigitalActionResult GetDigitalAction(ApplicationModule& self, const std::string& actionName)
+{
+    return self.GetActionManager().GetDigitalAction(actionName);
 }
 
 bool GetDigitalActionIsPressed(DigitalActionResult& self)
@@ -26,9 +31,9 @@ bool GetDigitalActionIsReleased(DigitalActionResult& self)
     return self.IsReleased();
 }
 
-glm::vec2 GetAnalogAction(ApplicationModule& self, const std::string& action_name)
+glm::vec2 GetAnalogAction(ApplicationModule& self, const std::string& actionName)
 {
-    return self.GetActionManager().GetAnalogAction(action_name);
+    return self.GetActionManager().GetAnalogAction(actionName);
 }
 
 glm::vec2 GetMousePosition(ApplicationModule& self)
@@ -57,6 +62,7 @@ bool GetRawKeyHeld(ApplicationModule& self, KeyboardCode code)
 void BindInputAPI(wren::ForeignModule& module)
 {
     auto& wrenClass = module.klass<ApplicationModule>("Input");
+    wrenClass.funcExt<bindings::SetActiveActionSet>("SetActiveActionSet");
     wrenClass.funcExt<bindings::GetDigitalAction>("GetDigitalAction");
     wrenClass.funcExt<bindings::GetAnalogAction>("GetAnalogAction");
     wrenClass.funcExt<bindings::GetRawKeyOnce>("DebugGetKey");
