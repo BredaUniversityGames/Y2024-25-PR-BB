@@ -40,8 +40,8 @@ private:
     // If the input has been consumed this frame.
     bool _hasInputBeenConsumed = false;
     float _inputDeadZone = 0.2f;
-    std::string _pressActionName = "Jump";
-    std::string _navigationActionName = "Move";
+    std::string _pressActionName = "Interact";
+    std::string _navigationActionName = "Navigate";
     UINavigationDirection _previousNavigationDirection {};
 };
 
