@@ -40,7 +40,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 {
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
-  
+
     _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
@@ -50,7 +50,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
     _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
 
-
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
     spdlog::info("Starting engine...");
@@ -58,7 +57,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
+    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
 
     bblog::info("Successfully initialized engine!");
 
