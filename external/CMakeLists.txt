@@ -221,7 +221,22 @@ target_include_directories(ImGui
 # Steamworks API
 add_subdirectory(steamworks)
 
-# Enable Unity for external libraries
+# Game Analytics
+FetchContent_Declare(
+        GameAnalytics
+        GIT_REPOSITORY https://github.com/MuskettaMan/gameanalytics-sdk-cpp.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(GA_BUILD_SAMPLE OFF)
+override_option(GA_USE_PACKAGE OFF)
+
+FetchContent_MakeAvailable(GameAnalytics)
+
+target_compile_options(GameAnalytics PRIVATE -w)
+
 if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()
