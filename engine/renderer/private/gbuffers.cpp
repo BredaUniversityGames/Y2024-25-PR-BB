@@ -80,7 +80,7 @@ void GBuffers::CreateDepthResources()
     depthSampler.useMaxAnisotropy = false;
     depthSampler.anisotropyEnable = false;
     depthSampler.minLod = 0.0f;
-    depthSampler.maxLod = VK_LOD_CLAMP_NONE;
+    depthSampler.maxLod = vk::LodClampNone;
 
     depthSampler.compareEnable = false;
     depthSampler.compareOp = vk::CompareOp::eAlways;

@@ -484,7 +484,7 @@ void Renderer::InitializeHDRTarget()
     nearestSampler.useMaxAnisotropy = false;
     nearestSampler.anisotropyEnable = false;
     nearestSampler.minLod = 0.0f;
-    nearestSampler.maxLod = VK_LOD_CLAMP_NONE;
+    nearestSampler.maxLod = vk::LodClampNone;
 
     nearestSampler.compareEnable = false;
     nearestSampler.compareOp = vk::CompareOp::eAlways;

@@ -33,10 +33,7 @@ public:
         }
     }
 
-    ~DataStore()
-    {
-        // Write();
-    }
+    ~DataStore() = default;
 
     T data;
 
