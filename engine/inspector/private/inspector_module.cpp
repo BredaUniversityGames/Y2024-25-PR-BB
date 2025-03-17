@@ -389,7 +389,7 @@ void DrawTonemappingSettings(Settings& settings)
 
         // Display a color editor for the current palette color
         // Casting the glm::vec4 pointer to a float pointer is safe if glm::vec4 is 4 floats.
-        ImGui::ColorEdit4("Color", reinterpret_cast<float*>(&tonemapping.palette[i]), ImGuiColorEditFlags_NoInputs);
+        ImGui::ColorEdit4("Color", &tonemapping.palette[i].x, ImGuiColorEditFlags_NoInputs);
 
         ImGui::SameLine();
 

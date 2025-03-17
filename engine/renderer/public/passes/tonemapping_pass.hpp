@@ -75,7 +75,7 @@ private:
         float paletteAmount;
         float time;
         float cloudsSpeed;
-        int paletteSize;
+        uint32_t paletteSize;
 
         glm::vec4 skyColor;
         glm::vec4 sunColor;

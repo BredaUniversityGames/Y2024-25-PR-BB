@@ -104,14 +104,6 @@ struct Settings
         bool enablePalette;
         float ditherAmount = 0.15f;
         float paletteAmount = 0.8f;
-        /*glm::vec4 palette[5] = {
-            glm::vec4(14.0f, 193.0f, 4.0f, 256.0f) / 256.0f, // Black
-            glm::vec4(6.0f, 6.0f, 6.0f, 256.0f) / 256.0f, // White
-            glm::vec4(94.0f, 43.0f, 22.0f, 256.0f) / 256.0f, // Red
-            glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
-            glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
-        };*/
-
         std::vector<glm::vec4> palette;
 
         glm::vec4 skyColor { 0.0f, 0.0f, 0.0f, 1.0f };

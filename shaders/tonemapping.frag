@@ -50,13 +50,14 @@ layout (push_constant) uniform PushConstants
     float paletteAmount;
     float time;
     float cloudsSpeed;
-    int paletteSize;
+    uint paletteSize;
 
     vec4 skyColor;
     vec4 sunColor;
     vec4 cloudsColor;
     vec4 voidColor;
-    
+
+
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
