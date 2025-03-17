@@ -200,7 +200,7 @@ void TonemappingPass::CreateDescriptorSetLayouts()
             .pImmutableSamplers = nullptr }
     };
 
-    _paletteDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "uColorPalette" });
+    _paletteDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "ColorPaletteUBO" });
 }
 
 void TonemappingPass::UpdatePaletteBuffer(const std::vector<glm::vec4>& paletteColors)
