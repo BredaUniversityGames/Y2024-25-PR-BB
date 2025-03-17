@@ -74,19 +74,13 @@ private:
         // Register 6 (16 bytes)
         float paletteAmount;
         float time;
-        float padding1;
-        float padding2;
-
-        // 2 floats of padding can be added here if needed, depending on shader expectations
-
-        // Registers 7+ (each 16 bytes)
-        glm::vec4 palette[5];
+        float cloudsSpeed;
+        uint32_t paletteSize;
 
         glm::vec4 skyColor;
         glm::vec4 sunColor;
         glm::vec4 cloudsColor;
         glm::vec4 voidColor;
-
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
@@ -100,8 +94,17 @@ private:
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
+    ResourceHandle<Buffer> _colorPaletteBuffer;
+    vk::DescriptorSetLayout _paletteDescriptorSetLayout;
+    vk::DescriptorSet _paletteDescriptorSet;
+    const int _maxColorsInPalette = 64;
+
     const BloomSettings& _bloomSettings;
     float timePassed = 0.0f;
 
     void CreatePipeline();
+    void UpdatePaletteBuffer(const std::vector<glm::vec4>& paletteColors);
+    void CreatePaletteBuffer();
+    void CreateDescriptorSetLayouts();
+    void CreateDescriptorSets();
 };

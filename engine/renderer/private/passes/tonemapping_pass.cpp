@@ -5,6 +5,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
+#include "resource_management/buffer_resource_manager.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "settings.hpp"
 #include "shaders/shader_loader.hpp"
@@ -21,6 +22,9 @@ TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context
     , _outputTarget(outputTarget)
     , _bloomSettings(bloomSettings)
 {
+    CreatePaletteBuffer();
+    CreateDescriptorSetLayouts();
+    CreateDescriptorSets();
     CreatePipeline();
 
     _pushConstants.hdrTargetIndex = hdrTarget.Index();
@@ -35,6 +39,8 @@ TonemappingPass::~TonemappingPass()
 {
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
+    _context->VulkanContext()->Device().destroy(_paletteDescriptorSetLayout);
+    _context->Resources()->BufferResourceManager().Destroy(_colorPaletteBuffer);
 }
 
 void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
@@ -93,11 +99,10 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.sunColor = _settings.sunColor;
     _pushConstants.cloudsColor = _settings.cloudsColor;
     _pushConstants.voidColor = _settings.voidColor;
+    _pushConstants.cloudsSpeed = _settings.cloudsSpeed;
 
-    for (int i = 0; i < 5; i++)
-    {
-        _pushConstants.palette[i] = _settings.palette[i];
-    }
+    _pushConstants.paletteSize = static_cast<int>(_settings.palette.size());
+    UpdatePaletteBuffer(_settings.palette);
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,
@@ -130,6 +135,7 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _paletteDescriptorSet }, {});
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
@@ -166,4 +172,73 @@ void TonemappingPass::CreatePipeline()
 
     _pipelineLayout = std::get<0>(result);
     _pipeline = std::get<1>(result);
+}
+void TonemappingPass::CreatePaletteBuffer()
+{
+    std::vector<glm::vec4> colors(_maxColorsInPalette);
+    vk::DeviceSize bufferSize = sizeof(glm::vec4) * _maxColorsInPalette;
+
+    BufferCreation creation;
+    creation.SetName("Palette Buffer")
+        .SetSize(bufferSize)
+        .SetIsMappable(true)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO)
+        .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+
+    _colorPaletteBuffer = _context->Resources()->BufferResourceManager().Create(creation);
+
+    // Immediately update the buffer with the initial palette data.
+    UpdatePaletteBuffer(colors);
+}
+void TonemappingPass::CreateDescriptorSetLayouts()
+{
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {
+        vk::DescriptorSetLayoutBinding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eAll,
+            .pImmutableSamplers = nullptr }
+    };
+
+    _paletteDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, { "ColorPaletteUBO" });
+}
+
+void TonemappingPass::UpdatePaletteBuffer(const std::vector<glm::vec4>& paletteColors)
+{
+    // Get a pointer to the mapped buffer memory.
+    void* data = _context->Resources()->BufferResourceManager().Access(_colorPaletteBuffer)->mappedPtr;
+    memcpy(data, paletteColors.data(), paletteColors.size() * sizeof(glm::vec4));
+}
+
+void TonemappingPass::CreateDescriptorSets()
+{
+    vk::DescriptorSetAllocateInfo allocInfo {
+        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+        .descriptorSetCount = 1,
+        .pSetLayouts = &_paletteDescriptorSetLayout
+    };
+
+    if (_context->VulkanContext()->Device().allocateDescriptorSets(&allocInfo, &_paletteDescriptorSet) != vk::Result::eSuccess)
+    {
+        throw std::runtime_error("Failed to allocate descriptor set");
+    }
+
+    vk::DescriptorBufferInfo colorPaletteBufferInfo {
+        .buffer = _context->Resources()->BufferResourceManager().Access(_colorPaletteBuffer)->buffer,
+        .offset = 0,
+        .range = vk::WholeSize,
+    };
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
+        vk::WriteDescriptorSet {
+            .dstSet = _paletteDescriptorSet,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .pBufferInfo = &colorPaletteBufferInfo }
+    };
+
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
