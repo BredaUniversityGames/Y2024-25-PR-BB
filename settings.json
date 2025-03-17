@@ -40,7 +40,7 @@
             "filterRadius": 0.004999999888241291
         },
         "tonemapping": {
-            "cereal_class_version": 7,
+            "cereal_class_version": 8,
             "tonemappingFunction": 7,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
@@ -55,12 +55,12 @@
             "saturation": 0.8399999737739563,
             "vibrance": 0.9599999785423279,
             "hue": 0.0,
-            "enablePixelization": false,
+            "enablePixelization": true,
             "minPixelSize": 2.0,
             "maxPixelSize": 4.0,
             "pixelizationLevels": 5.210000038146973,
             "pixelizationDepthBias": 313.0,
-            "enablePalette": false,
+            "enablePalette": true,
             "ditherAmount": 0.125,
             "paletteAmount": 0.800000011920929,
             "palette": [
@@ -118,7 +118,8 @@
                 "y": 0.2556285262107849,
                 "z": 0.2435501664876938,
                 "w": 1.0
-            }
+            },
+            "cloudsSpeed": 0.8999999761581421
         },
         "lighting": {
             "cereal_class_version": 0,

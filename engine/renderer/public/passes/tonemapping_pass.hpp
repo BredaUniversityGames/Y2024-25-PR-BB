@@ -74,14 +74,13 @@ private:
         // Register 6 (16 bytes)
         float paletteAmount;
         float time;
-        float padding1;
+        float cloudsSpeed;
         int paletteSize;
 
         glm::vec4 skyColor;
         glm::vec4 sunColor;
         glm::vec4 cloudsColor;
         glm::vec4 voidColor;
-
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

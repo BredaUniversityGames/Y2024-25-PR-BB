@@ -49,13 +49,14 @@ layout (push_constant) uniform PushConstants
 
     float paletteAmount;
     float time;
-    float padding1;
+    float cloudsSpeed;
     int paletteSize;
-    
+
     vec4 skyColor;
     vec4 sunColor;
     vec4 cloudsColor;
     vec4 voidColor;
+    
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -271,7 +272,7 @@ vec3 Sky(in vec3 ro, in vec3 rd)
     skyCol += sun;
 
     // clouds
-    float t = pc.time * 0.1;
+    float t = pc.time * pc.cloudsSpeed;
     float den = fbm(vec2(p.x - t, p.y - t));
     skyCol = mix(skyCol, cloudCol, smoothstep(.4, .8, den));
 
