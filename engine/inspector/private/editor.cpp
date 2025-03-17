@@ -3,6 +3,7 @@
 #include "audio_listener_component.hpp"
 #include "bloom_settings.hpp"
 #include "cheats_component.hpp"
+#include "components/animation_transform_component.hpp"
 #include "components/camera_component.hpp"
 #include "components/directional_light_component.hpp"
 #include "components/name_component.hpp"
@@ -41,6 +42,8 @@ Editor::Editor(ECSModule& ecs)
     _entityEditor.registerComponent<LifetimeComponent>("Lifetime");
     _entityEditor.registerComponent<CheatsComponent>("Cheats");
     _entityEditor.registerComponent<AnimationControlComponent>("Animation Control");
+    _entityEditor.registerComponent<AnimationChannelComponent>("Animation Channel");
+    _entityEditor.registerComponent<AnimationTransformComponent>("Animation Transform");
 }
 
 void Editor::DrawHierarchy()

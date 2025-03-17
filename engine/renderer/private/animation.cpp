@@ -4,7 +4,7 @@
 
 #include "log.hpp"
 
-void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float blendTime, float speed, bool looping)
+void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float speed, bool looping, float blendTime, bool blendMatch)
 {
     bool useBlend = blendTime > 0.0f && activeAnimation.has_value();
     if (useBlend)
@@ -16,20 +16,20 @@ void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float blend
     }
 
     activeAnimation = animationIndex;
-    animations[animationIndex].time = useBlend ? animations[transitionAnimation.value()].time * (animations[animationIndex].duration / animations[transitionAnimation.value()].duration) : 0.0f;
+    animations[animationIndex].time = useBlend && blendMatch ? animations[transitionAnimation.value()].time * (animations[animationIndex].duration / animations[transitionAnimation.value()].duration) : 0.0f;
     animations[animationIndex].looping = looping;
     animations[animationIndex].speed = speed;
     animations[animationIndex].playbackOption = Animation::PlaybackOptions::ePlaying;
 }
 
-void AnimationControlComponent::Play(const std::string& name, float blendTime, float speed, bool looping)
+void AnimationControlComponent::Play(const std::string& name, float speed, bool looping, float blendTime, bool blendMatch)
 {
     auto it = std::find_if(animations.begin(), animations.end(), [&name](const auto& anim)
         { return anim.name == name; });
 
     if (it != animations.end())
     {
-        PlayByIndex(std::distance(animations.begin(), it), blendTime, speed, looping);
+        PlayByIndex(std::distance(animations.begin(), it), speed, looping, blendTime, blendMatch);
     }
     else
     {

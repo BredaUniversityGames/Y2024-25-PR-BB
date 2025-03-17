@@ -102,8 +102,8 @@ struct AnimationControlComponent
     float blendTime;
     float remainingBlendTime;
 
-    void PlayByIndex(uint32_t animationIndex, float blendTime = 0.0f, float speed = 1.0f, bool looping = false);
-    void Play(const std::string& name, float blendTime = 0.0f, float speed = 1.0f, bool looping = false);
+    void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false, float blendTime = 0.0f, bool blendMatch = false);
+    void Play(const std::string& name, float speed = 1.0f, bool looping = false, float blendTime = 0.0f, bool blendMatch = false);
     void Stop();
     void Pause();
     void Resume();

@@ -13,6 +13,7 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 
+#include <components/name_component.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <tracy/Tracy.hpp>
 
@@ -185,9 +186,9 @@ void AnimationSystem::Inspect()
 
 void AnimationSystem::RecursiveCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton)
 {
-    const auto& view = ecs.GetRegistry().view<SkeletonNodeComponent, AnimationTransformComponent>();
+    const auto& view = ecs.GetRegistry().view<SkeletonNodeComponent, AnimationTransformComponent, NameComponent>();
 
-    auto [node, transform] = view[entity];
+    auto [node, transform, name] = view[entity];
 
     auto& matrix = ecs.GetRegistry().get_or_emplace<JointWorldTransformComponent>(entity);
 
