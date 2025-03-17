@@ -194,9 +194,9 @@ void SSAOPass::CreateBuffers()
     noiseSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
     noiseSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
 
-    noiseSampler.minFilter = vk::Filter::eLinear;
-    noiseSampler.magFilter = vk::Filter::eLinear;
-    noiseSampler.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    noiseSampler.minFilter = vk::Filter::eNearest;
+    noiseSampler.magFilter = vk::Filter::eNearest;
+    noiseSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
 
     noiseSampler.useMaxAnisotropy = false;
     noiseSampler.anisotropyEnable = false;
@@ -209,7 +209,7 @@ void SSAOPass::CreateBuffers()
     noiseSampler.borderColor = vk::BorderColor::eIntOpaqueBlack;
 
     _noiseSampler = _context->Resources()->SamplerResourceManager().Create(noiseSampler);
-    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage);
+    _ssaoNoise = _context->Resources()->ImageResourceManager().Create(noiseImage, _noiseSampler);
     _pushConstants.ssaoNoiseIndex = _ssaoNoise.Index();
 }
 void SSAOPass::CreateDescriptorSetLayouts()

@@ -8,10 +8,10 @@ struct DirectionalLightComponent
 {
     glm::vec3 color { 1.0f };
 
-    float shadowBias = 0.002f;
-    float poissonWorldOffset = 110.0f;
+    float shadowBias = 0.001f;
+    float poissonWorldOffset = 2048.0f;
     float poissonConstant = 2048.0f; // Good results when we keep this the same size as the shadowmap
-    float orthographicSize = 75.0f;
+    float orthographicSize = 95.0f;
     float nearPlane = 0.1f;
     float farPlane = 200.0f;
     float aspectRatio = 1.0f;

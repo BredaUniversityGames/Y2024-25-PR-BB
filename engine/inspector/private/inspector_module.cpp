@@ -17,6 +17,9 @@
 #include "tracy/Tracy.hpp"
 #include "vulkan_context.hpp"
 
+#include "components/static_mesh_component.hpp"
+#include "components/wants_shadows_updated.hpp"
+
 InspectorModule::InspectorModule() = default;
 
 InspectorModule::~InspectorModule()
@@ -442,6 +445,14 @@ void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
     ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::Image(textureID2, ImVec2(512, 512));
+    if (ImGui::Button("Force recalculate shadow map"))
+    {
+        auto view = engine.GetModule<ECSModule>().GetRegistry().view<StaticMeshComponent>();
+        for (auto entity : view)
+        {
+            engine.GetModule<ECSModule>().GetRegistry().emplace_or_replace<WantsShadowsUpdated>(entity);
+        }
+    }
     ImGui::End();
 }
 
