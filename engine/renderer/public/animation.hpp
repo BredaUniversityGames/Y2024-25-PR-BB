@@ -92,6 +92,15 @@ struct Animation
             time = std::fmod(time, duration);
         }
     }
+
+    float ScaledDuration() const
+    {
+        return duration / speed;
+    }
+    float ScaledTime() const
+    {
+        return time / speed;
+    }
 };
 
 struct AnimationControlComponent

@@ -177,7 +177,7 @@ class Main {
             if(engine.GetInput().DebugGetKey(Keycode.eL())) {
                 for(demon in __demons) {
                     var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Run", 1.0, true, 0.3, true)
+                    demonAnimations.Play("Run", 2.0, true, 0.3, true)
                 }
             }
             if(engine.GetInput().DebugGetKey(Keycode.eJ())) {

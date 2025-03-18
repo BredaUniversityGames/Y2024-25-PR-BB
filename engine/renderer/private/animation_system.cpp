@@ -3,6 +3,7 @@
 #include "animation.hpp"
 #include "components/animation_channel_component.hpp"
 #include "components/animation_transform_component.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/transform_component.hpp"
@@ -13,7 +14,6 @@
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 
-#include <components/name_component.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <tracy/Tracy.hpp>
 
@@ -57,25 +57,25 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
                     animationControl.transitionAnimation = std::nullopt;
                 }
 
-                float durationA = activeAnimation.duration;
-                float durationB = transitionAnimation.duration;
+                float durationA = activeAnimation.ScaledDuration();
+                float durationB = transitionAnimation.ScaledDuration();
 
                 // Compute the time scaling factors
                 float factorA = (1.0f - blendWeight) + blendWeight * (durationA / durationB);
                 float factorB = blendWeight + (1.0f - blendWeight) * (durationB / durationA);
 
                 // Update times
-                activeAnimation.time += timeStep / factorB;
-                transitionAnimation.time += equalAnimations ? 0.0f : timeStep / factorA;
+                activeAnimation.time += (timeStep / factorB) * activeAnimation.speed;
+                transitionAnimation.time += equalAnimations ? 0.0f : (timeStep / factorA) * transitionAnimation.speed;
 
-                if (activeAnimation.time > activeAnimation.duration && activeAnimation.looping)
+                if (activeAnimation.time > activeAnimation.ScaledDuration() && activeAnimation.looping)
                 {
-                    activeAnimation.time = std::fmod(activeAnimation.time, activeAnimation.duration);
+                    activeAnimation.time = std::fmod(activeAnimation.ScaledTime(), activeAnimation.ScaledDuration()) * activeAnimation.speed;
                 }
 
-                if (transitionAnimation.time > transitionAnimation.duration && transitionAnimation.looping)
+                if (transitionAnimation.time > transitionAnimation.ScaledDuration() && transitionAnimation.looping)
                 {
-                    transitionAnimation.time = std::fmod(transitionAnimation.time, transitionAnimation.duration);
+                    transitionAnimation.time = std::fmod(transitionAnimation.ScaledTime(), transitionAnimation.ScaledDuration()) * transitionAnimation.speed;
                 }
             }
         }
@@ -186,9 +186,9 @@ void AnimationSystem::Inspect()
 
 void AnimationSystem::RecursiveCalculateMatrix(entt::entity entity, const glm::mat4& parentMatrix, ECSModule& ecs, const SkeletonComponent& skeleton)
 {
-    const auto& view = ecs.GetRegistry().view<SkeletonNodeComponent, AnimationTransformComponent, NameComponent>();
+    const auto& view = ecs.GetRegistry().view<SkeletonNodeComponent, AnimationTransformComponent>();
 
-    auto [node, transform, name] = view[entity];
+    auto [node, transform] = view[entity];
 
     auto& matrix = ecs.GetRegistry().get_or_emplace<JointWorldTransformComponent>(entity);
 

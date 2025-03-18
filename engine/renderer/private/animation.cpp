@@ -16,9 +16,9 @@ void AnimationControlComponent::PlayByIndex(uint32_t animationIndex, float speed
     }
 
     activeAnimation = animationIndex;
-    animations[animationIndex].time = useBlend && blendMatch ? animations[transitionAnimation.value()].time * (animations[animationIndex].duration / animations[transitionAnimation.value()].duration) : 0.0f;
-    animations[animationIndex].looping = looping;
     animations[animationIndex].speed = speed;
+    animations[animationIndex].time = useBlend && blendMatch ? (animations[transitionAnimation.value()].ScaledTime() * (animations[animationIndex].ScaledDuration() / animations[transitionAnimation.value()].ScaledDuration())) * animations[animationIndex].speed : 0.0f;
+    animations[animationIndex].looping = looping;
     animations[animationIndex].playbackOption = Animation::PlaybackOptions::ePlaying;
 }
 
