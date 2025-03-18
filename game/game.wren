@@ -40,7 +40,7 @@ class Main {
         __timer = 0
 
         // Player stuff
-
+        engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
@@ -73,7 +73,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
