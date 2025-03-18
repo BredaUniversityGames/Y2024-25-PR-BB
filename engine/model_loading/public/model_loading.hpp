@@ -6,18 +6,6 @@
 
 #include <vector>
 
-struct StagingAnimationChannels
-{
-    std::vector<Animation> animations;
-
-    struct IndexChannel
-    {
-        std::vector<TransformAnimationSpline> animationChannels;
-        std::vector<uint32_t> nodeIndices;
-    };
-    std::vector<IndexChannel> indexChannels;
-};
-
 namespace ModelLoading
 {
 // Loads a GLTF model from the given path to the file.

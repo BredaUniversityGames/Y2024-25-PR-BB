@@ -4,6 +4,9 @@
 #include "resources/hierarchy.hpp"
 #include "resources/material.hpp"
 
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+
 struct CPUModel
 {
     std::string name {};
@@ -15,4 +18,5 @@ struct CPUModel
     std::vector<CPUMaterial> materials {};
     std::vector<CPUImage> textures {};
     std::vector<Animation> animations {};
+    std::vector<JPH::ShapeRefC> colliders {};
 };

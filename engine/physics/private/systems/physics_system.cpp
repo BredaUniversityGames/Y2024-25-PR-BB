@@ -62,9 +62,9 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
 
     TransformHelpers::SetLocalTransform(ecs.GetRegistry(), entity, currentNode.transform);
 
-    if (currentNode.meshIndex.has_value())
+    if (currentNode.mesh.has_value())
     {
-        auto mesh = models.meshes[currentNode.meshIndex.value().second];
+        auto mesh = models.meshes[currentNode.mesh.value().index];
 
         JPH::VertexList vertices;
         JPH::IndexedTriangleList triangles;
@@ -129,39 +129,6 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     }
 
     return entity;
-}
-
-RigidbodyComponent PhysicsSystem::CreateMeshColliderBody(const CPUMesh<Vertex>& mesh, PhysicsShapes shapeType)
-{
-    const bool validation = shapeType != PhysicsShapes::eMESH && shapeType != PhysicsShapes::eCONVEXHULL;
-    if (validation)
-    {
-        assert(!validation && "Shape is not supported, please use eMESH or eCONVEXHULL");
-    }
-
-    std::vector<glm::vec3> vertices;
-
-    // set vertices
-    for (auto vertex : mesh.vertices)
-    {
-        vertices.emplace_back(vertex.position.x, vertex.position.y, vertex.position.z);
-    }
-
-    JPH::ShapeRefC shape {};
-
-    if (shapeType == PhysicsShapes::eCONVEXHULL)
-        shape = ShapeFactory::MakeConvexHullShape(vertices);
-    if (shapeType == PhysicsShapes::eMESH)
-        shape = ShapeFactory::MakeMeshHullShape(vertices, mesh.indices);
-
-    RigidbodyComponent rb { _physicsModule.GetBodyInterface(), shape, false };
-    return rb;
-}
-
-void PhysicsSystem::CreateCollision(const std::string& path, const PhysicsShapes shapeType)
-{
-    CPUModel models = ModelLoading::LoadGLTF(path);
-    LoadNodeRecursive(models, _ecs, models.hierarchy.root, models.hierarchy, entt::null, shapeType);
 }
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)

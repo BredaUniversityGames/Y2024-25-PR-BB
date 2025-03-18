@@ -85,11 +85,11 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
         const std::pair<const Node*, glm::mat4>& topNodeTransform = nodeStack.front();
         nodeStack.pop();
 
-        if (topNodeTransform.first->meshIndex.has_value())
+        if (topNodeTransform.first->mesh.has_value())
         {
-            if (topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            if (topNodeTransform.first->mesh.value().type == MeshType::eSTATIC)
             {
-                meshIndex = topNodeTransform.first->meshIndex.value().second;
+                meshIndex = topNodeTransform.first->mesh.value().index;
                 transform = topNodeTransform.second;
                 break;
             }

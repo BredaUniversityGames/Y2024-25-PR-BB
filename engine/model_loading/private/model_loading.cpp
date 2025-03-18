@@ -6,6 +6,7 @@
 #include "include_fastgltf.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
+#include "physics/shape_factory.hpp"
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
@@ -119,6 +120,18 @@ CPUImage ProcessImage(const fastgltf::Asset& asset, const fastgltf::Image& gltfI
     }
 
     return out;
+}
+
+// Uses mesh colliders from Jolt
+JPH::ShapeRefC ProcessMeshIntoCollider(const CPUMesh<Vertex>& mesh)
+{
+    std::vector<glm::vec3> vertices;
+    for (auto vertex : mesh.vertices)
+    {
+        vertices.emplace_back(vertex.position.x, vertex.position.y, vertex.position.z);
+    }
+
+    return ShapeFactory::MakeMeshHullShape(vertices, mesh.indices);
 }
 
 }
@@ -538,6 +551,18 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
     return cpuImage;
 }
 
+struct StagingAnimationChannels
+{
+    std::vector<Animation> animations;
+
+    struct IndexChannel
+    {
+        std::vector<TransformAnimationSpline> animationChannels;
+        std::vector<uint32_t> nodeIndices;
+    };
+    std::vector<IndexChannel> indexChannels;
+};
+
 StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
 {
     ZoneScopedN("Animation Loading");
@@ -711,7 +736,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         for (auto it = range.first; it != range.second; ++it)
         {
             auto node = Node { "mesh node", glm::identity<glm::mat4>() };
-            node.meshIndex = it->second;
+            node.mesh = { it->second.first, it->second.second };
 
             model.hierarchy.nodes.emplace_back(node);
             model.hierarchy.nodes[nodeIndex].childrenIndices.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
@@ -986,6 +1011,8 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
                 else
                 {
                     CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
+
+                    model.colliders.emplace_back(detail::ProcessMeshIntoCollider(primitive));
                     model.meshes.emplace_back(primitive);
 
                     meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });

@@ -30,8 +30,9 @@
 class RecursiveNodeLoader
 {
 public:
-    RecursiveNodeLoader(ECSModule& ecs, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLut)
+    RecursiveNodeLoader(ECSModule& ecs, PhysicsModule& physics, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLut)
         : _ecs(ecs)
+        , _physics(physics)
         , _hierarchy(hierarchy)
         , _cpuModel(cpuModel)
         , _gpuModel(gpuModel)
@@ -57,26 +58,25 @@ public:
 
         TransformHelpers::SetLocalTransform(_ecs.GetRegistry(), entity, currentNode.transform);
 
-        if (currentNode.meshIndex.has_value())
+        if (currentNode.mesh.has_value())
         {
-            switch (currentNode.meshIndex.value().first)
+            auto index = currentNode.mesh.value().index;
+            switch (currentNode.mesh.value().type)
             {
             case MeshType::eSTATIC:
             {
-                _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(currentNode.meshIndex.value().second);
+                _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(index);
                 _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
 
-                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eMESH);
-                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-
-                // add collider recursively
+                auto rb = RigidbodyComponent(_physics.GetBodyInterface(), _cpuModel.colliders.at(index), false);
+                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, std::move(rb));
 
                 break;
             }
             case MeshType::eSKINNED:
-                _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(currentNode.meshIndex.value().second);
+                _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(index);
                 break;
             default:
                 throw std::runtime_error("Mesh type not supported!");
@@ -132,6 +132,7 @@ public:
 
 private:
     ECSModule& _ecs;
+    PhysicsModule& _physics;
     const Hierarchy& _hierarchy;
     const CPUModel& _cpuModel;
     const GPUModel& _gpuModel;
@@ -207,7 +208,7 @@ private:
     }
 };
 
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
 {
     ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
@@ -220,7 +221,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
         animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
     }
 
-    RecursiveNodeLoader recursiveNodeLoader { ecs, hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
+    RecursiveNodeLoader recursiveNodeLoader { ecs, physics, hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
     recursiveNodeLoader.Load(rootEntity, hierarchy.root, entt::null);
 
     entt::entity skeletonEntity = entt::null;
@@ -243,7 +244,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
         for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
         {
             const Node& node = hierarchy.nodes[i];
-            if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+            if (node.skeletonNode.has_value() && node.mesh.has_value() && node.mesh->type == MeshType::eSKINNED)
             {
                 SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
                 skinnedMeshComponent.skeletonEntity = skeletonEntity;
@@ -273,5 +274,11 @@ entt::entity SceneLoading::LoadModel(Engine& engine, const std::string& path)
     auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
     const GPUModel& gpuModel = *modelResourceManager.Access(gpuHandle);
 
-    return LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), gpuModel, cpuData, cpuData.hierarchy, cpuData.animations);
+    return LoadModelIntoECSAsHierarchy(
+        engine.GetModule<ECSModule>(),
+        engine.GetModule<PhysicsModule>(),
+        gpuModel,
+        cpuData,
+        cpuData.hierarchy,
+        cpuData.animations);
 }
