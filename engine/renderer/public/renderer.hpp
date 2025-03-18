@@ -66,7 +66,8 @@ public:
 
     void FlushCommands();
 
-    Settings& GetSettings() { return _settings.data; };
+    Settings& GetSettingsData() { return _settings.data; };
+    DataStore<Settings>& GetSettings() { return _settings; }
 
 private:
     friend class RendererModule;
@@ -107,6 +108,8 @@ private:
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
     ResourceHandle<GPUImage> _fxaaTarget;
+
+    ResourceHandle<Sampler> _bloomSampler;
 
     std::unique_ptr<FrameGraph> _frameGraph;
     std::unique_ptr<SwapChain> _swapChain;

@@ -473,18 +473,18 @@ void Renderer::InitializeHDRTarget()
 {
     SamplerCreation nearestSampler {};
     nearestSampler.name = "Nearest_Sampler";
-    nearestSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
-    nearestSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
-    nearestSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
+    nearestSampler.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    nearestSampler.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+    nearestSampler.addressModeW = vk::SamplerAddressMode::eClampToEdge;
 
     nearestSampler.minFilter = vk::Filter::eNearest;
     nearestSampler.magFilter = vk::Filter::eNearest;
     nearestSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
 
-    nearestSampler.useMaxAnisotropy = true;
-    nearestSampler.anisotropyEnable = true;
+    nearestSampler.useMaxAnisotropy = false;
+    nearestSampler.anisotropyEnable = false;
     nearestSampler.minLod = 0.0f;
-    nearestSampler.maxLod = 0.0f;
+    nearestSampler.maxLod = vk::LodClampNone;
 
     nearestSampler.compareEnable = false;
     nearestSampler.compareOp = vk::CompareOp::eAlways;
@@ -496,16 +496,26 @@ void Renderer::InitializeHDRTarget()
     CPUImage hdrImageData {};
     hdrImageData.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData, _nearestSampler);
+    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData);
 }
 
 void Renderer::InitializeBloomTargets()
 {
+    auto& samplerResourceManager = _context->Resources()->SamplerResourceManager();
+    SamplerCreation samplerCreation {
+        .name = "Bloom Sampler",
+        .mipmapMode = vk::SamplerMipmapMode::eLinear,
+        .minLod = 0.0f,
+        .maxLod = vk::LodClampNone,
+    };
+    samplerCreation.SetGlobalAddressMode(vk::SamplerAddressMode::eClampToEdge);
+    _bloomSampler = samplerResourceManager.Create(samplerCreation);
+
     auto size = _swapChain->GetImageSize();
 
     CPUImage bloomCreation {};
     bloomCreation.SetName("HDR Bloom Target").SetSize(size.x, size.y).SetMips(4).SetFormat(vk::Format::eR16G16B16A16Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-    _bloomTarget = _context->Resources()->ImageResourceManager().Create(bloomCreation);
+    _bloomTarget = _context->Resources()->ImageResourceManager().Create(bloomCreation, _bloomSampler);
 }
 void Renderer::InitializeTonemappingTarget()
 {
