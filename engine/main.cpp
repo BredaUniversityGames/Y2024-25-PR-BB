@@ -40,8 +40,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-            .AddModule<AnalyticsModule>()
-            .AddModule<InspectorModule>();
+            .AddModule<InspectorModule>()
+            .AddModule<AnalyticsModule>();
     }
 
     {
