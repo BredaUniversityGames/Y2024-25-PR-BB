@@ -58,7 +58,6 @@ if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
     add_compile_definitions(DISTRIBUTION)
 elseif("${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
     add_executable(CustomTech "engine/main.cpp")
-    set(SUBSYSTEM_OPTIONS )
     set_target_properties(CustomTech
             PROPERTIES
             LINK_FLAGS "-mwindows"
