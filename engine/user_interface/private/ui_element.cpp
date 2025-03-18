@@ -3,6 +3,11 @@
 
 #include <ranges>
 
+void UIElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
+{
+    ChildrenSubmitDrawInfo(drawList);
+}
+
 void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInputContext)
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)

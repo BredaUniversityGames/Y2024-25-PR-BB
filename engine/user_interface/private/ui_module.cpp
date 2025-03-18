@@ -14,13 +14,13 @@ ModuleTickOrder UIModule::Init(Engine& engine)
 
 void UIModule::Tick(Engine& engine)
 {
-    _uiInputContext._gamepadHasFocus = engine.GetModule<ApplicationModule>().GetInputDeviceManager().IsGamepadAvailable();
+    uiInputContext._gamepadHasFocus = engine.GetModule<ApplicationModule>().GetInputDeviceManager().IsGamepadAvailable();
 
     InputManagers inputManagers {
         .inputDeviceManager = engine.GetModule<ApplicationModule>().GetInputDeviceManager(),
         .actionManager = engine.GetModule<ApplicationModule>().GetActionManager()
     };
 
-    _viewport->Update(inputManagers, _uiInputContext);
-    _uiInputContext._hasInputBeenConsumed = false;
+    _viewport->Update(inputManagers, uiInputContext);
+    uiInputContext._hasInputBeenConsumed = false;
 }
