@@ -205,6 +205,10 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     mainMenu.quitButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     mainMenu.quitButton.lock()->AddChild<UITextElement>(font, "quit", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
+    mainMenu.openLinkButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(200, 70), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.openLinkButton.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    mainMenu.openLinkButton.lock()->AddChild<UITextElement>(font, "discord", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+
     mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
     mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
 

@@ -1,4 +1,3 @@
-a
 #pragma once
 #include "module_interface.hpp"
 #include <functional>
@@ -7,7 +6,7 @@ a
 
 #include "vulkan_include.hpp"
 
-    class InputDeviceManager;
+class InputDeviceManager;
 class ActionManager;
 struct SDL_Window;
 

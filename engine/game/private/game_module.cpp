@@ -36,6 +36,8 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <steam_module.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     auto& ECS = engine.GetModule<ECSModule>();
@@ -109,6 +111,22 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
         HudUpdate(_hud, totalTime);
+    }
+
+    if (auto locked = _mainMenu.lock(); locked != nullptr && locked->visibility == UIElement::VisibilityState::eUpdatedAndVisible)
+    {
+        if (locked->openLinkButton.lock()->IsPressedOnce())
+        {
+            auto& steam = engine.GetModule<SteamModule>();
+            if (steam.Available())
+            {
+                steam.OpenSteamBrowser(DISCORD_URL);
+            }
+            else
+            {
+                engine.GetModule<ApplicationModule>().OpenExternalBrowser(DISCORD_URL);
+            }
+        }
     }
     auto& ECS = engine.GetModule<ECSModule>();
 

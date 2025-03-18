@@ -11,7 +11,6 @@ class SteamModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
 
     std::string_view GetName() override { return "Steam Module"; }
-    void OpenSteamBrowser(const std::string& url);
 
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
@@ -26,6 +25,9 @@ public:
     // When the user launched the application through Steam, this will return true.
     // If false, the Steam module cannot be used, as Steam API does not work.
     bool Available() const { return _steamAvailable; }
+
+    // Check first if steam is available before using.
+    void OpenSteamBrowser(const std::string& url);
 
     // Returns whether Steam Input API is available to use.
     bool InputAvailable() const { return _steamInputAvailable; }
