@@ -39,7 +39,10 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
 
 WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
 {
-    auto entity = SceneLoading::LoadModel(*engine.instance, path);
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._scenesLoaded;
+    auto model = sceneCache.LoadModel(*engine.instance, path);
+
+    auto entity = model->Instantiate(*engine.instance);
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
 }
 
