@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wren_common.hpp"
+#include <glm/glm.hpp>
 #include <random>
 
 namespace bindings

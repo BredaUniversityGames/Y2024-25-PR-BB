@@ -222,7 +222,6 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddDefaultComponent<CheatsComponent>>("AddCheatsComponent");
 
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
-    entityClass.func<&WrenEntity::AddComponent<AnimationControlComponent>>("AddAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
     entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
