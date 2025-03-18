@@ -69,18 +69,18 @@ void GBuffers::CreateDepthResources()
 
     SamplerCreation depthSampler {};
     depthSampler.name = "Nearest_Depth_Sampler";
-    depthSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
-    depthSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
-    depthSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
+    depthSampler.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    depthSampler.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+    depthSampler.addressModeW = vk::SamplerAddressMode::eClampToEdge;
 
     depthSampler.minFilter = vk::Filter::eNearest;
     depthSampler.magFilter = vk::Filter::eNearest;
     depthSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
 
-    depthSampler.useMaxAnisotropy = true;
-    depthSampler.anisotropyEnable = true;
+    depthSampler.useMaxAnisotropy = false;
+    depthSampler.anisotropyEnable = false;
     depthSampler.minLod = 0.0f;
-    depthSampler.maxLod = 1.0f;
+    depthSampler.maxLod = vk::LodClampNone;
 
     depthSampler.compareEnable = false;
     depthSampler.compareOp = vk::CompareOp::eAlways;
@@ -89,7 +89,7 @@ void GBuffers::CreateDepthResources()
     _depthSampler = _context->Resources()->SamplerResourceManager().Create(depthSampler);
     CPUImage depthImageData {};
     depthImageData.SetFormat(_depthFormat).SetType(ImageType::eDepth).SetSize(_size.x, _size.y).SetName("Depth image").SetFlags(vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eDepthStencilAttachment);
-    _depthImage = _context->Resources()->ImageResourceManager().Create(depthImageData, _depthSampler);
+    _depthImage = _context->Resources()->ImageResourceManager().Create(depthImageData);
 }
 
 void GBuffers::CleanUp()

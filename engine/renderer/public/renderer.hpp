@@ -66,7 +66,8 @@ public:
 
     void FlushCommands();
 
-    Settings& GetSettings() { return _settings.data; };
+    Settings& GetSettingsData() { return _settings.data; };
+    DataStore<Settings>& GetSettings() { return _settings; }
 
 private:
     friend class RendererModule;

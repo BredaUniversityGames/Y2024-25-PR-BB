@@ -259,7 +259,7 @@ void DirectionalShadowMap(vec3 position, float bias, inout float shadow)
     const float depthFactor = testCoord.z - bias;
 
     for (int i = 0;i < 4; i++) {
-        const int index = int(16.0 * randomIndex(floor(position.xyz * scene.directionalLight.poissonWorldOffset), i)) % 16;
+        const int index = int(16.0 * randomIndex(floor(shadowCoord.xyx * scene.directionalLight.poissonWorldOffset), i)) % 16;
         staticVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.staticShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
         dynamicVisibility -= 0.25 * (1.0 - texture(bindless_shadowmap_textures[nonuniformEXT (scene.dynamicShadowMapIndex)], vec3(shadowCoord.xy + poissonDisk[index] / scene.directionalLight.poissonConstant, depthFactor / testCoord.w)).r);
     }
