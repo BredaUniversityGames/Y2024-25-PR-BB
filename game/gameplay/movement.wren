@@ -15,8 +15,9 @@ class PlayerMovement{
         isGrounded = false
         isSliding = false
         slideForce = 3.0
-        dashForce = 22.0
+        dashForce = 8.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
+        dashWishPosition = Vec3.new(0.0,0.0,0.0)
         
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
@@ -34,6 +35,7 @@ class PlayerMovement{
     slideWishDirection {_slideWishDirection}
     slideForce {_slideForce}
     dashForce {_dashForce}
+    dashWishPosition {_dashWishPosition}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -59,6 +61,7 @@ class PlayerMovement{
     slideWishDirection=(value) { _slideWishDirection = value}   
     slideForce=(value) { _slideForce = value}
     dashForce=(value) { _dashForce = value}
+    dashWishPosition=(value) { _dashWishPosition = value}
 
     //Base movement
     maxSpeed=(value) { _maxSpeed = value}
@@ -187,7 +190,7 @@ class PlayerMovement{
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
 
-        if(isGrounded && isJumpHeld) {
+        if((isGrounded && isJumpHeld) && !isSliding) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
             hasDoubleJumped = false
@@ -271,22 +274,17 @@ class PlayerMovement{
 
     Dash(engine, dt, playerController, camera){
 
-        var playerBody = playerController.GetRigidbodyComponent()
-        var velocity = playerBody.GetVelocity()
-
-        var dashAmount = dashForce
-        if(isGrounded==false){
-            dashAmount = dashForce/1.6
-        }else{
-            dashAmount = dashForce
-        }
+            var playerBody = playerController.GetRigidbodyComponent()
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
 
             hasDashed = true
-            var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
-            var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
-            forward.y = 0.0
-            var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
+
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var translation = playerBody.GetPosition()
+            var rotation = camera.GetTransformComponent().GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
+            var right = Math.Cross(forward, up)
             var movement = engine.GetInput().GetAnalogAction("Move")
 
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
@@ -294,21 +292,79 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                velocity = velocity + moveInputDir.mulScalar(dashAmount)
-                playerBody.SetVelocity(velocity)
-            }else{
-                velocity = velocity + forward.mulScalar(2.0 * dashAmount)
-                playerBody.SetVelocity(velocity)
+                forward  = forward + moveInputDir
             }
+   
+            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
+            var direction = (end - start).normalize()
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
+            dashWishPosition = end
+            if (!rayHitInfo.isEmpty) {
+                end = rayHitInfo[rayHitInfo.count - 1].position
+                //add some offset to the end position based on the normal 
+                end = end + rayHitInfo[rayHitInfo.count - 1].normal.mulScalar(1.5)
+                dashWishPosition = end
+            }
+
+            
         }
 
-        if(hasDashed){
+         if(hasDashed){
             dashTimer = dashTimer + dt
-            if(dashTimer > 200.0){
+            playerBody.SetTranslation(Math.Mix(playerBody.GetPosition(), dashWishPosition, 0.1))
+
+            if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 1.0){
                 hasDashed = false
                 dashTimer = 0.0
             }
-        }
+
+            if(dashTimer > 200.0){
+                hasDashed = false
+                dashTimer = 0.0
+
+            }
+         }
+
+         
+        // var playerBody = playerController.GetRigidbodyComponent()
+        // var velocity = playerBody.GetVelocity()
+
+        // var dashAmount = dashForce
+        // if(isGrounded==false){
+        //     dashAmount = dashForce/1.6
+        // }else{
+        //     dashAmount = dashForce
+        // }
+        // if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
+
+        //     hasDashed = true
+        //     var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
+        //     var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
+        //     forward.y = 0.0
+        //     var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
+        //     var movement = engine.GetInput().GetAnalogAction("Move")
+
+        //     var moveInputDir = Vec3.new(0.0,0.0,0.0)
+        //     moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
+        //     moveInputDir = moveInputDir.normalize()
+
+        //     if(moveInputDir.length() > 0.01){
+        //         velocity = velocity + moveInputDir.mulScalar(dashAmount)
+        //         playerBody.SetVelocity(velocity)
+        //     }else{
+        //         velocity = velocity + forward.mulScalar(2.0 * dashAmount)
+        //         playerBody.SetVelocity(velocity)
+        //     }
+        // }
+
+        // if(hasDashed){
+        //     dashTimer = dashTimer + dt
+        //     if(dashTimer > 200.0){
+        //         hasDashed = false
+        //         dashTimer = 0.0
+        //     }
+        // }
 
     }
 
