@@ -49,7 +49,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
     }
 
     const entt::entity entity = ecs.GetRegistry().create();
-    const Hierarchy::Node& currentNode = hierarchy.nodes[currentNodeIndex];
+    const Node& currentNode = hierarchy.nodes[currentNodeIndex];
 
     ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name + " collider";
     ecs.GetRegistry().emplace<TransformComponent>(entity);
@@ -123,7 +123,7 @@ entt::entity PhysicsSystem::LoadNodeRecursive(const CPUModel& models, ECSModule&
         //     .emplace<RigidbodyComponent>(entity, rb);
     }
 
-    for (const auto& nodeIndex : currentNode.children)
+    for (const auto& nodeIndex : currentNode.childrenIndices)
     {
         LoadNodeRecursive(models, _ecs, nodeIndex, hierarchy, entity, shape);
     }

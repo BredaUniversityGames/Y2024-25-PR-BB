@@ -42,7 +42,7 @@ public:
 
     void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
-        const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
+        const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _entityLUT[currentNodeIndex] = entity;
 
@@ -101,13 +101,13 @@ public:
         {
             switch (currentNode.light->type)
             {
-            case Hierarchy::LightData::LightType::Directional:
+            case NodeLightType::Directional:
             {
                 auto& directionalLight = _ecs.GetRegistry().emplace<DirectionalLightComponent>(entity);
                 directionalLight.color = currentNode.light->color * currentNode.light->intensity;
                 break;
             }
-            case Hierarchy::LightData::LightType::Point:
+            case NodeLightType::Point:
             {
                 auto& pointLight = _ecs.GetRegistry().emplace<PointLightComponent>(entity);
                 pointLight.color = currentNode.light->color;
@@ -115,7 +115,7 @@ public:
                 pointLight.range = currentNode.light->range;
                 break;
             }
-            case Hierarchy::LightData::LightType::Spot:
+            case NodeLightType::Spot:
             {
                 assert(!"Spot lights are not supported!");
                 break;
@@ -123,7 +123,7 @@ public:
             }
         }
 
-        for (const auto& nodeIndex : currentNode.children)
+        for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
             Load(childEntity, nodeIndex, entity);
@@ -167,7 +167,7 @@ private:
 
     void RecursiveLoadNode(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
-        const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
+        const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name;
         _ecs.GetRegistry().emplace<AnimationTransformComponent>(entity);
@@ -199,7 +199,7 @@ private:
             joint.skeletonEntity = _skeletonComponent->root;
         }
 
-        for (const auto& nodeIndex : currentNode.children)
+        for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
             RecursiveLoadNode(childEntity, nodeIndex, entity);
@@ -242,7 +242,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
         // Links skeleton entities to the skinned mesh components.
         for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
         {
-            const Hierarchy::Node& node = hierarchy.nodes[i];
+            const Node& node = hierarchy.nodes[i];
             if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
             {
                 SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);

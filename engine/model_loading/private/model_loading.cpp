@@ -3,6 +3,7 @@
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
+#include "include_fastgltf.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
 #include "profile_macros.hpp"
@@ -638,14 +639,14 @@ StagingAnimationChannels LoadAnimations(const fastgltf::Asset& gltf)
     return stagingAnimationChannels;
 }
 
-CPUModel::CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
+CPUMaterial ProcessMaterial(const fastgltf::Material& gltfMaterial, const std::vector<fastgltf::Texture>& gltfTextures)
 {
     auto MapTextureIndexToImageIndex = [](uint32_t textureIndex, const std::vector<fastgltf::Texture>& gltfTextures) -> uint32_t
     {
         return gltfTextures[textureIndex].imageIndex.value();
     };
 
-    CPUModel::CPUMaterial material {};
+    CPUMaterial material {};
 
     if (gltfMaterial.pbrData.baseColorTexture.has_value())
     {
@@ -697,7 +698,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     const std::unordered_multimap<uint32_t, std::pair<MeshType, uint32_t>>& meshLUT, // Used for looking up gltf mesh to engine mesh.
     std::unordered_map<uint32_t, uint32_t>& nodeLUT) // Will be populated with gltf node to engine node.
 {
-    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    model.hierarchy.nodes.emplace_back(Node {});
     uint32_t nodeIndex = model.hierarchy.nodes.size() - 1;
 
     nodeLUT[gltfNodeIndex] = nodeIndex;
@@ -709,9 +710,11 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
         auto range = meshLUT.equal_range(gltfNode.meshIndex.value());
         for (auto it = range.first; it != range.second; ++it)
         {
-            auto node = Hierarchy::Node { "mesh node", glm::identity<glm::mat4>(), it->second };
+            auto node = Node { "mesh node", glm::identity<glm::mat4>() };
+            node.meshIndex = it->second;
+
             model.hierarchy.nodes.emplace_back(node);
-            model.hierarchy.nodes[nodeIndex].children.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
+            model.hierarchy.nodes[nodeIndex].childrenIndices.emplace_back(static_cast<uint32_t>(model.hierarchy.nodes.size() - 1));
         }
     }
 
@@ -747,9 +750,9 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
             fastgltf::math::fmat4x4 inverseBindMatrix = fastgltf::getAccessorElement<fastgltf::math::fmat4x4>(gltf, gltf.accessors[skin.inverseBindMatrices.value()], std::distance(skin.joints.begin(), it));
 
             uint32_t jointIndex = std::distance(skin.joints.begin(), it);
-            model.hierarchy.nodes[nodeIndex].joint = Hierarchy::Joint {
-                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix),
+            model.hierarchy.nodes[nodeIndex].joint = NodeJointData {
                 jointIndex,
+                *reinterpret_cast<glm::mat4x4*>(&inverseBindMatrix)
             };
         }
     }
@@ -758,23 +761,23 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     {
         const auto& light = gltf.lights[gltfNode.lightIndex.value()];
 
-        Hierarchy::LightData lightData;
+        NodeLightData lightData;
         lightData.color = detail::ToVec3(light.color);
-        lightData.range = light.range.has_value() ? light.range.value() : Hierarchy::LightData::DEFAULT_LIGHT_RANGE;
+        lightData.range = light.range.has_value() ? light.range.value() : NodeLightData::DEFAULT_LIGHT_RANGE;
         lightData.intensity = light.intensity / (4.f * glm::pi<float>()) / 100.f;
         switch (light.type)
         {
         case fastgltf::LightType::Directional:
-            lightData.type = Hierarchy::LightData::LightType::Directional;
+            lightData.type = NodeLightType::Directional;
             break;
         case fastgltf::LightType::Point:
-            lightData.type = Hierarchy::LightData::LightType::Point;
+            lightData.type = NodeLightType::Point;
             break;
         case fastgltf::LightType::Spot:
-            lightData.type = Hierarchy::LightData::LightType::Spot;
+            lightData.type = NodeLightType::Spot;
             break;
         default:
-            lightData.type = Hierarchy::LightData::LightType::Point;
+            lightData.type = NodeLightType::Point;
             break;
         }
 
@@ -784,7 +787,7 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
     for (size_t childNodeIndex : gltfNode.children)
     {
         uint32_t index = RecurseHierarchy(gltf.nodes[childNodeIndex], childNodeIndex, model, gltf, stagingAnimationChannels, meshLUT, nodeLUT);
-        model.hierarchy.nodes[nodeIndex].children.emplace_back(index);
+        model.hierarchy.nodes[nodeIndex].childrenIndices.emplace_back(index);
     }
 
     return nodeIndex;
@@ -811,7 +814,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
@@ -853,7 +856,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         model.animations = animations.animations;
     }
 
-    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    model.hierarchy.nodes.emplace_back(Node {});
     uint32_t baseNodeIndex = model.hierarchy.nodes.size() - 1;
     model.hierarchy.nodes[baseNodeIndex].name = name;
 
@@ -867,14 +870,14 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         const auto& gltfNode { gltf.nodes[index] };
 
         uint32_t result = RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT, nodeLUT);
-        model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
+        model.hierarchy.nodes[baseNodeIndex].childrenIndices.emplace_back(result);
     }
 
     for (size_t i = 0; i < gltf.skins.size(); ++i)
     {
         const auto& skin = gltf.skins[i];
 
-        std::function<bool(Hierarchy::Node&, uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](Hierarchy::Node& node, uint32_t nodeIndex)
+        std::function<bool(Node&, uint32_t)> traverse = [&model, &skin, &nodeLUT, &traverse](Node& node, uint32_t nodeIndex)
         {
             auto it = std::find_if(skin.joints.begin(), skin.joints.end(), [&nodeLUT, nodeIndex](uint32_t index)
                 { return nodeLUT[index] == nodeIndex; });
@@ -885,21 +888,21 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
             }
 
             std::vector<uint32_t> baseJoints {};
-            for (size_t i = 0; i < node.children.size(); ++i)
+            for (size_t i = 0; i < node.childrenIndices.size(); ++i)
             {
-                if (traverse(model.hierarchy.nodes[node.children[i]], node.children[i]))
+                if (traverse(model.hierarchy.nodes[node.childrenIndices[i]], node.childrenIndices[i]))
                 {
-                    baseJoints.emplace_back(node.children[i]);
+                    baseJoints.emplace_back(node.childrenIndices[i]);
                 }
             }
 
             if (baseJoints.size() > 0)
             {
-                Hierarchy::Node& skeletonNode = model.hierarchy.nodes.emplace_back();
+                Node& skeletonNode = model.hierarchy.nodes.emplace_back();
                 model.hierarchy.skeletonRoot = model.hierarchy.nodes.size() - 1;
                 skeletonNode.name = "Skeleton Node";
-                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.children));
-                std::erase_if(node.children, [&baseJoints](auto index)
+                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.childrenIndices));
+                std::erase_if(node.childrenIndices, [&baseJoints](auto index)
                     { return std::find(baseJoints.begin(), baseJoints.end(), index) != baseJoints.end(); });
 
                 return false;
@@ -923,7 +926,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         if (gltfNode.skinIndex.has_value())
         {
             // Iterate over all the children of the matched node, since we expanded the primitives.
-            for (auto childIndex : node.children)
+            for (auto childIndex : node.childrenIndices)
             {
                 // Apply the skeleton node using the node LUT.
                 model.hierarchy.nodes[childIndex].skeletonNode = model.hierarchy.skeletonRoot;
@@ -956,7 +959,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
     // Extract material data
     for (auto& gltfMaterial : gltf.materials)
     {
-        const CPUModel::CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
+        const CPUMaterial material = ProcessMaterial(gltfMaterial, gltf.textures);
         model.materials.emplace_back(material);
     }
 
@@ -999,7 +1002,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
         model.animations = animations.animations;
     }
 
-    model.hierarchy.nodes.emplace_back(Hierarchy::Node {});
+    model.hierarchy.nodes.emplace_back(Node {});
     uint32_t baseNodeIndex = model.hierarchy.nodes.size() - 1;
     model.hierarchy.nodes[baseNodeIndex].name = name;
 
@@ -1013,7 +1016,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
         const auto& gltfNode { gltf.nodes[index] };
 
         uint32_t result = RecurseHierarchy(gltfNode, index, model, gltf, animations, meshLUT, nodeLUT);
-        model.hierarchy.nodes[baseNodeIndex].children.emplace_back(result);
+        model.hierarchy.nodes[baseNodeIndex].childrenIndices.emplace_back(result);
     }
 
     for (size_t i = 0; i < gltf.skins.size(); ++i)
@@ -1031,22 +1034,22 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
             }
 
             std::vector<uint32_t> baseJoints {};
-            for (size_t i = 0; i < model.hierarchy.nodes[nodeIndex].children.size(); ++i)
+            for (size_t i = 0; i < model.hierarchy.nodes[nodeIndex].childrenIndices.size(); ++i)
             {
-                if (traverse(model.hierarchy.nodes[nodeIndex].children[i]))
+                if (traverse(model.hierarchy.nodes[nodeIndex].childrenIndices[i]))
                 {
-                    baseJoints.emplace_back(model.hierarchy.nodes[nodeIndex].children[i]);
+                    baseJoints.emplace_back(model.hierarchy.nodes[nodeIndex].childrenIndices[i]);
                 }
             }
 
             if (baseJoints.size() > 0)
             {
-                Hierarchy::Node& skeletonNode = model.hierarchy.nodes.emplace_back();
+                Node& skeletonNode = model.hierarchy.nodes.emplace_back();
                 model.hierarchy.skeletonRoot = model.hierarchy.nodes.size() - 1;
                 skeletonNode.name = "Skeleton Node";
 
-                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.children));
-                std::erase_if(model.hierarchy.nodes[nodeIndex].children, [&baseJoints](auto index)
+                std::copy(baseJoints.begin(), baseJoints.end(), std::back_inserter(skeletonNode.childrenIndices));
+                std::erase_if(model.hierarchy.nodes[nodeIndex].childrenIndices, [&baseJoints](auto index)
                     { return std::find(baseJoints.begin(), baseJoints.end(), index) != baseJoints.end(); });
 
                 return false;
@@ -1070,7 +1073,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
         if (gltfNode.skinIndex.has_value())
         {
             // Iterate over all the children of the matched node, since we expanded the primitives.
-            for (auto childIndex : node.children)
+            for (auto childIndex : node.childrenIndices)
             {
                 // Apply the skeleton node using the node LUT.
                 model.hierarchy.nodes[childIndex].skeletonNode = model.hierarchy.skeletonRoot;
