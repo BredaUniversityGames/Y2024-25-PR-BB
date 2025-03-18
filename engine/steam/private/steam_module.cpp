@@ -68,3 +68,14 @@ void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     SteamAPI_Shutdown();
 }
+void SteamModule::OpenSteamBrowser(const std::string& url)
+{
+    if (_steamAvailable == false)
+    {
+        bblog::error("steam is not avaiable, cannot open steam browser.");
+    }
+    else
+    {
+        SteamFriends()->ActivateGameOverlayToWebPage(url.c_str());
+    }
+}

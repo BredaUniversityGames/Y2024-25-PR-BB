@@ -128,6 +128,13 @@ void ApplicationModule::SetMouseHidden(bool val)
     else
         SDL_ShowCursor();
 }
+void ApplicationModule::OpenExternalBrowser(const std::string& url)
+{
+    if (SDL_OpenURL(url.c_str()) == false)
+    {
+        bblog::error("Failed opening external browser with url: ", url);
+    }
+}
 
 glm::uvec2 ApplicationModule::DisplaySize() const
 {

@@ -85,7 +85,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
         HudUpdate(_hud, totalTime);
     }
-
     auto& ECS = engine.GetModule<ECSModule>();
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();

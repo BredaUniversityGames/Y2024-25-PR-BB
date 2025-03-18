@@ -1,3 +1,4 @@
+a
 #pragma once
 #include "module_interface.hpp"
 #include <functional>
@@ -6,7 +7,7 @@
 
 #include "vulkan_include.hpp"
 
-class InputDeviceManager;
+    class InputDeviceManager;
 class ActionManager;
 struct SDL_Window;
 
@@ -37,6 +38,8 @@ public:
 
     [[nodiscard]] bool GetMouseHidden() const { return _mouseHidden; }
     void SetMouseHidden(bool val);
+
+    void OpenExternalBrowser(const std::string& url);
 
     [[nodiscard]] glm::uvec2 DisplaySize() const;
     [[nodiscard]] bool isMinimized() const;

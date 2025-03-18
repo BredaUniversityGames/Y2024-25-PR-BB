@@ -1,6 +1,7 @@
 #pragma once
 #include <engine.hpp>
 #include <memory>
+#include <string>
 
 class SteamModule : public ModuleInterface
 {
@@ -10,6 +11,7 @@ class SteamModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
 
     std::string_view GetName() override { return "Steam Module"; }
+    void OpenSteamBrowser(const std::string& url);
 
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
