@@ -17,7 +17,7 @@
 #include "profile_macros.hpp"
 #include "wren_bindings.hpp"
 
-int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+int Main()
 {
     MainEngine instance;
     Stopwatch startupTimer {};
@@ -53,3 +53,19 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
+
+#if defined(_WIN32) && defined(DISTRIBUTION)
+
+int APIENTRY WinMain(MAYBE_UNUSED HINSTANCE hInstance, MAYBE_UNUSED HINSTANCE hPrevInstance, MAYBE_UNUSED LPSTR lpCmdLine, MAYBE_UNUSED int nShowCmd)
+{
+    return Main();
+}
+
+#else
+
+int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+{
+    return Main();
+}
+
+#endif

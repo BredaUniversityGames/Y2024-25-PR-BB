@@ -52,8 +52,27 @@ endif ()
 # Add engine library
 add_subdirectory(engine)
 
-# Add game executable (currently just main.cpp)
-add_executable(CustomTech "engine/main.cpp")
+# Add executable with settings based on configuration used
+if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
+    add_executable(CustomTech WIN32 "engine/main.cpp")
+    add_compile_definitions(DISTRIBUTION)
+elseif("${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+    add_executable(CustomTech "engine/main.cpp")
+    set(SUBSYSTEM_OPTIONS )
+    set_target_properties(CustomTech
+            PROPERTIES
+            LINK_FLAGS "-mwindows"
+    )
+    add_compile_definitions(DISTRIBUTION)
+else()
+    add_executable(CustomTech "engine/main.cpp")
+endif()
+
+set_target_properties(CustomTech
+        PROPERTIES
+        LINK_FLAGS "${SUBSYSTEM_OPTIONS}"
+)
+
 target_link_libraries(CustomTech
         PRIVATE ProjectSettings
         PRIVATE Engine
