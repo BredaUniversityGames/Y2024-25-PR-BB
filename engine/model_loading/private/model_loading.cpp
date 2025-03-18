@@ -931,6 +931,18 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
         }
     }
 
+    // Moves the animation from the model root to the skeleton root
+    if (model.hierarchy.skeletonRoot.has_value())
+    {
+        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].children[0]];
+        if (!firstChild.animationSplines.empty())
+        {
+            model.hierarchy.nodes[model.hierarchy.skeletonRoot.value()].animationSplines = firstChild.animationSplines;
+            firstChild.animationSplines = {};
+            firstChild.transform = {};
+        }
+    }
+
     return model;
 }
 
@@ -1081,6 +1093,18 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
     for (auto& image : imageLoadResults)
     {
         model.textures.emplace_back(image.get());
+    }
+
+    // Moves the animation from the model root to the skeleton root
+    if (model.hierarchy.skeletonRoot.has_value())
+    {
+        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].children[0]];
+        if (!firstChild.animationSplines.empty())
+        {
+            model.hierarchy.nodes[model.hierarchy.skeletonRoot.value()].animationSplines = firstChild.animationSplines;
+            firstChild.animationSplines = {};
+            firstChild.transform = {};
+        }
     }
 
     return model;
