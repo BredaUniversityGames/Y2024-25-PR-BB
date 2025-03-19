@@ -72,6 +72,18 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
+        var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
+
+        __demons = []
+        for (position in positions) {
+            __demons.add(engine.LoadModel("assets/models/Demon.glb"))
+            var demonAnimations = __demons[-1].GetAnimationControlComponent()
+            demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+            __demons[-1].GetTransformComponent().translation = position
+            __demons[-1].GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
+        }
+
+
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
 
@@ -86,7 +98,7 @@ class Main {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false)
+        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
         gunAnimations.Stop()
 
         __player.AttachChild(__camera)
@@ -154,6 +166,32 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
+            }
+
+            if(engine.GetInput().DebugGetKey(Keycode.eK())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Walk", 1.0, true, 0.3, true)
+                }
+            }
+            if(engine.GetInput().DebugGetKey(Keycode.eL())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Run", 2.0, true, 0.3, true)
+                }
+            }
+            if(engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Attack", 1.0, false, 0.3, false)
+                }
+            }
+
+            for(demon in __demons) {
+                var demonAnimations = demon.GetAnimationControlComponent()
+                if(demonAnimations.AnimationFinished()) {
+                    demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+                }
             }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
