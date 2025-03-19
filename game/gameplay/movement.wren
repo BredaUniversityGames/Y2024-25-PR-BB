@@ -20,7 +20,7 @@ class PlayerMovement{
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
         
         dashWishPosition = Vec3.new(0.0,0.0,0.0)
-        dashForce = 8.0
+        dashForce = 6.0
         currentDashCount = 3
         currentDashRefillTime = 3000.0
 
