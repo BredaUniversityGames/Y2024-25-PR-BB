@@ -21,6 +21,8 @@ struct WrenEntity
 
     template <typename T>
     void AddTag();
+    template <typename T>
+    bool HasComponent();
 };
 
 template <typename T>
@@ -48,6 +50,12 @@ template <typename T>
 void WrenEntity::AddTag()
 {
     registry->emplace_or_replace<T>(entity);
+}
+
+template <typename T>
+bool WrenEntity::HasComponent()
+{
+    return registry->all_of<T>(entity);
 }
 
 template <typename T>

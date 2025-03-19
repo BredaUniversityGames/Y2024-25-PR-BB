@@ -104,13 +104,15 @@ class Main {
 
         // Enemy setup
 
+        __enemyCounter = 0
+
         var enemyPos = Vec3.new(-5.0, 3.0, 60.0)
 
         __enemyList = []
         __spawner = Spawner.new(enemyPos, 1000.0)
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 3.5, "assets/models/demon.glb", __enemyShape, 1)
+        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1, __enemyCounter)
     }
 
     static Shutdown(engine) {
@@ -119,7 +121,7 @@ class Main {
 
     static Update(engine, dt) {
 
-        // __spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, dt)
+        __spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, dt, __enemyCounter)
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()

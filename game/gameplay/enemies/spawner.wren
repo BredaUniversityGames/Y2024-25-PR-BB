@@ -9,20 +9,21 @@ class Spawner {
         _timer = 0
     }
 
-    SpawnEnemies(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, count) {
+    SpawnEnemies(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, count, counter) {
 
         for(i in 0...count) {
             System.print("Spawned an Enemy")
             var enemy = enemyList.add(MeleeEnemy.new(engine, _rangeMin, size, maxSpeed, enemyModel, enemyShape))
             enemy.FindNewPath(engine)
+            counter = counter + 1
         }
     }
 
-    Update(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, dt) {
+    Update(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, dt, counter) {
         _timer = _timer + dt
         
         if (_timer > _interval) {
-            this.SpawnEnemies(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, 1)
+            this.SpawnEnemies(engine, enemyList, size, maxSpeed, enemyModel, enemyShape, 1, counter)
             _timer = 0
         }
     }

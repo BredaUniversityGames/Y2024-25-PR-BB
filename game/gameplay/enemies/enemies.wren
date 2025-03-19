@@ -2,7 +2,7 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyCom
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
+    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape, UID) {
         
         _maxVelocity = maxSpeed
         _currentPath = null
@@ -10,17 +10,25 @@ class MeleeEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
 
-        _rootEntity = engine.LoadModel(enemyModel)
-        _rootEntity.GetTransformComponent().translation = spawnPosition
-        _rootEntity.GetTransformComponent().scale = size
+        _enemyUID = UID
+        
+        _meshEntity = engine.LoadModel(enemyModel)
+
+        _rootEntity = engine.GetECS().NewEntity()
+        _rootEntity.AddNameComponent().name = "Enemy"
+        var transform = _rootEntity.AddTransformComponent()
+        transform.translation = spawnPosition
+        transform.scale = size
+
+        _rootEntity.AttachChild(_meshEntity)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-27,0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         // body.SetFriction(2.0)
 
-        var animations = _rootEntity.GetAnimationControlComponent()
+        var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Run", 1.0, true)
-
     }
 
     entity {
@@ -42,7 +50,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = pos
 
         var forwardVector = (playerPos - pos).normalize()
-        var velocity = _rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector.mulScalar(_maxVelocity * dt)
+        var velocity = forwardVector.mulScalar(_maxVelocity)//_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector.mulScalar(_maxVelocity * 1000 / dt)
 
         _rootEntity.GetRigidbodyComponent().SetVelocity(velocity)
         _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
