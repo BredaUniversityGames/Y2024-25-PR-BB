@@ -9,8 +9,7 @@ ModuleTickOrder UIModule::Init(Engine& engine)
     const glm::vec2 extend = engine.GetModule<ApplicationModule>().DisplaySize();
     _viewport = std::make_unique<Viewport>(extend);
     Viewport::SetScaleMultiplier(Viewport::CalculateScaleMultiplierFromVerticalResolution(extend.y));
-    _graphicsContext
-        = engine.GetModule<RendererModule>().GetGraphicsContext();
+    _graphicsContext = engine.GetModule<RendererModule>().GetGraphicsContext();
     return ModuleTickOrder::ePostTick;
 }
 
