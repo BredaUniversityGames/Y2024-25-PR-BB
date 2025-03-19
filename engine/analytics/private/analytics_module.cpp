@@ -1,6 +1,7 @@
 #include "analytics_module.hpp"
 
 #include "engine.hpp"
+#include "file_io.hpp"
 #include "log.hpp"
 
 #include <GameAnalytics/GameAnalytics.h>
@@ -30,12 +31,13 @@ void logHandler(const std::string& message, gameanalytics::EGALoggerMessageType 
 
 ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    if (std::ifstream keyFile { "game_analytics_keys.txt" })
+    auto keyFile = fileIO::OpenReadStream("game_analytics_keys.txt", fileIO::TEXT_READ_FLAGS);
+    if (keyFile.has_value())
     {
         std::string key;
         std::string secret;
-        std::getline(keyFile, key);
-        std::getline(keyFile, secret);
+        std::getline(keyFile.value(), key);
+        std::getline(keyFile.value(), secret);
 
         gameanalytics::GameAnalytics::configureCustomLogHandler(logHandler);
         gameanalytics::GameAnalytics::configureBuild("dev"); // TODO: Formalize this to actual build version
