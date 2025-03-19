@@ -85,7 +85,7 @@ class Main {
 
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
