@@ -30,7 +30,7 @@ public:
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
     T& AddElement(Args&&... args)
     {
-        UIElement& addedChild = *_baseElements.emplace_back(std::shared_ptr<T>(std::forward<Args>(args)...));
+        UIElement& addedChild = *_baseElements.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
         std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 

@@ -40,13 +40,6 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         elementTranslation.y += GetAbsoluteScale().y / 2.0;
     }
 
-    /* glm::vec2 elementTranslation = GetAbsoluteLocation();
-     if (anchorPoint == AnchorPoint::eMiddle)
-     {
-         elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
-         elementTranslation.y += GetAbsoluteScale().y / 3.0f;
-     }*/
-
     for (const auto& character : _text)
     {
         if (character != ' ')

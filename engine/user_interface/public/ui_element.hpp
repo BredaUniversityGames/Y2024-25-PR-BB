@@ -67,7 +67,7 @@ public:
         eUpdatedAndVisible,
         eUpdatedAndInvisble,
         eNotUpdatedAndVisible,
-        eNotUpdatedAndInvisble
+        eNotUpdatedAndInvisible
     } visibility
         = VisibilityState::eUpdatedAndVisible;
 
