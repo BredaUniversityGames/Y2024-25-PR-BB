@@ -385,7 +385,7 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
             //crouch first
-            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0025 * dt)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
             var playerBody = playerController.GetRigidbodyComponent()
@@ -412,7 +412,7 @@ class PlayerMovement{
 
         }else{
             isSliding = false
-            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0025 * dt)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
             slideWishDirection = Math.Mix(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
         }
