@@ -30,12 +30,12 @@
 class RecursiveNodeLoader
 {
 public:
-    RecursiveNodeLoader(ECSModule& ecs, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLut)
+    RecursiveNodeLoader(ECSModule& ecs, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, entt::entity animationControlEntity, std::unordered_map<uint32_t, entt::entity>& entityLut)
         : _ecs(ecs)
         , _hierarchy(hierarchy)
         , _cpuModel(cpuModel)
         , _gpuModel(gpuModel)
-        , _animationControl(animationControl)
+        , _animationControlEntity(animationControlEntity)
         , _entityLUT(entityLut)
     {
     }
@@ -85,11 +85,11 @@ public:
 
         if (!currentNode.animationSplines.empty())
         {
-            assert(_animationControl != nullptr);
+            assert(_animationControlEntity != entt::null);
 
             auto& animationChannel = _ecs.GetRegistry().emplace<AnimationChannelComponent>(entity);
             animationChannel.animationSplines = currentNode.animationSplines;
-            animationChannel.animationControl = _animationControl;
+            animationChannel.animationControlEntity = _animationControlEntity;
         }
 
         if (currentNode.joint.has_value())
@@ -135,17 +135,17 @@ private:
     const Hierarchy& _hierarchy;
     const CPUModel& _cpuModel;
     const GPUModel& _gpuModel;
-    AnimationControlComponent* _animationControl;
+    entt::entity _animationControlEntity;
     std::unordered_map<uint32_t, entt::entity>& _entityLUT;
 };
 
 class RecursiveSkeletonLoader
 {
 public:
-    RecursiveSkeletonLoader(ECSModule& ecs, const Hierarchy& hierarchy, AnimationControlComponent* animationControl)
+    RecursiveSkeletonLoader(ECSModule& ecs, const Hierarchy& hierarchy, entt::entity animationControlEntity)
         : _ecs(ecs)
         , _hierarchy(hierarchy)
-        , _animationControl(animationControl)
+        , _animationControlEntity(animationControlEntity)
         , _skeletonComponent(nullptr)
     {
     }
@@ -161,7 +161,7 @@ public:
 private:
     ECSModule& _ecs;
     const Hierarchy& _hierarchy;
-    AnimationControlComponent* _animationControl;
+    entt::entity _animationControlEntity;
 
     SkeletonComponent* _skeletonComponent;
 
@@ -184,11 +184,11 @@ private:
 
         if (!currentNode.animationSplines.empty())
         {
-            assert(_animationControl != nullptr);
+            assert(_animationControlEntity != entt::null);
 
             auto& animationChannel = _ecs.GetRegistry().emplace<AnimationChannelComponent>(entity);
             animationChannel.animationSplines = currentNode.animationSplines;
-            animationChannel.animationControl = _animationControl;
+            animationChannel.animationControlEntity = _animationControlEntity;
         }
 
         if (currentNode.joint.has_value())
@@ -214,13 +214,14 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
 
     std::unordered_map<uint32_t, entt::entity> entityLUT;
 
-    AnimationControlComponent* animationControl = nullptr;
+    entt::entity animationControlEntity = entt::null;
     if (!animations.empty())
     {
-        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt, std::nullopt, 0.0f, 0.0f);
+        ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt, std::nullopt, 0.0f, 0.0f);
+        animationControlEntity = rootEntity;
     }
 
-    RecursiveNodeLoader recursiveNodeLoader { ecs, hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
+    RecursiveNodeLoader recursiveNodeLoader { ecs, hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT };
     recursiveNodeLoader.Load(rootEntity, hierarchy.root, entt::null);
 
     entt::entity skeletonEntity = entt::null;
@@ -232,7 +233,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
 
         auto firstChild = ecs.GetRegistry().get<RelationshipComponent>(rootEntity).first;
 
-        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl };
+        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControlEntity };
         recursiveSkeletonLoader.Load(skeletonEntity, hierarchy.skeletonRoot.value(), entt::null);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), firstChild, skeletonEntity);
     }

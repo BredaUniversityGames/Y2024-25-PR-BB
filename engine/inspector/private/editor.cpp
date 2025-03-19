@@ -26,6 +26,7 @@
 
 Editor::Editor(ECSModule& ecs)
     : _ecs(ecs)
+    , _entityEditor(ecs)
 {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
