@@ -210,7 +210,7 @@ class Shotgun {
                 if (!rayHitInfo.isEmpty) {
                     end = rayHitInfo[0].position
                     var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-                    if (hitEntity.HasPlayerTag && rayHitInfo.count > 1) {
+                    if (hitEntity.HasPlayerTag() && rayHitInfo.count > 1) {
                         hitEntity = rayHitInfo[1].GetEntity(engine.GetECS())
                     }
                     if (hitEntity.GetNameComponent().name == "Enemy") {
