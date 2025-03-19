@@ -84,7 +84,7 @@ class Main {
 
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        //engine.LoadModel("assets/models/blockoutv4.glb")
 
         engine.LoadModelWithoutInstantiation("assets/models/Demon.glb")
 
