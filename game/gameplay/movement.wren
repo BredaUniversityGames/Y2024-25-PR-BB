@@ -339,47 +339,6 @@ class PlayerMovement{
 
             }
          }
-
-         
-        // var playerBody = playerController.GetRigidbodyComponent()
-        // var velocity = playerBody.GetVelocity()
-
-        // var dashAmount = dashForce
-        // if(isGrounded==false){
-        //     dashAmount = dashForce/1.6
-        // }else{
-        //     dashAmount = dashForce
-        // }
-        // if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
-
-        //     hasDashed = true
-        //     var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
-        //     var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
-        //     forward.y = 0.0
-        //     var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
-        //     var movement = engine.GetInput().GetAnalogAction("Move")
-
-        //     var moveInputDir = Vec3.new(0.0,0.0,0.0)
-        //     moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
-        //     moveInputDir = moveInputDir.normalize()
-
-        //     if(moveInputDir.length() > 0.01){
-        //         velocity = velocity + moveInputDir.mulScalar(dashAmount)
-        //         playerBody.SetVelocity(velocity)
-        //     }else{
-        //         velocity = velocity + forward.mulScalar(2.0 * dashAmount)
-        //         playerBody.SetVelocity(velocity)
-        //     }
-        // }
-
-        // if(hasDashed){
-        //     dashTimer = dashTimer + dt
-        //     if(dashTimer > 200.0){
-        //         hasDashed = false
-        //         dashTimer = 0.0
-        //     }
-        // }
-
     }
 
     Slide(engine, dt, playerController, camera){
@@ -408,7 +367,6 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                //slideWishDirection = moveInputDir
                 slideWishDirection = Math.Mix(slideWishDirection, moveInputDir, 0.05)
             }
 
