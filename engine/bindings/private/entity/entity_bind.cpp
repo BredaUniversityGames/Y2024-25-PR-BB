@@ -198,6 +198,7 @@ void BindEntity(wren::ForeignModule& module)
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+    entityClass.func<&WrenEntity::IsValid>("IsValid");
 
     entityClass.funcExt<AttachChild>("AttachChild");
     entityClass.funcExt<DetachChild>("DetachChild");

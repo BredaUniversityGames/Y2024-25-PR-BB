@@ -86,6 +86,8 @@ class Main {
         // Load Map
         engine.LoadModel("assets/models/blockoutv4.glb")
 
+        engine.LoadModelWithoutInstantiation("assets/models/Demon.glb")
+
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
@@ -286,7 +288,9 @@ class Main {
 
         for (enemy in __enemyList) {
 
-            if (enemy.entity.GetTransformComponent()) {
+            // We delete the entity from the ecs when it dies
+            // Then we check for entity validity, and remove it from the list if it is no longer valid
+            if (enemy.entity.IsValid()) { 
                 enemy.Update(playerPos, dt)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))

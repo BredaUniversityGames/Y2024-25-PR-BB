@@ -23,6 +23,8 @@ struct WrenEntity
     void AddTag();
     template <typename T>
     bool HasComponent();
+
+    bool IsValid();
 };
 
 template <typename T>
@@ -67,3 +69,8 @@ std::optional<WrenComponent<T>> WrenEntity::GetComponent()
     }
     return std::nullopt;
 };
+
+inline bool WrenEntity::IsValid()
+{
+    return registry->valid(entity);
+}
