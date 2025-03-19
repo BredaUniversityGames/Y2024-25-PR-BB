@@ -47,6 +47,12 @@ ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
         gameanalytics::GameAnalytics::setEnabledEventSubmission(true); // TODO: Look into privacy policy later for distribution
 
         gameanalytics::GameAnalytics::initialize(key, secret);
+
+        // if (gameanalytics::GameAnalytics::)
+    }
+    else
+    {
+        bblog::warn("Unable to find key files for analytics, proceeding without analytics!");
     }
 
     return ModuleTickOrder::eLast;
