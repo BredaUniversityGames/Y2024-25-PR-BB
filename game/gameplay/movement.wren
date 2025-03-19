@@ -300,19 +300,22 @@ class PlayerMovement{
                 forward  = forward + moveInputDir
             }
    
-            var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
+            var start = translation + forward * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
-                end = rayHitInfo[rayHitInfo.count - 1].position
-                //add some offset to the end position based on the normal 
-                end = end + rayHitInfo[rayHitInfo.count - 1].normal.mulScalar(1.5)
-                dashWishPosition = end
-            }
+                var hit = rayHitInfo[0]
+                if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+                    end = hit.position
+                    //add some offset to the end position based on the normal 
+                    end = end + hit.normal.mulScalar(1.5)
+                    dashWishPosition = end
+                }
 
-            
+                
+            }
         }
 
          if(hasDashed){
