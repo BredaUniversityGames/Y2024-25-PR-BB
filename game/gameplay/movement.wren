@@ -190,7 +190,7 @@ class PlayerMovement{
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
 
-        if((isGrounded && isJumpHeld) && !isSliding) {
+        if((isGrounded && isJumpHeld)) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
             hasDoubleJumped = false
@@ -369,6 +369,10 @@ class PlayerMovement{
     }
 
     Slide(engine, dt, playerController, camera){
+        var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
+        if(isJumpHeld){
+            return
+        }
         var slideAmount = slideForce
         if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
