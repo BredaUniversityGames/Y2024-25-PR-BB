@@ -962,7 +962,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     // Moves the animation from the model root to the skeleton root
     if (model.hierarchy.skeletonRoot.has_value())
     {
-        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].children[0]];
+        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].childrenIndices[0]];
         if (!firstChild.animationSplines.empty())
         {
             model.hierarchy.nodes[model.hierarchy.skeletonRoot.value()].animationSplines = firstChild.animationSplines;
@@ -1128,12 +1128,12 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
     // Moves the animation from the model root to the skeleton root
     if (model.hierarchy.skeletonRoot.has_value())
     {
-        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].children[0]];
+        auto& firstChild = model.hierarchy.nodes[model.hierarchy.nodes[model.hierarchy.root].childrenIndices[0]];
         if (!firstChild.animationSplines.empty())
         {
             model.hierarchy.nodes[model.hierarchy.skeletonRoot.value()].animationSplines = firstChild.animationSplines;
             firstChild.animationSplines = {};
-            firstChild.transform = {};
+            firstChild.transform = glm::identity<glm::mat4>();
         }
     }
 

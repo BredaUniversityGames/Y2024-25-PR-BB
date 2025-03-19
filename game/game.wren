@@ -73,14 +73,14 @@ class Main {
 
         var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
-        __demons = []
-        for (position in positions) {
-            __demons.add(engine.LoadModel("assets/models/Demon.glb"))
-            var demonAnimations = __demons[-1].GetAnimationControlComponent()
-            demonAnimations.Play("Idle", 1.0, true, 0.0, false)
-            __demons[-1].GetTransformComponent().translation = position
-            __demons[-1].GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
-        }
+        // __demons = []
+        // for (position in positions) {
+        //     __demons.add(engine.LoadModel("assets/models/Demon.glb"))
+        //     var demonAnimations = __demons[-1].GetAnimationControlComponent()
+        //     demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+        //     __demons[-1].GetTransformComponent().translation = position
+        //     __demons[-1].GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
+        // }
 
 
         // Load Map
@@ -121,10 +121,14 @@ class Main {
         var enemyPos = Vec3.new(-5.0, 3.0, 60.0)
 
         __enemyList = []
-        __spawner = Spawner.new(enemyPos, 1000.0)
+        __spawnerList = []
+        
+        for (position in positions) {
+            __spawnerList.add(Spawner.new(position, 7000.0))
+        }
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-        __spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1, __enemyCounter)
+        //__spawner.SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1, __enemyCounter)
     }
 
     static Shutdown(engine) {
@@ -133,7 +137,9 @@ class Main {
 
     static Update(engine, dt) {
 
-        __spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 0.1, "assets/models/demon.glb", __enemyShape, dt, __enemyCounter)
+        for (spawner in __spawnerList) {
+            spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 25, "assets/models/demon.glb", __enemyShape, dt, __enemyCounter)
+        }
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -181,31 +187,31 @@ class Main {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
             }
 
-            if(engine.GetInput().DebugGetKey(Keycode.eK())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Walk", 1.0, true, 0.3, true)
-                }
-            }
-            if(engine.GetInput().DebugGetKey(Keycode.eL())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Run", 2.0, true, 0.3, true)
-                }
-            }
-            if(engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Attack", 1.0, false, 0.3, false)
-                }
-            }
+            // if(engine.GetInput().DebugGetKey(Keycode.eK())) {
+            //     for(demon in __demons) {
+            //         var demonAnimations = demon.GetAnimationControlComponent()
+            //         demonAnimations.Play("Walk", 1.0, true, 0.3, true)
+            //     }
+            // }
+            // if(engine.GetInput().DebugGetKey(Keycode.eL())) {
+            //     for(demon in __demons) {
+            //         var demonAnimations = demon.GetAnimationControlComponent()
+            //         demonAnimations.Play("Run", 2.0, true, 0.3, true)
+            //     }
+            // }
+            // if(engine.GetInput().DebugGetKey(Keycode.eJ())) {
+            //     for(demon in __demons) {
+            //         var demonAnimations = demon.GetAnimationControlComponent()
+            //         demonAnimations.Play("Attack", 1.0, false, 0.3, false)
+            //     }
+            // }
 
-            for(demon in __demons) {
-                var demonAnimations = demon.GetAnimationControlComponent()
-                if(demonAnimations.AnimationFinished()) {
-                    demonAnimations.Play("Idle", 1.0, true, 0.0, false)
-                }
-            }
+            // for(demon in __demons) {
+            //     var demonAnimations = demon.GetAnimationControlComponent()
+            //     if(demonAnimations.AnimationFinished()) {
+            //         demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+            //     }
+            // }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
@@ -279,7 +285,13 @@ class Main {
         var playerPos = __player.GetTransformComponent().translation
 
         for (enemy in __enemyList) {
-            enemy.Update(playerPos, dt)
+
+            if (enemy.entity.GetTransformComponent()) {
+                enemy.Update(playerPos, dt)
+            } else {
+                __enemyList.removeAt(__enemyList.indexOf(enemy))
+            }
+
         }
     }
 }

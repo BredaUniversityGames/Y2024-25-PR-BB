@@ -13,7 +13,7 @@ class Spawner {
 
         for(i in 0...count) {
             System.print("Spawned an Enemy")
-            var enemy = enemyList.add(MeleeEnemy.new(engine, _rangeMin, size, maxSpeed, enemyModel, enemyShape))
+            var enemy = enemyList.add(MeleeEnemy.new(engine, _rangeMin, size, maxSpeed, enemyModel, enemyShape, counter))
             enemy.FindNewPath(engine)
             counter = counter + 1
         }

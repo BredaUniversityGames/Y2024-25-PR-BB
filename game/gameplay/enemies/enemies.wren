@@ -28,7 +28,7 @@ class MeleeEnemy {
         // body.SetFriction(2.0)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.0, true)
+        animations.Play("Run", 1.0, true, 1.0, true)
     }
 
     entity {

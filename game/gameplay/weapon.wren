@@ -77,7 +77,7 @@ class Pistol {
 
             if (!rayHitInfo.isEmpty) {
                 var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-                if (hitEntity.HasPlayerTag && rayHitInfo.count > 1) {
+                if (hitEntity.HasPlayerTag() && rayHitInfo.count > 1) {
                     hitEntity = rayHitInfo[1].GetEntity(engine.GetECS())
                 }
 
