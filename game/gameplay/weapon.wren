@@ -38,7 +38,7 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -110,7 +110,7 @@ class Pistol {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -166,7 +166,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -235,7 +235,7 @@ class Shotgun {
             }
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)            
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             _cooldown = _attackSpeed
         }
     }
@@ -319,7 +319,7 @@ class Knife {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
