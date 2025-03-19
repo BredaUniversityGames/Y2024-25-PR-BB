@@ -29,7 +29,7 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
@@ -58,7 +58,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-
+  
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
