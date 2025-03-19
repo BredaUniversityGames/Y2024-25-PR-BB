@@ -1,4 +1,4 @@
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 
 #include "animation.hpp"
 #include "components/animation_transform_component.hpp"

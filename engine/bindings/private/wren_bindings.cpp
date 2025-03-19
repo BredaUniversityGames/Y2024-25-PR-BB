@@ -17,7 +17,7 @@
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"

@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
 struct PlayerTag
