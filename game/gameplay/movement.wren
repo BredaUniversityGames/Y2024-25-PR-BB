@@ -388,7 +388,7 @@ class PlayerMovement{
             return
         }
         var slideAmount = slideForce
-        if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
+        if(engine.GetInput().GetDigitalAction("Slide").IsHeld()  && !hasDashed){
             isSliding = true
             //crouch first
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
