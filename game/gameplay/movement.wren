@@ -17,10 +17,13 @@ class PlayerMovement{
         isGrounded = false
         isSliding = false
         slideForce = 3.0
-        dashForce = 8.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
-        dashWishPosition = Vec3.new(0.0,0.0,0.0)
         
+        dashWishPosition = Vec3.new(0.0,0.0,0.0)
+        dashForce = 8.0
+        currentDashCount = 3
+        currentDashRefillTime = 3000.0
+
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
 
@@ -38,6 +41,8 @@ class PlayerMovement{
     slideForce {_slideForce}
     dashForce {_dashForce}
     dashWishPosition {_dashWishPosition}
+    currentDashCount {_currentDashCount}
+    currentDashRefillTime {_currentDashRefillTime}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -65,6 +70,8 @@ class PlayerMovement{
     slideForce=(value) { _slideForce = value}
     dashForce=(value) { _dashForce = value}
     dashWishPosition=(value) { _dashWishPosition = value}
+    currentDashCount=(value) { _currentDashCount = value}
+    currentDashRefillTime=(value) { _currentDashRefillTime = value}
 
     //Base movement
     maxSpeed=(value) { _maxSpeed = value}
@@ -278,10 +285,19 @@ class PlayerMovement{
     }
 
     Dash(engine, dt, playerController, camera){
+            //refill dashes
+            if(currentDashCount < 3){
+                currentDashRefillTime = currentDashRefillTime - dt
+                if(currentDashRefillTime <= 0.0){
+                    currentDashCount = currentDashCount + 1
+                    currentDashRefillTime = 3000.0
+                }
+            }
 
             var playerBody = playerController.GetRigidbodyComponent()
-        if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
+        if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0){
 
+            currentDashCount = currentDashCount - 1
             hasDashed = true
 
             var player = engine.GetECS().GetEntityByName("Camera")
