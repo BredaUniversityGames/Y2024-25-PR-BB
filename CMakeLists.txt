@@ -67,11 +67,6 @@ else()
     add_executable(CustomTech "engine/main.cpp")
 endif()
 
-set_target_properties(CustomTech
-        PROPERTIES
-        LINK_FLAGS "${SUBSYSTEM_OPTIONS}"
-)
-
 target_link_libraries(CustomTech
         PRIVATE ProjectSettings
         PRIVATE Engine
