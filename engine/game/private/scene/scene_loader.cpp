@@ -218,7 +218,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     AnimationControlComponent* animationControl = nullptr;
     if (!cpuModel.animations.empty())
     {
-        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, cpuModel.animations, std::nullopt);
+        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt, std::nullopt, 0.0f, 0.0f);
     }
 
     RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
