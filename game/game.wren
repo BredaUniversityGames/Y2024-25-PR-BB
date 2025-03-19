@@ -8,6 +8,10 @@ class Main {
 
     static Start(engine) {
 
+
+        engine.GetGame().SetHUDEnabled(true)
+        
+        
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
