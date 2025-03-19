@@ -1,8 +1,10 @@
 #pragma once
 
+#include "imgui_entt_entity_editor.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <entt/entity/registry.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <optional>
@@ -90,15 +92,27 @@ struct Animation
             time = std::fmod(time, duration);
         }
     }
+
+    float ScaledDuration() const
+    {
+        return duration / speed;
+    }
+    float ScaledTime() const
+    {
+        return time / speed;
+    }
 };
 
 struct AnimationControlComponent
 {
     std::vector<Animation> animations;
     std::optional<uint32_t> activeAnimation { std::nullopt };
+    std::optional<uint32_t> transitionAnimation { std::nullopt };
+    float blendTime;
+    float remainingBlendTime;
 
-    void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false);
-    void Play(const std::string& name, float speed = 1.0f, bool looping = false);
+    void PlayByIndex(uint32_t animationIndex, float speed = 1.0f, bool looping = false, float blendTime = 0.0f, bool blendMatch = false);
+    void Play(const std::string& name, float speed = 1.0f, bool looping = false, float blendTime = 0.0f, bool blendMatch = false);
     void Stop();
     void Pause();
     void Resume();
@@ -107,3 +121,8 @@ struct AnimationControlComponent
     std::optional<uint32_t> CurrentAnimationIndex();
     bool AnimationFinished();
 };
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<AnimationControlComponent>(entt::registry& reg, entt::registry::entity_type e);
+}
