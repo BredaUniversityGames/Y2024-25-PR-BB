@@ -218,6 +218,11 @@ class PlayerMovement{
                 velocity = velocity + moveInputDir.mulScalar(accelSpeed)
             }
 
+            //add slide here
+            if(slideWishDirection.length() > 0.01){
+                velocity = velocity + slideWishDirection.mulScalar(slideForce)
+            }
+
             var speed = velocity.length()
             if (speed > maxSpeed ) {
                 var factor = maxSpeed / speed
@@ -393,19 +398,18 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                slideWishDirection = moveInputDir
+                //slideWishDirection = moveInputDir
+                slideWishDirection = Math.Mix(slideWishDirection, moveInputDir, 0.05)
             }
 
-            if(slideWishDirection.length() > 0.01){
-                velocity = velocity + slideWishDirection.mulScalar(slideAmount)
-            }
+           
 
             playerBody.SetVelocity(velocity)
 
         }else{
             isSliding = false
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
-            slideWishDirection = Vec3.new(0.0,0.0,0.0)
+            slideWishDirection = Math.Mix(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
         }
     }
 
