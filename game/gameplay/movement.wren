@@ -12,6 +12,8 @@ class PlayerMovement{
         jumpForce = 8.20
         gravityFactor = 2.2
         playerHeight = 1.7
+        // Used for interpolation between crouching and standing
+        currentPlayerHeight = playerHeight 
         isGrounded = false
         isSliding = false
         slideForce = 3.0
@@ -43,6 +45,7 @@ class PlayerMovement{
     jumpForce {_jumpForce}
     gravityFactor {_gravityFactor} // A multiplier for the regular 9.8 gravity of the physics simulation
     playerHeight {_playerHeight}
+    currentPlayerHeight {_currentPlayerHeight}
     isGrounded {_isGrounded}
 
     // Input
@@ -69,6 +72,7 @@ class PlayerMovement{
     jumpForce=(value) { _jumpForce = value}
     gravityFactor=(value) { _gravityFactor = value}
     playerHeight=(value) { _playerHeight = value}
+    currentPlayerHeight=(value) { _currentPlayerHeight = value}
     isGrounded=(value) { _isGrounded = value}
 
     // Input
@@ -382,7 +386,8 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
             isSliding = true
             //crouch first
-            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.005 * dt)
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = playerBody.GetVelocity()
@@ -408,7 +413,8 @@ class PlayerMovement{
 
         }else{
             isSliding = false
-            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.005 * dt)
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
             slideWishDirection = Math.Mix(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
         }
     }

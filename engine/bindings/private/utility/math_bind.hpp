@@ -66,6 +66,10 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static float MixFloat(float start, float end, float t)
+    {
+        return glm::mix(start, end, t);
+    }
     static float Dot(glm::vec3 a, glm::vec3 b)
     {
         return glm::dot(a, b);
@@ -201,6 +205,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
         mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
         mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+        mathUtilClass.funcStatic<&MathUtil::MixFloat>("MixFloat");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
