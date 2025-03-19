@@ -321,15 +321,21 @@ class PlayerMovement{
          if(hasDashed){
             dashTimer = dashTimer + dt
             playerBody.SetTranslation(Math.Mix(playerBody.GetPosition(), dashWishPosition, 0.1))
-
+            var velocity = playerBody.GetVelocity()
             if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 1.0){
                 hasDashed = false
                 dashTimer = 0.0
+
+                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
+                playerBody.SetVelocity(velocity + direction.mulScalar(dashForce))
             }
 
             if(dashTimer > 200.0){
                 hasDashed = false
                 dashTimer = 0.0
+
+                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
+                playerBody.SetVelocity(velocity +direction.mulScalar(dashForce))
 
             }
          }
