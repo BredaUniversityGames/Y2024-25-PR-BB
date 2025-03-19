@@ -76,14 +76,17 @@ class Pistol {
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             if (!rayHitInfo.isEmpty) {
-                var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-                if (hitEntity.HasPlayerTag() && rayHitInfo.count > 1) {
-                    hitEntity = rayHitInfo[1].GetEntity(engine.GetECS())
-                }
+                // var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
 
-                if (hitEntity.GetNameComponent().name == "Enemy") {
-                    engine.GetECS().DestroyEntity(hitEntity)
-                }
+                for (hitEntity in rayHitInfo) {
+                    if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
+                        if (hitEntity.GetEntity(engine.GetECS()).GetNameComponent().name == "Enemy") {
+                            engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
+                            break
+                        }
+                        break
+                    }
+                }   
 
                 end = rayHitInfo[0].position
                 var entity = engine.GetECS().NewEntity()
@@ -209,12 +212,16 @@ class Shotgun {
                 
                 if (!rayHitInfo.isEmpty) {
                     end = rayHitInfo[0].position
-                    var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-                    if (hitEntity.HasPlayerTag() && rayHitInfo.count > 1) {
-                        hitEntity = rayHitInfo[1].GetEntity(engine.GetECS())
-                    }
-                    if (hitEntity.GetNameComponent().name == "Enemy") {
-                        engine.GetECS().DestroyEntity(hitEntity)
+                    // var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
+
+                    for (hitEntity in rayHitInfo) {
+                        if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
+                            if (hitEntity.GetEntity(engine.GetECS()).GetNameComponent().name == "Enemy") {
+                                engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
+                                break
+                            }
+                            break
+                        }
                     }
                 }
 

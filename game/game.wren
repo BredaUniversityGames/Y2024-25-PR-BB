@@ -10,7 +10,7 @@ class Main {
     static Start(engine) {
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh.glb")
 
         // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
@@ -84,7 +84,7 @@ class Main {
 
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
 
         engine.LoadModelWithoutInstantiation("assets/models/Demon.glb")
 
