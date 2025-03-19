@@ -7,7 +7,7 @@
 
 class Engine;
 
-struct SceneData
+struct ModelData
 {
     CPUModel cpuModel {};
     ResourceHandle<GPUModel> gpuModel {};
@@ -15,17 +15,17 @@ struct SceneData
     entt::entity Instantiate(Engine& engine);
 };
 
-class SceneLoader
+class ModelLoader
 {
 public:
-    SceneLoader() = default;
-    NON_MOVABLE(SceneLoader);
-    NON_COPYABLE(SceneLoader);
+    ModelLoader() = default;
+    NON_MOVABLE(ModelLoader);
+    NON_COPYABLE(ModelLoader);
 
-    std::shared_ptr<SceneData> LoadModel(Engine& engine, std::string_view path);
+    std::shared_ptr<ModelData> LoadModel(Engine& engine, std::string_view path);
     void Clear() { _models.clear(); }
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<SceneData>> _models {};
+    std::unordered_map<std::string, std::shared_ptr<ModelData>> _models {};
 };
 ;

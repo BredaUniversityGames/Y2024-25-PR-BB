@@ -25,7 +25,7 @@ public:
 
     void TransitionScene(const std::string& scriptFile);
 
-    SceneLoader _scenesLoaded {};
+    ModelLoader _modelsLoaded {};
     HUD _hud;
     bool _updateHud = false;
     std::string _nextSceneToExecute {};
