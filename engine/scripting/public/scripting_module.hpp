@@ -56,6 +56,7 @@ public:
 private:
     std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
+    std::stringstream _scriptingLogs {};
 
     std::unique_ptr<ScriptingContext> _context {};
     std::unique_ptr<MainScript> _mainModule {};
