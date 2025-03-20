@@ -51,7 +51,7 @@ public:
     NO_DISCARD const glm::vec2& GetAbsoluteScale() const noexcept { return _absoluteScale; }
     NO_DISCARD const glm::vec2& GetRelativeScale() const noexcept { return _relativeScale; }
 
-    void SetScale(const glm::vec2& scale) noexcept { _relativeScale = scale; }
+    void SetScale(const glm::vec2& scale) noexcept;
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
