@@ -2,15 +2,13 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyCom
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape, UID) {
+    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
         
         _maxVelocity = maxSpeed
         _currentPath = null
         _currentPathNodeIdx = null
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
-
-        _enemyUID = UID
         
         _meshEntity = engine.LoadModel(enemyModel)
 
@@ -36,11 +34,11 @@ class MeleeEnemy {
     }
 
     position {
-        return _rootEntity.GetTransformComponent().translation
+        return _meshEntity.GetTransformComponent().translation
     }
 
     position=(newPos) {
-        _rootEntity.GetTransformComponent().translation = newPos
+        _meshEntity.GetTransformComponent().translation = newPos
     }
 
     Update(playerPos, dt) {
@@ -59,12 +57,14 @@ class MeleeEnemy {
 
         // Pathfinding logic
         if(_currentPath != null) {
-            
+            //System.print("Following path")
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+            //System.printAll([[waypoint.center.x, waypoint.center.y, waypoint.center.z]])
 
-            if((waypoint.center - pos).length() < 0.3) {
+            if(Math.Distance(waypoint.center, pos) < 0.3) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
+                    System.print("Pula")
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
                     return
@@ -72,11 +72,18 @@ class MeleeEnemy {
                 waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
             }
 
+          
             var forwardVector = (waypoint.center - pos).normalize()
-            var velocity = _maxVelocity * dt
-            System.print(velocity)
+            // System.print(forwardVector.x)
+            // System.print(forwardVector.y)
+            // System.print(forwardVector.z)
+            // System.print("")
+            // System.print(_maxVelocity)
+            // System.print("-----------------")
 
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(velocity))
+
+
+            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
 
             // Set forward rotation
             _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
@@ -85,7 +92,7 @@ class MeleeEnemy {
 
     FindNewPath(engine) {
         var startPos = position
-        _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("PlayerController").GetTransformComponent().GetWorldTranslation())
+        _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
         _currentPathNodeIdx = 0
     }
 

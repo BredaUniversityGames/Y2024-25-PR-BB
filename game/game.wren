@@ -71,7 +71,7 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
+        var positions = [Vec3.new(10.0, 8.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
         // __demons = []
         // for (position in positions) {
@@ -117,11 +117,6 @@ class Main {
         __ultimateActive = false
 
         // Enemy setup
-
-        __enemyCounter = 0
-
-        var enemyPos = Vec3.new(-5.0, 3.0, 60.0)
-
         __enemyList = []
         __spawnerList = []
         
@@ -131,7 +126,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1, __enemyCounter)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1)
     }
 
     static Shutdown(engine) {
@@ -141,7 +136,7 @@ class Main {
     static Update(engine, dt) {
 
         // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.01, 0.01, 0.01), 25, "assets/models/demon.glb", __enemyShape, dt, __enemyCounter)
+        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, dt)
         // }
 
         var cheats = __playerController.GetCheatsComponent()
@@ -160,8 +155,6 @@ class Main {
         } else {
             __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
-
-        __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
@@ -188,6 +181,10 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
+            }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eI())) {
+                __enemyList[0].FindNewPath(engine)
             }
 
             // if(engine.GetInput().DebugGetKey(Keycode.eK())) {

@@ -25,11 +25,18 @@ const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
 {
     return path.waypoints;
 }
+
+void ToggleDebugRender(PathfindingModule& self)
+{
+    self.SetDebugDrawState(!self.GetDebugDrawState());
+}
+
 }
 
 void BindPathfindingAPI(wren::ForeignModule& module)
 {
     auto& wren_class = module.klass<PathfindingModule>("PathfindingModule");
+    wren_class.funcExt<bindings::ToggleDebugRender>("ToggleDebugRender");
 
     wren_class.funcExt<bindings::FindPath>("FindPath");
     wren_class.funcExt<bindings::SetNavigationMesh>("SetNavigationMesh");
