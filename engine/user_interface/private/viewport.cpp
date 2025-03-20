@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ranges>
 
+float Viewport::_uiScaleMultiplier = 0.5f;
 void Viewport::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
     for (int32_t i = _baseElements.size() - 1; i >= 0; --i)

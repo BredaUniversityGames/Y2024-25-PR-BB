@@ -76,7 +76,8 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
     hud.canvas = std::make_unique<Canvas>(screenResolution);
 
     // temporary
-    hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), hud.canvas->GetRelativeScale());
+    hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), hud.canvas->GetRelativeScale(),screenResolution);
+
 
     CPUImage commonImageData {};
     commonImageData.format
