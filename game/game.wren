@@ -95,7 +95,7 @@ class Main {
         __gun = engine.LoadModel("assets/models/Revolver.glb")
 
         __gunAnchor = engine.GetECS().NewEntity()
-        __gunAnchor.AddTransformComponent().translation = Vec3.new(0.4, -0.3, -3) 
+        __gunAnchor.AddTransformComponent().translation = Vec3.new(0.4, -0.3, -3)
         __gunAnchor.AddNameComponent().name = "GunAnchor"
 
         __gun.GetNameComponent().name = "Gun"
@@ -125,7 +125,7 @@ class Main {
         // Enemy setup
         __enemyList = []
         __spawnerList = []
-        
+
         for (position in positions) {
             __spawnerList.add(Spawner.new(position, 7000.0))
         }
@@ -196,7 +196,7 @@ class Main {
 
             // Update gun position
 
-            
+
             // var rigidbody = playerController.GetRigidbodyComponent()
             // var gunTransform = engine.GetECS().GetEntityByName("Gun").GetTransformComponent()
 
@@ -296,6 +296,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
+        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
@@ -306,7 +307,7 @@ class Main {
 
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
-            if (enemy.entity.IsValid()) { 
+            if (enemy.entity.IsValid()) {
                 enemy.Update(playerPos, dt)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))

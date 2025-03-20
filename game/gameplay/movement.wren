@@ -7,17 +7,23 @@ class PlayerMovement{
         hasDoubleJumped = false
         dashTimer = newDashTimer
 
-        maxSpeed = 7.0
-        sv_accelerate = 5.5
-        jumpForce = 8.20
-        gravityFactor = 2.2
+        maxSpeed = 9.0
+        sv_accelerate = 10.0
+        jumpForce = 9.75
+        gravityFactor = 2.4
         playerHeight = 1.7
+        // Used for interpolation between crouching and standing
+        currentPlayerHeight = playerHeight 
         isGrounded = false
         isSliding = false
-        slideForce = 3.5
-        dashForce = 22.0
+        slideForce = 3.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
         
+        dashWishPosition = Vec3.new(0.0,0.0,0.0)
+        dashForce = 6.0
+        currentDashCount = 3
+        currentDashRefillTime = 3000.0
+
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
 
@@ -34,6 +40,9 @@ class PlayerMovement{
     slideWishDirection {_slideWishDirection}
     slideForce {_slideForce}
     dashForce {_dashForce}
+    dashWishPosition {_dashWishPosition}
+    currentDashCount {_currentDashCount}
+    currentDashRefillTime {_currentDashRefillTime}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -41,6 +50,7 @@ class PlayerMovement{
     jumpForce {_jumpForce}
     gravityFactor {_gravityFactor} // A multiplier for the regular 9.8 gravity of the physics simulation
     playerHeight {_playerHeight}
+    currentPlayerHeight {_currentPlayerHeight}
     isGrounded {_isGrounded}
 
     // Input
@@ -59,6 +69,9 @@ class PlayerMovement{
     slideWishDirection=(value) { _slideWishDirection = value}   
     slideForce=(value) { _slideForce = value}
     dashForce=(value) { _dashForce = value}
+    dashWishPosition=(value) { _dashWishPosition = value}
+    currentDashCount=(value) { _currentDashCount = value}
+    currentDashRefillTime=(value) { _currentDashRefillTime = value}
 
     //Base movement
     maxSpeed=(value) { _maxSpeed = value}
@@ -66,6 +79,7 @@ class PlayerMovement{
     jumpForce=(value) { _jumpForce = value}
     gravityFactor=(value) { _gravityFactor = value}
     playerHeight=(value) { _playerHeight = value}
+    currentPlayerHeight=(value) { _currentPlayerHeight = value}
     isGrounded=(value) { _isGrounded = value}
 
     // Input
@@ -175,6 +189,7 @@ class PlayerMovement{
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
 
+
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
         }else{
@@ -193,7 +208,10 @@ class PlayerMovement{
         }else {
             if(doubleJump && hasDoubleJumped == false){
                 velocity.y = 0.0
-                velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
+                velocity = velocity + Vec3.new(0.0, jumpForce*1.5, 0.0)
+                if(moveInputDir.length() > 0.01){
+                    velocity = velocity + moveInputDir.mulScalar(maxSpeed/1.5)
+                }
                 hasDoubleJumped = true
             }
         }
@@ -202,7 +220,6 @@ class PlayerMovement{
         var wishVel = moveInputDir.mulScalar(maxSpeed)
 
         if(isGrounded && !hasDashed){
-
             var currentSpeed = Math.Dot(velocity, moveInputDir)
 
             var addSpeed = maxSpeed - currentSpeed
@@ -215,14 +232,18 @@ class PlayerMovement{
                 velocity = velocity + moveInputDir.mulScalar(accelSpeed)
             }
 
+            //add slide here
+            if(slideWishDirection.length() > 0.01){
+                velocity = velocity + slideWishDirection.mulScalar(slideForce)
+            }
+
             var speed = velocity.length()
             if (speed > maxSpeed) {
                 var factor = maxSpeed / speed
-                velocity.x = velocity.x * factor
-
-                velocity.z = velocity.z * factor
+                var newVel  =  Vec3.new(velocity.x * factor, velocity.y, velocity.z * factor)
+                velocity = Math.MixVec3(velocity, newVel, 0.2)
             }
-                
+            
         }else{
             
             var wishSpeed = wishVel.length()
@@ -262,32 +283,32 @@ class PlayerMovement{
 
         var pos = playerBody.GetPosition()
 
-        if(isSliding == true){
-            pos.y = pos.y + (playerHeight/4.0)/2.0
-        }else{
-            pos.y = pos.y + playerHeight/2.0
-        }
+        pos.y = pos.y + currentPlayerHeight/2.0
         engine.GetECS().GetEntityByName("Player").GetTransformComponent().translation = pos
     }
 
     Dash(engine, dt, playerController, camera){
+            //refill dashes
+            if(currentDashCount < 3){
+                currentDashRefillTime = currentDashRefillTime - dt
+                if(currentDashRefillTime <= 0.0){
+                    currentDashCount = currentDashCount + 1
+                    currentDashRefillTime = 3000.0
+                }
+            }
 
-        var playerBody = playerController.GetRigidbodyComponent()
-        var velocity = playerBody.GetVelocity()
+            var playerBody = playerController.GetRigidbodyComponent()
+        if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0){
 
-        var dashAmount = dashForce
-        if(isGrounded==false){
-            dashAmount = dashForce/1.6
-        }else{
-            dashAmount = dashForce
-        }
-        if(engine.GetInput().GetDigitalAction("Dash").IsPressed()){
-
+            currentDashCount = currentDashCount - 1
             hasDashed = true
-            var cameraRotation = camera.GetTransformComponent().GetWorldRotation()
-            var forward = (Math.ToVector(cameraRotation)*Vec3.new(1.0, 0.0, 1.0)).normalize()
-            forward.y = 0.0
-            var right = (cameraRotation.mulVec3(Vec3.new(1.0, 0.0, 0.0))).normalize()
+
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var translation = playerBody.GetPosition()
+            var rotation = camera.GetTransformComponent().GetWorldRotation()
+            var forward = Math.ToVector(rotation)
+            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
+            var right = Math.Cross(forward, up)
             var movement = engine.GetInput().GetAnalogAction("Move")
 
             var moveInputDir = Vec3.new(0.0,0.0,0.0)
@@ -295,30 +316,61 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                velocity = velocity + moveInputDir.mulScalar(dashAmount)
-                playerBody.SetVelocity(velocity)
-            }else{
-                velocity = velocity + forward.mulScalar(2.0 * dashAmount)
-                playerBody.SetVelocity(velocity)
+                forward  = forward + moveInputDir
+            }
+   
+            var start = translation + forward * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
+            var direction = (end - start).normalize()
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
+            dashWishPosition = end
+            if (!rayHitInfo.isEmpty) {
+                var hit = rayHitInfo[0]
+                if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+                    end = hit.position
+                    //add some offset to the end position based on the normal 
+                    end = end + hit.normal.mulScalar(1.5)
+                    dashWishPosition = end
+                }
+
+                
             }
         }
 
-        if(hasDashed){
+         if(hasDashed){
             dashTimer = dashTimer + dt
+            playerBody.SetTranslation(Math.MixVec3(playerBody.GetPosition(), dashWishPosition, 0.1))
+            var velocity = playerBody.GetVelocity()
+            if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 1.0){
+                hasDashed = false
+                dashTimer = 0.0
+
+                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
+                playerBody.SetVelocity(velocity + direction.mulScalar(dashForce))
+            }
+
             if(dashTimer > 200.0){
                 hasDashed = false
                 dashTimer = 0.0
-            }
-        }
 
+                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
+                playerBody.SetVelocity(velocity +direction.mulScalar(dashForce))
+
+            }
+         }
     }
 
     Slide(engine, dt, playerController, camera){
-        var slideAmount = slideForce * dt
-        if(engine.GetInput().GetDigitalAction("Slide").IsHeld() && isGrounded && !hasDashed){
+        var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
+        if(isJumpHeld){
+            return
+        }
+        var slideAmount = slideForce
+        if(engine.GetInput().GetDigitalAction("Slide").IsHeld()  && !hasDashed){
             isSliding = true
             //crouch first
-            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight/4.0)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = playerBody.GetVelocity()
@@ -334,19 +386,18 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                slideWishDirection = moveInputDir
+                slideWishDirection = Math.MixVec3(slideWishDirection, moveInputDir, 0.05)
             }
 
-            if(slideWishDirection.length() > 0.01){
-                velocity = velocity + slideWishDirection.mulScalar(slideAmount)
-            }
+           
 
             playerBody.SetVelocity(velocity)
 
         }else{
             isSliding = false
-            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),playerHeight)
-            slideWishDirection = Vec3.new(0.0,0.0,0.0)
+            currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
+            engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
+            slideWishDirection = Math.MixVec3(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
         }
     }
 

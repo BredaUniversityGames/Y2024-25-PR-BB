@@ -32,6 +32,7 @@ public:
     void SetAngularVelocity(const glm::vec3& velocity) { bodyInterface->SetAngularVelocity(bodyID, ToJoltVec3(velocity)); };
     void SetGravityFactor(float factor) { bodyInterface->SetGravityFactor(bodyID, factor); }
     void SetFriction(float friction) { bodyInterface->SetFriction(bodyID, friction); }
+    void SetTranslation(const glm::vec3& translation) { bodyInterface->SetPosition(bodyID, ToJoltVec3(translation), JPH::EActivation::Activate); }
 
     // Adders
     void AddForce(const glm::vec3& force) { bodyInterface->AddForce(bodyID, ToJoltVec3(force)); }

@@ -20,6 +20,8 @@
 #include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
 
+#include <ui_image.hpp>
+
 namespace bindings
 {
 void SetLifetimePaused(WrenComponent<LifetimeComponent>& self, bool paused)
@@ -115,6 +117,23 @@ void UpdateGrenadeBar(HUD& self, const float charge)
     }
 }
 
+void UpdateDashCharges(HUD& self, int charges)
+{
+    for (int32_t i = 0; i < static_cast<int32_t>(self.dashCharges.size()); i++)
+    {
+        if (auto locked = self.dashCharges[i].lock(); locked != nullptr)
+        {
+            if (i < charges) // Charge full
+            {
+                locked->display_color = glm::vec4(1);
+            }
+            else // Charge empty
+            {
+                locked->display_color = glm::vec4(1, 1, 1, 0.2);
+            }
+        }
+    }
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -136,4 +155,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar");
+    hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges");
 }

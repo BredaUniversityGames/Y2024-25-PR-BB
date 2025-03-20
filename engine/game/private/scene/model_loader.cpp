@@ -1,4 +1,4 @@
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 
 #include "animation.hpp"
 #include "components/animation_transform_component.hpp"
@@ -256,7 +256,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     return rootEntity;
 }
 
-std::shared_ptr<SceneData> SceneLoader::LoadModel(Engine& engine, std::string_view path)
+std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_view path)
 {
     if (auto it = _models.find(std::string(path)); it != _models.end())
     {
@@ -277,13 +277,13 @@ std::shared_ptr<SceneData> SceneLoader::LoadModel(Engine& engine, std::string_vi
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto gpuHandle = rendererModule.LoadModels({ cpuData }).front();
 
-    auto ret = std::make_shared<SceneData>(std::move(cpuData), gpuHandle);
+    auto ret = std::make_shared<ModelData>(std::move(cpuData), gpuHandle);
     _models[std::string(path)] = ret;
 
     return ret;
 }
 
-entt::entity SceneData::Instantiate(Engine& engine)
+entt::entity ModelData::Instantiate(Engine& engine)
 {
     auto& modelResourceManager = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->Resources()->ModelResourceManager();
     const GPUModel& model = *modelResourceManager.Access(gpuModel);

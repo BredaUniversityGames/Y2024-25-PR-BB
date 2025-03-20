@@ -9,7 +9,6 @@
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
 #include "input/input_bindings.hpp"
-#include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
@@ -19,7 +18,7 @@
 #include "renderer/animation_bindings.hpp"
 #include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
@@ -41,7 +40,7 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
 
 WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
 {
-    auto& sceneCache = engine.instance->GetModule<GameModule>()._scenesLoaded;
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
     auto model = sceneCache.LoadModel(*engine.instance, path);
 
     auto entity = model->Instantiate(*engine.instance);
@@ -50,7 +49,7 @@ WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
 
 void LoadModelScriptingWithoutInstantiation(WrenEngine& engine, const std::string& path)
 {
-    auto& sceneCache = engine.instance->GetModule<GameModule>()._scenesLoaded;
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
     auto model = sceneCache.LoadModel(*engine.instance, path);
 }
 
