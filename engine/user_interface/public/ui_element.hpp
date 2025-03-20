@@ -42,7 +42,7 @@ public:
 
     glm::vec4 display_color = glm::vec4(1, 1, 1, 1);
 
-    void SetLocation(const glm::vec2& location) noexcept { _relativeLocation = location; }
+    void SetLocation(const glm::vec2& location) noexcept;
 
     // todo: move transform functionality into its own class
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
