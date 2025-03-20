@@ -1,5 +1,6 @@
 #pragma once
 #include "canvas.hpp"
+#include <array>
 
 class UIImage;
 class UITextElement;

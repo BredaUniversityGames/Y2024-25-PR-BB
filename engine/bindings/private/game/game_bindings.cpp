@@ -113,7 +113,7 @@ void UpdateGrenadeBar(HUD& self, const float charge)
 
 void UpdateDashCharges(HUD& self, int charges)
 {
-    for (int i = 0; i < self.dashCharges.size(); i++)
+    for (int32_t i = 0; i < static_cast<int32_t>(self.dashCharges.size()); i++)
     {
         if (auto locked = self.dashCharges[i].lock(); locked != nullptr)
         {

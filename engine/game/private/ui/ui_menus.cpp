@@ -121,7 +121,7 @@ std::pair<std::unique_ptr<Canvas>, HUD> HudCreate(GraphicsContext& graphicsConte
 
     auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
 
-    for (int i = 0; i < hud.dashCharges.size(); i++)
+    for (int32_t i = 0; i < static_cast<int32_t>(hud.dashCharges.size()); i++)
     {
         hud.dashCharges[i] = canvas->AddChild<UIImage>(dashCircle, glm::vec2((i * 60) + 100, 100), glm::vec2(50));
         hud.dashCharges[i].lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
