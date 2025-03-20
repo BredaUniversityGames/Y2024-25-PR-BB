@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
+#include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
 struct PlayerTag
@@ -24,6 +25,7 @@ public:
 
     void TransitionScene(const std::string& scriptFile);
 
+    ModelLoader _modelsLoaded {};
     HUD _hud;
     bool _updateHud = false;
     std::string _nextSceneToExecute {};

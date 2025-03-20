@@ -2,22 +2,9 @@
 
 #include "components/animation_channel_component.hpp"
 #include "cpu_resources.hpp"
-#include "include_fastgltf.hpp"
 #include "thread_pool.hpp"
 
 #include <vector>
-
-struct StagingAnimationChannels
-{
-    std::vector<Animation> animations;
-
-    struct IndexChannel
-    {
-        std::vector<TransformAnimationSpline> animationChannels;
-        std::vector<uint32_t> nodeIndices;
-    };
-    std::vector<IndexChannel> indexChannels;
-};
 
 namespace ModelLoading
 {
