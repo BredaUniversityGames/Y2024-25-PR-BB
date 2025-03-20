@@ -11,7 +11,7 @@
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/model_resource_manager.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 
 #include "scripting_module.hpp"
 
@@ -76,28 +76,28 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
     uint32_t meshIndex = std::numeric_limits<uint32_t>::max();
     glm::mat4 transform = glm::mat4(1.0f);
 
-    const Hierarchy::Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
+    const Node* rootNode = &navmesh.hierarchy.nodes[navmesh.hierarchy.root];
 
-    std::queue<std::pair<const Hierarchy::Node*, glm::mat4>> nodeStack;
+    std::queue<std::pair<const Node*, glm::mat4>> nodeStack;
     nodeStack.push({ rootNode, rootNode->transform });
     while (!nodeStack.empty())
     {
-        const std::pair<const Hierarchy::Node*, glm::mat4>& topNodeTransform = nodeStack.front();
+        const std::pair<const Node*, glm::mat4>& topNodeTransform = nodeStack.front();
         nodeStack.pop();
 
-        if (topNodeTransform.first->meshIndex.has_value())
+        if (topNodeTransform.first->mesh.has_value())
         {
-            if (topNodeTransform.first->meshIndex.value().first == MeshType::eSTATIC)
+            if (topNodeTransform.first->mesh.value().type == MeshType::eSTATIC)
             {
-                meshIndex = topNodeTransform.first->meshIndex.value().second;
+                meshIndex = topNodeTransform.first->mesh.value().index;
                 transform = topNodeTransform.second;
                 break;
             }
         }
 
-        for (size_t i = 0; i < topNodeTransform.first->children.size(); i++)
+        for (size_t i = 0; i < topNodeTransform.first->childrenIndices.size(); i++)
         {
-            const Hierarchy::Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->children[i]];
+            const Node* pNode = &navmesh.hierarchy.nodes[topNodeTransform.first->childrenIndices[i]];
             glm::mat4 transform = topNodeTransform.second * pNode->transform;
 
             nodeStack.push({ pNode, transform });

@@ -91,7 +91,7 @@ class Pistol {
             while (i < length) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
-                transform.translation = Math.Mix(start, end, i / length)
+                transform.translation = Math.MixVec3(start, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 200.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
@@ -207,7 +207,7 @@ class Shotgun {
                 while (j < length) {
                     var entity = engine.GetECS().NewEntity()
                     var transform = entity.AddTransformComponent()
-                    transform.translation = Math.Mix(start, end, j / length)
+                    transform.translation = Math.MixVec3(start, end, j / length)
                     var lifetime = entity.AddLifetimeComponent()
                     lifetime.lifetime = 200.0
                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
