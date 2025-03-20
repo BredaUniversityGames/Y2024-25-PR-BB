@@ -42,6 +42,19 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
     vk::PhysicalDeviceProperties properties;
     _physicalDevice.getProperties(&properties);
     _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
+
+    spdlog::info("##### SYSTEM INFO #####");
+    spdlog::info("Operating System: {}", _WIN32 ? "Windows" : "Linux");
+
+    uint32_t apiVersion = vk::enumerateInstanceVersion();
+    uint32_t major = VK_VERSION_MAJOR(apiVersion);
+    uint32_t minor = VK_VERSION_MINOR(apiVersion);
+    uint32_t patch = VK_VERSION_PATCH(apiVersion);
+    spdlog::info("Vulkan Version Installed: {}.{}.{}", major, minor, patch);
+
+    spdlog::info("GPU: {}", std::string(properties.deviceName.begin(), properties.deviceName.end() - 1));
+    spdlog::info("GPU Driver Version (encoded): {}", properties.driverVersion); // Encoding can be different for each vendor
+    spdlog::info("#######################");
 }
 
 VulkanContext::~VulkanContext()
