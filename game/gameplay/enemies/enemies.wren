@@ -19,7 +19,7 @@ class MeleeEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-27,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-100,0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -34,11 +34,11 @@ class MeleeEnemy {
     }
 
     position {
-        return _meshEntity.GetTransformComponent().translation
+        return _rootEntity.GetTransformComponent().translation
     }
 
     position=(newPos) {
-        _meshEntity.GetTransformComponent().translation = newPos
+        _rootEntity.GetTransformComponent().translation = newPos
     }
 
     Update(playerPos, dt) {
@@ -61,10 +61,9 @@ class MeleeEnemy {
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
             //System.printAll([[waypoint.center.x, waypoint.center.y, waypoint.center.z]])
 
-            if(Math.Distance(waypoint.center, pos) < 0.3) {
+            if(Math.Distance(waypoint.center, pos) < 3.0) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
-                    System.print("Pula")
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
                     return

@@ -92,18 +92,24 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb")
 
+        __gunAnchor = engine.GetECS().NewEntity()
+        __gunAnchor.AddTransformComponent().translation = Vec3.new(0.4, -0.3, -3) 
+        __gunAnchor.AddNameComponent().name = "GunAnchor"
+
+        __gun.GetNameComponent().name = "Gun"
         var gunTransform = __gun.GetTransformComponent()
-        gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+        gunTransform.scale = Vec3.new(0.1, 0.1, 0.1)
 
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
-        gunAnimations.Stop()
+        // var gunAnimations = __gun.GetAnimationControlComponent()
+        // gunAnimations.Play("Reload", 1.0, false, 0.0, false)
+        // gunAnimations.Stop()
 
         __player.AttachChild(__camera)
-        __camera.AttachChild(__gun)
+        __camera.AttachChild(__gunAnchor)
+        __gunAnchor.AttachChild(__gun)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
@@ -186,6 +192,18 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eI())) {
                 __enemyList[0].FindNewPath(engine)
             }
+
+
+            // Update gun position
+
+            
+            // var rigidbody = playerController.GetRigidbodyComponent()
+            // var gunTransform = engine.GetECS().GetEntityByName("Gun").GetTransformComponent()
+
+
+
+
+
 
             // if(engine.GetInput().DebugGetKey(Keycode.eK())) {
             //     for(demon in __demons) {
