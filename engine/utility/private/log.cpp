@@ -1,9 +1,9 @@
 #include "log.hpp"
 #include <spdlog/sinks/rotating_file_sink.h>
 
-void spdlog::Initialize()
+void spdlog::StartWritingToFile()
 {
-#if defined(DISTRIBUTION)
+
 const std::string logFileDir = "logs/";
 const std::string logFileExtension = ".bblog";
 
@@ -20,5 +20,4 @@ auto fileLogger = spdlog::rotating_logger_mt("bblog", fullName, maxFileSize, max
 bblog::set_default_logger(fileLogger);
 
 bblog::flush_on(bblog::level::level_enum::trace); // Flush on everything
-#endif
 }

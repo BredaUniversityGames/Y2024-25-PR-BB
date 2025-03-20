@@ -17,7 +17,9 @@
 
 int Main()
 {
-    bblog::Initialize();
+#if defined(DISTRIBUTION)
+    bblog::StartWritingToFile();
+#endif
 
     MainEngine instance;
     Stopwatch startupTimer {};

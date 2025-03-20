@@ -3,7 +3,8 @@
 
 namespace spdlog
 {
-void Initialize();
+// After this is called, the logs are written to a file, instead of the console.
+void StartWritingToFile();
 }
 
 namespace bblog = spdlog;
