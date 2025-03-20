@@ -4,7 +4,6 @@
 #include <glm/gtx/range.hpp>
 #include <tracy/TracyVulkan.hpp>
 
-#include "gpu_resources.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"

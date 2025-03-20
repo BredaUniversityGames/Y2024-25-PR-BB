@@ -1,15 +1,12 @@
 #include "fonts.hpp"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#define STB_RECT_PACK_IMPLEMENTATION
-#include <stb_rect_pack.h>
-
-#include "gpu_resources.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <stb_rect_pack.h>
 
 std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context)
 {

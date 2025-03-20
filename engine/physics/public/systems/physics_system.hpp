@@ -29,12 +29,6 @@ public:
     std::string_view GetName() override { return "PhysicsSystem"; }
 
 private:
-    // for loading mesh data or convex data into the scene with no rendering mesh relation
-    entt::entity LoadNodeRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
-
-    // for loading mesh data or convex data into the scene. returns a vector of rigidbodies
-    std::vector<RigidbodyComponent> LoadBodiesRecursive(const CPUModel& models, ECSModule& ecs, uint32_t currentNodeIndex, const Hierarchy& hierarchy, entt::entity parent, PhysicsShapes shape);
-
     Engine& engine;
     ECSModule& _ecs;
     PhysicsModule& _physicsModule;

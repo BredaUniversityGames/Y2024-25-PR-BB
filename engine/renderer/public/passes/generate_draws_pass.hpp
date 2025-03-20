@@ -3,7 +3,6 @@
 #include "camera_batch.hpp"
 #include "common.hpp"
 #include "frame_graph.hpp"
-#include "gpu_resources.hpp"
 
 #include <cstdint>
 #include <memory>

@@ -4,8 +4,8 @@
 #include <vulkan/vulkan.hpp>
 
 #include "common.hpp"
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/sampler.hpp"
 
 class VulkanContext;
 

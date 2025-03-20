@@ -1,6 +1,5 @@
 #include "passes/ui_pass.hpp"
 
-#include "fastgltf/types.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
@@ -13,6 +12,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+
 UIPass::UIPass(const std::shared_ptr<GraphicsContext>& context, const ResourceHandle<GPUImage>& outputTarget, const SwapChain& swapChain)
     : _context(context)
     , _outputTarget(outputTarget)

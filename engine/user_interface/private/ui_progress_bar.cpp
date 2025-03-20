@@ -1,5 +1,7 @@
 #include "ui_progress_bar.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)

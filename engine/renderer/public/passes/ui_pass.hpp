@@ -1,7 +1,6 @@
 #pragma once
 
 #include "frame_graph.hpp"
-#include "gpu_resources.hpp"
 #include "quad_draw_info.hpp"
 
 #include <cstdint>

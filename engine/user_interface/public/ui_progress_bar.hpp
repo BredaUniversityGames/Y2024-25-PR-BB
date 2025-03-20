@@ -1,6 +1,6 @@
 #pragma once
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/image.hpp"
 #include "ui_element.hpp"
 
 class UIProgressBar : public UIElement

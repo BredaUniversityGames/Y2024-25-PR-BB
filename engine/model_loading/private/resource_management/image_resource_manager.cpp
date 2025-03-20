@@ -1,8 +1,8 @@
 #include "resource_management/image_resource_manager.hpp"
 
-#include "../vulkan_helper.hpp"
 #include "log.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 ImageResourceManager::ImageResourceManager(const std::shared_ptr<VulkanContext>& context, ResourceHandle<Sampler> defaultSampler)
     : _context(context)

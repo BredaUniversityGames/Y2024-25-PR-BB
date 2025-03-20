@@ -3,7 +3,7 @@
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
-#include "include_fastgltf.hpp"
+#include "lib/include_fastgltf.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
 #include "physics/shape_factory.hpp"

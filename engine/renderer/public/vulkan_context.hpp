@@ -5,7 +5,6 @@
 #include <vk_mem_alloc.h>
 
 #include "common.hpp"
-#include "gpu_resources.hpp"
 #include "vulkan_include.hpp"
 
 struct VulkanInitInfo;

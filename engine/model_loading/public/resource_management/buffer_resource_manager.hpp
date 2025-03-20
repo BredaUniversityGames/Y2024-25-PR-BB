@@ -1,8 +1,8 @@
 #pragma once
 
 #include "common.hpp"
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/buffer.hpp"
 
 #include <memory>
 

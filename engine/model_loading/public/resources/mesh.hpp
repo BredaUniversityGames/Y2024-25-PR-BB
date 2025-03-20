@@ -2,7 +2,8 @@
 #include <vector>
 
 #include "math_util.hpp"
-#include "vertex.hpp"
+#include "resources/material.hpp"
+#include "resources/mesh.hpp"
 
 enum class MeshType : uint8_t
 {
@@ -19,4 +20,16 @@ struct CPUMesh
 
     math::Vec3Range boundingBox;
     float boundingRadius;
+};
+
+struct GPUMesh
+{
+    uint32_t count { 0 };
+    uint32_t vertexOffset { 0 };
+    uint32_t indexOffset { 0 };
+    float boundingRadius;
+    math::Vec3Range boundingBox;
+
+    MeshType type;
+    ResourceHandle<GPUMaterial> material;
 };
