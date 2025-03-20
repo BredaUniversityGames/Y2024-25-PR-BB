@@ -85,7 +85,7 @@ class Main {
 
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
@@ -259,6 +259,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
+        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
