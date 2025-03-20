@@ -11,6 +11,32 @@
 #include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
 
+#ifndef _WIN32
+#include <sys/utsname.h>
+#endif
+
+std::string GetOSName()
+{
+#ifdef _WIN32
+    double version = 0.0;
+    NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
+    OSVERSIONINFOEXW osInfo;
+
+    *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+    if (NULL != RtlGetVersion)
+    {
+        osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+        RtlGetVersion(&osInfo);
+        version = (double)osInfo.dwMajorVersion;
+    }
+
+    return "Windows " + std::to_string(version);
+#else
+
+#endif
+}
+
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
 {
     _validationEnabled = CheckValidationLayerSupport() && ENABLE_VALIDATION_LAYERS;
@@ -44,7 +70,7 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
     _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
 
     spdlog::info("##### SYSTEM INFO #####");
-    spdlog::info("Operating System: {}", _WIN32 ? "Windows" : "Linux");
+    spdlog::info("Operating System: {}", GetOSName());
 
     uint32_t apiVersion = vk::enumerateInstanceVersion();
     uint32_t major = VK_VERSION_MAJOR(apiVersion);
@@ -52,7 +78,7 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
     uint32_t patch = VK_VERSION_PATCH(apiVersion);
     spdlog::info("Vulkan Version Installed: {}.{}.{}", major, minor, patch);
 
-    spdlog::info("GPU: {}", std::string(properties.deviceName.begin(), properties.deviceName.end() - 1));
+    spdlog::info("GPU: {}", std::string(properties.deviceName));
     spdlog::info("GPU Driver Version (encoded): {}", properties.driverVersion); // Encoding can be different for each vendor
     spdlog::info("#######################");
 }
