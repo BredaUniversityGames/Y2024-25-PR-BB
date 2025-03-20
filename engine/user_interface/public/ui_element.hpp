@@ -39,6 +39,8 @@ public:
     UINavigationTargets navigationTargets = {};
     int16_t zLevel = 1;
 
+    glm::vec4 display_color = glm::vec4(1, 1, 1, 1);
+
     void SetLocation(const glm::vec2& location) noexcept;
 
     // todo: move transform functionality into its own class

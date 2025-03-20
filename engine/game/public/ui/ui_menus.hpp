@@ -1,11 +1,15 @@
 #pragma once
 #include "canvas.hpp"
-
+#include <array>
 #include <ui_button.hpp>
 
+class UIImage;
 class UITextElement;
 class UIProgressBar;
 class GraphicsContext;
+
+inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
+
 struct HUD
 {
     std::shared_ptr<Canvas> canvas;
@@ -15,6 +19,7 @@ struct HUD
     std::weak_ptr<UIProgressBar> grenadeBar;
     std::weak_ptr<UITextElement> ammoCounter;
     std::weak_ptr<UITextElement> scoreText;
+    std::array<std::weak_ptr<UIImage>, MAX_DASH_CHARGE_COUNT> dashCharges;
 };
 
 HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
