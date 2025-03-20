@@ -84,6 +84,7 @@ void InspectorModule::Tick(Engine& engine)
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
+#if not defined(DISTRIBUTION)
     _performanceTracker->Update();
 
     if (ImGui::BeginMainMenuBar())
@@ -221,6 +222,7 @@ void InspectorModule::Tick(Engine& engine)
             }
         }
     }
+#endif
 
     {
         ZoneNamedN(zz, "ImGui Render", true);
