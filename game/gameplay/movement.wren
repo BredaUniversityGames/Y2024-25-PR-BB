@@ -241,7 +241,7 @@ class PlayerMovement{
             if (speed > maxSpeed) {
                 var factor = maxSpeed / speed
                 var newVel  =  Vec3.new(velocity.x * factor, velocity.y, velocity.z * factor)
-                velocity = Math.Mix(velocity, newVel, 0.2)
+                velocity = Math.MixVec3(velocity, newVel, 0.2)
             }
             
         }else{
@@ -339,7 +339,7 @@ class PlayerMovement{
 
          if(hasDashed){
             dashTimer = dashTimer + dt
-            playerBody.SetTranslation(Math.Mix(playerBody.GetPosition(), dashWishPosition, 0.1))
+            playerBody.SetTranslation(Math.MixVec3(playerBody.GetPosition(), dashWishPosition, 0.1))
             var velocity = playerBody.GetVelocity()
             if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 1.0){
                 hasDashed = false
@@ -386,7 +386,7 @@ class PlayerMovement{
             moveInputDir = moveInputDir.normalize()
 
             if(moveInputDir.length() > 0.01){
-                slideWishDirection = Math.Mix(slideWishDirection, moveInputDir, 0.05)
+                slideWishDirection = Math.MixVec3(slideWishDirection, moveInputDir, 0.05)
             }
 
            
@@ -397,7 +397,7 @@ class PlayerMovement{
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
-            slideWishDirection = Math.Mix(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
+            slideWishDirection = Math.MixVec3(slideWishDirection, Vec3.new(0.0,0.0,0.0), 0.05)
         }
     }
 
