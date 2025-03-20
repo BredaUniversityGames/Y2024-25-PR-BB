@@ -13,11 +13,3 @@
 #include <glm/mat4x4.hpp>
 #include <unordered_map>
 #include <vector>
-
-struct GPUModel
-{
-    std::vector<ResourceHandle<GPUMesh>> staticMeshes;
-    std::vector<ResourceHandle<GPUMesh>> skinnedMeshes;
-    std::vector<ResourceHandle<GPUMaterial>> materials;
-    std::vector<ResourceHandle<GPUImage>> textures;
-};
