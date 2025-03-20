@@ -40,7 +40,7 @@ public:
     UINavigationTargets navigationTargets = {};
     int16_t zLevel = 1;
 
-    void SetLocation(const glm::vec2& location) noexcept { _relativeLocation = location; }
+    void SetLocation(const glm::vec2& location) noexcept;
 
     // todo: move transform functionality into its own class
     NO_DISCARD const glm::vec2& GetRelativeLocation() const noexcept { return _relativeLocation; }
@@ -49,7 +49,7 @@ public:
     NO_DISCARD const glm::vec2& GetAbsoluteScale() const noexcept { return _absoluteScale; }
     NO_DISCARD const glm::vec2& GetRelativeScale() const noexcept { return _relativeScale; }
 
-    void SetScale(const glm::vec2& scale) noexcept { _relativeScale = scale; }
+    void SetScale(const glm::vec2& scale) noexcept;
 
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
 
