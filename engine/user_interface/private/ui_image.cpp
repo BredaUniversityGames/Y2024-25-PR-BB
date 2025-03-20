@@ -10,6 +10,7 @@ void UIImage::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
     QuadDrawInfo info {
         .matrix = matrix,
+        .color = display_color,
         .textureIndex = _image.Index(),
     };
 
