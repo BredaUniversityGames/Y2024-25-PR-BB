@@ -201,7 +201,7 @@ class PlayerMovement{
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
 
-        if((isGrounded && isJumpHeld)) {
+        if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
             hasDoubleJumped = false
@@ -238,7 +238,7 @@ class PlayerMovement{
             }
 
             var speed = velocity.length()
-            if (speed > maxSpeed ) {
+            if (speed > maxSpeed) {
                 var factor = maxSpeed / speed
                 var newVel  =  Vec3.new(velocity.x * factor, velocity.y, velocity.z * factor)
                 velocity = Math.Mix(velocity, newVel, 0.2)
