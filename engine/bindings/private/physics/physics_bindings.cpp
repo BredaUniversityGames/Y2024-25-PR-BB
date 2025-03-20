@@ -80,21 +80,6 @@ WrenEntity GetHitEntity(RayHitInfo& self, ECSModule& ecs)
     return WrenEntity { self.entity, &ecs.GetRegistry() };
 }
 
-glm::vec3 GetRayHitPosition(RayHitInfo& self)
-{
-    return self.position;
-}
-
-glm::vec3 GetRayHitNormal(RayHitInfo& self)
-{
-    return self.normal;
-}
-
-float GetRayHitFraction(RayHitInfo& self)
-{
-    return self.hitFraction;
-}
-
 JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
 {
     return self.component->bodyID;
@@ -118,9 +103,9 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     // RayHit struct
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");
     rayHitInfo.funcExt<bindings::GetHitEntity>("GetEntity");
-    rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
-    rayHitInfo.propReadonlyExt<bindings::GetRayHitNormal>("normal");
-    rayHitInfo.propReadonlyExt<bindings::GetRayHitFraction>("hitFraction");
+    rayHitInfo.var<&RayHitInfo::position>("position");
+    rayHitInfo.var<&RayHitInfo::normal>("normal");
+    rayHitInfo.var<&RayHitInfo::hitFraction>("hitFraction");
 
     // Body ID
     module.klass<JPH::BodyID>("BodyID");
