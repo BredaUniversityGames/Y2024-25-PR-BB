@@ -38,6 +38,11 @@ std::optional<SoundInstance> PlaySFX(AudioModule& self, const std::string& path,
     return self.PlaySFX(self.GetSFX(path), volume, false);
 }
 
+void StopSFX(AudioModule& self, const SoundInstance& sound_instance)
+{
+    self.StopSFX(sound_instance);
+}
+
 bool IsSFXPlaying(AudioModule& self, const SoundInstance instance)
 {
     return self.IsSFXPlaying(instance);
@@ -79,6 +84,7 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::PlayEventOnce>("PlayEventOnce");
     wren_class.funcExt<bindings::PlayEventLoop>("PlayEventLoop");
     wren_class.funcExt<bindings::StopEvent>("StopEvent");
+    wren_class.funcExt<bindings::StopSFX>("StopSFX");
 
     module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
     auto& audioEmitterComponentClass = module.klass<WrenComponent<AudioEmitterComponent>>("AudioEmitterComponent");

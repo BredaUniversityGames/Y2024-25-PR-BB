@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/music_player.wren" for MusicPlayer
 
 class Main {
 
@@ -114,13 +115,29 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        // Music player
+
+        var musicList = [
+            "assets/music/game/Juval - Play Your Game - No Lead Vocals.wav",
+            "assets/music/game/Ace - Silent Treatment.wav",
+            "assets/music/game/Dono - Zero Gravity.wav",
+            "assets/music/game/Ikoliks - Metal Warrior.wav",
+            "assets/music/game/Tomáš Herudek - Smash Your Enemies.wav",
+            "assets/music/game/Taheda - Phenomena.wav"
+            ]
+            
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList)
     }
 
     static Shutdown(engine) {
+        __musicPlayer.Destroy(engine.GetAudio())
         engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
+
+        __musicPlayer.Update(engine.GetInput(), engine.GetAudio())
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
