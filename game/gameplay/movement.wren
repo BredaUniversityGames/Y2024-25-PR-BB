@@ -9,7 +9,7 @@ class PlayerMovement{
 
         maxSpeed = 9.0
         sv_accelerate = 10.0
-        jumpForce = 10.0
+        jumpForce = 9.75
         gravityFactor = 2.4
         playerHeight = 1.7
         // Used for interpolation between crouching and standing
