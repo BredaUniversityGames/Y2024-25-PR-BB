@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/wave_system.wren" for WaveSystem
 
 class Main {
 
@@ -73,16 +74,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
-
-        __demons = []
-        for (position in positions) {
-            __demons.add(engine.LoadModel("assets/models/Demon.glb"))
-            var demonAnimations = __demons[-1].GetAnimationControlComponent()
-            demonAnimations.Play("Idle", 1.0, true, 0.0, false)
-            __demons[-1].GetTransformComponent().translation = position
-            __demons[-1].GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
-        }
-
+        __waveManager = WaveSystem.new(positions, ["assets/models/Demon.glb"])
 
         // Load Map
         engine.LoadModel("assets/models/blockoutv4.glb")
@@ -168,32 +160,6 @@ class Main {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
             }
 
-            if(engine.GetInput().DebugGetKey(Keycode.eK())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Walk", 1.0, true, 0.3, true)
-                }
-            }
-            if(engine.GetInput().DebugGetKey(Keycode.eL())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Run", 2.0, true, 0.3, true)
-                }
-            }
-            if(engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                for(demon in __demons) {
-                    var demonAnimations = demon.GetAnimationControlComponent()
-                    demonAnimations.Play("Attack", 1.0, false, 0.3, false)
-                }
-            }
-
-            for(demon in __demons) {
-                var demonAnimations = demon.GetAnimationControlComponent()
-                if(demonAnimations.AnimationFinished()) {
-                    demonAnimations.Play("Idle", 1.0, true, 0.0, false)
-                }
-            }
-
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
                 if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
@@ -262,6 +228,9 @@ class Main {
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
+
+        var playerPos = __player.GetTransformComponent().translation
+        __waveManager.Update(engine, playerPos, dt)
 
         // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

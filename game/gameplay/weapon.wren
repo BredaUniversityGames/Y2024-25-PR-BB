@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
 import "camera.wren" for CameraVariables
 
 class Weapons {
@@ -33,7 +33,6 @@ class Pistol {
     }
 
     reload (engine) {
-        System.print("Pistol reload")
 
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
@@ -49,7 +48,6 @@ class Pistol {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
-            System.print("Pistol shoot")
 
             // Shake the camera
 
@@ -108,7 +106,7 @@ class Pistol {
     }
 
     equip (engine) {
-        System.print("Pistol equip")
+
     }
 
     cooldown {_cooldown}
