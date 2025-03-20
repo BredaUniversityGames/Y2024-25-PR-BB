@@ -39,7 +39,10 @@ int Main()
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-            .AddModule<InspectorModule>();
+#if not defined(DISTRIBUTION)
+            .AddModule<InspectorModule>()
+#endif
+            ;
     }
 
     {
