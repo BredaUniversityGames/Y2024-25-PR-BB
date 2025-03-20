@@ -102,6 +102,12 @@ void ApplicationModule::Tick(Engine& engine)
     while (SDL_PollEvent(&event))
     {
         _inputDeviceManager->UpdateEvent(event);
+
+        if (_mouseHidden == false)
+        {
+            _inputDeviceManager->SetMousePositionToAbsoluteMousePosition();
+        }
+
         ImGui_ImplSDL3_ProcessEvent(&event);
 
         if (event.type == SDL_EventType::SDL_EVENT_QUIT)

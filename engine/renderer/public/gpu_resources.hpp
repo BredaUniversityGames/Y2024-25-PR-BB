@@ -52,7 +52,6 @@ struct Sampler
 private:
     std::shared_ptr<VulkanContext> _context;
 };
-
 struct GPUImage
 {
     GPUImage(const CPUImage& data, ResourceHandle<Sampler> textureSampler, const std::shared_ptr<VulkanContext>& context, SingleTimeCommands* const commands = nullptr);

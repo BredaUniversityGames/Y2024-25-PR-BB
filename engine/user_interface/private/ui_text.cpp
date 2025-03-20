@@ -28,17 +28,14 @@ void UITextElement::UpdateLocalTextSize()
         }
     }
 }
-
 void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     UIElement::ChildrenSubmitDrawInfo(drawList);
 
     float localOffset = 0;
-
     glm::vec2 elementTranslation = GetAbsoluteLocation();
     if (anchorPoint == AnchorPoint::eMiddle)
     {
-
         elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
         elementTranslation.y += GetAbsoluteScale().y / 2.0;
     }
@@ -58,6 +55,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             QuadDrawInfo info;
 
             glm::vec2 correctedBearing = (glm::vec2(fontChar.bearing) / static_cast<float>(_font->characterHeight)) * (GetAbsoluteScale().y / 2.0f);
+
             glm::vec3 localTranslation = glm::vec3(elementTranslation + glm::vec2(localOffset + correctedBearing.x, -correctedBearing.y), 0);
             glm::vec3 localScale = glm::vec3(glm::vec2(fontChar.size) / glm::vec2(_font->characterHeight), 1.0) * glm::vec3(GetAbsoluteScale().y, GetAbsoluteScale().y, 0);
 

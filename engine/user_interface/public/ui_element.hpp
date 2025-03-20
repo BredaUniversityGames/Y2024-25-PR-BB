@@ -24,7 +24,6 @@ class UIElement
 public:
     UIElement() = default;
     virtual ~UIElement() = default;
-    NON_COPYABLE(UIElement)
 
     enum class AnchorPoint
     {
@@ -53,8 +52,7 @@ public:
 
     void SetScale(const glm::vec2& scale) noexcept;
 
-    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
-
+    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const {};
     virtual void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext);
 
     template <typename T, typename... Args>
@@ -71,7 +69,7 @@ public:
         eUpdatedAndVisible,
         eUpdatedAndInvisble,
         eNotUpdatedAndVisible,
-        eNotUpdatedAndInvisble
+        eNotUpdatedAndInvisible
     } visibility
         = VisibilityState::eUpdatedAndVisible;
 

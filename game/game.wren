@@ -8,6 +8,10 @@ class Main {
 
     static Start(engine) {
 
+
+        engine.GetGame().SetHUDEnabled(true)
+        
+        
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
@@ -40,7 +44,7 @@ class Main {
         __timer = 0
 
         // Player stuff
-
+        engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
