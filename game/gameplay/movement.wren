@@ -9,8 +9,8 @@ class PlayerMovement{
 
         maxSpeed = 9.0
         sv_accelerate = 10.0
-        jumpForce = 8.20
-        gravityFactor = 2.2
+        jumpForce = 10.0
+        gravityFactor = 2.4
         playerHeight = 1.7
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
@@ -208,7 +208,10 @@ class PlayerMovement{
         }else {
             if(doubleJump && hasDoubleJumped == false){
                 velocity.y = 0.0
-                velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
+                velocity = velocity + Vec3.new(0.0, jumpForce*1.5, 0.0)
+                if(moveInputDir.length() > 0.01){
+                    velocity = velocity + moveInputDir.mulScalar(maxSpeed/1.5)
+                }
                 hasDoubleJumped = true
             }
         }
