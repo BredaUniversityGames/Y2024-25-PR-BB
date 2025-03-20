@@ -235,7 +235,7 @@ override_option(GA_USE_PACKAGE OFF)
 
 FetchContent_MakeAvailable(GameAnalytics)
 
-target_compile_options(GameAnalytics PRIVATE -w)
+target_compile_options(GameAnalytics PRIVATE -w PRIVATE -Wno-error=implicit-function-declaration)
 
 if (ENABLE_UNITY)
     target_enable_unity(Jolt)
