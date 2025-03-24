@@ -245,7 +245,7 @@ GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphic
     visualization.canvas = std::make_unique<Canvas>(screenResolution);
     visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), screenResolution);
 
-    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(10.0f, 10.0f), 30);
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(5.0f, 20.0f), 25);
     visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
     visualization.text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
 
