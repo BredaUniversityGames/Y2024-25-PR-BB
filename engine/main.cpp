@@ -50,6 +50,7 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
 
         scripting.ResetVM();
         scripting.SetMainScript(instance, "game/main_menu.wren");
+        
         instance.GetModule<TimeModule>().ResetTimer();
     }
 
