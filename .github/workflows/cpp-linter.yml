@@ -39,7 +39,7 @@ jobs:
           vulkan-use-cache: true
 
       - name: Setup database
-        run: cmake --preset WSL-Release ${{ env.EXTRA_ARGS }}
+        run: cmake --preset WSL-Distribution ${{ env.EXTRA_ARGS }}
 
       - name: CPP-Linter
         uses: cpp-linter/cpp-linter-action@v2.13.4
