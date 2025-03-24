@@ -20,7 +20,7 @@ std::string GetOSName()
 #ifdef _WIN32
     double version = 0.0;
     NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
-    OSVERSIONINFOEXW osInfo;
+    OSVERSIONINFOEXW osInfo {};
 
     *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
 
@@ -31,9 +31,14 @@ std::string GetOSName()
         version = (double)osInfo.dwMajorVersion;
     }
 
+
+
     return "Windows " + std::to_string(version);
 #else
+    utsname name {};
+    uname(&name);
 
+    return std::string(name.sysname) + " " + std::string(name.release);
 #endif
 }
 
