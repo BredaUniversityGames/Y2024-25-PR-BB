@@ -20,17 +20,10 @@ OSVERSIONINFOEX GetWindowsVersion()
     // Get the function pointer to RtlGetVersion
     pRtlGetVersion = reinterpret_cast<NTSTATUS(__stdcall *)(PRTL_OSVERSIONINFOW)>(GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion"));
 
-    // If successfull then read the function
+    // If successfull then read the function, if not, we're doomed to not know the version
     if (pRtlGetVersion != NULL)
     {
         pRtlGetVersion((PRTL_OSVERSIONINFOW)&result);
-        return result;
-    }
-
-    // If function failed, use fallback to old version
-    if (pRtlGetVersion == NULL)
-    {
-        GetVersionEx((OSVERSIONINFO*)&result);
     }
 
     return result;
