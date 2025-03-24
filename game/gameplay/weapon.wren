@@ -38,7 +38,7 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -91,7 +91,7 @@ class Pistol {
             while (i < length) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
-                transform.translation = Math.Mix(start, end, i / length)
+                transform.translation = Math.MixVec3(start, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 200.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
@@ -101,7 +101,7 @@ class Pistol {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -157,7 +157,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
         }
 
         _reloadTimer = _reloadSpeed
@@ -207,7 +207,7 @@ class Shotgun {
                 while (j < length) {
                     var entity = engine.GetECS().NewEntity()
                     var transform = entity.AddTransformComponent()
-                    transform.translation = Math.Mix(start, end, j / length)
+                    transform.translation = Math.MixVec3(start, end, j / length)
                     var lifetime = entity.AddLifetimeComponent()
                     lifetime.lifetime = 200.0
                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
@@ -219,7 +219,7 @@ class Shotgun {
             }
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)            
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             _cooldown = _attackSpeed
         }
     }
@@ -303,7 +303,7 @@ class Knife {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false)
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 

@@ -1,13 +1,17 @@
 #include "ui_element.hpp"
 #include "ui_input.hpp"
-
+#include "viewport.hpp"
 #include <ranges>
 
-void UIElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
-{
-    ChildrenSubmitDrawInfo(drawList);
-}
 
+void UIElement::SetLocation(const glm::vec2& location) noexcept
+{
+    _relativeLocation = location * Viewport::GetScaleMultipler();
+}
+void UIElement::SetScale(const glm::vec2& scale) noexcept
+{
+    _relativeScale = scale * Viewport::GetScaleMultipler();
+}
 void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInputContext)
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
@@ -45,7 +49,8 @@ void UIElement::UpdateAllChildrenAbsoluteTransform()
         switch (child->anchorPoint)
         {
         case AnchorPoint::eMiddle:
-            newChildLocation = GetAbsoluteLocation() + (GetAbsoluteScale() / 2.0f) + (childRelativeLocation - child->_relativeScale / 2.0f);
+            newChildLocation = GetAbsoluteLocation() + (GetAbsoluteScale() / 2.0f)
+                + (childRelativeLocation - (child->_relativeScale / 2.0f));
             break;
         case AnchorPoint::eTopLeft:
             newChildLocation = { GetAbsoluteLocation() + childRelativeLocation };

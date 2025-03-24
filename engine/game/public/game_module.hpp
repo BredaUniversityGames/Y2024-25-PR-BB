@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
+#include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
 inline const std::string DISCORD_URL = "https://discord.gg/B8qdz5Nf";
@@ -35,6 +36,8 @@ public:
     NON_MOVABLE(GameModule);
 
     void TransitionScene(const std::string& scriptFile);
+
+    ModelLoader _modelsLoaded {};
 
     bool _updateHud = false;
     std::string _nextSceneToExecute {};

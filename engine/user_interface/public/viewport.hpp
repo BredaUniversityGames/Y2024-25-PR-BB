@@ -30,7 +30,7 @@ public:
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
     T& AddElement(Args&&... args)
     {
-        UIElement& addedChild = *_baseElements.emplace_back(std::shared_ptr<T>(std::forward<Args>(args)...));
+        UIElement& addedChild = *_baseElements.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
         std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
@@ -62,7 +62,17 @@ public:
     void SetExtend(const glm::uvec2 extend) { _extend = extend; }
     void SetOffset(const glm::uvec2 offset) { _offset = offset; }
 
+    static float GetScaleMultipler() { return _uiScaleMultiplier; }
+    static void SetScaleMultiplier(float scaleMultipler) { _uiScaleMultiplier = scaleMultipler; }
+    static float CalculateScaleMultiplierFromVerticalResolution(float yres)
+    {
+        return yres / baseYres;
+    }
+
 private:
+    static constexpr float baseYres = 1440;
+    static float _uiScaleMultiplier;
+
     glm::uvec2 _extend;
     glm::uvec2 _offset;
 
@@ -74,3 +84,4 @@ private:
      */
     std::vector<std::shared_ptr<UIElement>> _baseElements;
 };
+

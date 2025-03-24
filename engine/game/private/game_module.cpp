@@ -29,7 +29,7 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
@@ -49,8 +49,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu = mainMenu;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
-    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
-    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -78,7 +79,7 @@ void GameModule::SetMainMenuEnabled(bool val)
     }
     else
     {
-        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 }
 void GameModule::SetHUDEnabled(bool val)
@@ -89,7 +90,7 @@ void GameModule::SetHUDEnabled(bool val)
     }
     else
     {
-        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisble;
+        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 }
 void GameModule::TransitionScene(const std::string& scriptFile)

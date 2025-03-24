@@ -75,8 +75,7 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     hud.canvas = std::make_unique<Canvas>(screenResolution);
 
-    // temporary
-    hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), hud.canvas->GetRelativeScale());
+    hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
     commonImageData.format
@@ -120,6 +119,15 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     auto gunPic = hud.canvas->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
     gunPic.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+
+    auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
+
+    for (int32_t i = 0; i < static_cast<int32_t>(hud.dashCharges.size()); i++)
+    {
+        hud.dashCharges[i] = hud.canvas->AddChild<UIImage>(dashCircle, glm::vec2((i * 60) + 100, 100), glm::vec2(50));
+        hud.dashCharges[i].lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    }
+
     hud.canvas->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
