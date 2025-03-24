@@ -14,7 +14,7 @@
 #include <glm/gtx/norm.hpp>
 #include <stb_image.h>
 
--constexpr static auto DEFAULT_LOAD_FLAGS = fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
+constexpr static auto DEFAULT_LOAD_FLAGS = fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
 static fastgltf::Parser parser = fastgltf::Parser(fastgltf::Extensions::KHR_lights_punctual);
 
 namespace detail

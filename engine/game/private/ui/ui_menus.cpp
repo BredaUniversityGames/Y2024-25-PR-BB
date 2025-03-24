@@ -210,13 +210,16 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     mainMenu.openLinkButton.lock()->AddChild<UITextElement>(font, "discord", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
     mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
-    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
+    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.openLinkButton;
 
     mainMenu.settingsButton.lock()->navigationTargets.down = mainMenu.quitButton;
     mainMenu.settingsButton.lock()->navigationTargets.up = mainMenu.playButton;
 
-    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.openLinkButton;
     mainMenu.quitButton.lock()->navigationTargets.up = mainMenu.settingsButton;
+
+    mainMenu.openLinkButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.openLinkButton.lock()->navigationTargets.up = mainMenu.quitButton;
 
     CPUImage commonImageData;
     commonImageData.format
