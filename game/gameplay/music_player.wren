@@ -2,28 +2,42 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, 
 
 class MusicPlayer {
 
-    construct new(audio, musicList) {
+    construct new(audio, musicList, volume) {
 
         _musicList = []
+        _volume = volume
 
         for (music in musicList) {
-            audio.LoadSFX(music, false, true)
+
+            if (music.count > 0) {
+                audio.LoadSFX(music, false, true)
+            }
+            
             _musicList.insert(-1, music)
         }
 
         _index = 0
-        _currentSFX = audio.PlaySFX(_musicList[_index], 0.2)
+
+        if (_musicList[_index].count > 0) {
+            _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
+        }
     }
 
-    Update(input, audio) {
-        if (input.DebugGetKey(Keycode.eM())) {
-            _index = (_index + 1) % _musicList.count
+    CycleMusic(audio) {
+        _index = (_index + 1) % _musicList.count
+
+        if (_currentSFX != null) {
             audio.StopSFX(_currentSFX)
-            _currentSFX = audio.PlaySFX(_musicList[_index], 0.2)
+        }
+
+        if (_musicList[_index].count > 0) {
+            _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
         }
     }
 
     Destroy(audio) {
-        audio.StopSFX(_currentSFX)
+        if (_currentSFX != null) {
+            audio.StopSFX(_currentSFX)
+        }
     }
 }
