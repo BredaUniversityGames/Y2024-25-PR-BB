@@ -52,7 +52,7 @@ class MeleeEnemy {
         _reasonTimer = _reasonTimer + dt
         if(_reasonTimer > 2000) {
             _reasonTimer = 0
-            this.FindNewPath(engine)
+            //this.FindNewPath(engine)
             System.print("Finding new path")
         }
 
@@ -67,10 +67,24 @@ class MeleeEnemy {
         // Pathfinding logic
         if(_currentPath != null) {
             //System.print("Following path")
+            var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+
+            var p2 = p1
+
+            if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
+                p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
+            }
+
+            var dst = Math.Distance(pos, p1.center)
+            var bias = 0.01
+            var target = Math.MixVec3(p1.center, p2.center, dst * bias)
+
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+
+
             //System.printAll([[waypoint.center.x, waypoint.center.y, waypoint.center.z]])
 
-            if(Math.Distance(waypoint.center, pos) < 3.0) {
+            if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -82,19 +96,14 @@ class MeleeEnemy {
             }
 
           
-            var forwardVector = (waypoint.center - pos).normalize()
-            // System.print(forwardVector.x)
-            // System.print(forwardVector.y)
-            // System.print(forwardVector.z)
-            // System.print("")
-            // System.print(_maxVelocity)
-            // System.print("-----------------")
-
-
+            var forwardVector = (target - pos).normalize()
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
 
             // Set forward rotation
-            _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+
+            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+            var startRotation = _rootEntity.GetTransformComponent().rotation
+            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
         }else{
             this.FindNewPath(engine)
 

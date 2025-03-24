@@ -132,7 +132,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/demon.glb", __enemyShape, 1)
     }
 
     static Shutdown(engine) {
