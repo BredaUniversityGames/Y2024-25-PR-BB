@@ -18,8 +18,12 @@ public:
         ePressed
     } state
         = ButtonState::eNormal;
+    ButtonState previousState = ButtonState::eNormal;
 
     void Update(const InputManagers& inputManagers, UIInputContext& inputContext) override;
+
+    ButtonState GetState() const { return state; }
+    bool IsPressedOnce() const { return state == ButtonState::ePressed && previousState != ButtonState::ePressed; }
 
     struct ButtonStyle
     {
@@ -30,16 +34,12 @@ public:
 
     UIButton(ButtonStyle aStyle, const glm::vec2& location, const glm::vec2& size)
         : style(aStyle)
-
     {
         SetLocation(location);
         SetScale(size);
     }
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
-
-    std::function<void()> onBeginHoverCallBack = []() {};
-    std::function<void()> onMouseDownCallBack = []() {};
 
 private:
     void SwitchState(bool inputActionPressed, bool inputActionReleased);

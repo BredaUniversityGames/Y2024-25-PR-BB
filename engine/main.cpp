@@ -1,3 +1,4 @@
+#include "analytics_module.hpp"
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
@@ -39,14 +40,16 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-            .AddModule<InspectorModule>();
+            .AddModule<InspectorModule>()
+            .AddModule<AnalyticsModule>();
     }
 
     {
         ZoneScopedN("Game Script Setup");
         auto& scripting = instance.GetModule<ScriptingModule>();
+
         scripting.ResetVM();
-        scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/main_menu.wren");
         instance.GetModule<TimeModule>().ResetTimer();
     }
 

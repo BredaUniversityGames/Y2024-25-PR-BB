@@ -3,6 +3,7 @@
 #include "viewport.hpp"
 #include <ranges>
 
+
 void UIElement::SetLocation(const glm::vec2& location) noexcept
 {
     _relativeLocation = location * Viewport::GetScaleMultipler();
