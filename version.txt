@@ -1,1 +1,1 @@
-1.2.4 Blightspire
+Blightspire - Build v0.3.0

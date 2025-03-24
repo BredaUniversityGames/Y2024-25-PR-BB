@@ -36,6 +36,8 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <file_io.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     auto& ECS = engine.GetModule<ECSModule>();
@@ -43,8 +45,15 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
     const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
-    _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, "Blightspire v0.1.0");
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+
+    std::optional<std::ifstream> versionFile = fileIO::OpenReadStream("version.txt");
+    if (versionFile.has_value())
+    {
+        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
+        _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, gameVersionText);
+        engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+    }
+
 
     _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
