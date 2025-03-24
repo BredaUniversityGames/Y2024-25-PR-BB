@@ -17,7 +17,7 @@
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
 #include "utility/math_bind.hpp"
@@ -39,8 +39,16 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
 
 WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
 {
-    auto entity = SceneLoading::LoadModel(*engine.instance, path);
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
+    auto model = sceneCache.LoadModel(*engine.instance, path);
+
+    auto entity = model->Instantiate(*engine.instance);
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
+}
+
+void SetExit(WrenEngine& engine, int code)
+{
+    engine.instance->SetExit(code);
 }
 
 }
@@ -65,6 +73,7 @@ void BindEngineAPI(wren::ForeignModule& module)
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
+        engineAPI.funcExt<bindings::SetExit>("SetExit");
     }
 
     // Time Module

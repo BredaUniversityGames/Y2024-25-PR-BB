@@ -50,6 +50,11 @@ void SetFriction(WrenComponent<RigidbodyComponent>& self, const float friction)
     self.component->SetFriction(friction);
 }
 
+void SetTranslation(WrenComponent<RigidbodyComponent>& self, const glm::vec3& translation)
+{
+    self.component->SetTranslation(translation);
+}
+
 glm::vec3 GetVelocity(WrenComponent<RigidbodyComponent>& self)
 {
     return self.component->GetVelocity();
@@ -75,16 +80,6 @@ WrenEntity GetHitEntity(RayHitInfo& self, ECSModule& ecs)
     return WrenEntity { self.entity, &ecs.GetRegistry() };
 }
 
-glm::vec3 GetRayHitPosition(RayHitInfo& self)
-{
-    return self.position;
-}
-
-glm::vec3 GetRayHitNormal(RayHitInfo& self)
-{
-    return self.normal;
-}
-
 JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
 {
     return self.component->bodyID;
@@ -108,8 +103,9 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     // RayHit struct
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");
     rayHitInfo.funcExt<bindings::GetHitEntity>("GetEntity");
-    rayHitInfo.propReadonlyExt<bindings::GetRayHitPosition>("position");
-    rayHitInfo.propReadonlyExt<bindings::GetRayHitNormal>("normal");
+    rayHitInfo.var<&RayHitInfo::position>("position");
+    rayHitInfo.var<&RayHitInfo::normal>("normal");
+    rayHitInfo.var<&RayHitInfo::hitFraction>("hitFraction");
 
     // Body ID
     module.klass<JPH::BodyID>("BodyID");
@@ -143,4 +139,5 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBodyComponent.funcExt<bindings::GetRotation>("GetRotation");
     rigidBodyComponent.funcExt<bindings::SetGravityFactor>("SetGravityFactor");
     rigidBodyComponent.funcExt<bindings::SetFriction>("SetFriction");
+    rigidBodyComponent.funcExt<bindings::SetTranslation>("SetTranslation");
 }

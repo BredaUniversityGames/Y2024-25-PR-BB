@@ -29,7 +29,7 @@
 #include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
@@ -41,13 +41,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
-    auto& applicationModule = engine.GetModule<ApplicationModule>();
-    applicationModule.GetActionManager().SetGameActions(GAME_ACTIONS);
-    applicationModule.GetActionManager().SetCustomInputGlyphs(INPUT_GLYPHS);
-
-    auto hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
-    _hud = hud.second;
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(std::move(hud.first));
+    _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
+    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
+    _mainMenu = mainMenu;
+    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
+    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto path = std::filesystem::current_path();
     spdlog::info("Current path: {}", path.string());
@@ -55,7 +56,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
-    
+
+    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+  
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
@@ -65,6 +68,28 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
 
+void GameModule::SetMainMenuEnabled(bool val)
+{
+    if (val)
+    {
+        _mainMenu.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+    else
+    {
+        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
+void GameModule::SetHUDEnabled(bool val)
+{
+    if (val)
+    {
+        _hud.canvas->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+    else
+    {
+        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
