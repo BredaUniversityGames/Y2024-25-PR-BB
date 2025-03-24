@@ -1,14 +1,15 @@
 #include "scripting_module.hpp"
 #include "file_io.hpp"
+#include "log.hpp"
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
-#include "log.hpp"
 
 void ScriptingModule::ResetVM()
 {
     _mainModule.reset();
     _context->Reset();
     BindEngineAPI(GetForeignAPI());
+    GenerateEngineBindingsFile();
 }
 
 void ScriptingModule::GenerateEngineBindingsFile()

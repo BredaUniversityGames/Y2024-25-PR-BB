@@ -44,7 +44,7 @@ endif ()
 # Define if it's the distribution config for main file
 if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution" OR "${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
     add_compile_definitions(DISTRIBUTION)
-endif()
+endif ()
 
 # Add external dependencies
 add_subdirectory(external)
@@ -58,17 +58,17 @@ endif ()
 add_subdirectory(engine)
 
 # Add executable with settings based on configuration used
-if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
+if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
     add_executable(CustomTech WIN32 "engine/main.cpp")
-elseif("${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+elseif ("${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
     add_executable(CustomTech "engine/main.cpp")
     set_target_properties(CustomTech
             PROPERTIES
             LINK_FLAGS "-mwindows"
     )
-else()
+else ()
     add_executable(CustomTech "engine/main.cpp")
-endif()
+endif ()
 
 target_link_libraries(CustomTech
         PRIVATE ProjectSettings
