@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
 
@@ -118,6 +119,8 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        AnalyticsManager.AccuracyEvent(1, "Revolver", 1)
     }
 
     static Shutdown(engine) {
