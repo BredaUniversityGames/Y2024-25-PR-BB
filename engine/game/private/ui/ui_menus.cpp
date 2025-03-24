@@ -236,3 +236,17 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
 
     return mainMenu;
 }
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::string_view text)
+{
+    GameVersionVisualization visualization {};
+    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+
+    visualization.canvas = std::make_unique<Canvas>(screenResolution);
+
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, "ajushdgajsdh", glm::vec2(50.0f, 50.0f), 50);
+    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    graphicsContext.UpdateBindlessSet();
+
+    return visualization;
+}

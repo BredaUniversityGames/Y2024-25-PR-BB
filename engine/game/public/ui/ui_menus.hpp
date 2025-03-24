@@ -38,3 +38,11 @@ public:
 };
 
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+struct GameVersionVisualization
+{
+    std::shared_ptr<Canvas> canvas;
+    std::weak_ptr<UITextElement> text;
+};
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::string_view text);

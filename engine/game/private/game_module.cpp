@@ -41,7 +41,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
-    _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
+    _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, "aisudhasjdhbasjdhlbs");
+
+    _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
     _mainMenu = mainMenu;
@@ -58,7 +62,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-  
+
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
