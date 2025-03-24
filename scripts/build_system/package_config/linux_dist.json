@@ -12,6 +12,7 @@
     "settings.json",
     "build/WSL-Release/libsteam_api.so",
     "build/WSL-Release/libfmod.so.14",
-    "build/WSL-Release/libfmodstudio.so.14"
+    "build/WSL-Release/libfmodstudio.so.14",
+    "game_analytics_keys.txt"
   ]
 }
