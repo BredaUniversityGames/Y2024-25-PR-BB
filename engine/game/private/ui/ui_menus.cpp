@@ -199,7 +199,7 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
 
     // temporary
-    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), mainMenu.GetRelativeScale());
+    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), screenResolution);
 
     constexpr float xMargin = 50;
     mainMenu.playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f).lock();
@@ -243,7 +243,7 @@ GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphic
     auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
 
     visualization.canvas = std::make_unique<Canvas>(screenResolution);
-    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), visualization.canvas->GetRelativeScale());
+    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), screenResolution);
 
     visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(10.0f, 10.0f), 30);
     visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
