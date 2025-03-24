@@ -49,6 +49,8 @@ class MeleeEnemy {
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
 
+        
+
         _reasonTimer = _reasonTimer + dt
         if(_reasonTimer > 2000) {
             _reasonTimer = 0
@@ -98,6 +100,10 @@ class MeleeEnemy {
           
             var forwardVector = (target - pos).normalize()
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+
+            var rayHitInfos = engine.GetPhysics().ShootMultipleRays(Vec3.new(pos.x,pos.y - 1.5,pos.z),Vec3.new(forwardVector.x, 0.45, forwardVector.z), 4.0, 5,110)
+
 
             // Set forward rotation
 
