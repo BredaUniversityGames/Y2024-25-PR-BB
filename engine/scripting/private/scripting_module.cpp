@@ -2,6 +2,7 @@
 #include "file_io.hpp"
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
+#include "log.hpp"
 
 void ScriptingModule::ResetVM()
 {
@@ -52,7 +53,7 @@ void ScriptingModule::Tick(Engine& engine)
 
         if (!_scriptingLogs.str().empty())
         {
-            spdlog::info("[Script] {}", _scriptingLogs.str());
+            bblog::info("[Script] {}", _scriptingLogs.str());
             _scriptingLogs.str(std::string {}); // Clear stream for next frame
         }
     }
