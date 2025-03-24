@@ -1,6 +1,11 @@
 #pragma once
 #include <spdlog/spdlog.h>
 
-// Currently this is just an alias for spdlog,
-// But we might want more complex logging logic later
+namespace spdlog
+{
+// After this is called, the logs are written to a file, instead of the console.
+void StartWritingToFile();
+void PrintOSName();
+}
+
 namespace bblog = spdlog;

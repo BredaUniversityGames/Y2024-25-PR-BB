@@ -8,6 +8,7 @@
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
+#include "profile_macros.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
@@ -15,11 +16,12 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
-#include "profile_macros.hpp"
-#include "wren_bindings.hpp"
-
-int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+int Main()
 {
+#ifdef DISTRIBUTION
+    bblog::StartWritingToFile();
+#endif
+
     MainEngine instance;
     Stopwatch startupTimer {};
 
@@ -56,3 +58,19 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
     bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
+
+#if defined(_WIN32) && defined(DISTRIBUTION)
+
+int APIENTRY WinMain(MAYBE_UNUSED HINSTANCE hInstance, MAYBE_UNUSED HINSTANCE hPrevInstance, MAYBE_UNUSED LPSTR lpCmdLine, MAYBE_UNUSED int nShowCmd)
+{
+    return Main();
+}
+
+#else
+
+int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+{
+    return Main();
+}
+
+#endif
