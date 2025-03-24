@@ -8,23 +8,47 @@
 #include <sys/utsname.h>
 #endif
 
+#ifdef _WIN32
+OSVERSIONINFOEX GetWindowsVersion()
+{
+    OSVERSIONINFOEX result {};
+
+    // Function pointer to driver function
+    NTSTATUS (WINAPI *pRtlGetVersion)(
+       PRTL_OSVERSIONINFOW lpVersionInformation) = NULL;
+
+    // Get the function pointer to RtlGetVersion
+    pRtlGetVersion = reinterpret_cast<NTSTATUS(__stdcall *)(PRTL_OSVERSIONINFOW)>(GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion"));
+
+    // If successfull then read the function
+    if (pRtlGetVersion != NULL)
+    {
+        pRtlGetVersion((PRTL_OSVERSIONINFOW)&result);
+        return result;
+    }
+
+    // If function failed, use fallback to old version
+    if (pRtlGetVersion == NULL)
+    {
+        GetVersionEx((OSVERSIONINFO*)&result);
+    }
+
+    return result;
+}
+#endif
+
 std::string GetOSName()
 {
 #ifdef _WIN32
-    double version = 0.0;
-    NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW);
-    OSVERSIONINFOEXW osInfo {};
+    double majorVersion = 0.0;
+    double minorVersion = 0.0;
 
-    *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+    OSVERSIONINFOEX info = GetWindowsVersion();
 
-    if (NULL != RtlGetVersion)
-    {
-        osInfo.dwOSVersionInfoSize = sizeof(osInfo);
-        RtlGetVersion(&osInfo);
-        version = (double)osInfo.dwMajorVersion;
-    }
+    majorVersion = static_cast<double>(info.dwMajorVersion);
+    minorVersion = static_cast<double>(info.dwMinorVersion);
 
-    return "Windows " + std::to_string(version);
+    return "Windows " + std::to_string(majorVersion) + "-" + std::to_string(minorVersion);
 #else
     utsname name {};
     uname(&name);
