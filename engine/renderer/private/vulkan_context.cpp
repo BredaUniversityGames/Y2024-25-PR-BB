@@ -8,39 +8,7 @@
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
-
-#ifndef _WIN32
-#include <sys/utsname.h>
-#endif
-
-std::string GetOSName()
-{
-#ifdef _WIN32
-    double version = 0.0;
-    NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
-    OSVERSIONINFOEXW osInfo {};
-
-    *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
-
-    if (NULL != RtlGetVersion)
-    {
-        osInfo.dwOSVersionInfoSize = sizeof(osInfo);
-        RtlGetVersion(&osInfo);
-        version = (double)osInfo.dwMajorVersion;
-    }
-
-
-
-    return "Windows " + std::to_string(version);
-#else
-    utsname name {};
-    uname(&name);
-
-    return std::string(name.sysname) + " " + std::string(name.release);
-#endif
-}
 
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
 {
@@ -74,18 +42,18 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
     _physicalDevice.getProperties(&properties);
     _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
 
-    spdlog::info("##### SYSTEM INFO #####");
-    spdlog::info("Operating System: {}", GetOSName());
+    bblog::info("##### SYSTEM INFO #####");
+    bblog::PrintOSName();
 
     uint32_t apiVersion = vk::enumerateInstanceVersion();
     uint32_t major = VK_VERSION_MAJOR(apiVersion);
     uint32_t minor = VK_VERSION_MINOR(apiVersion);
     uint32_t patch = VK_VERSION_PATCH(apiVersion);
-    spdlog::info("Vulkan Version Installed: {}.{}.{}", major, minor, patch);
+    bblog::info("Vulkan Version Installed: {}.{}.{}", major, minor, patch);
 
-    spdlog::info("GPU: {}", std::string(properties.deviceName));
-    spdlog::info("GPU Driver Version (encoded): {}", properties.driverVersion); // Encoding can be different for each vendor
-    spdlog::info("#######################");
+    bblog::info("GPU: {}", std::string(properties.deviceName));
+    bblog::info("GPU Driver Version (encoded): {}", properties.driverVersion); // Encoding can be different for each vendor
+    bblog::info("#######################");
 }
 
 VulkanContext::~VulkanContext()
