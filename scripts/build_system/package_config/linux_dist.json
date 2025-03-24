@@ -1,7 +1,7 @@
 {
   "output": "package/linux-dist",
   "executables": [
-    "build/WSL-Distribution/CustomTech"
+    "build/WSL-Distribution/Blightspire"
   ],
   "assets": [
     "assets",

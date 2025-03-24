@@ -11,6 +11,7 @@
 // This definition fixes the issues and does not change the final build output
 #define SDL_DISABLE_ANALYZE_MACROS
 
+#include <../stb/stb_image.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
@@ -49,6 +50,24 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
         engine.SetExit(-1);
         SDL_Quit();
         return priority;
+    }
+
+    int32_t width, height, nrChannels;
+    stbi_uc* pixels = stbi_load("assets/textures/icon.png", &width, &height, &nrChannels, 3);
+    if (pixels)
+    {
+        SDL_Surface* icon = SDL_CreateSurfaceFrom(
+            width,
+            height,
+            SDL_PIXELFORMAT_RGB24,
+            pixels, width * 3);
+        SDL_SetWindowIcon(_window, icon);
+
+        SDL_DestroySurface(icon);
+    }
+    else
+    {
+        bblog::warn("Unable to load window icon!");
     }
 
     uint32_t sdlExtensionsCount = 0;

@@ -1,7 +1,7 @@
 {
   "output": "package/linux-dev-rel-deb",
   "executables": [
-    "build/WSL-RelWithDebInfo/CustomTech"
+    "build/WSL-RelWithDebInfo/Blightspire"
   ],
   "assets": [
     "assets",

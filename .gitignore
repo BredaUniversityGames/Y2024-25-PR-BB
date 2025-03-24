@@ -17,6 +17,10 @@ package
 # Analytics key
 game_analytics_keys.txt
 
+# Icon files
+icon.ico
+icon.rc
+
 # User-specific files
 *.rsuser
 *.suo
