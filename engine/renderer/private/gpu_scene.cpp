@@ -50,6 +50,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     InitializeClusterCullingBuffers();
     InitializeObjectInstancesBuffers();
     InitializeSkinBuffers();
+    InitializeDecalBuffer();
 
     CreateHZBDescriptorSetLayout();
 
@@ -98,6 +99,7 @@ GPUScene::~GPUScene()
     vkContext->Device().destroy(_hzbImageDSL);
     vkContext->Device().destroy(_clusterDescriptorSetLayout);
     vkContext->Device().destroy(_clusterCullingDescriptorSetLayout);
+    vkContext->Device().destroy(_decalDescriptorSetLayout);
 }
 
 void GPUScene::Update(uint32_t frameIndex)
@@ -109,6 +111,7 @@ void GPUScene::Update(uint32_t frameIndex)
     UpdateCameraData(frameIndex);
     UpdateObjectInstancesData(frameIndex);
     UpdateSkinBuffers(frameIndex);
+    UpdateDecalBuffer();
     WriteDraws(frameIndex);
 }
 
@@ -406,6 +409,15 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
     std::memcpy(buffer->mappedPtr, skinDualQuats.data(), sizeof(glm::mat2x4) * skinDualQuats.size());
 }
 
+void GPUScene::UpdateDecalBuffer()
+{
+    // TODO: check for newly spawned decals
+
+    // TODO: update decal buffer with new decals
+
+    // TODO: check for camera near plane intersections
+}
+
 void GPUScene::InitializeSceneBuffers()
 {
     CreateSceneBuffers();
@@ -446,6 +458,13 @@ void GPUScene::InitializeSkinBuffers()
     CreateSkinBuffers();
     CreateSkinDescriptorSetLayout();
     CreateSkinDescriptorSets();
+}
+
+void GPUScene::InitializeDecalBuffer()
+{
+    CreateDecalBuffer();
+    CreateDecalDescriptorSetLayout();
+    CreateDecalDescriptorSet();
 }
 
 void GPUScene::CreateSceneDescriptorSetLayout()
@@ -566,6 +585,20 @@ void GPUScene::CreateHZBDescriptorSetLayout()
     };
 
     _hzbImageDSL = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names, dslCreateInfo);
+}
+
+void GPUScene::CreateDecalDescriptorSetLayout()
+{
+    vk::DescriptorSetLayoutBinding binding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eAllGraphics,
+    };
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
+    std::vector<std::string_view> names { "DecalSSB" };
+    _decalDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
 }
 
 void GPUScene::CreateSceneDescriptorSets()
@@ -701,6 +734,34 @@ void GPUScene::CreateSkinDescriptorSets()
     {
         UpdateSkinDescriptorSet(i);
     }
+}
+
+void GPUScene::CreateDecalDescriptorSet()
+{
+    vk::DescriptorSetAllocateInfo allocateInfo {};
+    allocateInfo.descriptorPool = _context->VulkanContext()->DescriptorPool();
+    allocateInfo.descriptorSetCount = 1;
+    allocateInfo.pSetLayouts = &_decalDescriptorSetLayout;
+
+    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_decalDescriptorSet),
+        "Failed allocating Decal Uniform Buffer descriptor set!");
+
+    vk::DescriptorBufferInfo bufferInfo {};
+    bufferInfo.buffer = _context->Resources()->BufferResourceManager().Access(_decalBuffer)->buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(DecalArray);
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
+    vk::WriteDescriptorSet& bufferWrite { descriptorWrites[0] };
+    bufferWrite.dstSet = _decalDescriptorSet;
+    bufferWrite.dstBinding = 0;
+    bufferWrite.dstArrayElement = 0;
+    bufferWrite.descriptorType = vk::DescriptorType::eStorageBuffer;
+    bufferWrite.descriptorCount = 1;
+    bufferWrite.pBufferInfo = &bufferInfo;
+
+    _context->VulkanContext()->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
 void GPUScene::UpdateSceneDescriptorSet(uint32_t frameIndex)
@@ -958,6 +1019,17 @@ void GPUScene::CreateSkinBuffers()
             std::memcpy(static_cast<std::byte*>(skinBuffer->mappedPtr) + sizeof(glm::mat2x4) * j, &data, sizeof(glm::mat2x4));
         }
     }
+}
+
+void GPUScene::CreateDecalBuffer()
+{
+    BufferCreation createInfo {};
+    createInfo.SetSize(sizeof(DecalArray))
+        .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst)
+        .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
+        .SetName("Decal Buffer");
+
+    _decalBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
 }
 
 void GPUScene::InitializeIndirectDrawBuffer()

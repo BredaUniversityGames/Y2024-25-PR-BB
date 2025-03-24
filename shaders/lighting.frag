@@ -44,6 +44,11 @@ layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
 layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
 layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
 
+layout (set = 6, binding = 0) buffer DecalSSB
+{
+    DecalArray decals;
+};
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -176,8 +181,8 @@ vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, i
     float fogAmount = (a / b) * exp(-cameraPosition.y * b) * (1.0 - exp(-distanceToPoint * directionToCamera.y * b)) / directionToCamera.y;
     float sunAmount = max(dot(directionToCamera, lightPosition), 0.0);
     vec3 fogColor = mix(scene.fogColor,
-                        scene.directionalLight.color.rgb,
-                        pow(sunAmount, 8.0));
+    scene.directionalLight.color.rgb,
+    pow(sunAmount, 8.0));
     return mix(color, fogColor, clamp(fogAmount, 0.0, 0.5));
 }
 

@@ -76,6 +76,7 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetPointLightDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 5, { scene.gpuScene->GetClusterCullingDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 6, { scene.gpuScene->GetDecalDescriptorSet() }, {});
 
     commandBuffer.draw(3, 1, 0, 0);
 

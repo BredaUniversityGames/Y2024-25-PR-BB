@@ -1,4 +1,5 @@
 #define MAX_POINT_LIGHTS 8192
+#define MAX_DECALS 32
 
 struct Camera
 {
@@ -42,6 +43,21 @@ struct PointLight
 struct PointLightArray
 {
     PointLight lights[MAX_POINT_LIGHTS];
+    uint count;
+};
+
+struct Decal
+{
+    vec4 orientation;
+    vec3 size;
+    uint albedoIndex;
+    vec3 position;
+    uint normalIndex;
+};
+
+struct DecalArray
+{
+    Decal decals[MAX_DECALS];
     uint count;
 };
 
