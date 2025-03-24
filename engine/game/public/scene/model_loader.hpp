@@ -9,6 +9,10 @@ class Engine;
 
 struct ModelData
 {
+    ModelData(const CPUModel& cpu,  ResourceHandle<GPUModel> gpu)
+        : cpuModel(cpu), gpuModel(gpu)
+    {}
+
     CPUModel cpuModel {};
     ResourceHandle<GPUModel> gpuModel {};
 

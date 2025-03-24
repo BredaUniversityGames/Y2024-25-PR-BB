@@ -79,7 +79,7 @@ void InspectorModule::Shutdown(Engine& engine)
     _editor.reset();
 }
 
-void InspectorModule::Tick(Engine& engine)
+void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
