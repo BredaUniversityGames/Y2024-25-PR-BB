@@ -1,5 +1,6 @@
 #include "analytics_module.hpp"
 
+#include "../../../build/x64-Debug/_deps/gameanalytics-src/source/gameanalytics/GAState.h"
 #include "engine.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
@@ -47,8 +48,6 @@ ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
         gameanalytics::GameAnalytics::setEnabledEventSubmission(true); // TODO: Look into privacy policy later for distribution
 
         gameanalytics::GameAnalytics::initialize(key, secret);
-
-        // if (gameanalytics::GameAnalytics::)
     }
     else
     {
