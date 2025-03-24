@@ -45,4 +45,4 @@ struct GameVersionVisualization
     std::weak_ptr<UITextElement> text;
 };
 
-GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::string_view text);
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text);

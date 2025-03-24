@@ -42,8 +42,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
-    glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
-    _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, "aisudhasjdhbasjdhlbs");
+    const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
+    _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, "Blightspire v0.1.0");
+    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
 
     _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));

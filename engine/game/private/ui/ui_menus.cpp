@@ -237,15 +237,19 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     return mainMenu;
 }
 
-GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::string_view text)
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text)
 {
     GameVersionVisualization visualization {};
     auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
 
     visualization.canvas = std::make_unique<Canvas>(screenResolution);
+    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), visualization.canvas->GetRelativeScale());
 
-    visualization.text = visualization.canvas->AddChild<UITextElement>(font, "ajushdgajsdh", glm::vec2(50.0f, 50.0f), 50);
-    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(10.0f, 10.0f), 30);
+    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    visualization.text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+
+    visualization.canvas->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
     return visualization;
