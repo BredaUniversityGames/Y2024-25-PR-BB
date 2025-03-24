@@ -8,6 +8,7 @@
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
+#include "ui/game_ui_bindings.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
@@ -141,8 +142,13 @@ void BindGameAPI(wren::ForeignModule& module)
 
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
-    game.funcExt<bindings::GetHUD>("GetHUD");
+    
+    game.func<&GameModule::GetMainMenu>("GetMainMenu");
+    game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
+    game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
+    BindMainMenu(module);
 
+    game.funcExt<bindings::GetHUD>("GetHUD");
     auto& hud = module.klass<HUD>("HUD");
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
@@ -150,4 +156,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges");
+
 }

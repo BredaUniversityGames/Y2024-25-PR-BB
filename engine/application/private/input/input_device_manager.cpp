@@ -8,11 +8,11 @@
 
 InputDeviceManager::InputDeviceManager()
 {
-    SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
 }
 
 void InputDeviceManager::Update()
 {
+
     for (auto& key : _keyboard.inputPressed)
         key.second = false;
     for (auto& key : _keyboard.inputReleased)
@@ -62,13 +62,6 @@ void InputDeviceManager::UpdateEvent(const SDL_Event& event)
     {
         _mouse.positionX += event.motion.xrel;
         _mouse.positionY += event.motion.yrel;
-
-        break;
-    }
-
-    case SDL_EVENT_WINDOW_FOCUS_GAINED:
-    {
-        SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
         break;
     }
 
@@ -105,6 +98,10 @@ bool InputDeviceManager::IsMouseButtonHeld(MouseButton button) const
 bool InputDeviceManager::IsMouseButtonReleased(MouseButton button) const
 {
     return !ImGui::GetIO().WantCaptureMouse && UnorderedMapGetOr(_mouse.inputReleased, button, false);
+}
+void InputDeviceManager::SetMousePositionToAbsoluteMousePosition()
+{
+    SDL_GetMouseState(&_mouse.positionX, &_mouse.positionY);
 }
 
 void InputDeviceManager::GetMousePosition(int32_t& x, int32_t& y) const
