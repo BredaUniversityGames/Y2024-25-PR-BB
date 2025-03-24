@@ -84,7 +84,7 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
-#if not defined(DISTRIBUTION)
+#ifndef DISTRIBUTION
     _performanceTracker->Update();
 
     if (ImGui::BeginMainMenuBar())

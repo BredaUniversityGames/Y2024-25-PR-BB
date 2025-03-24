@@ -17,7 +17,7 @@
 
 int Main()
 {
-#if defined(DISTRIBUTION)
+#ifdef DISTRIBUTION
     bblog::StartWritingToFile();
 #endif
 
