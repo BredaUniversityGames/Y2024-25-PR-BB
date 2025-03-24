@@ -30,7 +30,6 @@ class PlayerMovement{
         _lastMousePosition = Vec2.new(0.0 ,0.0)
     }
 
-
 //getters
     //Extra movement
     hasDashed {_hasDashed}

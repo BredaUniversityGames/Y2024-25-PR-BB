@@ -1,3 +1,4 @@
+#include "analytics_module.hpp"
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
@@ -39,7 +40,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-            .AddModule<InspectorModule>();
+            .AddModule<InspectorModule>()
+            .AddModule<AnalyticsModule>();
     }
 
     {
