@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <vk_mem_alloc.h>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 class CameraResource;
 class BloomSettings;

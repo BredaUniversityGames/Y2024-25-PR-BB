@@ -7,7 +7,7 @@
 #include <array>
 #include <glm/vec2.hpp>
 #include <memory>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 struct GPUImage;
 class GraphicsContext;

@@ -5,7 +5,7 @@
 #include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 struct QueueFamilyIndices;
 class GraphicsContext;

@@ -11,7 +11,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 class GraphicsContext;
 struct TransformComponent;

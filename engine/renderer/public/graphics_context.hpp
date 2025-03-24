@@ -4,7 +4,7 @@
 #include "resource_manager.hpp"
 
 #include <memory>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 #include "draw_stats.hpp"
 

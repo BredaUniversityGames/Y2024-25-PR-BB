@@ -10,7 +10,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 class GraphicsContext;
 class VulkanContext;

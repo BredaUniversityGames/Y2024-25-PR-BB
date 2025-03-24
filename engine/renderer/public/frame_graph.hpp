@@ -7,7 +7,7 @@
 #include <memory>
 #include <unordered_map>
 #include <variant>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 struct RenderSceneDescription;
 struct Buffer;
