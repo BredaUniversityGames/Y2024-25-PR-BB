@@ -11,7 +11,7 @@ std::string GetOSName()
 {
 #ifdef _WIN32
     double version = 0.0;
-    NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
+    NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW);
     OSVERSIONINFOEXW osInfo {};
 
     *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
@@ -32,7 +32,7 @@ std::string GetOSName()
 #endif
 }
 
-std::string SerializeTimePoint( const std::chrono::system_clock::time_point& time, const std::string& format)
+std::string SerializeTimePoint(const std::chrono::system_clock::time_point& time, const std::string& format)
 {
     std::time_t tt = std::chrono::system_clock::to_time_t(time);
     std::tm tm {};

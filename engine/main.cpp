@@ -7,13 +7,13 @@
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
+#include "profile_macros.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
 #include "thread_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
-#include "profile_macros.hpp"
 
 int Main()
 {

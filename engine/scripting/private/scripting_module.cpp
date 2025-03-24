@@ -53,7 +53,7 @@ void ScriptingModule::Tick(Engine& engine)
         if (!_scriptingLogs.str().empty())
         {
             spdlog::info("[Script] {}", _scriptingLogs.str());
-            _scriptingLogs.str(std::string{}); // Clear stream for next frame
+            _scriptingLogs.str(std::string {}); // Clear stream for next frame
         }
     }
 }
