@@ -1,5 +1,6 @@
 #include "log.hpp"
 #include <spdlog/sinks/rotating_file_sink.h>
+#include <time.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -36,9 +37,16 @@ std::string SerializeTimePoint(const std::chrono::system_clock::time_point& time
 {
     std::time_t tt = std::chrono::system_clock::to_time_t(time);
     std::tm tm {};
-    _gmtime64_s(&tm, &tt); // GMT (UTC)
+
+#ifdef _WIN32
+    gmtime_s(&tm, &tt); // GMT (UTC)
+#else
+    gmtime_r(&tt, &tm); // GMT (UTC)
+#endif
+
     std::stringstream ss {};
     ss << std::put_time(&tm, format.c_str());
+
     return ss.str();
 }
 
