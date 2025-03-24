@@ -17,7 +17,7 @@ void spdlog::StartWritingToFile()
 
     // TODO: Probably good to put the version of the game here as well when we have access to that
     const auto now = std::chrono::system_clock::now();
-    const std::string logFileName = serializeTimePoint(now, "{:%dd-%mm-%Yy_%Hh-%Mm-%OSs}");
+    const std::string logFileName = serializeTimePoint(now, "%dd-%mm-%Yy_%Hh-%Mm-%OSs");
 
     const std::string fullName = logFileDir + logFileName + logFileExtension;
 
