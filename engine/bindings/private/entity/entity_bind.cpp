@@ -146,14 +146,14 @@ bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
     return component.component->reversedZ;
 }
 
-void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float nearp)
 {
-    component.component->nearPlane = near;
+    component.component->nearPlane = nearp;
 }
 
-void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float farp)
 {
-    component.component->farPlane = far;
+    component.component->farPlane = farp;
 }
 
 void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
@@ -281,7 +281,6 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
     return entities;
 }
 }
-
 void BindEntityAPI(wren::ForeignModule& module)
 {
 

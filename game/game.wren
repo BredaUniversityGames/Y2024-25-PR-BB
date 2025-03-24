@@ -8,6 +8,10 @@ class Main {
 
     static Start(engine) {
 
+
+        engine.GetGame().SetHUDEnabled(true)
+        
+        
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
@@ -40,7 +44,7 @@ class Main {
         __timer = 0
 
         // Player stuff
-
+        engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
@@ -85,7 +89,7 @@ class Main {
 
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
@@ -259,6 +263,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
+        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

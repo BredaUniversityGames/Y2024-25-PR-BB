@@ -47,8 +47,9 @@ int Main()
     {
         ZoneScopedN("Game Script Setup");
         auto& scripting = instance.GetModule<ScriptingModule>();
+
         scripting.ResetVM();
-        scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/main_menu.wren");
         instance.GetModule<TimeModule>().ResetTimer();
     }
 
