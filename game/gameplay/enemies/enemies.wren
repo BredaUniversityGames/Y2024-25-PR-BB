@@ -27,6 +27,8 @@ class MeleeEnemy {
 
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Run", 1.0, true, 1.0, true)
+
+        _reasonTimer = 0.0
     }
 
     entity {
@@ -41,11 +43,18 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, dt) {
-
+    Update(playerPos, engine, dt) {
+        
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
+
+        _reasonTimer = _reasonTimer + dt
+        if(_reasonTimer > 2000) {
+            _reasonTimer = 0
+            this.FindNewPath(engine)
+            System.print("Finding new path")
+        }
 
         // var forwardVector = (playerPos - pos).normalize()
         // var velocity = forwardVector.mulScalar(_maxVelocity)//_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector.mulScalar(_maxVelocity * 1000 / dt)
@@ -66,6 +75,7 @@ class MeleeEnemy {
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
+                    System.print("Path complete")
                     return
                 }
                 waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
@@ -81,12 +91,17 @@ class MeleeEnemy {
             // System.print("-----------------")
 
 
-
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
 
             // Set forward rotation
             _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        }else{
+            this.FindNewPath(engine)
+
         }
+
+            //_currentPath.ClearWaypoints()
+
     }
 
     FindNewPath(engine) {

@@ -308,7 +308,7 @@ class Main {
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, dt)
+                enemy.Update(playerPos, engine, dt)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }

@@ -26,6 +26,11 @@ const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
     return path.waypoints;
 }
 
+void ClearWaypoints(ComputedPath& path)
+{
+    path.waypoints.clear();
+}
+
 void ToggleDebugRender(PathfindingModule& self)
 {
     self.SetDebugDrawState(!self.GetDebugDrawState());
@@ -46,4 +51,5 @@ void BindPathfindingAPI(wren::ForeignModule& module)
 
     auto& computedPath = module.klass<ComputedPath>("ComputedPath");
     computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
+    computedPath.funcExt<bindings::ClearWaypoints>("ClearWaypoints");
 }

@@ -112,8 +112,8 @@ class Pistol {
             }
 
             // Play shooting animation
-            var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
+            //var gunAnimations = gun.GetAnimationControlComponent()
+            //gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
