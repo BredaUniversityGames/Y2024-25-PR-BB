@@ -106,7 +106,7 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, 
             return resource;
         }
 
-        bblog::error("[Error] Image not found!");
+        bblog::error("[Error] Particle image not found!");
         imageFound = false;
         return _emitterImages.begin()->second;
     }

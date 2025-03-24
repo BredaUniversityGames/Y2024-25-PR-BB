@@ -28,6 +28,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <filesystem>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -413,9 +414,66 @@ void GPUScene::UpdateDecalBuffer()
 {
     // TODO: check for newly spawned decals
 
-    // TODO: update decal buffer with new decals
+    // Update Decal buffer
+    const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_decalBuffer);
+    std::memcpy(buffer->mappedPtr, &_decals, sizeof(DecalArray));
 
     // TODO: check for camera near plane intersections
+}
+
+ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
+{
+    auto got = _decalImages.find(fileName);
+
+    if (got == _decalImages.end())
+    {
+        if (std::filesystem::exists("assets/textures/particles/" + fileName))
+        {
+            CPUImage creation;
+            creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
+            creation.SetName(fileName);
+            creation.FromPNG("assets/textures/decals/" + fileName);
+            creation.isHDR = false;
+            auto image = _context->Resources()->ImageResourceManager().Create(creation);
+            auto& resource = _decalImages.emplace(fileName, image).first->second;
+            _context->UpdateBindlessSet();
+            return resource;
+        }
+
+        bblog::error("[Error] Decal image not found!");
+        return _decalImages.begin()->second;
+    }
+
+    return got->second;
+}
+
+void GPUScene::AddDecal(glm::vec3 direction, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
+{
+    const auto image = GetDecalImage(albedoName);
+
+    glm::vec2 imageSize;
+    imageSize.x = _context->Resources()->ImageResourceManager().Access(image)->width;
+    imageSize.y = _context->Resources()->ImageResourceManager().Access(image)->height;
+
+    const float decalThickness = 0.125f;
+
+    DecalData newDecal;
+    newDecal.position = position;
+    newDecal.size = glm::vec3(imageSize.x, imageSize.y, decalThickness);
+    newDecal.albedoIndex = image.Index();
+    // newDecal.normalIndex = -1; // TODO: decide if we want normal stuff for this
+
+    glm::vec3 forward = direction;
+    glm::vec3 up = std::abs(glm::dot(forward, glm::vec3(0.0f, 1.0f, 0.0f))) < 0.99f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 right = glm::normalize(glm::cross(up, forward));
+    up = glm::cross(forward, right);
+    glm::mat3 orientation = glm::mat3(right, up, forward);
+
+    newDecal.orientation = glm::quat(orientation);
+
+    // Place a new decal, and fill the buffer
+    const uint32_t decalIndex = (_decals.count++) % MAX_DECALS;
+    _decals.decals[decalIndex] = newDecal;
 }
 
 void GPUScene::InitializeSceneBuffers()
@@ -1024,12 +1082,18 @@ void GPUScene::CreateSkinBuffers()
 void GPUScene::CreateDecalBuffer()
 {
     BufferCreation createInfo {};
-    createInfo.SetSize(sizeof(DecalArray))
+    createInfo
+        .SetSize(sizeof(DecalArray))
         .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst)
+        .SetIsMappable(true)
         .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
         .SetName("Decal Buffer");
 
     _decalBuffer = _context->Resources()->BufferResourceManager().Create(createInfo);
+
+    const Buffer* decalBuffer = _context->Resources()->BufferResourceManager().Access(_decalBuffer);
+    DecalArray data;
+    std::memcpy(decalBuffer->mappedPtr, &data, sizeof(DecalArray));
 }
 
 void GPUScene::InitializeIndirectDrawBuffer()

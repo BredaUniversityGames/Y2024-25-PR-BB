@@ -68,6 +68,8 @@ public:
     void Update(uint32_t frameIndex);
     void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
+    void AddDecal(glm::vec3 direction, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName);
+
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetSkinnedInstancesDescriptorSet(uint32_t frameIndex) const { return _skinnedInstancesFrameData.at(frameIndex).descriptorSet; }
@@ -188,7 +190,7 @@ private:
     struct alignas(16) DecalArray
     {
         std::array<DecalData, MAX_DECALS> decals;
-        uint32_t count;
+        uint32_t count = 0;
     };
 
     struct FrameData
@@ -238,6 +240,9 @@ private:
     ClusterCullingData _clusterCullingData;
 
     DecalArray _decals;
+    ResourceHandle<GPUImage>& GetDecalImage(std::string fileName);
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> _decalImages;
+
     ResourceHandle<Buffer> _decalBuffer;
     vk::DescriptorSet _decalDescriptorSet;
     vk::DescriptorSetLayout _decalDescriptorSetLayout;
