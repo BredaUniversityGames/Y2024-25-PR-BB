@@ -98,13 +98,40 @@ class MeleeEnemy {
             }
 
           
+           
+
             var forwardVector = (target - pos).normalize()
+
+            var rayHitInfos = engine.GetPhysics().ShootMultipleRays(Vec3.new(pos.x,pos.y - 1.3,pos.z),Vec3.new(forwardVector.x, 0.4, forwardVector.z), 6.0, 5,20)
+
+            var averageNormal = Vec3.new(0,0,0)
+            var amountOfHits = 0
+            for( rayHit in rayHitInfos) {
+
+                 if(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name != _rootEntity.GetNameComponent().name && rayHit.GetEntity(engine.GetECS()) != null){
+                    var normal = rayHit.normal
+                    normal.y = 0.0
+                    averageNormal = averageNormal + normal
+                    amountOfHits = amountOfHits + 1
+
+                    //System.print("Hit")
+                    System.print(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name)
+                    //System.print(_rootEntity.GetNameComponent().name)
+                    
+                    //System.print(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name == _rootEntity.GetNameComponent().name )
+
+                }
+            }
+
+            if(amountOfHits > 0 ){
+                averageNormal.x = averageNormal.x / amountOfHits
+                averageNormal.y = averageNormal.y / amountOfHits
+                averageNormal.z = averageNormal.z / amountOfHits
+            }
+
+
+            forwardVector = Math.MixVec3(forwardVector, forwardVector + averageNormal, 0.1*dt)   
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-
-
-            var rayHitInfos = engine.GetPhysics().ShootMultipleRays(Vec3.new(pos.x,pos.y - 1.5,pos.z),Vec3.new(forwardVector.x, 0.45, forwardVector.z), 4.0, 5,110)
-
-
             // Set forward rotation
 
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
