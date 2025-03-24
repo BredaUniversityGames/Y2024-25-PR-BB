@@ -3,6 +3,7 @@
 #include "camera.hpp"
 #include "constants.hpp"
 #include "resource_manager.hpp"
+#include "resources/image.hpp"
 #include "resources/sampler.hpp"
 #include "settings.hpp"
 

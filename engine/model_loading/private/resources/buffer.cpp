@@ -1,4 +1,5 @@
 #include "resources/buffer.hpp"
+#include "vulkan_helper.hpp"
 
 BufferCreation& BufferCreation::SetSize(vk::DeviceSize size)
 {
