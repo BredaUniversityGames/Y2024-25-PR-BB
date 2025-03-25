@@ -53,9 +53,9 @@ void SetExit(WrenEngine& engine, int code)
     engine.instance->SetExit(code);
 }
 
-void SpawnDecal(WrenEngine& engine, glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
+void SpawnDecal(WrenEngine& engine, glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().SpawnDecal(normal, position, size, albedoName, normalName);
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().SpawnDecal(normal, position, size, albedoName);
 }
 
 }

@@ -84,7 +84,15 @@ class Pistol {
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal)
-                engine.SpawnDecal(rayHitInfo[0].normal, rayHitInfo[0].position, Vec3.new(1, 1, 1), "bullet_hole.png", "null")
+
+                for (i in (rayHitInfo.count - 1)..0) {
+                    var hitEntity = rayHitInfo[i]
+                    if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
+                        // TODO: check if we don't hit the player or an enemy (dynamic meshes)
+                        engine.SpawnDecal(hitEntity.normal, hitEntity.position, Vec3.new(1, 1, 1), "bullet_hole.png")
+                        break
+                    }
+                }
             }
 
             var length = (end - start).length()

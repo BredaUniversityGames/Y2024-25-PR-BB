@@ -32,6 +32,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
 
@@ -445,7 +446,7 @@ ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
     return got->second;
 }
 
-void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
+void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName)
 {
     const auto image = GetDecalImage(albedoName);
 
@@ -455,19 +456,19 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, 
 
     const float decalThickness = 0.125f;
 
-    DecalData newDecal;
-    newDecal.position = position;
-    newDecal.size = glm::vec3(imageSize.x, imageSize.y, decalThickness);
-    newDecal.albedoIndex = image.Index();
-    // newDecal.normalIndex = -1; // TODO: decide if we want normal stuff for this
-
     glm::vec3 forward = -normal;
     glm::vec3 up = std::abs(glm::dot(forward, glm::vec3(0.0f, 1.0f, 0.0f))) < 0.99f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 1.0f);
     glm::vec3 right = glm::normalize(glm::cross(up, forward));
     up = glm::cross(forward, right);
-    glm::mat3 orientation = glm::mat3(right, up, forward);
+    glm::quat orientation = glm::quat(glm::mat3(right, up, forward));
 
-    newDecal.orientation = glm::quat(orientation);
+    const glm::mat4 translationMatrix = glm::translate(glm::mat4 { 1.0f }, position);
+    const glm::mat4 rotationMatrix = glm::toMat4(orientation);
+    const glm::mat4 scaleMatrix = glm::scale(glm::mat4 { 1.0f }, glm::vec3(imageSize.x, imageSize.y, decalThickness));
+
+    DecalData newDecal;
+    newDecal.invModel = glm::inverse(translationMatrix * rotationMatrix * scaleMatrix);
+    newDecal.albedoIndex = image.Index();
 
     // Place a new decal, and fill the buffer
     const uint32_t decalIndex = (_decals.count++) % MAX_DECALS;

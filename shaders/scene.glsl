@@ -48,11 +48,8 @@ struct PointLightArray
 
 struct Decal
 {
-    vec4 orientation;
-    vec3 size;
+    mat4 invModel;
     uint albedoIndex;
-    vec3 position;
-    uint normalIndex;
 };
 
 struct DecalArray

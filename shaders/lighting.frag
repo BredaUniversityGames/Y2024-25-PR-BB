@@ -121,6 +121,27 @@ void main()
     if (normal == vec3(0.0))
     discard;
 
+    // Decal calculations
+    for (uint decalIndex = 0; decalIndex < decals.count; decalIndex++)
+    {
+        Decal currentDecal = decals.decals[decalIndex];
+
+        // transform pixel pos to decal box space
+        vec4 positionObjectSpace = vec4(position, 1.0f) * currentDecal.invModel;
+
+        // check if pixel is within decal box
+        if (abs(positionObjectSpace.x) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.y) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.z) - 0.5f <= 0.0f)
+        {
+            vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
+            vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
+            float decalBlend = decalAlbedo.w;
+            albedo = mix(albedo, decalAlbedo.xyz, decalBlend);
+        }
+    }
+
+    // Start light calculations
     vec3 Lo = vec3(0.0);
     vec3 N = normalize(normal);
     vec3 V = normalize(camera.cameraPosition - position);

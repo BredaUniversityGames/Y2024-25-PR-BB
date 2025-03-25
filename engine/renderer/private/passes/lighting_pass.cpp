@@ -68,6 +68,8 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
 
+    // TODO: different rendering settings for when the camera touches the decal box
+
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, _pushConstants);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});

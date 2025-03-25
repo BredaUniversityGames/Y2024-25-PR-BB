@@ -21,6 +21,11 @@ struct WrenEntity
 
     template <typename T>
     void AddTag();
+
+    template <typename T>
+    bool HasComponent();
+
+    bool IsValid();
 };
 
 template <typename T>
@@ -51,6 +56,12 @@ void WrenEntity::AddTag()
 }
 
 template <typename T>
+bool WrenEntity::HasComponent()
+{
+    return registry->all_of<T>(entity);
+}
+
+template <typename T>
 std::optional<WrenComponent<T>> WrenEntity::GetComponent()
 {
     if (auto* out = registry->try_get<T>(entity))
@@ -58,4 +69,9 @@ std::optional<WrenComponent<T>> WrenEntity::GetComponent()
         return WrenComponent<T> { WrenEntity { entity, registry }, out };
     }
     return std::nullopt;
-};
+}
+
+inline bool WrenEntity::IsValid()
+{
+    return registry->valid(entity);
+}

@@ -68,7 +68,7 @@ public:
     void Update(uint32_t frameIndex);
     void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
-    void SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName);
+    void SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
@@ -180,11 +180,8 @@ private:
 
     struct alignas(16) DecalData
     {
-        glm::quat orientation;
-        glm::vec3 size;
+        glm::mat4 invModel;
         uint32_t albedoIndex;
-        glm::vec3 position;
-        uint32_t normalIndex;
     };
 
     struct alignas(16) DecalArray
