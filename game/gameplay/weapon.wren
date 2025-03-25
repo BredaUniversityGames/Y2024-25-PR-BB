@@ -33,9 +33,9 @@ class Pistol {
     }
 
     reload (engine) {
-        System.print("Pistol reload")
+        //System.print("Pistol reload")
 
-        var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gun = engine.GetECS().GetEntityByName("Gun")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
@@ -49,14 +49,14 @@ class Pistol {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
-            System.print("Pistol shoot")
+            //System.print("Pistol shoot")
 
             // Shake the camera
 
             cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var gun = engine.GetECS().GetEntityByName("Gun")
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -76,19 +76,18 @@ class Pistol {
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             if (!rayHitInfo.isEmpty) {
-                // var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-
-                for (hitEntity in rayHitInfo) {
+                for (i in (rayHitInfo.count - 1)..0) {
+                    var hitEntity = rayHitInfo[i]
                     if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
-                        if (hitEntity.GetEntity(engine.GetECS()).GetNameComponent().name == "Enemy") {
+                        end = hitEntity.position
+                        if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
                             engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
                             break
                         }
                         break
                     }
-                }   
-
-                end = rayHitInfo[0].position
+                }
+                
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
@@ -112,8 +111,8 @@ class Pistol {
             }
 
             // Play shooting animation
-            //var gunAnimations = gun.GetAnimationControlComponent()
-            //gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
+            var gunAnimations = gun.GetAnimationControlComponent()
+            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -166,7 +165,7 @@ class Shotgun {
     reload (engine) {
         System.print("Shotgun reload")
 
-        var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gun = engine.GetECS().GetEntityByName("Gun")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
@@ -184,7 +183,7 @@ class Shotgun {
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var gun = engine.GetECS().GetEntityByName("Gun")
 
             // Play shooting audio
             var shootingInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -211,12 +210,11 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
                 
                 if (!rayHitInfo.isEmpty) {
-                    end = rayHitInfo[0].position
-                    // var hitEntity = rayHitInfo[0].GetEntity(engine.GetECS())
-
-                    for (hitEntity in rayHitInfo) {
+                    for (i in (rayHitInfo.count - 1)..0) {
+                        var hitEntity = rayHitInfo[i]
                         if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
-                            if (hitEntity.GetEntity(engine.GetECS()).GetNameComponent().name == "Enemy") {
+                            end = hitEntity.position
+                            if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
                                 engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
                                 break
                             }
@@ -299,7 +297,7 @@ class Knife {
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var gun = engine.GetECS().GetEntityByName("Gun")
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)

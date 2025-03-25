@@ -206,6 +206,9 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
     entityClass.func<&WrenEntity::HasComponent<PlayerTag>>("HasPlayerTag");
 
+    entityClass.func<&WrenEntity::AddTag<EnemyTag>>("AddEnemyTag");
+    entityClass.func<&WrenEntity::HasComponent<EnemyTag>>("HasEnemyTag");
+
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<TransformComponent>>("AddTransformComponent");
 

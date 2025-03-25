@@ -9,6 +9,10 @@ struct PlayerTag
 {
 };
 
+struct EnemyTag
+{
+};
+
 class GameModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;

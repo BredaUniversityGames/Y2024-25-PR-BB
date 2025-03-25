@@ -92,20 +92,19 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
 
         __gunAnchor = engine.GetECS().NewEntity()
-        __gunAnchor.AddTransformComponent().translation = Vec3.new(0.4, -0.3, -3)
+        __gunAnchor.AddTransformComponent().translation = Vec3.new(-0.4, -3.1, -1)
         __gunAnchor.AddNameComponent().name = "GunAnchor"
 
         __gun.GetNameComponent().name = "Gun"
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
-        gunTransform.scale = Vec3.new(0.1, 0.1, 0.1)
-
-        // var gunAnimations = __gun.GetAnimationControlComponent()
-        // gunAnimations.Play("Reload", 1.0, false, 0.0, false)
-        // gunAnimations.Stop()
+        
+        var gunAnimations = __gun.GetAnimationControlComponent()
+        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
+        gunAnimations.Stop()
 
         __player.AttachChild(__camera)
         __camera.AttachChild(__gunAnchor)
@@ -141,9 +140,9 @@ class Main {
 
     static Update(engine, dt) {
 
-        // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 25, "assets/models/demon.glb", __enemyShape, dt)
-        // }
+        for (spawner in __spawnerList) {
+            spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/demon.glb", __enemyShape, dt)
+        }
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -192,18 +191,6 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eI())) {
                 __enemyList[0].FindNewPath(engine)
             }
-
-
-            // Update gun position
-
-
-            // var rigidbody = playerController.GetRigidbodyComponent()
-            // var gunTransform = engine.GetECS().GetEntityByName("Gun").GetTransformComponent()
-
-
-
-
-
 
             // if(engine.GetInput().DebugGetKey(Keycode.eK())) {
             //     for(demon in __demons) {
