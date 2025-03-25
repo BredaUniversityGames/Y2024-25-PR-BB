@@ -9,6 +9,10 @@ class Main {
     static Start(engine) {
         engine.GetInput().SetActiveActionSet("Shooter")
 
+
+        engine.GetGame().SetHUDEnabled(true)
+        
+        
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
@@ -23,12 +27,12 @@ class Main {
 
         var comp = __directionalLight.AddDirectionalLightComponent()
         comp.color = Vec3.new(4.0, 3.2, 1.2)
-        comp.planes = Vec2.new(0.1, 1000.0)
-        comp.orthographicSize = 75.0
+        comp.planes = Vec2.new(-50.0, 500.0)
+        comp.orthographicSize = 120.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-105.0, 68.0, 168.0)
-        transform.rotation = Quat.new(-0.29, 0.06, -0.93, -0.19)
+        transform.translation = Vec3.new(-94.000, 174.800, 156.900)
+        transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
 
         // Player Setup
 
@@ -41,7 +45,7 @@ class Main {
         __timer = 0
 
         // Player stuff
-
+        engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
@@ -73,8 +77,23 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
+        var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
+
+        __demons = []
+        for (position in positions) {
+            __demons.add(engine.LoadModel("assets/models/Demon.glb"))
+            var demonAnimations = __demons[-1].GetAnimationControlComponent()
+            demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+            __demons[-1].GetTransformComponent().translation = position
+            __demons[-1].GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
+        }
+
+
         // Load Map
-        engine.LoadModel("assets/models/blockoutv4.glb")
+        engine.LoadModel("assets/models/blockoutv5.glb")
+
+        // Loading lights from gltf, uncomment to test
+        // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
@@ -84,7 +103,7 @@ class Main {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
 
         var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false)
+        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
         gunAnimations.Stop()
 
         __player.AttachChild(__camera)
@@ -154,6 +173,32 @@ class Main {
                 __activeWeapon.attack(engine, dt, __cameraVariables)
             }
 
+            if(engine.GetInput().DebugGetKey(Keycode.eK())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Walk", 1.0, true, 0.3, true)
+                }
+            }
+            if(engine.GetInput().DebugGetKey(Keycode.eL())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Run", 2.0, true, 0.3, true)
+                }
+            }
+            if(engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                for(demon in __demons) {
+                    var demonAnimations = demon.GetAnimationControlComponent()
+                    demonAnimations.Play("Attack", 1.0, false, 0.3, false)
+                }
+            }
+
+            for(demon in __demons) {
+                var demonAnimations = demon.GetAnimationControlComponent()
+                if(demonAnimations.AnimationFinished()) {
+                    demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+                }
+            }
+
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
                 if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
@@ -219,6 +264,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
+        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

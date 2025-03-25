@@ -20,8 +20,7 @@ public:
     bool GamepadHasFocus() const { return _gamepadHasFocus; }
 
     // Consume the UI input for this frame.
-    void
-    ConsumeInput()
+    void ConsumeInput()
     {
         _hasInputBeenConsumed = true;
     }
@@ -39,7 +38,7 @@ private:
 
     // If the input has been consumed this frame.
     bool _hasInputBeenConsumed = false;
-    float _inputDeadZone = 0.2f;
+    float _inputDeadZone = 0.4f;
     std::string _pressActionName = "Interact";
     std::string _navigationActionName = "Navigate";
     UINavigationDirection _previousNavigationDirection {};

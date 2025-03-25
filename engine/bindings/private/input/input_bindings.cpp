@@ -66,6 +66,10 @@ void BindInputAPI(wren::ForeignModule& module)
     wrenClass.funcExt<bindings::GetDigitalAction>("GetDigitalAction");
     wrenClass.funcExt<bindings::GetAnalogAction>("GetAnalogAction");
     wrenClass.funcExt<bindings::GetRawKeyOnce>("DebugGetKey");
+    
+    wrenClass.func<&ApplicationModule::SetMouseHidden>("SetMouseHidden");
+    wrenClass.func<&ApplicationModule::GetMouseHidden>("GetMouseHidden");
+
     wrenClass.funcExt<bindings::GetRawKeyHeld>("DebugGetHeldKey");
     wrenClass.funcExt<bindings::GetMousePosition>("GetMousePosition");
     wrenClass.funcExt<bindings::IsInputEnabled>("DebugIsInputEnabled");
@@ -74,6 +78,5 @@ void BindInputAPI(wren::ForeignModule& module)
     digitalActionResult.funcExt<bindings::GetDigitalActionIsPressed>("IsPressed");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsHeld>("IsHeld");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsReleased>("IsReleased");
-
     bindings::BindEnum<KeyboardCode>(module, "Keycode");
 }

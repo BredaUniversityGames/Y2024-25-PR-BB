@@ -20,3 +20,15 @@ void AnimationTransformHelpers::SetLocalTransform(entt::registry& reg, entt::ent
     transform.rotation = rotation;
     transform.scale = scale;
 }
+
+namespace EnttEditor
+{
+template <>
+void ComponentEditorWidget<AnimationTransformComponent>(entt::registry& reg, entt::registry::entity_type e)
+{
+    auto& comp = reg.get<AnimationTransformComponent>(e);
+    ImGui::InputFloat3("Position##AnimationTransform", &comp.position[0]);
+    ImGui::InputFloat4("Rotation##AnimationTransform", &comp.rotation[0]);
+    ImGui::InputFloat3("Scale##AnimationTransform", &comp.scale[0]);
+}
+}

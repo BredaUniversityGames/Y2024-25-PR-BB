@@ -1,9 +1,11 @@
-#include "scene/scene_loader.hpp"
+#include "scene/model_loader.hpp"
 
 #include "animation.hpp"
 #include "components/animation_transform_component.hpp"
+#include "components/directional_light_component.hpp"
 #include "components/is_static_draw.hpp"
 #include "components/name_component.hpp"
+#include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
 #include "components/rigidbody_component.hpp"
@@ -28,8 +30,9 @@
 class RecursiveNodeLoader
 {
 public:
-    RecursiveNodeLoader(ECSModule& ecs, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLut)
+    RecursiveNodeLoader(ECSModule& ecs, PhysicsModule& physics, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, AnimationControlComponent* animationControl, std::unordered_map<uint32_t, entt::entity>& entityLut)
         : _ecs(ecs)
+        , _physics(physics)
         , _hierarchy(hierarchy)
         , _cpuModel(cpuModel)
         , _gpuModel(gpuModel)
@@ -40,7 +43,7 @@ public:
 
     void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
-        const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
+        const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _entityLUT[currentNodeIndex] = entity;
 
@@ -55,26 +58,25 @@ public:
 
         TransformHelpers::SetLocalTransform(_ecs.GetRegistry(), entity, currentNode.transform);
 
-        if (currentNode.meshIndex.has_value())
+        if (currentNode.mesh.has_value())
         {
-            switch (currentNode.meshIndex.value().first)
+            auto index = currentNode.mesh.value().index;
+            switch (currentNode.mesh.value().type)
             {
             case MeshType::eSTATIC:
             {
-                _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(currentNode.meshIndex.value().second);
+                _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(index);
                 _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
 
-                auto rb = _ecs.GetSystem<PhysicsSystem>()->CreateMeshColliderBody(_cpuModel.meshes.at(currentNode.meshIndex.value().second), PhysicsShapes::eMESH);
-                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, rb);
-
-                // add collider recursively
+                auto rb = RigidbodyComponent(_physics.GetBodyInterface(), _cpuModel.colliders.at(index), false);
+                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, std::move(rb));
 
                 break;
             }
             case MeshType::eSKINNED:
-                _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(currentNode.meshIndex.value().second);
+                _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(index);
                 break;
             default:
                 throw std::runtime_error("Mesh type not supported!");
@@ -95,7 +97,33 @@ public:
             assert(!"Joints should only appear in the skeleton");
         }
 
-        for (const auto& nodeIndex : currentNode.children)
+        if (currentNode.light.has_value())
+        {
+            switch (currentNode.light->type)
+            {
+            case NodeLightType::Directional:
+            {
+                auto& directionalLight = _ecs.GetRegistry().emplace<DirectionalLightComponent>(entity);
+                directionalLight.color = currentNode.light->color * currentNode.light->intensity;
+                break;
+            }
+            case NodeLightType::Point:
+            {
+                auto& pointLight = _ecs.GetRegistry().emplace<PointLightComponent>(entity);
+                pointLight.color = currentNode.light->color;
+                pointLight.intensity = currentNode.light->intensity;
+                pointLight.range = currentNode.light->range;
+                break;
+            }
+            case NodeLightType::Spot:
+            {
+                assert(!"Spot lights are not supported!");
+                break;
+            }
+            }
+        }
+
+        for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
             Load(childEntity, nodeIndex, entity);
@@ -104,6 +132,7 @@ public:
 
 private:
     ECSModule& _ecs;
+    PhysicsModule& _physics;
     const Hierarchy& _hierarchy;
     const CPUModel& _cpuModel;
     const GPUModel& _gpuModel;
@@ -139,7 +168,7 @@ private:
 
     void RecursiveLoadNode(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
     {
-        const Hierarchy::Node& currentNode = _hierarchy.nodes[currentNodeIndex];
+        const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
         _ecs.GetRegistry().emplace<NameComponent>(entity).name = currentNode.name;
         _ecs.GetRegistry().emplace<AnimationTransformComponent>(entity);
@@ -171,7 +200,7 @@ private:
             joint.skeletonEntity = _skeletonComponent->root;
         }
 
-        for (const auto& nodeIndex : currentNode.children)
+        for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
             RecursiveLoadNode(childEntity, nodeIndex, entity);
@@ -179,7 +208,7 @@ private:
     }
 };
 
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuModel, const CPUModel& cpuModel, const Hierarchy& hierarchy, const std::vector<Animation>& animations)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel)
 {
     ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
@@ -187,16 +216,16 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
     std::unordered_map<uint32_t, entt::entity> entityLUT;
 
     AnimationControlComponent* animationControl = nullptr;
-    if (!animations.empty())
+    if (!cpuModel.animations.empty())
     {
-        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, animations, std::nullopt);
+        animationControl = &ecs.GetRegistry().emplace<AnimationControlComponent>(rootEntity, cpuModel.animations, std::nullopt, std::nullopt, 0.0f, 0.0f);
     }
 
-    RecursiveNodeLoader recursiveNodeLoader { ecs, hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
-    recursiveNodeLoader.Load(rootEntity, hierarchy.root, entt::null);
+    RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControl, entityLUT };
+    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null);
 
     entt::entity skeletonEntity = entt::null;
-    if (hierarchy.skeletonRoot.has_value())
+    if (cpuModel.hierarchy.skeletonRoot.has_value())
     {
         skeletonEntity = ecs.GetRegistry().create();
         ecs.GetRegistry().emplace<TransformComponent>(skeletonEntity);
@@ -204,18 +233,18 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
 
         auto firstChild = ecs.GetRegistry().get<RelationshipComponent>(rootEntity).first;
 
-        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, hierarchy, animationControl };
-        recursiveSkeletonLoader.Load(skeletonEntity, hierarchy.skeletonRoot.value(), entt::null);
+        RecursiveSkeletonLoader recursiveSkeletonLoader { ecs, cpuModel.hierarchy, animationControl };
+        recursiveSkeletonLoader.Load(skeletonEntity, cpuModel.hierarchy.skeletonRoot.value(), entt::null);
         RelationshipHelpers::AttachChild(ecs.GetRegistry(), firstChild, skeletonEntity);
     }
 
     if (skeletonEntity != entt::null)
     {
         // Links skeleton entities to the skinned mesh components.
-        for (size_t i = 0; i < hierarchy.nodes.size(); ++i)
+        for (size_t i = 0; i < cpuModel.hierarchy.nodes.size(); ++i)
         {
-            const Hierarchy::Node& node = hierarchy.nodes[i];
-            if (node.skeletonNode.has_value() && node.meshIndex.has_value() && std::get<0>(node.meshIndex.value()) == MeshType::eSKINNED)
+            const Node& node = cpuModel.hierarchy.nodes[i];
+            if (node.skeletonNode.has_value() && node.mesh.has_value() && node.mesh->type == MeshType::eSKINNED)
             {
                 SkinnedMeshComponent& skinnedMeshComponent = ecs.GetRegistry().get<SkinnedMeshComponent>(entityLUT[i]);
                 skinnedMeshComponent.skeletonEntity = skeletonEntity;
@@ -226,14 +255,19 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, const GPUModel& gpuMode
     return rootEntity;
 }
 
-entt::entity SceneLoading::LoadModel(Engine& engine, const std::string& path)
+std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_view path)
 {
+    if (auto it = _models.find(std::string(path)); it != _models.end())
+    {
+        return it->second;
+    }
+
     auto& threadPool = engine.GetModule<ThreadModule>().GetPool();
     CPUModel cpuData {};
 
     {
         ZoneScoped;
-        std::string zone = path + " CPU parsing";
+        std::string zone = std::string(path) + " CPU parsing";
         ZoneName(zone.c_str(), 128);
 
         cpuData = ModelLoading::LoadGLTFFast(threadPool, path);
@@ -242,8 +276,20 @@ entt::entity SceneLoading::LoadModel(Engine& engine, const std::string& path)
     auto& rendererModule = engine.GetModule<RendererModule>();
     auto gpuHandle = rendererModule.LoadModels({ cpuData }).front();
 
-    auto& modelResourceManager = rendererModule.GetRenderer()->GetContext()->Resources()->ModelResourceManager();
-    const GPUModel& gpuModel = *modelResourceManager.Access(gpuHandle);
+    auto ret = std::make_shared<ModelData>(std::move(cpuData), gpuHandle);
+    _models[std::string(path)] = ret;
 
-    return LoadModelIntoECSAsHierarchy(engine.GetModule<ECSModule>(), gpuModel, cpuData, cpuData.hierarchy, cpuData.animations);
+    return ret;
+}
+
+entt::entity ModelData::Instantiate(Engine& engine)
+{
+    auto& modelResourceManager = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    const GPUModel& model = *modelResourceManager.Access(gpuModel);
+
+    return LoadModelIntoECSAsHierarchy(
+        engine.GetModule<ECSModule>(),
+        engine.GetModule<PhysicsModule>(),
+        model,
+        cpuModel);
 }

@@ -344,7 +344,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)
+#ifndef DISTRIBUTION
         .AddNode(debugPass)
+#endif
         .AddNode(presentationPass)
         .Build();
 
@@ -473,18 +475,18 @@ void Renderer::InitializeHDRTarget()
 {
     SamplerCreation nearestSampler {};
     nearestSampler.name = "Nearest_Sampler";
-    nearestSampler.addressModeU = vk::SamplerAddressMode::eRepeat;
-    nearestSampler.addressModeV = vk::SamplerAddressMode::eRepeat;
-    nearestSampler.addressModeW = vk::SamplerAddressMode::eRepeat;
+    nearestSampler.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    nearestSampler.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+    nearestSampler.addressModeW = vk::SamplerAddressMode::eClampToEdge;
 
     nearestSampler.minFilter = vk::Filter::eNearest;
     nearestSampler.magFilter = vk::Filter::eNearest;
     nearestSampler.mipmapMode = vk::SamplerMipmapMode::eNearest;
 
-    nearestSampler.useMaxAnisotropy = true;
-    nearestSampler.anisotropyEnable = true;
+    nearestSampler.useMaxAnisotropy = false;
+    nearestSampler.anisotropyEnable = false;
     nearestSampler.minLod = 0.0f;
-    nearestSampler.maxLod = 0.0f;
+    nearestSampler.maxLod = vk::LodClampNone;
 
     nearestSampler.compareEnable = false;
     nearestSampler.compareOp = vk::CompareOp::eAlways;
@@ -496,7 +498,7 @@ void Renderer::InitializeHDRTarget()
     CPUImage hdrImageData {};
     hdrImageData.SetName("HDR Target").SetSize(size.x, size.y).SetFormat(vk::Format::eR32G32B32A32Sfloat).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData, _nearestSampler);
+    _hdrTarget = _context->Resources()->ImageResourceManager().Create(hdrImageData);
 }
 
 void Renderer::InitializeBloomTargets()

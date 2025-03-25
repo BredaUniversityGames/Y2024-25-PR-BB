@@ -10,9 +10,9 @@ int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationContro
 {
     return component.component->animations.size();
 }
-void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping)
+void AnimationControlComponentPlay(WrenComponent<AnimationControlComponent>& component, const std::string& name, float speed, bool looping, float blendTime, bool blendMatch)
 {
-    component.component->Play(name, speed, looping);
+    component.component->Play(name, speed, looping, blendTime, blendMatch);
 }
 void AnimationControlComponentStop(WrenComponent<AnimationControlComponent>& component)
 {

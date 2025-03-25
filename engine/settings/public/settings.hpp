@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/vector.hpp>
 #include <visit_struct/visit_struct.hpp>
 
 #include "log.hpp"
@@ -72,7 +73,7 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(6);
+        VERSION(8);
 
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
@@ -103,18 +104,14 @@ struct Settings
         bool enablePalette;
         float ditherAmount = 0.15f;
         float paletteAmount = 0.8f;
-        glm::vec4 palette[5] = {
-            glm::vec4(14.0f, 193.0f, 4.0f, 256.0f) / 256.0f, // Black
-            glm::vec4(6.0f, 6.0f, 6.0f, 256.0f) / 256.0f, // White
-            glm::vec4(94.0f, 43.0f, 22.0f, 256.0f) / 256.0f, // Red
-            glm::vec4(172.0f, 18.0f, 18.0f, 256.0f) / 256.0f,
-            glm::vec4(128.0f, 128.0f, 128.0f, 256.0f) / 256.0f
-        };
+        std::vector<glm::vec4> palette;
 
         glm::vec4 skyColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 sunColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 cloudsColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 voidColor { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        float cloudsSpeed = 0.1f;
 
     } tonemapping;
 
@@ -143,7 +140,7 @@ VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxB
 CLASS_SERIALIZE_VERSION(Settings::Bloom);
 CLASS_VERSION(Settings::Bloom);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor, cloudsSpeed);
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 

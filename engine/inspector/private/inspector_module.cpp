@@ -17,6 +17,9 @@
 #include "tracy/Tracy.hpp"
 #include "vulkan_context.hpp"
 
+#include "components/static_mesh_component.hpp"
+#include "components/wants_shadows_updated.hpp"
+
 InspectorModule::InspectorModule() = default;
 
 InspectorModule::~InspectorModule()
@@ -76,11 +79,12 @@ void InspectorModule::Shutdown(Engine& engine)
     _editor.reset();
 }
 
-void InspectorModule::Tick(Engine& engine)
+void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     _imguiBackend->NewFrame();
     ImGui::NewFrame();
 
+#ifndef DISTRIBUTION
     _performanceTracker->Update();
 
     if (ImGui::BeginMainMenuBar())
@@ -138,6 +142,11 @@ void InspectorModule::Tick(Engine& engine)
 
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Save Settings"))
+        {
+            engine.GetModule<RendererModule>().GetRenderer()->GetSettings().Write();
+            ImGui::EndMenu();
+        }
         ImGui::EndMainMenuBar();
     }
 
@@ -171,7 +180,7 @@ void InspectorModule::Tick(Engine& engine)
         DrawShadowMapInspect(engine, *_imguiBackend);
     }
 
-    Settings& settings = engine.GetModule<RendererModule>().GetRenderer()->GetSettings();
+    Settings& settings = engine.GetModule<RendererModule>().GetRenderer()->GetSettingsData();
 
     if (_openWindows["Bloom"])
     {
@@ -213,6 +222,7 @@ void InspectorModule::Tick(Engine& engine)
             }
         }
     }
+#endif
 
     {
         ZoneNamedN(zz, "ImGui Render", true);
@@ -372,11 +382,40 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::BeginDisabled(!tonemapping.enablePalette);
     ImGui::DragFloat("Dither Amount", &tonemapping.ditherAmount, 0.01f);
     ImGui::DragFloat("Palette Amount", &tonemapping.paletteAmount, 0.01f);
-    for (int32_t i = 0; i < 5; i++)
+
+    // Iterate over the palette vector
+    for (size_t i = 0; i < tonemapping.palette.size();)
     {
-        ImGui::PushID(i);
-        ImGui::ColorEdit3("Palette", &tonemapping.palette[i].x);
+        // Push a unique ID so that ImGui can differentiate each item
+        ImGui::PushID(static_cast<int>(i));
+
+        // Display a color editor for the current palette color
+        // Casting the glm::vec4 pointer to a float pointer is safe if glm::vec4 is 4 floats.
+        ImGui::ColorEdit4("Color", &tonemapping.palette[i].x, ImGuiColorEditFlags_NoInputs);
+
+        ImGui::SameLine();
+
+        // "X" button for removal
+        if (ImGui::Button("X"))
+        {
+            // Erase the element at the current index and continue without incrementing i,
+            // since the next element shifts into the current index.
+            tonemapping.palette.erase(tonemapping.palette.begin() + i);
+            ImGui::PopID();
+            continue;
+        }
+
         ImGui::PopID();
+        i++; // Only increment when no deletion occurs
+    }
+
+    // A separator for clarity
+    ImGui::Separator();
+
+    // Button to add the new color to the palette
+    if (ImGui::Button("Add Color"))
+    {
+        tonemapping.palette.push_back(glm::vec4(1.0f));
     }
     ImGui::EndDisabled();
 
@@ -385,6 +424,7 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::ColorEdit3("Sun Color", &tonemapping.sunColor.x);
     ImGui::ColorEdit3("Clouds Color", &tonemapping.cloudsColor.x);
     ImGui::ColorEdit3("Void Color", &tonemapping.voidColor.x);
+    ImGui::DragFloat("Clouds Speed", &tonemapping.cloudsSpeed);
 
     ImGui::End();
 }
@@ -409,6 +449,14 @@ void DrawShadowMapInspect(Engine& engine, ImGuiBackend& imguiBackend)
     ImGui::Begin("Directional Light Shadow Map View", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::Image(textureID, ImVec2(512, 512));
     ImGui::Image(textureID2, ImVec2(512, 512));
+    if (ImGui::Button("Force recalculate shadow map"))
+    {
+        auto view = engine.GetModule<ECSModule>().GetRegistry().view<StaticMeshComponent>();
+        for (auto entity : view)
+        {
+            engine.GetModule<ECSModule>().GetRegistry().emplace_or_replace<WantsShadowsUpdated>(entity);
+        }
+    }
     ImGui::End();
 }
 

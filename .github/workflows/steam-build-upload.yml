@@ -13,7 +13,7 @@ jobs:
       fail-fast: true
       matrix:
         platform: [ ubuntu-latest, windows-latest ]
-        configuration: [ Release ]
+        configuration: [ Distribution ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -87,7 +87,7 @@ jobs:
           python-version: '3.10'
 
       # Package project
-      
+
       - name: Package Windows Project
         if: matrix.platform == 'windows-latest'
         run: |
@@ -128,7 +128,7 @@ jobs:
 
       - name: Checkout Project
         uses: actions/checkout@v4
-    
+
       # Download build artifacts from previous job
 
       - name: Download Packaged Windows Build From Artifacts
@@ -152,7 +152,7 @@ jobs:
           echo "${{ env.STEAM_CONFIG }}" | base64 -d > scripts/build_system/steam/builder/config/config.vdf
 
       # Upload to Steam
-      
+
       - name: Upload Build
         run: |
           scripts/build_system/steam/builder/steamcmd.exe +login ${{ env.STEAM_USERNAME }} +run_app_build ..\config\app_build_3365920.vdf +quit

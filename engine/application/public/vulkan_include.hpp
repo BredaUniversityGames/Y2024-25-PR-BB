@@ -12,3 +12,5 @@
 #undef Bool
 #undef None
 #undef Convex
+#undef near
+#undef far
