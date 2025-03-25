@@ -14,9 +14,6 @@ game/engine_api.wren
 build
 package
 
-# Analytics key
-game_analytics_keys.txt
-
 # User-specific files
 *.rsuser
 *.suo

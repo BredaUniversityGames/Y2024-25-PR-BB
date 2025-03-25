@@ -1,7 +1,7 @@
 {
   "output": "package/linux-dist",
   "executables": [
-    "build/WSL-Distribution/CustomTech"
+    "build/WSL-Distribution/Blightspire"
   ],
   "assets": [
     "assets",
@@ -12,7 +12,6 @@
     "settings.json",
     "build/WSL-Distribution/libsteam_api.so",
     "build/WSL-Distribution/libfmod.so.14",
-    "build/WSL-Distribution/libfmodstudio.so.14",
-    "game_analytics_keys.txt"
+    "build/WSL-Distribution/libfmodstudio.so.14"
   ]
 }
