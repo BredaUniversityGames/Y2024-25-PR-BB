@@ -83,6 +83,36 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
     {
         ZoneScopedN("Animate Transforms");
+        const auto view = ecs.GetRegistry().view<TransformComponent, AnimationChannelComponent>();
+        for (auto entity : view)
+        {
+            auto& animationChannel = view.get<AnimationChannelComponent>(entity);
+            auto* animationControl = animationChannel.animationControl;
+            if (animationControl->activeAnimation.has_value())
+            {
+                auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
+                float time = animationControl->animations[animationControl->activeAnimation.value()].time;
+                if (activeAnimation.translation.has_value())
+                {
+                    glm::vec3 position = activeAnimation.translation.value().Sample(time);
+
+                    TransformHelpers::SetLocalPosition(ecs.GetRegistry(), entity, position);
+                }
+                if (activeAnimation.rotation.has_value())
+                {
+                    glm::quat rotation = activeAnimation.rotation.value().Sample(time);
+
+                    TransformHelpers::SetLocalRotation(ecs.GetRegistry(), entity, rotation);
+                }
+                if (activeAnimation.scaling.has_value())
+                {
+                    glm::vec3 scale = activeAnimation.scaling.value().Sample(time);
+
+                    TransformHelpers::SetLocalScale(ecs.GetRegistry(), entity, scale);
+                }
+            }
+        }
+
         const auto animationView = ecs.GetRegistry().view<AnimationTransformComponent, AnimationChannelComponent>();
         for (auto entity : animationView)
         {
