@@ -76,10 +76,12 @@ class Pistol {
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             if (!rayHitInfo.isEmpty) {
+                var normal = Vec3.new(0, 1, 0)
                 for (i in (rayHitInfo.count - 1)..0) {
                     var hitEntity = rayHitInfo[i]
                     if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
                         end = hitEntity.position
+                        normal = hitEntity.normal
                         if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
                             engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
                             break
@@ -94,7 +96,7 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal)
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
             }
 
             var length = (end - start).length()
