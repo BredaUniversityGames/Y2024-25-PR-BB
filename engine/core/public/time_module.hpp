@@ -15,25 +15,25 @@ public:
 
     TimeModule() = default;
     ~TimeModule() override = default;
-    DeltaMS GetDeltatime() const { return current_deltatime * deltatimeScale; }
-    DeltaMS GetTotalTime() const { return total_time; }
+    DeltaMS GetDeltatime() const { return _currentDeltaTime * _deltaTimeScale; }
+    DeltaMS GetTotalTime() const { return _totalTime; }
 
     void SetDeltatimeScale(float scale)
     {
-        deltatimeScale = scale;
+        _deltaTimeScale = scale;
     }
 
     void ResetTimer()
     {
-        delta_timer.Reset();
-        current_deltatime = {};
+        _deltaTimer.Reset();
+        _currentDeltaTime = {};
     }
 
 private:
-    float deltatimeScale = 1.0f;
+    float _deltaTimeScale = 1.0f;
 
-    DeltaMS current_deltatime {};
-    DeltaMS total_time {};
+    DeltaMS _currentDeltaTime {};
+    DeltaMS _totalTime {};
 
-    Stopwatch delta_timer {};
+    Stopwatch _deltaTimer {};
 };
