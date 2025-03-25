@@ -31,7 +31,6 @@ int Main()
         instance
             .AddModule<ThreadModule>()
             .AddModule<ECSModule>()
-            .AddModule<ScriptingModule>()
             .AddModule<TimeModule>()
             .AddModule<SteamModule>()
             .AddModule<ApplicationModule>()
@@ -43,7 +42,8 @@ int Main()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
             .AddModule<InspectorModule>()
-            .AddModule<AnalyticsModule>();
+            .AddModule<AnalyticsModule>()
+            .AddModule<ScriptingModule>();
     }
 
     {
