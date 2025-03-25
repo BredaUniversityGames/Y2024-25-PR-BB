@@ -62,7 +62,11 @@ public:
     {
         return quat * glm::vec3(0.0f, 0.0f, -1.0f);
     }
-    static glm::vec3 Mix(glm::vec3 start, glm::vec3 end, float t)
+    static glm::vec3 MixVec3(glm::vec3 start, glm::vec3 end, float t)
+    {
+        return glm::mix(start, end, t);
+    }
+    static float MixFloat(float start, float end, float t)
     {
         return glm::mix(start, end, t);
     }
@@ -209,7 +213,8 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::ToEuler>("ToEuler");
         mathUtilClass.funcStatic<&MathUtil::ToDirectionVector>("ToVector");
         mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
-        mathUtilClass.funcStatic<&MathUtil::Mix>("Mix");
+        mathUtilClass.funcStatic<&MathUtil::MixVec3>("MixVec3");
+        mathUtilClass.funcStatic<&MathUtil::MixFloat>("MixFloat");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");

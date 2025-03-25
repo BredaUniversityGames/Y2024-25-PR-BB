@@ -11,7 +11,10 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake"
+      "toolchainFile": "${sourceDir}/scripts/cmake/toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_PRESET_NAME": "${presetName}"
+      }
     },
     {
       "name": "WSL",
@@ -23,6 +26,9 @@
         "jetbrains.com/clion": {
           "toolchain": "WSL"
         }
+      },
+      "cacheVariables": {
+        "CMAKE_PRESET_NAME": "${presetName}"
       }
     },
     {
@@ -44,6 +50,13 @@
       "inherits": "default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "x64-Distribution",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -76,6 +89,13 @@
       "inherits": "WSL",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "WSL-Distribution",
+      "inherits": "WSL",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ]

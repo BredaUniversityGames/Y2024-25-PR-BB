@@ -17,7 +17,7 @@ jobs:
       fail-fast: true
       matrix:
         platform: [ ubuntu-latest, windows-latest ]
-        configuration: [ Debug, Release ]
+        configuration: [ Debug, Distribution ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -56,4 +56,3 @@ jobs:
 
       - name: Test Project
         run: build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}/UnitTests
-          
