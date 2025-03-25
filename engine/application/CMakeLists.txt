@@ -9,3 +9,7 @@ target_link_libraries(Application
         PRIVATE SDL3::SDL3-static
         PRIVATE Steamworks
 )
+
+target_include_directories(Application
+        PUBLIC "${PROJECT_SOURCE_DIR}/external/stb"
+)

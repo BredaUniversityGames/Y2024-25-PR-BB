@@ -11,10 +11,10 @@
 // This definition fixes the issues and does not change the final build output
 #define SDL_DISABLE_ANALYZE_MACROS
 
-#include <../stb/stb_image.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
+#include <stb_image.h>
 
 ModuleTickOrder ApplicationModule::Init(Engine& engine)
 {
