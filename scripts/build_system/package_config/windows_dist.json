@@ -1,7 +1,7 @@
 {
   "output": "package/windows-dist",
   "executables": [
-    "build/x64-Release/CustomTech.exe"
+    "build/x64-Distribution/Blightspire.exe"
   ],
   "assets": [
     "assets",
@@ -10,8 +10,8 @@
   ],
   "files": [
     "settings.json",
-    "build/x64-Release/steam_api64.dll",
-    "build/x64-Release/fmod.dll",
-    "build/x64-Release/fmodstudio.dll"
+    "build/x64-Distribution/steam_api64.dll",
+    "build/x64-Distribution/fmod.dll",
+    "build/x64-Distribution/fmodstudio.dll"
   ]
 }

@@ -129,9 +129,9 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     // Rigidbody component (a bit hacky, since we cannot add a default constructed rb to the ECS)
 
     auto& rigidBody = module.klass<RigidbodyComponent>("Rigidbody");
-    rigidBody.funcStaticExt<bindings::RigidbodyNew>("new");
+    rigidBody.funcStaticExt<bindings::RigidbodyNew>("new", "Construct a Rigidbody by providing the Physics System, a collision shape, whether it is dynamic and if we want to allow rotation");
 
-    auto& rigidBodyComponent = module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent");
+    auto& rigidBodyComponent = module.klass<WrenComponent<RigidbodyComponent>>("RigidbodyComponent", "Must be created by passing a Rigidbody to the AddComponent function on an entity");
     rigidBodyComponent.propReadonlyExt<bindings::GetBodyID>("GetBodyID");
 
     rigidBodyComponent.funcExt<bindings::AddForce>("AddForce");

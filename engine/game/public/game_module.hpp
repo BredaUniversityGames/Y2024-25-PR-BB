@@ -20,9 +20,19 @@ class GameModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
     std::string_view GetName() override { return "Game Module"; }
 
+    std::weak_ptr<MainMenu> _mainMenu;
+
+    glm::ivec2 _lastMousePos {};
+
 public:
     GameModule() = default;
     ~GameModule() override = default;
+
+    void SetMainMenuEnabled(bool val);
+    void SetHUDEnabled(bool val);
+    MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
+
+    HUD _hud;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
@@ -30,7 +40,7 @@ public:
     void TransitionScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};
-    HUD _hud;
+
     bool _updateHud = false;
     std::string _nextSceneToExecute {};
 };

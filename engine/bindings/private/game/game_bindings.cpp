@@ -14,6 +14,7 @@
 #include "physics_module.hpp"
 #include "renderer_module.hpp"
 #include "systems/lifetime_component.hpp"
+#include "ui/game_ui_bindings.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
@@ -147,13 +148,18 @@ void BindGameAPI(wren::ForeignModule& module)
 
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
-    game.funcExt<bindings::GetHUD>("GetHUD");
 
+    game.func<&GameModule::GetMainMenu>("GetMainMenu");
+    game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
+    game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
+    BindMainMenu(module);
+
+    game.funcExt<bindings::GetHUD>("GetHUD");
     auto& hud = module.klass<HUD>("HUD");
-    hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar");
-    hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText");
-    hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar");
-    hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText");
-    hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar");
-    hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges");
+    hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar", "Update health bar with value from 0 to 1");
+    hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText", "Update ammo bar with a current ammo count and max");
+    hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar", "Update ult bar with value from 0 to 1");
+    hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
+    hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
+    hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
 }

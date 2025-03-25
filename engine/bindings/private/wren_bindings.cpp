@@ -53,6 +53,11 @@ void LoadModelScriptingWithoutInstantiation(WrenEngine& engine, const std::strin
     auto model = sceneCache.LoadModel(*engine.instance, path);
 }
 
+void SetExit(WrenEngine& engine, int code)
+{
+    engine.instance->SetExit(code);
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -76,6 +81,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::LoadModelScriptingWithoutInstantiation>("LoadModelWithoutInstantiation");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
+        engineAPI.funcExt<bindings::SetExit>("SetExit");
     }
 
     // Time Module

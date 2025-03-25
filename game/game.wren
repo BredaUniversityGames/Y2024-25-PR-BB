@@ -9,6 +9,10 @@ class Main {
 
     static Start(engine) {
 
+
+        engine.GetGame().SetHUDEnabled(true)
+
+
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh.glb")
 
@@ -40,6 +44,8 @@ class Main {
         __hasDashed = false
         __timer = 0
 
+        // Player stuff
+        engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
@@ -101,7 +107,7 @@ class Main {
         __gun.GetNameComponent().name = "Gun"
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
-        
+
         var gunAnimations = __gun.GetAnimationControlComponent()
         gunAnimations.Play("Reload", 1.0, false, 0.0, false)
         gunAnimations.Stop()

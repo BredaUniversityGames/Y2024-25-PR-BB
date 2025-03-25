@@ -146,14 +146,14 @@ bool CameraGetReversedZ(WrenComponent<CameraComponent>& component)
     return component.component->reversedZ;
 }
 
-void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float near)
+void CameraSetNearPlane(WrenComponent<CameraComponent>& component, const float nearp)
 {
-    component.component->nearPlane = near;
+    component.component->nearPlane = nearp;
 }
 
-void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float far)
+void CameraSetFarPlane(WrenComponent<CameraComponent>& component, const float farp)
 {
-    component.component->farPlane = far;
+    component.component->farPlane = farp;
 }
 
 void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool reversedZ)
@@ -229,7 +229,7 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
-    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
+    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent", "Must pass a Rigidbody to this function");
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
@@ -302,7 +302,6 @@ std::vector<WrenEntity> GetChildren(ECSModule& self, const WrenEntity& entity)
 }
 
 }
-
 void BindEntityAPI(wren::ForeignModule& module)
 {
 
@@ -313,9 +312,9 @@ void BindEntityAPI(wren::ForeignModule& module)
         // ECS class
         auto& wrenClass = module.klass<ECSModule>("ECS");
         wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
-        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
-        wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
         wrenClass.funcExt<bindings::GetChildren>("GetChildren");
+        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName", "Returns the first entity found with the specified name");
+        wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName", "Returns a list of all the entities found with the specified name");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
         wrenClass.funcExt<bindings::Clear>("DestroyAllEntities");
     }
