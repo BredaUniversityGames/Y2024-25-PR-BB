@@ -3,6 +3,7 @@
 #include "common.hpp"
 
 #include "graphics_context.hpp"
+#include "vulkan_include.hpp"
 #include <cstddef>
 #include <optional>
 #include <spirv_reflect.h>
@@ -10,7 +11,6 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <vulkan_include.hpp>
 
 class GraphicsContext;
 class VulkanContext;

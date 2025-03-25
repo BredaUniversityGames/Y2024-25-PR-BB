@@ -2,10 +2,10 @@
 
 #include "common.hpp"
 
+#include "vulkan_include.hpp"
 #include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
-#include <vulkan_include.hpp>
 
 struct QueueFamilyIndices;
 class GraphicsContext;

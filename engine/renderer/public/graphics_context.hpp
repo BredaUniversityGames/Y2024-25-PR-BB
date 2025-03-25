@@ -3,8 +3,8 @@
 #include "common.hpp"
 #include "resource_manager.hpp"
 
+#include "vulkan_include.hpp"
 #include <memory>
-#include <vulkan_include.hpp>
 
 #include "draw_stats.hpp"
 

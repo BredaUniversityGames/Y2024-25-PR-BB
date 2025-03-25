@@ -6,12 +6,12 @@
 #include "resource_manager.hpp"
 #include "resources/buffer.hpp"
 
+#include "vulkan_include.hpp"
 #include <array>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
-#include <vulkan_include.hpp>
 
 class GraphicsContext;
 struct TransformComponent;

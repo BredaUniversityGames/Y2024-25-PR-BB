@@ -3,11 +3,11 @@
 #include "enum_utils.hpp"
 #include "resource_manager.hpp"
 #include "swap_chain.hpp"
+#include "vulkan_include.hpp"
 #include <glm/vec3.hpp>
 #include <memory>
 #include <unordered_map>
 #include <variant>
-#include <vulkan_include.hpp>
 
 struct RenderSceneDescription;
 struct Buffer;

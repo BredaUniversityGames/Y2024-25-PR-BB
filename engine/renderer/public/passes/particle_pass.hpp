@@ -5,10 +5,10 @@
 #include "gbuffers.hpp"
 #include "resource_manager.hpp"
 
+#include "vulkan_include.hpp"
 #include <cstdint>
 #include <memory>
 #include <vk_mem_alloc.h>
-#include <vulkan_include.hpp>
 
 class CameraResource;
 class BloomSettings;
