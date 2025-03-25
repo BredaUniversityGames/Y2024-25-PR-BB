@@ -12,9 +12,6 @@
     "settings.json",
     "build/x64-Distribution/steam_api64.dll",
     "build/x64-Distribution/fmod.dll",
-    "build/x64-Distribution/fmodstudio.dll",
-    "game_analytics_keys.txt",
-    "icon.rc",
-    "icon.ico"
+    "build/x64-Distribution/fmodstudio.dll"
   ]
 }
