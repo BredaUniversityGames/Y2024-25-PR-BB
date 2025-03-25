@@ -58,6 +58,9 @@ endif ()
 add_subdirectory(engine)
 
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon.rc")
+if (NOT EXISTS "${APP_ICON_RESOURCE_WINDOWS}")
+    unset(APP_ICON_RESOURCE_WINDOWS)
+endif ()
 
 # Add executable with settings based on configuration used
 if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
