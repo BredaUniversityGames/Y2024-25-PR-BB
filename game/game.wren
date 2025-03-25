@@ -8,11 +8,8 @@ import "analytics/analytics.wren" for AnalyticsManager
 class Main {
 
     static Start(engine) {
-
-
         engine.GetGame().SetHUDEnabled(true)
-        
-        
+
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
@@ -119,8 +116,6 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
-
-        AnalyticsManager.AccuracyEvent(1, "Revolver", 1)
     }
 
     static Shutdown(engine) {

@@ -1,6 +1,5 @@
 #include "analytics_module.hpp"
 
-#include "../../../build/x64-Debug/_deps/gameanalytics-src/source/gameanalytics/GAState.h"
 #include "engine.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
