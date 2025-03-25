@@ -224,7 +224,7 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<AnimationControlComponent>>("GetAnimationControlComponent");
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
-    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent");
+    entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent", "Must pass a Rigidbody to this function");
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");
@@ -291,8 +291,8 @@ void BindEntityAPI(wren::ForeignModule& module)
         // ECS class
         auto& wrenClass = module.klass<ECSModule>("ECS");
         wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
-        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName");
-        wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName");
+        wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName", "Returns the first entity found with the specified name");
+        wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName", "Returns a list of all the entities found with the specified name");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");
         wrenClass.funcExt<bindings::Clear>("DestroyAllEntities");
     }

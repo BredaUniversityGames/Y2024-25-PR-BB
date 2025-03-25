@@ -31,7 +31,7 @@ void logHandler(const std::string& message, gameanalytics::EGALoggerMessageType 
 
 ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
 {
-    auto keyFile = fileIO::OpenReadStream("game_analytics_keys.txt", fileIO::TEXT_READ_FLAGS);
+    auto keyFile = fileIO::OpenReadStream("assets/game_analytics_keys.txt", fileIO::TEXT_READ_FLAGS);
     if (keyFile.has_value())
     {
         std::string key;
