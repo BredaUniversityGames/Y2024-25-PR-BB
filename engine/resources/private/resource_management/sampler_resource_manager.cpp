@@ -1,8 +1,7 @@
 #include "resource_management/sampler_resource_manager.hpp"
 
-#include "../vulkan_helper.hpp"
-#include "gpu_resources.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 SamplerResourceManager::SamplerResourceManager(const std::shared_ptr<VulkanContext>& context)
     : _context(context)
