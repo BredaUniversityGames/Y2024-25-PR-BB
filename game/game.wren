@@ -63,7 +63,7 @@ class Main {
         __cameraVariables = CameraVariables.new()
 
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = 45.0
+        cameraProperties.fov = Math.Radians(45.0)
         cameraProperties.nearPlane = 0.5
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
@@ -95,15 +95,10 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
+        __gun = engine.LoadModel("assets/models/revolver.glb")
 
         var gunTransform = __gun.GetTransformComponent()
-        gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
-
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
-        gunAnimations.Stop()
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
         __player.AttachChild(__camera)
         __camera.AttachChild(__gun)
@@ -194,8 +189,7 @@ class Main {
             for(demon in __demons) {
                 var demonAnimations = demon.GetAnimationControlComponent()
                 if(demonAnimations.AnimationFinished()) {
-                    demonAnimations.Play("Idle", 1.0, true, 0.0, false)
-                }
+                   }
             }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()

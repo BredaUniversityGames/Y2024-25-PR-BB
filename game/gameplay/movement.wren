@@ -26,7 +26,7 @@ class PlayerMovement{
 
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
-
+        _smoothedCameraDelta = Vec2.new(0.0,0.0)
         _lastMousePosition = Vec2.new(0.0 ,0.0)
     }
 
@@ -99,7 +99,7 @@ class PlayerMovement{
         var lookAnalogAction = engine.GetInput().GetAnalogAction("Look")
         rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY
         rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY
-
+    
         var rotation = player.GetTransformComponent().rotation
 
         var euler = Math.ToEuler(rotation)
@@ -113,6 +113,20 @@ class PlayerMovement{
             euler.y = euler.y - rotationDelta.x
         }
 
+        var gun = engine.GetECS().GetEntityByName("revolver")
+        var gunTransform = gun.GetTransformComponent()
+
+    var val = 0.97
+    var dev = 1.1
+    var max = 0.6
+        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * val +  rotationDelta.x * (1-val)) / dev
+        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * val +  rotationDelta.y * (1-val))/  dev
+
+    var cx  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
+    var cy  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max)
+
+        gunTransform.translation = Vec3.new(cx,cy,0)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+cx,cy*0.2)) 
         rotation = Math.ToQuat(euler)
 
         player.GetTransformComponent().rotation = rotation
@@ -183,7 +197,15 @@ class PlayerMovement{
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-
+        if(Math.Abs(movement.y) > 0.2){
+                
+            var gun = engine.GetECS().GetEntityByName("revolver")
+            var gunAnimations = gun.GetAnimationControlComponent()
+            if(gunAnimations.AnimationFinished()){
+                gunAnimations.Play("walk", 1.0, false, 0.0, false)
+            }
+        }
+        
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()

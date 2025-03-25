@@ -17,7 +17,7 @@ class Pistol {
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 1.2 * 1000
+        _reloadSpeed = 1.2 * 700
 
         _cameraShakeIntensity = 0.3
         
@@ -25,24 +25,26 @@ class Pistol {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Shoot"
-        _reloadAnim = "Reload"
+        _attackAnim = "shoot"
+        _reloadAnim = "reload"
         _equipAnim = "" 
 
         _mesh = ""
     }
 
     reload (engine) {
-        System.print("Pistol reload")
-
-        var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        
+        var gun = engine.GetECS().GetEntityByName("revolver")
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
-        }
+                System.print("Pistol reload")
 
         _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
+
+        }
+
     }
 
     attack(engine, deltaTime, cameraVariables) {
@@ -56,7 +58,7 @@ class Pistol {
             cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var gun = engine.GetECS().GetEntityByName("revolver")
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -101,7 +103,7 @@ class Pistol {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
+            gunAnimations.Play("shoot", 1.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -144,8 +146,8 @@ class Shotgun {
         _reloadSFX = ""
         _equipSFX = ""
         
-        _attackAnim = "Shoot"
-        _reloadAnim = "Reload"
+        _attackAnim = "shoot"
+        _reloadAnim = "reload"
         _equipAnim = "" 
 
         _mesh = ""
@@ -156,8 +158,9 @@ class Shotgun {
 
         var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
+        if(engine.GetInput().GetDigitalAction("reload").IsPressed()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
+
         }
 
         _reloadTimer = _reloadSpeed
