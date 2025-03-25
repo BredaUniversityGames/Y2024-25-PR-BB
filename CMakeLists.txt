@@ -57,7 +57,7 @@ endif ()
 # Add engine library
 add_subdirectory(engine)
 
-set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
+set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon.rc")
 
 # Add executable with settings based on configuration used
 if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
