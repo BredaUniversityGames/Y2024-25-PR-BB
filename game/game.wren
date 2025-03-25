@@ -3,7 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
-import "gameplay/wave_system.wren" for WaveSystem
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig
 
 class Main {
 
@@ -78,7 +78,6 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
-        __waveManager = WaveSystem.new(positions, ["assets/models/Demon.glb"])
 
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
@@ -110,6 +109,17 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        var waveConfigs = []
+        waveConfigs.add(WaveConfig.new().SetDuration(10)
+            .AddSpawn("Demon", 0, 1, 1)
+            .AddSpawn("Demon", 0, 7, 3)
+        )
+        waveConfigs.add(WaveConfig.new().SetDuration(10)
+            .AddSpawn("Demon", 0, 1, 1)
+            .AddSpawn("Demon", 0, 7, 3)
+        )
+        __waveSystem = WaveSystem.new(engine, waveConfigs)
     }
 
     static Shutdown(engine) {
@@ -235,7 +245,8 @@ class Main {
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __player.GetTransformComponent().translation
-        __waveManager.Update(engine, playerPos, dt)
+
+        __waveSystem.Update(dt)
 
         // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
     }

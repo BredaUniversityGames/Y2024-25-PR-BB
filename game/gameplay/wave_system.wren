@@ -1,59 +1,120 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random
 
+class Spawn {
+    construct new(enemyType, spawnLocationId, time, count) {
+        _enemyType = enemyType
+        _spawnLocationId = spawnLocationId
+        _time = time
+        _count = count
+        _processed = false
+    }
+
+    EnemyType{ _enemyType }
+    SpawnLocationId { _spawnLocationId }
+    Time{ _time }
+    Count{ _count }
+    Processed{ _processed }
+    Processed=(value){ _processed = value }
+}
+
+class WaveConfig {
+    construct new() {
+        _duration = 0.0
+        _spawns = []
+    }
+
+    Duration{ _duration }
+    Spawns{ _spawns }
+
+    SetDuration(duration) {
+        _duration = duration
+        return this
+    }
+
+    AddSpawn(enemyType, spawnLocationId, time, count) {
+        _spawns.add(Spawn.new(enemyType, spawnLocationId, time, count))
+        return this
+    }
+}
+
+class WaveStatusType {
+    static NotStarted { 0 }
+    static Ongoing { 1 } 
+    static Completed { 2 }
+    static Finished { 3 }
+}
+
 class WaveSystem {
 
-    construct new(spawnPoints, enemyModels) {
-        _spawnPoints = spawnPoints
-        _enemyModels = enemyModels
+    construct new(engine, waveConfigs) {
+        _engine = engine
+        _waveConfigs = waveConfigs
 
-        _timer = 0.0
-
-        _waveDelay = 5000.0
-        _waveDelayMult = 1.01
-
-        _waveCount = 1.0
-        _waveCountAdd = 0.07
-    }
-
-    SpawnEnemy(engine, playerPosition) {
-
-        // Pick random spawnpoint
-
-        var index = Random.RandomIndex(0, _spawnPoints.count)
-        var spawnPos = _spawnPoints[index]
-
-        // Pick random model
-
-        var index2 = Random.RandomIndex(0, _enemyModels.count)
-        var enemyModel = _enemyModels[index2]
-
-        // Spawn entity
-
-        var entity = engine.LoadModel(enemyModel)
-
-        entity.GetTransformComponent().translation = spawnPos
-        // entity.GetTransformComponent().rotation = Quat.
-        entity.GetTransformComponent().scale = Vec3.new(0.025, 0.025, 0.025)
-
-        var demonAnimations = entity.GetAnimationControlComponent()
-        demonAnimations.Play("Idle", 1.0, true, 0.0, false)
+        _currentWave = -1
+        _status = WaveStatusType.NotStarted
+        _waveTimer = 0.0
+        _spawnedEnemies = []
     }
     
-    Update(engine, playerPosition, dt) {
-
-        _timer = _timer + dt
-        var enemiesToSpawn = 0
-
-        if (_timer > _waveDelay) {
-            _waveDelay = _waveDelay / _waveDelayMult
-            _timer = _timer % _waveDelay
-
-            enemiesToSpawn = _waveCount
-            _waveCount = _waveCount + _waveCountAdd
+    ActiveWaveConfig() { 
+        if(_currentWave >= 0 && _currentWave < _waveConfigs.count) {
+            return _waveConfigs[_currentWave]
         }
 
-        for (i in 0...enemiesToSpawn) {
-            this.SpawnEnemy(engine, playerPosition)
+        return null
+    }
+
+    Update(dt) {
+        _waveTimer = _waveTimer + dt / 1000.0
+
+        if(_status == WaveStatusType.Ongoing) {
+
+            var allProcessed = true
+
+            for(spawn in this.ActiveWaveConfig().Spawns) {
+
+                if(allProcessed) {
+                    allProcessed = spawn.Processed
+                }
+
+                if(!spawn.Processed && spawn.Time < _waveTimer) {
+                    // TODO: Spawn enemy at location
+                    System.print("Spawned %(spawn.Count) enemies")
+
+                    spawn.Processed = true
+                }
+                
+            }
+
+            if(_spawnedEnemies.count == 0 && _waveTimer > this.ActiveWaveConfig().Duration) {
+                _status = WaveStatusType.Completed
+                _waveTimer = 0.0
+            }
+
+        } else if(_status == WaveStatusType.Completed || _status == WaveStatusType.NotStarted) {
+
+            if(_waveTimer > 3.0) {
+
+                if(_currentWave + 1 < _waveConfigs.count) {
+                    this.StartNextWave()
+                } else if (_status != WaveStatusType.Finished) {
+                    _status = WaveStatusType.Finished
+                    System.print("Completed all waves")
+                }
+            
+            }
         }
+    }
+
+    StartNextWave() {
+        if(_status == WaveStatusType.Ongoing) {
+            return
+        }
+
+        _currentWave = _currentWave + 1
+        _status = WaveStatusType.Ongoing
+        _waveTimer = 0.0
+            
+        System.print("Starting wave %(_currentWave)")
     }
 }
