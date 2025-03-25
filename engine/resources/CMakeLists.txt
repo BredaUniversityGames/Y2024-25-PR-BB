@@ -1,7 +1,7 @@
-add_library(ModelLoading)
-module_default_init(ModelLoading)
+add_library(Resources)
+module_default_init(Resources)
 
-target_link_libraries(ModelLoading
+target_link_libraries(Resources
         PUBLIC Core
         PUBLIC Renderer
         PUBLIC Thread
@@ -9,7 +9,7 @@ target_link_libraries(ModelLoading
         PRIVATE fastgltf::fastgltf
 )
 
-target_include_directories(ModelLoading
+target_include_directories(Resources
         PRIVATE "${PROJECT_SOURCE_DIR}/external/stb"
 )
 

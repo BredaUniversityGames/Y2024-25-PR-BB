@@ -15,8 +15,7 @@ struct VulkanInitInfo;
 struct Sampler;
 struct GPUImage;
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES
-    = 1024;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 1024;
 
 class GraphicsContext
 {
