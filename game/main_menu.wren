@@ -29,6 +29,19 @@ class Main {
         var camTrans = __camera.GetTransformComponent()
         camTrans.rotation = Quat.new(0.982,0.145,0.117,-0.017)
 
+        var settings = engine.GetGame().GetMainMenu().settingsButton
+        settings.OnPress(Fn.new { System.print("Settings Opened!")})
+
+        var play = engine.GetGame().GetMainMenu().playButton
+        play.OnPress(Fn.new {
+            engine.GetGame().SetMainMenuEnabled(false)
+            engine.TransitionToScript("game/game.wren")
+        })
+
+        var exit = engine.GetGame().GetMainMenu().quitButton
+        exit.OnPress(Fn.new {
+            engine.SetExit(0)
+        })
     }
 
     static Shutdown(engine) {
@@ -37,14 +50,6 @@ class Main {
     }
 
     static Update(engine, dt) {
-       if(engine.GetGame().GetMainMenu().PlayButtonPressedOnce()){
-            engine.GetGame().SetMainMenuEnabled(false)
-            engine.TransitionToScript("game/game.wren")
-            return
-       }
-       if(engine.GetGame().GetMainMenu().QuitButtonPressedOnce()){
-            engine.SetExit(0)
-            return
-      }
+    
     }
 }

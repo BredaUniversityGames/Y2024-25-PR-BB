@@ -119,7 +119,7 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
 
     auto gunPic = hud.canvas->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
-    gunPic.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
 
@@ -172,10 +172,9 @@ void HudUpdate(HUD& hud, float timePassed)
         locked->SetText(std::to_string(int(ammo)) + "/8");
     }
 }
-
-MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+    : Canvas(screenResolution)
 {
-    MainMenu mainMenu(screenResolution);
     // resource loading.
     auto loadButtonStyle = [&graphicsContext]()
     {
@@ -199,40 +198,43 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
 
     // temporary
-    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), mainMenu.GetRelativeScale());
+    SetAbsoluteTransform(GetAbsoluteLocation(), GetRelativeScale());
 
     constexpr float xMargin = 50;
-    mainMenu.playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f).lock();
-    mainMenu.playButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    mainMenu.playButton.lock()->AddChild<UITextElement>(font, "play", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+    playButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f);
+    playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    playButton->AddChild<UITextElement>(font, "play", 15)->SetColor(glm::vec4(0, 0, 0, 1));
 
-    mainMenu.settingsButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 250), glm::vec2(878, 243) * .2f).lock();
-    mainMenu.settingsButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    mainMenu.settingsButton.lock()->AddChild<UITextElement>(font, "settings", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+    std::function<void()> callback = []()
+    { bblog::info("INFO CALLBACK!!!"); };
 
-    mainMenu.quitButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 300), glm::vec2(878, 243) * .2f).lock();
-    mainMenu.quitButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    mainMenu.quitButton.lock()->AddChild<UITextElement>(font, "quit", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+    playButton->OnPress(callback);
 
-    mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
-    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
+    settingsButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 250), glm::vec2(878, 243) * .2f);
+    settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    settingsButton->AddChild<UITextElement>(font, "settings", 15)->SetColor(glm::vec4(0, 0, 0, 1));
 
-    mainMenu.settingsButton.lock()->navigationTargets.down = mainMenu.quitButton;
-    mainMenu.settingsButton.lock()->navigationTargets.up = mainMenu.playButton;
+    quitButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 300), glm::vec2(878, 243) * .2f);
+    quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    quitButton->AddChild<UITextElement>(font, "quit", 15)->SetColor(glm::vec4(0, 0, 0, 1));
 
-    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.playButton;
-    mainMenu.quitButton.lock()->navigationTargets.up = mainMenu.settingsButton;
+    playButton->navigationTargets.down = settingsButton;
+    playButton->navigationTargets.up = quitButton;
+
+    settingsButton->navigationTargets.down = quitButton;
+    settingsButton->navigationTargets.up = playButton;
+
+    quitButton->navigationTargets.down = playButton;
+    quitButton->navigationTargets.up = settingsButton;
 
     CPUImage commonImageData;
     commonImageData.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/blightspire_logo.png"));
-    auto logoElement = mainMenu.AddChild<UIImage>(logo, glm::vec2(xMargin - 20, 100), glm::vec2(618, 217) * 0.4f);
-    logoElement.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    auto logoElement = AddChild<UIImage>(logo, glm::vec2(xMargin - 20, 100), glm::vec2(618, 217) * 0.4f);
+    logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-    mainMenu.UpdateAllChildrenAbsoluteTransform();
+    UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
-
-    return mainMenu;
 }

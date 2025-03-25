@@ -28,13 +28,11 @@ void HudUpdate(HUD& hud, float timePassed);
 class MainMenu : public Canvas
 {
 public:
-    MainMenu(const glm::uvec2& screenResolution)
-        : Canvas(screenResolution)
-    {
-    }
-    std::weak_ptr<UIButton> playButton;
-    std::weak_ptr<UIButton> settingsButton;
-    std::weak_ptr<UIButton> quitButton;
+    MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+    std::shared_ptr<UIButton> playButton;
+    std::shared_ptr<UIButton> settingsButton;
+    std::shared_ptr<UIButton> quitButton;
 };
 
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
