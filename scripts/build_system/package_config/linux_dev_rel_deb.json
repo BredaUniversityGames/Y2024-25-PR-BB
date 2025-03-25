@@ -14,6 +14,7 @@
     "build/WSL-RelWithDebInfo/libfmodL.so.14",
     "build/WSL-RelWithDebInfo/libfmodstudioL.so.14",
     "steam_appid.txt",
-    "game_analytics_keys.txt"
+    "game_analytics_keys.txt",
+    "version.txt"
   ]
 }
