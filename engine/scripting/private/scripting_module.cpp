@@ -9,7 +9,6 @@ void ScriptingModule::ResetVM()
     _mainModule.reset();
     _context->Reset();
     BindEngineAPI(GetForeignAPI());
-    GenerateEngineBindingsFile();
 }
 
 void ScriptingModule::GenerateEngineBindingsFile()

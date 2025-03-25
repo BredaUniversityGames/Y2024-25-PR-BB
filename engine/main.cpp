@@ -51,6 +51,7 @@ int Main()
         auto& scripting = instance.GetModule<ScriptingModule>();
 
         scripting.ResetVM();
+        // scripting.GenerateEngineBindingsFile();
         scripting.SetMainScript(instance, "game/main_menu.wren");
         instance.GetModule<TimeModule>().ResetTimer();
     }
