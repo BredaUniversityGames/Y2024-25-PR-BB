@@ -47,7 +47,7 @@ private:
     SDL_Window* _window = nullptr;
     VulkanInitInfo _vulkanInitInfo;
 
-    std::string _windowName = "BB-Prototype";
+    std::string _windowName = "Blightspire";
     bool _isFullscreen = true;
     bool _mouseHidden = true;
 

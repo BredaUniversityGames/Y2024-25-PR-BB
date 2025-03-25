@@ -344,7 +344,9 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)
+#ifndef DISTRIBUTION
         .AddNode(debugPass)
+#endif
         .AddNode(presentationPass)
         .Build();
 

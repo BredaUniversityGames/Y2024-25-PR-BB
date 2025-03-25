@@ -12,7 +12,7 @@ class ScriptingModule : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
     void Tick(Engine& engine) override;
-    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override { };
     std::string_view GetName() override { return "Scripting Module"; }
 
 public:
@@ -56,6 +56,7 @@ public:
 private:
     std::string _mainEngineScript {};
     std::string _engineBindingsPath {};
+    std::stringstream _scriptingLogs {};
 
     std::unique_ptr<ScriptingContext> _context {};
     std::unique_ptr<MainScript> _mainModule {};
