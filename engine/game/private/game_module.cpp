@@ -58,7 +58,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-  
+
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
@@ -151,9 +151,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
-        engine.SetExit(0);
 
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))

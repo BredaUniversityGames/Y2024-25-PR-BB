@@ -77,11 +77,15 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
     const int updatesNeeded = std::min(static_cast<int>(glm::ceil(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND)), PHYSICS_MAX_STEPS_PER_FRAME);
 
     // Step the world
-    auto error = _physicsSystem->Update(deltatimeSeconds, updatesNeeded, _tempAllocator.get(), _jobSystem.get());
 
-    if (error != JPH::EPhysicsUpdateError::None)
+    if (updatesNeeded > 0)
     {
-        bblog::error("[PHYSICS] Simulation step error has occurred");
+        auto error = _physicsSystem->Update(deltatimeSeconds, updatesNeeded, _tempAllocator.get(), _jobSystem.get());
+
+        if (error != JPH::EPhysicsUpdateError::None)
+        {
+            bblog::error("[PHYSICS] Simulation step error has occurred");
+        }
     }
 
     JPH::BodyManager::DrawSettings drawSettings;

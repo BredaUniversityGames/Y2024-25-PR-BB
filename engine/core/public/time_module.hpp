@@ -6,7 +6,7 @@ class TimeModule : public ModuleInterface
 {
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) override;
     void Tick(MAYBE_UNUSED Engine& engine) override;
-    void Shutdown(MAYBE_UNUSED Engine& engine) override {};
+    void Shutdown(MAYBE_UNUSED Engine& engine) override { };
     std::string_view GetName() override { return "Time Module"; }
 
 public:
@@ -15,8 +15,14 @@ public:
 
     TimeModule() = default;
     ~TimeModule() override = default;
-    DeltaMS GetDeltatime() const { return current_deltatime; }
+    DeltaMS GetDeltatime() const { return current_deltatime * deltatimeScale; }
     DeltaMS GetTotalTime() const { return total_time; }
+
+    void SetDeltatimeScale(float scale)
+    {
+        deltatimeScale = scale;
+    }
+
     void ResetTimer()
     {
         delta_timer.Reset();
@@ -24,6 +30,8 @@ public:
     }
 
 private:
+    float deltatimeScale = 1.0f;
+
     DeltaMS current_deltatime {};
     DeltaMS total_time {};
 

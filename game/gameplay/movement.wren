@@ -87,6 +87,7 @@ class PlayerMovement{
 
     Rotation(engine, player) {
 
+        var dt = engine.GetTime().GetDeltatime()
         var FORWARD = Vec3.new(0.0, 0.0, -1.0)
 
         var MOUSE_SENSITIVITY = 0.003 * _lookSensitivity
@@ -96,9 +97,10 @@ class PlayerMovement{
         var mouseDelta = _lastMousePosition - mousePosition
         var rotationDelta = Vec2.new(-mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY)
 
+        
         var lookAnalogAction = engine.GetInput().GetAnalogAction("Look")
-        rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY
-        rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY
+        rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY * dt
+        rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY * dt
 
         var rotation = player.GetTransformComponent().rotation
 
@@ -126,7 +128,7 @@ class PlayerMovement{
         var up = rotation.mulVec3(Vec3.new(0, 1, 0))
         var right = Math.Cross(forward, up)
 
-        var CAM_SPEED = 0.03 * _freeCamSpeedMultiplier
+        var CAM_SPEED = _freeCamSpeedMultiplier
 
         var movementDir = Vec3.new(0.0, 0.0, 0.0)
         var analogMovement = engine.GetInput().GetAnalogAction("Move")
@@ -139,7 +141,7 @@ class PlayerMovement{
         }
 
         var position = player.GetTransformComponent().translation
-        var scaled = engine.GetTime().GetDeltatime() * CAM_SPEED
+        var scaled = CAM_SPEED
 
         position = position + movementDir.mulScalar(scaled)
 
@@ -148,12 +150,15 @@ class PlayerMovement{
 
     Movement(engine, playerController, camera) {
 
-        this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
-
         var cheats = playerController.GetCheatsComponent()
-        if(cheats.noClip == true){
+        if(cheats.noClip == true) {
+            this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
             this.FlyCamMovement(engine, engine.GetECS().GetEntityByName("Player"))
             return
+        }
+
+        if (engine.GetTime().GetDeltatime() != 0.0) {
+             this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
         }
 
         var playerBody = playerController.GetRigidbodyComponent()

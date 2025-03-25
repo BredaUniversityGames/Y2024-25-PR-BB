@@ -80,6 +80,7 @@ void BindEngineAPI(wren::ForeignModule& module)
     {
         auto& time = module.klass<TimeModule>("TimeModule");
         time.funcExt<bindings::TimeModuleGetDeltatime>("GetDeltatime");
+        time.func<&TimeModule::SetDeltatimeScale>("SetScale");
     }
 
     // ECS module

@@ -8,7 +8,6 @@ class Main {
 
     static Start(engine) {
 
-
         engine.GetGame().SetHUDEnabled(true)
         
         
@@ -118,6 +117,8 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        __pauseEnabled = false
     }
 
     static Shutdown(engine) {
@@ -255,6 +256,16 @@ class Main {
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __playerVariables.IncreaseScore(1)
+            }
+
+            if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
+                __pauseEnabled = !__pauseEnabled
+
+                if (__pauseEnabled) {
+                    engine.GetTime().SetScale(0.0)
+                } else {
+                    engine.GetTime().SetScale(1.0)
+                }
             }
         }
 
