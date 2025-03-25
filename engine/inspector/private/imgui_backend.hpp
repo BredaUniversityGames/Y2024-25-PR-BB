@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 
 #include "resource_manager.hpp"
 

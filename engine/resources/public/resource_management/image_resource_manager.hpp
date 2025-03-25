@@ -1,8 +1,9 @@
 #pragma once
 
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/image.hpp"
 #include "single_time_commands.hpp"
+
 #include <memory>
 
 class VulkanContext;

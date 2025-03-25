@@ -6,5 +6,5 @@ target_link_libraries(Pathfinding
         PUBLIC Application
         PUBLIC Physics
         PUBLIC Renderer
-        PUBLIC ModelLoading
+        PUBLIC Resources
 )
