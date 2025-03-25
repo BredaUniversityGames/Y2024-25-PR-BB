@@ -17,7 +17,6 @@ const GameActions GAME_ACTIONS {
                 .name = "Slide",
                 .inputs = {
                     GamepadButton::eLEFT_SHOULDER,
-                    GamepadButton::eEAST,
                     KeyboardCode::eLCTRL,
                 },
             },

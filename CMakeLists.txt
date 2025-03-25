@@ -41,6 +41,11 @@ if (ENABLE_UNITY)
     message(STATUS "### Compiling with Unity (Jumbo) builds")
 endif ()
 
+# Define if it's the distribution config for main file
+if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution" OR "${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+    add_compile_definitions(DISTRIBUTION)
+endif()
+
 # Add external dependencies
 add_subdirectory(external)
 
@@ -52,8 +57,19 @@ endif ()
 # Add engine library
 add_subdirectory(engine)
 
-# Add game executable (currently just main.cpp)
-add_executable(CustomTech "engine/main.cpp")
+# Add executable with settings based on configuration used
+if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution")
+    add_executable(CustomTech WIN32 "engine/main.cpp")
+elseif("${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+    add_executable(CustomTech "engine/main.cpp")
+    set_target_properties(CustomTech
+            PROPERTIES
+            LINK_FLAGS "-mwindows"
+    )
+else()
+    add_executable(CustomTech "engine/main.cpp")
+endif()
+
 target_link_libraries(CustomTech
         PRIVATE ProjectSettings
         PRIVATE Engine
