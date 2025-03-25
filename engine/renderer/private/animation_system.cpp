@@ -89,7 +89,6 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
             auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
             auto& animationControl = ecs.GetRegistry().get<AnimationControlComponent>(animationChannel.animationControlEntity);
             auto& transform = animationView.get<AnimationTransformComponent>(entity);
-            auto& name = animationView.get<NameComponent>(entity);
 
             AnimationTransformComponent activeTransform = transform;
             std::optional<AnimationTransformComponent> transitionTransform = std::nullopt;
