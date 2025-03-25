@@ -84,6 +84,7 @@ class Pistol {
                 lifetime.lifetime = 300.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), rayHitInfo[0].normal)
+                engine.SpawnDecal(rayHitInfo[0].normal, rayHitInfo[0].position, Vec3.new(1, 1, 1), "bullet_hole.png", "null")
             }
 
             var length = (end - start).length()

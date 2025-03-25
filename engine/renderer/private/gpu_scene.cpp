@@ -412,8 +412,6 @@ void GPUScene::UpdateSkinBuffers(uint32_t frameIndex)
 
 void GPUScene::UpdateDecalBuffer()
 {
-    // TODO: check for newly spawned decals
-
     // Update Decal buffer
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_decalBuffer);
     std::memcpy(buffer->mappedPtr, &_decals, sizeof(DecalArray));
@@ -427,7 +425,7 @@ ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
 
     if (got == _decalImages.end())
     {
-        if (std::filesystem::exists("assets/textures/particles/" + fileName))
+        if (std::filesystem::exists("assets/textures/decals/" + fileName))
         {
             CPUImage creation;
             creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
@@ -447,7 +445,7 @@ ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
     return got->second;
 }
 
-void GPUScene::AddDecal(glm::vec3 direction, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
+void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
 {
     const auto image = GetDecalImage(albedoName);
 
@@ -463,7 +461,7 @@ void GPUScene::AddDecal(glm::vec3 direction, glm::vec3 position, glm::vec3 size,
     newDecal.albedoIndex = image.Index();
     // newDecal.normalIndex = -1; // TODO: decide if we want normal stuff for this
 
-    glm::vec3 forward = direction;
+    glm::vec3 forward = -normal;
     glm::vec3 up = std::abs(glm::dot(forward, glm::vec3(0.0f, 1.0f, 0.0f))) < 0.99f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 1.0f);
     glm::vec3 right = glm::normalize(glm::cross(up, forward));
     up = glm::cross(forward, right);

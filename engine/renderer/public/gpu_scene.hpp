@@ -68,7 +68,7 @@ public:
     void Update(uint32_t frameIndex);
     void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
-    void AddDecal(glm::vec3 direction, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName);
+    void SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName);
 
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }

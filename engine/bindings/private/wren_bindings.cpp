@@ -24,6 +24,8 @@
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
 
+#include <gpu_scene.hpp>
+
 namespace bindings
 {
 
@@ -51,6 +53,11 @@ void SetExit(WrenEngine& engine, int code)
     engine.instance->SetExit(code);
 }
 
+void SpawnDecal(WrenEngine& engine, glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName, std::string normalName)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().SpawnDecal(normal, position, size, albedoName, normalName);
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -74,6 +81,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
         engineAPI.funcExt<bindings::SetExit>("SetExit");
+        engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
     }
 
     // Time Module
