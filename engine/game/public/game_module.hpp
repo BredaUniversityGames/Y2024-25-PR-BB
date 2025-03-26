@@ -5,7 +5,7 @@
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
-inline const std::string DISCORD_URL = "https://discord.gg/B8qdz5Nf";
+inline const std::string DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
 
 struct PlayerTag
 {
