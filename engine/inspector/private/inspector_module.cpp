@@ -148,8 +148,7 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             ImGui::EndMenu();
         }
 
-        ImGui::
-            if (ImGui::BeginMenu("Exit Program"))
+        if (ImGui::BeginMenu("Exit Program"))
         {
             engine.SetExit(0);
             ImGui::EndMenu();

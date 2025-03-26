@@ -13,17 +13,15 @@ OSVERSIONINFOEX GetWindowsVersion()
 {
     OSVERSIONINFOEX result {};
 
-    // Function pointer to driver function
-    NTSTATUS (WINAPI *pRtlGetVersion)(
-       PRTL_OSVERSIONINFOW lpVersionInformation) = NULL;
-
     // Get the function pointer to RtlGetVersion
-    pRtlGetVersion = reinterpret_cast<NTSTATUS(__stdcall *)(PRTL_OSVERSIONINFOW)>(GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion"));
+    void* procAddress = reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion"));
 
     // If successfull then read the function, if not, we're doomed to not know the version
-    if (pRtlGetVersion != NULL)
+    if (procAddress != NULL)
     {
-        pRtlGetVersion((PRTL_OSVERSIONINFOW)&result);
+        using GetVersionProcType = NTSTATUS(WINAPI*)(PRTL_OSVERSIONINFOW);
+        auto call = reinterpret_cast<GetVersionProcType>(procAddress);
+        call((PRTL_OSVERSIONINFOW)&result);
     }
 
     return result;
