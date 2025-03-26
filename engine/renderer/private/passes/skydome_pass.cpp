@@ -1,6 +1,5 @@
 #include "passes/skydome_pass.hpp"
 
-#include "../vulkan_helper.hpp"
 #include "batch_buffer.hpp"
 #include "bloom_settings.hpp"
 #include "gpu_scene.hpp"
@@ -12,6 +11,7 @@
 #include "resource_management/mesh_resource_manager.hpp"
 #include "shaders/shader_loader.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 SkydomePass::SkydomePass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUMesh> sphere, ResourceHandle<GPUImage> hdrTarget,
     ResourceHandle<GPUImage> brightnessTarget, ResourceHandle<GPUImage> environmentMap, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
