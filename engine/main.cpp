@@ -1,3 +1,4 @@
+#include "analytics_module.hpp"
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
@@ -7,6 +8,7 @@
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
+#include "profile_macros.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
 #include "steam_module.hpp"
@@ -14,11 +16,12 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
-#include "profile_macros.hpp"
-#include "wren_bindings.hpp"
-
-int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+int Main()
 {
+#ifdef DISTRIBUTION
+    bblog::StartWritingToFile();
+#endif
+
     MainEngine instance;
     Stopwatch startupTimer {};
 
@@ -39,7 +42,8 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
             .AddModule<UIModule>()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
-            .AddModule<InspectorModule>();
+            .AddModule<InspectorModule>()
+            .AddModule<AnalyticsModule>();
     }
 
     {
@@ -47,10 +51,28 @@ int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
         auto& scripting = instance.GetModule<ScriptingModule>();
 
         scripting.ResetVM();
-        scripting.SetMainScript(instance, "game/main_menu.wren");
+        scripting.GenerateEngineBindingsFile();
+        scripting.SetMainScript(instance, "game/game.wren");
+
         instance.GetModule<TimeModule>().ResetTimer();
     }
 
-    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
+    bblog::info("{}ms taken for Complete Startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
+
+#if defined(_WIN32) && defined(DISTRIBUTION)
+
+int APIENTRY WinMain(MAYBE_UNUSED HINSTANCE hInstance, MAYBE_UNUSED HINSTANCE hPrevInstance, MAYBE_UNUSED LPSTR lpCmdLine, MAYBE_UNUSED int nShowCmd)
+{
+    return Main();
+}
+
+#else
+
+int main(MAYBE_UNUSED int argc, MAYBE_UNUSED char* argv[])
+{
+    return Main();
+}
+
+#endif

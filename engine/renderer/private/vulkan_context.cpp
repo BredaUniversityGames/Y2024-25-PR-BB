@@ -8,7 +8,6 @@
 #include "pipeline_builder.hpp"
 #include "swap_chain.hpp"
 #include "vulkan_helper.hpp"
-#include "vulkan_include.hpp"
 #include "vulkan_validation.hpp"
 
 VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
@@ -42,6 +41,19 @@ VulkanContext::VulkanContext(const VulkanInitInfo& initInfo)
     vk::PhysicalDeviceProperties properties;
     _physicalDevice.getProperties(&properties);
     _minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
+
+    bblog::info("##### SYSTEM INFO #####");
+    bblog::PrintOSName();
+
+    uint32_t apiVersion = vk::enumerateInstanceVersion();
+    uint32_t major = VK_VERSION_MAJOR(apiVersion);
+    uint32_t minor = VK_VERSION_MINOR(apiVersion);
+    uint32_t patch = VK_VERSION_PATCH(apiVersion);
+    bblog::info("Vulkan Version Installed: {}.{}.{}", major, minor, patch);
+
+    bblog::info("GPU: {}", std::string(properties.deviceName));
+    bblog::info("GPU Driver Version (encoded): {}", properties.driverVersion); // Encoding can be different for each vendor
+    bblog::info("#######################");
 }
 
 VulkanContext::~VulkanContext()
