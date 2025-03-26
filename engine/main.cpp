@@ -31,7 +31,6 @@ int Main()
         instance
             .AddModule<ThreadModule>()
             .AddModule<ECSModule>()
-            .AddModule<ScriptingModule>()
             .AddModule<TimeModule>()
             .AddModule<SteamModule>()
             .AddModule<ApplicationModule>()
@@ -43,7 +42,8 @@ int Main()
             .AddModule<ParticleModule>()
             .AddModule<GameModule>()
             .AddModule<InspectorModule>()
-            .AddModule<AnalyticsModule>();
+            .AddModule<AnalyticsModule>()
+            .AddModule<ScriptingModule>();
     }
 
     {
@@ -52,7 +52,7 @@ int Main()
 
         scripting.ResetVM();
         scripting.GenerateEngineBindingsFile();
-        scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/main_menu.wren");
 
         instance.GetModule<TimeModule>().ResetTimer();
     }
