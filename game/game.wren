@@ -10,6 +10,7 @@ import "analytics/analytics.wren" for AnalyticsManager
 class Main {
 
     static Start(engine) {
+        engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetHUDEnabled(true)
 
         // Set navigational mesh

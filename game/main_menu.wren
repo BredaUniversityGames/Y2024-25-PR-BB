@@ -6,6 +6,8 @@ class Main {
 
     static Start(engine) {
         System.print("Start main menu")
+
+        engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)
         engine.GetGame().SetMainMenuEnabled(true)
         // __background = engine.LoadModel("assets/models/main_menu.glb")
@@ -67,12 +69,13 @@ class Main {
             __ambientPlayer.CycleMusic(engine.GetAudio())
         }
 
-        if(engine.GetGame().GetMainMenu().PlayButtonPressedOnce()){
+        if(engine.GetGame().GetMainMenu().PlayButtonPressedOnce()) {
             engine.GetGame().SetMainMenuEnabled(false)
             engine.TransitionToScript("game/game.wren")
             return
         }
-        if(engine.GetGame().GetMainMenu().QuitButtonPressedOnce()){
+
+        if(engine.GetGame().GetMainMenu().QuitButtonPressedOnce()) {
             engine.SetExit(0)
             return
         }

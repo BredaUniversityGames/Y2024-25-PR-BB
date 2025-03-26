@@ -83,6 +83,9 @@ protected:
     void ChildrenSubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const;
 
 private:
+    // Steam deck verification requires 9px minimum, but recommends 12px
+    static constexpr float MIN_STEAM_SCALE_RECOMMENDATION = 12.0f;
+
     glm::vec2 _absoluteLocation {};
     glm::vec2 _relativeLocation {};
 

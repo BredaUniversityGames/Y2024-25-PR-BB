@@ -34,10 +34,10 @@ ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
     auto keyFile = fileIO::OpenReadStream("assets/game_analytics_keys.txt", fileIO::TEXT_READ_FLAGS);
     if (keyFile.has_value())
     {
-        std::string key;
-        std::string secret;
-        std::getline(keyFile.value(), key);
-        std::getline(keyFile.value(), secret);
+        std::string keyFileContent = fileIO::DumpStreamIntoString(keyFile.value());
+        uint32_t seperatorIndex = keyFileContent.find_first_of('\n');
+        std::string key = keyFileContent.substr(0, seperatorIndex);
+        std::string secret = keyFileContent.substr(seperatorIndex + 1, keyFileContent.size() - seperatorIndex - 2);
 
         gameanalytics::GameAnalytics::configureCustomLogHandler(logHandler);
         gameanalytics::GameAnalytics::configureBuild("dev"); // TODO: Formalize this to actual build version
