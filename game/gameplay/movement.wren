@@ -242,7 +242,7 @@ class PlayerMovement{
         var wishVel = moveInputDir.mulScalar(maxSpeed)
 
         //Fix for moving on slopes
-        if(isGrounded && moveInputDir.length() > 0.01){
+        if(isGrounded && moveInputDir.length() > 0.01 && isJumpHeld == false){
             // Get the right vector relative to movement
             var lateral = Math.Cross(assNormal, moveInputDir).normalize()
 
