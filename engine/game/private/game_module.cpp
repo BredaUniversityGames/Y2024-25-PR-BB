@@ -15,6 +15,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
@@ -35,9 +36,8 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-#include "file_io.hpp"
 
-#include <steam_module.hpp>
+#include "steam_module.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {

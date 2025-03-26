@@ -72,7 +72,7 @@ void SteamModule::OpenSteamBrowser(const std::string& url)
 {
     if (_steamAvailable == false)
     {
-        bblog::error("steam is not avaiable, cannot open steam browser.");
+        bblog::error("Steam is not available, cannot open Steam browser.");
     }
     else
     {
