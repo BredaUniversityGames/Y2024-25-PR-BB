@@ -1,5 +1,6 @@
 #include "wren_bindings.hpp"
 
+#include "analytics/analytics_bindings.hpp"
 #include "application_module.hpp"
 #include "audio/audio_bindings.hpp"
 #include "audio_module.hpp"
@@ -121,5 +122,10 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Game
     {
         BindGameAPI(module);
+    }
+
+    // Analytics
+    {
+        BindAnalyticsAPI(module);
     }
 }

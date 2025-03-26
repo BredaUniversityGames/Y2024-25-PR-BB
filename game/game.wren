@@ -3,14 +3,13 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
 
     static Start(engine) {
-
         engine.GetGame().SetHUDEnabled(true)
-        
-        
+
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
 
