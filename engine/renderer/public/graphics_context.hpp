@@ -3,8 +3,8 @@
 #include "common.hpp"
 #include "resource_manager.hpp"
 
+#include "vulkan_include.hpp"
 #include <memory>
-#include <vulkan/vulkan.hpp>
 
 #include "draw_stats.hpp"
 
@@ -15,8 +15,7 @@ struct VulkanInitInfo;
 struct Sampler;
 struct GPUImage;
 
-constexpr uint32_t MAX_BINDLESS_RESOURCES
-    = 1024;
+constexpr uint32_t MAX_BINDLESS_RESOURCES = 1024;
 
 class GraphicsContext
 {

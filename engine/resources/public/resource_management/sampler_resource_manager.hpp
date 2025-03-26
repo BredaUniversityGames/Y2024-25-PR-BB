@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.hpp>
 
 #include "common.hpp"
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/sampler.hpp"
 
 class VulkanContext;
 
