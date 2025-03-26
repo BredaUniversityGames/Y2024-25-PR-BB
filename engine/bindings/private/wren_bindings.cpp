@@ -47,10 +47,10 @@ WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
 }
 
-void LoadModelScriptingWithoutInstantiation(WrenEngine& engine, const std::string& path)
+void PreloadModel(WrenEngine& engine, const std::string& path)
 {
     auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
-    auto model = sceneCache.LoadModel(*engine.instance, path);
+    sceneCache.LoadModel(*engine.instance, path);
 }
 
 void SetExit(WrenEngine& engine, int code)
@@ -79,7 +79,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
-        engineAPI.funcExt<bindings::LoadModelScriptingWithoutInstantiation>("LoadModelWithoutInstantiation");
+        engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
         engineAPI.funcExt<bindings::SetExit>("SetExit");
     }

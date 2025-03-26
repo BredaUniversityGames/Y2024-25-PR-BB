@@ -51,10 +51,9 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = pos
 
         _reasonTimer = _reasonTimer + dt
-        if(_reasonTimer > 2000) {
+        if(_reasonTimer > 300) {
             _reasonTimer = 0
             this.FindNewPath(engine)
-            //System.print("Finding new path")
         }
 
         // var forwardVector = (playerPos - pos).normalize()
@@ -66,18 +65,8 @@ class MeleeEnemy {
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
             //System.print("Following path")
-            var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-
-            var p2 = p1
-
-            if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
-                p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
-            }
-
-            var dst = Math.Distance(pos, p1.center)
+            
             var bias = 0.01
-            var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
 
             //System.printAll([[waypoint.center.x, waypoint.center.y, waypoint.center.z]])
@@ -92,6 +81,20 @@ class MeleeEnemy {
                 }
                 waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
             }
+
+            var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+
+            var p2 = p1
+
+            if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
+                p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
+            }
+
+            var dst = Math.Distance(pos, p1.center)
+           
+            var target = Math.MixVec3(p1.center, p2.center, dst * bias)
+
+            
 
             var forwardVector = (target - pos).normalize()
 
@@ -138,7 +141,8 @@ class MeleeEnemy {
     FindNewPath(engine) {
         var startPos = position
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
-        _currentPathNodeIdx = 0
+        
+        _currentPathNodeIdx = 1
     }
 
     Destroy(engine) {

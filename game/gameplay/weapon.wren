@@ -33,8 +33,6 @@ class Pistol {
     }
 
     reload (engine) {
-        //System.print("Pistol reload")
-
         var gun = engine.GetECS().GetEntityByName("Gun")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && gunAnimations.AnimationFinished()) {
@@ -49,7 +47,6 @@ class Pistol {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
-            //System.print("Pistol shoot")
 
             // Shake the camera
 
@@ -121,7 +118,6 @@ class Pistol {
     }
 
     equip (engine) {
-        System.print("Pistol equip")
     }
 
     cooldown {_cooldown}
@@ -165,7 +161,6 @@ class Shotgun {
     }
     
     reload (engine) {
-        System.print("Shotgun reload")
 
         var gun = engine.GetECS().GetEntityByName("Gun")
         var gunAnimations = gun.GetAnimationControlComponent()
@@ -180,7 +175,6 @@ class Shotgun {
     attack(engine, deltaTime, cameraVariables) {   
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
-            System.print("Shotgun shoot")
 
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
@@ -248,7 +242,6 @@ class Shotgun {
     }
 
     equip (engine) {
-        System.print("Shotgun equip")    
     }
 
     cooldown {_cooldown}
@@ -289,12 +282,10 @@ class Knife {
 
     reload (engine) {
         // Use some weapon inspect animation maybe?
-        System.print("Knife reload")
     }
 
     attack(engine, deltaTime, cameraVariables) {
         if (_cooldown <= 0) {
-            System.print("Knife Stab")
 
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
@@ -334,7 +325,6 @@ class Knife {
 
     equip (engine) {
         // Knife should not be equipped?
-        System.print("Knife equip")   
     }
 
     cooldown {_cooldown}

@@ -83,7 +83,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
     {
         ZoneScopedN("Animate Transforms");
-        const auto animationView = ecs.GetRegistry().view<AnimationTransformComponent, AnimationChannelComponent, NameComponent>();
+        const auto animationView = ecs.GetRegistry().view<AnimationTransformComponent, AnimationChannelComponent>();
         for (auto entity : animationView)
         {
             auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
