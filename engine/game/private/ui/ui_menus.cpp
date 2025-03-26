@@ -198,7 +198,7 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
 
     // temporary
-    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), mainMenu.GetRelativeScale());
+    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), screenResolution);
 
     constexpr float xMargin = 50;
     mainMenu.playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f).lock();
@@ -241,4 +241,22 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     graphicsContext.UpdateBindlessSet();
 
     return mainMenu;
+}
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text)
+{
+    GameVersionVisualization visualization {};
+    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+
+    visualization.canvas = std::make_unique<Canvas>(screenResolution);
+    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), screenResolution);
+
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(5.0f, 20.0f), 25);
+    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    visualization.text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+
+    visualization.canvas->UpdateAllChildrenAbsoluteTransform();
+    graphicsContext.UpdateBindlessSet();
+
+    return visualization;
 }

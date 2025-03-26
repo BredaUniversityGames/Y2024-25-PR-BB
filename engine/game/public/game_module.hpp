@@ -31,6 +31,7 @@ public:
     MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
 
     HUD _hud;
+    GameVersionVisualization _gameVersionVisualization;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

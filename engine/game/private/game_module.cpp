@@ -35,6 +35,7 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
+#include "file_io.hpp"
 
 #include <steam_module.hpp>
 
@@ -43,7 +44,18 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
-    _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
+
+    std::optional<std::ifstream> versionFile = fileIO::OpenReadStream("version.txt");
+    if (versionFile.has_value())
+    {
+        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
+        _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, gameVersionText);
+        engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+    }
+
+    _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
     _mainMenu = mainMenu;

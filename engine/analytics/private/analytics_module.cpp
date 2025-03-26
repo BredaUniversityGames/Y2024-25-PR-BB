@@ -43,12 +43,15 @@ ModuleTickOrder AnalyticsModule::Init(MAYBE_UNUSED Engine& engine)
         gameanalytics::GameAnalytics::configureBuild("dev"); // TODO: Formalize this to actual build version
         gameanalytics::GameAnalytics::enableSDKInitEvent(true);
 
-        gameanalytics::GameAnalytics::setEnabledErrorReporting(true);
-        gameanalytics::GameAnalytics::setEnabledEventSubmission(true); // TODO: Look into privacy policy later for distribution
+#if DISTRIBUTION
+        constexpr bool enabled = false;
+#else
+        constexpr bool enabled = true;
+#endif
+        gameanalytics::GameAnalytics::setEnabledErrorReporting(enabled);
+        gameanalytics::GameAnalytics::setEnabledEventSubmission(enabled); // TODO: Look into privacy policy later for distribution
 
         gameanalytics::GameAnalytics::initialize(key, secret);
-
-        // if (gameanalytics::GameAnalytics::)
     }
     else
     {
