@@ -2,11 +2,17 @@
 
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"
+#include "model_loading.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
+#include "renderer_module.hpp"
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 

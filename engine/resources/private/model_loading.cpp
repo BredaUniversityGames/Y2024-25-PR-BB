@@ -1133,7 +1133,7 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
         {
             model.hierarchy.nodes[model.hierarchy.skeletonRoot.value()].animationSplines = firstChild.animationSplines;
             firstChild.animationSplines = {};
-            firstChild.transform = {};
+            firstChild.transform = glm::identity<glm::mat4>();
         }
     }
 
