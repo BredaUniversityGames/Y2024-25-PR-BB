@@ -4,11 +4,11 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
 
     static Start(engine) {
-
         engine.GetGame().SetHUDEnabled(true)
 
         // Set navigational mesh
