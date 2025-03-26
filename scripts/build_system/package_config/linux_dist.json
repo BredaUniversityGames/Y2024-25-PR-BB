@@ -12,6 +12,7 @@
     "settings.json",
     "build/WSL-Distribution/libsteam_api.so",
     "build/WSL-Distribution/libfmod.so.14",
-    "build/WSL-Distribution/libfmodstudio.so.14"
+    "build/WSL-Distribution/libfmodstudio.so.14",
+    "version.txt"
   ]
 }
