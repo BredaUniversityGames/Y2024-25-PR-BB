@@ -2,6 +2,7 @@
 
 #include "constants.hpp"
 #include "resource_manager.hpp"
+#include "resources/buffer.hpp"
 #include "settings.hpp"
 #include "vulkan_include.hpp"
 
@@ -11,7 +12,6 @@
 #include <memory>
 
 class GraphicsContext;
-struct Buffer;
 
 class BloomSettings
 {

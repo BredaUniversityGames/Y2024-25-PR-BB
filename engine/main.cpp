@@ -51,11 +51,13 @@ int Main()
         auto& scripting = instance.GetModule<ScriptingModule>();
 
         scripting.ResetVM();
-        scripting.SetMainScript(instance, "game/main_menu.wren");
+        scripting.GenerateEngineBindingsFile();
+        scripting.SetMainScript(instance, "game/game.wren");
+
         instance.GetModule<TimeModule>().ResetTimer();
     }
 
-    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
+    bblog::info("{}ms taken for Complete Startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/material.hpp"
 
 #include <memory>
 

@@ -10,7 +10,6 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <vulkan/vulkan.hpp>
 
 class MaterialResourceManager;
 
