@@ -147,6 +147,13 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             engine.GetModule<RendererModule>().GetRenderer()->GetSettings().Write();
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Exit Program"))
+        {
+            engine.SetExit(0);
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 

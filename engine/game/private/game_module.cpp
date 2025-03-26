@@ -182,9 +182,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
-        engine.SetExit(0);
-
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
