@@ -1,84 +1,78 @@
-#include "gpu_resources.hpp"
-
+#include "resources/image.hpp"
 #include "profile_macros.hpp"
-#include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
 #include <stb_image.h>
 
-SamplerCreation& SamplerCreation::SetGlobalAddressMode(vk::SamplerAddressMode addressMode)
+CPUImage& CPUImage::FromPNG(std::string_view path)
 {
-    addressModeU = addressMode;
-    addressModeV = addressMode;
-    addressModeW = addressMode;
+    int width;
+    int height;
+    int nrChannels;
+
+    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(),
+        &width, &height, &nrChannels,
+        4));
+
+    if (data == nullptr)
+    {
+        throw std::runtime_error("Failed to load image!");
+    }
+
+    if (width > UINT16_MAX || height > UINT16_MAX)
+    {
+        throw std::runtime_error("Image size is too large!");
+    }
+
+    SetFormat(vk::Format::eR8G8B8A8Unorm);
+    SetSize(static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+    SetName(path);
+    initialData.assign(data, data + static_cast<ptrdiff_t>(width * height * 4));
+    stbi_image_free(data);
 
     return *this;
 }
-
-Sampler::Sampler(const SamplerCreation& creation, const std::shared_ptr<VulkanContext>& context)
-    : _context(context)
+CPUImage& CPUImage::SetData(std::vector<std::byte> data)
 {
-    vk::StructureChain<vk::SamplerCreateInfo, vk::SamplerReductionModeCreateInfo> structureChain {};
-    vk::SamplerCreateInfo& createInfo { structureChain.get<vk::SamplerCreateInfo>() };
-    if (creation.useMaxAnisotropy)
-    {
-        auto properties = _context->PhysicalDevice().getProperties();
-        createInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-    }
-
-    vk::SamplerReductionModeCreateInfo& reductionModeCreateInfo { structureChain.get<vk::SamplerReductionModeCreateInfo>() };
-    reductionModeCreateInfo.reductionMode = creation.reductionMode;
-
-    createInfo.addressModeU = creation.addressModeU;
-    createInfo.addressModeV = creation.addressModeV;
-    createInfo.addressModeW = creation.addressModeW;
-    createInfo.mipmapMode = creation.mipmapMode;
-    createInfo.minLod = creation.minLod;
-    createInfo.maxLod = creation.maxLod;
-    createInfo.compareOp = creation.compareOp;
-    createInfo.compareEnable = creation.compareEnable;
-    createInfo.unnormalizedCoordinates = creation.unnormalizedCoordinates;
-    createInfo.mipLodBias = creation.mipLodBias;
-    createInfo.borderColor = creation.borderColor;
-    createInfo.minFilter = creation.minFilter;
-    createInfo.magFilter = creation.magFilter;
-
-    sampler = _context->Device().createSampler(createInfo);
-
-    util::NameObject(sampler, creation.name, _context);
+    initialData = std::move(data);
+    return *this;
 }
 
-Sampler::~Sampler()
+CPUImage& CPUImage::SetSize(uint16_t width, uint16_t height, uint16_t depth)
 {
-    if (!_context)
-    {
-        return;
-    }
-
-    _context->Device().destroy(sampler);
+    this->width = width;
+    this->height = height;
+    this->depth = depth;
+    return *this;
 }
 
-Sampler::Sampler(Sampler&& other) noexcept
-    : sampler(other.sampler)
-    , _context(other._context)
+CPUImage& CPUImage::SetMips(uint8_t mips)
 {
-    other.sampler = nullptr;
-    other._context = nullptr;
+    this->mips = mips;
+    return *this;
 }
 
-Sampler& Sampler::operator=(Sampler&& other) noexcept
+CPUImage& CPUImage::SetFlags(vk::ImageUsageFlags flags)
 {
-    if (this == &other)
-    {
-        return *this;
-    }
+    this->flags = flags;
+    return *this;
+}
 
-    sampler = other.sampler;
-    _context = other._context;
+CPUImage& CPUImage::SetFormat(vk::Format format)
+{
+    this->format = format;
+    return *this;
+}
 
-    other.sampler = nullptr;
-    other._context = nullptr;
+CPUImage& CPUImage::SetName(std::string_view name)
+{
+    this->name = name;
+    return *this;
+}
 
+CPUImage& CPUImage::SetType(ImageType type)
+{
+    this->type = type;
     return *this;
 }
 
@@ -429,145 +423,6 @@ GPUImage& GPUImage::operator=(GPUImage&& other) noexcept
     other.image = nullptr;
     other.view = nullptr;
     other.allocation = nullptr;
-    other._context = nullptr;
-
-    return *this;
-}
-
-GPUMaterial::GPUMaterial(const MaterialCreation& creation, const std::shared_ptr<ResourceManager<GPUImage>>& imageResourceManager)
-    : _imageResourceManager(imageResourceManager)
-{
-    albedoMap = creation.albedoMap;
-    mrMap = creation.metallicRoughnessMap;
-    normalMap = creation.normalMap;
-    occlusionMap = creation.occlusionMap;
-    emissiveMap = creation.emissiveMap;
-
-    gpuInfo.useAlbedoMap = _imageResourceManager->IsValid(albedoMap);
-    gpuInfo.useMRMap = _imageResourceManager->IsValid(mrMap);
-    gpuInfo.useNormalMap = _imageResourceManager->IsValid(normalMap);
-    gpuInfo.useOcclusionMap = _imageResourceManager->IsValid(occlusionMap);
-    gpuInfo.useEmissiveMap = _imageResourceManager->IsValid(emissiveMap);
-
-    gpuInfo.albedoMapIndex = albedoMap.Index();
-    gpuInfo.mrMapIndex = mrMap.Index();
-    gpuInfo.normalMapIndex = normalMap.Index();
-    gpuInfo.occlusionMapIndex = occlusionMap.Index();
-    gpuInfo.emissiveMapIndex = emissiveMap.Index();
-
-    gpuInfo.albedoFactor = creation.albedoFactor;
-    gpuInfo.metallicFactor = creation.metallicFactor;
-    gpuInfo.roughnessFactor = creation.roughnessFactor;
-    gpuInfo.normalScale = creation.normalScale;
-    gpuInfo.occlusionStrength = creation.occlusionStrength;
-    gpuInfo.emissiveFactor = creation.emissiveFactor;
-}
-
-GPUMaterial::~GPUMaterial()
-{
-}
-
-BufferCreation& BufferCreation::SetSize(vk::DeviceSize size)
-{
-    this->size = size;
-    return *this;
-}
-
-BufferCreation& BufferCreation::SetUsageFlags(vk::BufferUsageFlags usage)
-{
-    this->usage = usage;
-    return *this;
-}
-
-BufferCreation& BufferCreation::SetIsMappable(bool isMappable)
-{
-    this->isMappable = isMappable;
-    return *this;
-}
-
-BufferCreation& BufferCreation::SetMemoryUsage(VmaMemoryUsage memoryUsage)
-{
-    this->memoryUsage = memoryUsage;
-    return *this;
-}
-
-BufferCreation& BufferCreation::SetName(std::string_view name)
-{
-    this->name = name;
-    return *this;
-}
-
-Buffer::Buffer(const BufferCreation& creation, const std::shared_ptr<VulkanContext>& context)
-    : _context(context)
-{
-    util::CreateBuffer(_context,
-        creation.size,
-        creation.usage,
-        buffer,
-        creation.isMappable,
-        allocation,
-        creation.memoryUsage,
-        creation.name);
-
-    size = creation.size;
-    usage = creation.usage;
-    name = creation.name;
-
-    if (creation.isMappable)
-    {
-        util::VK_ASSERT(vmaMapMemory(_context->MemoryAllocator(), allocation, &mappedPtr),
-            "Failed mapping memory for buffer: " + creation.name);
-    }
-}
-
-Buffer::~Buffer()
-{
-    if (!_context)
-    {
-        return;
-    }
-
-    if (mappedPtr)
-    {
-        vmaUnmapMemory(_context->MemoryAllocator(), allocation);
-    }
-
-    util::vmaDestroyBuffer(_context->MemoryAllocator(), buffer, allocation);
-}
-
-Buffer::Buffer(Buffer&& other) noexcept
-    : buffer(other.buffer)
-    , allocation(other.allocation)
-    , mappedPtr(other.mappedPtr)
-    , size(other.size)
-    , usage(other.usage)
-    , name(std::move(other.name))
-    , _context(other._context)
-{
-    other.buffer = nullptr;
-    other.allocation = nullptr;
-    other.mappedPtr = nullptr;
-    other._context = nullptr;
-}
-
-Buffer& Buffer::operator=(Buffer&& other) noexcept
-{
-    if (this == &other)
-    {
-        return *this;
-    }
-
-    buffer = other.buffer;
-    allocation = other.allocation;
-    mappedPtr = other.mappedPtr;
-    size = other.size;
-    usage = other.usage;
-    name = std::move(other.name);
-    _context = other._context;
-
-    other.buffer = nullptr;
-    other.allocation = nullptr;
-    other.mappedPtr = nullptr;
     other._context = nullptr;
 
     return *this;
