@@ -75,7 +75,6 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     hud.canvas = std::make_unique<Canvas>(screenResolution);
 
-    // temporary
     hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
@@ -214,14 +213,21 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     mainMenu.quitButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     mainMenu.quitButton.lock()->AddChild<UITextElement>(font, "quit", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
+    mainMenu.openLinkButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(200, 70), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.openLinkButton.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    mainMenu.openLinkButton.lock()->AddChild<UITextElement>(font, "discord", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+
     mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
-    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
+    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.openLinkButton;
 
     mainMenu.settingsButton.lock()->navigationTargets.down = mainMenu.quitButton;
     mainMenu.settingsButton.lock()->navigationTargets.up = mainMenu.playButton;
 
-    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.openLinkButton;
     mainMenu.quitButton.lock()->navigationTargets.up = mainMenu.settingsButton;
+
+    mainMenu.openLinkButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.openLinkButton.lock()->navigationTargets.up = mainMenu.quitButton;
 
     CPUImage commonImageData;
     commonImageData.format
