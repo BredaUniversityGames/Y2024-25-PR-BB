@@ -7,7 +7,7 @@ endif ()
 # Define if it's the distribution config for all modules
 if ("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution" OR "${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
     add_compile_definitions(DISTRIBUTION)
-endif()
+endif ()
 
 # ENGINE MODULES
 
@@ -27,7 +27,7 @@ target_add_module(Engine bindings Bindings)
 target_add_module(Engine inspector Inspector)
 target_add_module(Engine game Game)
 target_add_module(Engine ecs ECS)
-target_add_module(Engine model_loading ModelLoading)
+target_add_module(Engine resources Resources)
 target_add_module(Engine thread Thread)
 target_add_module(Engine settings Settings)
 target_add_module(Engine analytics Analytics)

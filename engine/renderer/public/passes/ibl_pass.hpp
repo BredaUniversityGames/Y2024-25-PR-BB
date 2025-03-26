@@ -1,6 +1,7 @@
 #pragma once
 
-#include "vertex.hpp"
+#include "resource_manager.hpp"
+#include "resources/image.hpp"
 
 #include <memory>
 
