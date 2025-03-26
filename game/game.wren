@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/music_player.wren" for MusicPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
@@ -116,15 +117,48 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
-
+        
         __pauseEnabled = false
+
+        // Music player
+        var musicList = [
+            "assets/music/game/Juval - Play Your Game - No Lead Vocals.wav",
+            "assets/music/game/Ace - Silent Treatment.wav",
+            "assets/music/game/Dono - Zero Gravity.wav",
+            "assets/music/game/Ikoliks - Metal Warrior.wav",
+            "assets/music/game/Tomáš Herudek - Smash Your Enemies.wav",
+            "assets/music/game/Taheda - Phenomena.wav",
+            ""
+            ]
+
+        var ambientList = [
+            "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
+            "assets/music/ambient/749939__universfield__horror-background-atmosphere-10.mp3",
+            "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
+            ""
+            ]
+            
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
 
     static Shutdown(engine) {
+        __musicPlayer.Destroy(engine.GetAudio())
+        __ambientPlayer.Destroy(engine.GetAudio())
         engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
+
+        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
+            System.print("Next Ambient Track")
+            __ambientPlayer.CycleMusic(engine.GetAudio())
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
+            System.print("Next Gameplay Track")
+            __musicPlayer.CycleMusic(engine.GetAudio())
+        }
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
