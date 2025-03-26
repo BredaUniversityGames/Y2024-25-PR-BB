@@ -17,6 +17,7 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
+#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
@@ -47,6 +48,12 @@ WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path)
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
 }
 
+void PreloadModel(WrenEngine& engine, const std::string& path)
+{
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
+    sceneCache.LoadModel(*engine.instance, path);
+}
+
 void SetExit(WrenEngine& engine, int code)
 {
     engine.instance->SetExit(code);
@@ -73,6 +80,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
+        engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
         engineAPI.funcExt<bindings::SetExit>("SetExit");
     }

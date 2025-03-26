@@ -67,6 +67,10 @@ void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
         _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
         _mainEngineScript = result.value();
     }
+    else
+    {
+        _mainEngineScript = path;
+    }
 }
 
 void ScriptingModule::HotReload(Engine& e)

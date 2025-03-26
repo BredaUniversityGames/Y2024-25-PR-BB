@@ -55,6 +55,11 @@ void SetTranslation(WrenComponent<RigidbodyComponent>& self, const glm::vec3& tr
     self.component->SetTranslation(translation);
 }
 
+void SetRotation(WrenComponent<RigidbodyComponent>& self, const glm::quat rotation)
+{
+    self.component->SetRotation(rotation);
+}
+
 glm::vec3 GetVelocity(WrenComponent<RigidbodyComponent>& self)
 {
     return self.component->GetVelocity();
@@ -140,4 +145,5 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBodyComponent.funcExt<bindings::SetGravityFactor>("SetGravityFactor");
     rigidBodyComponent.funcExt<bindings::SetFriction>("SetFriction");
     rigidBodyComponent.funcExt<bindings::SetTranslation>("SetTranslation");
+    rigidBodyComponent.funcExt<bindings::SetRotation>("SetRotation");
 }
