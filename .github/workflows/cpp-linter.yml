@@ -50,7 +50,7 @@ jobs:
 
           version: 18
           files-changed-only: true # Only processes files changed in PR
-          database: build/WSL-Release/compile_commands.json
+          database: build/WSL-Distribution/compile_commands.json
           verbosity: 'debug'
           style: 'file'
           ignore: 'external | build | VULKAN_SDK' # Also ignore Vulkan SDK folder
