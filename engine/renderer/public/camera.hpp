@@ -3,19 +3,41 @@
 #include "common.hpp"
 #include "components/camera_component.hpp"
 #include "constants.hpp"
-#include "gpu_resources.hpp"
+#include "resource_manager.hpp"
+#include "resources/buffer.hpp"
 
+#include "vulkan_include.hpp"
 #include <array>
-#include <entt/entity/entity.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
-#include <vulkan/vulkan.hpp>
 
 class GraphicsContext;
 struct TransformComponent;
 struct CameraComponent;
 class ECSModule;
+
+struct alignas(16) GPUCamera
+{
+    glm::mat4 VP;
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::mat4 skydomeMVP; // TODO: remove this
+    glm::mat4 inverseView;
+    glm::mat4 inverseProj;
+    glm::mat4 inverseVP;
+
+    glm::vec3 cameraPosition;
+    bool distanceCullingEnabled;
+    float frustum[4];
+    float zNear;
+    float zFar;
+    bool cullingEnabled;
+    int32_t projectionType;
+
+    glm::vec2 _padding {};
+};
 
 class CameraResource
 {
