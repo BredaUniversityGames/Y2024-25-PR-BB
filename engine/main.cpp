@@ -57,7 +57,7 @@ int Main()
         instance.GetModule<TimeModule>().ResetTimer();
     }
 
-    bblog::info("{}ms taken for Complete Startup!", startupTimer.GetElapsed().count());
+    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
     return instance.Run();
 }
 
