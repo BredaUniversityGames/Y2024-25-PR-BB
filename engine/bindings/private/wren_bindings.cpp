@@ -110,11 +110,6 @@ void BindEngineAPI(wren::ForeignModule& module)
         BindAnimationAPI(module);
     }
 
-    // Renderer
-    {
-        BindRendererAPI(module);
-    }
-
     // Particles
     {
         BindParticleAPI(module);

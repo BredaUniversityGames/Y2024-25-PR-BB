@@ -56,47 +56,35 @@ class MeleeEnemy {
             this.FindNewPath(engine)
         }
 
-        // var forwardVector = (playerPos - pos).normalize()
-        // var velocity = forwardVector.mulScalar(_maxVelocity)//_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector.mulScalar(_maxVelocity * 1000 / dt)
-
-        // _rootEntity.GetRigidbodyComponent().SetVelocity(velocity)
-        // _rootEntity.GetTransformComponent().rotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
-            //System.print("Following path")
-            
             var bias = 0.01
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-
-            //System.printAll([[waypoint.center.x, waypoint.center.y, waypoint.center.z]])
 
             if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
-                    //System.print("Path complete")
                     return
                 }
                 waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
             }
 
             var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-
             var p2 = p1
-
             if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
                 p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
             }
 
             var dst = Math.Distance(pos, p1.center)
-           
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-
-            
-
             var forwardVector = (target - pos).normalize()
+
+
+            // --------
+            //  WIP local avoidance
+            // --------
 
             // var rayHitInfos = engine.GetPhysics().ShootMultipleRays(Vec3.new(pos.x,pos.y - 1.3,pos.z),Vec3.new(forwardVector.x, 0.4, forwardVector.z), 6.0, 5,20)
 
@@ -126,10 +114,13 @@ class MeleeEnemy {
             // }
             // forwardVector = Math.MixVec3(forwardVector, forwardVector + averageNormal, 0.1*dt)   
 
+            // --------
+            //  WIP local avoidance
+            // --------
 
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+            
             // Set forward rotation
-
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
             var startRotation = _rootEntity.GetTransformComponent().rotation
             _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
