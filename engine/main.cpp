@@ -52,7 +52,7 @@ int Main()
 
         scripting.ResetVM();
         scripting.GenerateEngineBindingsFile();
-        scripting.SetMainScript(instance, "game/game.wren");
+        scripting.SetMainScript(instance, "game/main_menu.wren");
 
         instance.GetModule<TimeModule>().ResetTimer();
     }
