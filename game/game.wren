@@ -37,7 +37,6 @@ class Main {
         // Player Setup
 
         __playerVariables = PlayerVariables.new()
-        __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -64,8 +63,8 @@ class Main {
         __cameraVariables = CameraVariables.new()
 
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = 45.0
-        cameraProperties.nearPlane = 0.5
+        cameraProperties.fov = Math.Radians(45.0)
+        cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
 
@@ -88,7 +87,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb")
 
         __gunAnchor = engine.GetECS().NewEntity()
         __gunAnchor.AddTransformComponent().translation = Vec3.new(-0.4, -3.1, -1)
@@ -96,11 +95,8 @@ class Main {
 
         __gun.GetNameComponent().name = "Gun"
         var gunTransform = __gun.GetTransformComponent()
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
-        gunAnimations.Stop()
 
         __player.AttachChild(__camera)
         __camera.AttachChild(__gunAnchor)
@@ -110,6 +106,9 @@ class Main {
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
+
+        // create the player movement
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
