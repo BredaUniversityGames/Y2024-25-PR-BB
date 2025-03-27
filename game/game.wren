@@ -91,18 +91,13 @@ class Main {
         // Gun Setup
         __gun = engine.LoadModel("assets/models/Revolver.glb")
 
-        __gunAnchor = engine.GetECS().NewEntity()
-        __gunAnchor.AddTransformComponent().translation = Vec3.new(-0.4, -3.1, -1)
-        __gunAnchor.AddNameComponent().name = "GunAnchor"
-
-        __gun.GetNameComponent().name = "Gun"
+        __gun.GetNameComponent().name = "Revolver"
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
 
         __player.AttachChild(__camera)
-        __camera.AttachChild(__gunAnchor)
-        __gunAnchor.AttachChild(__gun)
+        __camera.AttachChild(__gun)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
