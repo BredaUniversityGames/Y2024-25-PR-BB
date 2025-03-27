@@ -69,7 +69,7 @@ std::optional<WrenComponent<T>> WrenEntity::GetComponent()
         return WrenComponent<T> { WrenEntity { entity, registry }, out };
     }
     return std::nullopt;
-}
+};
 
 inline bool WrenEntity::IsValid()
 {

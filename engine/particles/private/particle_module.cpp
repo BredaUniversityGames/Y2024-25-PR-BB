@@ -6,7 +6,6 @@
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
 #include "engine.hpp"
-#include "gpu_resources.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "physics_module.hpp"

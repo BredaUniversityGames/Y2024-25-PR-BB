@@ -1,6 +1,7 @@
 #pragma once
 #include <engine.hpp>
 #include <memory>
+#include <string>
 
 class SteamModule : public ModuleInterface
 {
@@ -24,6 +25,9 @@ public:
     // When the user launched the application through Steam, this will return true.
     // If false, the Steam module cannot be used, as Steam API does not work.
     bool Available() const { return _steamAvailable; }
+
+    // Check first if steam is available before using.
+    void OpenSteamBrowser(const std::string& url);
 
     // Returns whether Steam Input API is available to use.
     bool InputAvailable() const { return _steamInputAvailable; }

@@ -35,6 +35,15 @@ public:
     std::weak_ptr<UIButton> playButton;
     std::weak_ptr<UIButton> settingsButton;
     std::weak_ptr<UIButton> quitButton;
+    std::weak_ptr<UIButton> openLinkButton;
 };
 
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+struct GameVersionVisualization
+{
+    std::shared_ptr<Canvas> canvas;
+    std::weak_ptr<UITextElement> text;
+};
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text);

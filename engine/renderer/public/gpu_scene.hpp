@@ -2,10 +2,10 @@
 
 #include "camera.hpp"
 #include "constants.hpp"
-#include "gpu_resources.hpp"
 #include "resource_manager.hpp"
+#include "resources/image.hpp"
+#include "resources/sampler.hpp"
 #include "settings.hpp"
-#include "vulkan_include.hpp"
 
 #include <entt/entity/entity.hpp>
 #include <memory>

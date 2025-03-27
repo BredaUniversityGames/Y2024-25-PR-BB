@@ -5,7 +5,6 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "gpu_resources.hpp"
 
 #include "imgui.h"
 #include <magic_enum.hpp>

@@ -25,11 +25,23 @@ const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
 {
     return path.waypoints;
 }
+
+void ClearWaypoints(ComputedPath& path)
+{
+    path.waypoints.clear();
+}
+
+void ToggleDebugRender(PathfindingModule& self)
+{
+    self.SetDebugDrawState(!self.GetDebugDrawState());
+}
+
 }
 
 void BindPathfindingAPI(wren::ForeignModule& module)
 {
     auto& wren_class = module.klass<PathfindingModule>("PathfindingModule");
+    wren_class.funcExt<bindings::ToggleDebugRender>("ToggleDebugRender");
 
     wren_class.funcExt<bindings::FindPath>("FindPath");
     wren_class.funcExt<bindings::SetNavigationMesh>("SetNavigationMesh");
@@ -39,4 +51,5 @@ void BindPathfindingAPI(wren::ForeignModule& module)
 
     auto& computedPath = module.klass<ComputedPath>("ComputedPath");
     computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
+    computedPath.funcExt<bindings::ClearWaypoints>("ClearWaypoints");
 }
