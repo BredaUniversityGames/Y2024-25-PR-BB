@@ -53,10 +53,10 @@ struct Scene
     uint prefilterIndex;
     uint brdfLUTIndex;
     uint staticShadowMapIndex;
+
     uint dynamicShadowMapIndex;
-    vec3 fogColor;
     float fogDensity;
-    float fogHeight;
+    vec3 fogColor;
 };
 
 struct Instance

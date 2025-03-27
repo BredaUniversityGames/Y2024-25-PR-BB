@@ -70,6 +70,10 @@ public:
     {
         return glm::mix(start, end, t);
     }
+    static glm::quat MixQuat(glm::quat start, glm::quat end, float t)
+    {
+        return glm::mix(start, end, t);
+    }
     static glm::quat Slerp(glm::quat start, glm::quat end, float t)
     {
         return glm::slerp(start, end, t);
@@ -219,6 +223,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::ToQuat>("ToQuat");
         mathUtilClass.funcStatic<&MathUtil::MixVec3>("MixVec3");
         mathUtilClass.funcStatic<&MathUtil::MixFloat>("MixFloat");
+        mathUtilClass.funcStatic<&MathUtil::MixQuat>("MixQuat");
         mathUtilClass.funcStatic<&MathUtil::Slerp>("Slerp");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
