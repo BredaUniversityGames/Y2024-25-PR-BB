@@ -36,7 +36,6 @@ class Main {
         // Player Setup
 
         __playerVariables = PlayerVariables.new()
-        __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -107,6 +106,9 @@ class Main {
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
+
+        // create the player movement
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)

@@ -2,11 +2,11 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, 
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer){
+    construct new(newHasDashed, newDashTimer, gun){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
-
+        _gun = gun
         maxSpeed = 9.0
         sv_accelerate = 10.0
         jumpForce = 9.75
@@ -197,13 +197,10 @@ class PlayerMovement{
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-        if(Math.Abs(movement.y) > 0.2){
-                
-            var gun = engine.GetECS().GetEntityByName("revolver")
-            var gunAnimations = gun.GetAnimationControlComponent()
-            if(gunAnimations.AnimationFinished()){
-                gunAnimations.Play("walk", 1.0, false, 0.0, false)
-            }
+        if(movement.length() > 0.1){
+            _gun.play_walk_anim(engine)
+        }else{
+            _gun.play_idle_anim(engine)
         }
         
         var moveInputDir = Vec3.new(0.0,0.0,0.0)

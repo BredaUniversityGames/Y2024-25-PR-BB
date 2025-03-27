@@ -25,26 +25,44 @@ class Pistol {
         _reloadSFX = ""
         _equipSFX = ""
         
+        _walkAnim = "walk"
+        _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
         _equipAnim = "" 
-
+        _entityName = "revolver" //subject to change when implementing swapping
         _mesh = ""
     }
 
     reload (engine) {
         
-        var gun = engine.GetECS().GetEntityByName("revolver")
+        var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
-            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
                 System.print("Pistol reload")
 
         _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
 
         }
+    }
 
+    play_walk_anim (engine){
+        //will hold reference to entity when implementing weapon switching
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _idleAnim){
+            gunAnimations.Play(_walkAnim, 1.0, false, 0.2, false)
+        }
+    }
+
+    play_idle_anim(engine){
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
+            gunAnimations.Play(_idleAnim, 1.0, false, 0.2, false)
+        }
     }
 
     attack(engine, deltaTime, cameraVariables) {
@@ -58,7 +76,7 @@ class Pistol {
             cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("revolver")
+            var gun = engine.GetECS().GetEntityByName(_entityName)
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -103,7 +121,7 @@ class Pistol {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play("shoot", 1.0, false, 0.0, false)
+            gunAnimations.Play(_attackAnim, 1.0, false, 0.0, false)
             
             _cooldown = _attackSpeed
         } 
@@ -156,7 +174,7 @@ class Shotgun {
     reload (engine) {
         System.print("Shotgun reload")
 
-        var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+        var gun = engine.GetECS().GetEntityByName("revolver")
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("reload").IsPressed()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
@@ -175,7 +193,7 @@ class Shotgun {
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("AnimatedRifle")
+            var gun = engine.GetECS().GetEntityByName("revolver")
 
             // Play shooting audio
             var shootingInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
