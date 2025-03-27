@@ -74,8 +74,7 @@ class Pistol {
 
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
-                for (i in (rayHitInfo.count - 1)..0) {
-                    var hitEntity = rayHitInfo[i]
+                for (hitEntity in rayHitInfo) {
                     if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
                         end = hitEntity.position
                         normal = hitEntity.normal
@@ -83,7 +82,7 @@ class Pistol {
                             engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
                             break
                         }
-                        engine.SpawnDecal(hitEntity.normal, hitEntity.position, Vec2.new(0.005, 0.005), "bullet_hole.png")
+                        engine.SpawnDecal(hitEntity.normal, hitEntity.position, Vec2.new(0.002, 0.002), "bullet_hole.png")
                         break
                     }
                 }
