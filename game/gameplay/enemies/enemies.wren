@@ -1,4 +1,5 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math
+import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
 
@@ -30,6 +31,24 @@ class MeleeEnemy {
         animations.Play("Run", 1.0, true, 1.0, true)
 
         _reasonTimer = 0.0
+
+        _attackRange = 6
+        _attackDamage = 30
+        
+        _movingState = false
+        _attackingState = false
+        _recoveryState = false
+
+        _attackMaxCooldown = 2000
+        _attackCooldown = _attackMaxCooldown
+
+        _attackMaxTime = 1300
+        _attackTime = 0
+
+        _recoveryMaxTime = 2000
+        _recoveryTime = 0
+
+        _evaluateState = true
     }
 
     entity {
@@ -44,14 +63,70 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, engine, dt) {
-        
+    Update(playerPos, playerVariables, engine, dt) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
+        var animations = _meshEntity.GetAnimationControlComponent()
+
+        if (_attackingState) {
+            _attackTime = _attackTime - dt
+            if (_attackTime <= 0 ) {
+                
+                if (Math.Distance(playerPos, pos) < _attackRange) {
+                    playerVariables.DecreaseHealth(_attackDamage)
+                }
+
+                System.print("Enter Recovery State")
+                _attackingState = false
+                _recoveryState = true
+                _recoveryTime = _recoveryMaxTime 
+            }
+        }
+        if (_recoveryState) {
+            if (animations.AnimationFinished()) {
+                animations.Play("Idle", 1.0, true, 1.0, false)
+                animations.SetTime(0.0)
+            }
+            _recoveryTime = _recoveryTime - dt
+            if (_recoveryTime <= 0) {
+                System.print("Recovered")
+                _recoveryState = false
+                _evaluateState = true
+            }
+        }
+
+        if (_movingState) {
+            this.DoPathfinding(playerPos, engine, dt)
+            _evaluateState = true   
+        }
+
+        if (_evaluateState) {
+            if (Math.Distance(playerPos, pos) < _attackRange) {
+                System.print("Enter Attack State")
+                // Enter attack state
+                _attackingState = true
+                _movingState = false
+                body.SetFriction(12.0)
+                animations.Play("Attack", 1.0, false, 1.0, false)
+                animations.SetTime(0.0)
+                _attackTime = _attackMaxTime
+                _evaluateState = false
+            } else if (_movingState == false) { // Enter attack state
+                System.print("Enter Moving State")
+                body.SetFriction(0.0)
+                animations.Play("Run", 1.0, true, 0.5, true)
+                _movingState = true
+            }
+        }    
+    }
+
+    DoPathfinding(playerPos, engine, dt) {
+        var body = _rootEntity.GetRigidbodyComponent()
+        var pos = body.GetPosition()
 
         _reasonTimer = _reasonTimer + dt
-        if(_reasonTimer > 300) {
+        if(_reasonTimer > 800) {
             _reasonTimer = 0
             this.FindNewPath(engine)
         }
@@ -80,43 +155,6 @@ class MeleeEnemy {
             var dst = Math.Distance(pos, p1.center)
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
             var forwardVector = (target - pos).normalize()
-
-
-            // --------
-            //  WIP local avoidance
-            // --------
-
-            // var rayHitInfos = engine.GetPhysics().ShootMultipleRays(Vec3.new(pos.x,pos.y - 1.3,pos.z),Vec3.new(forwardVector.x, 0.4, forwardVector.z), 6.0, 5,20)
-
-            // var averageNormal = Vec3.new(0,0,0)
-            // var amountOfHits = 0
-            // for( rayHit in rayHitInfos) {
-
-            //      if(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name != _rootEntity.GetNameComponent().name && rayHit.GetEntity(engine.GetECS()) != null){
-            //         var normal = rayHit.normal
-            //         normal.y = 0.0
-            //         averageNormal = averageNormal + normal
-            //         amountOfHits = amountOfHits + 1
-
-            //         //System.print("Hit")
-            //         System.print(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name)
-            //         //System.print(_rootEntity.GetNameComponent().name)
-                    
-            //         //System.print(rayHit.GetEntity(engine.GetECS()).GetNameComponent().name == _rootEntity.GetNameComponent().name )
-
-            //     }
-            // }
-
-            // if(amountOfHits > 0 ){
-            //     averageNormal.x = averageNormal.x / amountOfHits
-            //     averageNormal.y = averageNormal.y / amountOfHits
-            //     averageNormal.z = averageNormal.z / amountOfHits
-            // }
-            // forwardVector = Math.MixVec3(forwardVector, forwardVector + averageNormal, 0.1*dt)   
-
-            // --------
-            //  WIP local avoidance
-            // --------
 
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
             
