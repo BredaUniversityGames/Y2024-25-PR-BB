@@ -19,6 +19,7 @@ layout (push_constant) uniform PushConstants
     float shadowMapSize;
     float ambientStrength;
     float ambientShadowStrength;
+    float decalNormalThreshold;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -135,7 +136,7 @@ void main()
         abs(positionObjectSpace.z) - 0.5f <= 0.0f)
         {
             // make sure there's no side stretching
-            if (dot(normalize(normal), currentDecal.orientation) - cos(55.f) > 0.0f)
+            if (dot(normalize(normal), currentDecal.orientation) - pushConstants.decalNormalThreshold > 0.0f)
             {
                 vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
                 vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);

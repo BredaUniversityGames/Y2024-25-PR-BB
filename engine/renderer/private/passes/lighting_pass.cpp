@@ -37,6 +37,7 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     _pushConstants.ambientStrength = _lightingSettings.ambientStrength;
     _pushConstants.ambientShadowStrength = _lightingSettings.ambientShadowStrength;
+    _pushConstants.decalNormalThreshold = glm::cos(_lightingSettings.decalNormalThreshold);
 
     TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pass");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
