@@ -38,7 +38,7 @@ class CameraVariables {
         
             
         if (Math.Abs(movement.x) < 0.0001) {
-            _tiltFactor = _tiltFactor * 0.2
+            _tiltFactor = Math.Clamp(_tiltFactor * 0.2,0.001,20.0)
         } else {
             _tiltFactor = Math.Clamp(_tiltFactor + (dt * 0.01) * -movement.x, -1, 1)   
         }
@@ -58,7 +58,9 @@ class CameraVariables {
         }
         
         var transform = cameraEntity.GetTransformComponent()
-        //transform.rotation = Math.Slerp(transform.rotation, Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor + _slideFactorX))), dt * tiltSpeed)
+        System.printAll([_tiltFactor, " ", _slideFactorX])
+        var newRotation = Math.ToQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor + _slideFactorX)))
+        transform.rotation = Math.Slerp(transform.rotation, newRotation, Math.Clamp(dt * tiltSpeed, 0.0, 1.0))
     }
 
 }
