@@ -171,6 +171,7 @@ void HudUpdate(HUD& hud, float timePassed)
         locked->SetText(std::to_string(int(ammo)) + "/8");
     }
 }
+
 MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
     : Canvas(screenResolution)
 {
@@ -182,8 +183,7 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
     {
         // common image data.
         CPUImage commonImageData;
-        commonImageData.format
-            = vk::Format::eR8G8B8A8Unorm;
+        commonImageData.format = vk::Format::eR8G8B8A8Unorm;
         commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
         commonImageData.isHDR = false;
 
@@ -200,8 +200,6 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
     glm::vec2 screenResFloat = { 1920, 1080 };
 
-    ResourceHandle<GPUImage> logo;
-
     // Title
     {
         CPUImage commonImageData;
@@ -212,7 +210,7 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
         glm::vec2 pos = glm::vec2(screenResFloat.y * 0.05f);
         glm::vec2 size = glm::vec2(((float)commonImageData.width / (float)commonImageData.height), 1.0f) * (0.25f * screenResFloat.y);
 
-        logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
+        ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
 
         auto logoElement = AddChild<UIImage>(logo, pos, size);
         logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
@@ -227,12 +225,11 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
 
     // Buttons
 
-    auto buttonPanel = AddChild<UIElement>();
+    auto buttonPanel = AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
 
     {
         buttonPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.1f, screenResFloat.y * 0.4f));
-        // buttonPanel->SetScale(glm::vec2(500.0f, 500.0f));
     }
 
     {

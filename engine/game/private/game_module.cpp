@@ -57,11 +57,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
-    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
 
     _mainMenu = mainMenu;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
+    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
 
     _mainMenu->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;

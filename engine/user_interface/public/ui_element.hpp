@@ -52,14 +52,7 @@ public:
 
     void SetScale(const glm::vec2& scale) noexcept;
 
-    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const
-    {
-        for (auto& child : _children)
-        {
-            child->SubmitDrawInfo(drawList);
-        }
-    }
-
+    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
     virtual void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext);
 
     template <typename T, typename... Args>
