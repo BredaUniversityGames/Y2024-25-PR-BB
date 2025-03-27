@@ -135,7 +135,7 @@ void main()
         abs(positionObjectSpace.z) - 0.5f <= 0.0f)
         {
             // make sure there's no side stretching
-            if (dot(currentDecal.orientation, normalize(normal)) < 0.0f)
+            if (dot(currentDecal.orientation, normalize(normal)) <= 0.0f)
             {
                 vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
                 vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
@@ -191,6 +191,7 @@ void main()
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
+
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
