@@ -33,6 +33,15 @@ public:
     std::shared_ptr<UIButton> playButton;
     std::shared_ptr<UIButton> settingsButton;
     std::shared_ptr<UIButton> quitButton;
+    std::shared_ptr<UIButton> openLinkButton;
 };
 
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+struct GameVersionVisualization
+{
+    std::shared_ptr<Canvas> canvas;
+    std::weak_ptr<UITextElement> text;
+};
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text);

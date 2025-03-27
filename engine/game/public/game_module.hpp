@@ -5,7 +5,13 @@
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
+inline const std::string DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
+
 struct PlayerTag
+{
+};
+
+struct EnemyTag
 {
 };
 
@@ -29,6 +35,7 @@ public:
     MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
 
     HUD _hud;
+    GameVersionVisualization _gameVersionVisualization;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

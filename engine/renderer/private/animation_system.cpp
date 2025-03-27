@@ -87,16 +87,16 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
         for (auto entity : animationView)
         {
             auto& animationChannel = animationView.get<AnimationChannelComponent>(entity);
-            auto* animationControl = animationChannel.animationControl;
+            auto& animationControl = ecs.GetRegistry().get<AnimationControlComponent>(animationChannel.animationControlEntity);
             auto& transform = animationView.get<AnimationTransformComponent>(entity);
 
             AnimationTransformComponent activeTransform = transform;
             std::optional<AnimationTransformComponent> transitionTransform = std::nullopt;
 
-            if (animationControl->activeAnimation.has_value())
+            if (animationControl.activeAnimation.has_value())
             {
-                auto& activeAnimation = animationChannel.animationSplines[animationControl->activeAnimation.value()];
-                float time = animationControl->animations[animationControl->activeAnimation.value()].time;
+                auto& activeAnimation = animationChannel.animationSplines[animationControl.activeAnimation.value()];
+                float time = animationControl.animations[animationControl.activeAnimation.value()].time;
 
                 if (activeAnimation.translation.has_value())
                 {
@@ -112,12 +112,12 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
                 }
             }
 
-            if (animationControl->transitionAnimation.has_value())
+            if (animationControl.transitionAnimation.has_value())
             {
                 transitionTransform = transform;
 
-                auto& transitionAnimation = animationChannel.animationSplines[animationControl->transitionAnimation.value()];
-                float time = animationControl->animations[animationControl->transitionAnimation.value()].time;
+                auto& transitionAnimation = animationChannel.animationSplines[animationControl.transitionAnimation.value()];
+                float time = animationControl.animations[animationControl.transitionAnimation.value()].time;
 
                 if (transitionAnimation.translation.has_value())
                 {
@@ -135,7 +135,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
             if (transitionTransform.has_value())
             {
-                float blendWeight = 1.0 - animationControl->remainingBlendTime / animationControl->blendTime;
+                float blendWeight = 1.0 - animationControl.remainingBlendTime / animationControl.blendTime;
 
                 transform.position = glm::mix(transitionTransform.value().position, activeTransform.position, blendWeight);
                 transform.scale = glm::mix(transitionTransform.value().scale, activeTransform.scale, blendWeight);

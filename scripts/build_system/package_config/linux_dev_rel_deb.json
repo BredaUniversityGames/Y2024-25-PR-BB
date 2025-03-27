@@ -1,7 +1,7 @@
 {
   "output": "package/linux-dev-rel-deb",
   "executables": [
-    "build/WSL-RelWithDebInfo/CustomTech"
+    "build/WSL-RelWithDebInfo/Blightspire"
   ],
   "assets": [
     "assets",
@@ -14,6 +14,6 @@
     "build/WSL-RelWithDebInfo/libfmodL.so.14",
     "build/WSL-RelWithDebInfo/libfmodstudioL.so.14",
     "steam_appid.txt",
-    "game_analytics_keys.txt"
+    "version.txt"
   ]
 }

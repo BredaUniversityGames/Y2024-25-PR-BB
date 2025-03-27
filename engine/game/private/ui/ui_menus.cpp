@@ -75,7 +75,6 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     hud.canvas = std::make_unique<Canvas>(screenResolution);
 
-    // temporary
     hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
@@ -214,6 +213,13 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
     settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     settingsButton->AddChild<UITextElement>(font, "settings", 15)->SetColor(glm::vec4(0, 0, 0, 1));
 
+    openLinkButton = AddChild<UIButton>(buttonStyle, glm::vec2(200, 70), glm::vec2(878, 243) * .2f).lock();
+    openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    openLinkButton->AddChild<UITextElement>(font, "discord", 15)->SetColor(glm::vec4(0, 0, 0, 1));
+
+    playButton->navigationTargets.down = settingsButton;
+    playButton->navigationTargets.up = openLinkButton;
+
     quitButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 300), glm::vec2(878, 243) * .2f);
     quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     quitButton->AddChild<UITextElement>(font, "quit", 15)->SetColor(glm::vec4(0, 0, 0, 1));
@@ -226,10 +232,14 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
 
     quitButton->navigationTargets.down = playButton;
     quitButton->navigationTargets.up = settingsButton;
+    quitButton->navigationTargets.down = openLinkButton;
+    quitButton->navigationTargets.up = settingsButton;
+
+    openLinkButton->navigationTargets.down = playButton;
+    openLinkButton->navigationTargets.up = quitButton;
 
     CPUImage commonImageData;
-    commonImageData.format
-        = vk::Format::eR8G8B8A8Unorm;
+    commonImageData.format = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/blightspire_logo.png"));
     auto logoElement = AddChild<UIImage>(logo, glm::vec2(xMargin - 20, 100), glm::vec2(618, 217) * 0.4f);
@@ -237,4 +247,22 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
 
     UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
+}
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text)
+{
+    GameVersionVisualization visualization {};
+    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+
+    visualization.canvas = std::make_unique<Canvas>(screenResolution);
+    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), screenResolution);
+
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(5.0f, 20.0f), 25);
+    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    visualization.text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+
+    visualization.canvas->UpdateAllChildrenAbsoluteTransform();
+    graphicsContext.UpdateBindlessSet();
+
+    return visualization;
 }
