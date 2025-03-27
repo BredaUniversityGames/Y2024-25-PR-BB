@@ -46,6 +46,7 @@ constexpr uint32_t MAX_SKINNED_INSTANCES = 1 << 13;
 constexpr uint32_t MAX_POINT_LIGHTS = 1 << 13;
 constexpr uint32_t MAX_BONES = 1 << 14;
 constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 256;
+constexpr uint32_t MAX_DECALS = 32;
 
 constexpr uint32_t CLUSTER_X = 16, CLUSTER_Y = 9, CLUSTER_Z = 24;
 constexpr uint32_t CLUSTER_SIZE = CLUSTER_X * CLUSTER_Y * CLUSTER_Z;
@@ -67,18 +68,23 @@ public:
     void Update(uint32_t frameIndex);
     void UpdateGlobalIndexBuffer(vk::CommandBuffer& commandBuffer);
 
+    void SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, std::string albedoName);
+    void ResetDecals();
+
     const vk::DescriptorSet& GetSceneDescriptorSet(uint32_t frameIndex) const { return _sceneFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetStaticInstancesDescriptorSet(uint32_t frameIndex) const { return _staticInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetSkinnedInstancesDescriptorSet(uint32_t frameIndex) const { return _skinnedInstancesFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetClusterDescriptorSet() const { return _clusterData.descriptorSet; }
     const vk::DescriptorSet& GetClusterCullingDescriptorSet(uint32_t frameIndex) const { return _clusterCullingData.descriptorSets.at(frameIndex); }
+    const vk::DescriptorSet& GetDecalDescriptorSet() const { return _decalDescriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
     const vk::DescriptorSetLayout& GetHZBDescriptorSetLayout() const { return _hzbImageDSL; }
     const vk::DescriptorSetLayout& GetClusterDescriptorSetLayout() const { return _clusterDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetClusterCullingDescriptorSetLayout() const { return _clusterCullingDescriptorSetLayout; }
+    const vk::DescriptorSetLayout& GetDecalDescriptorSetLayout() const { return _decalDescriptorSetLayout; }
 
     vk::DescriptorSetLayout DrawBufferLayout() const { return _drawBufferDSL; }
     ResourceHandle<Buffer> StaticDrawBuffer(uint32_t frameIndex) const { return _staticDraws[frameIndex].buffer; }
@@ -173,6 +179,19 @@ private:
         bool isStaticDraw;
     };
 
+    struct alignas(16) DecalData
+    {
+        glm::mat4 invModel;
+        glm::vec3 orientation;
+        uint32_t albedoIndex;
+    };
+
+    struct alignas(16) DecalArray
+    {
+        std::array<DecalData, MAX_DECALS> decals;
+        uint32_t count = 0;
+    };
+
     struct FrameData
     {
         ResourceHandle<Buffer> buffer;
@@ -219,6 +238,14 @@ private:
     vk::DescriptorSetLayout _clusterCullingDescriptorSetLayout;
     ClusterCullingData _clusterCullingData;
 
+    DecalArray _decals;
+    ResourceHandle<GPUImage>& GetDecalImage(std::string fileName);
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> _decalImages;
+
+    ResourceHandle<Buffer> _decalBuffer;
+    vk::DescriptorSet _decalDescriptorSet;
+    vk::DescriptorSetLayout _decalDescriptorSetLayout;
+
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
     bool _shouldUpdateShadows = false;
@@ -250,6 +277,7 @@ private:
     void UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex);
     void UpdateCameraData(uint32_t frameIndex);
     void UpdateSkinBuffers(uint32_t frameIndex);
+    void UpdateDecalBuffer();
 
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
@@ -257,6 +285,7 @@ private:
     void InitializeClusterCullingBuffers();
     void InitializeObjectInstancesBuffers();
     void InitializeSkinBuffers();
+    void InitializeDecalBuffer();
 
     void CreateSceneDescriptorSetLayout();
     void CreatePointLightDescriptorSetLayout();
@@ -265,6 +294,7 @@ private:
     void CreateObjectInstanceDescriptorSetLayout();
     void CreateSkinDescriptorSetLayout();
     void CreateHZBDescriptorSetLayout();
+    void CreateDecalDescriptorSetLayout();
 
     void CreateSceneDescriptorSets();
     void CreatePointLightDescriptorSets();
@@ -272,6 +302,7 @@ private:
     void CreateClusterCullingDescriptorSet();
     void CreateObjectInstancesDescriptorSets();
     void CreateSkinDescriptorSets();
+    void CreateDecalDescriptorSet();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdatePointLightDescriptorSet(uint32_t frameIndex);
@@ -285,6 +316,7 @@ private:
     void CreateClusterCullingBuffers();
     void CreateObjectInstancesBuffers();
     void CreateSkinBuffers();
+    void CreateDecalBuffer();
 
     void InitializeIndirectDrawBuffer();
     void InitializeIndirectDrawDescriptor();

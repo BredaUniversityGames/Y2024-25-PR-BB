@@ -1,4 +1,5 @@
 #define MAX_POINT_LIGHTS 8192
+#define MAX_DECALS 32
 
 struct Camera
 {
@@ -42,6 +43,19 @@ struct PointLight
 struct PointLightArray
 {
     PointLight lights[MAX_POINT_LIGHTS];
+    uint count;
+};
+
+struct Decal
+{
+    mat4 invModel;
+    vec3 orientation;
+    uint albedoIndex;
+};
+
+struct DecalArray
+{
+    Decal decals[MAX_DECALS];
     uint count;
 };
 
