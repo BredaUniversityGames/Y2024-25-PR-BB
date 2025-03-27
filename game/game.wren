@@ -94,7 +94,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/revolver.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb")
 
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))

@@ -116,7 +116,7 @@ class PlayerMovement{
             euler.y = euler.y - rotationDelta.x
         }
 
-        var gun = engine.GetECS().GetEntityByName("revolver")
+        var gun = engine.GetECS().GetEntityByName("Revolver")
         var gunTransform = gun.GetTransformComponent()
 
         var lerpFactor = 0.97
@@ -200,12 +200,6 @@ class PlayerMovement{
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-        if(movement.length() > 0.1){
-            _gun.play_walk_anim(engine)
-        }else{
-            _gun.play_idle_anim(engine)
-        }
-        
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
@@ -213,7 +207,9 @@ class PlayerMovement{
 
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
+            _gun.playWalkAnim(engine)
         }else{
+            _gun.playIdleAnim(engine)
             playerBody.SetFriction(12.0)
         }
 

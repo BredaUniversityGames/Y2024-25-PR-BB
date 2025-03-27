@@ -30,7 +30,7 @@ class Pistol {
         _attackAnim = "shoot"
         _reloadAnim = "reload"
         _equipAnim = "" 
-        _entityName = "revolver" //subject to change when implementing swapping
+        _entityName = "Revolver" //subject to change when implementing swapping
         _mesh = ""
     }
 
@@ -48,7 +48,7 @@ class Pistol {
         }
     }
 
-    play_walk_anim (engine){
+    playWalkAnim (engine){
         //will hold reference to entity when implementing weapon switching
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
@@ -57,7 +57,7 @@ class Pistol {
         }
     }
 
-    play_idle_anim(engine){
+    playIdleAnim(engine){
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
         if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
