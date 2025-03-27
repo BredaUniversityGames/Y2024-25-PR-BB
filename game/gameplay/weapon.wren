@@ -83,7 +83,7 @@ class Pistol {
                             engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
                             break
                         }
-                        engine.SpawnDecal(hitEntity.normal, hitEntity.position, Vec3.new(1, 1, 1), "bullet_hole.png")
+                        engine.SpawnDecal(hitEntity.normal, hitEntity.position, Vec2.new(0.005, 0.005), "bullet_hole.png")
                         break
                     }
                 }

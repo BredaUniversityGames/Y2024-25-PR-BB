@@ -446,7 +446,7 @@ ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
     return got->second;
 }
 
-void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, std::string albedoName)
+void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, std::string albedoName)
 {
     const auto image = GetDecalImage(albedoName);
 
@@ -464,7 +464,7 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec3 size, 
 
     const glm::mat4 translationMatrix = glm::translate(glm::mat4 { 1.0f }, position);
     const glm::mat4 rotationMatrix = glm::toMat4(orientation);
-    const glm::mat4 scaleMatrix = glm::scale(glm::mat4 { 1.0f }, glm::vec3(imageSize.x, imageSize.y, decalThickness));
+    const glm::mat4 scaleMatrix = glm::scale(glm::mat4 { 1.0f }, glm::vec3(imageSize.x * size.x, imageSize.y * size.y, decalThickness));
 
     DecalData newDecal;
     newDecal.invModel = glm::inverse(translationMatrix * rotationMatrix * scaleMatrix);

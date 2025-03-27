@@ -122,12 +122,13 @@ void main()
     discard;
 
     // Decal calculations
+    vec4 testColor = vec4(position, 1.0f);
     for (uint decalIndex = 0; decalIndex < decals.count; decalIndex++)
     {
         Decal currentDecal = decals.decals[decalIndex];
 
         // transform pixel pos to decal box space
-        vec4 positionObjectSpace = vec4(position, 1.0f) * currentDecal.invModel;
+        vec4 positionObjectSpace = currentDecal.invModel * vec4(position, 1.0f);
 
         // check if pixel is within decal box
         if (abs(positionObjectSpace.x) - 0.5f <= 0.0f &&
