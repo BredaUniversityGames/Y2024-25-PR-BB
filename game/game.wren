@@ -63,7 +63,7 @@ class Main {
 
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = Math.Radians(45.0)
-        cameraProperties.nearPlane = 0.5
+        cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
 
