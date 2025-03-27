@@ -2,16 +2,19 @@ import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, 
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer){
+    construct new(newHasDashed, newDashTimer, gun){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
-
+        _gun = gun
         maxSpeed = 9.0
         sv_accelerate = 10.0
         jumpForce = 9.75
         gravityFactor = 2.4
         playerHeight = 1.7
+        _cameraFovNormal = 45
+        _cameraFovSlide = 50
+        _cameraFovCurrent = _cameraFovNormal
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
         isGrounded = false
@@ -26,7 +29,7 @@ class PlayerMovement{
 
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
-
+        _smoothedCameraDelta = Vec2.new(0.0,0.0)
         _lastMousePosition = Vec2.new(0.0 ,0.0)
     }
 
@@ -115,6 +118,21 @@ class PlayerMovement{
             euler.y = euler.y - rotationDelta.x
         }
 
+        var gun = engine.GetECS().GetEntityByName("Revolver")
+        var gunTransform = gun.GetTransformComponent()
+
+        var lerpFactor = 0.97
+        var divisionFactor = 1.1
+           var max = 0.6
+        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * lerpFactor +  rotationDelta.x * (1-lerpFactor)) / divisionFactor
+        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
+
+
+        var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
+        var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) 
+
+        gunTransform.translation = Vec3.new(clampedX,clampedY,0)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
         rotation = Math.ToQuat(euler)
 
         player.GetTransformComponent().rotation = rotation
@@ -186,7 +204,6 @@ class PlayerMovement{
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
@@ -194,7 +211,9 @@ class PlayerMovement{
 
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
+            _gun.playWalkAnim(engine)
         }else{
+            _gun.playIdleAnim(engine)
             playerBody.SetFriction(12.0)
         }
 
@@ -374,6 +393,8 @@ class PlayerMovement{
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovSlide,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = playerBody.GetVelocity()
 
@@ -396,6 +417,9 @@ class PlayerMovement{
             playerBody.SetVelocity(velocity)
 
         }else{
+            
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
