@@ -21,6 +21,9 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
 
+        engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
+        engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
+
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
@@ -62,7 +65,7 @@ class Main {
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
-
+        __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = 45.0
         cameraProperties.nearPlane = 0.5
@@ -160,8 +163,6 @@ class Main {
     }
 
     static Update(engine, dt) {
-
-
         // for (spawner in __spawnerList) {
         //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
         // }
@@ -193,6 +194,8 @@ class Main {
         } else {
             __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
+
+        __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip

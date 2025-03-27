@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -16,6 +16,7 @@ class MeleeEnemy {
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Enemy"
         _rootEntity.AddEnemyTag()
+        _rootEntity.AddAudioEmitterComponent()
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
         transform.scale = size
@@ -34,6 +35,7 @@ class MeleeEnemy {
 
         _attackRange = 6
         _attackDamage = 30
+        _shakeIntensity = 1.6
         
         _movingState = false
         _attackingState = false
@@ -72,9 +74,12 @@ class MeleeEnemy {
         if (_attackingState) {
             _attackTime = _attackTime - dt
             if (_attackTime <= 0 ) {
-                
-                if (Math.Distance(playerPos, pos) < _attackRange) {
+                if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
                     playerVariables.DecreaseHealth(_attackDamage)
+                    playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                    playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                    engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
                 }
 
                 System.print("Enter Recovery State")
@@ -88,6 +93,12 @@ class MeleeEnemy {
                 animations.Play("Idle", 1.0, true, 1.0, false)
                 animations.SetTime(0.0)
             }
+            var forwardVector = (playerPos - pos).normalize()
+
+            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+            var startRotation = _rootEntity.GetTransformComponent().rotation
+            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+
             _recoveryTime = _recoveryTime - dt
             if (_recoveryTime <= 0) {
                 System.print("Recovered")
@@ -112,6 +123,9 @@ class MeleeEnemy {
                 animations.SetTime(0.0)
                 _attackTime = _attackMaxTime
                 _evaluateState = false
+
+                _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
+
             } else if (_movingState == false) { // Enter attack state
                 System.print("Enter Moving State")
                 body.SetFriction(0.0)
