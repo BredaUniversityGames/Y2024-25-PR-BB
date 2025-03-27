@@ -123,10 +123,10 @@ class PlayerMovement{
         _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
 
         var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
-        var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) * 0.2
+        var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) 
 
-        gunTransform.translation = Vec3.new(cx,cy,0)
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY)) 
+        gunTransform.translation = Vec3.new(clampedX,clampedY,0)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
         rotation = Math.ToQuat(euler)
 
         player.GetTransformComponent().rotation = rotation
