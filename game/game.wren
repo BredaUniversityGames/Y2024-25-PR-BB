@@ -14,12 +14,15 @@ class Main {
         engine.GetGame().SetHUDEnabled(true)
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
         // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+
+        engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
+        engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -61,7 +64,7 @@ class Main {
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
-
+        __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = Math.Radians(45.0)
         cameraProperties.nearPlane = 0.1
@@ -123,7 +126,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
@@ -155,10 +158,8 @@ class Main {
     }
 
     static Update(engine, dt) {
-
-
         // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/demon.glb", __enemyShape, dt)
+        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
         // }
 
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
@@ -188,6 +189,8 @@ class Main {
         } else {
             __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
+
+        __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
@@ -304,7 +307,7 @@ class Main {
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, engine, dt)
+                enemy.Update(playerPos, __playerVariables, engine, dt)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
