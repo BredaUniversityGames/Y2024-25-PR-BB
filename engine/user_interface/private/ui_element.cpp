@@ -84,7 +84,11 @@ void UIElement::UpdateAllChildrenAbsoluteTransform()
 void UIElement::SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren) noexcept
 {
     _absoluteLocation = location;
-    _absoluteScale = scale;
+
+    // We make sure it doesn't go under Steam's recommended minimal scale
+    const float clampedY = glm::max(scale.y, MIN_STEAM_SCALE_RECOMMENDATION);
+    _absoluteScale = glm::vec2(scale.x, clampedY);
+
     if (updateChildren)
     {
         UpdateAllChildrenAbsoluteTransform();

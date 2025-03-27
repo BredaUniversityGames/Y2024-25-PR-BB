@@ -75,7 +75,6 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     hud.canvas = std::make_unique<Canvas>(screenResolution);
 
-    // temporary
     hud.canvas->SetAbsoluteTransform(hud.canvas->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
@@ -199,7 +198,7 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
 
     // temporary
-    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), mainMenu.GetRelativeScale());
+    mainMenu.SetAbsoluteTransform(mainMenu.GetAbsoluteLocation(), screenResolution);
 
     constexpr float xMargin = 50;
     mainMenu.playButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f).lock();
@@ -214,14 +213,21 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     mainMenu.quitButton.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     mainMenu.quitButton.lock()->AddChild<UITextElement>(font, "quit", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
 
+    mainMenu.openLinkButton = mainMenu.AddChild<UIButton>(buttonStyle, glm::vec2(200, 70), glm::vec2(878, 243) * .2f).lock();
+    mainMenu.openLinkButton.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    mainMenu.openLinkButton.lock()->AddChild<UITextElement>(font, "discord", 15).lock()->SetColor(glm::vec4(0, 0, 0, 1));
+
     mainMenu.playButton.lock()->navigationTargets.down = mainMenu.settingsButton;
-    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.quitButton;
+    mainMenu.playButton.lock()->navigationTargets.up = mainMenu.openLinkButton;
 
     mainMenu.settingsButton.lock()->navigationTargets.down = mainMenu.quitButton;
     mainMenu.settingsButton.lock()->navigationTargets.up = mainMenu.playButton;
 
-    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.quitButton.lock()->navigationTargets.down = mainMenu.openLinkButton;
     mainMenu.quitButton.lock()->navigationTargets.up = mainMenu.settingsButton;
+
+    mainMenu.openLinkButton.lock()->navigationTargets.down = mainMenu.playButton;
+    mainMenu.openLinkButton.lock()->navigationTargets.up = mainMenu.quitButton;
 
     CPUImage commonImageData;
     commonImageData.format
@@ -235,4 +241,22 @@ MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& scre
     graphicsContext.UpdateBindlessSet();
 
     return mainMenu;
+}
+
+GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text)
+{
+    GameVersionVisualization visualization {};
+    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+
+    visualization.canvas = std::make_unique<Canvas>(screenResolution);
+    visualization.canvas->SetAbsoluteTransform(visualization.canvas->GetAbsoluteLocation(), screenResolution);
+
+    visualization.text = visualization.canvas->AddChild<UITextElement>(font, text, glm::vec2(5.0f, 20.0f), 25);
+    visualization.text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    visualization.text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+
+    visualization.canvas->UpdateAllChildrenAbsoluteTransform();
+    graphicsContext.UpdateBindlessSet();
+
+    return visualization;
 }

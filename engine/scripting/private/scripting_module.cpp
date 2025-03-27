@@ -1,8 +1,8 @@
 #include "scripting_module.hpp"
 #include "file_io.hpp"
+#include "log.hpp"
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
-#include "log.hpp"
 
 void ScriptingModule::ResetVM()
 {
@@ -66,6 +66,10 @@ void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
     {
         _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
         _mainEngineScript = result.value();
+    }
+    else
+    {
+        _mainEngineScript = path;
     }
 }
 

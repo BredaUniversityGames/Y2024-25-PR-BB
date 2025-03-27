@@ -1,6 +1,5 @@
 #include "passes/ibl_pass.hpp"
 
-#include "../vulkan_helper.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "pipeline_builder.hpp"
@@ -9,6 +8,7 @@
 #include "shaders/shader_loader.hpp"
 #include "single_time_commands.hpp"
 #include "vulkan_context.hpp"
+#include "vulkan_helper.hpp"
 
 IBLPass::IBLPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> environmentMap)
     : _context(context)

@@ -105,7 +105,7 @@ SoundID AudioModule::LoadSFX(SoundInfo& soundInfo)
     soundInfo.uid = hash;
     if (_sounds.contains(hash) && _soundInfos.contains(soundInfo.path.data()))
     {
-        bblog::error("Could not load sound, sound already loaded: {0}", soundInfo.path);
+        bblog::warn("Sound at path already loaded: {0}", soundInfo.path);
         return hash;
     }
 

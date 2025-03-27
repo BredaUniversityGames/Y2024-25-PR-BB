@@ -3,6 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 
 class Main {
     static Start(engine) {
+        engine.GetInput().SetActiveActionSet("Shooter")
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()

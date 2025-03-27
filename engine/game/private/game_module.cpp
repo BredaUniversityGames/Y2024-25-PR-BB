@@ -15,6 +15,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
@@ -36,17 +37,31 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include "steam_module.hpp"
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
-    _hud = HudCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
+
+    std::optional<std::ifstream> versionFile = fileIO::OpenReadStream("version.txt");
+    if (versionFile.has_value())
+    {
+        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
+        _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, gameVersionText);
+        engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+    }
+
+    _hud = HudCreate(graphicsContext, viewportSize);
     auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
     _mainMenu = mainMenu;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
+
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
@@ -58,7 +73,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-  
+
     bblog::info("Successfully initialized engine!");
 
     return ModuleTickOrder::eTick;
@@ -111,6 +126,21 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         HudUpdate(_hud, totalTime);
     }
 
+    if (auto locked = _mainMenu.lock(); locked != nullptr && locked->visibility == UIElement::VisibilityState::eUpdatedAndVisible)
+    {
+        if (locked->openLinkButton.lock()->IsPressedOnce())
+        {
+            auto& steam = engine.GetModule<SteamModule>();
+            if (steam.Available())
+            {
+                steam.OpenSteamBrowser(DISCORD_URL);
+            }
+            else
+            {
+                engine.GetModule<ApplicationModule>().OpenExternalBrowser(DISCORD_URL);
+            }
+        }
+    }
     auto& ECS = engine.GetModule<ECSModule>();
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
@@ -151,9 +181,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
-        engine.SetExit(0);
 
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))

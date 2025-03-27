@@ -38,6 +38,8 @@ public:
     [[nodiscard]] bool GetMouseHidden() const { return _mouseHidden; }
     void SetMouseHidden(bool val);
 
+    void OpenExternalBrowser(const std::string& url);
+
     [[nodiscard]] glm::uvec2 DisplaySize() const;
     [[nodiscard]] bool isMinimized() const;
 
@@ -47,7 +49,7 @@ private:
     SDL_Window* _window = nullptr;
     VulkanInitInfo _vulkanInitInfo;
 
-    std::string _windowName = "BB-Prototype";
+    std::string _windowName = "Blightspire";
     bool _isFullscreen = true;
     bool _mouseHidden = true;
 
