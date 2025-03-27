@@ -452,7 +452,7 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, 
     imageSize.x = _context->Resources()->ImageResourceManager().Access(image)->width;
     imageSize.y = _context->Resources()->ImageResourceManager().Access(image)->height;
 
-    const float decalThickness = 0.125f;
+    const float decalThickness = 1.f;
 
     glm::vec3 forward = -normal;
     glm::vec3 up = std::abs(glm::dot(forward, glm::vec3(0.0f, 1.0f, 0.0f))) < 0.99f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 1.0f);
@@ -466,7 +466,7 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, 
 
     DecalData newDecal;
     newDecal.invModel = glm::inverse(translationMatrix * rotationMatrix * scaleMatrix);
-    newDecal.orientation = glm::normalize(glm::rotate(orientation, glm::vec3(0.0f, 1.0f, 0.0f)));
+    newDecal.orientation = glm::normalize(normal);
     newDecal.albedoIndex = image.Index();
 
     // Place a new decal, and fill the buffer
