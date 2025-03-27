@@ -207,8 +207,7 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
                 
                 if (!rayHitInfo.isEmpty) {
-                    for (i in (rayHitInfo.count - 1)..0) {
-                        var hitEntity = rayHitInfo[i]
+                    for (hitEntity in rayHitInfo.count) {
                         if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
                             end = hitEntity.position
                             if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {

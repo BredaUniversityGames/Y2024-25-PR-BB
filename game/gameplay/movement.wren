@@ -179,8 +179,6 @@ class PlayerMovement{
 
         isGrounded = false
         for(hit in groundCheckRay) {
-
-
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
                 isGrounded = true
                 break
