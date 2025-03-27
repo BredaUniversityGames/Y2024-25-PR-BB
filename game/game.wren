@@ -14,7 +14,7 @@ class Main {
         engine.GetGame().SetHUDEnabled(true)
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
         // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
@@ -129,7 +129,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 12, "assets/models/demon.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
