@@ -4,29 +4,23 @@
 namespace bindings
 {
 
-bool PlayButtonPressedOnce(MainMenu& self)
-{
-    if (auto locked = self.playButton.lock(); locked != nullptr)
-    {
-        return locked->IsPressedOnce();
-    }
-    return false;
-}
-
-bool QuitButtonPressedOnce(MainMenu& self)
-{
-    if (auto locked = self.quitButton.lock(); locked != nullptr)
-    {
-        return locked->IsPressedOnce();
-    }
-    return false;
-}
+void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
+std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton; }
+std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton; }
+std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton; }
 
 }
 
 void BindMainMenu(wren::ForeignModule& module)
 {
+    auto& cls = module.klass<Callback>("Callback");
+    cls.ctor<wren::Variable>();
+
+    auto& button = module.klass<UIButton>("UIButton");
+    button.funcExt<bindings::ButtonOnPress>("OnPress", "Pass a wren function to define the logic that is called OnPress");
+
     auto& mainMenu = module.klass<MainMenu>("MainMenu");
-    mainMenu.funcExt<bindings::PlayButtonPressedOnce>("PlayButtonPressedOnce");
-    mainMenu.funcExt<bindings::QuitButtonPressedOnce>("QuitButtonPressedOnce");
+    mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");
+    mainMenu.propReadonlyExt<bindings::QuitButton>("quitButton");
+    mainMenu.propReadonlyExt<bindings::PlayButton>("playButton");
 }

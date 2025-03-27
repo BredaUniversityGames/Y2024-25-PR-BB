@@ -52,12 +52,12 @@ public:
 
     void SetScale(const glm::vec2& scale) noexcept;
 
-    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const {};
+    virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
     virtual void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext);
 
     template <typename T, typename... Args>
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
-    std::weak_ptr<T> AddChild(Args&&... args);
+    std::shared_ptr<T> AddChild(Args&&... args);
 
     NO_DISCARD std::vector<std::shared_ptr<UIElement>>& GetChildren()
     {
@@ -97,7 +97,7 @@ private:
 
 template <typename T, typename... Args>
     requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
-std::weak_ptr<T> UIElement::AddChild(Args&&... args)
+std::shared_ptr<T> UIElement::AddChild(Args&&... args)
 {
     std::shared_ptr<UIElement>& addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     std::sort(_children.begin(), _children.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)

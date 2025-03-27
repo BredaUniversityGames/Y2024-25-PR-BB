@@ -70,6 +70,11 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
             }
         }
     }
+
+    if (IsPressedOnce())
+    {
+        _callback();
+    }
 }
 
 void UIButton::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
