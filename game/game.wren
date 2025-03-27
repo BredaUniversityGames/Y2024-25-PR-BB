@@ -20,6 +20,8 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -149,8 +151,8 @@ class Main {
             ""
             ]
             
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.0)
+        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.0)
     }
 
     static Shutdown(engine) {

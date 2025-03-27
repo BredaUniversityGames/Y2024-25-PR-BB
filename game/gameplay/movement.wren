@@ -28,6 +28,8 @@ class PlayerMovement{
         _freeCamSpeedMultiplier = 1.0
 
         _lastMousePosition = Vec2.new(0.0 ,0.0)
+
+        _slideSoundInstance = null
     }
 
 //getters
@@ -430,8 +432,18 @@ class PlayerMovement{
            
 
             playerBody.SetVelocity(velocity)
+
+            //play slide sound
+            if(!_slideSoundInstance && isGrounded){
+                _slideSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/slide2.wav", 1.0)
+                camera.GetAudioEmitterComponent().AddSFX(_slideSoundInstance)
+            }
             
         }else{
+            if(_slideSoundInstance){
+                engine.GetAudio().StopSFX(_slideSoundInstance)
+                _slideSoundInstance = null
+            }
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
