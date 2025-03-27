@@ -116,17 +116,17 @@ class PlayerMovement{
         var gun = engine.GetECS().GetEntityByName("revolver")
         var gunTransform = gun.GetTransformComponent()
 
-    var val = 0.97
-    var dev = 1.1
-    var max = 0.6
-        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * val +  rotationDelta.x * (1-val)) / dev
-        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * val +  rotationDelta.y * (1-val))/  dev
+        var lerpFactor = 0.97
+        var divisionFactor = 1.1
+        var max = 0.6
+        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * lerpFactor +  rotationDelta.x * (1-lerpFactor)) / divisionFactor
+        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
 
-    var cx  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
-    var cy  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max)
+        var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
+        var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) * 0.2
 
         gunTransform.translation = Vec3.new(cx,cy,0)
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+cx,cy*0.2)) 
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY)) 
         rotation = Math.ToQuat(euler)
 
         player.GetTransformComponent().rotation = rotation
