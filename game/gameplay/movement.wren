@@ -158,7 +158,7 @@ class PlayerMovement{
         }
 
         if (engine.GetTime().GetDeltatime() != 0.0) {
-             this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
+            this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
         }
 
         var playerBody = playerController.GetRigidbodyComponent()
@@ -200,8 +200,8 @@ class PlayerMovement{
         if(moveInputDir.length() > 0.01){
 
         
-        System.print("Move input before")
-        System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
+        // System.print("Move input before")
+        // System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
 
 
         var dot = Math.Dot(moveInputDir, assNormal)
@@ -209,9 +209,9 @@ class PlayerMovement{
 
         moveInputDir = moveProjected.normalize()
 
-        System.print("Move input after")
-        System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
-        System.print("-------------------")
+        // System.print("Move input after")
+        // System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
+        // System.print("-------------------")
         }
 
         //System.print(movement.length())
@@ -430,7 +430,7 @@ class PlayerMovement{
            
 
             playerBody.SetVelocity(velocity)
-
+            
         }else{
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)

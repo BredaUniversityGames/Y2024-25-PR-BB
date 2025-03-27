@@ -5,7 +5,8 @@ class CameraVariables {
     construct new() {
         _shakeIntensity = 0.3
         _shakeOffset = Vec2.new(0.0, 0.0)
-        _tiltFactor = 0        
+        _tiltFactor = 0   
+        _slideFactorX = 0
     }
 
     shakeIntensity {_shakeIntensity}
@@ -32,15 +33,32 @@ class CameraVariables {
 
     Tilt(engine, cameraEntity, dt) {
         var movement = engine.GetInput().GetAnalogAction("Move")
+        var isSliding = engine.GetInput().GetDigitalAction("Slide").IsHeld()
+        var tiltSpeed= 0.3
+        
             
         if (Math.Abs(movement.x) < 0.0001) {
             _tiltFactor = _tiltFactor * 0.2
         } else {
             _tiltFactor = Math.Clamp(_tiltFactor + (dt * 0.01) * -movement.x, -1, 1)   
         }
+
+        if(isSliding) {
+            tiltSpeed = 0.005
+            if (Math.Abs(movement.x) < 0.0001) {
+                _slideFactorX = Math.Clamp(_slideFactorX * 0.2, 2.5, 5)
+            } else {
+                _slideFactorX = Math.Clamp(_slideFactorX + (dt * 0.01) * -movement.x, -3, 3)   
+            }
+
+           
+        }else{
+            _slideFactorX = _slideFactorX * 0.2
+           
+        }
         
         var transform = cameraEntity.GetTransformComponent()
-        transform.rotation = Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor)))
+        transform.rotation = Math.Slerp(transform.rotation, Quat.Default().mulVec3RetQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor + _slideFactorX))), dt * tiltSpeed)
     }
 
 }
