@@ -474,6 +474,11 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, 
     _decals.decals[decalIndex] = newDecal;
 }
 
+void GPUScene::ResetDecals()
+{
+    _decals.count = 0;
+}
+
 void GPUScene::InitializeSceneBuffers()
 {
     CreateSceneBuffers();
