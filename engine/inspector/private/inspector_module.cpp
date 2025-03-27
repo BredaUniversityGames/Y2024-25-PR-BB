@@ -323,7 +323,6 @@ void DrawFogSettings(Settings& settings)
     ImGui::Begin("Fog Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::ColorPicker3("Color", &fog.color.x);
     ImGui::DragFloat("Density", &fog.density, 0.01f);
-    ImGui::DragFloat("Height", &fog.height, 0.01f);
     ImGui::End();
 }
 
