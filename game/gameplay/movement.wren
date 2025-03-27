@@ -12,6 +12,9 @@ class PlayerMovement{
         jumpForce = 9.75
         gravityFactor = 2.4
         playerHeight = 1.7
+        _cameraFovNormal = 45
+        _cameraFovSlide = 50
+        _cameraFovCurrent = _cameraFovNormal
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
         isGrounded = false
@@ -390,6 +393,8 @@ class PlayerMovement{
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovSlide,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = playerBody.GetVelocity()
 
@@ -412,6 +417,9 @@ class PlayerMovement{
             playerBody.SetVelocity(velocity)
 
         }else{
+            
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
