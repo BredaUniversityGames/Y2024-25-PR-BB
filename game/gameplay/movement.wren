@@ -196,7 +196,7 @@ class PlayerMovement{
         var rayLength = 2.0
 
         var groundCheckRay = engine.GetPhysics().ShootRay(playerControllerPos, rayDirection, rayLength)
-        var assNormal = Vec3.new(0.0, 0.0, 0.0)
+        var groundHitNormal = Vec3.new(0.0, 0.0, 0.0)
 
         isGrounded = false
         for(hit in groundCheckRay) {
@@ -204,12 +204,10 @@ class PlayerMovement{
 
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
                 isGrounded = true
-                assNormal = hit.normal
+                groundHitNormal = hit.normal
                 break
             }
         }
-
-        
 
         var movement = engine.GetInput().GetAnalogAction("Move")
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
@@ -217,23 +215,11 @@ class PlayerMovement{
         moveInputDir = moveInputDir.normalize()
 
         if(moveInputDir.length() > 0.01){
-
-        
-        // System.print("Move input before")
-        // System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
-
-
-        var dot = Math.Dot(moveInputDir, assNormal)
-        var moveProjected = moveInputDir - assNormal.mulScalar(dot)
-
-        moveInputDir = moveProjected.normalize()
-
-        // System.print("Move input after")
-        // System.printAll([moveInputDir.x, " ", moveInputDir.y, " ", moveInputDir.z])
-        // System.print("-------------------")
+            var dot = Math.Dot(moveInputDir, groundHitNormal)
+            var moveProjected = moveInputDir - groundHitNormal.mulScalar(dot)
+            moveInputDir = moveProjected.normalize()
         }
 
-        //System.print(movement.length())
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
             _gun.playWalkAnim(engine)
@@ -241,8 +227,6 @@ class PlayerMovement{
             _gun.playIdleAnim(engine)
             playerBody.SetFriction(12.0)
         }
-
-
 
         playerBody.SetGravityFactor(gravityFactor)
 
@@ -270,7 +254,7 @@ class PlayerMovement{
         //Fix for moving on slopes
         if(isGrounded && moveInputDir.length() > 0.01 && isJumpHeld == false){
             // Get the right vector relative to movement
-            var lateral = Math.Cross(assNormal, moveInputDir).normalize()
+            var lateral = Math.Cross(groundHitNormal, moveInputDir).normalize()
 
             // Remove velocity component in the lateral direction
             var latMag = Math.Dot(velocity, lateral)
@@ -321,22 +305,6 @@ class PlayerMovement{
                 velocity = velocity + wishVel.mulScalar(accelSpeed)
             }
         }
-
-        // Wall Collision Fix - Project velocity if collision occurs
-        // Somehow it works without it currently, leave it here we might need it later
-
-        // // Wall Collision Fix - Project velocity if collision occurs
-        // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
-
-        // for(hit in wallCheckRays) {
-        // if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-        //     var wallNormal = hit.normal
-
-        //     //Clip velocity
-        //     var backoff = Math.Dot(velocity, wallNormal) * 1.0
-        //     velocity = velocity - wallNormal *  Vec3.new(backoff,backoff,backoff)
-        // }
-        // }
 
         playerBody.SetVelocity(velocity)
 
