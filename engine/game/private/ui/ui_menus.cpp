@@ -198,7 +198,7 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
     auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
 
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
-    glm::vec2 screenResFloat = screenResolution;
+    glm::vec2 screenResFloat = { 1920, 1080 };
 
     ResourceHandle<GPUImage> logo;
 
@@ -231,9 +231,8 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
 
     {
         buttonPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-
         buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.1f, screenResFloat.y * 0.4f));
-        buttonPanel->SetScale(glm::vec2(500.0f, 500.0f));
+        // buttonPanel->SetScale(glm::vec2(500.0f, 500.0f));
     }
 
     {
