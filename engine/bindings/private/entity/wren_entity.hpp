@@ -21,7 +21,6 @@ struct WrenEntity
 
     template <typename T>
     void AddTag();
-
     template <typename T>
     bool HasComponent();
 
