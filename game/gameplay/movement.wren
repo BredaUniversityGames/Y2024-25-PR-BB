@@ -123,10 +123,10 @@ class PlayerMovement{
 
         var lerpFactor = 0.97
         var divisionFactor = 1.1
-        var max = 0.3
+           var max = 0.6
+        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * lerpFactor +  rotationDelta.x * (1-lerpFactor)) / divisionFactor
+        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
 
-        _smoothedCameraDelta.x = Math.MixFloat(_smoothedCameraDelta.x,rotationDelta.x,0.03) / divisionFactor
-        _smoothedCameraDelta.y = Math.MixFloat(_smoothedCameraDelta.y,rotationDelta.y,0.03) / divisionFactor
 
         var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
         var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) 
