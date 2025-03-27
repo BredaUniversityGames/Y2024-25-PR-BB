@@ -22,7 +22,7 @@ class GameModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
     std::string_view GetName() override { return "Game Module"; }
 
-    std::weak_ptr<MainMenu> _mainMenu;
+    std::shared_ptr<MainMenu> _mainMenu;
 
     glm::ivec2 _lastMousePos {};
 
@@ -32,7 +32,7 @@ public:
 
     void SetMainMenuEnabled(bool val);
     void SetHUDEnabled(bool val);
-    MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
+    MainMenu& GetMainMenu() const { return *_mainMenu; }
 
     HUD _hud;
     GameVersionVisualization _gameVersionVisualization;

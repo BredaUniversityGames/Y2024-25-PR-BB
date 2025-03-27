@@ -56,26 +56,36 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     }
 
     _hud = HudCreate(graphicsContext, viewportSize);
-    auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
+    auto mainMenu = std::make_shared<MainMenu>(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
+
     _mainMenu = mainMenu;
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
 
-    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _mainMenu->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    auto path = std::filesystem::current_path();
-    spdlog::info("Current path: {}", path.string());
-    spdlog::info("Starting engine...");
+    auto OpenDiscordURL = [&engine]()
+    {
+        bblog::info("Opening Discord LINK");
+        auto& steam = engine.GetModule<SteamModule>();
+        if (steam.Available())
+        {
+            steam.OpenSteamBrowser(DISCORD_URL);
+        }
+        else
+        {
+            engine.GetModule<ApplicationModule>().OpenExternalBrowser(DISCORD_URL);
+        }
+    };
+
+    _mainMenu->openLinkButton->OnPress(Callback { OpenDiscordURL });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-
-    bblog::info("Successfully initialized engine!");
-
     return ModuleTickOrder::eTick;
 }
 
@@ -85,25 +95,12 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void GameModule::SetMainMenuEnabled(bool val)
 {
-    if (val)
-    {
-        _mainMenu.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-    }
-    else
-    {
-        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    }
+    _mainMenu->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
+
 void GameModule::SetHUDEnabled(bool val)
 {
-    if (val)
-    {
-        _hud.canvas->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-    }
-    else
-    {
-        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    }
+    _hud.canvas->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
@@ -126,21 +123,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         HudUpdate(_hud, totalTime);
     }
 
-    if (auto locked = _mainMenu.lock(); locked != nullptr && locked->visibility == UIElement::VisibilityState::eUpdatedAndVisible)
-    {
-        if (locked->openLinkButton.lock()->IsPressedOnce())
-        {
-            auto& steam = engine.GetModule<SteamModule>();
-            if (steam.Available())
-            {
-                steam.OpenSteamBrowser(DISCORD_URL);
-            }
-            else
-            {
-                engine.GetModule<ApplicationModule>().OpenExternalBrowser(DISCORD_URL);
-            }
-        }
-    }
     auto& ECS = engine.GetModule<ECSModule>();
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();

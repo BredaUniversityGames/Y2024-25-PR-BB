@@ -174,6 +174,9 @@ void HudUpdate(HUD& hud, float timePassed)
 MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
     : Canvas(screenResolution)
 {
+    anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    SetAbsoluteTransform(GetAbsoluteLocation(), screenResolution);
+
     // resource loading.
     auto loadButtonStyle = [&graphicsContext]()
     {
@@ -195,55 +198,83 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
     auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
 
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
+    glm::vec2 screenResFloat = screenResolution;
 
-    // temporary
-    SetAbsoluteTransform(GetAbsoluteLocation(), GetRelativeScale());
+    ResourceHandle<GPUImage> logo;
 
-    constexpr float xMargin = 50;
-    playButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 200), glm::vec2(878, 243) * .2f);
-    playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    playButton->AddChild<UITextElement>(font, "play", 15)->SetColor(glm::vec4(0, 0, 0, 1));
+    // Title
+    {
+        CPUImage commonImageData;
+        commonImageData.format = vk::Format::eR8G8B8A8Unorm;
+        commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
+        commonImageData.FromPNG("assets/textures/blightspire_logo.png");
 
-    std::function<void()> callback = []()
-    { bblog::info("INFO CALLBACK!!!"); };
+        glm::vec2 pos = glm::vec2(screenResFloat.y * 0.05f);
+        glm::vec2 size = glm::vec2(((float)commonImageData.width / (float)commonImageData.height), 1.0f) * (0.25f * screenResFloat.y);
 
-    playButton->OnPress(callback);
+        logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
 
-    settingsButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 250), glm::vec2(878, 243) * .2f);
-    settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    settingsButton->AddChild<UITextElement>(font, "settings", 15)->SetColor(glm::vec4(0, 0, 0, 1));
+        auto logoElement = AddChild<UIImage>(logo, pos, size);
+        logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    }
 
-    openLinkButton = AddChild<UIButton>(buttonStyle, glm::vec2(200, 70), glm::vec2(878, 243) * .2f).lock();
-    openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    openLinkButton->AddChild<UITextElement>(font, "discord", 15)->SetColor(glm::vec4(0, 0, 0, 1));
+    // Discord Link
+    {
+        openLinkButton = AddChild<UIButton>(buttonStyle, glm::vec2(878, 243) * .4f, glm::vec2(878, 243) * .4f);
+        openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+        openLinkButton->AddChild<UITextElement>(font, "check out our discord!", 20)->SetColor(glm::vec4(0, 0, 0, 1));
+    }
 
-    playButton->navigationTargets.down = settingsButton;
-    playButton->navigationTargets.up = openLinkButton;
+    // Buttons
 
-    quitButton = AddChild<UIButton>(buttonStyle, glm::vec2(xMargin, 300), glm::vec2(878, 243) * .2f);
-    quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    quitButton->AddChild<UITextElement>(font, "quit", 15)->SetColor(glm::vec4(0, 0, 0, 1));
+    auto buttonPanel = AddChild<UIElement>();
 
-    playButton->navigationTargets.down = settingsButton;
-    playButton->navigationTargets.up = quitButton;
+    {
+        buttonPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-    settingsButton->navigationTargets.down = quitButton;
-    settingsButton->navigationTargets.up = playButton;
+        buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.1f, screenResFloat.y * 0.4f));
+        buttonPanel->SetScale(glm::vec2(500.0f, 500.0f));
+    }
 
-    quitButton->navigationTargets.down = playButton;
-    quitButton->navigationTargets.up = settingsButton;
-    quitButton->navigationTargets.down = openLinkButton;
-    quitButton->navigationTargets.up = settingsButton;
+    {
+        glm::vec2 buttonPos = { 0.0f, 0.0f };
+        constexpr glm::vec2 increment = { 0.0f, 90.0f };
+        constexpr glm::vec2 buttonBaseSize = glm::vec2(878, 243) * 0.5f;
+        constexpr float textSize = 50;
 
-    openLinkButton->navigationTargets.down = playButton;
-    openLinkButton->navigationTargets.up = quitButton;
+        playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        playButton->AddChild<UITextElement>(font, "play", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
-    CPUImage commonImageData;
-    commonImageData.format = vk::Format::eR8G8B8A8Unorm;
-    commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/blightspire_logo.png"));
-    auto logoElement = AddChild<UIImage>(logo, glm::vec2(xMargin - 20, 100), glm::vec2(618, 217) * 0.4f);
-    logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        buttonPos += increment;
+
+        settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        settingsButton->AddChild<UITextElement>(font, "settings", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+
+        buttonPos += increment;
+
+        quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        quitButton->AddChild<UITextElement>(font, "quit", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+
+        playButton->navigationTargets.down = settingsButton;
+        playButton->navigationTargets.up = openLinkButton;
+
+        playButton->navigationTargets.down = settingsButton;
+        playButton->navigationTargets.up = quitButton;
+
+        settingsButton->navigationTargets.down = quitButton;
+        settingsButton->navigationTargets.up = playButton;
+
+        quitButton->navigationTargets.down = playButton;
+        quitButton->navigationTargets.up = settingsButton;
+        quitButton->navigationTargets.down = openLinkButton;
+        quitButton->navigationTargets.up = settingsButton;
+
+        openLinkButton->navigationTargets.down = playButton;
+        openLinkButton->navigationTargets.up = quitButton;
+    }
 
     UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
