@@ -198,11 +198,16 @@ void BindEntity(wren::ForeignModule& module)
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+    entityClass.func<&WrenEntity::IsValid>("IsValid");
 
     entityClass.funcExt<AttachChild>("AttachChild");
     entityClass.funcExt<DetachChild>("DetachChild");
 
     entityClass.func<&WrenEntity::AddTag<PlayerTag>>("AddPlayerTag");
+    entityClass.func<&WrenEntity::HasComponent<PlayerTag>>("HasPlayerTag");
+
+    entityClass.func<&WrenEntity::AddTag<EnemyTag>>("AddEnemyTag");
+    entityClass.func<&WrenEntity::HasComponent<EnemyTag>>("HasEnemyTag");
 
     entityClass.func<&WrenEntity::GetComponent<TransformComponent>>("GetTransformComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<TransformComponent>>("AddTransformComponent");
@@ -280,6 +285,22 @@ std::vector<WrenEntity> GetEntitiesByName(ECSModule& self, const std::string& na
 
     return entities;
 }
+
+std::vector<WrenEntity> GetChildren(ECSModule& self, const WrenEntity& entity)
+{
+    auto& relationship = self.GetRegistry().get<RelationshipComponent>(entity.entity);
+
+    std::vector<WrenEntity> entities {};
+    for (entt::entity entity = relationship.first; entity != entt::null;)
+    {
+        entities.emplace_back(WrenEntity { entity, &self.GetRegistry() });
+
+        entity = self.GetRegistry().get<RelationshipComponent>(entity).next;
+    }
+
+    return entities;
+}
+
 }
 void BindEntityAPI(wren::ForeignModule& module)
 {
@@ -291,6 +312,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         // ECS class
         auto& wrenClass = module.klass<ECSModule>("ECS");
         wrenClass.funcExt<bindings::CreateEntity>("NewEntity");
+        wrenClass.funcExt<bindings::GetChildren>("GetChildren");
         wrenClass.funcExt<bindings::GetEntityByName>("GetEntityByName", "Returns the first entity found with the specified name");
         wrenClass.funcExt<bindings::GetEntitiesByName>("GetEntitiesByName", "Returns a list of all the entities found with the specified name");
         wrenClass.funcExt<bindings::FreeEntity>("DestroyEntity");

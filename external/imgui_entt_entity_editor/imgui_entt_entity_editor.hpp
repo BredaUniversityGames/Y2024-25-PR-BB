@@ -9,6 +9,8 @@
 #include <entt/entt.hpp>
 #include <imgui.h>
 
+#include "ecs_module.hpp"
+
 #ifndef ENTTEDITOR_IEEE_ASSERT
 #define ENTTEDITOR_IEEE_ASSERT(x) assert(x)
 #endif
@@ -80,6 +82,12 @@ class EntityEditor
 public:
     using Registry = entt::basic_registry<EntityType>;
     using ComponentTypeID = entt::id_type;
+
+    ECSModule& _ecs;
+
+    EntityEditor(ECSModule& ecs) : _ecs(ecs)
+    {
+    }
 
     struct ComponentInfo
     {
@@ -167,7 +175,7 @@ public:
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
             if (ImGui::Button("Destroy"))
             {
-                registry.destroy(e);
+                _ecs.DestroyEntity(e);
                 e = entt::null;
             }
             ImGui::PopStyleColor(3);

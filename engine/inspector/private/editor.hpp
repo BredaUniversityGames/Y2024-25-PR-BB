@@ -26,7 +26,7 @@ private:
     ECSModule& _ecs;
 
     entt::entity _selectedEntity = entt::null;
-    EnttEditor::EntityEditor<entt::entity> _entityEditor {};
+    EnttEditor::EntityEditor<entt::entity> _entityEditor;
 
     void DisplaySelectedEntityDetails();
 };

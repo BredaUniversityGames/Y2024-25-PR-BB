@@ -38,6 +38,8 @@ public:
     [[nodiscard]] bool GetMouseHidden() const { return _mouseHidden; }
     void SetMouseHidden(bool val);
 
+    void OpenExternalBrowser(const std::string& url);
+
     [[nodiscard]] glm::uvec2 DisplaySize() const;
     [[nodiscard]] bool isMinimized() const;
 
