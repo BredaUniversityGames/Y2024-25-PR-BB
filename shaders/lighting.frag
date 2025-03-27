@@ -122,7 +122,6 @@ void main()
     discard;
 
     // Decal calculations
-    vec4 testColor = vec4(position, 1.0f);
     for (uint decalIndex = 0; decalIndex < decals.count; decalIndex++)
     {
         Decal currentDecal = decals.decals[decalIndex];
@@ -135,10 +134,14 @@ void main()
         abs(positionObjectSpace.y) - 0.5f <= 0.0f &&
         abs(positionObjectSpace.z) - 0.5f <= 0.0f)
         {
-            vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
-            vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
-            float decalBlend = decalAlbedo.w;
-            albedo = mix(albedo, decalAlbedo.xyz, decalBlend);
+            // make sure there's no side stretching
+            if (dot(currentDecal.orientation, normalize(normal)) < 0.0f)
+            {
+                vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
+                vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
+                float decalBlend = decalAlbedo.w;
+                albedo = mix(albedo, decalAlbedo.xyz, decalBlend);
+            }
         }
     }
 

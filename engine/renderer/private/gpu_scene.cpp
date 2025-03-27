@@ -416,8 +416,6 @@ void GPUScene::UpdateDecalBuffer()
     // Update Decal buffer
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_decalBuffer);
     std::memcpy(buffer->mappedPtr, &_decals, sizeof(DecalArray));
-
-    // TODO: check for camera near plane intersections
 }
 
 ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
@@ -468,6 +466,7 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, 
 
     DecalData newDecal;
     newDecal.invModel = glm::inverse(translationMatrix * rotationMatrix * scaleMatrix);
+    newDecal.orientation = glm::normalize(glm::rotate(orientation, glm::vec3(0.0f, 1.0f, 0.0f)));
     newDecal.albedoIndex = image.Index();
 
     // Place a new decal, and fill the buffer

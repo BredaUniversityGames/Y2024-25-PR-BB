@@ -181,6 +181,7 @@ private:
     struct alignas(16) DecalData
     {
         glm::mat4 invModel;
+        glm::vec3 orientation;
         uint32_t albedoIndex;
     };
 

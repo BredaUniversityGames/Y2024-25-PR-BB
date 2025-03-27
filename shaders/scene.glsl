@@ -49,6 +49,7 @@ struct PointLightArray
 struct Decal
 {
     mat4 invModel;
+    vec3 orientation;
     uint albedoIndex;
 };
 
