@@ -18,6 +18,10 @@ class PlayerVariables {
         _invincibilityTime = 0
         
         _cameraVariablesRef = null
+
+        _heat = 0
+
+        _maxHeat = 5
     }
 
     health {_health}
@@ -33,6 +37,8 @@ class PlayerVariables {
     grenadeMaxCharge {_grenadeMaxCharge}
     invincibilityTime {_invincibilityTime}
     invincibilityMaxTime {_invincibilityMaxTime}
+    heat {_heat}
+    maxHeat {_maxHeat}
     
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
@@ -43,6 +49,8 @@ class PlayerVariables {
     ultActive=(value) {_ultActive = value}
     grenadeCharge=(value) {_grenadeCharge = value}
     invincibilityTime=(value) {_invincibilityTime = value}
+    heat=(value) {_heat = value}
+    maxHeat=(value) {_maxHeat = value}
 
     IsInvincible() {
         return _invincibilityTime > 0
@@ -59,5 +67,9 @@ class PlayerVariables {
     IncreaseScore(value) {
         _score = _score + value
     }    
+
+    IncreaseHeat(value) {
+        _heat = Math.Min(_heat + value, _maxHeat)
+    }
 
 }

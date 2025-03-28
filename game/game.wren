@@ -215,7 +215,7 @@ class Main {
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-                __activeWeapon.attack(engine, dt, __cameraVariables)
+                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
             }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -274,7 +274,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __playerVariables.IncreaseScore(1)
+                __playerVariables.IncreaseHeat(1)
             }
             
             // TODO: Pause Menu on ESC
@@ -295,6 +295,9 @@ class Main {
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
+
+        engine.GetGame().GetHUD().UpdateScoreTextScale(1 + __playerVariables.heat * 0.15)
+        __playerVariables.heat = Math.Max(__playerVariables.heat - 0.001 * dt, 0)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
