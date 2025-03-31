@@ -73,6 +73,7 @@ class MeleeEnemy {
 
     DecreaseHealth(amount) {
         var animations = _meshEntity.GetAnimationControlComponent()
+        var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
 
@@ -80,14 +81,17 @@ class MeleeEnemy {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
             animations.Play("Death", 1.0, false, 1.0, false)
-            var body = _rootEntity.GetRigidbodyComponent()
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
         } else {
             animations.Play("Hit", 1.0, false, 0.3, false)
+            _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             _hitState = true
             _movingState = false
             _evaluateState = false
+            _attackingState = false
+            _recoveryState = false
+            body.SetStatic()
         }
     }
 
@@ -174,9 +178,13 @@ class MeleeEnemy {
             if(_hitState) {
                 _hitTimer = _hitTimer + dt
 
-                if(_hitTimer > 2000) {
+                if(_hitTimer > 1000) {
+                    _hitTimer = 0
                     _movingState = true
+                    _evaluateState = true
                     _hitState = false
+                    body.SetDynamic()
+                    animations.Play("Run", 1.0, true, 0.5, true)
                 }
             }
         } else {
@@ -186,7 +194,7 @@ class MeleeEnemy {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
-                if(_deathTimerMax - _deathTimer > 1500) {
+                if(_deathTimerMax - _deathTimer > 1800) {
                     var newPos = pos - Vec3.new(1, 1, 1).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
                 }
