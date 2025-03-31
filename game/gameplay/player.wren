@@ -18,6 +18,15 @@ class PlayerVariables {
         _invincibilityTime = 0
         
         _cameraVariablesRef = null
+
+        _multiplier = 1.0
+        _multiplierIncrement = 0.2
+
+        _multiplierTimer = 0
+        _multiplierMaxTime = 5000
+
+        _consecutiveHits = 0
+        _consecutiveMaxHits = 5        
     }
 
     health {_health}
@@ -33,6 +42,12 @@ class PlayerVariables {
     grenadeMaxCharge {_grenadeMaxCharge}
     invincibilityTime {_invincibilityTime}
     invincibilityMaxTime {_invincibilityMaxTime}
+    multiplier {_multiplier}
+    multiplierIncrement {_multiplierIncrement}
+    multiplierTimer {_multiplierTimer}
+    multiplierMaxTime {_multiplierMaxTime}
+    consecutiveHits {_consecutiveHits}
+    consecutiveMaxHits {_consecutiveMaxHits}
     
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
@@ -43,6 +58,12 @@ class PlayerVariables {
     ultActive=(value) {_ultActive = value}
     grenadeCharge=(value) {_grenadeCharge = value}
     invincibilityTime=(value) {_invincibilityTime = value}
+    multiplier=(value) {_multiplier = value}
+    multiplierIncrement=(value) {_multiplierIncrement = value}
+    multiplierTimer=(value) {_multiplierTimer = value}
+    multiplierMaxTime=(value) {_multiplierMaxTime = value}
+    consecutiveHits=(value) {_consecutiveHits = value}
+    consecutiveMaxHits=(value) {_consecutiveMaxHits = value}
 
     IsInvincible() {
         return _invincibilityTime > 0
@@ -60,4 +81,12 @@ class PlayerVariables {
         _score = _score + value
     }    
 
+    UpdateMultiplier() {
+        _consecutiveHits = _consecutiveHits + 1
+        _multiplierTimer = _multiplierMaxTime
+        if (_consecutiveHits == 5) {
+            _consecutiveHits = 0
+            _multiplier = _multiplier + _multiplierIncrement
+        }
+    }
 }

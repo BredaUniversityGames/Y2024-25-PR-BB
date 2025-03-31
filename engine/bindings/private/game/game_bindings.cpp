@@ -16,6 +16,8 @@
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 #include "ui_progress_bar.hpp"
@@ -73,9 +75,13 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     }
 }
 
-HUD& GetHUD(GameModule& self)
+std::optional<std::shared_ptr<HUD>> GetHUD(GameModule& self)
 {
-    return self._hud;
+    if (auto lock = self._hud.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
 }
 
 void UpdateHealthBar(HUD& self, const float health)
@@ -107,6 +113,14 @@ void UpdateScoreText(HUD& self, const int score)
     if (auto locked = self.scoreText.lock(); locked != nullptr)
     {
         locked->SetText(std::string("Score: ") + std::to_string(score));
+    }
+}
+
+void UpdateMultiplierText(HUD& self, const float multiplier)
+{
+    if (auto locked = self.multiplierText.lock(); locked != nullptr)
+    {
+        locked->SetText(fmt::format("{:.1f}", multiplier).append("x"));
     }
 }
 
@@ -163,4 +177,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
+    hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
 }
