@@ -89,7 +89,7 @@ class Main {
         engine.PreloadModel("assets/models/Demon.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
-        engine.PreloadModel("assets/models/shotgun.glb")
+        engine.PreloadModel("assets/models/Shotgun.glb")
         
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
