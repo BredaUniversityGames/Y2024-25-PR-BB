@@ -96,8 +96,7 @@ class Pistol {
 
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
-                for (i in (rayHitInfo.count - 1)..0) {
-                    var rayHit = rayHitInfo[i]
+                for (rayHit in rayHitInfo) {
                     var hitEntity = rayHit.GetEntity(engine.GetECS())
                     if (!hitEntity.HasPlayerTag()) {
                         end = rayHit.position
@@ -118,6 +117,7 @@ class Pistol {
                             }
                             break
                         }
+                        engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
                         break
                     }
                 }
@@ -127,6 +127,7 @@ class Pistol {
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
+
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
             }
@@ -241,8 +242,7 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
 
                 if (!rayHitInfo.isEmpty) {
-                    for (i in (rayHitInfo.count - 1)..0) {
-                        var rayHit = rayHitInfo[i]
+                    for (rayHit in rayHitInfo.count) {
                         var hitEntity = rayHit.GetEntity(engine.GetECS())
                         if (!hitEntity.HasPlayerTag()) {
                             end = rayHit.position
