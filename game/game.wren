@@ -1,25 +1,31 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
+import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig
+import "gameplay/music_player.wren" for MusicPlayer
+import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
 
     static Start(engine) {
-
-
+        engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetHUDEnabled(true)
-        
-        
+
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/NavmeshTest/LevelNavmeshTest.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
         // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+
+
+        engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
+        engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -37,7 +43,6 @@ class Main {
         // Player Setup
 
         __playerVariables = PlayerVariables.new()
-        __playerMovement = PlayerMovement.new(false,0.0)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -62,10 +67,10 @@ class Main {
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
-
+        __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = 45.0
-        cameraProperties.nearPlane = 0.5
+        cameraProperties.fov = Math.Radians(45.0)
+        cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
 
@@ -77,24 +82,21 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        var positions = [Vec3.new(0.0, 12.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
-
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
+
+        engine.PreloadModel("assets/models/Demon.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/AnimatedRifle.glb")
+        __gun = engine.LoadModel("assets/models/revolver.glb")
 
+        __gun.GetNameComponent().name = "Revolver"
         var gunTransform = __gun.GetTransformComponent()
-        gunTransform.translation = Vec3.new(-0.4, -3.1, -1)
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI(), 0.0))
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-        var gunAnimations = __gun.GetAnimationControlComponent()
-        gunAnimations.Play("Reload", 1.0, false, 0.0, false)
-        gunAnimations.Stop()
 
         __player.AttachChild(__camera)
         __camera.AttachChild(__gun)
@@ -104,11 +106,49 @@ class Main {
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
 
+        // create the player movement
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
+
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
         __ultimateCharge = 0
         __ultimateActive = false
+
+        __pauseEnabled = false
+
+        // Enemy setup
+        __enemyList = []
+        __spawnerList = []
+
+        for (position in positions) {
+            __spawnerList.add(Spawner.new(position, 7000.0))
+        }
+
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 12, "assets/models/Demon.glb", __enemyShape, 1)
+
+        // Music player
+        var musicList = [
+            "assets/music/game/Juval - Play Your Game - No Lead Vocals.wav",
+            "assets/music/game/Ace - Silent Treatment.wav",
+            "assets/music/game/Dono - Zero Gravity.wav",
+            "assets/music/game/Ikoliks - Metal Warrior.wav",
+            "assets/music/game/Tomáš Herudek - Smash Your Enemies.wav",
+            "assets/music/game/Taheda - Phenomena.wav",
+            ""
+            ]
+
+        var ambientList = [
+            "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
+            "assets/music/ambient/749939__universfield__horror-background-atmosphere-10.mp3",
+            "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
+            ""
+            ]
+
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var waveConfigs = []
         waveConfigs.add(WaveConfig.new().SetDuration(10)
@@ -123,10 +163,27 @@ class Main {
     }
 
     static Shutdown(engine) {
+        engine.ResetDecals()
+        __musicPlayer.Destroy(engine.GetAudio())
+        __ambientPlayer.Destroy(engine.GetAudio())
         engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
+        // for (spawner in __spawnerList) {
+        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
+        // }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
+            System.print("Next Ambient Track")
+            __ambientPlayer.CycleMusic(engine.GetAudio())
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
+            System.print("Next Gameplay Track")
+            __musicPlayer.CycleMusic(engine.GetAudio())
+        }
+
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -145,7 +202,15 @@ class Main {
             __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
 
-        __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
+        __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
+
+        __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
+
+        if (__playerVariables.multiplierTimer == 0 ) {
+            __playerVariables.multiplier = 1.0
+            __playerVariables.consecutiveHits = 0
+        }
+
 
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
@@ -171,7 +236,10 @@ class Main {
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-                __activeWeapon.attack(engine, dt, __cameraVariables)
+                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
+                if (__activeWeapon.ammo <= 0) {
+                    __activeWeapon.reload(engine)
+                }
             }
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -230,8 +298,19 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __playerVariables.IncreaseScore(1)
+                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
             }
+
+            // TODO: Pause Menu on ESC
+            // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
+            //     __pauseEnabled = !__pauseEnabled
+
+            //     if (__pauseEnabled) {
+            //         engine.GetTime().SetScale(0.0)
+            //     } else {
+            //         engine.GetTime().SetScale(1.0)
+            //     }
+            // }
         }
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
@@ -240,14 +319,26 @@ class Main {
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
+        engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __player.GetTransformComponent().translation
 
-        __waveSystem.Update(dt)
+        for (enemy in __enemyList) {
 
-        // var path = engine.GetPathfinding().FindPath(Vec3.new(-42.8, 19.3, 267.6), Vec3.new(-16.0, 29.0, 195.1))
+            // We delete the entity from the ecs when it dies
+            // Then we check for entity validity, and remove it from the list if it is no longer valid
+            if (enemy.entity.IsValid()) {
+                enemy.Update(playerPos, __playerVariables, engine, dt)
+            } else {
+                __enemyList.removeAt(__enemyList.indexOf(enemy))
+            }
+
+        }
+        var playerPos = __player.GetTransformComponent().translation
+
+        __waveSystem.Update(dt)
     }
 }

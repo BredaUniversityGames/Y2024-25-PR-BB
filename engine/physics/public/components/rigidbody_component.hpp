@@ -33,6 +33,10 @@ public:
     void SetGravityFactor(float factor) { bodyInterface->SetGravityFactor(bodyID, factor); }
     void SetFriction(float friction) { bodyInterface->SetFriction(bodyID, friction); }
     void SetTranslation(const glm::vec3& translation) { bodyInterface->SetPosition(bodyID, ToJoltVec3(translation), JPH::EActivation::Activate); }
+    void SetRotation(const glm::quat& rotation) { bodyInterface->SetRotation(bodyID, ToJoltQuat(rotation), JPH::EActivation::Activate); }
+    void SetDynamic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Dynamic, JPH::EActivation::Activate); }
+    void Setkinematic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Kinematic, JPH::EActivation::Activate); }
+    void SetStatic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Static, JPH::EActivation::Activate); }
 
     // Adders
     void AddForce(const glm::vec3& force) { bodyInterface->AddForce(bodyID, ToJoltVec3(force)); }

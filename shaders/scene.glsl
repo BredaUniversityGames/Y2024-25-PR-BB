@@ -1,4 +1,5 @@
 #define MAX_POINT_LIGHTS 8192
+#define MAX_DECALS 32
 
 struct Camera
 {
@@ -45,6 +46,19 @@ struct PointLightArray
     uint count;
 };
 
+struct Decal
+{
+    mat4 invModel;
+    vec3 orientation;
+    uint albedoIndex;
+};
+
+struct DecalArray
+{
+    Decal decals[MAX_DECALS];
+    uint count;
+};
+
 struct Scene
 {
     DirectionalLight directionalLight;
@@ -53,10 +67,10 @@ struct Scene
     uint prefilterIndex;
     uint brdfLUTIndex;
     uint staticShadowMapIndex;
+
     uint dynamicShadowMapIndex;
-    vec3 fogColor;
     float fogDensity;
-    float fogHeight;
+    vec3 fogColor;
 };
 
 struct Instance

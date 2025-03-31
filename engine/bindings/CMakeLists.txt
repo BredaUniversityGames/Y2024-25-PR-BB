@@ -9,6 +9,7 @@ target_link_libraries(Bindings
         PRIVATE Audio
         PRIVATE Renderer
         PRIVATE Particles
+        PRIVATE GameAnalytics
 )
 
 target_include_directories(Renderer

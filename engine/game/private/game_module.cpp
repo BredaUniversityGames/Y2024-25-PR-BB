@@ -15,6 +15,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
@@ -35,7 +36,8 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-#include "file_io.hpp"
+
+#include "steam_module.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -43,36 +45,42 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
-    const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
 
-    std::optional<std::ifstream> versionFile = fileIO::OpenReadStream("version.txt");
-    if (versionFile.has_value())
+    auto& viewport = engine.GetModule<UIModule>().GetViewport();
+    const glm::uvec2 viewportSize = viewport.GetExtend();
+
+    if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
         std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
-        _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, gameVersionText);
-        engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, gameVersionText));
     }
 
-    _hud = HudCreate(graphicsContext, viewportSize);
-    auto mainMenu = std::make_shared<MainMenu>(MainMenuCreate(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend()));
-    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
-    _mainMenu = mainMenu;
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
-    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize));
+    _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
 
-    auto path = std::filesystem::current_path();
-    spdlog::info("Current path: {}", path.string());
-    spdlog::info("Starting engine...");
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    auto OpenDiscordURL = [&engine]()
+    {
+        bblog::info("Opening Discord LINK");
+        auto& steam = engine.GetModule<SteamModule>();
+        if (steam.Available())
+        {
+            steam.OpenSteamBrowser(DISCORD_URL);
+        }
+        else
+        {
+            engine.GetModule<ApplicationModule>().OpenExternalBrowser(DISCORD_URL);
+        }
+    };
+
+    _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
-
-    bblog::info("Successfully initialized engine!");
-
     return ModuleTickOrder::eTick;
 }
 
@@ -82,26 +90,20 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void GameModule::SetMainMenuEnabled(bool val)
 {
-    if (val)
+    if (auto lock = _mainMenu.lock())
     {
-        _mainMenu.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-    }
-    else
-    {
-        _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 }
+
 void GameModule::SetHUDEnabled(bool val)
 {
-    if (val)
+    if (auto lock = _hud.lock())
     {
-        _hud.canvas->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-    }
-    else
-    {
-        _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 }
+
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
@@ -116,12 +118,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 
     _nextSceneToExecute.clear();
-
-    if (_updateHud == true)
-    {
-        float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
-        HudUpdate(_hud, totalTime);
-    }
 
     auto& ECS = engine.GetModule<ECSModule>();
 
@@ -163,9 +159,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             physicsModule._debugRenderer->SetCameraPos(cameraPos);
         }
     }
-
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eESCAPE))
-        engine.SetExit(0);
 
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))

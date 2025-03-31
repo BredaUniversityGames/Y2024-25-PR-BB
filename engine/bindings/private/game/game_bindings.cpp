@@ -2,13 +2,21 @@
 
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
+#include "components/static_mesh_component.hpp"
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
+#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"
+#include "model_loading.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
+#include "renderer_module.hpp"
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
+
+#include <spdlog/fmt/fmt.h>
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
@@ -67,9 +75,13 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     }
 }
 
-HUD& GetHUD(GameModule& self)
+std::optional<std::shared_ptr<HUD>> GetHUD(GameModule& self)
 {
-    return self._hud;
+    if (auto lock = self._hud.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
 }
 
 void UpdateHealthBar(HUD& self, const float health)
@@ -101,6 +113,14 @@ void UpdateScoreText(HUD& self, const int score)
     if (auto locked = self.scoreText.lock(); locked != nullptr)
     {
         locked->SetText(std::string("Score: ") + std::to_string(score));
+    }
+}
+
+void UpdateMultiplierText(HUD& self, const float multiplier)
+{
+    if (auto locked = self.multiplierText.lock(); locked != nullptr)
+    {
+        locked->SetText(fmt::format("{:.1f}", multiplier).append("x"));
     }
 }
 
@@ -150,10 +170,12 @@ void BindGameAPI(wren::ForeignModule& module)
 
     game.funcExt<bindings::GetHUD>("GetHUD");
     auto& hud = module.klass<HUD>("HUD");
+
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar", "Update health bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText", "Update ammo bar with a current ammo count and max");
     hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar", "Update ult bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
+    hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
 }

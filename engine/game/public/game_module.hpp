@@ -5,7 +5,13 @@
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
+inline const std::string DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
+
 struct PlayerTag
+{
+};
+
+struct EnemyTag
 {
 };
 
@@ -16,8 +22,6 @@ class GameModule : public ModuleInterface
     void Shutdown(MAYBE_UNUSED Engine& engine) override;
     std::string_view GetName() override { return "Game Module"; }
 
-    std::weak_ptr<MainMenu> _mainMenu;
-
     glm::ivec2 _lastMousePos {};
 
 public:
@@ -26,10 +30,17 @@ public:
 
     void SetMainMenuEnabled(bool val);
     void SetHUDEnabled(bool val);
-    MainMenu& GetMainMenu() const { return *_mainMenu.lock(); }
+    std::optional<std::shared_ptr<MainMenu>> GetMainMenu()
+    {
+        if (auto lock = _mainMenu.lock())
+        {
+            return lock;
+        }
+        return std::nullopt;
+    }
 
-    HUD _hud;
-    GameVersionVisualization _gameVersionVisualization;
+    std::weak_ptr<HUD> _hud;
+    std::weak_ptr<MainMenu> _mainMenu;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

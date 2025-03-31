@@ -17,6 +17,8 @@
 
 #include <set>
 
+#define TRIANGLE_EDGE_CENTERS 1
+
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     return ModuleTickOrder::eTick;
@@ -43,8 +45,6 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
             }
         }
     }
-
-    _computedPaths.clear();
 }
 
 void PathfindingModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -160,8 +160,10 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
         {
             if (sharedTriangles.count(triangleIdx) > 1)
             {
-                bool insert = true;
                 // We share more than 2 indices now so we're adjacent to the current triangle
+                bool insert = true;
+
+                // Check if the triangle is already inserted as neighbour (limitation of iterating over std::unordered_multiset)
                 for (uint32_t k = 0; k < triangle.adjacentTriangleCount; k++)
                 {
                     if (triangle.adjacentTriangleIndices[k] == triangleIdx)
@@ -193,6 +195,7 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
 
 ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 {
+    _computedPaths.clear();
     // Reference: https://app.datacamp.com/learn/tutorials/a-star-algorithm?dc_referrer=https%3A%2F%2Fwww.google.com%2F
     // Legend:
     // G = totalCost
@@ -228,6 +231,8 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
             closestDestinationTriangleIndex = i;
         }
     }
+
+    glm::vec3 closestDestinationTriangleCentre = _triangles[closestDestinationTriangleIndex].centre;
 
     TriangleNode node {};
     node.totalCost = 0;
@@ -282,7 +287,7 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
             if (tentativeCostFromStart < neighbourNode.totalCost)
             {
                 neighbourNode.totalCost = tentativeCostFromStart;
-                neighbourNode.estimateToGoal = Heuristic(neighbourTriangleInfo.centre, endPos);
+                neighbourNode.estimateToGoal = DirectedHeuristic(neighbourTriangleInfo.centre, endPos, closestDestinationTriangleCentre);
                 neighbourNode.parentTriangleIndex = topNode.triangleIndex;
                 neighbourNode.totalEstimatedCost = neighbourNode.totalCost + neighbourNode.estimateToGoal;
             }
@@ -294,8 +299,26 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 
 float PathfindingModule::Heuristic(glm::vec3 startPos, glm::vec3 endPos)
 {
-    return glm::length(endPos - startPos);
+    glm::vec3 towardsVector = endPos - startPos;
+    float length = glm::length(towardsVector);
+    return length;
 }
+
+float PathfindingModule::DirectedHeuristic(glm::vec3 startPos, glm::vec3 endPos, glm::vec3 finalPosition)
+{
+    glm::vec3 towardsEnd = endPos - startPos;
+    glm::vec3 towardsFinal = finalPosition - startPos;
+
+    float towardsEndLength = glm::length(towardsEnd);
+
+    towardsEnd = glm::normalize(towardsEnd);
+    towardsFinal = glm::normalize(towardsFinal);
+
+    float dot = std::max(glm::dot(towardsEnd, towardsFinal), 0.001f);
+
+    return (1.0f - dot) * towardsEndLength;
+}
+
 
 ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes)
 {
@@ -321,9 +344,9 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
         }
 
         const TriangleNode& node = nodes[parentTriangleIndex];
-        // pathNode.centre = _triangles[parentTriangleIndex].centre;
-        // path.waypoints.push_back(pathNode);
+        pathNode.centre = _triangles[parentTriangleIndex].centre;
 
+#ifdef TRIANGLE_EDGE_CENTERS
         std::unordered_map<uint32_t, uint32_t> triangleIndices;
         for (int32_t i = 0; i < 3; i++)
         {
@@ -347,12 +370,15 @@ ComputedPath PathfindingModule::ReconstructPath(const uint32_t finalTriangleInde
 
         pathNode.centre = (_mesh.vertices[adjacentEdgeIndices[0]].position + _mesh.vertices[adjacentEdgeIndices[1]].position) * 0.5f;
         pathNode.centre = glm::vec3(glm::inverse(_inverseTransform) * glm::vec4(pathNode.centre, 1.0f));
+#endif
 
         path.waypoints.push_back(pathNode);
 
         previousTriangleIndex = parentTriangleIndex;
         parentTriangleIndex = node.parentTriangleIndex;
     }
+
+    std::reverse(path.waypoints.begin(), path.waypoints.end());
 
     return path;
 }

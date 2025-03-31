@@ -2,16 +2,19 @@ import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, Transf
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer){
+    construct new(newHasDashed, newDashTimer, gun){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
-
+        _gun = gun
         maxSpeed = 9.0
         sv_accelerate = 10.0
         jumpForce = 9.75
         gravityFactor = 2.4
         playerHeight = 1.7
+        _cameraFovNormal = 45
+        _cameraFovSlide = 50
+        _cameraFovCurrent = _cameraFovNormal
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
         isGrounded = false
@@ -26,8 +29,10 @@ class PlayerMovement{
 
         _lookSensitivity = 1.0
         _freeCamSpeedMultiplier = 1.0
-
+        _smoothedCameraDelta = Vec2.new(0.0,0.0)
         _lastMousePosition = Vec2.new(0.0 ,0.0)
+
+        _slideSoundInstance = null
     }
 
 //getters
@@ -87,6 +92,7 @@ class PlayerMovement{
 
     Rotation(engine, player) {
 
+        var dt = engine.GetTime().GetDeltatime()
         var FORWARD = Vec3.new(0.0, 0.0, -1.0)
 
         var MOUSE_SENSITIVITY = 0.003 * _lookSensitivity
@@ -96,9 +102,10 @@ class PlayerMovement{
         var mouseDelta = _lastMousePosition - mousePosition
         var rotationDelta = Vec2.new(-mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY)
 
+        
         var lookAnalogAction = engine.GetInput().GetAnalogAction("Look")
-        rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY
-        rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY
+        rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY * dt
+        rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY * dt
 
         var rotation = player.GetTransformComponent().rotation
 
@@ -113,6 +120,21 @@ class PlayerMovement{
             euler.y = euler.y - rotationDelta.x
         }
 
+        var gun = engine.GetECS().GetEntityByName("Revolver")
+        var gunTransform = gun.GetTransformComponent()
+
+        var lerpFactor = 0.97
+        var divisionFactor = 1.1
+           var max = 0.6
+        _smoothedCameraDelta.x = (_smoothedCameraDelta.x * lerpFactor +  rotationDelta.x * (1-lerpFactor)) / divisionFactor
+        _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
+
+
+        var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
+        var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max) 
+
+        gunTransform.translation = Vec3.new(clampedX,clampedY,0)
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
         rotation = Math.ToQuat(euler)
 
         player.GetTransformComponent().rotation = rotation
@@ -126,7 +148,7 @@ class PlayerMovement{
         var up = rotation.mulVec3(Vec3.new(0, 1, 0))
         var right = Math.Cross(forward, up)
 
-        var CAM_SPEED = 0.03 * _freeCamSpeedMultiplier
+        var CAM_SPEED = _freeCamSpeedMultiplier
 
         var movementDir = Vec3.new(0.0, 0.0, 0.0)
         var analogMovement = engine.GetInput().GetAnalogAction("Move")
@@ -139,7 +161,7 @@ class PlayerMovement{
         }
 
         var position = player.GetTransformComponent().translation
-        var scaled = engine.GetTime().GetDeltatime() * CAM_SPEED
+        var scaled = CAM_SPEED
 
         position = position + movementDir.mulScalar(scaled)
 
@@ -148,12 +170,15 @@ class PlayerMovement{
 
     Movement(engine, playerController, camera) {
 
-        this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
-
         var cheats = playerController.GetCheatsComponent()
-        if(cheats.noClip == true){
+        if(cheats.noClip) {
+            this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
             this.FlyCamMovement(engine, engine.GetECS().GetEntityByName("Player"))
             return
+        }
+
+        if (engine.GetTime().GetDeltatime() != 0.0) {
+            this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
         }
 
         var playerBody = playerController.GetRigidbodyComponent()
@@ -171,27 +196,33 @@ class PlayerMovement{
         var rayLength = 2.0
 
         var groundCheckRay = engine.GetPhysics().ShootRay(playerControllerPos, rayDirection, rayLength)
+        var groundHitNormal = Vec3.new(0.0, 0.0, 0.0)
 
         isGrounded = false
         for(hit in groundCheckRay) {
-
-
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
                 isGrounded = true
+                groundHitNormal = hit.normal
                 break
             }
         }
 
         var movement = engine.GetInput().GetAnalogAction("Move")
-
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
 
+        if(moveInputDir.length() > 0.01){
+            var dot = Math.Dot(moveInputDir, groundHitNormal)
+            var moveProjected = moveInputDir - groundHitNormal.mulScalar(dot)
+            moveInputDir = moveProjected.normalize()
+        }
 
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
+            _gun.playWalkAnim(engine)
         }else{
+            _gun.playIdleAnim(engine)
             playerBody.SetFriction(12.0)
         }
 
@@ -217,6 +248,17 @@ class PlayerMovement{
 
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir.mulScalar(maxSpeed)
+
+        //Fix for moving on slopes
+        if(isGrounded && moveInputDir.length() > 0.01 && isJumpHeld == false){
+            // Get the right vector relative to movement
+            var lateral = Math.Cross(groundHitNormal, moveInputDir).normalize()
+
+            // Remove velocity component in the lateral direction
+            var latMag = Math.Dot(velocity, lateral)
+            velocity = velocity - lateral.mulScalar(latMag)
+        }
+
 
         if(isGrounded && !hasDashed){
             var currentSpeed = Math.Dot(velocity, moveInputDir)
@@ -261,22 +303,6 @@ class PlayerMovement{
                 velocity = velocity + wishVel.mulScalar(accelSpeed)
             }
         }
-
-        // Wall Collision Fix - Project velocity if collision occurs
-        // Somehow it works without it currently, leave it here we might need it later
-
-        // // Wall Collision Fix - Project velocity if collision occurs
-        // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
-
-        // for(hit in wallCheckRays) {
-        // if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-        //     var wallNormal = hit.normal
-
-        //     //Clip velocity
-        //     var backoff = Math.Dot(velocity, wallNormal) * 1.0
-        //     velocity = velocity - wallNormal *  Vec3.new(backoff,backoff,backoff)
-        // }
-        // }
 
         playerBody.SetVelocity(velocity)
 
@@ -324,15 +350,15 @@ class PlayerMovement{
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
-                var hit = rayHitInfo[0]
-                if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-                    end = hit.position
-                    //add some offset to the end position based on the normal 
-                    end = end + hit.normal.mulScalar(1.5)
-                    dashWishPosition = end
+                for(hitInfo in rayHitInfo) {
+                    if(hitInfo.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+                        end = hitInfo.position
+                        //add some offset to the end position based on the normal
+                        end = end + hitInfo.normal.mulScalar(1.5)
+                        dashWishPosition = end
+                        break
+                    }
                 }
-
-                
             }
         }
 
@@ -371,6 +397,8 @@ class PlayerMovement{
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight/4.0, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
 
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovSlide,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             var playerBody = playerController.GetRigidbodyComponent()
             var velocity = playerBody.GetVelocity()
 
@@ -392,7 +420,20 @@ class PlayerMovement{
 
             playerBody.SetVelocity(velocity)
 
+            //play slide sound
+            if(!_slideSoundInstance && isGrounded){
+                _slideSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/slide2.wav", 1.0)
+                camera.GetAudioEmitterComponent().AddSFX(_slideSoundInstance)
+            }
+            
         }else{
+            if(_slideSoundInstance){
+                engine.GetAudio().StopSFX(_slideSoundInstance)
+                _slideSoundInstance = null
+            }
+            
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
+            camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             isSliding = false
             currentPlayerHeight = Math.MixFloat(currentPlayerHeight, playerHeight, 0.0035 * dt)
             engine.GetGame().AlterPlayerHeight(engine.GetPhysics(),engine.GetECS(),currentPlayerHeight)
