@@ -31,11 +31,10 @@ struct Settings
 
     struct Fog
     {
-        VERSION(0);
+        VERSION(1);
 
         glm::vec3 color { 0.5, 0.6, 0.7 };
         float density { 0.2f };
-        float height { 0.3f };
     } fog;
 
     struct SSAO
@@ -121,10 +120,11 @@ struct Settings
 
         float ambientStrength { 1.0 };
         float ambientShadowStrength { 0.3 };
+        float decalNormalThreshold { 55.0 };
     } lighting;
 };
 
-VISITABLE_STRUCT(Settings::Fog, color, density, height);
+VISITABLE_STRUCT(Settings::Fog, color, density);
 CLASS_SERIALIZE_VERSION(Settings::Fog);
 CLASS_VERSION(Settings::Fog);
 
@@ -144,7 +144,7 @@ VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVig
 CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
 CLASS_VERSION(Settings::Tonemapping);
 
-VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength);
+VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength, decalNormalThreshold);
 CLASS_SERIALIZE_VERSION(Settings::Lighting);
 CLASS_VERSION(Settings::Lighting);
 

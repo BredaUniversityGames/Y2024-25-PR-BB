@@ -108,6 +108,9 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
     hud.scoreText = hud.canvas->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 50);
     hud.scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
+    hud.multiplierText = hud.canvas->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 50);
+    hud.multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
     // common image data.
     CPUImage imageData;
     imageData.format

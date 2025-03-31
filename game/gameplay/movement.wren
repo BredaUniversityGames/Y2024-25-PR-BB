@@ -31,6 +31,8 @@ class PlayerMovement{
         _freeCamSpeedMultiplier = 1.0
         _smoothedCameraDelta = Vec2.new(0.0,0.0)
         _lastMousePosition = Vec2.new(0.0 ,0.0)
+
+        _slideSoundInstance = null
     }
 
 //getters
@@ -176,7 +178,7 @@ class PlayerMovement{
         }
 
         if (engine.GetTime().GetDeltatime() != 0.0) {
-             this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
+            this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
         }
 
         var playerBody = playerController.GetRigidbodyComponent()
@@ -194,13 +196,13 @@ class PlayerMovement{
         var rayLength = 2.0
 
         var groundCheckRay = engine.GetPhysics().ShootRay(playerControllerPos, rayDirection, rayLength)
+        var groundHitNormal = Vec3.new(0.0, 0.0, 0.0)
 
         isGrounded = false
         for(hit in groundCheckRay) {
-
-
             if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
                 isGrounded = true
+                groundHitNormal = hit.normal
                 break
             }
         }
@@ -210,6 +212,11 @@ class PlayerMovement{
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
         moveInputDir = moveInputDir.normalize()
 
+        if(moveInputDir.length() > 0.01){
+            var dot = Math.Dot(moveInputDir, groundHitNormal)
+            var moveProjected = moveInputDir - groundHitNormal.mulScalar(dot)
+            moveInputDir = moveProjected.normalize()
+        }
 
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
@@ -241,6 +248,17 @@ class PlayerMovement{
 
         var frameTime = engine.GetTime().GetDeltatime()
         var wishVel = moveInputDir.mulScalar(maxSpeed)
+
+        //Fix for moving on slopes
+        if(isGrounded && moveInputDir.length() > 0.01 && isJumpHeld == false){
+            // Get the right vector relative to movement
+            var lateral = Math.Cross(groundHitNormal, moveInputDir).normalize()
+
+            // Remove velocity component in the lateral direction
+            var latMag = Math.Dot(velocity, lateral)
+            velocity = velocity - lateral.mulScalar(latMag)
+        }
+
 
         if(isGrounded && !hasDashed){
             var currentSpeed = Math.Dot(velocity, moveInputDir)
@@ -285,22 +303,6 @@ class PlayerMovement{
                 velocity = velocity + wishVel.mulScalar(accelSpeed)
             }
         }
-
-        // Wall Collision Fix - Project velocity if collision occurs
-        // Somehow it works without it currently, leave it here we might need it later
-
-        // // Wall Collision Fix - Project velocity if collision occurs
-        // var wallCheckRays = engine.GetPhysics().ShootMultipleRays(playerControllerPos, velocity,1.25,3,35.0)
-
-        // for(hit in wallCheckRays) {
-        // if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-        //     var wallNormal = hit.normal
-
-        //     //Clip velocity
-        //     var backoff = Math.Dot(velocity, wallNormal) * 1.0
-        //     velocity = velocity - wallNormal *  Vec3.new(backoff,backoff,backoff)
-        // }
-        // }
 
         playerBody.SetVelocity(velocity)
 
@@ -348,15 +350,15 @@ class PlayerMovement{
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
-                var hit = rayHitInfo[0]
-                if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
-                    end = hit.position
-                    //add some offset to the end position based on the normal 
-                    end = end + hit.normal.mulScalar(1.5)
-                    dashWishPosition = end
+                for(hitInfo in rayHitInfo) {
+                    if(hitInfo.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+                        end = hitInfo.position
+                        //add some offset to the end position based on the normal
+                        end = end + hitInfo.normal.mulScalar(1.5)
+                        dashWishPosition = end
+                        break
+                    }
                 }
-
-                
             }
         }
 
@@ -418,7 +420,17 @@ class PlayerMovement{
 
             playerBody.SetVelocity(velocity)
 
+            //play slide sound
+            if(!_slideSoundInstance && isGrounded){
+                _slideSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/slide2.wav", 1.0)
+                camera.GetAudioEmitterComponent().AddSFX(_slideSoundInstance)
+            }
+            
         }else{
+            if(_slideSoundInstance){
+                engine.GetAudio().StopSFX(_slideSoundInstance)
+                _slideSoundInstance = null
+            }
             
             _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
             camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)

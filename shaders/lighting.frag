@@ -19,6 +19,7 @@ layout (push_constant) uniform PushConstants
     float shadowMapSize;
     float ambientStrength;
     float ambientShadowStrength;
+    float decalNormalThreshold;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -44,6 +45,11 @@ layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
 layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
 layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
 
+layout (set = 6, binding = 0) uniform DecalUB
+{
+    DecalArray decals;
+};
+
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
@@ -64,7 +70,7 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
-vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition);
+vec3 applyFog(in vec3 color, in float distanceToPoint);
 
 // stackoverflow.com/questions/51108596/linearize-depth
 float LinearDepth(float z, float near, float far)
@@ -116,6 +122,31 @@ void main()
     if (normal == vec3(0.0))
     discard;
 
+    // Decal calculations
+    for (uint decalIndex = 0; decalIndex < decals.count; decalIndex++)
+    {
+        Decal currentDecal = decals.decals[decalIndex];
+
+        // transform pixel pos to decal box space
+        vec4 positionObjectSpace = currentDecal.invModel * vec4(position, 1.0f);
+
+        // check if pixel is within decal box
+        if (abs(positionObjectSpace.x) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.y) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.z) - 0.5f <= 0.0f)
+        {
+            // make sure there's no side stretching
+            if (dot(normalize(normal), currentDecal.orientation) - pushConstants.decalNormalThreshold > 0.0f)
+            {
+                vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
+                vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
+                float decalBlend = decalAlbedo.w;
+                albedo = mix(albedo, decalAlbedo.xyz, decalBlend);
+            }
+        }
+    }
+
+    // Start light calculations
     vec3 Lo = vec3(0.0);
     vec3 N = normalize(normal);
     vec3 V = normalize(camera.cameraPosition - position);
@@ -160,7 +191,7 @@ void main()
     vec3 litColor = vec3((Lo * shadow) + pointLightLo + (ambient * pushConstants.ambientStrength) * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
-    outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
+    outColor = vec4(applyFog(litColor, linearDepth), 1.0);
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
@@ -169,17 +200,12 @@ void main()
     outBrightness = vec4(brightnessColor, 1.0);
 }
 
-vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition)
+vec3 applyFog(in vec3 color, in float distanceToPoint)
 {
-    float a = scene.fogHeight;
-    float b = scene.fogDensity;
-    float fogAmount = (a / b) * exp(-cameraPosition.y * b) * (1.0 - exp(-distanceToPoint * directionToCamera.y * b)) / directionToCamera.y;
-    float sunAmount = max(dot(directionToCamera, lightPosition), 0.0);
-    vec3 fogColor = mix(scene.fogColor,
-                        scene.directionalLight.color.rgb,
-                        pow(sunAmount, 8.0));
-    return mix(color, fogColor, clamp(fogAmount, 0.0, 0.5));
+    float fogAmount = 1.0 - exp(-distanceToPoint * scene.fogDensity);
+    return mix(color, scene.fogColor, fogAmount);
 }
+
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {

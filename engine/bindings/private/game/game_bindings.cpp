@@ -110,6 +110,14 @@ void UpdateScoreText(HUD& self, const int score)
     }
 }
 
+void UpdateMultiplierText(HUD& self, const float multiplier)
+{
+    if (auto locked = self.multiplierText.lock(); locked != nullptr)
+    {
+        locked->SetText(std::format("{:.1f}", multiplier).append("x"));
+    }
+}
+
 void UpdateGrenadeBar(HUD& self, const float charge)
 {
     if (auto locked = self.grenadeBar.lock(); locked != nullptr)
@@ -163,4 +171,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
+    hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
 }

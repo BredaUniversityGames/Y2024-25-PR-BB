@@ -323,7 +323,6 @@ void DrawFogSettings(Settings& settings)
     ImGui::Begin("Fog Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::ColorPicker3("Color", &fog.color.x);
     ImGui::DragFloat("Density", &fog.density, 0.01f);
-    ImGui::DragFloat("Height", &fog.height, 0.01f);
     ImGui::End();
 }
 
@@ -444,6 +443,7 @@ void DrawLightingSettings(Settings& settings)
     ImGui::Begin("Lighting Settings", nullptr, ImGuiWindowFlags_NoResize);
     ImGui::DragFloat("Ambient Strength", &lighting.ambientStrength, 0.01f, 0.0f, 16.0f);
     ImGui::DragFloat("Ambient Shadow Strength", &lighting.ambientShadowStrength, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("Decals Normal Wrap Threshold", &lighting.decalNormalThreshold, 0.1f, 0.0f, 180.0f);
 
     ImGui::End();
 }
