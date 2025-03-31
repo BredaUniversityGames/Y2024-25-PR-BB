@@ -26,6 +26,7 @@ public:
     std::weak_ptr<UIProgressBar> grenadeBar;
     std::weak_ptr<UITextElement> ammoCounter;
     std::weak_ptr<UITextElement> scoreText;
+    std::weak_ptr<UITextElement> multiplierText;
     std::array<std::weak_ptr<UIImage>, MAX_DASH_CHARGE_COUNT> dashCharges;
 };
 

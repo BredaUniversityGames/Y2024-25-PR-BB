@@ -19,6 +19,7 @@ layout (push_constant) uniform PushConstants
     float shadowMapSize;
     float ambientStrength;
     float ambientShadowStrength;
+    float decalNormalThreshold;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -43,6 +44,11 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
 layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
 layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
 layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
+
+layout (set = 6, binding = 0) uniform DecalUB
+{
+    DecalArray decals;
+};
 
 layout (location = 0) in vec2 texCoords;
 
@@ -116,6 +122,31 @@ void main()
     if (normal == vec3(0.0))
     discard;
 
+    // Decal calculations
+    for (uint decalIndex = 0; decalIndex < decals.count; decalIndex++)
+    {
+        Decal currentDecal = decals.decals[decalIndex];
+
+        // transform pixel pos to decal box space
+        vec4 positionObjectSpace = currentDecal.invModel * vec4(position, 1.0f);
+
+        // check if pixel is within decal box
+        if (abs(positionObjectSpace.x) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.y) - 0.5f <= 0.0f &&
+        abs(positionObjectSpace.z) - 0.5f <= 0.0f)
+        {
+            // make sure there's no side stretching
+            if (dot(normalize(normal), currentDecal.orientation) - pushConstants.decalNormalThreshold > 0.0f)
+            {
+                vec2 decalTexCoord = positionObjectSpace.xy + 0.5f;
+                vec4 decalAlbedo = texture(bindless_color_textures[nonuniformEXT(currentDecal.albedoIndex)], decalTexCoord);
+                float decalBlend = decalAlbedo.w;
+                albedo = mix(albedo, decalAlbedo.xyz, decalBlend);
+            }
+        }
+    }
+
+    // Start light calculations
     vec3 Lo = vec3(0.0);
     vec3 N = normalize(normal);
     vec3 V = normalize(camera.cameraPosition - position);
@@ -161,6 +192,7 @@ void main()
 
     float linearDepth = distance(position, camera.cameraPosition);
     outColor = vec4(applyFog(litColor, linearDepth), 1.0);
+
 
     // We store brightness for bloom later on
     float brightnessStrength = dot(outColor.rgb, bloomSettings.colorWeights);
