@@ -15,6 +15,7 @@
 #include "components/transform_helpers.hpp"
 #include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
+#include "components/render_in_foreground.hpp"
 #include "ecs_module.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -168,7 +169,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     _staticDrawCommands.clear();
     _shouldUpdateShadows = false;
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>(entt::exclude<RenderInForeground>);
 
     for (auto entity : staticMeshView)
     {
@@ -209,7 +210,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     _skinnedDrawCommands.clear();
     count = 0;
 
-    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
+    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>(entt::exclude<RenderInForeground>);
 
     for (auto entity : skinnedMeshView)
     {
