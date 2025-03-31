@@ -110,14 +110,6 @@ void UpdateScoreText(HUD& self, const int score)
     }
 }
 
-void UpdateScoreTextScale(HUD& self, const float scale)
-{
-    if (auto locked = self.scoreText.lock(); locked != nullptr)
-    {
-        locked->SetScale(glm::vec2(0.0f, scale));
-    }
-}
-
 void UpdateGrenadeBar(HUD& self, const float charge)
 {
     if (auto locked = self.grenadeBar.lock(); locked != nullptr)
@@ -169,7 +161,6 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText", "Update ammo bar with a current ammo count and max");
     hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar", "Update ult bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
-    hud.funcExt<bindings::UpdateScoreTextScale>("UpdateScoreTextScale", "Update score text scale");
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
 }

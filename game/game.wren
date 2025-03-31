@@ -296,9 +296,6 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
 
-        engine.GetGame().GetHUD().UpdateScoreTextScale(1 + __playerVariables.heat * 0.15)
-        __playerVariables.heat = Math.Max(__playerVariables.heat - 0.001 * dt, 0)
-
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 

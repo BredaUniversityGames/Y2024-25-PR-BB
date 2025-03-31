@@ -10,7 +10,8 @@ class Weapons {
 
 class Pistol {
     construct new(engine) {
-        _damage = 20
+        _damage = 50
+        _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.2 * 1000
@@ -40,8 +41,7 @@ class Pistol {
 
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
-            gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
-                System.print("Pistol reload")
+        gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
 
         _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
@@ -106,10 +106,15 @@ class Pistol {
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
                                 if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
-                                    enemy.DecreaseHealth(_damage)
+                                    var multiplier = 1.0
+                                    if (enemy.IsHeadshot(rayHit.position.y)) {
+                                        multiplier = _headShotMultiplier
+                                    }
+                                    
+                                    enemy.DecreaseHealth(_damage * multiplier)
+
                                     if (enemy.health <= 0) {
-                                        playerVariables.IncreaseScore(5)
-                                        playerVariables.IncreaseHeat(1)
+                                        playerVariables.IncreaseScore(5 * multiplier)                                       
                                     }
                                 }
                             }
@@ -167,17 +172,17 @@ class Pistol {
 
 class Shotgun {
     construct new(engine) {
-        _damage = 8
+        _damage = 15
         _damageDropoff = 0.5
         _raysPerShot = 9
         _range = 23
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.8 * 1000
+        _attackSpeed = 0.1 * 1000
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 0.4 * 1000
+        _reloadSpeed = 0.25 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
@@ -196,13 +201,12 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("Revolver")
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("reload").IsPressed()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
-
+        
+            _reloadTimer = _reloadSpeed
+            _ammo = _maxAmmo
         }
-
-        _reloadTimer = _reloadSpeed
-        _ammo = _maxAmmo
     }
 
     attack(engine, deltaTime, playerVariables, enemies) {   
@@ -238,13 +242,22 @@ class Shotgun {
                 
                 var end = start + newDirection * _rangeVector
                 
+
                 if (!rayHitInfo.isEmpty) {
                     for (i in (rayHitInfo.count - 1)..0) {
-                        var hitEntity = rayHitInfo[i]
-                        if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
-                            end = hitEntity.position
-                            if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
-                                engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
+                        var rayHit = rayHitInfo[i]
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
+                        if (!hitEntity.HasPlayerTag()) {
+                            end = rayHit.position
+                            if (hitEntity.HasEnemyTag()) {
+                                for (enemy in enemies) {
+                                    if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                        enemy.DecreaseHealth(_damage)
+                                        if (enemy.health <= 0) {
+                                            playerVariables.IncreaseScore(15)
+                                        }
+                                    }
+                                }
                                 break
                             }
                             break

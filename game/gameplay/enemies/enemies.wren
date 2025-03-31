@@ -59,6 +59,13 @@ class MeleeEnemy {
         _deathTimer = 1000
     }
 
+    IsHeadshot(y) { // Will probably need to be changed when we have a different model
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+            return true
+        }
+        return false
+    }
+
     DecreaseHealth(amount) {
         _health = Math.Max(_health - amount, 0)
         if (_health <= 0 && _isAlive) {
