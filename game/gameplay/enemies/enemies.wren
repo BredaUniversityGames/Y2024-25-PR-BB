@@ -8,6 +8,7 @@ class MeleeEnemy {
         _maxVelocity = maxSpeed
         _currentPath = null
         _currentPathNodeIdx = null
+        _honeInRadius = 30.0
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
@@ -26,14 +27,14 @@ class MeleeEnemy {
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
-        // body.SetFriction(2.0)
+        body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Run", 1.0, true, 1.0, true)
 
         _isAlive = true
 
-        _reasonTimer = 0.0
+        _reasonTimer = 2001
 
         _attackRange = 6
         _attackDamage = 30
@@ -177,10 +178,15 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        _reasonTimer = _reasonTimer + dt
-        if(_reasonTimer > 800) {
-            _reasonTimer = 0
-            this.FindNewPath(engine)
+        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+            _reasonTimer = _reasonTimer + dt
+            if(_reasonTimer > 2000) {
+                this.FindNewPath(engine)
+                _reasonTimer = 0
+            }
+        } else {
+            _currentPath = null
+            _reasonTimer = 2001
         }
 
         // Pathfinding logic
@@ -215,7 +221,20 @@ class MeleeEnemy {
             var startRotation = _rootEntity.GetTransformComponent().rotation
             _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
         }else{
-            this.FindNewPath(engine)
+            var forwardVector = playerPos - position
+            forwardVector.y = 0
+            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
+            var maxVelocityScalar = 1.0
+            if(forwardVector.length() >= _maxVelocity) {
+                maxVelocityScalar = _maxVelocity / forwardVector.length()
+            }
+
+            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
+            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
+            
+            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+            var startRotation = _rootEntity.GetTransformComponent().rotation
+            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
         }
     }
 

@@ -37,6 +37,7 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     _pushConstants.ambientStrength = _lightingSettings.ambientStrength;
     _pushConstants.ambientShadowStrength = _lightingSettings.ambientShadowStrength;
+    _pushConstants.decalNormalThreshold = glm::cos(_lightingSettings.decalNormalThreshold);
 
     TracyVkZone(scene.tracyContext, commandBuffer, "Lighting Pass");
     std::array<vk::RenderingAttachmentInfoKHR, 2> colorAttachmentInfos {};
@@ -76,6 +77,7 @@ void LightingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetPointLightDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 5, { scene.gpuScene->GetClusterCullingDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 6, { scene.gpuScene->GetDecalDescriptorSet(currentFrame) }, {});
 
     commandBuffer.draw(3, 1, 0, 0);
 

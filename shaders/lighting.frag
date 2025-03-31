@@ -19,6 +19,7 @@ layout (push_constant) uniform PushConstants
     float shadowMapSize;
     float ambientStrength;
     float ambientShadowStrength;
+    float decalNormalThreshold;
 } pushConstants;
 
 layout (set = 1, binding = 0) uniform CameraUBO
@@ -43,6 +44,11 @@ layout (set = 4, binding = 0) uniform BloomSettingsUBO
 layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
 layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
 layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
+
+layout (set = 6, binding = 0) uniform DecalUB
+{
+    DecalArray decals;
+};
 
 layout (location = 0) in vec2 texCoords;
 
