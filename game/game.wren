@@ -79,7 +79,7 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        var positions = [Vec3.new(10.0, 8.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
+        var positions = [Vec3.new(10.0, 14.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
@@ -191,6 +191,14 @@ class Main {
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
+        __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
+
+        if (__playerVariables.multiplierTimer == 0 ) {
+            __playerVariables.multiplier = 1.0
+            __playerVariables.consecutiveHits = 0
+        }
+
+
         if(engine.GetInput().DebugGetKey(Keycode.eN())){
            cheats.noClip = !cheats.noClip
         }
@@ -277,7 +285,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __playerVariables.IncreaseScore(1)
+                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
             }
             
             // TODO: Pause Menu on ESC
@@ -298,6 +306,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
+        engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

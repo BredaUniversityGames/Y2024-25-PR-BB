@@ -109,11 +109,10 @@ class Pistol {
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
                                     }
-                                    
+                                    playerVariables.UpdateMultiplier()
                                     enemy.DecreaseHealth(_damage * multiplier)
-
                                     if (enemy.health <= 0) {
-                                        playerVariables.IncreaseScore(5 * multiplier)                                       
+                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
                                     }
                                 }
                             }
@@ -233,14 +232,13 @@ class Shotgun {
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             
+            var hitAnEnemy = false
+
             var i = 0
             while (i < _raysPerShot) {
                 var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
-
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
-                
                 var end = start + newDirection * _rangeVector
-                
 
                 if (!rayHitInfo.isEmpty) {
                     for (i in (rayHitInfo.count - 1)..0) {
@@ -251,9 +249,11 @@ class Shotgun {
                             if (hitEntity.HasEnemyTag()) {
                                 for (enemy in enemies) {
                                     if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                        hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage)
+                                        playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         if (enemy.health <= 0) {
-                                            playerVariables.IncreaseScore(15)
+                                            playerVariables.IncreaseScore(15 * playerVariables.multiplier)
                                         }
                                     }
                                 }
@@ -279,6 +279,11 @@ class Shotgun {
 
                 i = i + 1
             }
+
+            if (hitAnEnemy) {
+                playerVariables.UpdateMultiplier()
+            }
+
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
             gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
