@@ -45,26 +45,25 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
-    const glm::uvec2 viewportSize = engine.GetModule<UIModule>().GetViewport().GetExtend();
 
-    std::optional<std::ifstream> versionFile = fileIO::OpenReadStream("version.txt");
-    if (versionFile.has_value())
+    auto& viewport = engine.GetModule<UIModule>().GetViewport();
+    const glm::uvec2 viewportSize = viewport.GetExtend();
+
+    if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
         std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
-        _gameVersionVisualization = GameVersionVisualizationCreate(graphicsContext, viewportSize, gameVersionText);
-        engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_gameVersionVisualization.canvas);
+        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, gameVersionText));
     }
 
-    _hud = HudCreate(graphicsContext, viewportSize);
-    auto mainMenu = std::make_shared<MainMenu>(*engine.GetModule<RendererModule>().GetGraphicsContext(), engine.GetModule<UIModule>().GetViewport().GetExtend());
+    auto mainMenu = std::make_shared<MainMenu>(graphicsContext, viewportSize);
 
     _mainMenu = mainMenu;
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(_hud.canvas);
+    _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
     engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
     engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
 
     _mainMenu->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    _hud.canvas->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -100,8 +99,12 @@ void GameModule::SetMainMenuEnabled(bool val)
 
 void GameModule::SetHUDEnabled(bool val)
 {
-    _hud.canvas->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    if (auto lock = _hud.lock())
+    {
+        _hud.lock()->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
 }
+
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
@@ -116,12 +119,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 
     _nextSceneToExecute.clear();
-
-    if (_updateHud == true)
-    {
-        float totalTime = engine.GetModule<TimeModule>().GetTotalTime().count();
-        HudUpdate(_hud, totalTime);
-    }
 
     auto& ECS = engine.GetModule<ECSModule>();
 

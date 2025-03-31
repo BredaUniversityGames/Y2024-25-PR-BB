@@ -73,9 +73,13 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     }
 }
 
-HUD& GetHUD(GameModule& self)
+std::optional<std::shared_ptr<HUD>> GetHUD(GameModule& self)
 {
-    return self._hud;
+    if (auto lock = self._hud.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
 }
 
 void UpdateHealthBar(HUD& self, const float health)

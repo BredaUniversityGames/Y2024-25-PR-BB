@@ -34,7 +34,7 @@ public:
     void SetHUDEnabled(bool val);
     MainMenu& GetMainMenu() const { return *_mainMenu; }
 
-    HUD _hud;
+    std::weak_ptr<HUD> _hud;
     GameVersionVisualization _gameVersionVisualization;
 
     NON_COPYABLE(GameModule);
