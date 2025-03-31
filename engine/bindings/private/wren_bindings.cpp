@@ -9,6 +9,7 @@
 #include "entity/wren_entity.hpp"
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
+#include "gpu_scene.hpp"
 #include "input/input_bindings.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
@@ -25,8 +26,6 @@
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
-
-#include <gpu_scene.hpp>
 
 namespace bindings
 {
