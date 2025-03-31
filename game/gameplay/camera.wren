@@ -58,7 +58,6 @@ class CameraVariables {
         }
         
         var transform = cameraEntity.GetTransformComponent()
-        System.printAll([_tiltFactor, " ", _slideFactorX])
         var newRotation = Math.ToQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor + _slideFactorX)))
         transform.rotation = Math.Slerp(transform.rotation, newRotation, Math.Clamp(dt * tiltSpeed, 0.0, 1.0))
     }
