@@ -45,7 +45,7 @@ layout (set = 5, binding = 0) readonly buffer AtomicCount { uint count; };
 layout (set = 5, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
 layout (set = 5, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
 
-layout (set = 6, binding = 0) buffer DecalSSB
+layout (set = 6, binding = 0) uniform DecalUB
 {
     DecalArray decals;
 };

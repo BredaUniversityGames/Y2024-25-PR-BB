@@ -77,7 +77,7 @@ public:
     const vk::DescriptorSet& GetPointLightDescriptorSet(uint32_t frameIndex) const { return _pointLightFrameData.at(frameIndex).descriptorSet; }
     const vk::DescriptorSet& GetClusterDescriptorSet() const { return _clusterData.descriptorSet; }
     const vk::DescriptorSet& GetClusterCullingDescriptorSet(uint32_t frameIndex) const { return _clusterCullingData.descriptorSets.at(frameIndex); }
-    const vk::DescriptorSet& GetDecalDescriptorSet() const { return _decalDescriptorSet; }
+    const vk::DescriptorSet& GetDecalDescriptorSet(uint32_t frameIndex) const { return _decalFrameData[frameIndex].descriptorSet; }
     const vk::DescriptorSetLayout& GetSceneDescriptorSetLayout() const { return _sceneDescriptorSetLayout; }
     const vk::DescriptorSetLayout& GetObjectInstancesDescriptorSetLayout() const { return _objectInstancesDSL; }
     const vk::DescriptorSetLayout& GetPointLightDescriptorSetLayout() const { return _pointLightDSL; }
@@ -241,9 +241,7 @@ private:
     DecalArray _decals;
     ResourceHandle<GPUImage>& GetDecalImage(std::string fileName);
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _decalImages;
-
-    ResourceHandle<Buffer> _decalBuffer;
-    vk::DescriptorSet _decalDescriptorSet;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _decalFrameData;
     vk::DescriptorSetLayout _decalDescriptorSetLayout;
 
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
@@ -277,7 +275,7 @@ private:
     void UpdatePointLightData(PointLightArray& pointLightArray, uint32_t frameIndex);
     void UpdateCameraData(uint32_t frameIndex);
     void UpdateSkinBuffers(uint32_t frameIndex);
-    void UpdateDecalBuffer();
+    void UpdateDecalBuffer(uint32_t frameIndex);
 
     void InitializeSceneBuffers();
     void InitializePointLightBuffer();
@@ -302,13 +300,14 @@ private:
     void CreateClusterCullingDescriptorSet();
     void CreateObjectInstancesDescriptorSets();
     void CreateSkinDescriptorSets();
-    void CreateDecalDescriptorSet();
+    void CreateDecalDescriptorSets();
 
     void UpdateSceneDescriptorSet(uint32_t frameIndex);
     void UpdatePointLightDescriptorSet(uint32_t frameIndex);
     void UpdateAtomicGlobalDescriptorSet(uint32_t frameIndex);
     void UpdateObjectInstancesDescriptorSet(uint32_t frameIndex);
     void UpdateSkinDescriptorSet(uint32_t frameIndex);
+    void UpdateDecalDescriptorSet(uint32_t frameIndex);
 
     void CreateSceneBuffers();
     void CreatePointLightBuffer();
