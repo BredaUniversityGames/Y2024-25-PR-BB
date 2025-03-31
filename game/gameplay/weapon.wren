@@ -40,12 +40,11 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName(_entityName)
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
-        gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
+        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
 
-        _reloadTimer = _reloadSpeed
-        _ammo = _maxAmmo
-
+            _reloadTimer = _reloadSpeed
+            _ammo = _maxAmmo
         }
     }
 
@@ -177,7 +176,7 @@ class Shotgun {
         _raysPerShot = 9
         _range = 23
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.1 * 1000
+        _attackSpeed = 0.22 * 1000
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
