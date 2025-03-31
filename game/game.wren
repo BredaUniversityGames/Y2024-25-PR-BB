@@ -86,13 +86,13 @@ class Main {
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
 
-        engine.PreloadModel("assets/models/Demon.glb")
+        engine.PreloadModel("assets/models/Skeleton.glb")
 
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun = engine.LoadModel("assets/models/revolver.glb")
 
         __gun.GetNameComponent().name = "Revolver"
         var gunTransform = __gun.GetTransformComponent()
@@ -153,6 +153,7 @@ class Main {
     }
 
     static Shutdown(engine) {
+        engine.ResetDecals()
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
         engine.GetECS().DestroyAllEntities()
@@ -283,7 +284,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
+                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
             
             // TODO: Pause Menu on ESC

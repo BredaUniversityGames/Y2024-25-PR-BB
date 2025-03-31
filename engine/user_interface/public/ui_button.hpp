@@ -1,4 +1,5 @@
 #pragma once
+#include "callback.hpp"
 #include "resource_manager.hpp"
 #include "resources/image.hpp"
 #include "ui_element.hpp"
@@ -17,9 +18,7 @@ public:
         eNormal,
         eHovered,
         ePressed
-    } state
-        = ButtonState::eNormal;
-    ButtonState previousState = ButtonState::eNormal;
+    };
 
     void Update(const InputManagers& inputManagers, UIInputContext& inputContext) override;
 
@@ -41,7 +40,13 @@ public:
     }
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
+    void OnPress(Callback callback) { _callback = callback; }
 
 private:
     void SwitchState(bool inputActionPressed, bool inputActionReleased);
+
+    ButtonState state = ButtonState::eNormal;
+    ButtonState previousState = ButtonState::eNormal;
+
+    Callback _callback {};
 };

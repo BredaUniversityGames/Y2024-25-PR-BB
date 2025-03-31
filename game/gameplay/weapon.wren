@@ -72,7 +72,7 @@ class Pistol {
 
             // Shake the camera
 
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
@@ -96,8 +96,7 @@ class Pistol {
 
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
-                for (i in (rayHitInfo.count - 1)..0) {
-                    var rayHit = rayHitInfo[i]
+                for (rayHit in rayHitInfo) {
                     var hitEntity = rayHit.GetEntity(engine.GetECS())
                     if (!hitEntity.HasPlayerTag()) {
                         end = rayHit.position
@@ -112,12 +111,13 @@ class Pistol {
                                     playerVariables.UpdateMultiplier()
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
-                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
+                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                     }
                                 }
                             }
                             break
                         }
+                        engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
                         break
                     }
                 }
@@ -127,6 +127,7 @@ class Pistol {
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 300.0
+
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
             }
@@ -201,13 +202,13 @@ class Shotgun {
         var gunAnimations = gun.GetAnimationControlComponent()
         if(engine.GetInput().GetDigitalAction("Reload").IsPressed()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
-        
+
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {   
+    attack(engine, deltaTime, playerVariables, enemies) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
@@ -236,13 +237,12 @@ class Shotgun {
 
             var i = 0
             while (i < _raysPerShot) {
-                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
+                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
                 var end = start + newDirection * _rangeVector
 
                 if (!rayHitInfo.isEmpty) {
-                    for (i in (rayHitInfo.count - 1)..0) {
-                        var rayHit = rayHitInfo[i]
+                    for (rayHit in rayHitInfo.count) {
                         var hitEntity = rayHit.GetEntity(engine.GetECS())
                         if (!hitEntity.HasPlayerTag()) {
                             end = rayHit.position
