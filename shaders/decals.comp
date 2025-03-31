@@ -1,0 +1,32 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier: enable
+
+#include "bindless.glsl"
+#include "scene.glsl"
+#include "octahedron.glsl"
+
+layout (push_constant) uniform PushConstants
+{
+    uint albedoRMIndex;
+    uint depthIndex;
+    uvec2 screenSize;
+    float decalNormalThreshold;
+} pushConstants;
+
+layout (set = 1, binding = 0) uniform CameraUBO
+{
+    Camera camera;
+};
+
+layout (set = 2, binding = 0) uniform DecalUBO
+{
+    Decal decals[MAX_DECALS];
+};
+
+// TODO: see if I can dedicate one of these to looping over decals?
+layout (local_size_x = 12, local_size_y = 12, local_size_z = 1) in;
+
+void main()
+{
+    //vec4 albedoRMSample = texture(bindless_color_textures[nonuniformEXT(pushConstants.albedoRMIndex)], texCoords);
+}

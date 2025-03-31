@@ -30,6 +30,7 @@ class ClusterLightCullingPass;
 class IBLPass;
 class ParticlePass;
 class PresentationPass;
+class DecalPass;
 class SwapChain;
 class GBuffers;
 class GraphicsContext;
@@ -102,6 +103,7 @@ private:
     std::unique_ptr<PresentationPass> _presentationPass;
     std::unique_ptr<ClusterGenerationPass> _clusterGenerationPass;
     std::unique_ptr<ClusterLightCullingPass> _clusterLightCullingPass;
+    std::unique_ptr<DecalPass> _decalPass;
 
     std::shared_ptr<GPUScene> _gpuScene;
     ResourceHandle<GPUImage> _environmentMap;

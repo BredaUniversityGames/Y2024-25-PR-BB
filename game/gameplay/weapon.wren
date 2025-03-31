@@ -242,7 +242,7 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
 
                 if (!rayHitInfo.isEmpty) {
-                    for (rayHit in rayHitInfo.count) {
+                    for (rayHit in rayHitInfo) {
                         var hitEntity = rayHit.GetEntity(engine.GetECS())
                         if (!hitEntity.HasPlayerTag()) {
                             end = rayHit.position

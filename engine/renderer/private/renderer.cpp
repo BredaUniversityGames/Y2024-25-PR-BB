@@ -24,6 +24,7 @@
 #include "passes/cluster_generation_pass.hpp"
 #include "passes/cluster_lightculling_pass.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/decal_pass.hpp"
 #include "passes/fxaa_pass.hpp"
 #include "passes/generate_draws_pass.hpp"
 #include "passes/geometry_pass.hpp"
@@ -142,6 +143,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _presentationPass = std::make_unique<PresentationPass>(_context, *_swapChain, _fxaaTarget);
     _clusterGenerationPass = std::make_unique<ClusterGenerationPass>(_context, *_gBuffers, *_swapChain, *_gpuScene);
     _clusterLightCullingPass = std::make_unique<ClusterLightCullingPass>(_context, *_gpuScene, _gpuScene->GetClusterBuffer(), _gpuScene->GetGlobalIndexBuffer(), _gpuScene->GetClusterCullingBuffer(0), _gpuScene->GetClusterCullingBuffer(1));
+    _decalPass = std::make_unique<DecalPass>(_context, _settings.data.lighting, *_gBuffers);
 
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -241,6 +243,13 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_ssaoTarget, FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation decalPass { *_decalPass };
+    decalPass.SetName("Decal pass")
+        .SetDebugLabelColor(GetColor(ColorType::Magenta))
+        .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
+        .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment);
+
     FrameGraphNodeCreation lightingPass { *_lightingPass };
     lightingPass.SetName("Lighting pass")
         .SetDebugLabelColor(GetColor(ColorType::Periwinkle))
@@ -336,6 +345,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(geometrySecondPass)
         .AddNode(shadowSecondPass)
         .AddNode(ssaoPass)
+        .AddNode(decalPass)
         .AddNode(lightingPass)
         .AddNode(skyDomePass)
         .AddNode(particlePass)
