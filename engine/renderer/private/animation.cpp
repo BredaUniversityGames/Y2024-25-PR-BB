@@ -68,6 +68,14 @@ void AnimationControlComponent::Resume()
     animation.playbackOption = Animation::PlaybackOptions::ePlaying;
 }
 
+void AnimationControlComponent::SetAnimationTime(float time)
+{
+    if (activeAnimation.has_value())
+    {
+        animations[activeAnimation.value()].time = time;
+    }
+}
+
 Animation::PlaybackOptions AnimationControlComponent::CurrentPlayback()
 {
     if (!activeAnimation.has_value())

@@ -116,6 +116,7 @@ struct AnimationControlComponent
     void Stop();
     void Pause();
     void Resume();
+    void SetAnimationTime(float time);
     Animation::PlaybackOptions CurrentPlayback();
     std::optional<std::string> CurrentAnimationName();
     std::optional<uint32_t> CurrentAnimationIndex();
