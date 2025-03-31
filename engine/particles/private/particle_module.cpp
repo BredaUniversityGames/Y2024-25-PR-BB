@@ -238,14 +238,26 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
-        preset.count = 7;
-        preset.spawnRandomness = glm::vec3(0.2f);
+        preset.count = 1;
+        preset.spawnRandomness = glm::vec3(0.1f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(0.1f, 0.15f, 1.0f, 1.0f);
+        preset.color = glm::vec4(0.9f, 0.9f, 0.9f, 1.0f);
         preset.name = "Ray";
         SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.4f, 0.4f, 0.0f);
+        preset.size = glm::vec3(0.1f, 0.1f, 0.0f);
 
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 1;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 1;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
         _emitterPresets.emplace_back(preset);
     }
 
