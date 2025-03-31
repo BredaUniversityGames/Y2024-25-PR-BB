@@ -230,13 +230,20 @@ class Main {
                 }
             }
 
-            // 
-            if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
-                if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+            // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
+            if (engine.GetInput().DebugGetKey(Keycode.eU())) {
+                if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
                     System.print("Activate ultimate")
                     __activeWeapon = __armory[Weapons.shotgun]
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
+
+                    var particleEntity = engine.GetECS().NewEntity()
+                    particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
+                    var lifetime = particleEntity.AddLifetimeComponent()
+                    lifetime.lifetime = 400.0
+                    var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                    engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
                 }
             }
 
