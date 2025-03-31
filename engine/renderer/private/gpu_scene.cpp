@@ -131,7 +131,6 @@ void GPUScene::UpdateSceneData(uint32_t frameIndex)
 
     sceneData.fogColor = _settings.color;
     sceneData.fogDensity = _settings.density;
-    sceneData.fogHeight = _settings.height;
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
     memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));

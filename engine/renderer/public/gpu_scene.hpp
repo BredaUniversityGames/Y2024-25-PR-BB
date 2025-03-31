@@ -138,6 +138,7 @@ private:
         glm::vec4 color;
         float poissonWorldOffset;
         float poissonConstant;
+        uint32_t padding[2];
     };
 
     struct alignas(16) PointLightData
@@ -162,11 +163,13 @@ private:
         uint32_t prefilterIndex;
         uint32_t brdfLUTIndex;
         uint32_t staticShadowMapIndex;
+
         uint32_t dynamicShadowMapIndex;
+        float fogDensity;
+
+        float padding[2];
 
         glm::vec3 fogColor;
-        float fogDensity;
-        float fogHeight;
     };
 
     struct alignas(32) InstanceData

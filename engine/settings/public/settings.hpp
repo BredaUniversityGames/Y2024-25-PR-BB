@@ -31,11 +31,10 @@ struct Settings
 
     struct Fog
     {
-        VERSION(0);
+        VERSION(1);
 
         glm::vec3 color { 0.5, 0.6, 0.7 };
         float density { 0.2f };
-        float height { 0.3f };
     } fog;
 
     struct SSAO
@@ -125,7 +124,7 @@ struct Settings
     } lighting;
 };
 
-VISITABLE_STRUCT(Settings::Fog, color, density, height);
+VISITABLE_STRUCT(Settings::Fog, color, density);
 CLASS_SERIALIZE_VERSION(Settings::Fog);
 CLASS_VERSION(Settings::Fog);
 

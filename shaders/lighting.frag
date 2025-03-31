@@ -70,7 +70,7 @@ vec3 CalculateDiffuseIBL(vec3 normal, vec3 albedo, uint irradianceIndex);
 vec3 CalculateSpecularIBL(vec3 normal, vec3 viewDir, float roughness, vec3 F, uint prefilterIndex, uint brdfLUTIndex);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
 
-vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition);
+vec3 applyFog(in vec3 color, in float distanceToPoint);
 
 // stackoverflow.com/questions/51108596/linearize-depth
 float LinearDepth(float z, float near, float far)
@@ -191,7 +191,7 @@ void main()
     vec3 litColor = vec3((Lo * shadow) + pointLightLo + (ambient * pushConstants.ambientStrength) * ambientShadow);
 
     float linearDepth = distance(position, camera.cameraPosition);
-    outColor = vec4(applyFog(litColor, linearDepth, camera.cameraPosition, normalize(position - camera.cameraPosition), scene.directionalLight.direction.xyz), 1.0);
+    outColor = vec4(applyFog(litColor, linearDepth), 1.0);
 
 
     // We store brightness for bloom later on
@@ -201,17 +201,12 @@ void main()
     outBrightness = vec4(brightnessColor, 1.0);
 }
 
-vec3 applyFog(in vec3 color, in float distanceToPoint, in vec3 cameraPosition, in vec3 directionToCamera, in vec3 lightPosition)
+vec3 applyFog(in vec3 color, in float distanceToPoint)
 {
-    float a = scene.fogHeight;
-    float b = scene.fogDensity;
-    float fogAmount = (a / b) * exp(-cameraPosition.y * b) * (1.0 - exp(-distanceToPoint * directionToCamera.y * b)) / directionToCamera.y;
-    float sunAmount = max(dot(directionToCamera, lightPosition), 0.0);
-    vec3 fogColor = mix(scene.fogColor,
-    scene.directionalLight.color.rgb,
-    pow(sunAmount, 8.0));
-    return mix(color, fogColor, clamp(fogAmount, 0.0, 0.5));
+    float fogAmount = 1.0 - exp(-distanceToPoint * scene.fogDensity);
+    return mix(color, scene.fogColor, fogAmount);
 }
+
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {

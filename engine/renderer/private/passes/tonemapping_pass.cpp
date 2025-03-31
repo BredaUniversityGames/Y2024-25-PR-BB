@@ -87,8 +87,10 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.saturation = _settings.saturation;
     _pushConstants.vibrance = _settings.vibrance;
     _pushConstants.hue = _settings.hue;
-    _pushConstants.minPixelSize = _settings.minPixelSize;
-    _pushConstants.maxPixelSize = _settings.maxPixelSize;
+
+    float scaleFactor = _gBuffers.Size().y / 1080.0f;
+    _pushConstants.minPixelSize = _settings.minPixelSize * scaleFactor;
+    _pushConstants.maxPixelSize = _settings.maxPixelSize * scaleFactor;
     _pushConstants.pixelizationLevels = _settings.pixelizationLevels;
     _pushConstants.pixelizationDepthBias = _settings.pixelizationDepthBias;
     _pushConstants.ditherAmount = _settings.ditherAmount;
