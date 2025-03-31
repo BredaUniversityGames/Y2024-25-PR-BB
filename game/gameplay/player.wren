@@ -13,7 +13,7 @@ class PlayerVariables {
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
-        
+
         _invincibilityMaxTime = 500
         _invincibilityTime = 0
         
@@ -28,6 +28,7 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5        
     }
+    
     health {_health}
     maxHealth {_maxHealth}
     score {_score}
