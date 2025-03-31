@@ -54,15 +54,6 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     }
 
-    // Discord Link
-    {
-        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, glm::vec2(878, 243) * .4f, glm::vec2(878, 243) * .4f);
-        openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-        openLinkButton->AddChild<UITextElement>(font, "check out our discord!", 20)->SetColor(glm::vec4(0, 0, 0, 1));
-
-        main->openLinkButton = openLinkButton;
-    }
-
     // Buttons
 
     auto buttonPanel = main->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
@@ -77,6 +68,12 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         constexpr glm::vec2 increment = { 0.0f, 90.0f };
         constexpr glm::vec2 buttonBaseSize = glm::vec2(878, 243) * 0.5f;
         constexpr float textSize = 50;
+
+        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize * 1.4f, buttonBaseSize * 1.4f);
+        openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+        openLinkButton->AddChild<UITextElement>(font, "check out our discord!", 40)->SetColor(glm::vec4(0, 0, 0, 1));
+
+        main->openLinkButton = openLinkButton;
 
         auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
