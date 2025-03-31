@@ -277,7 +277,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __playerVariables.IncreaseHeat(1)
+                __playerVariables.IncreaseScore(1)
             }
             
             // TODO: Pause Menu on ESC
