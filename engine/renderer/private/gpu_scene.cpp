@@ -173,6 +173,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     uint32_t count = 0;
 
     _staticDrawCommands.clear();
+    _foregroundStaticDrawCommands.clear();
     _shouldUpdateShadows = false;
     auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>(entt::exclude<RenderInForeground>);
 
@@ -200,11 +201,11 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
         if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
         {
-            _foregroundStaticDrawCommands.emplace_back(DrawDirectCommand {
+            _foregroundStaticDrawCommands.emplace_back(DrawIndexedDirectCommand {
                 .instanceIndex = count,
                 .indexCount = mesh->count,
                 .firstIndex = mesh->indexOffset,
-                .vertexOffset = mesh->vertexOffset,
+                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
             });
         }
         else
@@ -225,6 +226,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
     static std::vector<InstanceData> skinnedInstances { MAX_SKINNED_INSTANCES };
     _skinnedDrawCommands.clear();
+    _foregroundSkinnedDrawCommands.clear();
     count = 0;
 
     auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
@@ -248,11 +250,11 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
 
         if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
         {
-            _foregroundSkinnedDrawCommands.emplace_back(DrawDirectCommand {
+            _foregroundSkinnedDrawCommands.emplace_back(DrawIndexedDirectCommand {
                 .instanceIndex = count,
                 .indexCount = mesh->count,
                 .firstIndex = mesh->indexOffset,
-                .vertexOffset = mesh->vertexOffset,
+                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
             });
         }
         else

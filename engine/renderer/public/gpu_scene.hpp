@@ -56,12 +56,12 @@ struct DrawIndexedIndirectCommand
     vk::DrawIndexedIndirectCommand command;
 };
 
-struct DrawDirectCommand
+struct DrawIndexedDirectCommand
 {
     uint32_t instanceIndex {};
     uint32_t indexCount {};
     uint32_t firstIndex {};
-    uint32_t vertexOffset {};
+    int32_t vertexOffset {};
 };
 
 class GPUScene
@@ -105,12 +105,14 @@ public:
 
     uint32_t StaticDrawCount() const { return _staticDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& StaticDrawCommands() const { return _staticDrawCommands; }
+    const std::vector<DrawIndexedDirectCommand>& ForegroundStaticDrawCommands() const { return _foregroundStaticDrawCommands; }
     ResourceHandle<Buffer>& GetClusterBuffer() { return _clusterData.buffer; }
     ResourceHandle<Buffer>& GetClusterCullingBuffer(uint32_t index) { return _clusterCullingData.buffers.at(index); }
     ResourceHandle<Buffer>& GetGlobalIndexBuffer() { return _clusterCullingData.globalIndexBuffer; }
 
     uint32_t SkinnedDrawCount() const { return _skinnedDrawCommands.size(); };
     const std::vector<DrawIndexedIndirectCommand>& SkinnedDrawCommands() const { return _skinnedDrawCommands; }
+    const std::vector<DrawIndexedDirectCommand>& ForegroundSkinnedDrawCommands() const { return _foregroundSkinnedDrawCommands; }
     uint32_t DrawCommandIndexCount(std::vector<DrawIndexedIndirectCommand> commands) const
     {
         uint32_t count { 0 };
@@ -257,8 +259,8 @@ private:
 
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
-    std::vector<DrawDirectCommand> _foregroundStaticDrawCommands;
-    std::vector<DrawDirectCommand> _foregroundSkinnedDrawCommands;
+    std::vector<DrawIndexedDirectCommand> _foregroundStaticDrawCommands;
+    std::vector<DrawIndexedDirectCommand> _foregroundSkinnedDrawCommands;
     bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
