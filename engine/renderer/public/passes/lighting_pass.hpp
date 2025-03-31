@@ -38,6 +38,7 @@ private:
         float shadowMapSize;
         float ambientStrength;
         float ambientShadowStrength;
+        float decalNormalThreshold;
     } _pushConstants;
 
     void CreatePipeline();
