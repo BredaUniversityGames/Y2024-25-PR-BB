@@ -203,7 +203,7 @@ class Shotgun {
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 0.25 * 1000
+        _reloadSpeed = 600
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
