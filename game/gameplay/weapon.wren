@@ -30,7 +30,7 @@ class Pistol {
         _attackAnim = "shoot"
         _reloadAnim = "reload"
         _equipAnim = "" 
-        _entityName = "Revolver" //subject to change when implementing swapping
+        _entityName = "Gun" 
         _mesh = ""
     }
 
@@ -138,10 +138,33 @@ class Pistol {
             _cooldown = _attackSpeed
         } 
     }
+   equip (engine) {
+        engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName("Gun"))
 
-    equip (engine) {
+        var camera = engine.GetECS().GetEntityByName("Camera")
+
+        var newGun =  engine.LoadModel("assets/models/revolver.glb")
+        newGun.GetNameComponent().name = "Gun"
+        var gunTransform = newGun.GetTransformComponent()
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+
+        camera.AttachChild(newGun)
+        //create new entity
+       System.print("pistol equip")
+        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunAnimations.Play("equip", 1.2, false, 0.2, false)
     }
 
+    unequip(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName("Gun").GetAnimationControlComponent()
+        gunAnimations.Play("unequip", 1.5, false, 0.2, false)
+    }
+
+    isUnequiping(engine){
+    
+        var gunAnimations =engine.GetECS().GetEntityByName("Gun").GetAnimationControlComponent()
+        return gunAnimations.CurrentAnimationName() == "unequip" || gunAnimations.CurrentAnimationName() == "equip" 
+    }
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
 
@@ -175,22 +198,22 @@ class Shotgun {
         _reloadSFX = ""
         _equipSFX = ""
         
+        _walkAnim = "walk"
+        _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
         _equipAnim = "" 
-
+        _entityName = "Gun" 
         _mesh = ""
     }
     
     reload (engine) {
-        var gun = engine.GetECS().GetEntityByName("Revolver")
+        var gun = engine.GetECS().GetEntityByName(_entityName)
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("reload").IsPressed()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
-
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
         }
-
         _reloadTimer = _reloadSpeed
         _ammo = _maxAmmo
     }
@@ -202,7 +225,7 @@ class Shotgun {
             cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("Revolver")
+            var gun = engine.GetECS().GetEntityByName(_entityName)
 
             // Play shooting audio
             var shootingInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -259,12 +282,39 @@ class Shotgun {
             }
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
+            gunAnimations.Play(_attackAnim, 1.1, false, 0.0, false)
             _cooldown = _attackSpeed
         }
     }
 
     equip (engine) {
+
+
+        engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName("Gun"))
+
+        var camera = engine.GetECS().GetEntityByName("Camera")
+
+        var newGun =  engine.LoadModel("assets/models/Shotgun.glb")
+        newGun.GetNameComponent().name = "Gun"
+        var gunTransform = newGun.GetTransformComponent()
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+
+        camera.AttachChild(newGun)
+        //create new entity
+       System.print("shotgun equip")
+        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunAnimations.Play("equip", 1.2, false, 0.0, false)
+
+    }
+
+    isUnequiping(engine){
+        var gunAnimations =engine.GetECS().GetEntityByName("Gun").GetAnimationControlComponent()
+return gunAnimations.CurrentAnimationName() == "unequip" || gunAnimations.CurrentAnimationName() == "equip" 
+    }
+
+    unequip(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName("Gun").GetAnimationControlComponent()
+        gunAnimations.Play("unequip", 1.5, false, 0.0, false)
     }
 
     cooldown {_cooldown}

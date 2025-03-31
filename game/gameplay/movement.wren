@@ -118,7 +118,7 @@ class PlayerMovement{
             euler.y = euler.y - rotationDelta.x
         }
 
-        var gun = engine.GetECS().GetEntityByName("Revolver")
+        var gun = engine.GetECS().GetEntityByName("Gun")
         var gunTransform = gun.GetTransformComponent()
 
         var lerpFactor = 0.97

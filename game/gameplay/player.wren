@@ -13,8 +13,8 @@ class PlayerVariables {
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
+    
     }
-
     health {_health}
     maxHealth {_maxHealth}
     score {_score}
