@@ -128,7 +128,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
@@ -159,10 +159,6 @@ class Main {
     }
 
     static Update(engine, dt) {
-        // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
-        // }
-
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
             __ambientPlayer.CycleMusic(engine.GetAudio())
