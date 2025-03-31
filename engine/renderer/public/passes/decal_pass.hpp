@@ -12,7 +12,7 @@ class GraphicsContext;
 
 struct Buffer;
 
-//static constexpr uint32_t MAX_DECALS = 32;
+constexpr uint32_t MAX_DECALS = 32;
 
 struct alignas(16) DecalData
 {

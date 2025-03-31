@@ -64,6 +64,7 @@ public:
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
     ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
     GPUScene& GetGPUScene() { return *_gpuScene; }
+    DecalPass& GetDecalPass() const { return *_decalPass; }
 
     void FlushCommands();
 

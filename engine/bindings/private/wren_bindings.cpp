@@ -13,6 +13,7 @@
 #include "input/input_bindings.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "passes/decal_pass.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
 #include "pathfinding_module.hpp"
 #include "physics/physics_bindings.hpp"
@@ -62,12 +63,12 @@ void SetExit(WrenEngine& engine, int code)
 
 void SpawnDecal(WrenEngine& engine, glm::vec3 normal, glm::vec3 position, glm::vec2 size, std::string albedoName)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().SpawnDecal(normal, position, size, albedoName);
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetDecalPass().SpawnDecal(normal, position, size, albedoName);
 }
 
 void ResetDecals(WrenEngine& engine)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().ResetDecals();
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetDecalPass().ResetDecals();
 }
 
 }
