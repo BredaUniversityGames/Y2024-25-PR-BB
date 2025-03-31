@@ -198,15 +198,27 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
             _shouldUpdateShadows = true;
         }
 
-        _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
-            .command = {
+        if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
+        {
+            _foregroundStaticDrawCommands.emplace_back(DrawDirectCommand {
+                .instanceIndex = count,
                 .indexCount = mesh->count,
-                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
-                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
-            },
-        });
+                .vertexOffset = mesh->vertexOffset,
+            });
+        }
+        else
+        {
+            _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = mesh->count,
+                    .instanceCount = 0,
+                    .firstIndex = mesh->indexOffset,
+                    .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                    .firstInstance = 0,
+                },
+            });
+        }
 
         count++;
     }
@@ -215,7 +227,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     _skinnedDrawCommands.clear();
     count = 0;
 
-    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>(entt::exclude<RenderInForeground>);
+    auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : skinnedMeshView)
     {
@@ -234,15 +246,27 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].boneOffset = _skeletonBoneOffset[skinnedMeshComponent.skeletonEntity];
         skinnedInstances[count].isStaticDraw = true;
 
-        _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
-            .command = {
+        if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
+        {
+            _foregroundSkinnedDrawCommands.emplace_back(DrawDirectCommand {
+                .instanceIndex = count,
                 .indexCount = mesh->count,
-                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
-                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
-            },
-        });
+                .vertexOffset = mesh->vertexOffset,
+            });
+        }
+        else
+        {
+            _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = mesh->count,
+                    .instanceCount = 0,
+                    .firstIndex = mesh->indexOffset,
+                    .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                    .firstInstance = 0,
+                },
+            });
+        }
 
         count++;
     }

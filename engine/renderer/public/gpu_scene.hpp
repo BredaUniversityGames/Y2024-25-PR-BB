@@ -56,6 +56,14 @@ struct DrawIndexedIndirectCommand
     vk::DrawIndexedIndirectCommand command;
 };
 
+struct DrawDirectCommand
+{
+    uint32_t instanceIndex {};
+    uint32_t indexCount {};
+    uint32_t firstIndex {};
+    uint32_t vertexOffset {};
+};
+
 class GPUScene
 {
 public:
@@ -249,6 +257,8 @@ private:
 
     std::vector<DrawIndexedIndirectCommand> _staticDrawCommands;
     std::vector<DrawIndexedIndirectCommand> _skinnedDrawCommands;
+    std::vector<DrawDirectCommand> _foregroundStaticDrawCommands;
+    std::vector<DrawDirectCommand> _foregroundSkinnedDrawCommands;
     bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
