@@ -72,7 +72,7 @@ class Pistol {
             _ammo = _ammo - 1
 
             // Shake the camera
-
+ 
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
@@ -235,9 +235,8 @@ class Shotgun {
     attack(engine, deltaTime, playerVariables, enemies) {   
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
-
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
-
+ 
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
 
@@ -266,7 +265,7 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
 
                 if (!rayHitInfo.isEmpty) {
-                    for (rayHit in rayHitInfo.count) {
+                    for (rayHit in rayHitInfo) {
                         var hitEntity = rayHit.GetEntity(engine.GetECS())
                         if (!hitEntity.HasPlayerTag()) {
                             end = rayHit.position
