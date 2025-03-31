@@ -247,6 +247,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     decalPass.SetName("Decal pass")
         .SetDebugLabelColor(GetColor(ColorType::Magenta))
         .AddInput(_gBuffers->Attachments()[0], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_gBuffers->Attachments()[0], FrameGraphResourceType::eAttachment);
 

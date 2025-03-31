@@ -36,12 +36,14 @@ public:
     NON_MOVABLE(DecalPass);
 
 private:
-    struct PushConstants
+    struct alignas(16) PushConstants
     {
-        uint32_t albedoRMIndex;
+        uint32_t albedoMIndex;
+        uint32_t normalRIndex;
         uint32_t depthIndex;
         glm::uvec2 screenSize;
         float decalNormalThreshold;
+        uint32_t decalCount;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
@@ -63,13 +65,17 @@ private:
     std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> _decalDescriptorSets;
     vk::DescriptorSetLayout _decalDescriptorSetLayout;
 
+    vk::DescriptorSet _outputImageDescriptorSet;
+    vk::DescriptorSetLayout _outputImageDescriptorSetLayout;
+
     void UpdateDecals();
     void UpdateDecalBuffer(uint32_t currentFrame);
 
     void CreatePipeline();
-    void CreateDescriptorSetLayout();
+    void CreateDescriptorSetLayouts();
     void CreateDescriptorSets();
     void CreateBuffers();
 
-    void UpdateDescriptorSet(uint32_t frameIndex);
+    void UpdateDecalBufferDescriptorSet(uint32_t frameIndex);
+    void UpdateOutputImageDescriptorSet();
 };

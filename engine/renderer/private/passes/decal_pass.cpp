@@ -21,12 +21,13 @@ DecalPass::DecalPass(const std::shared_ptr<GraphicsContext>& context, const Sett
     , _gBuffers(gBuffers)
     , _screenSize({ _gBuffers.Size().x, _gBuffers.Size().y })
 {
-    _pushConstants.albedoRMIndex = _gBuffers.Attachments()[0].Index();
+    _pushConstants.albedoMIndex = _gBuffers.Attachments()[0].Index();
+    _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
     _pushConstants.depthIndex = _gBuffers.Depth().Index();
     _pushConstants.screenSize = _screenSize;
 
     CreateBuffers();
-    CreateDescriptorSetLayout();
+    CreateDescriptorSetLayouts();
     CreateDescriptorSets();
     CreatePipeline();
 }
@@ -36,6 +37,7 @@ DecalPass::~DecalPass()
     _context->VulkanContext()->Device().destroy(_pipeline);
     _context->VulkanContext()->Device().destroy(_pipelineLayout);
     _context->VulkanContext()->Device().destroy(_decalDescriptorSetLayout);
+    _context->VulkanContext()->Device().destroy(_outputImageDescriptorSetLayout);
 }
 
 void DecalPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
@@ -46,24 +48,30 @@ void DecalPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t current
 
     TracyVkZone(scene.tracyContext, commandBuffer, "Decals Pass");
 
-    auto vkContext { _context->VulkanContext() };
+    util::BeginLabel(commandBuffer, "Decals pass", glm::vec3 { 230.0f, 230.0f, 250.0f } / 255.0f, _context->VulkanContext()->Dldi());
 
-    util::BeginLabel(commandBuffer, "Decals pass", glm::vec3 { 230.0f, 230.0f, 250.0f } / 255.0f, vkContext->Dldi());
+    vk::ImageView outputTexture = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[0])->view;
+    vk::DescriptorImageInfo outputImageInfo {
+        .imageView = outputTexture,
+        .imageLayout = vk::ImageLayout::eGeneral,
+    };
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipeline);
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 1, scene.gpuScene->MainCamera().DescriptorSet(currentFrame), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 2, _decalDescriptorSets[currentFrame], {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayout, 3, _outputImageDescriptorSet, {});
 
     _pushConstants.decalNormalThreshold = glm::cos(_lightingSettings.decalNormalThreshold);
+    _pushConstants.decalCount = _decalCount;
     commandBuffer.pushConstants<PushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { _pushConstants });
 
-    int groupSize = 12;
-    glm::uvec2 numGroups = glm::ivec2(_screenSize.x / groupSize, _screenSize.y / groupSize);
-    commandBuffer.dispatch(numGroups.x, numGroups.y, 1);
+    const int groupSize = 16;
+    glm::uvec2 numGroups = glm::uvec2(_screenSize.x / groupSize, _screenSize.y / groupSize);
+    commandBuffer.dispatch(numGroups.x, numGroups.y, _decalCount);
 
-    util::EndLabel(commandBuffer, vkContext->Dldi());
+    util::EndLabel(commandBuffer, _context->VulkanContext()->Dldi());
 }
 
 void DecalPass::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, std::string albedoName)
@@ -139,7 +147,7 @@ void DecalPass::CreatePipeline()
     auto vkContext { _context->VulkanContext() };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-    std::array<vk::DescriptorSetLayout, 3> layouts = { _context->BindlessLayout(), CameraResource::DescriptorSetLayout(), _decalDescriptorSetLayout };
+    std::array<vk::DescriptorSetLayout, 4> layouts = { _context->BindlessLayout(), CameraResource::DescriptorSetLayout(), _decalDescriptorSetLayout, _outputImageDescriptorSetLayout };
     pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
     pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -176,41 +184,71 @@ void DecalPass::CreatePipeline()
     vkContext->Device().destroy(shaderModule);
 }
 
-void DecalPass::CreateDescriptorSetLayout()
+void DecalPass::CreateDescriptorSetLayouts()
 {
-    vk::DescriptorSetLayoutBinding binding {
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eUniformBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
+    { // Decal UBO
+        vk::DescriptorSetLayoutBinding binding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute,
+        };
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
-    std::vector<std::string_view> names { "DecalUBO" };
-    _decalDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+        std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
+        std::vector<std::string_view> names { "DecalUBO" };
+        _decalDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    }
+
+    { // Output Tex
+        vk::DescriptorSetLayoutBinding binding {
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eStorageImage,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eCompute,
+        };
+
+        std::vector<vk::DescriptorSetLayoutBinding> bindings { binding };
+        std::vector<std::string_view> names { "outputTexture" };
+        _outputImageDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*_context->VulkanContext(), bindings, names);
+    }
 }
 
 void DecalPass::CreateDescriptorSets()
 {
-    std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { _decalDescriptorSetLayout, _decalDescriptorSetLayout, _decalDescriptorSetLayout };
-    vk::DescriptorSetAllocateInfo allocateInfo {
-        .descriptorPool = _context->VulkanContext()->DescriptorPool(),
-        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
-        .pSetLayouts = layouts.data(),
-    };
+    { // Decal UBO
+        std::array<vk::DescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts = { _decalDescriptorSetLayout, _decalDescriptorSetLayout, _decalDescriptorSetLayout };
+        vk::DescriptorSetAllocateInfo allocateInfo {
+            .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+            .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+            .pSetLayouts = layouts.data(),
+        };
 
-    std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
-    util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-        "Failed allocating Decal Uniform Buffer descriptor sets!");
+        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+        util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+            "Failed allocating Decal Uniform Buffer descriptor sets!");
 
-    for (size_t i = 0; i < descriptorSets.size(); ++i)
-    {
-        _decalDescriptorSets[i] = descriptorSets[i];
-        UpdateDescriptorSet(i);
+        for (size_t i = 0; i < descriptorSets.size(); ++i)
+        {
+            _decalDescriptorSets[i] = descriptorSets[i];
+            UpdateDecalBufferDescriptorSet(i);
+        }
+    }
+
+    { // Output Tex
+        vk::DescriptorSetAllocateInfo allocateInfo {
+            .descriptorPool = _context->VulkanContext()->DescriptorPool(),
+            .descriptorSetCount = 1,
+            .pSetLayouts = &_outputImageDescriptorSetLayout,
+        };
+
+        util::VK_ASSERT(_context->VulkanContext()->Device().allocateDescriptorSets(&allocateInfo, &_outputImageDescriptorSet),
+            "Failed allocating Decal Uniform Buffer descriptor sets!");
+
+        UpdateOutputImageDescriptorSet();
     }
 }
 
-void DecalPass::UpdateDescriptorSet(uint32_t frameIndex)
+void DecalPass::UpdateDecalBufferDescriptorSet(uint32_t frameIndex)
 {
     vk::DescriptorBufferInfo bufferInfo {
         .buffer = _context->Resources()->BufferResourceManager().Access(_decalBuffers[frameIndex])->buffer,
@@ -228,6 +266,26 @@ void DecalPass::UpdateDescriptorSet(uint32_t frameIndex)
     };
 
     _context->VulkanContext()->Device().updateDescriptorSets(1, &bufferWrite, 0, nullptr);
+}
+
+void DecalPass::UpdateOutputImageDescriptorSet()
+{
+    vk::DescriptorImageInfo imageInfo {
+        .sampler = VK_NULL_HANDLE,
+        .imageView = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments()[0])->view,
+        .imageLayout = vk::ImageLayout::eColorAttachmentOptimal, // TODO: in between texture? can't have color attachment image layout for storage image
+    };
+
+    vk::WriteDescriptorSet imageWrite {
+        .dstSet = _outputImageDescriptorSet,
+        .dstBinding = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = vk::DescriptorType::eStorageImage,
+        .pImageInfo = &imageInfo,
+    };
+
+    _context->VulkanContext()->Device().updateDescriptorSets(1, &imageWrite, 0, nullptr);
 }
 
 void DecalPass::CreateBuffers()

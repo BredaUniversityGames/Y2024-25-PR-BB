@@ -55,7 +55,7 @@ void GBuffers::CreateGBuffers()
     CPUImage imageData {};
     imageData
         .SetSize(_size.x, _size.y)
-        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+        .SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage);
 
     imageData.SetFormat(vk::Format::eR8G8B8A8Unorm).SetName("Albedo Metallic Roughness");
     _attachments[0] = resources->ImageResourceManager().Create(imageData);
