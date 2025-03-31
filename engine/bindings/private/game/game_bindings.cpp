@@ -16,6 +16,8 @@
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 #include "ui_progress_bar.hpp"
@@ -118,7 +120,7 @@ void UpdateMultiplierText(HUD& self, const float multiplier)
 {
     if (auto locked = self.multiplierText.lock(); locked != nullptr)
     {
-        locked->SetText(std::format("{:.1f}", multiplier).append("x"));
+        locked->SetText(fmt::format("{:.1f}", multiplier).append("x"));
     }
 }
 
