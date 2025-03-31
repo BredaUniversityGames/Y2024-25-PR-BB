@@ -9,6 +9,7 @@
 #include "entity/wren_entity.hpp"
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
+#include "gpu_scene.hpp"
 #include "input/input_bindings.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
@@ -59,6 +60,16 @@ void SetExit(WrenEngine& engine, int code)
     engine.instance->SetExit(code);
 }
 
+void SpawnDecal(WrenEngine& engine, glm::vec3 normal, glm::vec3 position, glm::vec2 size, std::string albedoName)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().SpawnDecal(normal, position, size, albedoName);
+}
+
+void ResetDecals(WrenEngine& engine)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().ResetDecals();
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -83,6 +94,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
         engineAPI.funcExt<bindings::SetExit>("SetExit");
+        engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
+        engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
     }
 
     // Time Module

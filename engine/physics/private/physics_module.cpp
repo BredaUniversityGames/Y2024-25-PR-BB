@@ -114,6 +114,8 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     JPH::RayCastSettings settings;
     _physicsSystem->GetNarrowPhaseQuery().CastRay(JPH::RRayCast(ray), settings, collector2);
 
+    collector2.Sort();
+
     hitInfos.resize(collector2.mHits.size());
     int32_t iterator = 0;
 
