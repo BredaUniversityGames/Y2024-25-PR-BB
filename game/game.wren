@@ -253,7 +253,6 @@ class Main {
 
             if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
                 __activeWeapon.unequip(engine)
-
                 __nextWeapon = __armory[Weapons.shotgun]
             }
 

@@ -31,7 +31,8 @@ class Pistol {
         _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
-        _equipAnim = "" 
+        _equipAnim = "equip"
+        _unequipAnim = "unequip" 
         _entityName = "Gun" 
         _mesh = ""
     }
@@ -163,21 +164,19 @@ class Pistol {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
         camera.AttachChild(newGun)
-        //create new entity
-       System.print("pistol equip")
         var gunAnimations =newGun .GetAnimationControlComponent()
-        gunAnimations.Play("equip", 1.2, false, 0.2, false)
+        gunAnimations.Play(_equipAnim, 1.2, false, 0.2, false)
     }
 
     unequip(engine){
         var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        gunAnimations.Play("unequip", 1.5, false, 0.2, false)
+        gunAnimations.Play(_unequipAnim, 1.5, false, 0.2, false)
     }
 
     isUnequiping(engine){
     
         var gunAnimations =engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        return gunAnimations.CurrentAnimationName() == "unequip" || gunAnimations.CurrentAnimationName() == "equip" 
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim 
     }
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
@@ -216,7 +215,8 @@ class Shotgun {
         _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
-        _equipAnim = "" 
+        _equipAnim = "equip" 
+        _unequipAnim = "unequip"
         _entityName = "Gun" 
         _mesh = ""
     }
@@ -316,8 +316,6 @@ class Shotgun {
     }
 
     equip (engine) {
-
-
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
 
         var camera = engine.GetECS().GetEntityByName("Camera")
@@ -328,21 +326,19 @@ class Shotgun {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
         camera.AttachChild(newGun)
-        //create new entity
-       System.print("shotgun equip")
         var gunAnimations =newGun .GetAnimationControlComponent()
-        gunAnimations.Play("equip", 1.2, false, 0.0, false)
+        gunAnimations.Play(_equipAnim, 1.2, false, 0.0, false)
 
     }
 
     isUnequiping(engine){
-        var gunAnimations =engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-return gunAnimations.CurrentAnimationName() == "unequip" || gunAnimations.CurrentAnimationName() == "equip" 
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim 
     }
 
     unequip(engine){
         var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        gunAnimations.Play("unequip", 1.5, false, 0.0, false)
+        gunAnimations.Play(_unequipAnim, 1.5, false, 0.0, false)
     }
 
     cooldown {_cooldown}
@@ -376,8 +372,6 @@ class Knife {
         
         _attackAnim = "Shoot"
         _reloadAnim = "Reload"
-        _equipAnim = "" 
-
         _mesh = ""
     }
 
