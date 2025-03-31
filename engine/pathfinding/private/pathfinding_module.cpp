@@ -191,6 +191,7 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
 
 ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
 {
+    _computedPaths.clear();
     // Reference: https://app.datacamp.com/learn/tutorials/a-star-algorithm?dc_referrer=https%3A%2F%2Fwww.google.com%2F
     // Legend:
     // G = totalCost

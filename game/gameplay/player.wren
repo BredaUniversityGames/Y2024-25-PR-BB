@@ -13,6 +13,11 @@ class PlayerVariables {
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
+
+        _invincibilityMaxTime = 500
+        _invincibilityTime = 0
+        
+        _cameraVariablesRef = null
     }
 
     health {_health}
@@ -26,13 +31,23 @@ class PlayerVariables {
     grenadeCharge {_grenadeCharge}
     grenadeChargeRate {_grenadeChargeRate}
     grenadeMaxCharge {_grenadeMaxCharge}
+    invincibilityTime {_invincibilityTime}
+    invincibilityMaxTime {_invincibilityMaxTime}
+    
+    cameraVariables {_cameraVariablesRef}
+    cameraVariables=(value) {_cameraVariablesRef = value}
 
     health=(value) {_health = value}
     score=(value) {_score = value}
     ultCharge=(value) {_ultCharge = value}
     ultActive=(value) {_ultActive = value}
     grenadeCharge=(value) {_grenadeCharge = value}
-    
+    invincibilityTime=(value) {_invincibilityTime = value}
+
+    IsInvincible() {
+        return _invincibilityTime > 0
+    }
+
     DecreaseHealth(value) {
         _health = Math.Max(_health - value, 0)
     }
