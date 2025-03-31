@@ -5,11 +5,11 @@ class PlayerVariables {
         _maxHealth = 100.0
         _health = _maxHealth
         _score = 0
-        _ultChargeRate = 10
         _ultDecayRate = 10
         _ultMaxCharge = 100
         _ultCharge = 0
         _ultActive = false
+        _ultMaxChargeMultiplier = 4.0
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
@@ -88,5 +88,9 @@ class PlayerVariables {
             _consecutiveHits = 0
             _multiplier = _multiplier + _multiplierIncrement
         }
+    }
+
+    UpdateUltCharge() {
+        _ultCharge = Math.Min(_ultCharge + Math.Min(1 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }
 }

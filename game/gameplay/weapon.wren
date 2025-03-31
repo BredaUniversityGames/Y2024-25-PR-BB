@@ -112,6 +112,7 @@ class Pistol {
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
+                                        playerVariables.UpdateUltCharge()
                                     }
                                 }
                             }
@@ -200,7 +201,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("Revolver")
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
         
             _reloadTimer = _reloadSpeed
@@ -252,6 +253,7 @@ class Shotgun {
                                         hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
+                                        playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)
                                         }

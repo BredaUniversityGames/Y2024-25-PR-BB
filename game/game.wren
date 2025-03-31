@@ -188,8 +188,6 @@ class Main {
                 __activeWeapon.equip(engine)
                 __playerVariables.ultActive = false
             }
-        } else {
-            __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
         }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
