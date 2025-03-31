@@ -30,6 +30,8 @@ public:
 
     void SetMainMenuEnabled(bool val);
     void SetHUDEnabled(bool val);
+    void SetLoadingScreenEnabled(bool val);
+
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu()
     {
         if (auto lock = _mainMenu.lock())
@@ -41,6 +43,7 @@ public:
 
     std::weak_ptr<HUD> _hud;
     std::weak_ptr<MainMenu> _mainMenu;
+    std::weak_ptr<LoadingScreen> _loadingScreen;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

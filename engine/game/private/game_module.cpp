@@ -57,9 +57,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
+    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize));
 
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -91,6 +93,14 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 void GameModule::SetMainMenuEnabled(bool val)
 {
     if (auto lock = _mainMenu.lock())
+    {
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
+
+void GameModule::SetLoadingScreenEnabled(bool val)
+{
+    if (auto lock = _loadingScreen.lock())
     {
         lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
@@ -140,7 +150,8 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
 
     {
-        ZoneNamedN(updateCamera, "Update Camera", true);
+        // TODO!!! This can be directly handled by the debug renderer/physics
+        ZoneNamedN(updateCamera, "Update Physics camera", true);
 
         auto cameraView = ECS.GetRegistry().view<CameraComponent, TransformComponent>();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
