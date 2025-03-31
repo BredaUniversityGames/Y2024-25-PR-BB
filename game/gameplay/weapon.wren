@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.2 * 1000
+        _attackSpeed = 0.4 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -45,9 +45,31 @@ class Pistol {
 
             // Play reload audio
             var player = engine.GetECS().GetEntityByName("Camera")
+            var playerController = engine.GetECS().GetEntityByName("PlayerController")
+            var rb =  playerController.GetRigidbodyComponent()
+            var velocity = rb.GetVelocity()
+
             var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+
+            var gunTransform = gun.GetTransformComponent()
+            var gunTranslation = gunTransform.GetWorldTranslation()
+            var gunRotation = gunTransform.GetWorldRotation()
+            var gunForward = Math.ToVector(gunRotation)
+            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
+            var gunRight = Math.Cross(gunForward, gunUp)
+            var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
+
+            //play a particle effect
+            var entity = engine.GetECS().NewEntity()
+            var transform = entity.AddTransformComponent()
+            transform.translation = gunStart
+            var lifetime = entity.AddLifetimeComponent()
+            lifetime.lifetime = 175.0
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 5.0, 0.0) + velocity.mulScalar(1.2))
+            
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
