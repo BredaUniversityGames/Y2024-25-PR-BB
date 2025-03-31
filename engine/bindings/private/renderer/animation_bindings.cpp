@@ -26,6 +26,10 @@ void AnimationControlComponentResume(WrenComponent<AnimationControlComponent>& c
 {
     component.component->Resume();
 }
+void AnimationControlComponentSetTime(WrenComponent<AnimationControlComponent>& component, float time)
+{
+    component.component->SetAnimationTime(time);
+}
 Animation::PlaybackOptions AnimationControlComponentCurrentPlayback(WrenComponent<AnimationControlComponent>& component)
 {
     return component.component->CurrentPlayback();
@@ -54,6 +58,7 @@ void BindAnimationAPI(wren::ForeignModule& module)
     animationControlClass.funcExt<bindings::AnimationControlComponentStop>("Stop");
     animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
     animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
+    animationControlClass.funcExt<bindings::AnimationControlComponentSetTime>("SetTime");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentPlayback>("CurrentPlayback");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationIndex>("CurrentAnimationIndex");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationName>("CurrentAnimationName");
