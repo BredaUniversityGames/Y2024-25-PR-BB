@@ -93,6 +93,7 @@ class Main {
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Revolver"
         var gunTransform = __gun.GetTransformComponent()
@@ -115,7 +116,7 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
-        
+
         __pauseEnabled = false
 
         // Enemy setup
@@ -147,7 +148,7 @@ class Main {
             "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
             ""
             ]
-            
+
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
@@ -289,7 +290,7 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
             }
-            
+
             // TODO: Pause Menu on ESC
             // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
             //     __pauseEnabled = !__pauseEnabled
