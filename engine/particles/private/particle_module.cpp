@@ -186,6 +186,34 @@ void ParticleModule::LoadEmitterPresets()
         _emitterPresets.emplace_back(preset);
     }
 
+    { // Feathers
+        EmitterPreset preset;
+        preset.count = 10;
+        preset.startingVelocity = glm::vec3(1.0f, 5.0f, 1.0f);
+        preset.mass = 0.05f;
+        preset.rotationVelocity = glm::vec2(2.0f, 2.0f);
+        SetEmitterPresetImage(preset, "feather.png");
+        preset.size = glm::vec3(0.8f, 0.8f, 0.0f);
+        preset.name = "Feathers";
+        preset.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        preset.spawnRandomness = glm::vec3(5.0f);
+
+        ParticleBurst burst1;
+        burst1.loop = true;
+        burst1.count = 5;
+        burst1.maxInterval = 1.0f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 5;
+        burst2.maxInterval = 1.5f;
+
+        preset.bursts.emplace_back(burst1);
+        preset.bursts.emplace_back(burst2);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
     { // IMPACT
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
