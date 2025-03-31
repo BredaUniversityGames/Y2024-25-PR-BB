@@ -1,20 +1,20 @@
-#include "ui/ui_menus.hpp"
 #include "fonts.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
+#include "ui/ui_menus.hpp"
 #include "ui_image.hpp"
-#include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
 
 #include <glm/glm.hpp>
 #include <ui_button.hpp>
 
-MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
-    : Canvas(screenResolution)
+std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
 {
-    anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    SetAbsoluteTransform(GetAbsoluteLocation(), screenResolution);
+    auto main = std::make_shared<MainMenu>(screenResolution);
+
+    main->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    main->SetAbsoluteTransform(main->GetAbsoluteLocation(), screenResolution);
 
     // resource loading.
     auto loadButtonStyle = [&graphicsContext]()
@@ -50,20 +50,22 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
 
         ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
 
-        auto logoElement = AddChild<UIImage>(logo, pos, size);
+        auto logoElement = main->AddChild<UIImage>(logo, pos, size);
         logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     }
 
     // Discord Link
     {
-        openLinkButton = AddChild<UIButton>(buttonStyle, glm::vec2(878, 243) * .4f, glm::vec2(878, 243) * .4f);
+        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, glm::vec2(878, 243) * .4f, glm::vec2(878, 243) * .4f);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
         openLinkButton->AddChild<UITextElement>(font, "check out our discord!", 20)->SetColor(glm::vec4(0, 0, 0, 1));
+
+        main->openLinkButton = openLinkButton;
     }
 
     // Buttons
 
-    auto buttonPanel = AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
+    auto buttonPanel = main->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
 
     {
         buttonPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
@@ -76,40 +78,44 @@ MainMenu::MainMenu(GraphicsContext& graphicsContext, const glm::uvec2& screenRes
         constexpr glm::vec2 buttonBaseSize = glm::vec2(878, 243) * 0.5f;
         constexpr float textSize = 50;
 
-        playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         playButton->AddChild<UITextElement>(font, "play", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         buttonPos += increment;
 
-        settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         settingsButton->AddChild<UITextElement>(font, "settings", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         buttonPos += increment;
 
-        quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         quitButton->AddChild<UITextElement>(font, "quit", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
-        playButton->navigationTargets.down = settingsButton;
-        playButton->navigationTargets.up = openLinkButton;
+        main->playButton = playButton;
+        main->quitButton = quitButton;
+        main->settingsButton = settingsButton;
 
-        playButton->navigationTargets.down = settingsButton;
-        playButton->navigationTargets.up = quitButton;
+        playButton->navigationTargets.down = main->settingsButton;
+        playButton->navigationTargets.up = main->openLinkButton;
 
-        settingsButton->navigationTargets.down = quitButton;
-        settingsButton->navigationTargets.up = playButton;
+        playButton->navigationTargets.down = main->settingsButton;
+        playButton->navigationTargets.up = main->quitButton;
 
-        quitButton->navigationTargets.down = playButton;
-        quitButton->navigationTargets.up = settingsButton;
-        quitButton->navigationTargets.down = openLinkButton;
-        quitButton->navigationTargets.up = settingsButton;
+        settingsButton->navigationTargets.down = main->quitButton;
+        settingsButton->navigationTargets.up = main->playButton;
 
-        openLinkButton->navigationTargets.down = playButton;
-        openLinkButton->navigationTargets.up = quitButton;
+        quitButton->navigationTargets.down = main->openLinkButton;
+        quitButton->navigationTargets.up = main->settingsButton;
+
+        main->openLinkButton.lock()->navigationTargets.down = main->playButton;
+        main->openLinkButton.lock()->navigationTargets.up = main->quitButton;
     }
 
-    UpdateAllChildrenAbsoluteTransform();
+    main->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
+
+    return main;
 }

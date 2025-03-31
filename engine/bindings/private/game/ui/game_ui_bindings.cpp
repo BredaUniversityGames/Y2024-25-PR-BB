@@ -5,9 +5,9 @@ namespace bindings
 {
 
 void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
-std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton; }
-std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton; }
-std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton; }
+std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
+std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton.lock(); }
+std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton.lock(); }
 
 }
 

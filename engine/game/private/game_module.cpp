@@ -55,14 +55,10 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, gameVersionText));
     }
 
-    auto mainMenu = std::make_shared<MainMenu>(graphicsContext, viewportSize);
-
-    _mainMenu = mainMenu;
+    _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
-    engine.GetModule<UIModule>().GetViewport().AddElement<Canvas>(mainMenu);
-    engine.GetModule<UIModule>().uiInputContext.focusedUIElement = mainMenu->playButton;
 
-    _mainMenu->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
@@ -79,7 +75,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         }
     };
 
-    _mainMenu->openLinkButton->OnPress(Callback { OpenDiscordURL });
+    _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
@@ -94,14 +90,17 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void GameModule::SetMainMenuEnabled(bool val)
 {
-    _mainMenu->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    if (auto lock = _mainMenu.lock())
+    {
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
 }
 
 void GameModule::SetHUDEnabled(bool val)
 {
     if (auto lock = _hud.lock())
     {
-        _hud.lock()->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 }
 
