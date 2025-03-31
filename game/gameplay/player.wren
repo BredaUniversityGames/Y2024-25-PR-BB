@@ -90,7 +90,7 @@ class PlayerVariables {
         }
     }
 
-    UpdateUltCharge() {
-        _ultCharge = Math.Min(_ultCharge + Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
+    UpdateUltCharge(multiplier) {
+        _ultCharge = multiplier * Math.Min(_ultCharge + Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }
 }

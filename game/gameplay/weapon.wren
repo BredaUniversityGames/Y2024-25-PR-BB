@@ -112,7 +112,7 @@ class Pistol {
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
-                                        playerVariables.UpdateUltCharge()
+                                        playerVariables.UpdateUltCharge(1.0)
                                     }
                                 }
                             }
@@ -256,6 +256,7 @@ class Shotgun {
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)
+                                            playerVariables.UpdateUltCharge(0.1) // Allow the player to try and keep the ult active a bit longer
                                         }
                                     }
                                 }

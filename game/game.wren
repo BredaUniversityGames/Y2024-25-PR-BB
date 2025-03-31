@@ -230,8 +230,8 @@ class Main {
                 }
             }
 
-            // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
-            if (engine.GetInput().DebugGetKey(Keycode.eU())) {
+            // 
+            if (engine.GetInput().GetDigitalAction("Ultimate").IsPressed()) {
                 if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
                     System.print("Activate ultimate")
                     __activeWeapon = __armory[Weapons.shotgun]
