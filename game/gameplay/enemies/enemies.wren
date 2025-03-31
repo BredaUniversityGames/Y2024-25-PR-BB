@@ -31,6 +31,8 @@ class MeleeEnemy {
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Run", 1.0, true, 1.0, true)
 
+        _isAlive = true
+
         _reasonTimer = 0.0
 
         _attackRange = 6
@@ -51,7 +53,33 @@ class MeleeEnemy {
         _recoveryTime = 0
 
         _evaluateState = true
+
+        _health = 100
+
+        _deathTimer = 1000
     }
+
+    IsHeadshot(y) { // Will probably need to be changed when we have a different model
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+            return true
+        }
+        return false
+    }
+
+    DecreaseHealth(amount) {
+        _health = Math.Max(_health - amount, 0)
+        if (_health <= 0 && _isAlive) {
+            _isAlive = false
+            _rootEntity.RemoveEnemyTag()
+            var animations = _meshEntity.GetAnimationControlComponent()
+            animations.Play("Death", 1.0, true, 1.0, false)
+            var body = _rootEntity.GetRigidbodyComponent()
+            body.SetVelocity(Vec3.new(0,0,0))
+            body.SetStatic()
+        }
+    }
+
+    health {_health}
 
     entity {
         return _rootEntity
@@ -71,68 +99,78 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = pos
         var animations = _meshEntity.GetAnimationControlComponent()
 
-        if (_attackingState) {
-            _attackTime = _attackTime - dt
-            if (_attackTime <= 0 ) {
-                if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
-                    playerVariables.DecreaseHealth(_attackDamage)
-                    playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                    playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+        if (_isAlive) {
+            if (_attackingState) {
+                _attackTime = _attackTime - dt
+                if (_attackTime <= 0 ) {
+                    if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
+                        playerVariables.DecreaseHealth(_attackDamage)
+                        playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                        playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
-                    engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                    }
+
+                    System.print("Enter Recovery State")
+                    _attackingState = false
+                    _recoveryState = true
+                    _recoveryTime = _recoveryMaxTime 
                 }
+            }
+            if (_recoveryState) {
+                if (animations.AnimationFinished()) {
+                    animations.Play("Idle", 1.0, true, 1.0, false)
+                    animations.SetTime(0.0)
+                }
+                var forwardVector = (playerPos - pos).normalize()
 
-                System.print("Enter Recovery State")
-                _attackingState = false
-                _recoveryState = true
-                _recoveryTime = _recoveryMaxTime 
+                var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+                var startRotation = _rootEntity.GetTransformComponent().rotation
+                _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+
+                _recoveryTime = _recoveryTime - dt
+                if (_recoveryTime <= 0) {
+                    System.print("Recovered")
+                    _recoveryState = false
+                    _evaluateState = true
+                }
+            }
+
+            if (_movingState) {
+                this.DoPathfinding(playerPos, engine, dt)
+                _evaluateState = true   
+            }
+
+            if (_evaluateState) {
+                if (Math.Distance(playerPos, pos) < _attackRange) {
+                    System.print("Enter Attack State")
+                    // Enter attack state
+                    _attackingState = true
+                    _movingState = false
+                    body.SetFriction(12.0)
+                    animations.Play("Attack", 1.0, false, 1.0, false)
+                    animations.SetTime(0.0)
+                    _attackTime = _attackMaxTime
+                    _evaluateState = false
+                    _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
+
+                } else if (_movingState == false) { // Enter attack state
+                    System.print("Enter Moving State")
+                    body.SetFriction(0.0)
+                    animations.Play("Run", 1.0, true, 0.5, true)
+                    _movingState = true
+                }
+            }    
+        } else {
+            _deathTimer = _deathTimer - dt
+
+            if (_deathTimer <= 0) {
+                engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
+            } else {
+                var newPos = pos - Vec3.new(1, 1, 1).mulScalar(1.0 * 0.001 * dt)
+                body.SetTranslation(newPos)
             }
         }
-        if (_recoveryState) {
-            if (animations.AnimationFinished()) {
-                animations.Play("Idle", 1.0, true, 1.0, false)
-                animations.SetTime(0.0)
-            }
-            var forwardVector = (playerPos - pos).normalize()
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = _rootEntity.GetTransformComponent().rotation
-            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
-
-            _recoveryTime = _recoveryTime - dt
-            if (_recoveryTime <= 0) {
-                System.print("Recovered")
-                _recoveryState = false
-                _evaluateState = true
-            }
-        }
-
-        if (_movingState) {
-            this.DoPathfinding(playerPos, engine, dt)
-            _evaluateState = true   
-        }
-
-        if (_evaluateState) {
-            if (Math.Distance(playerPos, pos) < _attackRange) {
-                System.print("Enter Attack State")
-                // Enter attack state
-                _attackingState = true
-                _movingState = false
-                body.SetFriction(12.0)
-                animations.Play("Attack", 1.0, false, 1.0, false)
-                animations.SetTime(0.0)
-                _attackTime = _attackMaxTime
-                _evaluateState = false
-
-                _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
-
-            } else if (_movingState == false) { // Enter attack state
-                System.print("Enter Moving State")
-                body.SetFriction(0.0)
-                animations.Play("Run", 1.0, true, 0.5, true)
-                _movingState = true
-            }
-        }    
     }
 
     DoPathfinding(playerPos, engine, dt) {

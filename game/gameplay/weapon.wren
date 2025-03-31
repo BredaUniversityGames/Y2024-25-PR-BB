@@ -1,5 +1,6 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
 import "camera.wren" for CameraVariables
+import "player.wren" for PlayerVariables
 
 class Weapons {
     static pistol {0}
@@ -9,7 +10,8 @@ class Weapons {
 
 class Pistol {
     construct new(engine) {
-        _damage = 20
+        _damage = 50
+        _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.2 * 1000
@@ -38,13 +40,11 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName(_entityName)
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
+        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
-                System.print("Pistol reload")
 
-        _reloadTimer = _reloadSpeed
-        _ammo = _maxAmmo
-
+            _reloadTimer = _reloadSpeed
+            _ammo = _maxAmmo
         }
     }
 
@@ -65,14 +65,14 @@ class Pistol {
         }
     }
 
-    attack(engine, deltaTime, cameraVariables) {
+    attack(engine, deltaTime, playerVariables, enemies) {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
             // Shake the camera
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity            
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
@@ -97,12 +97,25 @@ class Pistol {
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
                 for (i in (rayHitInfo.count - 1)..0) {
-                    var hitEntity = rayHitInfo[i]
-                    if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
-                        end = hitEntity.position
-                        normal = hitEntity.normal
-                        if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
-                            engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
+                    var rayHit = rayHitInfo[i]
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                    if (!hitEntity.HasPlayerTag()) {
+                        end = rayHit.position
+                        normal = rayHit.normal
+                        if (hitEntity.HasEnemyTag()) {
+                            for (enemy in enemies) {
+                                if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                    var multiplier = 1.0
+                                    if (enemy.IsHeadshot(rayHit.position.y)) {
+                                        multiplier = _headShotMultiplier
+                                    }
+                                    playerVariables.UpdateMultiplier()
+                                    enemy.DecreaseHealth(_damage * multiplier)
+                                    if (enemy.health <= 0) {
+                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
+                                    }
+                                }
+                            }
                             break
                         }
                         break
@@ -157,17 +170,17 @@ class Pistol {
 
 class Shotgun {
     construct new(engine) {
-        _damage = 8
+        _damage = 15
         _damageDropoff = 0.5
         _raysPerShot = 9
         _range = 23
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.8 * 1000
+        _attackSpeed = 0.22 * 1000
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 0.4 * 1000
+        _reloadSpeed = 0.25 * 1000
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
@@ -186,20 +199,19 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName("Revolver")
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("reload").IsPressed()) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
-
+        
+            _reloadTimer = _reloadSpeed
+            _ammo = _maxAmmo
         }
-
-        _reloadTimer = _reloadSpeed
-        _ammo = _maxAmmo
     }
 
-    attack(engine, deltaTime, cameraVariables) {   
+    attack(engine, deltaTime, playerVariables, enemies) {   
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("Revolver")
@@ -220,21 +232,31 @@ class Shotgun {
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             
+            var hitAnEnemy = false
+
             var i = 0
             while (i < _raysPerShot) {
                 var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
-
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
-                
                 var end = start + newDirection * _rangeVector
-                
+
                 if (!rayHitInfo.isEmpty) {
                     for (i in (rayHitInfo.count - 1)..0) {
-                        var hitEntity = rayHitInfo[i]
-                        if (!hitEntity.GetEntity(engine.GetECS()).HasPlayerTag()) {
-                            end = hitEntity.position
-                            if (hitEntity.GetEntity(engine.GetECS()).HasEnemyTag()) {
-                                engine.GetECS().DestroyEntity(hitEntity.GetEntity(engine.GetECS()))
+                        var rayHit = rayHitInfo[i]
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
+                        if (!hitEntity.HasPlayerTag()) {
+                            end = rayHit.position
+                            if (hitEntity.HasEnemyTag()) {
+                                for (enemy in enemies) {
+                                    if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                        hitAnEnemy = true
+                                        enemy.DecreaseHealth(_damage)
+                                        playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
+                                        if (enemy.health <= 0) {
+                                            playerVariables.IncreaseScore(15 * playerVariables.multiplier)
+                                        }
+                                    }
+                                }
                                 break
                             }
                             break
@@ -257,6 +279,11 @@ class Shotgun {
 
                 i = i + 1
             }
+
+            if (hitAnEnemy) {
+                playerVariables.UpdateMultiplier()
+            }
+
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
             gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
@@ -307,10 +334,10 @@ class Knife {
         // Use some weapon inspect animation maybe?
     }
 
-    attack(engine, deltaTime, cameraVariables) {
+    attack(engine, deltaTime, playerVariables, enemies) {
         if (_cooldown <= 0) {
 
-            cameraVariables.shakeIntensity = _cameraShakeIntensity
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName("Gun")
