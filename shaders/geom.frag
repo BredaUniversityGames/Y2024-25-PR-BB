@@ -25,6 +25,14 @@ layout (push_constant) uniform PushConstants
     uint directInstanceIndex;
 } pc;
 
+const mat4 bayer = mat4(
+1.0 / 17.0, 13.0 / 17.0, 4.0 / 17.0, 16.0 / 17.0,
+9.0 / 17.0, 5.0 / 17.0, 12.0 / 17.0, 8.0 / 17.0,
+3.0 / 17.0, 15.0 / 17.0, 2.0 / 17.0, 14.0 / 17.0,
+11.0 / 17.0, 7.0 / 17.0, 10.0 / 17.0, 6.0 / 17.0
+);
+
+
 void main()
 {
     Material material;
@@ -45,9 +53,15 @@ void main()
 
     vec3 normal = normalIn;
 
+    ivec2 pixelPos = ivec2(gl_FragCoord.xy);
+    if (instances[drawID].transparency < bayer[pixelPos.x % 4][pixelPos.y % 4] && instances[drawID].transparency != 1.0)
+    {
+        discard;
+    }
+
     if (material.useAlbedoMap)
     {
-        albedoSample = pow(texture(bindless_color_textures[nonuniformEXT(material.albedoMapIndex)], texCoord), vec4(2.2));
+        albedoSample = pow(texture(bindless_color_textures[nonuniformEXT (material.albedoMapIndex)], texCoord), vec4(2.2));
         if (albedoSample.a < 1.0)
         {
             discard;
@@ -55,15 +69,15 @@ void main()
     }
     if (material.useMRMap)
     {
-        mrSample = texture(bindless_color_textures[nonuniformEXT(material.mrMapIndex)], texCoord);
+        mrSample = texture(bindless_color_textures[nonuniformEXT (material.mrMapIndex)], texCoord);
     }
     if (material.useNormalMap)
     {
-        normalSample = texture(bindless_color_textures[nonuniformEXT(material.normalMapIndex)], texCoord);
+        normalSample = texture(bindless_color_textures[nonuniformEXT (material.normalMapIndex)], texCoord);
     }
     if (material.useOcclusionMap)
     {
-        occlusionSample = texture(bindless_color_textures[nonuniformEXT(material.occlusionMapIndex)], texCoord);
+        occlusionSample = texture(bindless_color_textures[nonuniformEXT (material.occlusionMapIndex)], texCoord);
     }
 
     albedoSample *= pow(material.albedoFactor, vec4(2.2));
