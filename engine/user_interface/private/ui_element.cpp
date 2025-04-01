@@ -3,7 +3,6 @@
 #include "viewport.hpp"
 #include <ranges>
 
-
 void UIElement::SetLocation(const glm::vec2& location) noexcept
 {
     _relativeLocation = location * Viewport::GetScaleMultipler();
@@ -22,11 +21,15 @@ void UIElement::Update(const InputManagers& inputManagers, UIInputContext& uiInp
             if (auto locked = uiInputContext.focusedUIElement.lock(); locked.get() == this)
             {
                 UINavigationDirection direction = uiInputContext.GetDirection(inputManagers.actionManager);
-                std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, direction);
 
-                if (std::shared_ptr<UIElement> locked = navTarget.lock(); locked != nullptr)
+                if (direction != UINavigationDirection::eNone)
                 {
-                    uiInputContext.focusedUIElement = locked;
+                    std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, direction);
+
+                    if (std::shared_ptr<UIElement> locked = navTarget.lock(); locked != nullptr)
+                    {
+                        uiInputContext.focusedUIElement = locked;
+                    }
                 }
             }
         }
