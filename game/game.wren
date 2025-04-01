@@ -22,6 +22,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+        engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
 
 
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
