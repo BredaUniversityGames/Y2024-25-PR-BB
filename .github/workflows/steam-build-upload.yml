@@ -3,7 +3,7 @@ name: Steam-Build-Upload
 on:
   workflow_dispatch:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   build-and-package-project:
@@ -57,6 +57,12 @@ jobs:
 
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
+
+      # Update game version
+
+      - name: Write Game Version
+        run: |
+          "Blightspire - Build ${{ github.ref_name }}" > "version.txt"
 
       # Get assets from perforce depot
 
