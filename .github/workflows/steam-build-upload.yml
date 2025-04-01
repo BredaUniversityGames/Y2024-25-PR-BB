@@ -143,6 +143,11 @@ jobs:
           name: linux-dist
           path: package/
 
+      # Update game version
+      - name: Write Game Version
+        run: |
+          "Blightspire - Build ${{ github.ref_name }}" > "version.txt"
+
       # Create steam config to avoid 2FA
 
       - name: Create Steam Config
