@@ -26,7 +26,6 @@ GENERATE_ENUM_FLAG_OPERATORS(SpawnEmitterFlagBits)
 
 enum class EmitterPresetID : uint8_t
 {
-    eTest = 0,
     eFlame,
     eDust,
     eFeathers,
