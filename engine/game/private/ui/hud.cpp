@@ -103,6 +103,9 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->scoreText = hud->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 50);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
+    hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 50);
+    hud->multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
     // common image data.
     CPUImage imageData;
     imageData.format
