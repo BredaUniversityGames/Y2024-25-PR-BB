@@ -7,7 +7,7 @@ class PlayerVariables {
         _score = 0
         _ultDecayRate = 10
         _ultMaxCharge = 100
-        _ultCharge = 99
+        _ultCharge = 0
         _ultActive = false
         _ultMaxChargeMultiplier = 4.0
         _wasUltReadyLastFrame = false
@@ -67,7 +67,7 @@ class PlayerVariables {
     consecutiveHits=(value) {_consecutiveHits = value}
     consecutiveMaxHits=(value) {_consecutiveMaxHits = value}
     wasUltReadyLastFrame=(value) {_wasUltReadyLastFrame = value}
-    
+
     IsInvincible() {
         return _invincibilityTime > 0
     }
