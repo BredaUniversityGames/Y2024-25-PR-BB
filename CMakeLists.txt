@@ -62,7 +62,7 @@ if (NOT EXISTS "${APP_ICON_RESOURCE_WINDOWS}")
     unset(APP_ICON_RESOURCE_WINDOWS)
     message(STATUS "App icon resource found")
 else ()
-
+    message(STATUS "App icon resource not found!")
 endif ()
 
 # Add executable with settings based on configuration used
