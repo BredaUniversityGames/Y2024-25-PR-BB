@@ -1,4 +1,5 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
+import "enemies/enemies.wren" for MeleeEnemy
 
 class Spawn {
     construct new(enemyType, spawnLocationId, time, count) {
@@ -46,14 +47,15 @@ class WaveStatusType {
 
 class WaveSystem {
 
-    construct new(engine, waveConfigs) {
+    construct new(engine, waveConfigs, enemyList) {
         _engine = engine
         _waveConfigs = waveConfigs
+        _enemyList = enemyList
 
         _currentWave = -1
         _status = WaveStatusType.NotStarted
         _waveTimer = 0.0
-        _spawnedEnemies = []
+        _enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
     }
     
     ActiveWaveConfig() { 
@@ -78,17 +80,18 @@ class WaveSystem {
                 }
 
                 if(!spawn.Processed && spawn.Time < _waveTimer) {
-                    // TODO: Spawn enemy at location
-                    System.print("Spawned %(spawn.Count) enemies")
+                    this.Spawn(spawn)
 
                     spawn.Processed = true
                 }
                 
             }
 
-            if(_spawnedEnemies.count == 0 && _waveTimer > this.ActiveWaveConfig().Duration) {
+            if(_enemyList.count == 0 && _waveTimer > this.ActiveWaveConfig().Duration) {
                 _status = WaveStatusType.Completed
                 _waveTimer = 0.0
+
+                System.print("Completed wave")
             }
 
         } else if(_status == WaveStatusType.Completed || _status == WaveStatusType.NotStarted) {
@@ -116,5 +119,11 @@ class WaveSystem {
         _waveTimer = 0.0
             
         System.print("Starting wave %(_currentWave)")
+    }
+
+    Spawn(spawn) {
+        var enemyModelPath = "assets/models/Skeleton.glb"
+        var enemy = _enemyList.add(MeleeEnemy.new(_engine, Vec3.new(10.0, 14.4, 11.4), Vec3.new(0.02, 0.02, 0.02), 5, enemyModelPath, _enemyShape))
+        enemy.FindNewPath(_engine)
     }
 }

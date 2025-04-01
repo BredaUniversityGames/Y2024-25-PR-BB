@@ -18,7 +18,7 @@ void logHandler(const std::string& message, gameanalytics::EGALoggerMessageType 
         bblog::warn(message);
         break;
     case gameanalytics::LogInfo:
-        bblog::info(message);
+        // bblog::info(message);
         break;
     case gameanalytics::LogDebug:
         bblog::debug(message);

@@ -123,17 +123,6 @@ class Main {
 
         __pauseEnabled = false
 
-        // Enemy setup
-        __enemyList = []
-        __spawnerList = []
-
-        for (position in positions) {
-            __spawnerList.add(Spawner.new(position, 7000.0))
-        }
-
-        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
@@ -156,16 +145,17 @@ class Main {
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
+        __enemyList = []
         var waveConfigs = []
         waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Demon", 0, 1, 1)
-            .AddSpawn("Demon", 0, 7, 3)
+            .AddSpawn("Skeleton", 0, 1, 1)
+            .AddSpawn("Skeleton", 0, 7, 3)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Demon", 0, 1, 1)
-            .AddSpawn("Demon", 0, 7, 3)
+            .AddSpawn("Skeleton", 0, 1, 1)
+            .AddSpawn("Skeleton", 0, 7, 3)
         )
-        __waveSystem = WaveSystem.new(engine, waveConfigs)
+        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList)
     }
 
     static Shutdown(engine) {
@@ -303,10 +293,6 @@ class Main {
                 __playerVariables.IncreaseHealth(5)
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
-            }
-
             // TODO: Pause Menu on ESC
             // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
             //     __pauseEnabled = !__pauseEnabled
@@ -343,7 +329,6 @@ class Main {
             }
 
         }
-        var playerPos = __player.GetTransformComponent().translation
 
         __waveSystem.Update(dt)
     }
