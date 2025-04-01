@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "log.hpp"
 #include "wren_common.hpp"
 
 #include <cstdint>

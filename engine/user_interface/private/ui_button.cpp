@@ -52,11 +52,23 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
             state = ButtonState::eNormal;
             return;
         }
-        SwitchState(inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsPressed(), inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsReleased());
-        if (state == ButtonState::ePressed)
+        else
+        {
+            state = ButtonState::eHovered;
+        }
+
+        auto pressAction = inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName());
+
+        if (pressAction.IsHeld())
+        {
+            state = ButtonState::ePressed;
+        }
+
+        if (pressAction.IsReleased())
         {
             std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
             inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
+            _callback();
         }
     }
     else // Mouse controls
@@ -82,10 +94,7 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
             if (mouseUp)
             {
-                bblog::info("Callback Press");
                 _callback();
-
-                state = ButtonState::eHovered;
             }
 
             inputContext.ConsumeInput();

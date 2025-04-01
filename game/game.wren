@@ -165,6 +165,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(true)
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -333,7 +334,8 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
-            
+        }
+
         // Check if pause key was pressed
         if(engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
             
@@ -368,7 +370,6 @@ class Main {
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
-
         }
     }
 }
