@@ -34,11 +34,11 @@ public:
     std::optional<std::string> RunScript(const std::string& path);
 
     // Sets the output stream for system log calls
-    void SetScriptingOutputStream(std::ostream* stream) { _wrenOutStream = stream; }
+    void SetScriptingOutputStream(std::shared_ptr<bblog::logger> stream) { _wrenOutStream = stream; }
     void FlushOutputStream() { _wrenOutStream->flush(); }
 
 private:
     VMInitConfig _vmInitConfig {};
     std::unique_ptr<wren::VM> _vm;
-    std::ostream* _wrenOutStream = &std::cout;
+    std::shared_ptr<bblog::logger> _wrenOutStream = nullptr;
 };
