@@ -78,6 +78,9 @@ class Main {
         __camera.AddNameComponent().name = "Camera"
         __camera.AddAudioListenerTag()
 
+
+
+
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
@@ -168,6 +171,9 @@ class Main {
         //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
         // }
 
+
+
+
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
             __ambientPlayer.CycleMusic(engine.GetAudio())
@@ -182,7 +188,6 @@ class Main {
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
         __timer = __timer + dt
-
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
         if (__playerVariables.ultActive) {
@@ -199,6 +204,8 @@ class Main {
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
+        __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
+
 
         if (__playerVariables.multiplierTimer == 0 ) {
             __playerVariables.multiplier = 1.0
@@ -212,7 +219,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__activeWeapon)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -318,6 +325,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
+        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

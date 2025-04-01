@@ -19,6 +19,8 @@ class PlayerVariables {
         
         _cameraVariablesRef = null
 
+        _hitmarkTimer = 0
+
         _multiplier = 1.0
         _multiplierIncrement = 0.2
 
@@ -29,6 +31,7 @@ class PlayerVariables {
         _consecutiveMaxHits = 5        
     }
     
+    hitmarkTimer{_hitmarkTimer}
     health {_health}
     maxHealth {_maxHealth}
     score {_score}
@@ -52,6 +55,8 @@ class PlayerVariables {
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
 
+
+    hitmarkTimer=(value){_hitmarkTimer = value}
     health=(value) {_health = value}
     score=(value) {_score = value}
     ultCharge=(value) {_ultCharge = value}

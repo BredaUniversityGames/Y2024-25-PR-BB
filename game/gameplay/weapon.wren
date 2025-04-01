@@ -26,7 +26,7 @@ class Pistol {
         _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = ""
         _equipSFX = ""
-        
+        __hitmarkTimer = 0
         _walkAnim = "walk"
         _idleAnim = "idle"
         _attackAnim = "shoot"
@@ -63,6 +63,14 @@ class Pistol {
         var gunAnimations = gun.GetAnimationControlComponent()
         if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
             gunAnimations.Play(_idleAnim, 1.0, false, 0.2, false)
+        } 
+    }
+
+    playSlidingAnim(engine){
+    var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
+            gunAnimations.Play("slide", 1.0, false, 0.2, false)
         }
     }
 
@@ -94,7 +102,7 @@ class Pistol {
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-
+     
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
                 for (rayHit in rayHitInfo) {
@@ -106,6 +114,12 @@ class Pistol {
                             for (enemy in enemies) {
                                 if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
                                     var multiplier = 1.0
+
+                                    playerVariables.hitmarkTimer = 100   
+                                                 
+                                   
+                                   engine.GetGame().GetHUD().ShowHitmarker(true)
+    
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
                                     }
@@ -257,7 +271,9 @@ class Shotgun {
             var direction = (end - start).normalize()
             
             var hitAnEnemy = false
-
+ engine.GetGame().GetHUD().ShowHitmarker(false)
+        
+          
             var i = 0
             while (i < _raysPerShot) {
                 var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
@@ -273,6 +289,10 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
                                         hitAnEnemy = true
+
+                                        playerVariables.hitmarkTimer = 100   
+    
+                                         
                                         enemy.DecreaseHealth(_damage)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         if (enemy.health <= 0) {
@@ -330,6 +350,31 @@ class Shotgun {
 
     }
 
+    playWalkAnim (engine){
+        //will hold reference to entity when implementing weapon switching
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || (gunAnimations.CurrentAnimationName() == _idleAnim || gunAnimations.CurrentAnimationName() == "slide")){
+            gunAnimations.Play(_walkAnim, 1.0, false, 0.2, false)
+        }
+    }
+
+    playIdleAnim(engine){
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || (gunAnimations.CurrentAnimationName() == _walkAnim || gunAnimations.CurrentAnimationName() == "slide") ){
+            gunAnimations.Play(_idleAnim, 1.0, false, 0.2, false)
+        }
+    }
+
+    playSlidingAnim(engine){
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunAnimations = gun.GetAnimationControlComponent()
+        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim || gunAnimations.CurrentAnimationName() == _idleAnim){
+            gunAnimations.Play("slide", 1.0, false, 0.1, false)
+        }
+    }
+
     isUnequiping(engine){
         var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
         return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim 
@@ -339,6 +384,8 @@ class Shotgun {
         var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
         gunAnimations.Play(_unequipAnim, 1.5, false, 0.0, false)
     }
+
+
 
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}

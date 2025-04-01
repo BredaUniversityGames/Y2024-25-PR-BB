@@ -168,7 +168,7 @@ class PlayerMovement{
         player.GetTransformComponent().translation = position
     }
 
-    Movement(engine, playerController, camera) {
+    Movement(engine, playerController, camera, gun) {
 
         var cheats = playerController.GetCheatsComponent()
         if(cheats.noClip) {
@@ -218,13 +218,24 @@ class PlayerMovement{
             moveInputDir = moveProjected.normalize()
         }
 
-        if(movement.length() > 0.1){
+
+
+
+if(isSliding == true){
+        System.print("slide")
+        gun.playSlidingAnim(engine)
+
+}else{
+  if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
-            _gun.playWalkAnim(engine)
+            gun.playWalkAnim(engine)
+            System.print("move")
         }else{
-            _gun.playIdleAnim(engine)
+            gun.playIdleAnim(engine) 
             playerBody.SetFriction(12.0)
         }
+}
+      
 
         playerBody.SetGravityFactor(gravityFactor)
 
@@ -443,8 +454,8 @@ class PlayerMovement{
 
 
     
-    Update(engine, dt, playerController, camera){
-        this.Movement(engine, playerController, camera)
+    Update(engine, dt, playerController, camera, gun){
+        this.Movement(engine, playerController, camera, gun)
         this.Dash(engine, dt, playerController, camera)
         this.Slide(engine, dt, playerController, camera)
     }

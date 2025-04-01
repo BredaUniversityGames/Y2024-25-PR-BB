@@ -13,6 +13,8 @@ inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
 struct HUD
 {
     std::shared_ptr<Canvas> canvas;
+    std::weak_ptr<UIImage> crosshair;
+    std::weak_ptr<UIImage> hitmarker;
     std::weak_ptr<UIProgressBar> healthBar;
     std::weak_ptr<UIProgressBar> ultBar;
     std::weak_ptr<UIProgressBar> sprintBar;

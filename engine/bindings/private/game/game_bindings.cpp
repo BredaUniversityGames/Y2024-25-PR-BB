@@ -110,6 +110,21 @@ void UpdateScoreText(HUD& self, const int score)
     }
 }
 
+void ShowHitmarker(HUD& self, bool val)
+{
+
+    if (auto locked = self.hitmarker.lock(); locked != nullptr)
+    {
+        if (val)
+        {
+            locked->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        }
+        else
+        {
+            locked->visibility = UIElement::VisibilityState::eUpdatedAndInvisble;
+        }
+    }
+}
 void UpdateMultiplierText(HUD& self, const float multiplier)
 {
     if (auto locked = self.multiplierText.lock(); locked != nullptr)
@@ -172,4 +187,5 @@ void BindGameAPI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
+    hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "Show hit marker");
 }

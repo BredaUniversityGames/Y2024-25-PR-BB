@@ -83,7 +83,7 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     commonImageData.isHDR = false;
     auto crosshair = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
-    hud.canvas->AddChild<UIImage>(crosshair, glm::vec2(0), glm::vec2(120, 160) * 0.15f);
+    hud.crosshair = hud.canvas->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(120, 160) * 0.3f);
 
     hud.healthBar = hud.canvas->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
     hud.healthBar.lock()->AddChild<UITextElement>(font, "health", 30);
@@ -120,7 +120,12 @@ HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResoluti
 
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
 
+    auto hitmarkerImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker.png"));
+
     auto gunPic = hud.canvas->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
+
+    hud.hitmarker = hud.canvas->AddChild<UIImage>(hitmarkerImage, glm::vec2(0), glm::vec2(100, 100) * 0.5f).lock();
+    hud.hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     gunPic.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
