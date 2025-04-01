@@ -81,6 +81,7 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
+
         var positions = [Vec3.new(10.0, 14.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
         // Load Map
@@ -237,6 +238,8 @@ class Main {
                     __activeWeapon = __armory[Weapons.shotgun]
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
+
+                    engine.GetAudio().PlayEventOnce("event:/Character/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)

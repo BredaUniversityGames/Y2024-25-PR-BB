@@ -86,9 +86,29 @@ void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, 
     component.component->color = color;
 }
 
+void PointLightComponentSetRange(WrenComponent<PointLightComponent>& component, const float range)
+{
+    component.component->range = range;
+}
+
+void PointLightComponentSetIntensity(WrenComponent<PointLightComponent>& component, const float intensity)
+{
+    component.component->intensity = intensity;
+}
+
 glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& component)
 {
     return component.component->color;
+}
+
+float PointLightComponentGetRange(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->range;
+}
+
+float PointLightComponentGetIntensity(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->intensity;
 }
 
 void DirectionalLightComponentSetColor(WrenComponent<DirectionalLightComponent>& component, const glm::vec3& color)
@@ -327,6 +347,8 @@ void BindEntityAPI(wren::ForeignModule& module)
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
         pointLightClass.propExt<bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
+        pointLightClass.propExt<bindings::PointLightComponentGetRange, bindings::PointLightComponentSetRange>("range");
+        pointLightClass.propExt<bindings::PointLightComponentGetIntensity, bindings::PointLightComponentSetIntensity>("intensity");
 
         auto& directionalLightClass = module.klass<WrenComponent<DirectionalLightComponent>>("DirectionalLightComponent");
         directionalLightClass.propExt<bindings::DirectionalLightComponentGetColor, bindings::DirectionalLightComponentSetColor>("color");
