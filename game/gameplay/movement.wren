@@ -115,7 +115,6 @@ class PlayerMovement{
         _cameraYaw = Math.Min(Math.Max(_cameraYaw + rotationDelta.y, Math.Radians(-90.0)), Math.Radians(90.0))
         var forwardVector = Math.ToQuat(Vec3.new(_cameraYaw, -_cameraPitch, 0))
 
-
         var gun = engine.GetECS().GetEntityByName("Gun")
         var gunTransform = gun.GetTransformComponent()
 
@@ -125,16 +124,13 @@ class PlayerMovement{
         _smoothedCameraDelta.x = (_smoothedCameraDelta.x * lerpFactor +  rotationDelta.x * (1-lerpFactor)) / divisionFactor
         _smoothedCameraDelta.y = (_smoothedCameraDelta.y * lerpFactor +  rotationDelta.y * (1-lerpFactor)) / divisionFactor
 
-
         var clampedX  = Math.Clamp(_smoothedCameraDelta.x*5,-max,max)
         var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max)
 
         gunTransform.translation = Vec3.new(clampedX,clampedY,0)
         gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
 
-        var rotation = forwardVector
-
-        player.GetTransformComponent().rotation = rotation
+        player.GetTransformComponent().rotation = forwardVector
     }
 
     FlyCamMovement(engine, player) {
