@@ -12,12 +12,12 @@
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/render_in_foreground.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "game_module.hpp"
 #include "systems/lifetime_component.hpp"
-#include "components/render_in_foreground.hpp"
 
 namespace bindings
 {

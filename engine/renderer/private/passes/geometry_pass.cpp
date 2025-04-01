@@ -185,8 +185,7 @@ void GeometryPass::DrawIndirectGeometry(vk::CommandBuffer commandBuffer, uint32_
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 3, { scene.gpuScene->MainCameraBatch().StaticDraw().redirectDescriptor }, {});
 
-        PushConstants pushConstant
-        {
+        PushConstants pushConstant {
             .isDirectCommand = 0,
             .directInstanceIndex = 0,
         };
@@ -221,8 +220,7 @@ void GeometryPass::DrawIndirectGeometry(vk::CommandBuffer commandBuffer, uint32_
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { _cameraBatch.SkinnedDraw().redirectDescriptor }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 4, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
 
-        PushConstants pushConstant
-        {
+        PushConstants pushConstant {
             .isDirectCommand = 0,
             .directInstanceIndex = 0,
         };
@@ -269,8 +267,7 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
 
         for (const DrawIndexedDirectCommand& command : staticCommands)
         {
-            PushConstants pushConstant
-            {
+            PushConstants pushConstant {
                 .isDirectCommand = 1,
                 .directInstanceIndex = command.instanceIndex,
             };
@@ -301,8 +298,7 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
 
         for (const DrawIndexedDirectCommand& command : skinnedCommands)
         {
-            PushConstants pushConstant
-            {
+            PushConstants pushConstant {
                 .isDirectCommand = 1,
                 .directInstanceIndex = command.instanceIndex,
             };
