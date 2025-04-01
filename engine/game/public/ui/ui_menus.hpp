@@ -10,11 +10,17 @@ class GraphicsContext;
 
 inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
 
-struct HUD
+class HUD : public Canvas
 {
-    std::shared_ptr<Canvas> canvas;
-    std::weak_ptr<UIImage> crosshair;
-    std::weak_ptr<UIImage> hitmarker;
+
+public:
+    static std::shared_ptr<HUD> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+    HUD(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
     std::weak_ptr<UIProgressBar> healthBar;
     std::weak_ptr<UIProgressBar> ultBar;
     std::weak_ptr<UIProgressBar> sprintBar;
@@ -25,16 +31,16 @@ struct HUD
     std::array<std::weak_ptr<UIImage>, MAX_DASH_CHARGE_COUNT> dashCharges;
 };
 
-HUD HudCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
-void HudUpdate(HUD& hud, float timePassed);
-
 class MainMenu : public Canvas
 {
 public:
+    static std::shared_ptr<MainMenu> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
     MainMenu(const glm::uvec2& screenResolution)
         : Canvas(screenResolution)
     {
     }
+
     std::weak_ptr<UIButton> playButton;
     std::weak_ptr<UIButton> settingsButton;
     std::weak_ptr<UIButton> quitButton;
@@ -43,8 +49,15 @@ public:
 
 MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
 
-struct GameVersionVisualization
+class GameVersionVisualization : public Canvas
 {
+public:
+    static std::shared_ptr<GameVersionVisualization> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text);
+
+    GameVersionVisualization(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
     std::shared_ptr<Canvas> canvas;
     std::weak_ptr<UITextElement> text;
 };

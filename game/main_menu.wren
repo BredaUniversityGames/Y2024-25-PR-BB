@@ -33,6 +33,20 @@ class Main {
         var camTrans = __camera.GetTransformComponent()
         camTrans.rotation = Quat.new(0.982,0.145,0.117,-0.017)
 
+        var settings = engine.GetGame().GetMainMenu().settingsButton
+        settings.OnPress(Fn.new { System.print("Settings Opened!")})
+
+        var play = engine.GetGame().GetMainMenu().playButton
+        play.OnPress(Fn.new {
+            engine.GetGame().SetMainMenuEnabled(false)
+            engine.TransitionToScript("game/game.wren")
+        })
+
+        var exit = engine.GetGame().GetMainMenu().quitButton
+        exit.OnPress(Fn.new {
+            engine.SetExit(0)
+        })
+        
         var musicList = [
             "assets/music/main_menu/Alon Peretz - The Queens Quarters.wav",
             "assets/music/main_menu/Itai Argaman - The Sacred Voice.wav",
@@ -67,17 +81,6 @@ class Main {
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
             __ambientPlayer.CycleMusic(engine.GetAudio())
-        }
-
-        if(engine.GetGame().GetMainMenu().PlayButtonPressedOnce()) {
-            engine.GetGame().SetMainMenuEnabled(false)
-            engine.TransitionToScript("game/game.wren")
-            return
-        }
-
-        if(engine.GetGame().GetMainMenu().QuitButtonPressedOnce()) {
-            engine.SetExit(0)
-            return
         }
     }
 }

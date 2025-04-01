@@ -28,24 +28,26 @@ public:
 
     template <typename T, typename... Args>
         requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
-    T& AddElement(Args&&... args)
+    std::weak_ptr<T> AddElement(Args&&... args)
     {
-        UIElement& addedChild = *_baseElements.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
+        auto newElement = std::make_shared<T>(std::forward<Args>(args)...);
+        _baseElements.emplace_back(newElement);
+
         std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
-        return static_cast<T&>(addedChild);
+        return newElement;
     }
 
     template <typename T>
         requires(std::derived_from<T, UIElement>)
-    T& AddElement(std::shared_ptr<T> typePtr)
+    std::weak_ptr<T> AddElement(std::shared_ptr<T> typePtr)
     {
-        UIElement& addedChild = *_baseElements.emplace_back(std::move(typePtr));
+        _baseElements.emplace_back(typePtr);
         std::sort(_baseElements.begin(), _baseElements.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
             { return v1->zLevel < v2->zLevel; });
 
-        return static_cast<T&>(addedChild);
+        return typePtr;
     }
 
     void ClearViewport()
