@@ -190,6 +190,7 @@ private:
         float boundingRadius;
         uint32_t boneOffset;
         bool isStaticDraw;
+        float transparency = 1.0f;
     };
 
     struct alignas(16) DecalData

@@ -9,4 +9,5 @@ struct SkinnedMeshComponent
 {
     ResourceHandle<GPUMesh> mesh {};
     entt::entity skeletonEntity { entt::null };
+    entt::entity rootEntity { entt::null };
 };
