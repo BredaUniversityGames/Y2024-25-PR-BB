@@ -7,7 +7,7 @@ class PlayerVariables {
         _score = 0
         _ultDecayRate = 10
         _ultMaxCharge = 100
-        _ultCharge = 0
+        _ultCharge = 99
         _ultActive = false
         _ultMaxChargeMultiplier = 4.0
         _grenadeMaxCharge = 100
