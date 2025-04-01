@@ -33,6 +33,7 @@ class PlayerMovement{
         _lastMousePosition = Vec2.new(0.0 ,0.0)
 
         _slideSoundInstance = null
+        _crowsSoundInstance = null
     }
 
 //getters
@@ -453,10 +454,33 @@ if(isSliding == true){
     }
 
 
+    CheckBounds(engine, playerController, camera){
+        var currentPos = playerController.GetRigidbodyComponent().GetPosition()
+        if(currentPos.y < -10.0){
+            var playerBody = playerController.GetRigidbodyComponent()
+            playerBody.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
+            playerBody.SetTranslation(Vec3.new(-27.0, 30.5, 7.0))
+
+            //play a sound effect
+            _crowsSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/crows.wav", 1.0)
+            camera.GetAudioEmitterComponent().AddSFX(_crowsSoundInstance)
+
+            //play a particle effect
+            var entity = engine.GetECS().NewEntity()
+            var transform = entity.AddTransformComponent()
+            transform.translation = Vec3.new(-27.0, 27.5, 7.0)
+            var lifetime = entity.AddLifetimeComponent()
+            lifetime.lifetime = 2000.0
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eFeathers(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            
+        }
+    }
     
     Update(engine, dt, playerController, camera, gun){
         this.Movement(engine, playerController, camera, gun)
         this.Dash(engine, dt, playerController, camera)
         this.Slide(engine, dt, playerController, camera)
+        this.CheckBounds(engine, playerController, camera)
     }
 }
