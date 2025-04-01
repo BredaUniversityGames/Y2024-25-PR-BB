@@ -316,15 +316,18 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
             }
-            
-            if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
-                __pauseEnabled = !__pauseEnabled
+        }
 
-                if (__pauseEnabled) {
-                    __pauseHandler.call()
-                } else {
-                    __unpauseHandler.call()
-                }
+        // Check if pause key was pressed
+        if(engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
+            System.print("Pause Menu pressed!")
+            
+            __pauseEnabled = !__pauseEnabled
+
+            if (__pauseEnabled) {
+                __pauseHandler.call()
+            } else {
+                __unpauseHandler.call()
             }
         }
 
