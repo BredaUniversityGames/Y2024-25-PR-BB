@@ -165,12 +165,12 @@ void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool re
 
 void TransparencySet(WrenComponent<TransparencyComponent>& component, float opacity)
 {
-    component.component->opacity = opacity;
+    component.component->transparency = opacity;
 }
 
 float TransparencyGet(WrenComponent<TransparencyComponent>& component)
 {
-    return component.component->opacity;
+    return component.component->transparency;
 }
 
 uint32_t GetEntity(WrenEntity& self)
@@ -399,6 +399,6 @@ void BindEntityAPI(wren::ForeignModule& module)
         cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
 
         auto& transparencyClass = module.klass<WrenComponent<TransparencyComponent>>("TransparencyComponent");
-        transparencyClass.propExt<bindings::TransparencyGet, bindings::TransparencySet>("opacity");
+        transparencyClass.propExt<bindings::TransparencyGet, bindings::TransparencySet>("transparency");
     }
 }

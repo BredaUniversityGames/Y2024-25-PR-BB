@@ -187,7 +187,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(meshComponent.rootEntity);
         if (transparencyComponent)
         {
-            staticInstances[count].transparency = transparencyComponent->opacity;
+            staticInstances[count].transparency = transparencyComponent->transparency;
         }
 
         auto resources { _context->Resources() };
@@ -248,7 +248,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(skinnedMeshComponent.rootEntity);
         if (transparencyComponent)
         {
-            skinnedInstances[count].transparency = transparencyComponent->opacity;
+            skinnedInstances[count].transparency = transparencyComponent->transparency;
         }
 
         auto resources { _context->Resources() };

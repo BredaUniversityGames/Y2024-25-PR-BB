@@ -2,5 +2,5 @@
 
 struct TransparencyComponent
 {
-    float opacity = 1.0f;
+    float transparency = 1.0f;
 };
