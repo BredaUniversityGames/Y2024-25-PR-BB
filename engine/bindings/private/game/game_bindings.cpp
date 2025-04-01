@@ -92,7 +92,8 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetHUD>("GetHUD");
 
     auto& ui = module.klass<UIModule>("UIModule");
-    auto& element = module.klass<UIElement>("UIElement");
+    module.klass<UIElement>("UIElement");
+
     ui.funcExt<bindings::SetGamepadActiveButton>("SetSelectedElement");
 
     BindGameUI(module);
