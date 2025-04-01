@@ -19,9 +19,24 @@ layout (std430, set = 1, binding = 0) buffer InstanceData
     Instance instances[];
 };
 
+layout (push_constant) uniform PushConstants
+{
+    uint isDirectCommand;
+    uint directInstanceIndex;
+} pc;
+
 void main()
 {
-    Material material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
+    Material material;
+
+    if (pc.isDirectCommand == 1)
+    {
+        material = bindless_materials[nonuniformEXT(instances[pc.directInstanceIndex].materialIndex)];
+    }
+    else
+    {
+        material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
+    }
 
     vec4 albedoSample = vec4(1.0);
     vec4 mrSample = vec4(0.0);

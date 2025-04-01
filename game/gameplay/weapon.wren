@@ -34,6 +34,7 @@ class Pistol {
         _equipAnim = "equip"
         _unequipAnim = "unequip" 
         _entityName = "Gun" 
+
         _mesh = ""
     }
 
@@ -108,7 +109,6 @@ class Pistol {
             _ammo = _ammo - 1
 
             // Shake the camera
- 
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
@@ -158,7 +158,7 @@ class Pistol {
                                     playerVariables.UpdateMultiplier()
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
-                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
+                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                     }
                                 }
                             }
@@ -232,9 +232,9 @@ class Pistol {
     }
 
     isUnequiping(engine){
-    
+
         var gunAnimations =engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim 
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim
     }
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
@@ -276,6 +276,7 @@ class Shotgun {
         _equipAnim = "equip" 
         _unequipAnim = "unequip"
         _entityName = "Gun" 
+
         _mesh = ""
     }
     
@@ -290,11 +291,12 @@ class Shotgun {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {   
+    attack(engine, deltaTime, playerVariables, enemies) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
  
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
+
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
 
@@ -320,7 +322,7 @@ class Shotgun {
           
             var i = 0
             while (i < _raysPerShot) {
-                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
+                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
                 var end = start + newDirection * _rangeVector
 
@@ -392,6 +394,17 @@ class Shotgun {
         var gunAnimations =newGun .GetAnimationControlComponent()
         gunAnimations.Play(_equipAnim, 1.2, false, 0.0, false)
 
+
+    }
+
+    isUnequiping(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim
+    }
+
+    unequip(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        gunAnimations.Play(_unequipAnim, 1.5, false, 0.0, false)
     }
 
     playWalkAnim (engine){

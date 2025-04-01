@@ -43,11 +43,12 @@ class MeleeEnemy {
         _movingState = false
         _attackingState = false
         _recoveryState = false
+        _hitState = false
 
         _attackMaxCooldown = 2000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 1300
+        _attackMaxTime = 2500
         _attackTime = 0
 
         _recoveryMaxTime = 2000
@@ -57,7 +58,10 @@ class MeleeEnemy {
 
         _health = 100
 
-        _deathTimer = 1000
+        _hitTimer = 0
+
+        _deathTimerMax = 3500
+        _deathTimer = _deathTimerMax
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -68,14 +72,25 @@ class MeleeEnemy {
     }
 
     DecreaseHealth(amount) {
+        var animations = _meshEntity.GetAnimationControlComponent()
+        var body = _rootEntity.GetRigidbodyComponent()
+
         _health = Math.Max(_health - amount, 0)
+
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
-            var animations = _meshEntity.GetAnimationControlComponent()
-            animations.Play("Death", 1.0, true, 1.0, false)
-            var body = _rootEntity.GetRigidbodyComponent()
+            animations.Play("Death", 1.0, false, 1.0, false)
             body.SetVelocity(Vec3.new(0,0,0))
+            body.SetStatic()
+        } else {
+            animations.Play("Hit", 1.0, false, 0.3, false)
+            _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
+            _hitState = true
+            _movingState = false
+            _evaluateState = false
+            _attackingState = false
+            _recoveryState = false
             body.SetStatic()
         }
     }
@@ -110,12 +125,12 @@ class MeleeEnemy {
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                         engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 
-                    System.print("Enter Recovery State")
                     _attackingState = false
                     _recoveryState = true
-                    _recoveryTime = _recoveryMaxTime 
+                    _recoveryTime = _recoveryMaxTime
                 }
             }
             if (_recoveryState) {
@@ -131,7 +146,6 @@ class MeleeEnemy {
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
-                    System.print("Recovered")
                     _recoveryState = false
                     _evaluateState = true
                 }
@@ -139,12 +153,11 @@ class MeleeEnemy {
 
             if (_movingState) {
                 this.DoPathfinding(playerPos, engine, dt)
-                _evaluateState = true   
+                _evaluateState = true
             }
 
             if (_evaluateState) {
                 if (Math.Distance(playerPos, pos) < _attackRange) {
-                    System.print("Enter Attack State")
                     // Enter attack state
                     _attackingState = true
                     _movingState = false
@@ -156,20 +169,35 @@ class MeleeEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
 
                 } else if (_movingState == false) { // Enter attack state
-                    System.print("Enter Moving State")
                     body.SetFriction(0.0)
                     animations.Play("Run", 1.0, true, 0.5, true)
                     _movingState = true
                 }
-            }    
+            }
+
+            if(_hitState) {
+                _hitTimer = _hitTimer + dt
+
+                if(_hitTimer > 1000) {
+                    _hitTimer = 0
+                    _movingState = true
+                    _evaluateState = true
+                    _hitState = false
+                    body.SetDynamic()
+                    animations.Play("Run", 1.0, true, 0.5, true)
+                }
+            }
         } else {
             _deathTimer = _deathTimer - dt
 
             if (_deathTimer <= 0) {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
-                var newPos = pos - Vec3.new(1, 1, 1).mulScalar(1.0 * 0.001 * dt)
-                body.SetTranslation(newPos)
+                // Wait for death animation before starting descent
+                if(_deathTimerMax - _deathTimer > 1800) {
+                    var newPos = pos - Vec3.new(1, 1, 1).mulScalar(1.0 * 0.00075 * dt)
+                    body.SetTranslation(newPos)
+                }
             }
         }
     }
@@ -231,7 +259,7 @@ class MeleeEnemy {
 
             var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-            
+
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
             var startRotation = _rootEntity.GetTransformComponent().rotation
             _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)

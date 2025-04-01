@@ -90,7 +90,7 @@ class Main {
         // Load Map
         engine.LoadModel("assets/models/blockoutv5.glb")
 
-        engine.PreloadModel("assets/models/Demon.glb")
+        engine.PreloadModel("assets/models/Skeleton.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -100,6 +100,7 @@ class Main {
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/revolver.glb")
+		__gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
 
@@ -123,7 +124,7 @@ class Main {
 
         __ultimateCharge = 0
         __ultimateActive = false
-        
+
         __pauseEnabled = false
 
         // Enemy setup
@@ -136,7 +137,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 12, "assets/models/Demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
@@ -155,7 +156,7 @@ class Main {
             "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
             ""
             ]
-            
+
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
@@ -168,12 +169,6 @@ class Main {
     }
 
     static Update(engine, dt) {
-        // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
-        // }
-
-
-
 
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
@@ -304,9 +299,9 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
+                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
-            
+
             // TODO: Pause Menu on ESC
             // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
             //     __pauseEnabled = !__pauseEnabled

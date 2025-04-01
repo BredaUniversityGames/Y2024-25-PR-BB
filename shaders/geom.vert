@@ -18,6 +18,12 @@ layout (set = 3, binding = 0) buffer RedirectBuffer
     uint redirect[];
 };
 
+layout (push_constant) uniform PushConstants
+{
+    uint isDirectCommand;
+    uint directInstanceIndex;
+} pc;
+
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec4 inTangent;
@@ -40,8 +46,17 @@ mat3 Adjoint(in mat4 m)
 
 void main()
 {
-    mat4 modelTransform = instances[redirect[gl_DrawID]].model;
-    drawID = redirect[gl_DrawID];
+    mat4 modelTransform;
+
+    if (pc.isDirectCommand == 1)
+    {
+        modelTransform = instances[pc.directInstanceIndex].model;
+    }
+    else
+    {
+        modelTransform = instances[redirect[gl_DrawID]].model;
+        drawID = redirect[gl_DrawID];
+    }
 
     position = (modelTransform * vec4(inPosition, 1.0)).xyz;
 
@@ -55,4 +70,9 @@ void main()
     gl_Position = (camera.VP) * vec4(position, 1.0);
     vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
     position = viewPos; // position is in view space
+
+    if (pc.isDirectCommand == 1)
+    {
+        gl_Position = vec4(gl_Position.x, gl_Position.y, 1.0, gl_Position.w);
+    }
 }
