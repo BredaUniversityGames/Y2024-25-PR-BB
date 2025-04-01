@@ -196,7 +196,7 @@ void DetachChild(WrenEntity& self, WrenEntity& child)
 
 void AddRenderInForegroundRecursive(entt::registry& registry, entt::entity entity)
 {
-    registry.emplace<RenderInForeground>(entity);
+    registry.emplace_or_replace<RenderInForeground>(entity);
 
     RelationshipComponent& relationship = registry.get<RelationshipComponent>(entity);
     entt::entity current = relationship.first;

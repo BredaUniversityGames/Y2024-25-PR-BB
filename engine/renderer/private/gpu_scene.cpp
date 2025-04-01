@@ -175,7 +175,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     _staticDrawCommands.clear();
     _foregroundStaticDrawCommands.clear();
     _shouldUpdateShadows = false;
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>(entt::exclude<RenderInForeground>);
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
     for (auto entity : staticMeshView)
     {
