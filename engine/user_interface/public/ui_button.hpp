@@ -22,8 +22,8 @@ public:
 
     void Update(const InputManagers& inputManagers, UIInputContext& inputContext) override;
 
-    ButtonState GetState() const { return state; }
-    bool IsPressedOnce() const { return state == ButtonState::ePressed && previousState != ButtonState::ePressed; }
+    // ButtonState GetState() const { return state; }
+    // bool IsPressedOnce() const { return state == ButtonState::ePressed && previousState != ButtonState::ePressed; }
 
     struct ButtonStyle
     {
@@ -46,7 +46,5 @@ private:
     void SwitchState(bool inputActionPressed, bool inputActionReleased);
 
     ButtonState state = ButtonState::eNormal;
-    ButtonState previousState = ButtonState::eNormal;
-
     Callback _callback {};
 };

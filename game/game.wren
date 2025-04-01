@@ -154,17 +154,21 @@ class Main {
         // Pause Menu callbacks
 
         __pauseHandler = Fn.new {
+            __pauseEnabled = true
             engine.GetTime().SetScale(0.0)
             engine.GetGame().SetPauseMenuEnabled(true)
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
+            System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
         __unpauseHandler = Fn.new { 
+            __pauseEnabled = false
             engine.GetTime().SetScale(1.0)
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
+            System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
         var continueButton = engine.GetGame().GetPauseMenu().continueButton
@@ -320,10 +324,9 @@ class Main {
 
         // Check if pause key was pressed
         if(engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
-            System.print("Pause Menu pressed!")
             
             __pauseEnabled = !__pauseEnabled
-
+            
             if (__pauseEnabled) {
                 __pauseHandler.call()
             } else {
