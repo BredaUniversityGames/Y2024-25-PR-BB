@@ -24,6 +24,12 @@ layout (std430, set = 4, binding = 0) readonly buffer SkinningTransforms
     mat2x4 skinningTransforms[];
 };
 
+layout (push_constant) uniform PushConstants
+{
+    uint isDirectCommand;
+    uint directInstanceIndex;
+} pc;
+
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec4 inTangent;
@@ -69,8 +75,17 @@ mat2x4 GetJointTransform(ivec4 joints, vec4 weights, uint boneOffset)
 
 void main()
 {
-    Instance instance = instances[redirect[gl_DrawID]];
-    drawID = redirect[gl_DrawID];
+    Instance instance;
+
+    if (pc.isDirectCommand == 1)
+    {
+        instance = instances[pc.directInstanceIndex];
+    }
+    else
+    {
+        instance = instances[redirect[gl_DrawID]];
+        drawID = redirect[gl_DrawID];
+    }
 
     mat2x4 bone = GetJointTransform(ivec4(inJoints), inWeights, instance.boneOffset);
     mat4 skinMatrix = instance.model * GetSkinMatrix(bone);
@@ -87,4 +102,9 @@ void main()
     gl_Position = (camera.VP) * vec4(position, 1.0);
     vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
     position = viewPos;
+
+    if (pc.isDirectCommand == 1)
+    {
+        gl_Position = vec4(gl_Position.x, gl_Position.y, 1.0, gl_Position.w);
+    }
 }

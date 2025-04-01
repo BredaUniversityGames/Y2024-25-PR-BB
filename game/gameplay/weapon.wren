@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.4 * 1000
+        _attackSpeed = 0.75 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -70,7 +70,7 @@ class Pistol {
             lifetime.lifetime = 175.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 5.0, 0.0) + velocity.mulScalar(1.2))
-
+            
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -119,6 +119,10 @@ class Pistol {
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
+            
+     
+            
+      
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
@@ -132,7 +136,7 @@ class Pistol {
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
-                                if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                if (enemy.entity == hitEntity) {
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
@@ -140,7 +144,7 @@ class Pistol {
                                     playerVariables.UpdateMultiplier()
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
-                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier) 
+                                        playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         var wasUltReady = true
                                         if (playerVariables.ultCharge < playerVariables.ultMaxCharge) {
                                             wasUltReady = false
@@ -180,7 +184,7 @@ class Pistol {
             var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
             var gunRight = Math.Cross(gunForward, gunUp)
             var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-
+            
 
             var length = (end - gunStart).length()
             var i = 1.0
@@ -281,7 +285,7 @@ class Shotgun {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {   
+    attack(engine, deltaTime, playerVariables, enemies) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
@@ -309,7 +313,7 @@ class Shotgun {
 
             var i = 0
             while (i < _raysPerShot) {
-                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)                
+                var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)
                 var rayHitInfo = engine.GetPhysics().ShootRay(start, newDirection, _range)
                 var end = start + newDirection * _rangeVector
 
@@ -320,7 +324,7 @@ class Shotgun {
                             end = rayHit.position
                             if (hitEntity.HasEnemyTag()) {
                                 for (enemy in enemies) {
-                                    if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                    if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime

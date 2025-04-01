@@ -12,9 +12,11 @@
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/render_in_foreground.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/transparency_component.hpp"
 #include "game_module.hpp"
 #include "systems/lifetime_component.hpp"
 
@@ -181,7 +183,30 @@ void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool re
     component.component->reversedZ = reversedZ;
 }
 
-uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
+void TransparencySet(WrenComponent<TransparencyComponent>& component, float opacity)
+{
+    component.component->transparency = opacity;
+}
+
+float TransparencyGet(WrenComponent<TransparencyComponent>& component)
+{
+    return component.component->transparency;
+}
+
+uint32_t GetEntity(WrenEntity& self)
+{
+    return static_cast<uint32_t>(self.entity);
+}
+
+bool EntityEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity == other.entity;
+}
+
+bool EntityNotEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity != other.entity;
+}
 
 void AttachChild(WrenEntity& self, WrenEntity& child)
 {
@@ -213,11 +238,35 @@ void DetachChild(WrenEntity& self, WrenEntity& child)
     RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
 }
 
+void AddRenderInForegroundRecursive(entt::registry& registry, entt::entity entity)
+{
+    registry.emplace_or_replace<RenderInForeground>(entity);
+
+    RelationshipComponent& relationship = registry.get<RelationshipComponent>(entity);
+    entt::entity current = relationship.first;
+
+    for (size_t i = 0; i < relationship.childrenCount; ++i)
+    {
+        if (registry.valid(current))
+        {
+            AddRenderInForegroundRecursive(registry, current);
+            current = registry.get<RelationshipComponent>(current).next;
+        }
+    }
+}
+
+void AddRenderInForeground(WrenEntity& self)
+{
+    AddRenderInForegroundRecursive(*self.registry, self.entity);
+}
+
 void BindEntity(wren::ForeignModule& module)
 {
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+    entityClass.funcExt<EntityEquality>(wren::OPERATOR_EQUAL);
+    entityClass.funcExt<EntityNotEquality>(wren::OPERATOR_NOT_EQUAL);
     entityClass.func<&WrenEntity::IsValid>("IsValid");
 
     entityClass.funcExt<AttachChild>("AttachChild");
@@ -259,6 +308,10 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddDefaultComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
     entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
+
+    entityClass.func<&WrenEntity::GetComponent<TransparencyComponent>>("GetTransparencyComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<TransparencyComponent>>("AddTransparencyComponent");
+    entityClass.funcExt<AddRenderInForeground>("RenderInForeground");
 }
 
 WrenEntity CreateEntity(ECSModule& self)
@@ -378,5 +431,8 @@ void BindEntityAPI(wren::ForeignModule& module)
         cameraClass.propExt<bindings::CameraGetNearPlane, bindings::CameraSetNearPlane>("nearPlane");
         cameraClass.propExt<bindings::CameraGetFarPlane, bindings::CameraSetFarPlane>("farPlane");
         cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
+
+        auto& transparencyClass = module.klass<WrenComponent<TransparencyComponent>>("TransparencyComponent");
+        transparencyClass.propExt<bindings::TransparencyGet, bindings::TransparencySet>("transparency");
     }
 }

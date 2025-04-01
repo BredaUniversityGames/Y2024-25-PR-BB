@@ -30,7 +30,7 @@
 class RecursiveNodeLoader
 {
 public:
-    RecursiveNodeLoader(ECSModule& ecs, PhysicsModule& physics, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, entt::entity animationControlEntity, std::unordered_map<uint32_t, entt::entity>& entityLut)
+    RecursiveNodeLoader(ECSModule& ecs, PhysicsModule& physics, const Hierarchy& hierarchy, const CPUModel& cpuModel, const GPUModel& gpuModel, entt::entity animationControlEntity, std::unordered_map<uint32_t, entt::entity>& entityLut, entt::entity rootEntity)
         : _ecs(ecs)
         , _physics(physics)
         , _hierarchy(hierarchy)
@@ -38,6 +38,7 @@ public:
         , _gpuModel(gpuModel)
         , _animationControlEntity(animationControlEntity)
         , _entityLUT(entityLut)
+        , _rootEntity(rootEntity)
     {
     }
 
@@ -66,6 +67,7 @@ public:
             case MeshType::eSTATIC:
             {
                 _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(index);
+                _ecs.GetRegistry().get<StaticMeshComponent>(entity).rootEntity = _rootEntity;
                 _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
@@ -77,6 +79,7 @@ public:
             }
             case MeshType::eSKINNED:
                 _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(index);
+                _ecs.GetRegistry().get<SkinnedMeshComponent>(entity).rootEntity = _rootEntity;
                 break;
             default:
                 throw std::runtime_error("Mesh type not supported!");
@@ -138,6 +141,7 @@ private:
     const GPUModel& _gpuModel;
     entt::entity _animationControlEntity;
     std::unordered_map<uint32_t, entt::entity>& _entityLUT;
+    entt::entity _rootEntity;
 };
 
 class RecursiveSkeletonLoader
@@ -222,7 +226,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
         animationControlEntity = rootEntity;
     }
 
-    RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT };
+    RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT, rootEntity };
     recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null);
 
     entt::entity skeletonEntity = entt::null;
