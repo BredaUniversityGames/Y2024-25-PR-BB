@@ -12,6 +12,7 @@
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
+#include "components/render_in_foreground.hpp"
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
@@ -193,6 +194,28 @@ void DetachChild(WrenEntity& self, WrenEntity& child)
     RelationshipHelpers::DetachChild(*self.registry, self.entity, child.entity);
 }
 
+void AddRenderInForegroundRecursive(entt::registry& registry, entt::entity entity)
+{
+    registry.emplace_or_replace<RenderInForeground>(entity);
+
+    RelationshipComponent& relationship = registry.get<RelationshipComponent>(entity);
+    entt::entity current = relationship.first;
+
+    for (size_t i = 0; i < relationship.childrenCount; ++i)
+    {
+        if (registry.valid(current))
+        {
+            AddRenderInForegroundRecursive(registry, current);
+            current = registry.get<RelationshipComponent>(current).next;
+        }
+    }
+}
+
+void AddRenderInForeground(WrenEntity& self)
+{
+    AddRenderInForegroundRecursive(*self.registry, self.entity);
+}
+
 void BindEntity(wren::ForeignModule& module)
 {
     // Entity class
@@ -239,6 +262,8 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::AddDefaultComponent<DirectionalLightComponent>>("AddDirectionalLightComponent");
     entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
+
+    entityClass.funcExt<AddRenderInForeground>("RenderInForeground");
 }
 
 WrenEntity CreateEntity(ECSModule& self)

@@ -9,6 +9,13 @@ void DrawStats::IndirectDraw(uint32_t drawCommandSize, uint32_t indexCount)
     _indexCount += indexCount;
 }
 
+void DrawStats::DrawIndexed(uint32_t indexCount)
+{
+    _directDrawCommands++;
+    _drawCalls++;
+    _indexCount += indexCount;
+}
+
 void DrawStats::Draw(uint32_t vertexCount)
 {
     _drawCalls++;
@@ -29,6 +36,7 @@ void DrawStats::Clear()
 {
     _drawCalls = 0;
     _indexCount = 0;
+    _directDrawCommands = 0;
     _indirectDrawCommands = 0;
     _particleCount = 0;
     _emitterCount = 0;
