@@ -159,10 +159,10 @@ class Pistol {
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 300.0
+                lifetime.lifetime = 400.0
 
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal.mulScalar(0.005) + Vec3.new(0.0, 0.4, 0.0))
             }
 
 
