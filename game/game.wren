@@ -93,7 +93,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun = engine.LoadModel("assets/models/revolver.glb")
 
         __gun.GetNameComponent().name = "Revolver"
         var gunTransform = __gun.GetTransformComponent()
@@ -129,7 +129,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
 
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 12, "assets/models/demon.glb", __enemyShape, 1)
+        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 12, "assets/models/Demon.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [

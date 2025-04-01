@@ -16,8 +16,9 @@
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-#include <spdlog/fmt/bundled/printf.h>
 
 #include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
@@ -74,9 +75,13 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     }
 }
 
-HUD& GetHUD(GameModule& self)
+std::optional<std::shared_ptr<HUD>> GetHUD(GameModule& self)
 {
-    return self._hud;
+    if (auto lock = self._hud.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
 }
 
 void UpdateHealthBar(HUD& self, const float health)
@@ -115,7 +120,7 @@ void UpdateMultiplierText(HUD& self, const float multiplier)
 {
     if (auto locked = self.multiplierText.lock(); locked != nullptr)
     {
-        locked->SetText(fmt::sprintf("%.1f", multiplier).append("x"));
+        locked->SetText(fmt::format("{:.1f}", multiplier).append("x"));
     }
 }
 
