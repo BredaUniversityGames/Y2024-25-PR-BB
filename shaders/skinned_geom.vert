@@ -102,4 +102,9 @@ void main()
     gl_Position = (camera.VP) * vec4(position, 1.0);
     vec3 viewPos = (camera.view * vec4(position, 1.0)).xyz;
     position = viewPos;
+
+    if (pc.isDirectCommand == 1)
+    {
+        gl_Position = vec4(gl_Position.x, gl_Position.y, 1.0, gl_Position.w);
+    }
 }

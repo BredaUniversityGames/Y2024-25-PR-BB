@@ -68,17 +68,6 @@ void GeometryPass::CreateStaticPipeline()
     for (size_t i = 0; i < DEFERRED_ATTACHMENT_COUNT; ++i)
         formats.at(i) = _context->Resources()->ImageResourceManager().Access(_gBuffers.Attachments().at(i))->format;
 
-    static constexpr std::array<vk::DynamicState, 3> DYNAMIC_STATES = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-        vk::DynamicState::eDepthCompareOp,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo = {
-        .dynamicStateCount = DYNAMIC_STATES.size(),
-        .pDynamicStates = DYNAMIC_STATES.data(),
-    };
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
@@ -90,7 +79,6 @@ void GeometryPass::CreateStaticPipeline()
                       .SetDepthStencilState(depthStencilStateCreateInfo)
                       .SetColorAttachmentFormats(formats)
                       .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-                        .SetDynamicState(dynamicStateCreateInfo)
                       .BuildPipeline();
 
     _staticPipelineLayout = std::get<0>(result);
@@ -128,17 +116,6 @@ void GeometryPass::CreateSkinnedPipeline()
         formats.at(i) = imageResourceManager.Access(_gBuffers.Attachments().at(i))->format;
     }
 
-    static constexpr std::array<vk::DynamicState, 3> DYNAMIC_STATES = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-        vk::DynamicState::eDepthCompareOp,
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo = {
-        .dynamicStateCount = DYNAMIC_STATES.size(),
-        .pDynamicStates = DYNAMIC_STATES.data(),
-    };
-
     std::vector<std::byte> vertSpv = shader::ReadFile("shaders/bin/skinned_geom.vert.spv");
     std::vector<std::byte> fragSpv = shader::ReadFile("shaders/bin/geom.frag.spv");
 
@@ -150,7 +127,6 @@ void GeometryPass::CreateSkinnedPipeline()
                       .SetDepthStencilState(depthStencilStateCreateInfo)
                       .SetColorAttachmentFormats(formats)
                       .SetDepthAttachmentFormat(_gBuffers.DepthFormat())
-    .SetDynamicState(dynamicStateCreateInfo)
                       .BuildPipeline();
 
     _skinnedPipelineLayout = std::get<0>(result);
@@ -204,8 +180,6 @@ void GeometryPass::DrawIndirectGeometry(vk::CommandBuffer commandBuffer, uint32_
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
-        commandBuffer.setDepthCompareOp(vk::CompareOp::eGreaterOrEqual);
-
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
@@ -240,8 +214,6 @@ void GeometryPass::DrawIndirectGeometry(vk::CommandBuffer commandBuffer, uint32_
     if (scene.gpuScene->SkinnedDrawCount() > 0)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
-
-        commandBuffer.setDepthCompareOp(vk::CompareOp::eGreaterOrEqual);
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSkinnedInstancesDescriptorSet(currentFrame) }, {});
@@ -284,8 +256,6 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
 
-        commandBuffer.setDepthCompareOp(vk::CompareOp::eAlways);
-
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
@@ -316,8 +286,6 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
     if (!skinnedCommands.empty())
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
-
-        commandBuffer.setDepthCompareOp(vk::CompareOp::eAlways);
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSkinnedInstancesDescriptorSet(currentFrame) }, {});
