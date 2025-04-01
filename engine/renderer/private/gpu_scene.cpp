@@ -8,11 +8,13 @@
 #include "components/name_component.hpp"
 #include "components/point_light_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/render_in_foreground.hpp"
 #include "components/skeleton_component.hpp"
 #include "components/skinned_mesh_component.hpp"
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/transparency_component.hpp"
 #include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
@@ -172,6 +174,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     uint32_t count = 0;
 
     _staticDrawCommands.clear();
+    _foregroundStaticDrawCommands.clear();
     _shouldUpdateShadows = false;
     auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
@@ -179,6 +182,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        // Try to get transparency
+        staticInstances[count].transparency = 1.0;
+        const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(meshComponent.rootEntity);
+        if (transparencyComponent)
+        {
+            staticInstances[count].transparency = transparencyComponent->transparency;
+        }
 
         auto resources { _context->Resources() };
 
@@ -197,21 +207,34 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
             _shouldUpdateShadows = true;
         }
 
-        _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
-            .command = {
+        if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
+        {
+            _foregroundStaticDrawCommands.emplace_back(DrawIndexedDirectCommand {
+                .instanceIndex = count,
                 .indexCount = mesh->count,
-                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
-            },
-        });
+            });
+        }
+        else
+        {
+            _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = mesh->count,
+                    .instanceCount = 0,
+                    .firstIndex = mesh->indexOffset,
+                    .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                    .firstInstance = 0,
+                },
+            });
+        }
 
         count++;
     }
 
     static std::vector<InstanceData> skinnedInstances { MAX_SKINNED_INSTANCES };
     _skinnedDrawCommands.clear();
+    _foregroundSkinnedDrawCommands.clear();
     count = 0;
 
     auto skinnedMeshView = _ecs.GetRegistry().view<SkinnedMeshComponent, WorldMatrixComponent>();
@@ -220,6 +243,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     {
         SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto transformComponent = skinnedMeshView.get<WorldMatrixComponent>(entity);
+        // Try to get transparency
+        skinnedInstances[count].transparency = 1.0;
+        const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(skinnedMeshComponent.rootEntity);
+        if (transparencyComponent)
+        {
+            skinnedInstances[count].transparency = transparencyComponent->transparency;
+        }
 
         auto resources { _context->Resources() };
 
@@ -233,15 +263,27 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         skinnedInstances[count].boneOffset = _skeletonBoneOffset[skinnedMeshComponent.skeletonEntity];
         skinnedInstances[count].isStaticDraw = true;
 
-        _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
-            .command = {
+        if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
+        {
+            _foregroundSkinnedDrawCommands.emplace_back(DrawIndexedDirectCommand {
+                .instanceIndex = count,
                 .indexCount = mesh->count,
-                .instanceCount = 0,
                 .firstIndex = mesh->indexOffset,
                 .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-                .firstInstance = 0,
-            },
-        });
+            });
+        }
+        else
+        {
+            _skinnedDrawCommands.emplace_back(DrawIndexedIndirectCommand {
+                .command = {
+                    .indexCount = mesh->count,
+                    .instanceCount = 0,
+                    .firstIndex = mesh->indexOffset,
+                    .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+                    .firstInstance = 0,
+                },
+            });
+        }
 
         count++;
     }

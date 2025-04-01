@@ -131,18 +131,20 @@ void main()
     }
     // Prepare the circle parameters, cycling the circle size over time.
     const vec3 bloomColor = texture(bindless_color_textures[nonuniformEXT (pc.bloomTargetIndex)], newTexCoords).rgb;
-    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
+    float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], newTexCoords).r;
 
     vec3 hdrColor = vec3(0.0);
+    const ivec2 texSize = textureSize(bindless_color_textures[nonuniformEXT(pc.depthIndex)], 0);
     if (pixelizationEnabled)
     {
-
         const vec2 uv = ComputePixelatedUV(depthSample, pc.pixelizationLevels, pc.minPixelSize, pc.maxPixelSize, newTexCoords, vec2(pc.screenWidth, pc.screenHeight));
         newTexCoords = uv;
-        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], uv, -256.0).rgb;
+        const ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
+        hdrColor = texelFetch(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], pixelCoords, 0).rgb;
     } else
     {
-        hdrColor = texture(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], newTexCoords).rgb;
+        const ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
+        hdrColor = texelFetch(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], pixelCoords, 0).rgb;
     }
 
     if (paletteEnabled)
@@ -154,7 +156,8 @@ void main()
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
 
     //sample the depth again, maybe we now need to use pixelization
-    float pixelatedDepthSample = texture(bindless_color_textures[nonuniformEXT (pc.depthIndex)], newTexCoords, -256.0).r;
+    ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
+    float pixelatedDepthSample = texelFetch(bindless_color_textures[nonuniformEXT (pc.depthIndex)], pixelCoords, 0).r;
     if (pixelatedDepthSample <= 0.0f)
     {
         vec2 uv = newTexCoords;
@@ -315,6 +318,7 @@ vec3 ComputeQuantizedColor(vec3 color, float ditherAmount, float blendFactor)
 
 vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, float maxPixelSize, vec2 texCoords, vec2 screenSize)
 {
+/**
     // Clamp and quantize the depth sample to one of the discrete levels.
     float t = clamp(depthSample * pc.pixelizationDepthBias, 0.0, 1.0);
     t = floor(t * levels) / (levels - 1.0);
@@ -335,6 +339,23 @@ vec2 ComputePixelatedUV(float depthSample, float levels, float minPixelSize, flo
     uv += vec2(0.5) / count;
     uv = clamp(uv, 0.0, 0.99);
     return uv;
+
+*/
+
+
+    // Clamp and quantize the depth sample to one of the discrete levels.
+
+
+    float inetrpolationValue = min(1.0, depthSample * pc.pixelizationDepthBias);
+    float granularity = mix(minPixelSize, maxPixelSize, inetrpolationValue);
+    granularity = round(clamp(granularity, minPixelSize, maxPixelSize));
+    float dx = granularity / screenSize.x;
+    float dy = granularity / screenSize.y;
+    vec2 uv = vec2(dx * (floor(texCoords.x / dx) + 0.5),
+    dy * (floor(texCoords.y / dy) + 0.5));
+
+    return uv;
+
 }
 
 
