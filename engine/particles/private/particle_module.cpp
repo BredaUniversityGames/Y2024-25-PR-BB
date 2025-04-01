@@ -339,20 +339,20 @@ void ParticleModule::LoadEmitterPresets()
         preset.color = glm::vec4(0.1686f, 1.0f, 0.086f, 3.0f);
 
         ParticleBurst burst {
-            .count = 250,
             .startTime = 0.1f,
+            .count = 250,
             .cycles = 1,
             .loop = false,
         };
         ParticleBurst burst1 {
-            .count = 100,
             .startTime = 0.2f,
+            .count = 100,
             .cycles = 1,
             .loop = false,
         };
         ParticleBurst burst2 {
-            .count = 100,
             .startTime = 0.25f,
+            .count = 100,
             .cycles = 1,
             .loop = false,
         };
