@@ -243,6 +243,36 @@ void ParticleModule::LoadEmitterPresets()
         _emitterPresets.emplace_back(preset);
     }
 
+    { // Bones
+        EmitterPreset preset;
+        preset.count = 20;
+        preset.startingVelocity = glm::vec3(0.0f, 3.0f, 0.0f);
+        preset.mass = 0.3f;
+        preset.rotationVelocity = glm::vec2(15.0f, 15.0f);
+        SetEmitterPresetImage(preset, "bone.png");
+        preset.size = glm::vec3(0.4f, 0.4f, 0.0f);
+        preset.name = "Bones";
+        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        preset.spawnRandomness = glm::vec3(8.0f, 18.0f, 8.0f);
+        preset.velocityRandomness = glm::vec3(1.0f);
+        preset.maxLife = 5.0f;
+
+        ParticleBurst burst1;
+        burst1.loop = true;
+        burst1.count = 5;
+        burst1.maxInterval = 0.2f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 2;
+        burst2.maxInterval = 0.05f;
+
+        preset.bursts.emplace_back(burst1);
+        preset.bursts.emplace_back(burst2);
+
+        _emitterPresets.emplace_back(preset);
+    }
+
     { // IMPACT
         EmitterPreset preset;
         preset.emitDelay = 1.0f;

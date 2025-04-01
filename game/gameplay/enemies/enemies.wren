@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -92,6 +92,8 @@ class MeleeEnemy {
             _attackingState = false
             _recoveryState = false
             body.SetStatic()
+
+           
         }
     }
 
