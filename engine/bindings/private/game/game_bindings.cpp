@@ -164,8 +164,11 @@ void BindGameAPI(wren::ForeignModule& module)
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
 
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
+    game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
+
     game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
     game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
+    game.func<&GameModule::SetPauseMenuEnabled>("SetPauseMenuEnabled");
     BindMainMenu(module);
 
     game.funcExt<bindings::GetHUD>("GetHUD");

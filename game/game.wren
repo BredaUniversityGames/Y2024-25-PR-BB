@@ -150,6 +150,35 @@ class Main {
             
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+
+        // Pause Menu callbacks
+
+        __pauseHandler = Fn.new {
+            engine.GetTime().SetScale(0.0)
+            engine.GetGame().SetPauseMenuEnabled(true)
+            engine.GetInput().SetActiveActionSet("UserInterface")
+            engine.GetInput().SetMouseHidden(false)
+        }
+
+        __unpauseHandler = Fn.new { 
+            engine.GetTime().SetScale(1.0)
+            engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetInput().SetActiveActionSet("Shooter")
+            engine.GetInput().SetMouseHidden(true)
+        }
+
+        var continueButton = engine.GetGame().GetPauseMenu().continueButton
+        continueButton.OnPress(__unpauseHandler)
+
+        var backToMain = Fn.new { 
+            engine.TransitionToScript("game/main_menu.wren")
+            engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetGame().SetHUDEnabled(false)
+            engine.GetTime().SetScale(1.0)
+        }
+
+        var menuButton = engine.GetGame().GetPauseMenu().backButton
+        menuButton.OnPress(backToMain)
     }
 
     static Shutdown(engine) {
@@ -160,10 +189,7 @@ class Main {
     }
 
     static Update(engine, dt) {
-        // for (spawner in __spawnerList) {
-        //     spawner.Update(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, dt)
-        // }
-
+  
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
             __ambientPlayer.CycleMusic(engine.GetAudio())
@@ -291,16 +317,15 @@ class Main {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Demon.glb", __enemyShape, 1)
             }
             
-            // TODO: Pause Menu on ESC
-            // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
-            //     __pauseEnabled = !__pauseEnabled
+            if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
+                __pauseEnabled = !__pauseEnabled
 
-            //     if (__pauseEnabled) {
-            //         engine.GetTime().SetScale(0.0)
-            //     } else {
-            //         engine.GetTime().SetScale(1.0)
-            //     }
-            // }
+                if (__pauseEnabled) {
+                    __pauseHandler.call()
+                } else {
+                    __unpauseHandler.call()
+                }
+            }
         }
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)

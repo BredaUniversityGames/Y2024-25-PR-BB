@@ -69,3 +69,18 @@ public:
     {
     }
 };
+
+class PauseMenu : public Canvas
+{
+public:
+    static std::shared_ptr<PauseMenu> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+    PauseMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIButton> continueButton;
+    std::weak_ptr<UIButton> settingsButton;
+    std::weak_ptr<UIButton> backToMainButton;
+};

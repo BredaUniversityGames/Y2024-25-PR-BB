@@ -98,9 +98,6 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         playButton->navigationTargets.down = main->settingsButton;
         playButton->navigationTargets.up = main->openLinkButton;
 
-        playButton->navigationTargets.down = main->settingsButton;
-        playButton->navigationTargets.up = main->quitButton;
-
         settingsButton->navigationTargets.down = main->quitButton;
         settingsButton->navigationTargets.up = main->playButton;
 

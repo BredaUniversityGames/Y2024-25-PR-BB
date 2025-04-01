@@ -58,10 +58,12 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize));
+    _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize));
 
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -109,6 +111,14 @@ void GameModule::SetLoadingScreenEnabled(bool val)
 void GameModule::SetHUDEnabled(bool val)
 {
     if (auto lock = _hud.lock())
+    {
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
+
+void GameModule::SetPauseMenuEnabled(bool val)
+{
+    if (auto lock = _pauseMenu.lock())
     {
         lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
