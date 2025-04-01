@@ -61,8 +61,9 @@ jobs:
       # Update game version
 
       - name: Write Game Version
+        shell: bash
         run: |
-          "Blightspire - Build ${{ github.ref_name }}" > "version.txt"
+          echo "Blightspire - Build ${{ github.ref_name }}" > "version.txt"
 
       # Get assets from perforce depot
 
