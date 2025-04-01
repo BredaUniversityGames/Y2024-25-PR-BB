@@ -115,6 +115,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = pos
         var animations = _meshEntity.GetAnimationControlComponent()
 
+
         if (_isAlive) {
             if (_attackingState) {
                 _attackTime = _attackTime - dt
@@ -189,13 +190,20 @@ class MeleeEnemy {
             }
         } else {
             _deathTimer = _deathTimer - dt
+            
+            var transparencyComponent = _meshEntity.GetTransparencyComponent()
+            if(transparencyComponent==null) {
+                transparencyComponent = _meshEntity.AddTransparencyComponent()
+            }
 
             if (_deathTimer <= 0) {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
-                    var newPos = pos - Vec3.new(1, 1, 1).mulScalar(1.0 * 0.00075 * dt)
+                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
+
+                    var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
                 }
             }

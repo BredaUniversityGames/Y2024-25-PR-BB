@@ -14,6 +14,7 @@
 #include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/transparency_component.hpp"
 #include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
 #include "ecs_module.hpp"
@@ -181,6 +182,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     {
         const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
         const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        // Try to get transparency
+        staticInstances[count].transparency = 1.0;
+        const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(meshComponent.rootEntity);
+        if (transparencyComponent)
+        {
+            staticInstances[count].transparency = transparencyComponent->transparency;
+        }
 
         auto resources { _context->Resources() };
 
@@ -235,6 +243,13 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     {
         SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto transformComponent = skinnedMeshView.get<WorldMatrixComponent>(entity);
+        // Try to get transparency
+        skinnedInstances[count].transparency = 1.0;
+        const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(skinnedMeshComponent.rootEntity);
+        if (transparencyComponent)
+        {
+            skinnedInstances[count].transparency = transparencyComponent->transparency;
+        }
 
         auto resources { _context->Resources() };
 

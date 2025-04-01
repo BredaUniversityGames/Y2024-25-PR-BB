@@ -201,7 +201,7 @@ class PlayerMovement{
 
         isGrounded = false
         for(hit in groundCheckRay) {
-            if(hit.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+            if(hit.GetEntity(engine.GetECS()) != playerController) {
                 isGrounded = true
                 groundHitNormal = hit.normal
                 break
@@ -352,7 +352,7 @@ class PlayerMovement{
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
                 for(hitInfo in rayHitInfo) {
-                    if(hitInfo.GetEntity(engine.GetECS()).GetEnttEntity() != playerController.GetEnttEntity()) {
+                    if(hitInfo.GetEntity(engine.GetECS()) != playerController) {
                         end = hitInfo.position
                         //add some offset to the end position based on the normal
                         end = end + hitInfo.normal.mulScalar(1.5)

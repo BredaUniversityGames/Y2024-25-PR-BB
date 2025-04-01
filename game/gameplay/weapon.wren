@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.4 * 1000
+        _attackSpeed = 0.75 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -136,7 +136,7 @@ class Pistol {
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
-                                if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                if (enemy.entity == hitEntity) {
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
@@ -269,7 +269,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
 
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() && _reloadTimer == 0) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()|| engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
              _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -315,7 +315,7 @@ class Shotgun {
                             end = rayHit.position
                             if (hitEntity.HasEnemyTag()) {
                                 for (enemy in enemies) {
-                                    if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                    if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
