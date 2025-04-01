@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.4 * 1000
+        _attackSpeed = 0.75 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
