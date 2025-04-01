@@ -29,6 +29,8 @@ enum class EmitterPresetID : uint8_t
     eTest = 0,
     eFlame,
     eDust,
+    eFeathers,
+    eBullets,
     eImpact,
     eRay,
     eStab,

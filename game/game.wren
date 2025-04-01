@@ -21,6 +21,7 @@ class Main {
         engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+        engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
 
 
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
@@ -89,13 +90,17 @@ class Main {
 
         engine.PreloadModel("assets/models/Demon.glb")
 
+        engine.PreloadModel("assets/models/Revolver.glb")
+        engine.PreloadModel("assets/models/Shotgun.glb")
+        
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/revolver.glb")
 
-        __gun.GetNameComponent().name = "Revolver"
+        __gun.GetNameComponent().name = "Gun"
+
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
@@ -107,7 +112,7 @@ class Main {
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
-
+        __nextWeapon = null
         // create the player movement
         __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
 
@@ -220,17 +225,6 @@ class Main {
                 }
             }
 
-            if (engine.GetInput().GetDigitalAction("Reload").IsHeld()) {
-                __activeWeapon.reload(engine)
-            }
-
-            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
-                if (__activeWeapon.ammo <= 0) {
-                    __activeWeapon.reload(engine)
-                }
-            }
-
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
                 if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
@@ -261,14 +255,29 @@ class Main {
                 __armory[Weapons.knife].attack(engine, dt, __cameraVariables)
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e1())) {
-                __activeWeapon = __armory[Weapons.pistol]
-                __activeWeapon.equip(engine)
+            if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
+                __activeWeapon.unequip(engine)
+                __nextWeapon = __armory[Weapons.pistol]
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e2())) {
-                __activeWeapon = __armory[Weapons.shotgun]
+            if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
+                __activeWeapon.unequip(engine)
+                __nextWeapon = __armory[Weapons.shotgun]
+            }
+
+            if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+
+                __activeWeapon = __nextWeapon        
+                __nextWeapon = null
                 __activeWeapon.equip(engine)
+
+            }
+            if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+                __activeWeapon.reload(engine)
+            }
+
+            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
             }
 
             __cameraVariables.Tilt(engine, __camera, deltaTime)

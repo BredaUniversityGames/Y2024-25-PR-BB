@@ -28,7 +28,7 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5        
     }
-
+    
     health {_health}
     maxHealth {_maxHealth}
     score {_score}
