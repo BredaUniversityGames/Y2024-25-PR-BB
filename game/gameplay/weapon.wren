@@ -145,15 +145,7 @@ class Pistol {
                                     enemy.DecreaseHealth(_damage * multiplier)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
-                                        var wasUltReady = true
-                                        if (playerVariables.ultCharge < playerVariables.ultMaxCharge) {
-                                            wasUltReady = false
-                                        }
                                         playerVariables.UpdateUltCharge(1.0)
-
-                                        if (!wasUltReady && playerVariables.ultCharge == playerVariables.ultMaxCharge) {
-                                            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
-                                        }
                                     }
                                 }
                             }

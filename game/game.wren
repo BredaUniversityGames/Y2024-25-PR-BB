@@ -190,7 +190,13 @@ class Main {
                 __activeWeapon = __armory[Weapons.pistol]
                 __activeWeapon.equip(engine)
                 __playerVariables.ultActive = false
+                __playerVariables.wasUltReadyLastFrame = false
             }
+        }
+
+        if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
+            __playerVariables.wasUltReadyLastFrame = true
         }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)

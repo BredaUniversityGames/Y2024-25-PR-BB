@@ -106,7 +106,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 50);
     hud->multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
 
-    hud->ultReadyText = hud->AddChild<UITextElement>(font, "AAAAAAAAAAAAAAAAA", glm::vec2(0, 250), 25);
+    hud->ultReadyText = hud->AddChild<UITextElement>(font, "AAAAAAAAAAAAAAAAA", glm::vec2(0, 135), 25);
     hud->ultReadyText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
 
     // common image data.

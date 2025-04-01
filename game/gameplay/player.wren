@@ -10,6 +10,7 @@ class PlayerVariables {
         _ultCharge = 99
         _ultActive = false
         _ultMaxChargeMultiplier = 4.0
+        _wasUltReadyLastFrame = false
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
@@ -48,6 +49,7 @@ class PlayerVariables {
     multiplierMaxTime {_multiplierMaxTime}
     consecutiveHits {_consecutiveHits}
     consecutiveMaxHits {_consecutiveMaxHits}
+    wasUltReadyLastFrame {_wasUltReadyLastFrame}
     
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
@@ -64,7 +66,8 @@ class PlayerVariables {
     multiplierMaxTime=(value) {_multiplierMaxTime = value}
     consecutiveHits=(value) {_consecutiveHits = value}
     consecutiveMaxHits=(value) {_consecutiveMaxHits = value}
-
+    wasUltReadyLastFrame=(value) {_wasUltReadyLastFrame = value}
+    
     IsInvincible() {
         return _invincibilityTime > 0
     }
