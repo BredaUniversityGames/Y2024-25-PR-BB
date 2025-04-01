@@ -136,7 +136,7 @@ class Pistol {
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
-                                if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                if (enemy.entity == hitEntity) {
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
@@ -315,7 +315,7 @@ class Shotgun {
                             end = rayHit.position
                             if (hitEntity.HasEnemyTag()) {
                                 for (enemy in enemies) {
-                                    if (enemy.entity.GetEnttEntity() == hitEntity.GetEnttEntity()) {
+                                    if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime

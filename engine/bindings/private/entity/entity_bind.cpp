@@ -178,6 +178,16 @@ uint32_t GetEntity(WrenEntity& self)
     return static_cast<uint32_t>(self.entity);
 }
 
+bool EntityEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity == other.entity;
+}
+
+bool EntityNotEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity != other.entity;
+}
+
 void AttachChild(WrenEntity& self, WrenEntity& child)
 {
     if (!self.registry->all_of<RelationshipComponent>(self.entity))
@@ -235,6 +245,8 @@ void BindEntity(wren::ForeignModule& module)
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+    entityClass.funcExt<EntityEquality>(wren::OPERATOR_EQUAL);
+    entityClass.funcExt<EntityNotEquality>(wren::OPERATOR_NOT_EQUAL);
     entityClass.func<&WrenEntity::IsValid>("IsValid");
 
     entityClass.funcExt<AttachChild>("AttachChild");

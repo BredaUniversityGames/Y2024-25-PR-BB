@@ -196,15 +196,12 @@ class MeleeEnemy {
                 transparencyComponent = _meshEntity.AddTransparencyComponent()
             }
 
-
-            System.print(transparencyComponent.opacity)
-
             if (_deathTimer <= 0) {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
-                    transparencyComponent.opacity =  _deathTimer / (_deathTimerMax-1000)
+                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
