@@ -10,6 +10,8 @@ class Main {
         engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)
         engine.GetGame().SetMainMenuEnabled(true)
+        engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
+
         // __background = engine.LoadModel("assets/models/main_menu.glb")
        
         // __transform = __background.GetTransformComponent()

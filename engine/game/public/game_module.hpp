@@ -42,9 +42,19 @@ public:
         return std::nullopt;
     }
 
-    std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu()
+    std::optional<std::shared_ptr<HUD>> GetPauseMenu()
     {
         if (auto lock = _pauseMenu.lock())
+
+        {
+            return lock;
+        }
+        return std::nullopt;
+    }
+
+    std::optional<std::shared_ptr<HUD>> GetHUD()
+    {
+        if (auto lock = _hud.lock())
         {
             return lock;
         }

@@ -23,6 +23,7 @@
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
+#include "ui_module.hpp"
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
@@ -89,6 +90,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
+        engineAPI.func<&WrenEngine::GetModule<UIModule>>("GetUI");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
