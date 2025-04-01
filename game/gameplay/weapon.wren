@@ -26,6 +26,7 @@ class Pistol {
         _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = "event:/Weapons/ReloadPistol"
         _equipSFX = ""
+        _bonesSFX = "event:/Character/Bones"
         
         _walkAnim = "walk"
         _idleAnim = "idle"
@@ -147,6 +148,10 @@ class Pistol {
                                     lifetime.lifetime = 170.0
                                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                                     engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
+
+                                    var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+                                    var audioEmitter = player.GetAudioEmitterComponent()
+                                    audioEmitter.AddEvent(eventInstance)
 
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {

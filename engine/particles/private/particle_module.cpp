@@ -146,7 +146,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f);
         preset.name = "Test";
-        SetEmitterPresetImage(preset, "jeremi.png");
+        SetEmitterPresetImage(preset, "flame_03.png");
 
         _emitterPresets.emplace_back(preset);
     }
