@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.2 * 1000
+        _attackSpeed = 0.4 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -24,7 +24,7 @@ class Pistol {
         _cameraShakeIntensity = 0.3
         
         _attackSFX = "event:/Weapons/Pistol"
-        _reloadSFX = ""
+        _reloadSFX = "event:/Weapons/ReloadPistol"
         _equipSFX = ""
         
         _walkAnim = "walk"
@@ -43,6 +43,34 @@ class Pistol {
         var gunAnimations = gun.GetAnimationControlComponent()
         if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
+
+            // Play reload audio
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var playerController = engine.GetECS().GetEntityByName("PlayerController")
+            var rb =  playerController.GetRigidbodyComponent()
+            var velocity = rb.GetVelocity()
+
+            var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
+            var audioEmitter = player.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
+
+            var gunTransform = gun.GetTransformComponent()
+            var gunTranslation = gunTransform.GetWorldTranslation()
+            var gunRotation = gunTransform.GetWorldRotation()
+            var gunForward = Math.ToVector(gunRotation)
+            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
+            var gunRight = Math.Cross(gunForward, gunUp)
+            var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
+
+            //play a particle effect
+            var entity = engine.GetECS().NewEntity()
+            var transform = entity.AddTransformComponent()
+            transform.translation = gunStart
+            var lifetime = entity.AddLifetimeComponent()
+            lifetime.lifetime = 175.0
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 5.0, 0.0) + velocity.mulScalar(1.2))
+            
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -91,6 +119,10 @@ class Pistol {
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
+            
+     
+            
+      
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
@@ -133,17 +165,29 @@ class Pistol {
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
             }
 
-            var length = (end - start).length()
+
+
+
+            var gunTransform = gun.GetTransformComponent()
+            var gunTranslation = gunTransform.GetWorldTranslation()
+            var gunRotation = gunTransform.GetWorldRotation()
+            var gunForward = Math.ToVector(gunRotation)
+            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
+            var gunRight = Math.Cross(gunForward, gunUp)
+            var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
+            
+
+            var length = (end - gunStart).length()
             var i = 1.0
             while (i < length) {
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
-                transform.translation = Math.MixVec3(start, end, i / length)
+                transform.translation = Math.MixVec3(gunStart, end, i / length)
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 200.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
-                i = i + 5.0
+                i = i + 2.0
             }
 
             // Play shooting animation
