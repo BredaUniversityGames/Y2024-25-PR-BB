@@ -39,6 +39,15 @@ public:
         return std::nullopt;
     }
 
+    std::optional<std::shared_ptr<HUD>> GetHUD()
+    {
+        if (auto lock = _hud.lock())
+        {
+            return lock;
+        }
+        return std::nullopt;
+    }
+
     std::weak_ptr<HUD> _hud;
     std::weak_ptr<MainMenu> _mainMenu;
 

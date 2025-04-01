@@ -12,8 +12,8 @@ class PlayerMovement{
         jumpForce = 9.75
         gravityFactor = 2.4
         playerHeight = 1.7
-        _cameraFovNormal = 45
-        _cameraFovSlide = 50
+        _cameraFovNormal = 50
+        _cameraFovSlide = 65
         _cameraFovCurrent = _cameraFovNormal
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
@@ -97,7 +97,7 @@ class PlayerMovement{
         var FORWARD = Vec3.new(0.0, 0.0, -1.0)
 
         var MOUSE_SENSITIVITY = 0.003 * _lookSensitivity
-        var GAMEPAD_LOOK_SENSITIVITY = 0.025 * _lookSensitivity
+        var GAMEPAD_LOOK_SENSITIVITY = 0.0025 * _lookSensitivity
 
         var mousePosition = engine.GetInput().GetMousePosition()
         var mouseDelta = _lastMousePosition - mousePosition
