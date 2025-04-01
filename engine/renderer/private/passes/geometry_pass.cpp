@@ -277,7 +277,7 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
             commandBuffer.pushConstants<PushConstants>(_staticPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
             commandBuffer.drawIndexed(command.indexCount, 1, command.firstIndex, command.vertexOffset, 0);
 
-            // TODO: Add draw stats for direct commands
+            _context->GetDrawStats().DrawIndexed(command.indexCount);
         }
     }
 
@@ -309,7 +309,7 @@ void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t 
             commandBuffer.pushConstants<PushConstants>(_staticPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
             commandBuffer.drawIndexed(command.indexCount, 1, command.firstIndex, command.vertexOffset, 0);
 
-            // TODO: Add draw stats for direct commands
+            _context->GetDrawStats().DrawIndexed(command.indexCount);
         }
     }
 }

@@ -246,6 +246,7 @@ void DrawRenderStats(Engine& engine)
 
     ImGui::LabelText("Draw calls", "%i", stats.DrawCalls());
     ImGui::LabelText("Triangles", "%i", stats.IndexCount() / 3);
+    ImGui::LabelText("Direct draw commands", "%i", stats.DirectDrawCommands());
     ImGui::LabelText("Indirect draw commands", "%i", stats.IndirectDrawCommands());
     ImGui::LabelText("Particles after simulation", "%i", stats.GetParticleCount());
     ImGui::LabelText("Emitters", "%i", stats.GetEmitterCount());
