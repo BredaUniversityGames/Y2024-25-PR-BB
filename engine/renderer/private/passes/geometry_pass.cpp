@@ -169,6 +169,13 @@ void GeometryPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t curren
     renderingInfo.pStencilAttachment = nullptr;
 
     commandBuffer.beginRenderingKHR(&renderingInfo, _context->VulkanContext()->Dldi());
+    DrawIndirectGeometry(commandBuffer, currentFrame, scene);
+    DrawDirectGeometry(commandBuffer, currentFrame, scene);
+    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
+}
+
+void GeometryPass::DrawIndirectGeometry(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+{
     if (scene.gpuScene->StaticDrawCount() > 0)
     {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
@@ -177,6 +184,12 @@ void GeometryPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t curren
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 3, { scene.gpuScene->MainCameraBatch().StaticDraw().redirectDescriptor }, {});
+
+        PushConstants pushConstant {
+            .isDirectCommand = 0,
+            .directInstanceIndex = 0,
+        };
+        commandBuffer.pushConstants<PushConstants>(_staticPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
 
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
@@ -207,6 +220,12 @@ void GeometryPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t curren
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { _cameraBatch.SkinnedDraw().redirectDescriptor }, {});
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 4, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
 
+        PushConstants pushConstant {
+            .isDirectCommand = 0,
+            .directInstanceIndex = 0,
+        };
+        commandBuffer.pushConstants<PushConstants>(_skinnedPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
+
         vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
         vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
         vk::Buffer indirectDrawBuffer = _context->Resources()->BufferResourceManager().Access(_cameraBatch.SkinnedDraw().drawBuffer)->buffer;
@@ -225,6 +244,68 @@ void GeometryPass::DrawGeometry(vk::CommandBuffer commandBuffer, uint32_t curren
 
         _context->GetDrawStats().IndirectDraw(scene.gpuScene->SkinnedDrawCount(), scene.gpuScene->DrawCommandIndexCount(scene.gpuScene->SkinnedDrawCommands()));
     }
+}
 
-    commandBuffer.endRenderingKHR(_context->VulkanContext()->Dldi());
+void GeometryPass::DrawDirectGeometry(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene)
+{
+    const std::vector<DrawIndexedDirectCommand>& staticCommands = scene.gpuScene->ForegroundStaticDrawCommands();
+
+    if (!staticCommands.empty())
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _staticPipeline);
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 1, { scene.gpuScene->GetStaticInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _staticPipelineLayout, 3, { scene.gpuScene->MainCameraBatch().StaticDraw().redirectDescriptor }, {});
+
+        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.staticBatchBuffer->IndexBuffer())->buffer;
+
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.staticBatchBuffer->IndexType());
+
+        for (const DrawIndexedDirectCommand& command : staticCommands)
+        {
+            PushConstants pushConstant {
+                .isDirectCommand = 1,
+                .directInstanceIndex = command.instanceIndex,
+            };
+            commandBuffer.pushConstants<PushConstants>(_staticPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
+            commandBuffer.drawIndexed(command.indexCount, 1, command.firstIndex, command.vertexOffset, 0);
+
+            _context->GetDrawStats().DrawIndexed(command.indexCount);
+        }
+    }
+
+    const std::vector<DrawIndexedDirectCommand>& skinnedCommands = scene.gpuScene->ForegroundSkinnedDrawCommands();
+
+    if (!skinnedCommands.empty())
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _skinnedPipeline);
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 0, { _context->BindlessSet() }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 1, { scene.gpuScene->GetSkinnedInstancesDescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 2, { _cameraBatch.Camera().DescriptorSet(currentFrame) }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 3, { _cameraBatch.SkinnedDraw().redirectDescriptor }, {});
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _skinnedPipelineLayout, 4, { scene.gpuScene->GetSkinDescriptorSet(currentFrame) }, {});
+
+        vk::Buffer vertexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->VertexBuffer())->buffer;
+        vk::Buffer indexBuffer = _context->Resources()->BufferResourceManager().Access(scene.skinnedBatchBuffer->IndexBuffer())->buffer;
+
+        commandBuffer.bindVertexBuffers(0, { vertexBuffer }, { 0 });
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, scene.skinnedBatchBuffer->IndexType());
+
+        for (const DrawIndexedDirectCommand& command : skinnedCommands)
+        {
+            PushConstants pushConstant {
+                .isDirectCommand = 1,
+                .directInstanceIndex = command.instanceIndex,
+            };
+            commandBuffer.pushConstants<PushConstants>(_staticPipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstant);
+            commandBuffer.drawIndexed(command.indexCount, 1, command.firstIndex, command.vertexOffset, 0);
+
+            _context->GetDrawStats().DrawIndexed(command.indexCount);
+        }
+    }
 }

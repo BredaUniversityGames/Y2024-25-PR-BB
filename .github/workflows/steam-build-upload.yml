@@ -58,6 +58,12 @@ jobs:
       - name: Build Project
         run: cmake --build build/${{ env.PRESET_PREFIX }}-${{ env.PRESET_SUFFIX }}
 
+      # Update game version
+      
+      - name: Write Game Version
+        run: |
+          "Blightspire - Build ${{ github.ref_name }}" > "version.txt"
+
       # Get assets from perforce depot
 
       - name: Perforce Setup

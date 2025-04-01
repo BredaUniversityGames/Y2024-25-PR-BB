@@ -31,8 +31,9 @@ class Pistol {
         _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
-        _equipAnim = "" 
-        _entityName = "Revolver" //subject to change when implementing swapping
+        _equipAnim = "equip"
+        _unequipAnim = "unequip"
+        _entityName = "Gun"
         _mesh = ""
     }
 
@@ -196,10 +197,31 @@ class Pistol {
             _cooldown = _attackSpeed
         } 
     }
+   equip (engine) {
+        engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
 
-    equip (engine) {
+        var camera = engine.GetECS().GetEntityByName("Camera")
+
+        var newGun =  engine.LoadModel("assets/models/Revolver.glb")
+        newGun.GetNameComponent().name = _entityName
+        var gunTransform = newGun.GetTransformComponent()
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+
+        camera.AttachChild(newGun)
+        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunAnimations.Play(_equipAnim, 1.2, false, 0.2, false)
     }
 
+    unequip(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        gunAnimations.Play(_unequipAnim, 1.5, false, 0.2, false)
+    }
+
+    isUnequiping(engine){
+
+        var gunAnimations =engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim
+    }
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
 
@@ -225,7 +247,7 @@ class Shotgun {
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 0.25 * 1000
+        _reloadSpeed = 600
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
@@ -233,21 +255,23 @@ class Shotgun {
         _reloadSFX = ""
         _equipSFX = ""
         
+        _walkAnim = "walk"
+        _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
-        _equipAnim = "" 
-
+        _equipAnim = "equip"
+        _unequipAnim = "unequip"
+        _entityName = "Gun"
         _mesh = ""
     }
     
     reload (engine) {
-        var gun = engine.GetECS().GetEntityByName("Revolver")
-
+        var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()) {
-            gunAnimations.Play(_reloadAnim, 1.0, false, 0.0, false)
 
-            _reloadTimer = _reloadSpeed
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()|| engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
+            gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
+             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
         }
     }
@@ -257,9 +281,8 @@ class Shotgun {
             _ammo = _ammo - 1
 
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
-
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("Revolver")
+            var gun = engine.GetECS().GetEntityByName(_entityName)
 
             // Play shooting audio
             var shootingInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
@@ -286,7 +309,7 @@ class Shotgun {
                 var end = start + newDirection * _rangeVector
 
                 if (!rayHitInfo.isEmpty) {
-                    for (rayHit in rayHitInfo.count) {
+                    for (rayHit in rayHitInfo) {
                         var hitEntity = rayHit.GetEntity(engine.GetECS())
                         if (!hitEntity.HasPlayerTag()) {
                             end = rayHit.position
@@ -330,12 +353,35 @@ class Shotgun {
 
             // Play shooting animation
             var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
+            gunAnimations.Play(_attackAnim, 1.1, false, 0.0, false)
             _cooldown = _attackSpeed
         }
     }
 
     equip (engine) {
+        engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
+
+        var camera = engine.GetECS().GetEntityByName("Camera")
+
+        var newGun =  engine.LoadModel("assets/models/Shotgun.glb")
+        newGun.GetNameComponent().name = _entityName
+        var gunTransform = newGun.GetTransformComponent()
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+
+        camera.AttachChild(newGun)
+        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunAnimations.Play(_equipAnim, 1.2, false, 0.0, false)
+
+    }
+
+    isUnequiping(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim
+    }
+
+    unequip(engine){
+        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
+        gunAnimations.Play(_unequipAnim, 1.5, false, 0.0, false)
     }
 
     cooldown {_cooldown}
@@ -369,8 +415,6 @@ class Knife {
         
         _attackAnim = "Shoot"
         _reloadAnim = "Reload"
-        _equipAnim = "" 
-
         _mesh = ""
     }
 
@@ -384,7 +428,7 @@ class Knife {
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
 
             var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName("Gun")
+            var gun = engine.GetECS().GetEntityByName(_entityName)
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
