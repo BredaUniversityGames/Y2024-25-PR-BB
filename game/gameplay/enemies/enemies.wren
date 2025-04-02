@@ -65,6 +65,9 @@ class MeleeEnemy {
 
         _bonesSFX = "event:/Character/Bones"
 
+        _bonesStepsSFX = "event:/Character/BonesSteps"
+        _walkEventInstance = null
+
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -168,6 +171,16 @@ class MeleeEnemy {
             if (_movingState) {
                 this.DoPathfinding(playerPos, engine, dt)
                 _evaluateState = true
+
+                if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
+                    _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
+                    var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+                    audioEmitter.AddEvent(_walkEventInstance)
+                }
+            }else{
+                if(_walkEventInstance && engine.GetAudio().IsEventPlaying(_walkEventInstance) == true) {
+                    engine.GetAudio().StopEvent(_walkEventInstance)
+                }
             }
 
             if (_evaluateState) {
