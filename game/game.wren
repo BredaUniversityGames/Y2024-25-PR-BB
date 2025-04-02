@@ -33,6 +33,7 @@ class Main {
 
         var comp = __directionalLight.AddDirectionalLightComponent()
         comp.color = Vec3.new(4.0, 3.2, 1.2)
+        comp.color = comp.color * Vec3.new(0.1, 0.1, 0.1)
         comp.planes = Vec2.new(-50.0, 500.0)
         comp.orthographicSize = 120.0
 
@@ -85,7 +86,7 @@ class Main {
         var positions = [Vec3.new(10.0, 14.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv5.glb")
+        engine.LoadModel("assets/models/blockoutv7_Lit.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
 
