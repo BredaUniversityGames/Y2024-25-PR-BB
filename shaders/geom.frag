@@ -25,13 +25,8 @@ layout (push_constant) uniform PushConstants
     uint directInstanceIndex;
 } pc;
 
-const mat4 bayer = mat4(
-1.0 / 17.0, 13.0 / 17.0, 4.0 / 17.0, 16.0 / 17.0,
-9.0 / 17.0, 5.0 / 17.0, 12.0 / 17.0, 8.0 / 17.0,
-3.0 / 17.0, 15.0 / 17.0, 2.0 / 17.0, 14.0 / 17.0,
-11.0 / 17.0, 7.0 / 17.0, 10.0 / 17.0, 6.0 / 17.0
-);
 
+/// Gpt o1 random hash function
 // A simple 32-bit hash function
 uint hash32(uint x) {
     x ^= x >> 16;
@@ -52,6 +47,7 @@ float randomFloatFromCoord(ivec2 coord)
     // Map [0 .. 2^32-1] to [0.0 .. 1.0).
     return float(seed) * (1.0 / 4294967296.0);
 }
+///
 
 void main()
 {
@@ -70,8 +66,8 @@ void main()
     vec4 mrSample = vec4(0.0);
     vec4 occlusionSample = vec4(0.0);
     vec4 normalSample = vec4(normalIn, 0.0);
-
     vec3 normal = normalIn;
+
 
     float alpha = instances[drawID].transparency;
 
