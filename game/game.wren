@@ -267,6 +267,9 @@ class Main {
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
                 __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
+                if (__activeWeapon.ammo <= 0) {
+                    __activeWeapon.reload(engine)
+                }
             }
 
             __cameraVariables.Tilt(engine, __camera, deltaTime)
