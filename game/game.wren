@@ -7,6 +7,8 @@ import "gameplay/player.wren" for PlayerVariables
 import "gameplay/music_player.wren" for MusicPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+
 class Main {
 
     static Start(engine) {
@@ -88,6 +90,7 @@ class Main {
         engine.LoadModel("assets/models/blockoutv5.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -133,8 +136,11 @@ class Main {
         }
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
 
         __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
+
+        
 
         // Music player
         var musicList = [
@@ -300,6 +306,11 @@ class Main {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
 
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                // shit
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+            }
+
             // TODO: Pause Menu on ESC
             // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
             //     __pauseEnabled = !__pauseEnabled
@@ -323,7 +334,7 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var playerPos = __player.GetTransformComponent().translation
+        var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
         for (enemy in __enemyList) {
 
