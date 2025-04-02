@@ -253,7 +253,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.size = glm::vec3(0.4f, 0.4f, 0.0f);
         preset.name = "Bones";
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        preset.spawnRandomness = glm::vec3(8.0f, 18.0f, 8.0f);
+        preset.spawnRandomness = glm::vec3(8.0f, 17.0f, 8.0f);
         preset.velocityRandomness = glm::vec3(1.0f);
         preset.maxLife = 5.0f;
 

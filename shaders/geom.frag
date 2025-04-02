@@ -32,6 +32,26 @@ const mat4 bayer = mat4(
 11.0 / 17.0, 7.0 / 17.0, 10.0 / 17.0, 6.0 / 17.0
 );
 
+// A simple 32-bit hash function
+uint hash32(uint x) {
+    x ^= x >> 16;
+    x *= 0x7FEB352D;
+    x ^= x >> 15;
+    x *= 0x846CA68B;
+    x ^= x >> 16;
+    return x;
+}
+
+// Return a float in [0..1) from the hash
+float randomFloatFromCoord(ivec2 coord)
+{
+    // Combine x and y into a single 32-bit integer
+    // so that each pixel coordinate produces a unique seed.
+    // The shift + XOR helps reduce collisions.
+    uint seed = hash32(uint(coord.x) ^ (uint(coord.y) << 16));
+    // Map [0 .. 2^32-1] to [0.0 .. 1.0).
+    return float(seed) * (1.0 / 4294967296.0);
+}
 
 void main()
 {
@@ -53,10 +73,19 @@ void main()
 
     vec3 normal = normalIn;
 
-    ivec2 pixelPos = ivec2(gl_FragCoord.xy);
-    if (instances[drawID].transparency < bayer[pixelPos.x % 4][pixelPos.y % 4] && instances[drawID].transparency != 1.0)
+    float alpha = instances[drawID].transparency;
+
+    // If alpha is not fully opaque (1.0), apply noise dithering
+    if (alpha < 1.0)
     {
-        discard;
+        ivec2 pixelPos = ivec2(gl_FragCoord.xy);
+        float noiseVal = randomFloatFromCoord(pixelPos);
+
+        // If the transparency is less than this random threshold, discard
+        if (alpha < noiseVal)
+        {
+            discard;
+        }
     }
 
     if (material.useAlbedoMap)
