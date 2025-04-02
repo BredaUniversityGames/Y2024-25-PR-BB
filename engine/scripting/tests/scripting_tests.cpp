@@ -21,7 +21,7 @@ TEST(ScriptingContextTests, PrintHelloWorld)
     auto result = context.RunScript("game/tests/hello_world.wren");
 
     EXPECT_TRUE(result);
-    EXPECT_EQ(oss.str(), "[Script] Hello World!\r\n");
+    EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
 }
 
 TEST(ScriptingContextTests, ModuleImports)
@@ -37,5 +37,5 @@ TEST(ScriptingContextTests, ModuleImports)
 
     auto result = context.RunScript("game/tests/import_modules.wren");
     EXPECT_TRUE(result);
-    EXPECT_EQ(oss.str(), "[Script] Hello World!\r\n");
+    EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
 }

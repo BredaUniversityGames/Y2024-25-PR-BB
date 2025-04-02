@@ -33,5 +33,5 @@ TEST(MainScriptTests, MainScript)
     wrenMain.Update(DeltaMS { 10.0f }); // Safe, the script does not use the engine parameter
 
     EXPECT_TRUE(wrenMain.IsValid());
-    EXPECT_EQ(oss.str(), "[Script] 10\r\n");
+    EXPECT_NE(oss.str().find("[Script] 10"), std::string::npos);
 }

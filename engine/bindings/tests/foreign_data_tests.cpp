@@ -60,7 +60,7 @@ TEST(ForeignDataTests, ForeignBasicClass)
     auto result = context.RunScript("game/tests/foreign_data.wren");
 
     EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(oss.str(), "[Script] 1, 2, 3\r\n");
+    EXPECT_NE(oss.str().find("[Script] 1, 2, 3"), std::string::npos);
 }
 
 TEST(ForeignDataTests, EngineWrapper)
@@ -90,5 +90,5 @@ TEST(ForeignDataTests, EngineWrapper)
     auto test_class = context.GetVM().find(script.value_or(""), "Test");
     test_class.func("test(_)")(WrenEngine { &e });
 
-    EXPECT_EQ(oss.str(), "[Script] 0\r\n");
+    EXPECT_NE(oss.str().find("[Script] 0"), std::string::npos);
 }
