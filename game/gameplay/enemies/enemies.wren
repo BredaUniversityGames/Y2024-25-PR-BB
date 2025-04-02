@@ -23,7 +23,7 @@ class MeleeEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-100,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -80,11 +80,11 @@ class MeleeEnemy {
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
-            animations.Play("Death", 1.0, false, 1.0, false)
+            animations.Play("Death", 1.0, false, 0.3, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
         } else {
-            animations.Play("Hit", 1.0, false, 0.3, false)
+            animations.Play("Hit", 1.0, false, 0.1, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             _hitState = true
             _movingState = false
@@ -163,7 +163,7 @@ class MeleeEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
-                    animations.Play("Attack", 1.0, false, 1.0, false)
+                    animations.Play("Attack", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
                     _evaluateState = false

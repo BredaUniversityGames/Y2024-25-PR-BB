@@ -45,18 +45,31 @@ class WaveStatusType {
     static Finished { 3 }
 }
 
+class SpawnLocationType {
+    static Closest { -1 }
+    static Furthest { -2 }
+}
+
 class WaveSystem {
 
-    construct new(engine, waveConfigs, enemyList) {
+    construct new(engine, waveConfigs, enemyList, spawnLocations, player) {
         _engine = engine
         _waveConfigs = waveConfigs
         _enemyList = enemyList
+        _spawnLocations = spawnLocations
+        _player = player
 
         _currentWave = -1
         _status = WaveStatusType.NotStarted
         _waveTimer = 0.0
-        _enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        _enemyShape = ShapeFactory.MakeCapsuleShape(60.0, 35.0)
+
+        if(_spawnLocations.count == 0) {
+            System.print("Should pass at least one spawn location to the wave system!")
+        }
     }
+
+    WaveDelay { 3.0 }
     
     ActiveWaveConfig() { 
         if(_currentWave >= 0 && _currentWave < _waveConfigs.count) {
@@ -96,7 +109,7 @@ class WaveSystem {
 
         } else if(_status == WaveStatusType.Completed || _status == WaveStatusType.NotStarted) {
 
-            if(_waveTimer > 3.0) {
+            if(_waveTimer > this.WaveDelay) {
 
                 if(_currentWave + 1 < _waveConfigs.count) {
                     this.StartNextWave()
@@ -123,7 +136,43 @@ class WaveSystem {
 
     Spawn(spawn) {
         var enemyModelPath = "assets/models/Skeleton.glb"
-        var enemy = _enemyList.add(MeleeEnemy.new(_engine, Vec3.new(10.0, 14.4, 11.4), Vec3.new(0.02, 0.02, 0.02), 5, enemyModelPath, _enemyShape))
-        enemy.FindNewPath(_engine)
+        if(spawn.SpawnLocationId > _spawnLocations.count) {
+            System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
+        }
+
+        var spawnerEntity = this.FindLocation(spawn)
+        var position = spawnerEntity.GetTransformComponent().translation
+
+        for(i in 0...spawn.Count) {
+            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 5, enemyModelPath, _enemyShape))
+            enemy.FindNewPath(_engine)
+        }
+    }
+
+    FindLocation(spawn) {
+        var playerPosition = _player.GetTransformComponent().translation
+
+        var closestDistance = 99999
+        var furthestDistance = 0
+
+        var spawnerEntity = _spawnLocations[0]
+        if(spawn.SpawnLocationId < 0) {
+            for(location in _spawnLocations) {
+                var position = location.GetTransformComponent().translation
+                var distance = Math.Distance(position, playerPosition)
+                if(spawn.SpawnLocationId == SpawnLocationType.Closest && distance < closestDistance) {
+                    closestDistance = distance
+                    spawnerEntity = location
+                }
+                if(spawn.SpawnLocationId == SpawnLocationType.Furthest && distance > furthestDistance) {
+                    furthestDistance = distance
+                    spawnerEntity = location
+                }
+            }
+        } else {
+            spawnerEntity = _spawnLocations[spawn.SpawnLocationId]
+        }
+    
+        return spawnerEntity
     }
 }

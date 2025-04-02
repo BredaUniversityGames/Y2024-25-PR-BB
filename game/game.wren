@@ -4,7 +4,7 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "gameplay/music_player.wren" for MusicPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
@@ -84,7 +84,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv5.glb")
+        engine.LoadModel("assets/models/blockoutv5_1.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
 
@@ -145,17 +145,46 @@ class Main {
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
+        var spawnLocations = []
+        for(i in 0..7) {
+            spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
+        }
+
         __enemyList = []
         var waveConfigs = []
         waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Skeleton", 0, 1, 1)
-            .AddSpawn("Skeleton", 0, 7, 3)
+            .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
         )
-        waveConfigs.add(WaveConfig.new().SetDuration(10)
+        waveConfigs.add(WaveConfig.new().SetDuration(30)
             .AddSpawn("Skeleton", 0, 1, 1)
-            .AddSpawn("Skeleton", 0, 7, 3)
+            .AddSpawn("Skeleton", 1, 1, 2)
+            .AddSpawn("Skeleton", 2, 1, 1)
+            .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Skeleton", 0, 10, 1)
+            .AddSpawn("Skeleton", 1, 15, 1)
+            .AddSpawn("Skeleton", 2, 5, 1)
+            .AddSpawn("Skeleton", 3, 15, 3)
         )
-        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList)
+        waveConfigs.add(WaveConfig.new().SetDuration(60)
+            .AddSpawn("Skeleton", 0, 1, 2)
+            .AddSpawn("Skeleton", 1, 1, 2)
+            .AddSpawn("Skeleton", 2, 1, 1)
+            .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
+            .AddSpawn("Skeleton", 0, 15, 2)
+            .AddSpawn("Skeleton", 1, 15, 1)
+            .AddSpawn("Skeleton", 2, 15, 2)
+            .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
+            .AddSpawn("Skeleton", 0, 40, 3)
+            .AddSpawn("Skeleton", 1, 40, 1)
+            .AddSpawn("Skeleton", 2, 40, 2)
+            .AddSpawn("Skeleton", 3, 40, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
+        )
+        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
     }
 
     static Shutdown(engine) {
