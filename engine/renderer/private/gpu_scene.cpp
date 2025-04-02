@@ -176,46 +176,46 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     _staticDrawCommands.clear();
     _foregroundStaticDrawCommands.clear();
     _shouldUpdateShadows = false;
-    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
 
-    for (auto entity : staticMeshView)
+    auto FillStaticInstanceInformation = [this](auto meshView, entt::entity entity, InstanceData& instance)
     {
-        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
-        const auto& transformComponent = staticMeshView.get<WorldMatrixComponent>(entity);
+        const auto& meshComponent = meshView.template get<StaticMeshComponent>(entity);
+        const auto& transformComponent = meshView.template get<WorldMatrixComponent>(entity);
         // Try to get transparency
-        staticInstances[count].transparency = 1.0;
+        instance.transparency = 1.0;
         const auto* transparencyComponent = _ecs.GetRegistry().try_get<TransparencyComponent>(meshComponent.rootEntity);
         if (transparencyComponent)
         {
-            staticInstances[count].transparency = transparencyComponent->transparency;
+            instance.transparency = transparencyComponent->transparency;
         }
 
         auto resources { _context->Resources() };
 
         auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
-        assert(count < staticInstances.size() && "Reached the limit of instance data available for the meshes");
         assert(resources->MaterialResourceManager().IsValid(mesh->material) && "There should always be a material available");
 
-        staticInstances[count].model = TransformHelpers::GetWorldMatrix(transformComponent);
-        staticInstances[count].materialIndex = mesh->material.Index();
-        staticInstances[count].boundingRadius = mesh->boundingRadius;
+        instance.model = TransformHelpers::GetWorldMatrix(transformComponent);
+        instance.materialIndex = mesh->material.Index();
+        instance.boundingRadius = mesh->boundingRadius;
 
-        staticInstances[count].isStaticDraw = _ecs.GetRegistry().all_of<IsStaticDraw>(entity);
+        instance.isStaticDraw = _ecs.GetRegistry().all_of<IsStaticDraw>(entity);
 
         if (_shouldUpdateShadows == false && _ecs.GetRegistry().all_of<WantsShadowsUpdated>(entity))
         {
             _shouldUpdateShadows = true;
         }
+    };
 
-        if (_ecs.GetRegistry().all_of<RenderInForeground>(entity))
-        {
-            _foregroundStaticDrawCommands.emplace_back(DrawIndexedDirectCommand {
-                .instanceIndex = count,
-                .indexCount = mesh->count,
-                .firstIndex = mesh->indexOffset,
-                .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
-            });
-        }
+    auto staticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent>();
+
+    for (auto entity : staticMeshView)
+    {
+        assert(count < staticInstances.size() && "Reached the limit of instance data available for the meshes");
+        FillStaticInstanceInformation(staticMeshView, entity, staticInstances[count]);
+
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        auto resources { _context->Resources() };
+        auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
 
         _staticDrawCommands.emplace_back(DrawIndexedIndirectCommand {
             .command = {
@@ -230,12 +230,33 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
         count++;
     }
 
+    auto foregroundStaticMeshView = _ecs.GetRegistry().view<StaticMeshComponent, WorldMatrixComponent, RenderInForeground>();
+
+    for (auto entity : foregroundStaticMeshView)
+    {
+        assert(count < staticInstances.size() && "Reached the limit of instance data available for the meshes");
+        FillStaticInstanceInformation(foregroundStaticMeshView, entity, staticInstances[count]);
+
+        const auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+        auto resources { _context->Resources() };
+        auto mesh = resources->MeshResourceManager().Access(meshComponent.mesh);
+
+        _foregroundStaticDrawCommands.emplace_back(DrawIndexedDirectCommand {
+            .instanceIndex = count,
+            .indexCount = mesh->count,
+            .firstIndex = mesh->indexOffset,
+            .vertexOffset = static_cast<int32_t>(mesh->vertexOffset),
+        });
+
+        count++;
+    }
+
     static std::vector<InstanceData> skinnedInstances { MAX_SKINNED_INSTANCES };
     _skinnedDrawCommands.clear();
     _foregroundSkinnedDrawCommands.clear();
     count = 0;
 
-    auto FillInstanceInformation = [this](auto meshView, entt::entity entity, InstanceData& instance)
+    auto FillSkinnedInstanceInformation = [this](auto meshView, entt::entity entity, InstanceData& instance)
     {
         SkinnedMeshComponent skinnedMeshComponent = meshView.template get<SkinnedMeshComponent>(entity);
         auto transformComponent = meshView.template get<WorldMatrixComponent>(entity);
@@ -264,7 +285,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     for (auto entity : skinnedMeshView)
     {
         assert(count < skinnedInstances.size() && "Reached the limit of instance data available for the meshes");
-        FillInstanceInformation(skinnedMeshView, entity, skinnedInstances[count]);
+        FillSkinnedInstanceInformation(skinnedMeshView, entity, skinnedInstances[count]);
 
         SkinnedMeshComponent skinnedMeshComponent = skinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto resources { _context->Resources() };
@@ -288,7 +309,7 @@ void GPUScene::UpdateObjectInstancesData(uint32_t frameIndex)
     for (auto entity : foregroundSkinnedMeshView)
     {
         assert(count < skinnedInstances.size() && "Reached the limit of instance data available for the meshes");
-        FillInstanceInformation(foregroundSkinnedMeshView, entity, skinnedInstances[count]);
+        FillSkinnedInstanceInformation(foregroundSkinnedMeshView, entity, skinnedInstances[count]);
 
         SkinnedMeshComponent skinnedMeshComponent = foregroundSkinnedMeshView.get<SkinnedMeshComponent>(entity);
         auto resources { _context->Resources() };
