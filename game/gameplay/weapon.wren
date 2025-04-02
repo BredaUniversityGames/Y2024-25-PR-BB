@@ -26,7 +26,6 @@ class Pistol {
         _attackSFX = "event:/Weapons/Pistol"
         _reloadSFX = "event:/Weapons/ReloadPistol"
         _equipSFX = ""
-        _bonesSFX = "event:/Character/Bones"
         
         _walkAnim = "walk"
         _idleAnim = "idle"
@@ -149,16 +148,12 @@ class Pistol {
                                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                                     engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
 
-                                    var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
-                                    var audioEmitter = player.GetAudioEmitterComponent()
-                                    audioEmitter.AddEvent(eventInstance)
-
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier)
+                                    enemy.DecreaseHealth(_damage * multiplier,engine)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                     }
@@ -333,7 +328,7 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        enemy.DecreaseHealth(_damage)
+                                        enemy.DecreaseHealth(_damage,engine)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)

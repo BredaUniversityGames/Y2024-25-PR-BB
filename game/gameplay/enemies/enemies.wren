@@ -62,6 +62,9 @@ class MeleeEnemy {
 
         _deathTimerMax = 3500
         _deathTimer = _deathTimerMax
+
+        _bonesSFX = "event:/Character/Bones"
+
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -71,7 +74,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount) {
+    DecreaseHealth(amount, engine) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -83,6 +86,10 @@ class MeleeEnemy {
             animations.Play("Death", 1.0, false, 1.0, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
+
+            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
         } else {
             animations.Play("Hit", 1.0, false, 0.3, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -92,6 +99,10 @@ class MeleeEnemy {
             _attackingState = false
             _recoveryState = false
             body.SetStatic()
+
+            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
 
            
         }
