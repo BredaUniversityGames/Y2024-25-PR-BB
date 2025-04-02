@@ -431,19 +431,7 @@ class Shotgun {
             gunAnimations.Play("slide", 1.0, false, 0.1, false)
         }
     }
-
-    isUnequiping(engine){
-        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        return gunAnimations.CurrentAnimationName() == _unequipAnim || gunAnimations.CurrentAnimationName() == _equipAnim 
-    }
-
-    unequip(engine){
-        var gunAnimations = engine.GetECS().GetEntityByName(_entityName).GetAnimationControlComponent()
-        gunAnimations.Play(_unequipAnim, 1.5, false, 0.0, false)
-    }
-
-
-
+    
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
 
