@@ -1,5 +1,6 @@
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
+#include <spdlog/sinks/ostream_sink.h>
 #include <sstream>
 
 #include "wren_bindings.hpp"
@@ -39,8 +40,12 @@ TEST(ForeignDataTests, ForeignBasicClass)
 
     auto& vm = context.GetVM();
 
-    std::stringstream output;
-    context.SetScriptingOutputStream(&output);
+    std::ostringstream oss;
+    auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+    auto test_logger = std::make_shared<spdlog::logger>("test", ostream_sink);
+    test_logger->set_pattern("%v");
+
+    context.SetScriptingOutputStream(test_logger);
 
     auto& foreignAPI = vm.module("Engine");
     auto& v3 = foreignAPI.klass<glm::vec3>("Vec3");
@@ -55,7 +60,7 @@ TEST(ForeignDataTests, ForeignBasicClass)
     auto result = context.RunScript("game/tests/foreign_data.wren");
 
     EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(output.str(), "1, 2, 3\n");
+    EXPECT_EQ(oss.str(), "[Script] 1, 2, 3\r\n");
 }
 
 TEST(ForeignDataTests, EngineWrapper)
@@ -68,8 +73,12 @@ TEST(ForeignDataTests, EngineWrapper)
 
     auto& context = scripting.GetContext();
 
-    std::stringstream output;
-    context.SetScriptingOutputStream(&output);
+    std::ostringstream oss;
+    auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+    auto test_logger = std::make_shared<spdlog::logger>("test", ostream_sink);
+    test_logger->set_pattern("%v");
+
+    context.SetScriptingOutputStream(test_logger);
 
     // Engine Binding
 
@@ -81,5 +90,5 @@ TEST(ForeignDataTests, EngineWrapper)
     auto test_class = context.GetVM().find(script.value_or(""), "Test");
     test_class.func("test(_)")(WrenEngine { &e });
 
-    EXPECT_EQ(output.str(), "0\n");
+    EXPECT_EQ(oss.str(), "[Script] 0\r\n");
 }
