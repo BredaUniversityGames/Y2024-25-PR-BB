@@ -373,6 +373,47 @@ void ParticleModule::LoadEmitterPresets()
 
         _emitterPresets.emplace_back(preset);
     }
+
+    { // Ult particles
+        EmitterPreset preset;
+        preset.emitDelay = 10000.0f;
+
+        preset.mass = 0.000f;
+        preset.maxLife = 8.0f;
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY);
+        preset.name = "Health";
+        preset.startingVelocity = glm::vec3(0.0f, 1.4f, 0.0f);
+        preset.spawnRandomness = glm::vec3(20.0f, 0.2f, 20.0f);
+        preset.velocityRandomness = glm::vec3(0.3f, 0.1f, 0.3f);
+        preset.color = glm::vec4(0.1686f, 1.0f, 0.086f, 3.0f);
+
+        ParticleBurst burst {
+            .startTime = 0.1f,
+            .count = 250,
+            .cycles = 1,
+            .loop = false,
+        };
+        ParticleBurst burst1 {
+            .startTime = 0.2f,
+            .count = 100,
+            .cycles = 1,
+            .loop = false,
+        };
+        ParticleBurst burst2 {
+            .startTime = 0.25f,
+            .count = 100,
+            .cycles = 1,
+            .loop = false,
+        };
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst1);
+        preset.bursts.emplace_back(burst2);
+
+        SetEmitterPresetImage(preset, "health.png");
+
+        _emitterPresets.emplace_back(preset);
+    }
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
