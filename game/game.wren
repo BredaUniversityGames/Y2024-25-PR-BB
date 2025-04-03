@@ -90,13 +90,13 @@ class Main {
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
-        
+
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/revolver.glb")
-		__gun.RenderInForeground()
+        __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
 
@@ -333,7 +333,7 @@ class Main {
 
             if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
 
-                __activeWeapon = __nextWeapon        
+                __activeWeapon = __nextWeapon
                 __nextWeapon = null
                 __activeWeapon.equip(engine)
 

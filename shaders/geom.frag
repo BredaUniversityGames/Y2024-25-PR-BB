@@ -53,14 +53,18 @@ void main()
 {
     Material material;
 
+    uint actualDrawID;
+
     if (pc.isDirectCommand == 1)
     {
-        material = bindless_materials[nonuniformEXT(instances[pc.directInstanceIndex].materialIndex)];
+        actualDrawID = pc.directInstanceIndex;
     }
     else
     {
-        material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
+        actualDrawID = drawID;
     }
+
+    material = bindless_materials[nonuniformEXT(instances[actualDrawID].materialIndex)];
 
     vec4 albedoSample = vec4(1.0);
     vec4 mrSample = vec4(0.0);
@@ -68,8 +72,7 @@ void main()
     vec4 normalSample = vec4(normalIn, 0.0);
     vec3 normal = normalIn;
 
-
-    float alpha = instances[drawID].transparency;
+    float alpha = instances[actualDrawID].transparency;
 
     // If alpha is not fully opaque (1.0), apply noise dithering
     if (alpha < 1.0)
