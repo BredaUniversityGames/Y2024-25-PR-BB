@@ -56,6 +56,8 @@ void ScriptingModule::Tick(Engine& engine)
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
 {
     ResetVM();
+
+    _mainEngineScript = path;
     if (auto result = _context->RunScript(path))
     {
         _mainModule = std::make_unique<MainScript>(&engine, _context->GetVM(), result.value(), "Main");
