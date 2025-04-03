@@ -101,7 +101,7 @@ class Pistol {
 
             // Shake the camera
 
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
@@ -156,6 +156,7 @@ class Pistol {
                                     enemy.DecreaseHealth(_damage * multiplier,engine)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
+                                        playerVariables.UpdateUltCharge(1.0)
                                     }
                                 }
                             }
@@ -253,7 +254,7 @@ class Shotgun {
         _raysPerShot = 9
         _range = 23
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.22 * 1000
+        _attackSpeed = 0.3 * 1000
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
@@ -280,7 +281,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
 
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()|| engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
              _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -330,8 +331,10 @@ class Shotgun {
                                         hitAnEnemy = true
                                         enemy.DecreaseHealth(_damage,engine)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
+                                        playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)
+                                            playerVariables.UpdateUltCharge(0.1) // Allow the player to try and keep the ult active a bit longer
                                         }
                                     }
                                 }

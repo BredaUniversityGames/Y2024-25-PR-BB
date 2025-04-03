@@ -97,11 +97,17 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->grenadeBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
     hud->grenadeBar.lock()->AddChild<UITextElement>(font, "grenade", 20);
 
-    hud->ammoCounter = hud->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 100), 50);
+    hud->ammoCounter = hud->AddChild<UITextElement>(font, "6/6", glm::vec2(550, 100), 50);
     hud->ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     hud->scoreText = hud->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 50);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
+    hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 50);
+    hud->multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
+    hud->ultReadyText = hud->AddChild<UITextElement>(font, "", glm::vec2(0, 135), 25);
+    hud->ultReadyText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
 
     // common image data.
     CPUImage imageData;
