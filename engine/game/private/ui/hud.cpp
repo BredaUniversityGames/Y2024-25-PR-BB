@@ -63,7 +63,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
     // resource loading.
 
-    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 50, graphicsContext);
 
     UIProgressBar::BarStyle healtbarStyle
         = LoadHealthBarStyle(graphicsContext);
