@@ -138,6 +138,8 @@ public:
     ResourceHandle<GPUImage> prefilterMap;
     ResourceHandle<GPUImage> brdfLUTMap;
 
+    float& FogDensity() { return _sceneData.fogDensity; }
+
 private:
     struct alignas(16) DirectionalLightData
     {
@@ -180,7 +182,7 @@ private:
         float padding[2];
 
         glm::vec3 fogColor;
-    };
+    } _sceneData;
 
     struct alignas(32) InstanceData
     {

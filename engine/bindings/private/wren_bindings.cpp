@@ -71,6 +71,25 @@ void ResetDecals(WrenEngine& engine)
     engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().ResetDecals();
 }
 
+void SetFog(WrenEngine& engine, float density)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity() = density;
+}
+
+float GetFog(WrenEngine& engine)
+{
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity();
+}
+
+bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
+{
+#if DISTRIBUTION
+    return true;
+#else
+    return false;
+#endif
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -98,6 +117,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SetExit>("SetExit");
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
+        engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
     }
 
     // Time Module

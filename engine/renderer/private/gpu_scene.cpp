@@ -87,6 +87,15 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
 
     _mainCameraBatch = std::make_unique<CameraBatch>(_context, "Main Camera Batch", _mainCamera, creation.depthImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
     _shadowCameraBatch = std::make_unique<CameraBatch>(_context, "Shadow Camera Batch", _directionalLightShadowCamera, _staticShadowImage, _drawBufferDSL, _visibilityDSL, _redirectDSL);
+
+    _sceneData.irradianceIndex = irradianceMap.Index();
+    _sceneData.prefilterIndex = prefilterMap.Index();
+    _sceneData.brdfLUTIndex = brdfLUTMap.Index();
+    _sceneData.staticShadowMapIndex = _staticShadowImage.Index();
+    _sceneData.dynamicShadowMapIndex = _dynamicShadowImage.Index();
+
+    _sceneData.fogColor = _settings.color;
+    _sceneData.fogDensity = _settings.density;
 }
 
 GPUScene::~GPUScene()
@@ -121,21 +130,10 @@ void GPUScene::Update(uint32_t frameIndex)
 
 void GPUScene::UpdateSceneData(uint32_t frameIndex)
 {
-    SceneData sceneData {};
-
-    UpdateDirectionalLightData(sceneData, frameIndex);
-
-    sceneData.irradianceIndex = irradianceMap.Index();
-    sceneData.prefilterIndex = prefilterMap.Index();
-    sceneData.brdfLUTIndex = brdfLUTMap.Index();
-    sceneData.staticShadowMapIndex = _staticShadowImage.Index();
-    sceneData.dynamicShadowMapIndex = _dynamicShadowImage.Index();
-
-    sceneData.fogColor = _settings.color;
-    sceneData.fogDensity = _settings.density;
+    UpdateDirectionalLightData(_sceneData, frameIndex);
 
     const Buffer* buffer = _context->Resources()->BufferResourceManager().Access(_sceneFrameData[frameIndex].buffer);
-    memcpy(buffer->mappedPtr, &sceneData, sizeof(SceneData));
+    memcpy(buffer->mappedPtr, &_sceneData, sizeof(SceneData));
 }
 
 void GPUScene::UpdatePointLightArray(uint32_t frameIndex)

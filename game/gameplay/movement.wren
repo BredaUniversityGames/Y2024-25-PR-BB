@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
 
 class PlayerMovement{
 
@@ -164,7 +164,7 @@ class PlayerMovement{
     Movement(engine, playerController, camera) {
 
         var cheats = playerController.GetCheatsComponent()
-        if(cheats.noClip) {
+        if(cheats.noClip && !engine.IsDistribution()) {
             this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
             this.FlyCamMovement(engine, engine.GetECS().GetEntityByName("Player"))
             return
