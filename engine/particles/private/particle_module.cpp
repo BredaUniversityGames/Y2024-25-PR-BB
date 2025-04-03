@@ -267,7 +267,9 @@ void ParticleModule::LoadEmitterPresets()
         preset.count = 1;
         preset.spawnRandomness = glm::vec3(0.075f, 0.0f, 0.075f);
         // preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 2.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eUnlit);
+
+        preset.color = glm::vec4(20.0f / 255.0f, 14.0f / 255.0f, 14.0f / 255.0f, 1.0f);
         preset.name = "Impact";
         SetEmitterPresetImage(preset, "swoosh.png");
         preset.size = glm::vec3(0.08f, 0.08f, 0.0f);
@@ -299,8 +301,9 @@ void ParticleModule::LoadEmitterPresets()
         preset.maxLife = 1.0f;
         preset.count = 3;
         preset.spawnRandomness = glm::vec3(0.1f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(0.9f, 0.9f, 0.9f, 1.0f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eUnlit);
+        preset.color = glm::vec4(20.0f / 255.0f, 14.0f / 255.0f, 14.0f / 255.0f, 1.0f);
+
         preset.name = "Ray";
         SetEmitterPresetImage(preset, "swoosh.png");
         preset.size = glm::vec3(0.1f, 0.1f, 0.0f);
