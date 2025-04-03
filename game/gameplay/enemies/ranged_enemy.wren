@@ -70,6 +70,8 @@ class RangedEnemy {
         _hasDashed = false
         _dashWishPosition = Vec3.new(0,0,0)
 
+        _maxHeight = 32.0
+
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -146,7 +148,7 @@ class RangedEnemy {
 
                     _chargeTimer = _chargeTimer - dt
                     if (_chargeTimer <= 0) {
-                        _chargeTimer = 200
+                        _chargeTimer = 100
                         var start = pos
                         var direction = forwardVector
                         start = start + direction.mulScalar(2.0)
@@ -163,7 +165,7 @@ class RangedEnemy {
                             var transform = entity.AddTransformComponent()
                             transform.translation = Math.MixVec3(start, end, j / length)
                             var lifetime = entity.AddLifetimeComponent()
-                            lifetime.lifetime = 200.0
+                            lifetime.lifetime = 10.0
                             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                             engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRayEyeStart(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
                             j = j + 1.0
@@ -196,7 +198,7 @@ class RangedEnemy {
                         var transform = entity.AddTransformComponent()
                         transform.translation = Math.MixVec3(start, end, j / length)
                         var lifetime = entity.AddLifetimeComponent()
-                        lifetime.lifetime = 200.0
+                        lifetime.lifetime = 10.0
                         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                         engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRayEyeEnd(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
                         j = j + 1.0
@@ -305,7 +307,10 @@ class RangedEnemy {
             _changeDirectionTimer = 0
             var start = body.GetPosition()
             var direction = Random.RandomPointOnUnitSphere()
-            System.printAll([direction.x, direction.y, direction.z])
+           
+            if(pos.y > _maxHeight) {
+                direction.y = -1.0
+            } 
 
             var end = direction.mulScalar(20.0) + start
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, 20.0)
@@ -327,7 +332,7 @@ class RangedEnemy {
             _dashTimer = _dashTimer + dt
             if(_dashTimer < 10000){
                 var enemyBody = _rootEntity.GetRigidbodyComponent()
-                enemyBody.SetTranslation(Math.MixVec3(enemyBody.GetPosition(), _dashWishPosition, 0.01))
+                enemyBody.SetTranslation(Math.MixVec3(enemyBody.GetPosition(), _dashWishPosition, 0.005))
 
 
                 if(Math.Distance(enemyBody.GetPosition(), _dashWishPosition) < 2.0){

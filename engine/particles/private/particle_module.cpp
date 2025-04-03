@@ -329,7 +329,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
-        preset.count = 4;
+        preset.count = 5;
         preset.spawnRandomness = glm::vec3(0.1f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f);
@@ -339,12 +339,12 @@ void ParticleModule::LoadEmitterPresets()
 
         ParticleBurst burst;
         burst.loop = true;
-        burst.count = 3;
+        burst.count = 5;
         burst.maxInterval = 0.05f;
 
         ParticleBurst burst2;
         burst2.loop = true;
-        burst2.count = 3;
+        burst2.count = 5;
         burst2.maxInterval = 0.08f;
 
         preset.bursts.emplace_back(burst);
@@ -358,7 +358,7 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
         preset.maxLife = 1.0f;
-        preset.count = 4;
+        preset.count = 5;
         preset.spawnRandomness = glm::vec3(0.1f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 0.0f, 0.0f, 30.0f);
@@ -368,12 +368,12 @@ void ParticleModule::LoadEmitterPresets()
 
         ParticleBurst burst;
         burst.loop = true;
-        burst.count = 3;
+        burst.count = 5;
         burst.maxInterval = 0.05f;
 
         ParticleBurst burst2;
         burst2.loop = true;
-        burst2.count = 3;
+        burst2.count = 5;
         burst2.maxInterval = 0.08f;
 
         preset.bursts.emplace_back(burst);
