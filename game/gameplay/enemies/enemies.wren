@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -79,6 +79,13 @@ class MeleeEnemy {
         _bonesStepsSFX = "event:/Character/BonesSteps"
         _walkEventInstance = null
 
+        if(__perlin == null) {
+            __baseIntensity = 10.0
+            __flickerRange = 25.0
+            __flickerSpeed = 1.0
+            __perlin = Perlin.new(0)
+        }
+        _noiseOffset = 0.0
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -245,6 +252,11 @@ class MeleeEnemy {
                 }
             }
         }
+
+        _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
+        var noise = __perlin.Noise1D(_noiseOffset)
+        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+        _pointLight.intensity = flickerIntensity
     }
 
     DoPathfinding(playerPos, engine, dt) {
