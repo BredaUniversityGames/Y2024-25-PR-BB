@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables
 
@@ -37,7 +37,7 @@ class Pistol {
         _mesh = ""
     }
 
-    reload (engine) {   
+    reload (engine) {
         var gun = engine.GetECS().GetEntityByName(_entityName)
 
         var gunAnimations = gun.GetAnimationControlComponent()
@@ -166,7 +166,7 @@ class Pistol {
                         break
                     }
                 }
-                
+
                 var entity = engine.GetECS().NewEntity()
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
