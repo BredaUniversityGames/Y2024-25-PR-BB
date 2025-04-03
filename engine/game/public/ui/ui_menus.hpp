@@ -47,8 +47,6 @@ public:
     std::weak_ptr<UIButton> openLinkButton;
 };
 
-MainMenu MainMenuCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
-
 class GameVersionVisualization : public Canvas
 {
 public:
@@ -62,4 +60,28 @@ public:
     std::weak_ptr<UITextElement> text;
 };
 
-GameVersionVisualization GameVersionVisualizationCreate(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, const std::string& text);
+class LoadingScreen : public Canvas
+{
+public:
+    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+    LoadingScreen(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+};
+
+class PauseMenu : public Canvas
+{
+public:
+    static std::shared_ptr<PauseMenu> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution);
+
+    PauseMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIButton> continueButton;
+    std::weak_ptr<UIButton> settingsButton;
+    std::weak_ptr<UIButton> backToMainButton;
+};

@@ -17,14 +17,16 @@ void logHandler(const std::string& message, gameanalytics::EGALoggerMessageType 
     case gameanalytics::LogWarning:
         bblog::warn(message);
         break;
-    case gameanalytics::LogInfo:
-        // bblog::info(message);
-        break;
-    case gameanalytics::LogDebug:
-        bblog::debug(message);
-        break;
-    case gameanalytics::LogVerbose:
-        bblog::info(message);
+    // case gameanalytics::LogInfo:
+    //     bblog::info(message);
+    //     break;
+    // case gameanalytics::LogDebug:
+    //     bblog::debug(message);
+    //     break;
+    // case gameanalytics::LogVerbose:
+    //     bblog::info(message);
+    //     break;
+    default:
         break;
     }
 }

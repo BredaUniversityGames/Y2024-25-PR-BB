@@ -38,7 +38,7 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
     _context = std::make_unique<ScriptingContext>(config);
     _engineBindingsPath = fileIO::CanonicalizePath("game/engine_api.wren");
 
-    _context->SetScriptingOutputStream(&_scriptingLogs);
+    _context->SetScriptingOutputStream(bblog::default_logger());
 
     return ModuleTickOrder::ePreTick;
 }
@@ -50,12 +50,6 @@ void ScriptingModule::Tick(Engine& engine)
     if (_mainModule)
     {
         _mainModule->Update(dt);
-
-        if (!_scriptingLogs.str().empty())
-        {
-            bblog::info("[Script] {}", _scriptingLogs.str());
-            _scriptingLogs.str(std::string {}); // Clear stream for next frame
-        }
     }
 }
 
