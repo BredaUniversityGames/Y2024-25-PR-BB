@@ -142,7 +142,7 @@ class Main {
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.0)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
@@ -218,9 +218,13 @@ class Main {
                 __activeWeapon = __armory[Weapons.pistol]
                 __activeWeapon.equip(engine)
                 __playerVariables.ultActive = false
+                __playerVariables.wasUltReadyLastFrame = false
             }
-        } else {
-            __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
+        }
+
+        if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
+            __playerVariables.wasUltReadyLastFrame = true
         }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
@@ -254,11 +258,20 @@ class Main {
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
-                if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+                if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
                     System.print("Activate ultimate")
                     __activeWeapon = __armory[Weapons.shotgun]
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
+
+                    engine.GetAudio().PlayEventOnce("event:/Character/ActivateUlt")
+
+                    var particleEntity = engine.GetECS().NewEntity()
+                    particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
+                    var lifetime = particleEntity.AddLifetimeComponent()
+                    lifetime.lifetime = 400.0
+                    var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                    engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
                 }
             }
 
@@ -344,6 +357,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
+        engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition

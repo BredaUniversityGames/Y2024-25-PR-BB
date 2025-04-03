@@ -79,6 +79,21 @@ void UpdateDashCharges(HUD& self, int charges)
     }
 }
 
+void UpdateUltReadyText(HUD& self, bool ready)
+{
+    if (auto locked = self.ultReadyText.lock(); locked != nullptr)
+    {
+        if (ready)
+        {
+            locked->SetText("ultimate ability is ready");
+        }
+        else
+        {
+            locked->SetText("");
+        }
+    }
+}
+
 std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 {
     return self;
@@ -108,4 +123,5 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
+    hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
 }

@@ -101,7 +101,7 @@ class Pistol {
 
             // Shake the camera
 
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
@@ -137,14 +137,26 @@ class Pistol {
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
                                 if (enemy.entity == hitEntity) {
+                                    
+                                    var body = enemy.entity.GetRigidbodyComponent()
+                                     // Fly some bones out of him
+                                    var entity = engine.GetECS().NewEntity()
+                                    var transform = entity.AddTransformComponent()
+                                    transform.translation = body.GetPosition()
+                                    var lifetime = entity.AddLifetimeComponent()
+                                    lifetime.lifetime = 170.0
+                                    var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+                                    engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
+
                                     var multiplier = 1.0
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier)
+                                    enemy.DecreaseHealth(_damage * multiplier,engine)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
+                                        playerVariables.UpdateUltCharge(1.0)
                                     }
                                 }
                             }
@@ -159,10 +171,10 @@ class Pistol {
                 var transform = entity.AddTransformComponent()
                 transform.translation = end
                 var lifetime = entity.AddLifetimeComponent()
-                lifetime.lifetime = 300.0
+                lifetime.lifetime = 400.0
 
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal)
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal.mulScalar(0.005) + Vec3.new(0.0, 0.4, 0.0))
             }
 
 
@@ -242,7 +254,7 @@ class Shotgun {
         _raysPerShot = 9
         _range = 23
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.22 * 1000
+        _attackSpeed = 0.3 * 1000
         _maxAmmo = 2
         _ammo = _maxAmmo
         _cooldown = 0
@@ -269,7 +281,7 @@ class Shotgun {
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
 
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed()|| engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
              _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -317,10 +329,12 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        enemy.DecreaseHealth(_damage)
+                                        enemy.DecreaseHealth(_damage,engine)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
+                                        playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)
+                                            playerVariables.UpdateUltCharge(0.1) // Allow the player to try and keep the ult active a bit longer
                                         }
                                     }
                                 }
