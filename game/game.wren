@@ -138,24 +138,17 @@ class Main {
 
         // Music player
         var musicList = [
-            "assets/music/game/Juval - Play Your Game - No Lead Vocals.wav",
-            "assets/music/game/Ace - Silent Treatment.wav",
-            "assets/music/game/Dono - Zero Gravity.wav",
-            "assets/music/game/Ikoliks - Metal Warrior.wav",
-            "assets/music/game/Tomáš Herudek - Smash Your Enemies.wav",
             "assets/music/game/Taheda - Phenomena.wav",
             ""
             ]
 
         var ambientList = [
             "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
-            "assets/music/ambient/749939__universfield__horror-background-atmosphere-10.mp3",
-            "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
             ""
             ]
 
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.2)
     }
 
     static Shutdown(engine) {
