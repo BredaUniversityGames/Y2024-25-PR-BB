@@ -73,6 +73,15 @@ void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
 
 }
 
+bool IsDistribution(MAYBE_UNUSED GameModule& self)
+{
+#if DISTRIBUTION
+    return true;
+#else
+    return false;
+#endif
+}
+
 void BindGameAPI(wren::ForeignModule& module)
 {
     auto& lifetimeComponent = module.klass<WrenComponent<LifetimeComponent>>("LifetimeComponent");
@@ -84,6 +93,7 @@ void BindGameAPI(wren::ForeignModule& module)
 
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
+    game.funcExt<IsDistribution>("IsDistribution");
 
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");

@@ -21,6 +21,8 @@ class Main {
         light.AddNameComponent().name = "Helmet point light"
         var lightComponent = light.AddPointLightComponent()
         lightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
+        lightComponent.range = 35
+        lightComponent.intensity = 39
         
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 
