@@ -135,22 +135,6 @@ void ParticleModule::LoadEmitterPresets()
 {
     // TODO: serialize emitter presets and load from file
 
-    { // TEST
-        EmitterPreset preset;
-        preset.emitDelay = 0.2f;
-        preset.mass = 2.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 4.0f);
-        preset.maxLife = 5.0f;
-        preset.count = 10;
-        preset.spawnRandomness = glm::vec3(1.0f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f);
-        preset.name = "Test";
-        SetEmitterPresetImage(preset, "flame_03.png");
-
-        _emitterPresets.emplace_back(preset);
-    }
-
     { // FLAME
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
