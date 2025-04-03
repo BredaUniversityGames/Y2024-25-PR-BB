@@ -3,11 +3,11 @@
 #include "graphics_resources.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "ui/ui_menus.hpp"
+#include "ui_button.hpp"
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
 #include <glm/glm.hpp>
-#include <ui_button.hpp>
 
 std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
 {
@@ -97,9 +97,6 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         playButton->navigationTargets.down = main->settingsButton;
         playButton->navigationTargets.up = main->openLinkButton;
-
-        playButton->navigationTargets.down = main->settingsButton;
-        playButton->navigationTargets.up = main->quitButton;
 
         settingsButton->navigationTargets.down = main->quitButton;
         settingsButton->navigationTargets.up = main->playButton;

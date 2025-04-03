@@ -88,8 +88,14 @@ void ScriptingContext::Reset()
         _vmInitConfig.heapGrowthPercent,
         detail::ReallocFn);
 
-    _vm->setPrintFunc([this](const char* message)
-        { *this->_wrenOutStream << message; });
+    auto logHandler = [this](const char* message)
+    {
+        if (message[0] == '\n')
+            return;
+        this->_wrenOutStream->info("[Script] {}", message);
+    };
+
+    _vm->setPrintFunc(logHandler);
 
     _vm->setPathResolveFunc(detail::ResolveImport);
     _vm->setLoadFileFunc(detail::LoadFile);
