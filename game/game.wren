@@ -95,7 +95,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/revolver.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb")
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
