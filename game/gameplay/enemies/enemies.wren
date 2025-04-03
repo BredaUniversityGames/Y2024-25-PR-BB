@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -62,6 +62,12 @@ class MeleeEnemy {
 
         _deathTimerMax = 3500
         _deathTimer = _deathTimerMax
+
+        _bonesSFX = "event:/Character/Bones"
+
+        _bonesStepsSFX = "event:/Character/BonesSteps"
+        _walkEventInstance = null
+
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -71,7 +77,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount) {
+    DecreaseHealth(amount, engine) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -83,6 +89,10 @@ class MeleeEnemy {
             animations.Play("Death", 1.0, false, 1.0, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
+
+            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
         } else {
             animations.Play("Hit", 1.0, false, 0.3, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -92,6 +102,12 @@ class MeleeEnemy {
             _attackingState = false
             _recoveryState = false
             body.SetStatic()
+
+            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
+
+           
         }
     }
 
@@ -155,6 +171,16 @@ class MeleeEnemy {
             if (_movingState) {
                 this.DoPathfinding(playerPos, engine, dt)
                 _evaluateState = true
+
+                if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
+                    _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
+                    var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+                    audioEmitter.AddEvent(_walkEventInstance)
+                }
+            }else{
+                if(_walkEventInstance && engine.GetAudio().IsEventPlaying(_walkEventInstance) == true) {
+                    engine.GetAudio().StopEvent(_walkEventInstance)
+                }
             }
 
             if (_evaluateState) {

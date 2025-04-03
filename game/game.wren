@@ -154,7 +154,7 @@ class Main {
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.0)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
 
