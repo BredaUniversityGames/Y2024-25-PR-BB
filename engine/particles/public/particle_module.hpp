@@ -30,6 +30,7 @@ enum class EmitterPresetID : uint8_t
     eDust,
     eFeathers,
     eBullets,
+    eBones,
     eImpact,
     eRay,
     eStab,
