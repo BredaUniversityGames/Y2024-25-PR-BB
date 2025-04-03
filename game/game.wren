@@ -4,7 +4,7 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
-import "gameplay/music_player.wren" for MusicPlayer
+import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
@@ -147,13 +147,18 @@ class Main {
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+        // __musicPlayer = BGMPlayer.new(engine.GetAudio(),
+        //     "assets/music/game/Master.bank",
+        //     "assets/music/game/Master.strings.bank",
+        //     "event:Gameplay",
+        //     0.2)
+
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.2)
     }
 
     static Shutdown(engine) {
         engine.ResetDecals()
-        __musicPlayer.Destroy(engine.GetAudio())
+        //__musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
         engine.GetECS().DestroyAllEntities()
     }

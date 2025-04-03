@@ -303,6 +303,15 @@ bool AudioModule::IsEventPlaying(EventInstance instance)
     return false;
 }
 
+void AudioModule::SetEventFloatAttribute(EventInstance ev, const std::string& name, float val)
+{
+    if (const auto it = _events.find(ev.id); it != _events.end())
+    {
+        float current, final;
+        auto result = FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false);
+    }
+}
+
 void AudioModule::SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const
 {
     FMOD_3D_ATTRIBUTES attribs {};

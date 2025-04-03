@@ -68,6 +68,8 @@ public:
 
     bool IsEventPlaying(EventInstance instance);
 
+    void SetEventFloatAttribute(EventInstance ev, const std::string& name, float val);
+
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 
     void UpdateSound3DAttributes(ChannelID id, const glm::vec3& position, const glm::vec3& velocity);

@@ -41,3 +41,21 @@ class MusicPlayer {
         }
     }
 }
+
+// This class uses events instead of sound instances
+
+class BGMPlayer {
+    construct new(audio, musicBank, stringBank, musicName, volume) {
+        audio.LoadBank(musicBank)
+        audio.LoadBank(stringBank)
+        _event = audio.PlayEventOnce(musicName)
+    }
+
+    SetAttribute(audio, name, val) {
+        audio.SetEventFloatAttribute(_event, name, val)
+    }
+
+    Destroy(audio) {
+        audio.StopEvent(_event)
+    }
+}
