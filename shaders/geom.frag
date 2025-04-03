@@ -37,14 +37,18 @@ void main()
 {
     Material material;
 
+    uint actualDrawID;
+
     if (pc.isDirectCommand == 1)
     {
-        material = bindless_materials[nonuniformEXT(instances[pc.directInstanceIndex].materialIndex)];
+        actualDrawID = pc.directInstanceIndex;
     }
     else
     {
-        material = bindless_materials[nonuniformEXT(instances[drawID].materialIndex)];
+        actualDrawID = drawID;
     }
+
+    material = bindless_materials[nonuniformEXT(instances[actualDrawID].materialIndex)];
 
     vec4 albedoSample = vec4(1.0);
     vec4 mrSample = vec4(0.0);
@@ -54,7 +58,7 @@ void main()
     vec3 normal = normalIn;
 
     ivec2 pixelPos = ivec2(gl_FragCoord.xy);
-    if (instances[drawID].transparency < bayer[pixelPos.x % 4][pixelPos.y % 4] && instances[drawID].transparency != 1.0)
+    if (instances[actualDrawID].transparency < bayer[pixelPos.x % 4][pixelPos.y % 4] && instances[actualDrawID].transparency != 1.0)
     {
         discard;
     }

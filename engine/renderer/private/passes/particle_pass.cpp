@@ -204,7 +204,7 @@ void ParticlePass::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const Re
     vk::RenderingAttachmentInfoKHR depthAttachmentInfo {};
     depthAttachmentInfo.imageView = resources->ImageResourceManager().Access(_gBuffers.Depth())->view;
     depthAttachmentInfo.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
     depthAttachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
     depthAttachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue { 1.0f, 0 };
 
