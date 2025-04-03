@@ -164,7 +164,7 @@ class PlayerMovement{
     Movement(engine, playerController, camera) {
 
         var cheats = playerController.GetCheatsComponent()
-        if(cheats.noClip && !Game.IsDistribution()) {
+        if(cheats.noClip && !engine.IsDistribution()) {
             this.Rotation(engine, engine.GetECS().GetEntityByName("Player"))
             this.FlyCamMovement(engine, engine.GetECS().GetEntityByName("Player"))
             return

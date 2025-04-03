@@ -25,6 +25,17 @@ class MeleeEnemy {
         _rootEntity.AttachChild(_meshEntity)
         _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
 
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "EnemyLight"
+        var lightTransform = _lightEntity.AddTransformComponent()
+        lightTransform.translation = Vec3.new(0.0, 26, 0.0)
+        _pointLight = _lightEntity.AddPointLightComponent()
+        _rootEntity.AttachChild(_lightEntity)
+
+        _pointLight.intensity = 10
+        _pointLight.range = 2
+        _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
+
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(2.2)
