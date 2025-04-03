@@ -19,7 +19,6 @@ class Main {
 
         // Loading sounds
         engine.GetAudio().LoadBank("assets/sounds/Master.bank")
-        engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
         engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
@@ -135,11 +134,9 @@ class Main {
             ""
             ]
 
-        // __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-        //     "assets/music/game/Master.bank",
-        //     "assets/music/game/Master.strings.bank",
-        //     "event:Gameplay",
-        //     0.2)
+        __musicPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:BGM",
+            0.2)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)

@@ -46,8 +46,8 @@ class MusicPlayer {
 
 class BGMPlayer {
     construct new(audio, musicBank, stringBank, musicName, volume) {
+
         audio.LoadBank(musicBank)
-        audio.LoadBank(stringBank)
         _event = audio.PlayEventOnce(musicName)
     }
 
