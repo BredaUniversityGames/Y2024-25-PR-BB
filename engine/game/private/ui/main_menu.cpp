@@ -33,7 +33,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         return buttonStyle;
     };
 
-    auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
+    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 50, graphicsContext);
 
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
     glm::vec2 screenResFloat = { 1920, 1080 };
@@ -71,25 +71,25 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize * 1.4f, buttonBaseSize * 1.4f);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-        openLinkButton->AddChild<UITextElement>(font, "check out our discord!", 40)->SetColor(glm::vec4(0, 0, 0, 1));
+        openLinkButton->AddChild<UITextElement>(font, "CHECK OUT OUR DISCORD!", 40)->SetColor(glm::vec4(0, 0, 0, 1));
 
         main->openLinkButton = openLinkButton;
 
         auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        playButton->AddChild<UITextElement>(font, "play", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+        playButton->AddChild<UITextElement>(font, "PLAY", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        settingsButton->AddChild<UITextElement>(font, "settings", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+        settingsButton->AddChild<UITextElement>(font, "SETTINGS", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         buttonPos += increment;
 
         auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        quitButton->AddChild<UITextElement>(font, "quit", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+        quitButton->AddChild<UITextElement>(font, "QUIT", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         main->playButton = playButton;
         main->quitButton = quitButton;
