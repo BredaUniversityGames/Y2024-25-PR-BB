@@ -163,6 +163,15 @@ public:
     {
         return glm::distance(pos1, pos2);
     }
+
+    static float AngleAxis2D(glm::vec2 from, glm::vec2 target)
+    {
+        // Rotation from two unit vectors
+        float cos = from.x * target.x + from.y * target.y;
+        float sin = from.x * target.y + from.y * target.x;
+
+        return std::atan2(sin, cos);
+    }
 };
 
 template <typename T>
@@ -242,6 +251,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
+        mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
     }
 }
 

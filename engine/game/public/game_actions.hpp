@@ -7,11 +7,11 @@ const GameActions GAME_ACTIONS {
         .name = "Shooter",
         .digitalActions = {
             {
-                .name = "OpenMenu",
+                .name = "Menu",
                 .inputs = {
                     GamepadButton::eSTART,
                     GamepadButton::eBACK,
-                },
+                    KeyboardCode::eESCAPE },
             },
             {
                 .name = "Slide",
@@ -88,11 +88,8 @@ const GameActions GAME_ACTIONS {
                 },
             },
             {
-                .name = "CloseMenu",
-                .inputs = {
-                    GamepadButton::eSTART,
-                    GamepadButton::eBACK,
-                },
+                .name = "Menu",
+                .inputs = { GamepadButton::eSTART, GamepadButton::eBACK, KeyboardCode::eESCAPE },
             },
             {
                 .name = "Back",

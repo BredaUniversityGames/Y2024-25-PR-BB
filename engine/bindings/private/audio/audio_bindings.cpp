@@ -48,6 +48,11 @@ bool IsSFXPlaying(AudioModule& self, const SoundInstance instance)
     return self.IsSFXPlaying(instance);
 }
 
+bool IsEventPlaying(AudioModule& self, const EventInstance instance)
+{
+    return self.IsEventPlaying(instance);
+}
+
 EventInstance PlayEventOnce(AudioModule& self, const std::string& path)
 {
     return self.StartOneShotEvent(path);
@@ -87,6 +92,7 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::LoadSFX>("LoadSFX", "Loads an audio file internally with path provided, bool is3D and bool isLooping");
     wren_class.funcExt<bindings::PlaySFX>("PlaySFX", "Plays a previously loaded sound with provided path and volume, returns a sound instance");
     wren_class.funcExt<bindings::IsSFXPlaying>("IsSFXPlaying", "Checks if a specific sound instance is still playing");
+    wren_class.funcExt<bindings::IsEventPlaying>("IsEventPlaying", "Checks if a specific event instance is still playing");
     wren_class.funcExt<bindings::PlayEventOnce>("PlayEventOnce", "Play FMOD event once, returns an event instance");
     wren_class.funcExt<bindings::PlayEventLoop>("PlayEventLoop", "Play FMOD event on loop, returns an event instance");
     wren_class.funcExt<bindings::StopEvent>("StopEvent", "Stop playing an event instance");

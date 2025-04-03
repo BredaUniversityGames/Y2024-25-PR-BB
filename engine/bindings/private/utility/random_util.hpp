@@ -19,6 +19,12 @@ public:
         return dist6(rng);
     }
 
+    static uint32_t RandomIndex(uint32_t start, uint32_t end)
+    {
+        uint32_t range = end - start;
+        return Random() % range + start;
+    }
+
     static float RandomFloat()
     {
         return static_cast<float>(Random()) / static_cast<float>(std::numeric_limits<uint32_t>::max());
@@ -55,6 +61,7 @@ inline void BindRandom(wren::ForeignModule& module)
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3>("RandomVec3");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3Range>("RandomVec3Range");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3VectorRange>("RandomVec3VectorRange");
+    randomUtilClass.funcStatic<&RandomUtil::RandomIndex>("RandomIndex");
 }
 
 }

@@ -5,6 +5,7 @@ import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
@@ -82,22 +83,20 @@ class Main {
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
-        var positions = [Vec3.new(10.0, 14.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
-
         // Load Map
-        engine.LoadModel("assets/models/blockoutv5.glb")
+        engine.LoadModel("assets/models/blockoutv5_1.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
-        
+
         // Loading lights from gltf, uncomment to test
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/revolver.glb")
-		__gun.RenderInForeground()
+        __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
 
@@ -124,17 +123,6 @@ class Main {
 
         __pauseEnabled = false
 
-        // Enemy setup
-        __enemyList = []
-        __spawnerList = []
-
-        for (position in positions) {
-            __spawnerList.add(Spawner.new(position, 7000.0))
-        }
-
-        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-
-        __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
 
         // Music player
         var musicList = [
@@ -154,6 +142,82 @@ class Main {
         //     0.2)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.2)
+        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+
+        var spawnLocations = []
+        for(i in 0..7) {
+            spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
+        }
+
+        __enemyList = []
+        var waveConfigs = []
+        waveConfigs.add(WaveConfig.new().SetDuration(10)
+            .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+        )
+        waveConfigs.add(WaveConfig.new().SetDuration(30)
+            .AddSpawn("Skeleton", 0, 1, 1)
+            .AddSpawn("Skeleton", 1, 1, 2)
+            .AddSpawn("Skeleton", 2, 1, 1)
+            .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Skeleton", 0, 10, 1)
+            .AddSpawn("Skeleton", 1, 15, 1)
+            .AddSpawn("Skeleton", 2, 5, 1)
+            .AddSpawn("Skeleton", 3, 15, 3)
+        )
+        waveConfigs.add(WaveConfig.new().SetDuration(60)
+            .AddSpawn("Skeleton", 0, 1, 2)
+            .AddSpawn("Skeleton", 1, 1, 2)
+            .AddSpawn("Skeleton", 2, 1, 1)
+            .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
+            .AddSpawn("Skeleton", 0, 15, 2)
+            .AddSpawn("Skeleton", 1, 15, 1)
+            .AddSpawn("Skeleton", 2, 15, 2)
+            .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
+            .AddSpawn("Skeleton", 0, 40, 3)
+            .AddSpawn("Skeleton", 1, 40, 1)
+            .AddSpawn("Skeleton", 2, 40, 2)
+            .AddSpawn("Skeleton", 3, 40, 2)
+            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
+        )
+        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+
+        // Pause Menu callbacks
+
+        __pauseHandler = Fn.new {
+            __pauseEnabled = true
+            engine.GetTime().SetScale(0.0)
+            engine.GetGame().SetPauseMenuEnabled(true)
+            engine.GetInput().SetActiveActionSet("UserInterface")
+            engine.GetInput().SetMouseHidden(false)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
+            System.print("Pause Menu is %(__pauseEnabled)!")
+        }
+
+        __unpauseHandler = Fn.new {
+            __pauseEnabled = false
+            engine.GetTime().SetScale(1.0)
+            engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetInput().SetActiveActionSet("Shooter")
+            engine.GetInput().SetMouseHidden(true)
+            System.print("Pause Menu is %(__pauseEnabled)!")
+        }
+
+        var continueButton = engine.GetGame().GetPauseMenu().continueButton
+        continueButton.OnPress(__unpauseHandler)
+
+        var backToMain = Fn.new {
+            engine.TransitionToScript("game/main_menu.wren")
+            engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetGame().SetHUDEnabled(false)
+            engine.GetTime().SetScale(1.0)
+        }
+
+        var menuButton = engine.GetGame().GetPauseMenu().backButton
+        menuButton.OnPress(backToMain)
     }
 
     static Shutdown(engine) {
@@ -164,6 +228,7 @@ class Main {
     }
 
     static Update(engine, dt) {
+
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
             __ambientPlayer.CycleMusic(engine.GetAudio())
@@ -187,9 +252,13 @@ class Main {
                 __activeWeapon = __armory[Weapons.pistol]
                 __activeWeapon.equip(engine)
                 __playerVariables.ultActive = false
+                __playerVariables.wasUltReadyLastFrame = false
             }
-        } else {
-            __playerVariables.ultCharge = Math.Min(__playerVariables.ultCharge + __playerVariables.ultChargeRate * dt / 1000, __playerVariables.ultMaxCharge)
+        }
+
+        if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
+            __playerVariables.wasUltReadyLastFrame = true
         }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
@@ -223,11 +292,20 @@ class Main {
 
             // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
             if (engine.GetInput().DebugGetKey(Keycode.eU())) {
-                if (__playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+                if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
                     System.print("Activate ultimate")
                     __activeWeapon = __armory[Weapons.shotgun]
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
+
+                    engine.GetAudio().PlayEventOnce("event:/Character/ActivateUlt")
+
+                    var particleEntity = engine.GetECS().NewEntity()
+                    particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
+                    var lifetime = particleEntity.AddLifetimeComponent()
+                    lifetime.lifetime = 400.0
+                    var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+                    engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
                 }
             }
 
@@ -254,7 +332,7 @@ class Main {
 
             if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
 
-                __activeWeapon = __nextWeapon        
+                __activeWeapon = __nextWeapon
                 __nextWeapon = null
                 __activeWeapon.equip(engine)
 
@@ -297,17 +375,18 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
+        }
 
-            // TODO: Pause Menu on ESC
-            // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
-            //     __pauseEnabled = !__pauseEnabled
+        // Check if pause key was pressed
+        if(engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
-            //     if (__pauseEnabled) {
-            //         engine.GetTime().SetScale(0.0)
-            //     } else {
-            //         engine.GetTime().SetScale(1.0)
-            //     }
-            // }
+            __pauseEnabled = !__pauseEnabled
+
+            if (__pauseEnabled) {
+                __pauseHandler.call()
+            } else {
+                __unpauseHandler.call()
+            }
         }
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
@@ -317,6 +396,7 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
+        engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
@@ -332,7 +412,8 @@ class Main {
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
-
         }
+
+        __waveSystem.Update(dt)
     }
 }
