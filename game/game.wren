@@ -14,6 +14,8 @@ class Main {
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetHUDEnabled(true)
 
+        engine.Fog = 0.005
+
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
