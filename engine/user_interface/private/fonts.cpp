@@ -6,6 +6,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <resource_management/sampler_resource_manager.hpp>
 #include <stb_rect_pack.h>
 
 std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context)
@@ -25,7 +26,7 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
     std::array<stbrp_rect, maxGlyphs> rects;
     for (uint8_t c = 0; c < maxGlyphs; ++c)
     {
-        if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER) != 0)
+        if (FT_Load_Char(fontFace, c, FT_LOAD_RENDER | FT_LOAD_MONOCHROME) != 0)
         {
             rects[c].id = c;
             rects[c].w = rects[c].h = 0;
@@ -90,7 +91,12 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
     image.SetFlags(vk::ImageUsageFlagBits::eSampled);
     image.isHDR = false;
 
-    font->fontAtlas = context.Resources()->ImageResourceManager().Create(image);
+    SamplerCreation samplerCreation;
+    samplerCreation.minFilter = vk::Filter::eNearest;
+    samplerCreation.magFilter = vk::Filter::eNearest;
+    static ResourceHandle<Sampler> sampler = context.Resources()->SamplerResourceManager().Create(samplerCreation);
+
+    font->fontAtlas = context.Resources()->ImageResourceManager().Create(image, sampler);
     context.UpdateBindlessSet();
 
     FT_Done_Face(fontFace);
