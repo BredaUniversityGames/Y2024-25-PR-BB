@@ -18,11 +18,10 @@ class Main {
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
         // Loading sounds
-        engine.GetAudio().LoadBank("assets/sounds/Master.bank")
-        engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        engine.GetAudio().LoadBank("assets/music/Master.bank")
+        engine.GetAudio().LoadBank("assets/music/Master.strings.bank")
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-
 
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
@@ -135,10 +134,9 @@ class Main {
             ]
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:BGM",
+            "event:/Gameplay",
             0.2)
 
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.2)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
@@ -219,23 +217,20 @@ class Main {
 
     static Shutdown(engine) {
         engine.ResetDecals()
-        //__musicPlayer.Destroy(engine.GetAudio())
+
+        __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
+
         engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
 
-        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
-            System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
+        if (__enemyList.count != 0) {
+            __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
+        } else {
+            __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 0.0)
         }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
-            System.print("Next Gameplay Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
-        }
-
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -254,7 +249,7 @@ class Main {
         }
 
         if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
+            engine.GetAudio().PlayEventOnce("event:/UltReady")
             __playerVariables.wasUltReadyLastFrame = true
         }
 
@@ -295,7 +290,7 @@ class Main {
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/Character/ActivateUlt")
+                    engine.GetAudio().PlayEventOnce("event:/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)

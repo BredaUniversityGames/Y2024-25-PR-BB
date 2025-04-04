@@ -308,7 +308,12 @@ void AudioModule::SetEventFloatAttribute(EventInstance ev, const std::string& na
     if (const auto it = _events.find(ev.id); it != _events.end())
     {
         float current, final;
-        auto result = FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false);
+        FMOD_CHECKRESULT(
+            FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false));
+
+        float x, y;
+        FMOD_Studio_EventInstance_GetParameterByName(it->second, name.c_str(), &x, &y);
+        bblog::info("{} {}", x, y);
     }
 }
 
