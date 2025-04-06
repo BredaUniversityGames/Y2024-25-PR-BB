@@ -6,25 +6,25 @@
 
 namespace bindings
 {
-    int32_t SetNavigationMesh(PathfindingModule& self, const std::string& path)
-    {
-        return self.SetNavigationMesh(path);
-    }
+int32_t SetNavigationMesh(PathfindingModule& self, const std::string& path)
+{
+    return self.SetNavigationMesh(path);
+}
 
-    ComputedPath FindPath(PathfindingModule& self, glm::vec3 start_pos, glm::vec3 end_pos)
-    {
-        return self.FindPath(start_pos, end_pos);
-    }
+ComputedPath FindPath(PathfindingModule& self, const glm::vec3& start_pos, const glm::vec3& end_pos)
+{
+    return self.FindPath(start_pos, end_pos);
+}
 
-    glm::vec3 GetCenter(PathNode& node)
-    {
-        return node.centre;
-    }
+glm::vec3 GetCenter(PathNode& node)
+{
+    return node.centre;
+}
 
-    const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
-    {
-        return path.waypoints;
-    }
+const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
+{
+    return path.waypoints;
+}
 }
 
 void BindPathfindingAPI(wren::ForeignModule& module)
@@ -40,4 +40,3 @@ void BindPathfindingAPI(wren::ForeignModule& module)
     auto& computedPath = module.klass<ComputedPath>("ComputedPath");
     computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
 }
-
