@@ -75,9 +75,6 @@ class Main {
         
         var musicList = [
             "assets/music/main_menu/Alon Peretz - The Queens Quarters.wav",
-            "assets/music/main_menu/Itai Argaman - The Sacred Voice.wav",
-            "assets/music/main_menu/Kyle Preston - Dark Tension.wav",
-            "assets/music/main_menu/Kyle Preston - Orchestral Tension.wav",
             ""
             ]
 
@@ -99,14 +96,5 @@ class Main {
 
     static Update(engine, dt) {
 
-        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
-            System.print("Next Main Menu Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
-        }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
-            System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
-        }
     }
 }

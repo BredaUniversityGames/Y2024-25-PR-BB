@@ -66,11 +66,12 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         continueButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         continueButton->AddChild<UITextElement>(font, "Continue", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
-        buttonPos += increment;
+        // buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+        settingsButton->visibility = VisibilityState::eNotUpdatedAndInvisible;
 
         buttonPos += increment;
 
