@@ -42,6 +42,14 @@ std::optional<std::string> AnimationControlComponentCurrentAnimationName(WrenCom
 {
     return component.component->CurrentAnimationName();
 }
+float AnimationControlComponentCurrentAnimationTime(WrenComponent<AnimationControlComponent>& component)
+{
+    if (component.component->activeAnimation.has_value())
+    {
+        return component.component->animations[component.component->activeAnimation.value()].time;
+    }
+    return 0.0f;
+}
 bool AnimationControlComponentAnimationFinished(WrenComponent<AnimationControlComponent>& component)
 {
     return component.component->AnimationFinished();
@@ -59,6 +67,7 @@ void BindAnimationAPI(wren::ForeignModule& module)
     animationControlClass.funcExt<bindings::AnimationControlComponentPause>("Pause");
     animationControlClass.funcExt<bindings::AnimationControlComponentResume>("Resume");
     animationControlClass.funcExt<bindings::AnimationControlComponentSetTime>("SetTime");
+    animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationTime>("CurrentAnimationTime");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentPlayback>("CurrentPlayback");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationIndex>("CurrentAnimationIndex");
     animationControlClass.funcExt<bindings::AnimationControlComponentCurrentAnimationName>("CurrentAnimationName");
