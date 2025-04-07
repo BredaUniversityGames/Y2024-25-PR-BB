@@ -168,8 +168,10 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         return;
     }
 
+#if !DISTRBUTION
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
+#endif
 
     {
         // TODO!!! This can be directly handled by the debug renderer/physics
@@ -193,6 +195,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
+#if !DISTRBUTION
     // Toggle physics debug drawing
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
     {
@@ -204,6 +207,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     {
         pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
     }
+#endif
 
     int8_t physicsDebugDrawing = physicsModule._debugRenderer->GetState(),
            pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
