@@ -36,7 +36,7 @@ class MeleeEnemy {
 
         _reasonTimer = 2000
 
-        _attackRange = 10
+        _attackRange = 7
         _attackDamage = 30
         _shakeIntensity = 1.6
         
