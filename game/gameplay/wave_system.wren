@@ -69,7 +69,7 @@ class WaveSystem {
         }
     }
 
-    WaveDelay { 3.0 }
+    WaveDelay { 7.0 }
     
     ActiveWaveConfig() { 
         if(_currentWave >= 0 && _currentWave < _waveConfigs.count) {
@@ -144,7 +144,7 @@ class WaveSystem {
         var position = spawnerEntity.GetTransformComponent().translation
 
         for(i in 0...spawn.Count) {
-            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 5, enemyModelPath, _enemyShape))
+            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 15, enemyModelPath, _enemyShape))
             enemy.FindNewPath(_engine)
         }
     }

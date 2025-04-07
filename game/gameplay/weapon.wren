@@ -14,17 +14,17 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.75 * 1000
+        _attackSpeed = 0.6 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
-        _reloadSpeed = 1.2 * 700
+        _reloadSpeed = 0.8 * 1000
 
         _cameraShakeIntensity = 0.3
 
-        _attackSFX = "event:/Weapons/Pistol"
-        _reloadSFX = "event:/Weapons/ReloadPistol"
+        _attackSFX = "event:/Pistol"
+        _reloadSFX = "event:/ReloadPistol"
         _equipSFX = ""
 
         _walkAnim = "walk"
@@ -265,7 +265,7 @@ class Shotgun {
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
-        _attackSFX = "event:/Weapons/Explosion"
+        _attackSFX = "event:/Explosion"
         _reloadSFX = ""
         _equipSFX = ""
 
@@ -426,7 +426,7 @@ class Knife {
         _reloadSpeed = 0
         _cameraShakeIntensity = 0.2
 
-        _attackSFX = "event:/Weapons/Machine Gun"
+        _attackSFX = "event:Explosion"
         _reloadSFX = ""
         _equipSFX = ""
 
