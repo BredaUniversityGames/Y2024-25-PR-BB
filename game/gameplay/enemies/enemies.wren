@@ -229,7 +229,7 @@ class MeleeEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Run", 1.0, true, 0.5, true)
+                    animations.Play("Run", 1.75, true, 0.5, true)
                 }
             }
         } else {

@@ -84,7 +84,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv6.glb")
+        engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
 
