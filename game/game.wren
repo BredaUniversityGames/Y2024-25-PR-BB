@@ -4,8 +4,8 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
-import "gameplay/music_player.wren" for MusicPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
@@ -18,12 +18,10 @@ class Main {
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
         // Loading sounds
-        engine.GetAudio().LoadBank("assets/sounds/Master.bank")
-        engine.GetAudio().LoadBank("assets/sounds/Master.strings.bank")
-        engine.GetAudio().LoadBank("assets/sounds/SFX.bank")
+        engine.GetAudio().LoadBank("assets/music/Master.bank")
+        engine.GetAudio().LoadBank("assets/music/Master.strings.bank")
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-
 
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
@@ -123,26 +121,17 @@ class Main {
 
         __pauseEnabled = false
 
-
-        // Music player
-        var musicList = [
-            "assets/music/game/Juval - Play Your Game - No Lead Vocals.wav",
-            "assets/music/game/Ace - Silent Treatment.wav",
-            "assets/music/game/Dono - Zero Gravity.wav",
-            "assets/music/game/Ikoliks - Metal Warrior.wav",
-            "assets/music/game/Tomáš Herudek - Smash Your Enemies.wav",
-            "assets/music/game/Taheda - Phenomena.wav",
-            ""
-            ]
+        // Music
 
         var ambientList = [
             "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
-            "assets/music/ambient/749939__universfield__horror-background-atmosphere-10.mp3",
-            "assets/music/ambient/759816__newlocknew__ambfant_a-mysterious-fairy-tale-forest-in-the-mountains.mp3",
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.0)
+        __musicPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/Gameplay",
+            0.15)
+
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
@@ -195,6 +184,7 @@ class Main {
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -204,6 +194,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.15)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -240,23 +231,20 @@ class Main {
 
     static Shutdown(engine) {
         engine.ResetDecals()
+
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
+
         engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
 
-        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
-            System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
+        if (__enemyList.count != 0) {
+            __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
+        } else {
+            __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 0.0)
         }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
-            System.print("Next Gameplay Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
-        }
-
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -275,7 +263,7 @@ class Main {
         }
 
         if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/Character/UltReady")
+            engine.GetAudio().PlayEventOnce("event:/UltReady")
             __playerVariables.wasUltReadyLastFrame = true
         }
 
@@ -316,7 +304,7 @@ class Main {
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/Character/ActivateUlt")
+                    engine.GetAudio().PlayEventOnce("event:/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)

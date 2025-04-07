@@ -34,9 +34,9 @@ class MeleeEnemy {
 
         _isAlive = true
 
-        _reasonTimer = 2001
+        _reasonTimer = 2000
 
-        _attackRange = 6
+        _attackRange = 7
         _attackDamage = 30
         _shakeIntensity = 1.6
         
@@ -48,10 +48,10 @@ class MeleeEnemy {
         _attackMaxCooldown = 2000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 2500
+        _attackMaxTime = 1500
         _attackTime = 0
 
-        _recoveryMaxTime = 2000
+        _recoveryMaxTime = 1500
         _recoveryTime = 0
 
         _evaluateState = true
@@ -60,12 +60,12 @@ class MeleeEnemy {
 
         _hitTimer = 0
 
-        _deathTimerMax = 3500
+        _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
-        _bonesSFX = "event:/Character/Bones"
+        _bonesSFX = "event:/Bones"
 
-        _bonesStepsSFX = "event:/Character/BonesSteps"
+        _bonesStepsSFX = "event:/BonesSteps"
         _walkEventInstance = null
 
     }
