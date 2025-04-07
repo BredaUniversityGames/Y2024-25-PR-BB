@@ -30,50 +30,79 @@ void UIButton::SwitchState(bool inputActionPressed, bool inputActionReleased)
 void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputContext)
 {
     UIElement::Update(inputManagers, inputContext);
-    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eUpdatedAndInvisble)
+
+    // Early out - Button should not be updated
+    if (visibility == VisibilityState::eNotUpdatedAndInvisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
-        previousState = state;
-        if (inputContext.HasInputBeenConsumed() == true)
+        return;
+    }
+
+    // Early out = Input had been consumed by another UI element
+    if (inputContext.HasInputBeenConsumed())
+    {
+        state = ButtonState::eNormal;
+        return;
+    }
+
+    // Gamepad controls
+    if (inputContext.GamepadHasFocus())
+    {
+        if (auto locked = inputContext.focusedUIElement.lock(); locked.get() != this)
         {
             state = ButtonState::eNormal;
+            return;
         }
         else
         {
-            if (inputContext.GamepadHasFocus())
-            {
-                if (auto locked = inputContext.focusedUIElement.lock(); locked.get() != this)
-                {
-                    state = ButtonState::eNormal;
-                    return;
-                }
-                SwitchState(inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsPressed(), inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName()).IsReleased());
-                if (state == ButtonState::ePressed)
-                {
-                    std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
-                    inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
-                }
-                inputContext.ConsumeInput();
-            }
-            else // Mouse controls
-            {
-                glm::ivec2 mousePos;
-                inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
-                if (IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale()))
-                {
-                    SwitchState(inputManagers.inputDeviceManager.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT), inputManagers.inputDeviceManager.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT));
-                    inputContext.ConsumeInput();
-                }
-                else
-                {
-                    state = ButtonState::eNormal;
-                }
-            }
+            state = ButtonState::eHovered;
+        }
+
+        auto pressAction = inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName());
+
+        if (pressAction.IsHeld())
+        {
+            state = ButtonState::ePressed;
+        }
+
+        if (pressAction.IsReleased())
+        {
+            std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
+            inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
+            _callback();
         }
     }
-
-    if (IsPressedOnce())
+    else // Mouse controls
     {
-        _callback();
+        glm::ivec2 mousePos;
+        inputManagers.inputDeviceManager.GetMousePosition(mousePos.x, mousePos.y);
+
+        bool mouseIn = IsMouseInsideBoundary(mousePos, GetAbsoluteLocation(), GetAbsoluteScale());
+        bool mouseDown = inputManagers.inputDeviceManager.IsMouseButtonPressed(MouseButton::eBUTTON_LEFT);
+        bool mouseUp = inputManagers.inputDeviceManager.IsMouseButtonReleased(MouseButton::eBUTTON_LEFT);
+
+        if (mouseIn)
+        {
+            if (state != ButtonState::ePressed)
+            {
+                state = ButtonState::eHovered;
+            }
+
+            if (mouseDown)
+            {
+                state = ButtonState::ePressed;
+            }
+
+            if (mouseUp)
+            {
+                _callback();
+            }
+
+            inputContext.ConsumeInput();
+        }
+        else
+        {
+            state = ButtonState::eNormal;
+        }
     }
 }
 

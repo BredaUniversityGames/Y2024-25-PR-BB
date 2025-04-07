@@ -9,9 +9,17 @@ namespace bindings
 {
 
 void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
+
 std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
 std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton.lock(); }
 std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton.lock(); }
+
+std::shared_ptr<UIButton> ContinueButton(PauseMenu& self) { return self.continueButton.lock(); }
+std::shared_ptr<UIButton> BackButton(PauseMenu& self) { return self.backToMainButton.lock(); }
+std::shared_ptr<UIButton> PauseSettingsButton(PauseMenu& self) { return self.settingsButton.lock(); }
+
+std::shared_ptr<UIButton> RetryButton(GameOverMenu& self) { return self.continueButton.lock(); }
+std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.backToMainButton.lock(); }
 
 void UpdateHealthBar(HUD& self, const float health)
 {
@@ -79,11 +87,25 @@ void UpdateDashCharges(HUD& self, int charges)
     }
 }
 
+void UpdateUltReadyText(HUD& self, bool ready)
+{
+    if (auto locked = self.ultReadyText.lock(); locked != nullptr)
+    {
+        if (ready)
+        {
+            locked->SetText("ultimate ability is ready");
+        }
+        else
+        {
+            locked->SetText("");
+        }
+    }
+}
+
 std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 {
     return self;
 }
-
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -99,6 +121,11 @@ void BindGameUI(wren::ForeignModule& module)
     mainMenu.propReadonlyExt<bindings::QuitButton>("quitButton");
     mainMenu.propReadonlyExt<bindings::PlayButton>("playButton");
 
+    auto& pauseMenu = module.klass<PauseMenu>("PauseMenu");
+    pauseMenu.propReadonlyExt<bindings::PauseSettingsButton>("settingsButton");
+    pauseMenu.propReadonlyExt<bindings::BackButton>("backButton");
+    pauseMenu.propReadonlyExt<bindings::ContinueButton>("continueButton");
+
     auto& hud = module.klass<HUD>("HUD");
 
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar", "Update health bar with value from 0 to 1");
@@ -108,4 +135,10 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
+    hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
+
+    auto& gameOver = module.klass<GameOverMenu>("GameOverMenu");
+
+    gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
+    gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
 }

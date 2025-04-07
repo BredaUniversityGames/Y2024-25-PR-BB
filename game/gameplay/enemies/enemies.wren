@@ -23,7 +23,7 @@ class MeleeEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-100,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -34,9 +34,9 @@ class MeleeEnemy {
 
         _isAlive = true
 
-        _reasonTimer = 2001
+        _reasonTimer = 2000
 
-        _attackRange = 6
+        _attackRange = 7
         _attackDamage = 30
         _shakeIntensity = 1.6
         
@@ -48,10 +48,10 @@ class MeleeEnemy {
         _attackMaxCooldown = 2000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 2500
+        _attackMaxTime = 1500
         _attackTime = 0
 
-        _recoveryMaxTime = 2000
+        _recoveryMaxTime = 1500
         _recoveryTime = 0
 
         _evaluateState = true
@@ -60,12 +60,12 @@ class MeleeEnemy {
 
         _hitTimer = 0
 
-        _deathTimerMax = 3500
+        _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
-        _bonesSFX = "event:/Character/Bones"
+        _bonesSFX = "event:/Bones"
 
-        _bonesStepsSFX = "event:/Character/BonesSteps"
+        _bonesStepsSFX = "event:/BonesSteps"
         _walkEventInstance = null
 
     }
@@ -86,7 +86,7 @@ class MeleeEnemy {
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
-            animations.Play("Death", 1.0, false, 1.0, false)
+            animations.Play("Death", 1.0, false, 0.3, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
 
@@ -94,7 +94,7 @@ class MeleeEnemy {
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
         } else {
-            animations.Play("Hit", 1.0, false, 0.3, false)
+            animations.Play("Hit", 1.0, false, 0.1, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             _hitState = true
             _movingState = false
@@ -189,7 +189,7 @@ class MeleeEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
-                    animations.Play("Attack", 1.0, false, 1.0, false)
+                    animations.Play("Attack", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
                     _evaluateState = false
