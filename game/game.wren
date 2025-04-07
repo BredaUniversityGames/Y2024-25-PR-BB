@@ -121,12 +121,7 @@ class Main {
 
         __pauseEnabled = false
 
-
-        // Music player
-        var musicList = [
-            "assets/music/game/Taheda - Phenomena.wav",
-            ""
-            ]
+        // Music
 
         var ambientList = [
             "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
@@ -135,7 +130,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.2)
+            0.15)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -189,6 +184,7 @@ class Main {
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -198,6 +194,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.15)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 

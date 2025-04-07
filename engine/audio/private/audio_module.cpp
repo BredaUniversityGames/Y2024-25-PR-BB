@@ -303,17 +303,19 @@ bool AudioModule::IsEventPlaying(EventInstance instance)
     return false;
 }
 
+void AudioModule::SetEventVolume(EventInstance ev, float volume)
+{
+    if (const auto it = _events.find(ev.id); it != _events.end())
+    {
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_SetVolume(it->second, volume));
+    }
+}
+
 void AudioModule::SetEventFloatAttribute(EventInstance ev, const std::string& name, float val)
 {
     if (const auto it = _events.find(ev.id); it != _events.end())
     {
-        float current, final;
-        FMOD_CHECKRESULT(
-            FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false));
-
-        float x, y;
-        FMOD_Studio_EventInstance_GetParameterByName(it->second, name.c_str(), &x, &y);
-        bblog::info("{} {}", x, y);
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false));
     }
 }
 
