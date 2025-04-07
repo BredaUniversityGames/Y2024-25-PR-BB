@@ -1,19 +1,16 @@
-#include "fonts.hpp"
-#include "graphics_context.hpp"
-#include "graphics_resources.hpp"
-#include "resource_management/image_resource_manager.hpp"
 #include "ui/ui_menus.hpp"
-#include "ui_button.hpp"
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
-#include <glm/glm.hpp>
+#include "graphics_context.hpp"
+#include "graphics_resources.hpp"
+#include "resource_management/image_resource_manager.hpp"
 
-std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
+std::shared_ptr<GameOverMenu> GameOverMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
-    auto pause = std::make_shared<PauseMenu>(screenResolution);
-    pause->anchorPoint = UIElement::AnchorPoint::eMiddle;
-    pause->SetAbsoluteTransform(pause->GetAbsoluteLocation(), screenResolution);
+    auto over = std::make_shared<GameOverMenu>(screenResolution);
+    over->anchorPoint = UIElement::AnchorPoint::eMiddle;
+    over->SetAbsoluteTransform(over->GetAbsoluteLocation(), screenResolution);
 
     {
         // common image data.
@@ -28,7 +25,7 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         commonImageData.initialData = { black, black, black, transparent };
 
         auto backdropImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
-        auto image = pause->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
+        auto image = over->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
@@ -46,7 +43,7 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         buttonStyle.pressedImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/wider2_p.png"));
     }
 
-    auto buttonPanel = pause->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
+    auto buttonPanel = over->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
 
     {
         buttonPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
@@ -59,18 +56,12 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         constexpr glm::vec2 buttonBaseSize = glm::vec2(878, 243) * 0.5f;
         constexpr float textSize = 50;
 
-        buttonPanel->AddChild<UITextElement>(font, "Paused", buttonPos, 200);
+        buttonPanel->AddChild<UITextElement>(font, "Game Over!", buttonPos, 200);
         buttonPos += increment * 5.0f;
 
         auto continueButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         continueButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        continueButton->AddChild<UITextElement>(font, "Continue", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
-
-        buttonPos += increment;
-
-        auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
-        settingsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
+        continueButton->AddChild<UITextElement>(font, "Retry", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
         buttonPos += increment;
 
@@ -78,22 +69,18 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         backToMainButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         backToMainButton->AddChild<UITextElement>(font, "Main Menu", textSize)->SetColor(glm::vec4(0, 0, 0, 1));
 
-        pause->continueButton = continueButton;
-        pause->backToMainButton = backToMainButton;
-        pause->settingsButton = settingsButton;
+        over->continueButton = continueButton;
+        over->backToMainButton = backToMainButton;
 
-        continueButton->navigationTargets.down = pause->settingsButton;
-        continueButton->navigationTargets.up = pause->backToMainButton;
+        continueButton->navigationTargets.down = over->backToMainButton;
+        continueButton->navigationTargets.up = over->backToMainButton;
 
-        settingsButton->navigationTargets.down = pause->backToMainButton;
-        settingsButton->navigationTargets.up = pause->continueButton;
-
-        backToMainButton->navigationTargets.down = pause->continueButton;
-        backToMainButton->navigationTargets.up = pause->settingsButton;
+        backToMainButton->navigationTargets.down = over->continueButton;
+        backToMainButton->navigationTargets.up = over->continueButton;
     }
 
-    pause->UpdateAllChildrenAbsoluteTransform();
+    over->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
-    return pause;
+    return over;
 }

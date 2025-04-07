@@ -6,7 +6,7 @@
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
-std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
     auto loading = std::make_shared<LoadingScreen>(screenResolution);
 
@@ -32,7 +32,6 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
 
     {
         constexpr auto textSize = 100;
-        auto font = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
         auto text = loading->AddChild<UITextElement>(font, "Loading", glm::vec2(), textSize);
         text->anchorPoint = UIElement::AnchorPoint::eMiddle;
     }

@@ -32,6 +32,7 @@ public:
     void SetHUDEnabled(bool val);
     void SetLoadingScreenEnabled(bool val);
     void SetPauseMenuEnabled(bool val);
+    void SetGameOverMenuEnabled(bool val);
 
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu()
     {
@@ -61,10 +62,20 @@ public:
         return std::nullopt;
     }
 
+    std::optional<std::shared_ptr<GameOverMenu>> GetGameOver()
+    {
+        if (auto lock = _gameOver.lock())
+        {
+            return lock;
+        }
+        return std::nullopt;
+    }
+
     std::weak_ptr<HUD> _hud;
     std::weak_ptr<MainMenu> _mainMenu;
     std::weak_ptr<LoadingScreen> _loadingScreen;
     std::weak_ptr<PauseMenu> _pauseMenu;
+    std::weak_ptr<GameOverMenu> _gameOver;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
