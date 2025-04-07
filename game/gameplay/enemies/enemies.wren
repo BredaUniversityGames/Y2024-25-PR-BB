@@ -59,7 +59,7 @@ class MeleeEnemy {
         _attackMaxCooldown = 2000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 1500
+        _attackMaxTime = 2500
         _attackTime = 0
 
         _recoveryMaxTime = 1500
