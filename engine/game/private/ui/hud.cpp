@@ -58,12 +58,10 @@ UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
     return barStyle;
 }
 
-std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
     std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
     // resource loading.
-
-    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 50, graphicsContext);
 
     UIProgressBar::BarStyle healtbarStyle
         = LoadHealthBarStyle(graphicsContext);

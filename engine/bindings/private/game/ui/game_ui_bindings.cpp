@@ -18,6 +18,9 @@ std::shared_ptr<UIButton> ContinueButton(PauseMenu& self) { return self.continue
 std::shared_ptr<UIButton> BackButton(PauseMenu& self) { return self.backToMainButton.lock(); }
 std::shared_ptr<UIButton> PauseSettingsButton(PauseMenu& self) { return self.settingsButton.lock(); }
 
+std::shared_ptr<UIButton> RetryButton(GameOverMenu& self) { return self.continueButton.lock(); }
+std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.backToMainButton.lock(); }
+
 void UpdateHealthBar(HUD& self, const float health)
 {
     if (auto locked = self.healthBar.lock(); locked != nullptr)
@@ -103,7 +106,6 @@ std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 {
     return self;
 }
-
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -134,4 +136,9 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
+
+    auto& gameOver = module.klass<GameOverMenu>("GameOverMenu");
+
+    gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
+    gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
 }

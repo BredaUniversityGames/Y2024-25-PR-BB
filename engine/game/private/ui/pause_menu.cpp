@@ -10,11 +10,9 @@
 
 #include <glm/glm.hpp>
 
-std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
     auto pause = std::make_shared<PauseMenu>(screenResolution);
-
-    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 50, graphicsContext);
     pause->anchorPoint = UIElement::AnchorPoint::eMiddle;
     pause->SetAbsoluteTransform(pause->GetAbsoluteLocation(), screenResolution);
 
