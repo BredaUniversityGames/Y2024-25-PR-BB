@@ -16,6 +16,7 @@
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "file_io.hpp"
+#include "fonts.hpp"
 #include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
@@ -32,12 +33,11 @@
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
+#include "steam_module.hpp"
 #include "systems/lifetime_system.hpp"
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-
-#include "steam_module.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -49,21 +49,25 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& viewport = engine.GetModule<UIModule>().GetViewport();
     const glm::uvec2 viewportSize = viewport.GetExtend();
 
+    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
+
     if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
         std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
-        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, gameVersionText));
+        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
     }
 
-    _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize));
-    _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize));
-    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize));
-    _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize));
+    _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
+    _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
+    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
+    _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
+    _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -103,6 +107,14 @@ void GameModule::SetMainMenuEnabled(bool val)
 void GameModule::SetLoadingScreenEnabled(bool val)
 {
     if (auto lock = _loadingScreen.lock())
+    {
+        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
+
+void GameModule::SetGameOverMenuEnabled(bool val)
+{
+    if (auto lock = _gameOver.lock())
     {
         lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }

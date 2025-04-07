@@ -204,12 +204,29 @@ class Main {
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
             engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetGame().SetGameOverMenuEnabled(false)
             engine.GetGame().SetHUDEnabled(false)
             engine.GetTime().SetScale(1.0)
         }
 
         var menuButton = engine.GetGame().GetPauseMenu().backButton
         menuButton.OnPress(backToMain)
+
+        // Game over callbacks
+        __alive = true
+
+        var menuButton2 = engine.GetGame().GetGameOverMenu().backButton
+        menuButton2.OnPress(backToMain)
+
+        var retryButton = engine.GetGame().GetGameOverMenu().retryButton
+        
+        var retryHandler = Fn.new {
+            engine.GetGame().SetGameOverMenuEnabled(false)
+            engine.TransitionToScript("game/game.wren")
+            engine.GetTime().SetScale(1.0)
+        }
+
+        retryButton.OnPress(retryHandler)
     }
 
     static Shutdown(engine) {
@@ -367,7 +384,7 @@ class Main {
         }
 
         // Check if pause key was pressed
-        if(engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
+        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
             __pauseEnabled = !__pauseEnabled
 
@@ -376,6 +393,17 @@ class Main {
             } else {
                 __unpauseHandler.call()
             }
+        }
+
+        // Check if player died
+
+        if (__alive && __playerVariables.health <= 0) {
+            __alive = false
+            engine.GetTime().SetScale(0.0)
+            engine.GetGame().SetGameOverMenuEnabled(true)
+            engine.GetInput().SetActiveActionSet("UserInterface")
+            engine.GetInput().SetMouseHidden(false)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)

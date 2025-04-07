@@ -9,7 +9,7 @@
 
 #include <glm/glm.hpp>
 
-std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
     auto main = std::make_shared<MainMenu>(screenResolution);
 
@@ -32,8 +32,6 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         };
         return buttonStyle;
     };
-
-    auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 50, graphicsContext);
 
     UIButton::ButtonStyle buttonStyle = loadButtonStyle();
     glm::vec2 screenResFloat = { 1920, 1080 };
