@@ -100,14 +100,14 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         main->quitButton = quitButton;
         main->settingsButton = settingsButton;
 
-        playButton->navigationTargets.down = main->settingsButton;
+        playButton->navigationTargets.down = main->quitButton;
         playButton->navigationTargets.up = main->openLinkButton;
 
-        settingsButton->navigationTargets.down = main->quitButton;
-        settingsButton->navigationTargets.up = main->playButton;
+        // settingsButton->navigationTargets.down = main->quitButton;
+        // settingsButton->navigationTargets.up = main->playButton;
 
         quitButton->navigationTargets.down = main->openLinkButton;
-        quitButton->navigationTargets.up = main->settingsButton;
+        quitButton->navigationTargets.up = main->playButton;
 
         main->openLinkButton.lock()->navigationTargets.down = main->playButton;
         main->openLinkButton.lock()->navigationTargets.up = main->quitButton;
