@@ -62,7 +62,7 @@ class WaveSystem {
         _currentWave = -1
         _status = WaveStatusType.NotStarted
         _waveTimer = 0.0
-        _enemyShape = ShapeFactory.MakeCapsuleShape(60.0, 35.0)
+        _enemyShape = ShapeFactory.MakeCapsuleShape(100.0, 35.0)
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
@@ -144,7 +144,7 @@ class WaveSystem {
         var position = spawnerEntity.GetTransformComponent().translation
 
         for(i in 0...spawn.Count) {
-            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 8, enemyModelPath, _enemyShape))
+            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
             enemy.FindNewPath(_engine)
         }
     }

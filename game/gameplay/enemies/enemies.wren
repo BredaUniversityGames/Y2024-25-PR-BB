@@ -41,7 +41,7 @@ class MeleeEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.0, true, 1.0, true)
+        animations.Play("Run", 1.25, true, 1.0, true)
 
         _isAlive = true
 
@@ -192,6 +192,7 @@ class MeleeEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
+                    engine.GetAudio().SetEventVolume(_walkEventInstance, 15.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -215,7 +216,7 @@ class MeleeEnemy {
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Run", 1.0, true, 0.5, true)
+                    animations.Play("Run", 1.25, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -229,7 +230,7 @@ class MeleeEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Run", 1.75, true, 0.5, true)
+                    animations.Play("Run", 1.25, true, 0.5, true)
                 }
             }
         } else {
