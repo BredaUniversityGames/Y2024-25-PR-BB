@@ -83,11 +83,12 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         playButton->AddChild<UITextElement>(font, "PLAY", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
 
-        buttonPos += increment;
+        // buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         settingsButton->AddChild<UITextElement>(font, "SETTINGS", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        settingsButton->visibility = VisibilityState::eNotUpdatedAndInvisible;
 
         buttonPos += increment;
 
