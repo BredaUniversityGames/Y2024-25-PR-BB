@@ -89,14 +89,14 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         pause->backToMainButton = backToMainButton;
         pause->settingsButton = settingsButton;
 
-        continueButton->navigationTargets.down = pause->settingsButton;
+        continueButton->navigationTargets.down = pause->backToMainButton;
         continueButton->navigationTargets.up = pause->backToMainButton;
 
-        settingsButton->navigationTargets.down = pause->backToMainButton;
-        settingsButton->navigationTargets.up = pause->continueButton;
+        //settingsButton->navigationTargets.down = pause->backToMainButton;
+        //settingsButton->navigationTargets.up = pause->continueButton;
 
         backToMainButton->navigationTargets.down = pause->continueButton;
-        backToMainButton->navigationTargets.up = pause->settingsButton;
+        backToMainButton->navigationTargets.up = pause->continueButton;
     }
 
     pause->UpdateAllChildrenAbsoluteTransform();
