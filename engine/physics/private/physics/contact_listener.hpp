@@ -9,7 +9,7 @@ class PhysicsContactListener : public JPH::ContactListener
 {
 public:
     // See: ContactListener
-    virtual JPH::ValidateResult OnContactValidate(
+    JPH::ValidateResult OnContactValidate(
         MAYBE_UNUSED const JPH::Body& inBody1,
         MAYBE_UNUSED const JPH::Body& inBody2,
         MAYBE_UNUSED JPH::RVec3Arg inBaseOffset,
@@ -19,23 +19,17 @@ public:
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
-    virtual void OnContactAdded(
+    void OnContactAdded(
         MAYBE_UNUSED const JPH::Body& inBody1,
         MAYBE_UNUSED const JPH::Body& inBody2,
         MAYBE_UNUSED const JPH::ContactManifold& inManifold,
-        MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
-    {
-    }
+        MAYBE_UNUSED JPH::ContactSettings& ioSettings) override;
 
-    virtual void OnContactPersisted(
-        MAYBE_UNUSED const JPH::Body& inBody1,
-        MAYBE_UNUSED const JPH::Body& inBody2,
-        MAYBE_UNUSED const JPH::ContactManifold& inManifold,
-        MAYBE_UNUSED JPH::ContactSettings& ioSettings) override
-    {
-    }
+    void OnContactPersisted(
+         MAYBE_UNUSED const JPH::Body& inBody1,
+         MAYBE_UNUSED const JPH::Body& inBody2,
+         MAYBE_UNUSED const JPH::ContactManifold& inManifold,
+         MAYBE_UNUSED JPH::ContactSettings& ioSettings) override;
 
-    virtual void OnContactRemoved(MAYBE_UNUSED const JPH::SubShapeIDPair& inSubShapePair) override
-    {
-    }
+    void OnContactRemoved(MAYBE_UNUSED const JPH::SubShapeIDPair& inSubShapePair) override;
 };

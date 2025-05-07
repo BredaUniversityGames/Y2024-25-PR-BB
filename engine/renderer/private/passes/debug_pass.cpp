@@ -142,7 +142,7 @@ void DebugPass::CreatePipeline()
 
 void DebugPass::CreateVertexBuffer()
 {
-    const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 2 * 1024 * 2048; // TODO: Remove magic number.
+    const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 30 * 1024 * 1024; // TODO: Remove magic number.
     BufferCreation vertexBufferCreation {};
     vertexBufferCreation.SetSize(bufferSize)
         .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)

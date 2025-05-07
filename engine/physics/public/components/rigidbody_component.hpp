@@ -16,7 +16,7 @@ struct UpdateMeshAndPhysics
 class RigidbodyComponent
 {
 public:
-    RigidbodyComponent(JPH::BodyInterface& bodyInterface, JPH::ShapeRefC shape, bool dynamic, JPH::EAllowedDOFs freedom = JPH::EAllowedDOFs::All);
+    RigidbodyComponent(JPH::BodyInterface& bodyInterface, JPH::ShapeRefC shape, JPH::ObjectLayer layer, JPH::EAllowedDOFs freedom = JPH::EAllowedDOFs::All);
 
     static void SetupRegistryCallbacks(entt::registry& registry);
     static void DisconnectRegistryCallbacks(entt::registry& registry);
@@ -48,7 +48,7 @@ public:
     JPH::ShapeRefC shape;
 
 private:
-    bool dynamic = false;
+    JPH::ObjectLayer layer {};
     JPH::EAllowedDOFs dofs {};
     JPH::BodyInterface* bodyInterface;
 

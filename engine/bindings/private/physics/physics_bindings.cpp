@@ -2,8 +2,11 @@
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
+#include "physics/collision.hpp"
+#include "physics/physics_bindings.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
+#include "utility/enum_bind.hpp"
 
 #include <optional>
 
@@ -105,10 +108,10 @@ JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
     return self.component->bodyID;
 }
 
-RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, bool dynamic, bool allowRotation)
+RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, PhysicsObjectLayer layer, bool allowRotation)
 {
     JPH::EAllowedDOFs dofs = allowRotation ? JPH::EAllowedDOFs::All : JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
-    return RigidbodyComponent { physics.GetBodyInterface(), shape, dynamic, dofs };
+    return RigidbodyComponent { physics.GetBodyInterface(), shape, layer, dofs };
 }
 
 }
@@ -126,6 +129,9 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rayHitInfo.var<&RayHitInfo::position>("position");
     rayHitInfo.var<&RayHitInfo::normal>("normal");
     rayHitInfo.var<&RayHitInfo::hitFraction>("hitFraction");
+
+    // Object Layers
+    bindings::BindEnum<PhysicsObjectLayer>(module, "PhysicsObjectLayer");
 
     // Body ID
     module.klass<JPH::BodyID>("BodyID");

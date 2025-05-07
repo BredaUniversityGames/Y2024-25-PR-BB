@@ -158,25 +158,22 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
 
             ImGui::SeparatorText("Physics");
 
+            auto displayLayerToggle = [&physicsModule](JPH::ObjectLayer layer, const char* name)
             {
-                bool state = physicsModule._debugLayersToRender.contains(PhysicsObjectLayer::eNON_MOVING_OBJECT);
-                ImGui::Checkbox("Static Objects", &state);
+                bool state = physicsModule._debugLayersToRender.contains(layer);
+                ImGui::Checkbox(name, &state);
 
                 if (state)
-                    physicsModule._debugLayersToRender.emplace(PhysicsObjectLayer::eNON_MOVING_OBJECT);
+                    physicsModule._debugLayersToRender.emplace(layer);
                 else
-                    physicsModule._debugLayersToRender.erase(PhysicsObjectLayer::eNON_MOVING_OBJECT);
-            }
+                    physicsModule._debugLayersToRender.erase(layer);
+            };
 
-            {
-                bool state = physicsModule._debugLayersToRender.contains(PhysicsObjectLayer::eMOVING_OBJECT);
-                ImGui::Checkbox("Dynamic Objects", &state);
-
-                if (state)
-                    physicsModule._debugLayersToRender.emplace(PhysicsObjectLayer::eMOVING_OBJECT);
-                else
-                    physicsModule._debugLayersToRender.erase(PhysicsObjectLayer::eMOVING_OBJECT);
-            }
+            displayLayerToggle(PhysicsObjectLayer::ePLAYER, "Player");
+            displayLayerToggle(PhysicsObjectLayer::eINTERACTABLE, "Interactables");
+            displayLayerToggle(PhysicsObjectLayer::eENEMY, "Enemies");
+            displayLayerToggle(PhysicsObjectLayer::ePROJECTILE, "Projectiles");
+            displayLayerToggle(PhysicsObjectLayer::eSTATIC, "Static Geometry (SLOW)");
 
             {
                 ImGui::Checkbox("Raycasts", &physicsModule._drawRays);

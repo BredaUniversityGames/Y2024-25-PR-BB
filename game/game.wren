@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
@@ -64,7 +64,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, shape, layer, allowRotation
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
