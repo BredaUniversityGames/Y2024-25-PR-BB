@@ -62,7 +62,9 @@ class RangedEnemy {
         _deathTimerMax = 1500
         _deathTimer = _deathTimerMax
 
-        _shootSFX = "" // TODO Add funny pew sound
+        _shootSFX = "event:/EyeLaserBlast" 
+        _chargeSFX = "event:/EyeLaserCharge"
+        _hitSFX = "event:/EyeHit"
 
         _changeDirectionTimerMax = 2000
         _changeDirectionTimer = 0
@@ -85,6 +87,10 @@ class RangedEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
+
+        var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+        //engine.GetAudio().SetEventVolume(eventInstance, 0.8)
+        _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
@@ -207,8 +213,9 @@ class RangedEnemy {
                         j = j + 1.0
                     }
 
-                    // var eventInstance = engine.GetAudio().PlayEventOnce("event:/Character/Laser")
-                    // _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
+                    var eventInstance = engine.GetAudio().PlayEventOnce(_shootSFX)
+                    engine.GetAudio().SetEventVolume(eventInstance, 0.8)
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
 
                     _attackingState = false
@@ -253,8 +260,9 @@ class RangedEnemy {
                     _evaluateState = false
                     
 
-                    // var eventInstance = engine.GetAudio().PlayEventOnce("event:/Character/LaserCharge")
-                    // _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
+                    var eventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
+                    engine.GetAudio().SetEventVolume(eventInstance, 0.8)
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
