@@ -88,6 +88,21 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
 
         float actionHeightLocation = actionSetTextSize + 10.0f;
 
+        for (const AnalogAction& analogAction : actionSet.analogActions)
+        {
+            ActionControls& action = set.actionControls.emplace_back();
+            action.canvas = set.canvas->AddChild<Canvas>(glm::vec2 { screenResolution.x, increment.y });
+            action.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+            action.canvas->SetLocation(glm::vec2(0.0f, actionHeightLocation));
+
+            actionHeightLocation += increment.y;
+
+            action.nameText = action.canvas->AddChild<UITextElement>(font, analogAction.name, actionTextSize);
+            action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1));
+            action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+            action.nameText->SetLocation({ 0.0f, 0.0f });
+        }
+
         for (const DigitalAction& digitalAction : actionSet.digitalActions)
         {
             ActionControls& action = set.actionControls.emplace_back();
