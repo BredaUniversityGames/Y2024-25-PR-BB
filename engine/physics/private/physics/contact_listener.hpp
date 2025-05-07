@@ -6,6 +6,8 @@
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <entt/entity/registry.hpp>
 
+#include <mutex>
+
 class PhysicsContactListener : public JPH::ContactListener
 {
 public:
@@ -13,7 +15,6 @@ public:
         : registry(registry)
     {
     }
-    entt::registry& registry;
 
     // See: ContactListener
     JPH::ValidateResult OnContactValidate(
@@ -35,4 +36,9 @@ public:
         MAYBE_UNUSED JPH::ContactSettings& ioSettings) override;
 
     void OnContactRemoved(MAYBE_UNUSED const JPH::SubShapeIDPair& inSubShapePair) override;
+
+private:
+    // contact callbacks are triggered asynchronously
+    std::mutex callbackMutex {};
+    entt::registry& registry;
 };

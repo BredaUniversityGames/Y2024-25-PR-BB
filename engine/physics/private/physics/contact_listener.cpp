@@ -17,6 +17,8 @@ void PhysicsContactListener::OnContactAdded(
     MAYBE_UNUSED const JPH::ContactManifold& inManifold,
     MAYBE_UNUSED JPH::ContactSettings& ioSettings)
 {
+    std::scoped_lock<std::mutex> lock { callbackMutex };
+
     auto e1 = static_cast<entt::entity>(inBody1.GetUserData());
     auto e2 = static_cast<entt::entity>(inBody2.GetUserData());
 
@@ -33,6 +35,8 @@ void PhysicsContactListener::OnContactPersisted(
     MAYBE_UNUSED const JPH::ContactManifold& inManifold,
     MAYBE_UNUSED JPH::ContactSettings& ioSettings)
 {
+    std::scoped_lock<std::mutex> lock { callbackMutex };
+
     auto e1 = static_cast<entt::entity>(inBody1.GetUserData());
     auto e2 = static_cast<entt::entity>(inBody1.GetUserData());
 
