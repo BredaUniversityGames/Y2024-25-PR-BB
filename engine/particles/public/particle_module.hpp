@@ -39,6 +39,7 @@ enum class EmitterPresetID : uint8_t
     eShotgunShoot,
     eFireAnimated,
     eHealth,
+    eWorms,
     eNone
 };
 

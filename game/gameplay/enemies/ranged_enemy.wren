@@ -77,6 +77,8 @@ class RangedEnemy {
         _hasTakenDamage = false
         _hasDashedFromDamage = false
 
+        _chargeSoundEventInstance = null
+
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -85,41 +87,43 @@ class RangedEnemy {
 
     DecreaseHealth(amount, engine) {
         var body = _rootEntity.GetRigidbodyComponent()
-
         _health = Math.Max(_health - amount, 0)
 
         var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-        //engine.GetAudio().SetEventVolume(eventInstance, 0.8)
+        engine.GetAudio().SetEventVolume(eventInstance, 20.0)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
+        // Fly some worms out of him
+        var entity = engine.GetECS().NewEntity()
+        var transform = entity.AddTransformComponent()
+        transform.translation = body.GetPosition()
+        var lifetime = entity.AddLifetimeComponent()
+        lifetime.lifetime = 170.0
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eWorms(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(1,3.5, 1))
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
             
             body.SetVelocity(Vec3.new(0,0,0))
-            //body.SetStatic()
+            
+            //stop charging sound if it dies
+            if(_chargeSoundEventInstance) {
+                engine.GetAudio().StopEvent(_chargeSoundEventInstance)
+                _chargeSoundEventInstance = null
+            }
+            body.SetDynamic()
+            body.SetGravityFactor(2.0)
 
-            // Maybe enable gravity?
-
-            // Play sound on death
-            // var audioEmitter = _rootEntity.GetAudioEmitterComponent()
-            // audioEmitter.AddEvent(eventInstance)
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            _hitState = true
-            _movingState = false
-            _evaluateState = false
-            _attackingState = false
-            _recoveryState = false
+            //_hitState = true
+            //_movingState = false
+            //_evaluateState = false
+            //_attackingState = false
+            //_recoveryState = false
             _hasTakenDamage = true
             _hasDashedFromDamage = false
-            //body.SetStatic()
-
-            // var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
-            // var audioEmitter = _rootEntity.GetAudioEmitterComponent()
-            // audioEmitter.AddEvent(eventInstance)
-
-           
         }
     }
 
@@ -142,6 +146,8 @@ class RangedEnemy {
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
 
+        System.print(_attackTime)
+
         if (_isAlive) {
             if (_attackingState) {
                 var forwardVector = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
@@ -156,6 +162,15 @@ class RangedEnemy {
                     // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
                     if (_chargeTimer <= 0) {
+
+                        //play charge sound
+                        if(!_chargeSoundEventInstance){
+                            _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
+                            engine.GetAudio().SetEventVolume(_chargeSoundEventInstance, 0.8)
+                            _rootEntity.GetAudioEmitterComponent().AddEvent(_chargeSoundEventInstance)
+                        }
+
+
                         _chargeTimer = 100
                         var start = pos
                         var direction = forwardVector
@@ -182,6 +197,12 @@ class RangedEnemy {
                     _attackTime = _attackTime - dt
                 
                 } else {
+
+                    //stop charge sound if it's the case
+                    if(_chargeSoundEventInstance) {
+                        engine.GetAudio().StopEvent(_chargeSoundEventInstance)
+                        _chargeSoundEventInstance = null
+                    }
                     
                     // Raycast to try hit the player
                     var start = pos
@@ -247,7 +268,6 @@ class RangedEnemy {
             if(_hasTakenDamage){
                 _changeDirectionTimer = _changeDirectionTimerMax
                 this.Wander(playerPos, engine, dt)
-                _evaluateState = true
             }
 
             if (_evaluateState) {
@@ -260,9 +280,6 @@ class RangedEnemy {
                     _evaluateState = false
                     
 
-                    var eventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
-                    engine.GetAudio().SetEventVolume(eventInstance, 0.8)
-                    _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
@@ -349,11 +366,14 @@ class RangedEnemy {
 
                 if(Math.Distance(enemyBody.GetPosition(), _dashWishPosition) < 2.0){
                     _dashTimer = 0
+                    _hasTakenDamage = false
+                    _hasDashedFromDamage = false
                     _changeDirectionTimer = 0
                     _hasDashed = false
                 }
             }else{
                 _hasDashed = false
+                _hasDashedFromDamage = false
                 _hasTakenDamage = false
                 _dashTimer = 0
                 _changeDirectionTimer = 0
