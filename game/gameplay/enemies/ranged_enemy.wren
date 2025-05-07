@@ -277,6 +277,8 @@ class RangedEnemy {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 100) {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
+
+                }
             }
         }
     }
