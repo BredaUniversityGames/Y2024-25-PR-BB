@@ -183,62 +183,14 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
             auto windowSize = applicationModule.DisplaySize();
             cameraComponent.aspectRatio = static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
 
-            if (!applicationModule.GetMouseHidden())
-            {
-                continue;
-            }
-
             glm::vec3 position = TransformHelpers::GetWorldPosition(ECS.GetRegistry(), entity);
-
-            JPH::RVec3Arg cameraPos = { position.x, position.y, position.z };
-            physicsModule._debugRenderer->SetCameraPos(cameraPos);
+            physicsModule.SetDebugCameraPosition(position);
         }
     }
 
-#if !DISTRBUTION
-    // Toggle physics debug drawing
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF1))
+    if (pathfindingModule.GetDebugDrawState())
     {
-        physicsModule._debugRenderer->SetState(!physicsModule._debugRenderer->GetState());
-    }
-
-    // Toggle pathfinding debug drawing
-    if (inputDeviceManager.IsKeyPressed(KeyboardCode::eF2))
-    {
-        pathfindingModule.SetDebugDrawState(!pathfindingModule.GetDebugDrawState());
-    }
-#endif
-
-    int8_t physicsDebugDrawing = physicsModule._debugRenderer->GetState(),
-           pathfindingDebugDrawing = pathfindingModule.GetDebugDrawState();
-
-    if (physicsDebugDrawing || pathfindingDebugDrawing)
-    {
-        rendererModule.GetRenderer()->GetDebugPipeline().SetState(true);
-    }
-    else
-    {
-        rendererModule.GetRenderer()->GetDebugPipeline().SetState(false);
-    }
-
-    if (physicsDebugDrawing)
-    {
-        auto linesData = physicsModule._debugRenderer->GetLinesData();
-        auto persistentLinesData = physicsModule._debugRenderer->GetPersistentLinesData();
-        physicsModule._debugRenderer->ClearLines();
-        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(linesData);
-        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(persistentLinesData);
-    }
-
-    if (pathfindingDebugDrawing)
-    {
-        // Update pathfinding module debug lines
         const std::vector<glm::vec3>& pathfindingLines = pathfindingModule.GetDebugLines();
-        rendererModule.GetRenderer()->GetDebugPipeline().AddLines(pathfindingLines);
+        engine.GetModule<RendererModule>().GetRenderer()->GetDebugPipeline().AddLines(pathfindingLines);
     }
-
-    // TODO: Ability to toggle audio debug lines, right now they get rendered as soon as the debug renderer is enabled
-    // Update audio module debug lines
-    rendererModule.GetRenderer()->GetDebugPipeline().AddLines(audioModule.GetDebugLines());
-    audioModule.ClearLines();
 }

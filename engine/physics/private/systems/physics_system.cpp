@@ -1,4 +1,5 @@
-﻿#include "systems/physics_system.hpp"
+﻿
+#include "systems/physics_system.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -12,6 +13,8 @@
 #include "graphics_context.hpp"
 #include "imgui.h"
 #include "model_loading.hpp"
+#include "physics/collision.hpp"
+#include "physics/constants.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"

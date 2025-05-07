@@ -161,23 +161,25 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
 
 void AnimationSystem::Render(const ECSModule& ecs) const
 {
+    // Note by Santi: This can be readded as a toggle on the new debug render tab if needed
+
     // Draw skeletons as debug lines
-    const auto debugView = ecs.GetRegistry().view<const JointSkinDataComponent, const SkeletonNodeComponent, const JointWorldTransformComponent>();
-    for (auto entity : debugView)
-    {
-        const auto& node = debugView.get<SkeletonNodeComponent>(entity);
-        const auto& transform = debugView.get<JointWorldTransformComponent>(entity);
+    // const auto debugView = ecs.GetRegistry().view<const JointSkinDataComponent, const SkeletonNodeComponent, const JointWorldTransformComponent>();
+    // for (auto entity : debugView)
+    // {
+    //     const auto& node = debugView.get<SkeletonNodeComponent>(entity);
+    //     const auto& transform = debugView.get<JointWorldTransformComponent>(entity);
 
-        if (node.parent != entt::null)
-        {
-            const auto& parentTransform = debugView.get<JointWorldTransformComponent>(node.parent);
+    //     if (node.parent != entt::null)
+    //     {
+    //         const auto& parentTransform = debugView.get<JointWorldTransformComponent>(node.parent);
 
-            glm::vec3 position { transform.world[3][0], transform.world[3][1], transform.world[3][2] };
-            glm::vec3 parentPosition { parentTransform.world[3][0], parentTransform.world[3][1], parentTransform.world[3][2] };
+    //         glm::vec3 position { transform.world[3][0], transform.world[3][1], transform.world[3][2] };
+    //         glm::vec3 parentPosition { parentTransform.world[3][0], parentTransform.world[3][1], parentTransform.world[3][2] };
 
-            _rendererModule.GetRenderer()->GetDebugPipeline().AddLine(position, parentPosition);
-        }
-    }
+    //         _rendererModule.GetRenderer()->GetDebugPipeline().AddLine(position, parentPosition);
+    //     }
+    // }
 }
 
 void AnimationSystem::Inspect()

@@ -1,5 +1,12 @@
 ﻿#pragma once
 
+#include "common.hpp"
+#include "module_interface.hpp"
+
+#include <entt/entity/entity.hpp>
+#include <glm/vec3.hpp>
+#include <unordered_map>
+
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
 #include <Jolt/Jolt.h>
 
@@ -7,17 +14,8 @@
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 
-#include "common.hpp"
-#include "components/rigidbody_component.hpp"
-#include "module_interface.hpp"
-#include "physics/collision.hpp"
-#include "physics/constants.hpp"
-#include "physics/contact_listener.hpp"
-#include "physics/debug_renderer.hpp"
-#include "physics/jolt_to_glm.hpp"
-#include "physics/shape_factory.hpp"
-
-#include <entt/entity/entity.hpp>
+class PhysicsDebugRenderer;
+class DebugPass;
 
 struct RayHitInfo
 {
@@ -35,8 +33,8 @@ class PhysicsModule final : public ModuleInterface
     std::string_view GetName() override { return "Physics Module"; }
 
 public:
-    PhysicsModule() = default;
-    ~PhysicsModule() final = default;
+    PhysicsModule();
+    ~PhysicsModule() final;
 
     NO_DISCARD std::vector<RayHitInfo> ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const;
     NO_DISCARD std::vector<RayHitInfo> ShootMultipleRays(const glm::vec3& origin, const glm::vec3& direction, float distance, unsigned int numRays, float angle) const;
@@ -44,11 +42,17 @@ public:
     JPH::BodyInterface& GetBodyInterface() { return _physicsSystem->GetBodyInterface(); }
     const JPH::BodyInterface& GetBodyInterface() const { return _physicsSystem->GetBodyInterface(); }
 
+    void SetDebugCameraPosition(const glm::vec3& cameraPos) const;
+    void ResetPersistentDebugLines();
+
+    std::unordered_set<JPH::ObjectLayer> _debugLayersToRender {};
+    bool _drawRays = false;
+
     std::unique_ptr<JPH::PhysicsSystem> _physicsSystem {};
-    std::unique_ptr<PhysicsDebugRenderer> _debugRenderer {};
 
 private:
     std::unique_ptr<JPH::ContactListener> _contactListener {};
+    std::unique_ptr<PhysicsDebugRenderer> _debugRenderer {};
 
     std::unique_ptr<JPH::ObjectLayerPairFilter> _objectVsObjectLayerFilter {};
     std::unique_ptr<JPH::BroadPhaseLayerInterface> _broadphaseLayerInterface {};
