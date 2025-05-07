@@ -16,6 +16,8 @@ class Main {
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetHUDEnabled(true)
 
+        engine.Fog = 0.005
+
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
 
@@ -84,7 +86,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv5_1.glb")
+        engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
@@ -96,7 +98,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/revolver.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb")
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
@@ -136,7 +138,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.0)
+            0.05)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -321,15 +323,11 @@ class Main {
                 }
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.eG())) {
+            if (engine.GetInput().DebugGetKey(Keycode.eG()) && false) {
                 if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
                     // Throw grenade
                     __playerVariables.grenadeCharge = 0
                 }
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eV())) {
-                __armory[Weapons.knife].attack(engine, dt, __cameraVariables)
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
@@ -358,34 +356,6 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }
-
-            __cameraVariables.Tilt(engine, __camera, deltaTime)
-            __cameraVariables.Shake(engine, __camera, __timer)
-
-            if (engine.GetInput().DebugGetKey(Keycode.eMINUS())) {
-                __camera.GetCameraComponent().fov = __camera.GetCameraComponent().fov - Math.Radians(1)
-            }
-            if (engine.GetInput().DebugGetKey(Keycode.eEQUALS())) {
-                __camera.GetCameraComponent().fov = __camera.GetCameraComponent().fov + Math.Radians(1)
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eLEFTBRACKET())) {
-                __playerMovement.lookSensitivity = Math.Max(__playerMovement.lookSensitivity - 0.01, 0.01)
-            }
-            if (engine.GetInput().DebugGetKey(Keycode.eRIGHTBRACKET())) {
-                __playerMovement.lookSensitivity = Math.Min(__playerMovement.lookSensitivity + 0.01, 10)
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eCOMMA())) {
-                __playerVariables.DecreaseHealth(5)
-            }
-            if (engine.GetInput().DebugGetKey(Keycode.ePERIOD())) {
-                __playerVariables.IncreaseHealth(5)
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __spawnerList[0].SpawnEnemies(engine, __enemyList, Vec3.new(0.02, 0.02, 0.02), 5, "assets/models/Skeleton.glb", __enemyShape, 1)
             }
         }
 

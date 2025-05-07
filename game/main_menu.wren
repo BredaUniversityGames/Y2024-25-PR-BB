@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode
+import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/music_player.wren" for MusicPlayer
 
@@ -6,6 +6,8 @@ class Main {
 
     static Start(engine) {
         System.print("Start main menu")
+
+        engine.Fog = -0.02
 
         engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)
@@ -19,8 +21,10 @@ class Main {
 
         var light = engine.GetECS().NewEntity()
         light.AddNameComponent().name = "Helmet point light"
-        var lightComponent = light.AddPointLightComponent()
-        lightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
+        __lightComponent = light.AddPointLightComponent()
+        __lightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
+        __lightComponent.range = 35
+        __lightComponent.intensity = 39
         
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 
@@ -75,9 +79,6 @@ class Main {
         
         var musicList = [
             "assets/music/main_menu/Alon Peretz - The Queens Quarters.wav",
-            "assets/music/main_menu/Itai Argaman - The Sacred Voice.wav",
-            "assets/music/main_menu/Kyle Preston - Dark Tension.wav",
-            "assets/music/main_menu/Kyle Preston - Orchestral Tension.wav",
             ""
             ]
 
@@ -88,6 +89,12 @@ class Main {
 
         __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.3)
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+
+        __perlin = Perlin.new(0)
+        __baseIntensity = 20.0
+        __flickerRange = 46.0
+        __flickerSpeed = 1.0
+        __noiseOffset = 0.0
     }
 
     static Shutdown(engine) {
@@ -98,15 +105,9 @@ class Main {
     }
 
     static Update(engine, dt) {
-
-        if (engine.GetInput().DebugGetKey(Keycode.e8())) {
-            System.print("Next Main Menu Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
-        }
-
-        if (engine.GetInput().DebugGetKey(Keycode.e9())) {
-            System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
-        }
+        __noiseOffset = __noiseOffset + dt * 0.001 * __flickerSpeed
+        var noise = __perlin.Noise1D(__noiseOffset)
+        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+        __lightComponent.intensity = flickerIntensity
     }
 }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "perlin_noise.hpp"
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
+
 #include <random>
 
 namespace bindings
@@ -69,6 +71,24 @@ public:
     }
 };
 
+class Perlin
+{
+public:
+    Perlin(uint32_t seed)
+        : perlin(seed)
+    {
+    }
+
+    siv::PerlinNoise perlin;
+
+    float Noise1D(float x)
+    {
+        return perlin.noise1D_01(x);
+    }
+};
+
+Perlin CreatePerlin(uint32_t seed) { return Perlin { seed }; }
+
 inline void BindRandom(wren::ForeignModule& module)
 {
     auto& randomUtilClass = module.klass<RandomUtil>("Random");
@@ -80,6 +100,10 @@ inline void BindRandom(wren::ForeignModule& module)
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3VectorRange>("RandomVec3VectorRange");
     randomUtilClass.funcStatic<&RandomUtil::RandomPointOnUnitSphere>("RandomPointOnUnitSphere");
     randomUtilClass.funcStatic<&RandomUtil::RandomIndex>("RandomIndex");
+
+    auto& perlinClass = module.klass<Perlin>("Perlin");
+    perlinClass.funcStaticExt<CreatePerlin>("new");
+    perlinClass.func<&Perlin::Noise1D>("Noise1D");
 }
 
 }
