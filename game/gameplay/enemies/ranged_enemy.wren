@@ -32,7 +32,7 @@ class RangedEnemy {
         _reasonTimer = 2001
 
         _attackRange = 80
-        _attackDamage = 30
+        _attackDamage = 10
         _shakeIntensity = 1.6
         
         _movingState = false
@@ -43,7 +43,7 @@ class RangedEnemy {
         _attackMaxCooldown = 10000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 2500
+        _attackMaxTime = 4500
         _attackTime = 0
         _attackPauseTime = 50
 
@@ -56,10 +56,10 @@ class RangedEnemy {
 
         _hitTimer = 0
 
-        _chargeTimer = 0
+        _chargeTimer = 0 // Interval between spawning white particle ray
         _attackPos = null
 
-        _deathTimerMax = 4000
+        _deathTimerMax = 2000
         _deathTimer = _deathTimerMax
 
         _shootSFX = "" // TODO Add funny pew sound
@@ -136,16 +136,14 @@ class RangedEnemy {
             if (_attackingState) {
                 var forwardVector = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
                 if (_attackTime > 0 ) {    
-                    // if (_attackTime > _attackPauseTime) {
-                        
-                    // }
-
                     _attackPos = playerPos
                     
+                    // Rotate towards the player
                     var endRotation = Math.LookAt((pos - _attackPos), Vec3.new(0, 1, 0))
                     var startRotation = _rootEntity.GetTransformComponent().rotation
                     _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.03 *dt)
 
+                    // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
                     if (_chargeTimer <= 0) {
                         _chargeTimer = 100
@@ -174,9 +172,8 @@ class RangedEnemy {
                     _attackTime = _attackTime - dt
                 
                 } else {
-
                     
-
+                    // Raycast to try hit the player
                     var start = pos
                     var direction = forwardVector
                     start = start + direction.mulScalar(4.0)
@@ -191,6 +188,8 @@ class RangedEnemy {
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
                         }
                     }
+
+                    // Spawning particles along ray
                     var length = (end - start).length()
                     var j = 1.0
                     while (j < length) {
@@ -266,11 +265,6 @@ class RangedEnemy {
             }
         } else {
             _deathTimer = _deathTimer - dt
-            body.SetDynamic()
-            body.SetGravityFactor(2.2)
-            body.SetFriction(0.0)
-
-
 
             var transparencyComponent = _meshEntity.GetTransparencyComponent()
             if(transparencyComponent==null) {
@@ -281,12 +275,8 @@ class RangedEnemy {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
-                if(_deathTimerMax - _deathTimer > 1800) {
+                if(_deathTimerMax - _deathTimer > 100) {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
-
-                    var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
-                    body.SetTranslation(newPos)
-                }
             }
         }
     }
