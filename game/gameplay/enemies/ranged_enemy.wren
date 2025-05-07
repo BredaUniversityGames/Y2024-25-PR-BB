@@ -59,7 +59,7 @@ class RangedEnemy {
         _chargeTimer = 0 // Interval between spawning white particle ray
         _attackPos = null
 
-        _deathTimerMax = 2000
+        _deathTimerMax = 1500
         _deathTimer = _deathTimerMax
 
         _shootSFX = "" // TODO Add funny pew sound
@@ -71,6 +71,9 @@ class RangedEnemy {
         _dashWishPosition = Vec3.new(0,0,0)
 
         _maxHeight = 32.0
+
+        _hasTakenDamage = false
+        _hasDashedFromDamage = false
 
     }
 
@@ -96,13 +99,14 @@ class RangedEnemy {
             // var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             // audioEmitter.AddEvent(eventInstance)
         } else {
-           
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             _hitState = true
             _movingState = false
             _evaluateState = false
             _attackingState = false
             _recoveryState = false
+            _hasTakenDamage = true
+            _hasDashedFromDamage = false
             //body.SetStatic()
 
             // var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
@@ -233,6 +237,12 @@ class RangedEnemy {
                 _evaluateState = true
             }
 
+            if(_hasTakenDamage){
+                _changeDirectionTimer = _changeDirectionTimerMax
+                this.Wander(playerPos, engine, dt)
+                _evaluateState = true
+            }
+
             if (_evaluateState) {
                 _attackCooldown = _attackCooldown + dt
                 if (Math.Distance(playerPos, pos) < _attackRange && _attackCooldown > _attackMaxCooldown) {
@@ -275,8 +285,8 @@ class RangedEnemy {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
+                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-100)
                 if(_deathTimerMax - _deathTimer > 100) {
-                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                 }
             }
@@ -294,7 +304,7 @@ class RangedEnemy {
         var startRotation = _rootEntity.GetTransformComponent().rotation
         _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
 
-        if(_changeDirectionTimer > _changeDirectionTimerMax){
+        if(_changeDirectionTimer > _changeDirectionTimerMax && !_hasDashedFromDamage){
             _hasDashed = true
             _changeDirectionTimer = 0
             var start = body.GetPosition()
@@ -318,6 +328,8 @@ class RangedEnemy {
                     }
                 }
             }
+            _hasDashedFromDamage = true
+
         }
 
         if(_hasDashed){
@@ -334,6 +346,7 @@ class RangedEnemy {
                 }
             }else{
                 _hasDashed = false
+                _hasTakenDamage = false
                 _dashTimer = 0
                 _changeDirectionTimer = 0
             }
