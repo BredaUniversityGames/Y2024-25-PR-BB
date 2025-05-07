@@ -146,8 +146,6 @@ class RangedEnemy {
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
 
-        System.print(_attackTime)
-
         if (_isAlive) {
             if (_attackingState) {
                 var forwardVector = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
