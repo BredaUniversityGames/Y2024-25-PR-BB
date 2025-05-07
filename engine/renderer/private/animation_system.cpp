@@ -159,7 +159,7 @@ void AnimationSystem::Update(ECSModule& ecs, float dt)
     }
 }
 
-void AnimationSystem::Render(const ECSModule& ecs) const
+void AnimationSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 {
     // Note by Santi: This can be readded as a toggle on the new debug render tab if needed
 

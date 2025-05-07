@@ -154,10 +154,8 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
-    auto& rendererModule = engine.GetModule<RendererModule>();
     auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
-    auto& audioModule = engine.GetModule<AudioModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
 
     // Slow down application when minimized.

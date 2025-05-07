@@ -1,5 +1,6 @@
 #include "physics/contact_listener.hpp"
 #include "Jolt/Physics/Body/Body.h"
+#include "components/rigidbody_component.hpp"
 
 JPH::ValidateResult PhysicsContactListener::OnContactValidate(
     MAYBE_UNUSED const JPH::Body& inBody1,
@@ -38,7 +39,7 @@ void PhysicsContactListener::OnContactPersisted(
     std::scoped_lock<std::mutex> lock { callbackMutex };
 
     auto e1 = static_cast<entt::entity>(inBody1.GetUserData());
-    auto e2 = static_cast<entt::entity>(inBody1.GetUserData());
+    auto e2 = static_cast<entt::entity>(inBody2.GetUserData());
 
     auto rb1 = registry.get<RigidbodyComponent>(e1);
     auto rb2 = registry.get<RigidbodyComponent>(e2);

@@ -172,11 +172,11 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
     }
 
-    JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
-    const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
-    const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
-
     // NOTE: Disabled because of the new layer system
+
+    // JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
+    // const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
+    // const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
 
     // if (ImGui::BeginCombo("Body type", currentItem))
     // {
