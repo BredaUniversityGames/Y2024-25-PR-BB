@@ -114,4 +114,20 @@ public:
     }
 
     std::weak_ptr<UIButton> backButton;
+
+    struct ActionControls
+    {
+        std::shared_ptr<Canvas> canvas;
+        std::shared_ptr<UITextElement> nameText;
+        std::vector<std::weak_ptr<UIImage>> controllerGlyphImages;
+    };
+
+    struct ActionSetControls
+    {
+        std::shared_ptr<Canvas> canvas;
+        std::shared_ptr<UITextElement> nameText;
+        std::vector<ActionControls> actionControls;
+    };
+
+    std::vector<ActionSetControls> actionSetControls {};
 };
