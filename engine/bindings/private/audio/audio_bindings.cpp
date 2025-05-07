@@ -6,7 +6,6 @@
 #include "log.hpp"
 #include "wren_entity.hpp"
 
-
 namespace bindings
 {
 void LoadBank(AudioModule& self, const std::string& path)
@@ -73,7 +72,6 @@ void SetEventVolume(AudioModule& self, EventInstance instance, float val)
 {
     self.SetEventVolume(instance, val);
 }
-
 
 void AddSFX(WrenComponent<AudioEmitterComponent>& self, SoundInstance& instance)
 {

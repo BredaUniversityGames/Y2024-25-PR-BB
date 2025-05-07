@@ -4,7 +4,6 @@
 #include "utility/enum_bind.hpp"
 #include "wren_entity.hpp"
 
-
 namespace bindings
 {
 int32_t AnimationControlComponentGetAnimationCount(WrenComponent<AnimationControlComponent>& component)

@@ -12,7 +12,6 @@
 #include "ui_module.hpp"
 #include "wren_entity.hpp"
 
-
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
 #include "ui_text.hpp"

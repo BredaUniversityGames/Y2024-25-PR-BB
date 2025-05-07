@@ -4,7 +4,6 @@
 #include "utility/enum_bind.hpp"
 #include "wren_entity.hpp"
 
-
 namespace bindings
 {
 void LoadEmitterPresets(ParticleModule& self)

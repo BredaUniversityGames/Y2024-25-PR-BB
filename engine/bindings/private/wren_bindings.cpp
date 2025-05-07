@@ -28,7 +28,6 @@
 #include "wren_engine.hpp"
 #include "wren_entity.hpp"
 
-
 namespace bindings
 {
 

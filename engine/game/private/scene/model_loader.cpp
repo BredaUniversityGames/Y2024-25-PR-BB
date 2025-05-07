@@ -25,7 +25,6 @@
 #include "systems/physics_system.hpp"
 #include "thread_module.hpp"
 
-
 #include <entt/entity/entity.hpp>
 #include <tracy/Tracy.hpp>
 
