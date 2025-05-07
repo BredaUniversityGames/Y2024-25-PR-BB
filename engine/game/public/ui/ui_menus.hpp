@@ -119,7 +119,7 @@ public:
     {
         std::shared_ptr<Canvas> canvas;
         std::shared_ptr<UITextElement> nameText;
-        std::vector<std::weak_ptr<UIImage>> controllerGlyphImages;
+        std::vector<std::shared_ptr<UIImage>> controllerGlyphImages;
     };
 
     struct ActionSetControls
