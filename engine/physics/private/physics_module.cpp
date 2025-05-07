@@ -57,13 +57,13 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 
     _physicsSystem->SetGravity(JPH::Vec3(0, -PHYSICS_GRAVITATIONAL_CONSTANT, 0));
 
-    // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
-    // Note that this is called from a job so whatever you do here needs to be thread safe.
-    _contactListener = std::make_unique<PhysicsContactListener>();
-    _physicsSystem->SetContactListener(_contactListener.get());
-
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
+
+    // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
+    // Note that this is called from a job so whatever you do here needs to be thread safe.
+    _contactListener = std::make_unique<PhysicsContactListener>(ecs.GetRegistry());
+    _physicsSystem->SetContactListener(_contactListener.get());
 
     RigidbodyComponent::SetupRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
 

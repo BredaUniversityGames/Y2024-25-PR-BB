@@ -3,7 +3,6 @@
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
-#include "entity/wren_entity.hpp"
 #include "game_module.hpp"
 #include "model_loading.hpp"
 #include "physics/shape_factory.hpp"
@@ -11,6 +10,8 @@
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 #include "ui_module.hpp"
+#include "wren_entity.hpp"
+
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 

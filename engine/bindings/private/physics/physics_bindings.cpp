@@ -1,12 +1,13 @@
 #include "physics_bindings.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
-#include "entity/wren_entity.hpp"
 #include "physics/collision.hpp"
+#include "physics/collision_callback.hpp"
 #include "physics/physics_bindings.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 #include "utility/enum_bind.hpp"
+#include "wren_entity.hpp"
 
 #include <optional>
 
@@ -108,12 +109,26 @@ JPH::BodyID GetBodyID(WrenComponent<RigidbodyComponent>& self)
     return self.component->bodyID;
 }
 
-RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, PhysicsObjectLayer layer, bool allowRotation)
+JPH::ObjectLayer GetLayer(WrenComponent<RigidbodyComponent>& self)
+{
+    return self.component->GetLayer();
+}
+
+RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, JPH::ObjectLayer layer, bool allowRotation)
 {
     JPH::EAllowedDOFs dofs = allowRotation ? JPH::EAllowedDOFs::All : JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
     return RigidbodyComponent { physics.GetBodyInterface(), shape, layer, dofs };
 }
 
+void SetOnCollisionEnter(WrenComponent<RigidbodyComponent>& self, wren::Variable callback)
+{
+    self.component->onCollisionEnter = { callback };
+}
+
+void SetOnCollisionStay(WrenComponent<RigidbodyComponent>& self, wren::Variable callback)
+{
+    self.component->onCollisionStay = { callback };
+}
 }
 void BindPhysicsAPI(wren::ForeignModule& module)
 {
@@ -131,7 +146,7 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rayHitInfo.var<&RayHitInfo::hitFraction>("hitFraction");
 
     // Object Layers
-    bindings::BindEnum<PhysicsObjectLayer>(module, "PhysicsObjectLayer");
+    bindings::BindBitflagEnum<PhysicsObjectLayer>(module, "PhysicsObjectLayer");
 
     // Body ID
     module.klass<JPH::BodyID>("BodyID");
@@ -156,6 +171,7 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBodyComponent.propReadonlyExt<bindings::GetBodyID>("GetBodyID");
 
     rigidBodyComponent.funcExt<bindings::AddForce>("AddForce");
+    rigidBodyComponent.funcExt<bindings::GetLayer>("GetLayer");
     rigidBodyComponent.funcExt<bindings::AddImpulse>("AddImpulse");
     rigidBodyComponent.funcExt<bindings::GetVelocity>("GetVelocity");
     rigidBodyComponent.funcExt<bindings::GetAngularVelocity>("GetAngularVelocity");
@@ -170,4 +186,6 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBodyComponent.funcExt<bindings::SetDynamic>("SetDynamic");
     rigidBodyComponent.funcExt<bindings::SetKinematic>("SetDynamic");
     rigidBodyComponent.funcExt<bindings::SetStatic>("SetStatic");
+    rigidBodyComponent.funcExt<bindings::SetOnCollisionEnter>("OnCollisionEnter", "void callback(WrenEntity self, WrenEntity other) -> void");
+    rigidBodyComponent.funcExt<bindings::SetOnCollisionStay>("OnCollisionStay", "void callback(WrenEntity self, WrenEntity other) -> void");
 }

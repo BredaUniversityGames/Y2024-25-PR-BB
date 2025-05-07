@@ -3,8 +3,9 @@
 #include "audio_emitter_component.hpp"
 #include "audio_listener_component.hpp"
 #include "audio_module.hpp"
-#include "entity/wren_entity.hpp"
 #include "log.hpp"
+#include "wren_entity.hpp"
+
 
 namespace bindings
 {

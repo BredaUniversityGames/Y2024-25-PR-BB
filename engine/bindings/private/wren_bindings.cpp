@@ -6,7 +6,6 @@
 #include "audio_module.hpp"
 #include "ecs_module.hpp"
 #include "entity/entity_bind.hpp"
-#include "entity/wren_entity.hpp"
 #include "game/game_bindings.hpp"
 #include "game_module.hpp"
 #include "gpu_scene.hpp"
@@ -27,6 +26,8 @@
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
+#include "wren_entity.hpp"
+
 
 namespace bindings
 {

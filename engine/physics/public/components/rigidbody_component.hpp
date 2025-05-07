@@ -1,7 +1,8 @@
 ﻿#pragma once
 
+#include "physics/collision_callback.hpp"
+#include "physics/jolt_to_glm.hpp"
 #include <entt/entity/registry.hpp>
-#include <physics/jolt_to_glm.hpp>
 
 #include <Jolt/Jolt.h>
 
@@ -26,6 +27,7 @@ public:
     glm::quat GetRotation() const { return ToGLMQuat(bodyInterface->GetRotation(bodyID)); }
     glm::vec3 GetVelocity() const { return ToGLMVec3(bodyInterface->GetLinearVelocity(bodyID)); }
     glm::vec3 GetAngularVelocity() const { return ToGLMVec3(bodyInterface->GetLinearVelocity(bodyID)); };
+    JPH::ObjectLayer GetLayer() const { return layer; }
 
     // Setters
     void SetVelocity(const glm::vec3& velocity) { bodyInterface->SetLinearVelocity(bodyID, ToJoltVec3(velocity)); };
@@ -46,6 +48,9 @@ public:
 
     JPH::BodyID bodyID;
     JPH::ShapeRefC shape;
+
+    CollisionCallback onCollisionEnter;
+    CollisionCallback onCollisionStay;
 
 private:
     JPH::ObjectLayer layer {};
