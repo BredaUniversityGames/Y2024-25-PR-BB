@@ -160,15 +160,7 @@ class RangedEnemy {
                     // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
                     if (_chargeTimer <= 0) {
-
-                        //play charge sound
-                        if(!_chargeSoundEventInstance){
-                            _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
-                            engine.GetAudio().SetEventVolume(_chargeSoundEventInstance, 0.8)
-                            _rootEntity.GetAudioEmitterComponent().AddEvent(_chargeSoundEventInstance)
-                        }
-
-
+                        
                         _chargeTimer = 100
                         var start = pos
                         var direction = forwardVector
@@ -277,7 +269,10 @@ class RangedEnemy {
                     _attackTime = _attackMaxTime
                     _evaluateState = false
                     
-
+                    //play charge sound
+                    _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
+                    engine.GetAudio().SetEventVolume(_chargeSoundEventInstance, 0.8)
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(_chargeSoundEventInstance)
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
