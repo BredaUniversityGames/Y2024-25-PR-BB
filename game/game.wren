@@ -143,7 +143,7 @@ class Main {
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
-        for(i in 0..7) {
+        for(i in 0..8) {
             spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
         }
 
@@ -159,11 +159,12 @@ class Main {
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
             .AddSpawn("Skeleton", 0, 10, 1)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
             .AddSpawn("Skeleton", 0, 1, 2)
@@ -176,8 +177,8 @@ class Main {
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 15, 2)
             .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Eye", SpawnLocationType.Furthest, 1, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
             .AddSpawn("Skeleton", 0, 40, 3)
             .AddSpawn("Skeleton", 1, 40, 1)

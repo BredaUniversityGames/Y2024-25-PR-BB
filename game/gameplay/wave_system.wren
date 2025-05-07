@@ -164,6 +164,7 @@ class WaveSystem {
 
             var spawnerEntity = this.FindLocation(spawn)
             var position = spawnerEntity.GetTransformComponent().translation
+            position.y = position.y + 14.0
 
             for(i in 0...spawn.Count) {
                 var enemy = _enemyList.add(RangedEnemy.new(_engine, position,  Vec3.new(2.25,2.25,2.25), 5, enemyModelPath, enemyShape))
