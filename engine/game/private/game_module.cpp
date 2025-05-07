@@ -62,12 +62,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), viewportSize, font));
 
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    // _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto OpenDiscordURL = [&engine]()
     {

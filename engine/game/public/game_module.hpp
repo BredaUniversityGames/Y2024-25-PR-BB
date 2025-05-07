@@ -76,6 +76,7 @@ public:
     std::weak_ptr<LoadingScreen> _loadingScreen;
     std::weak_ptr<PauseMenu> _pauseMenu;
     std::weak_ptr<GameOverMenu> _gameOver;
+    std::weak_ptr<ControlsMenu> _controlsMenu;
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

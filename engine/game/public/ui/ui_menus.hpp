@@ -9,6 +9,7 @@ class UIImage;
 class UITextElement;
 class UIProgressBar;
 class GraphicsContext;
+class ActionManager;
 
 inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
 
@@ -100,4 +101,17 @@ public:
 
     std::weak_ptr<UIButton> continueButton;
     std::weak_ptr<UIButton> backToMainButton;
+};
+
+class ControlsMenu : public Canvas
+{
+public:
+    static std::shared_ptr<ControlsMenu> Create(GraphicsContext& graphicsContext, ActionManager& actionManager, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    ControlsMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIButton> backButton;
 };
