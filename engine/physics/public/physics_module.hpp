@@ -15,7 +15,6 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 
 class PhysicsDebugRenderer;
-class DebugPass;
 
 struct RayHitInfo
 {

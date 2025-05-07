@@ -1,6 +1,7 @@
 ﻿#include "passes/debug_pass.hpp"
 
 #include "batch_buffer.hpp"
+#include "bytes.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
@@ -142,7 +143,7 @@ void DebugPass::CreatePipeline()
 
 void DebugPass::CreateVertexBuffer()
 {
-    const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 30 * 1024 * 1024; // TODO: Remove magic number.
+    const vk::DeviceSize bufferSize = sizeof(glm::vec3) * 4_mb;
     BufferCreation vertexBufferCreation {};
     vertexBufferCreation.SetSize(bufferSize)
         .SetUsageFlags(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
