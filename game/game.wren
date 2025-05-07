@@ -364,14 +364,6 @@ class Main {
             }
         }
 
-            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                // shit
-                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
-            }
-
-            // TODO: Pause Menu on ESC
-            // if(engine.GetInput().DebugGetKey(Keycode.eESCAPE())) {
-            //     __pauseEnabled = !__pauseEnabled
         // Check if pause key was pressed
         if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
