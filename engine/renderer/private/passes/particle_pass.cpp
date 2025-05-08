@@ -54,11 +54,14 @@ ParticlePass::~ParticlePass()
         resources->BufferResourceManager().Destroy(storageBuffer);
     }
     resources->BufferResourceManager().Destroy(_culledInstancesBuffer);
+    resources->BufferResourceManager().Destroy(_localEmittersBuffer);
     resources->BufferResourceManager().Destroy(_emittersBuffer);
     resources->BufferResourceManager().Destroy(_vertexBuffer);
     resources->BufferResourceManager().Destroy(_indexBuffer);
-    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _stagingBuffer, _stagingBufferAllocation);
+    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _emitterStagingBuffer, _emitterStagingBufferAllocation);
+    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _localEmitterStagingBuffer, _localEmitterStagingBufferAllocation);
 
+    vkContext->Device().destroy(_localEmittersBufferDescriptorSetLayout);
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
     vkContext->Device().destroy(_instancesDescriptorSetLayout);
@@ -149,6 +152,16 @@ void ParticlePass::RecordEmit(vk::CommandBuffer commandBuffer)
 void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    // make sure the copy buffer command is done before dispatching
+    vk::BufferMemoryBarrier barrier {};
+    barrier.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
+    barrier.size = _localEmitters.size() * sizeof(LocalEmitter);
+    barrier.offset = 0;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
 
     util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
 
@@ -157,11 +170,13 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _instancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 4, _localEmittersDescriptorSet, {});
 
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
+    _localEmitters.clear();
 
     vk::MemoryBarrier memoryBarrier {};
     memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
@@ -304,14 +319,34 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
             _ecs.GetRegistry().remove<ParticleEmitterComponent>(entity);
             _ecs.GetRegistry().remove<ActiveEmitterTag>(entity);
         }
+
+        // add local emitters to vector
+        if (HasAnyFlags(static_cast<ParticleRenderFlagBits>(component.emitter.flags), ParticleRenderFlagBits::eIsLocal))
+        {
+            LocalEmitter localEmitter;
+            localEmitter.position = component.emitter.position;
+            localEmitter.id = component.emitter.id;
+
+            _localEmitters.emplace_back(localEmitter);
+        }
     }
 
+    // copy over local emitters to buffer
+    if (!_localEmitters.empty())
+    {
+        vk::DeviceSize BufferSize = _localEmitters.size() * sizeof(LocalEmitter);
+
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _localEmitters.data(), _localEmitterStagingBufferAllocation, 0, BufferSize);
+        util::CopyBuffer(commandBuffer, _localEmitterStagingBuffer, resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer, BufferSize);
+    }
+
+    // copy over emitters
     if (!_emitters.empty())
     {
-        vk::DeviceSize bufferSize = _emitters.size() * sizeof(Emitter);
+        vk::DeviceSize BufferSize = _emitters.size() * sizeof(Emitter);
 
-        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _stagingBufferAllocation, 0, bufferSize);
-        util::CopyBuffer(commandBuffer, _stagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation, 0, BufferSize);
+        util::CopyBuffer(commandBuffer, _emitterStagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, BufferSize);
     }
 }
 
@@ -398,7 +433,7 @@ void ParticlePass::CreatePipelines()
 
     { // simulate
         vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        std::array<vk::DescriptorSetLayout, 4> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout, CameraResource::DescriptorSetLayout() };
+        std::array<vk::DescriptorSetLayout, 5> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout, CameraResource::DescriptorSetLayout(), _localEmittersBufferDescriptorSetLayout };
         pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -529,6 +564,24 @@ void ParticlePass::CreateDescriptorSetLayouts()
             "Failed creating emitter buffer descriptor set layout!");
     }
 
+    { // Local Emitter Uniform Buffer
+        std::array<vk::DescriptorSetLayoutBinding, 1> bindings {};
+
+        vk::DescriptorSetLayoutBinding& descriptorSetLayoutBinding { bindings[0] };
+        descriptorSetLayoutBinding.binding = 0;
+        descriptorSetLayoutBinding.descriptorCount = 1;
+        descriptorSetLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
+        descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
+        descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+
+        vk::DescriptorSetLayoutCreateInfo createInfo {};
+        createInfo.bindingCount = bindings.size();
+        createInfo.pBindings = bindings.data();
+
+        util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&createInfo, nullptr, &_localEmittersBufferDescriptorSetLayout),
+            "Failed creating local emitter buffer descriptor set layout!");
+    }
+
     { // Particle Instances Storage Buffer
         std::vector<vk::DescriptorSetLayoutBinding> bindings {};
 
@@ -588,6 +641,20 @@ void ParticlePass::CreateDescriptorSets()
 
         _emittersDescriptorSet = descriptorSets[0];
         UpdateEmittersBuffersDescriptorSets();
+    }
+
+    { // Local Emitter Uniform Buffers
+        vk::DescriptorSetAllocateInfo allocateInfo {};
+        allocateInfo.descriptorPool = vkContext->DescriptorPool();
+        allocateInfo.descriptorSetCount = 1;
+        allocateInfo.pSetLayouts = &_localEmittersBufferDescriptorSetLayout;
+
+        std::array<vk::DescriptorSet, 1> descriptorSets;
+        util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
+            "Failed allocating Emitter Uniform Buffer descriptor sets!");
+
+        _localEmittersDescriptorSet = descriptorSets[0];
+        UpdateLocalEmittersBuffersDescriptorSets();
     }
 }
 
@@ -717,6 +784,29 @@ void ParticlePass::UpdateEmittersBuffersDescriptorSets()
     vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
+void ParticlePass::UpdateLocalEmittersBuffersDescriptorSets()
+{
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
+    // Emitter UB (binding = 0)
+    vk::DescriptorBufferInfo localEmitterBufferInfo {};
+    localEmitterBufferInfo.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
+    localEmitterBufferInfo.offset = 0;
+    localEmitterBufferInfo.range = sizeof(Emitter) * MAX_EMITTERS;
+    vk::WriteDescriptorSet& localEmitterBufferWrite { descriptorWrites[0] };
+    localEmitterBufferWrite.dstSet = _localEmittersDescriptorSet;
+    localEmitterBufferWrite.dstBinding = 0;
+    localEmitterBufferWrite.dstArrayElement = 0;
+    localEmitterBufferWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+    localEmitterBufferWrite.descriptorCount = 1;
+    localEmitterBufferWrite.pBufferInfo = &localEmitterBufferInfo;
+
+    vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
 void ParticlePass::CreateBuffers()
 {
     auto vkContext { _context->VulkanContext() };
@@ -839,6 +929,22 @@ void ParticlePass::CreateBuffers()
 
     { // Emitter Staging buffer
         vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(Emitter);
-        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _stagingBuffer, true, _stagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Staging buffer");
+        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _emitterStagingBuffer, true, _emitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Emitter Staging buffer");
+    }
+
+    { // Local Emitter UB
+        vk::DeviceSize bufferSize = sizeof(LocalEmitter) * MAX_EMITTERS;
+        BufferCreation creation {};
+        creation.SetName("Local Emitter UB")
+            .SetSize(bufferSize)
+            .SetIsMappable(false)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+        _localEmittersBuffer = resources->BufferResourceManager().Create(creation);
+    }
+
+    { // Local Emitter Staging buffer
+        vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(LocalEmitter);
+        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _localEmitterStagingBuffer, true, _localEmitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Local Emitter Staging buffer");
     }
 }

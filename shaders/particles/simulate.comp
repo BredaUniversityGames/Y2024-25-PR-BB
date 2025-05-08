@@ -4,6 +4,12 @@
 #include "particle_binds.glsl"
 #include "rng_helper.glsl"
 
+struct LocalEmitter
+{
+    vec3 position;
+    uint id;
+};
+
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
     CulledInstances culledInstances;
@@ -12,6 +18,11 @@ layout (set = 2, binding = 0) buffer CulledInstancesSSB
 layout (set = 3, binding = 0) uniform CameraUBO
 {
     Camera camera;
+};
+
+layout (set = 4, binding = 0) uniform LocalEmitterUBO
+{
+    LocalEmitter localEmitters[MAX_EMITTERS];
 };
 
 layout (push_constant) uniform DeltaTime

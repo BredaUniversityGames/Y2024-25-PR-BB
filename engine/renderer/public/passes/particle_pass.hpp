@@ -17,6 +17,7 @@ class GraphicsContext;
 
 struct Buffer;
 struct Emitter;
+struct LocalEmitter;
 struct RenderSceneDescription;
 
 class ParticlePass final : public FrameGraphRenderPass
@@ -66,6 +67,7 @@ private:
     const BloomSettings& _bloomSettings;
 
     std::vector<Emitter> _emitters;
+    std::vector<LocalEmitter> _localEmitters;
 
     std::array<vk::Pipeline, 4> _pipelines;
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
@@ -82,9 +84,16 @@ private:
     ResourceHandle<Buffer> _emittersBuffer;
     vk::DescriptorSet _emittersDescriptorSet;
     vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
-    // staging buffer
-    vk::Buffer _stagingBuffer;
-    VmaAllocation _stagingBufferAllocation;
+    // emitter staging buffer
+    vk::Buffer _emitterStagingBuffer;
+    VmaAllocation _emitterStagingBufferAllocation;
+    // local emitter uniform buffer
+    ResourceHandle<Buffer> _localEmittersBuffer;
+    vk::DescriptorSet _localEmittersDescriptorSet;
+    vk::DescriptorSetLayout _localEmittersBufferDescriptorSetLayout;
+    // local emitter staging buffer
+    vk::Buffer _localEmitterStagingBuffer;
+    VmaAllocation _localEmitterStagingBufferAllocation;
     // buffers for rendering
     ResourceHandle<Buffer> _vertexBuffer;
     ResourceHandle<Buffer> _indexBuffer;
@@ -105,4 +114,5 @@ private:
     void UpdateParticleBuffersDescriptorSets();
     void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();
+    void UpdateLocalEmittersBuffersDescriptorSets();
 };

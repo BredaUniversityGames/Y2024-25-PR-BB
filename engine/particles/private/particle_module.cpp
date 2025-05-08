@@ -502,6 +502,23 @@ void ParticleModule::LoadEmitterPresets()
         preset.bursts.emplace_back(burst2);
         _emitterPresets.emplace_back(preset);
     }
+
+    { // soul SHEET
+        EmitterPreset preset;
+        preset.emitDelay = 2.0f;
+        preset.mass = 0.0f;
+        preset.maxLife = 2.0f;
+        preset.count = 1;
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY | ParticleRenderFlagBits::eIsLocal);
+        preset.name = "SoulSheet";
+        preset.startingVelocity = glm::vec3(0.0f);
+        SetEmitterPresetImage(preset, "soul-Sheet.png");
+        preset.size = glm::vec3(0.5f, 1.0, 0.0f);
+        preset.spriteDimensions = glm::ivec2(60, 1);
+        preset.frameCount = 60;
+
+        _emitterPresets.emplace_back(preset);
+    }
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
@@ -531,6 +548,9 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.maxFrames = preset.spriteDimensions;
     emitter.frameRate = preset.frameRate;
     emitter.frameCount = preset.frameCount;
+    emitter.id = emitterCount;
+
+    emitterCount++;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))

@@ -412,6 +412,6 @@ class Main {
             }
         }
 
-        __waveSystem.Update(dt)
+        //__waveSystem.Update(dt)
     }
 }
