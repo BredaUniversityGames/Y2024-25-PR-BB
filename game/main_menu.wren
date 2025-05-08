@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, Input, Vec3, Quat, Math, Keycode
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/music_player.wren" for MusicPlayer
+//import "gameplay/music_player.wren" for MusicPlayer
 
 class Main {
 
@@ -60,8 +60,8 @@ class Main {
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.3)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        //__musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.3)
+        //__ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
 
     static Shutdown(engine) {
@@ -75,12 +75,12 @@ class Main {
 
         if (engine.GetInput().DebugGetKey(Keycode.e8())) {
             System.print("Next Main Menu Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
+      //      __musicPlayer.CycleMusic(engine.GetAudio())
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
+       //     __ambientPlayer.CycleMusic(engine.GetAudio())
         }
     }
 }

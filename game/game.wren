@@ -4,7 +4,7 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
-import "gameplay/music_player.wren" for MusicPlayer
+//import "gameplay/music_player.wren" for MusicPlayer
 import "analytics/analytics.wren" for AnalyticsManager
 
 class Main {
@@ -88,7 +88,7 @@ class Main {
         var positions = [Vec3.new(10.0, 14.4, 11.4), Vec3.new(13.4, -0.6, 73.7), Vec3.new(24.9, -0.6, 72.3), Vec3.new(-30, 7.8, -10.2), Vec3.new(-41, 6.9, 1.2), Vec3.new(42.1, 12.4, -56.9)]
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv5.glb")
+        engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
 
@@ -157,8 +157,8 @@ class Main {
             ""
             ]
 
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+  //      __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.2)
+    //    __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
     }
 
     static Shutdown(engine) {
@@ -172,12 +172,12 @@ class Main {
 
         if (engine.GetInput().DebugGetKey(Keycode.e9())) {
             System.print("Next Ambient Track")
-            __ambientPlayer.CycleMusic(engine.GetAudio())
+     //       __ambientPlayer.CycleMusic(engine.GetAudio())
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.e8())) {
             System.print("Next Gameplay Track")
-            __musicPlayer.CycleMusic(engine.GetAudio())
+    //        __musicPlayer.CycleMusic(engine.GetAudio())
         }
 
 
