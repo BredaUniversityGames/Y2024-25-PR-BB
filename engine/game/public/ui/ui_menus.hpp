@@ -119,7 +119,14 @@ public:
     {
         std::shared_ptr<Canvas> canvas;
         std::shared_ptr<UITextElement> nameText;
-        std::vector<std::shared_ptr<UIImage>> controllerGlyphImages;
+
+        struct Binding
+        {
+            std::shared_ptr<UITextElement> originName;
+            std::shared_ptr<UIImage> glyph;
+        };
+
+        std::vector<Binding> bindings {};
     };
 
     struct ActionSetControls

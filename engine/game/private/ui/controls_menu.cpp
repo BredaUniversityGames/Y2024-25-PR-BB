@@ -88,6 +88,9 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
 
         float actionHeightLocation = actionSetTextSize + 10.0f;
 
+        // TODO: Add text for each input as well
+        // TODO: Show all possible inputs for an action
+
         for (const AnalogAction& analogAction : actionSet.analogActions)
         {
             ActionControls& action = set.actionControls.emplace_back();
@@ -102,23 +105,27 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
             action.nameText->SetLocation({ 0.0f, 0.0f });
 
+            constexpr float glyphHorizontalMargin = 5.0f;
+            float glyphHorizontalPosition = screenResolution.x / 6.0f;
+
             const std::vector<std::string> controllerGlyphPaths = actionManager.GetAnalogActionGamepadGlyphImagePaths(analogAction.name);
 
-            if (controllerGlyphPaths.size() == 0)
+            for (const std::string& glyphPath : controllerGlyphPaths)
             {
-                continue;
+                ActionControls::Binding& binding = action.bindings.emplace_back();
+
+                CPUImage glyphCPUImage;
+                glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
+                glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
+                glyphCPUImage.FromPNG(glyphPath);
+                ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
+
+                glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
+                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(glyphHorizontalPosition, size.y / 2.0f * -1.0f), size);
+                binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
+                glyphHorizontalPosition += size.x + glyphHorizontalMargin;
             }
-
-            CPUImage glyphCPUImage;
-            glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
-            glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-            glyphCPUImage.FromPNG(controllerGlyphPaths[0]);
-            ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
-
-            glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
-            std::shared_ptr<UIImage> glyph = action.controllerGlyphImages.emplace_back();
-            glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(screenResolution.x / 6.0f, size.y / 2.0f * -1.0f), size);
-            glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         }
 
         for (const DigitalAction& digitalAction : actionSet.digitalActions)
@@ -135,23 +142,27 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
             action.nameText->SetLocation({ 0.0f, 0.0f });
 
+            constexpr float glyphHorizontalMargin = 25.0f;
+            float glyphHorizontalPosition = screenResolution.x / 6.0f;
+
             const std::vector<std::string> controllerGlyphPaths = actionManager.GetDigitalActionGamepadGlyphImagePaths(digitalAction.name);
 
-            if (controllerGlyphPaths.size() == 0)
+            for (const std::string& glyphPath : controllerGlyphPaths)
             {
-                continue;
+                ActionControls::Binding& binding = action.bindings.emplace_back();
+
+                CPUImage glyphCPUImage;
+                glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
+                glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
+                glyphCPUImage.FromPNG(glyphPath);
+                ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
+
+                glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
+                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(glyphHorizontalPosition, size.y / 2.0f * -1.0f), size);
+                binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
+                glyphHorizontalPosition += size.x + glyphHorizontalMargin;
             }
-
-            CPUImage glyphCPUImage;
-            glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
-            glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-            glyphCPUImage.FromPNG(controllerGlyphPaths[0]);
-            ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
-
-            glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
-            std::shared_ptr<UIImage> glyph = action.controllerGlyphImages.emplace_back();
-            glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(screenResolution.x / 6.0f, size.y / 2.0f * -1.0f), size);
-            glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         }
 
         actionSetheightLocation += actionHeightLocation + 20.0f;
