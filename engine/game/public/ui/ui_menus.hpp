@@ -137,4 +137,8 @@ public:
     };
 
     std::vector<ActionSetControls> actionSetControls {};
+    ResourceHandle<Sampler> sampler;
+
+private:
+    ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, GraphicsContext &graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font, const glm::uvec2& screenResolution, float positionY, bool isAnalogInput);
 };
