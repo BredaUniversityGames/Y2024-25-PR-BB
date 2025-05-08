@@ -108,16 +108,16 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             constexpr float glyphHorizontalMargin = 5.0f;
             float glyphHorizontalPosition = screenResolution.x / 6.0f;
 
-            const std::vector<std::string> controllerGlyphPaths = actionManager.GetAnalogActionGamepadGlyphImagePaths(analogAction.name);
+            const std::vector<GamepadOriginVisual> gamepadOrigins = actionManager.GetAnalogActionGamepadOriginVisual(analogAction.name);
 
-            for (const std::string& glyphPath : controllerGlyphPaths)
+            for (const GamepadOriginVisual& origin : gamepadOrigins)
             {
                 ActionControls::Binding& binding = action.bindings.emplace_back();
 
                 CPUImage glyphCPUImage;
                 glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
                 glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-                glyphCPUImage.FromPNG(glyphPath);
+                glyphCPUImage.FromPNG(origin.glyphImagePath);
                 ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
 
                 glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
@@ -145,16 +145,16 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             constexpr float glyphHorizontalMargin = 25.0f;
             float glyphHorizontalPosition = screenResolution.x / 6.0f;
 
-            const std::vector<std::string> controllerGlyphPaths = actionManager.GetDigitalActionGamepadGlyphImagePaths(digitalAction.name);
+            const std::vector<GamepadOriginVisual> gamepadOrigins = actionManager.GetDigitalActionGamepadOriginVisual(digitalAction.name);
 
-            for (const std::string& glyphPath : controllerGlyphPaths)
+            for (const GamepadOriginVisual& origin : gamepadOrigins)
             {
                 ActionControls::Binding& binding = action.bindings.emplace_back();
 
                 CPUImage glyphCPUImage;
                 glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
                 glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-                glyphCPUImage.FromPNG(glyphPath);
+                glyphCPUImage.FromPNG(origin.glyphImagePath);
                 ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
 
                 glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
