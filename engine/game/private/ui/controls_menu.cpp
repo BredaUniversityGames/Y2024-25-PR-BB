@@ -103,7 +103,7 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
 
     glm::vec2 buttonPos = { 50.0f, 100.0f };
     constexpr glm::vec2 buttonBaseSize = glm::vec2(87, 22) * 3.0f;
-    constexpr float buttonTextSize = 60;
+    constexpr float buttonTextSize = 60.0f;
 
     auto backButton = menu->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
     backButton->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
@@ -113,12 +113,21 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
     auto actionsPanel = menu->AddChild<Canvas>(screenResolution);
 
     {
-        actionsPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        actionsPanel->SetLocation(glm::vec2(0.0f, 0.0f));
+        actionsPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
+        actionsPanel->SetLocation(glm::vec2(0.0f, -80.0f));
+
+        CPUImage commonImageData;
+        commonImageData.format = vk::Format::eR8G8B8A8Unorm;
+        commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
+        commonImageData.isHDR = false;
+
+        auto image = actionsPanel->AddChild<UIImage>(graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler), glm::vec2(0.0f), glm::vec2(0.0f));
+        image->anchorPoint = UIElement::AnchorPoint::eMiddle;
+        image->SetScale({screenResolution.x * 1.2f, screenResolution.y * 1.2f });
     }
 
     constexpr float actionSetTextSize = 60.0f;
-    constexpr float actionHeightMarginY = actionSetTextSize + 10.;
+    constexpr float actionHeightMarginY = actionSetTextSize + 10.0f;
     float actionSetheightLocation = 35.0f;
     float actionHeightLocation = actionHeightMarginY;
     constexpr float heightIncrement = 60.0f;
