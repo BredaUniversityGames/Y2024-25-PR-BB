@@ -66,8 +66,8 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
         actionsPanel->SetLocation(glm::vec2(0.0f, 0.0f));
     }
 
-    constexpr float actionSetTextSize = 60;
-    constexpr float actionTextSize = 50;
+    constexpr float actionSetTextSize = 60.0f;
+    constexpr float actionTextSize = 50.0f;
     constexpr glm::vec2 increment = { 0.0f, 60.0f };
     float actionSetheightLocation = 35.0f;
 
@@ -87,9 +87,10 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
         set.nameText->SetLocation({ 0.0f, 0.0f });
 
         float actionHeightLocation = actionSetTextSize + 10.0f;
-
-        // TODO: Add text for each input as well
-        // TODO: Show all possible inputs for an action
+        constexpr float actionOriginBindingTextSize = 40.0f;
+        constexpr float glyphHorizontalMargin = 25.0f;
+        constexpr float originHorizontalMargin = 200.0f;
+        constexpr float actionOriginBindingTextMarginMultiplier = 12.0f;
 
         for (const AnalogAction& analogAction : actionSet.analogActions)
         {
@@ -105,15 +106,22 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
             action.nameText->SetLocation({ 0.0f, 0.0f });
 
-            constexpr float glyphHorizontalMargin = 5.0f;
-            float glyphHorizontalPosition = screenResolution.x / 6.0f;
-
             const std::vector<GamepadOriginVisual> gamepadOrigins = actionManager.GetAnalogActionGamepadOriginVisual(analogAction.name);
+            float horizontalOffset = screenResolution.x / 6.0f;
 
             for (const GamepadOriginVisual& origin : gamepadOrigins)
             {
                 ActionControls::Binding& binding = action.bindings.emplace_back();
 
+                // Create binding text
+                binding.originName = action.canvas->AddChild<UITextElement>(font, origin.bindingInputName, actionOriginBindingTextSize);
+                binding.originName->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+                binding.originName->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+                binding.originName->SetLocation({ horizontalOffset, 0.0f });
+
+                horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
+
+                // Create glyph
                 CPUImage glyphCPUImage;
                 glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
                 glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
@@ -121,10 +129,10 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
                 ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
 
                 glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
-                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(glyphHorizontalPosition, size.y / 2.0f * -1.0f), size);
+                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, size.y / 2.0f * -1.0f), size);
                 binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-                glyphHorizontalPosition += size.x + glyphHorizontalMargin;
+                horizontalOffset += size.x + originHorizontalMargin;
             }
         }
 
@@ -138,19 +146,26 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
             actionHeightLocation += increment.y;
 
             action.nameText = action.canvas->AddChild<UITextElement>(font, digitalAction.name, actionTextSize);
-            action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1));
+            action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
             action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
             action.nameText->SetLocation({ 0.0f, 0.0f });
 
-            constexpr float glyphHorizontalMargin = 25.0f;
-            float glyphHorizontalPosition = screenResolution.x / 6.0f;
-
             const std::vector<GamepadOriginVisual> gamepadOrigins = actionManager.GetDigitalActionGamepadOriginVisual(digitalAction.name);
+            float horizontalOffset = screenResolution.x / 6.0f;
 
             for (const GamepadOriginVisual& origin : gamepadOrigins)
             {
                 ActionControls::Binding& binding = action.bindings.emplace_back();
 
+                // Create binding text
+                binding.originName = action.canvas->AddChild<UITextElement>(font, origin.bindingInputName, actionOriginBindingTextSize);
+                binding.originName->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1));
+                binding.originName->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+                binding.originName->SetLocation({ horizontalOffset, 0.0f });
+
+                horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
+
+                // Create glyph
                 CPUImage glyphCPUImage;
                 glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
                 glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
@@ -158,10 +173,10 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
                 ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
 
                 glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
-                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(glyphHorizontalPosition, size.y / 2.0f * -1.0f), size);
+                binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, size.y / 2.0f * -1.0f), size);
                 binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-                glyphHorizontalPosition += size.x + glyphHorizontalMargin;
+                horizontalOffset += size.x + originHorizontalMargin;
             }
         }
 
