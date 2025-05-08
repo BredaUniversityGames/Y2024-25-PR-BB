@@ -34,7 +34,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
     float localOffset = 0;
     glm::vec2 elementTranslation = GetAbsoluteLocation();
-    if (anchorPoint == AnchorPoint::eMiddle)
+    if (anchorPoint == AnchorPoint::eMiddle || anchorPoint == AnchorPoint::eBottomCenter)
     {
         elementTranslation.x -= (_horizontalTextSize / 2.0f) * GetAbsoluteScale().y;
         elementTranslation.y += GetAbsoluteScale().y / 2.0;

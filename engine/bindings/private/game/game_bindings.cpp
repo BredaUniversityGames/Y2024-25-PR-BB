@@ -2,28 +2,19 @@
 
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
-#include "components/static_mesh_component.hpp"
-#include "components/transform_component.hpp"
-#include "components/transform_helpers.hpp"
-#include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "entity/wren_entity.hpp"
 #include "game_module.hpp"
 #include "model_loading.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
-#include "renderer_module.hpp"
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
-
-#include <spdlog/fmt/fmt.h>
+#include "ui_module.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
-#include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
-
-#include <ui_image.hpp>
 
 namespace bindings
 {
@@ -75,14 +66,12 @@ void AlterPlayerHeight(MAYBE_UNUSED GameModule& self, PhysicsModule& physicsModu
     }
 }
 
-std::optional<std::shared_ptr<HUD>> GetHUD(GameModule& self)
+void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
 {
-    if (auto lock = self._hud.lock())
-    {
-        return lock;
-    }
-    return std::nullopt;
+    self.uiInputContext.focusedUIElement = button;
 }
+
+
 
 void UpdateHealthBar(HUD& self, const float health)
 {
@@ -164,6 +153,7 @@ void UpdateDashCharges(HUD& self, int charges)
         }
     }
 }
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -179,19 +169,20 @@ void BindGameAPI(wren::ForeignModule& module)
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
 
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
+    game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
+    game.func<&GameModule::GetHUD>("GetHUD");
+    game.func<&GameModule::GetGameOver>("GetGameOverMenu");
+
     game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
     game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
-    BindMainMenu(module);
+    game.func<&GameModule::SetPauseMenuEnabled>("SetPauseMenuEnabled");
+    game.func<&GameModule::SetGameOverMenuEnabled>("SetGameOverMenuEnabled");
 
-    game.funcExt<bindings::GetHUD>("GetHUD");
-    auto& hud = module.klass<HUD>("HUD");
-
-    hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar", "Update health bar with value from 0 to 1");
-    hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText", "Update ammo bar with a current ammo count and max");
-    hud.funcExt<bindings::UpdateUltBar>("UpdateUltBar", "Update ult bar with value from 0 to 1");
-    hud.funcExt<bindings::UpdateScoreText>("UpdateScoreText", "Update score text with score number");
-    hud.funcExt<bindings::UpdateGrenadeBar>("UpdateGrenadeBar", "Update grenade bar with value from 0 to 1");
-    hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
-    hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
+    auto& ui = module.klass<UIModule>("UIModule");
+    module.klass<UIElement>("UIElement");
+ 
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "Show hit marker");
+    ui.funcExt<bindings::SetGamepadActiveButton>("SetSelectedElement");
+
+    BindGameUI(module);
 }

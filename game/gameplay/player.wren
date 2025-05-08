@@ -5,11 +5,12 @@ class PlayerVariables {
         _maxHealth = 100.0
         _health = _maxHealth
         _score = 0
-        _ultChargeRate = 10
         _ultDecayRate = 10
         _ultMaxCharge = 100
         _ultCharge = 0
         _ultActive = false
+        _ultMaxChargeMultiplier = 4.0
+        _wasUltReadyLastFrame = false
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
@@ -51,6 +52,7 @@ class PlayerVariables {
     multiplierMaxTime {_multiplierMaxTime}
     consecutiveHits {_consecutiveHits}
     consecutiveMaxHits {_consecutiveMaxHits}
+    wasUltReadyLastFrame {_wasUltReadyLastFrame}
     
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
@@ -69,6 +71,7 @@ class PlayerVariables {
     multiplierMaxTime=(value) {_multiplierMaxTime = value}
     consecutiveHits=(value) {_consecutiveHits = value}
     consecutiveMaxHits=(value) {_consecutiveMaxHits = value}
+    wasUltReadyLastFrame=(value) {_wasUltReadyLastFrame = value}
 
     IsInvincible() {
         return _invincibilityTime > 0
@@ -93,5 +96,9 @@ class PlayerVariables {
             _consecutiveHits = 0
             _multiplier = _multiplier + _multiplierIncrement
         }
+    }
+
+    UpdateUltCharge(multiplier) {
+        _ultCharge =  Math.Min(_ultCharge + multiplier * Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }
 }

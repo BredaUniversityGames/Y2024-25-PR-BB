@@ -58,14 +58,8 @@ UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
     return barStyle;
 }
 
-std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution)
+std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
-
-    std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution); // resource loading.
-
-    auto font
-        = LoadFromFile("assets/fonts/Rooters.ttf", 50, graphicsContext);
-
     UIProgressBar::BarStyle healtbarStyle
         = LoadHealthBarStyle(graphicsContext);
     UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
@@ -82,30 +76,32 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(120, 160) * 0.3f);
 
     hud->healthBar = hud->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
-    hud->healthBar.lock()->AddChild<UITextElement>(font, "health", 30);
+    hud->healthBar.lock()->AddChild<UITextElement>(font, "health", 50);
     hud->healthBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
 
-    hud->ultBar
-        = hud->AddChild<UIProgressBar>(ultBarStyle, glm::vec2(440, 250), glm::vec2(1920, 770) * 0.35f);
+    hud->ultBar = hud->AddChild<UIProgressBar>(ultBarStyle, glm::vec2(440, 250), glm::vec2(1920, 770) * 0.35f);
     hud->ultBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->ultBar.lock()->AddChild<UITextElement>(font, "ult", glm::vec2(-55, -20), 40);
+    hud->ultBar.lock()->AddChild<UITextElement>(font, "ult", glm::vec2(-55, -20), 50);
 
     hud->sprintBar = hud->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(200, 405), glm::vec2(100));
     hud->sprintBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->sprintBar.lock()->AddChild<UITextElement>(font, "sprint", 20);
+    hud->sprintBar.lock()->AddChild<UITextElement>(font, "sprint", 30);
 
     hud->grenadeBar = hud->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(355, 335), glm::vec2(100));
     hud->grenadeBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->grenadeBar.lock()->AddChild<UITextElement>(font, "grenade", 20);
+    hud->grenadeBar.lock()->AddChild<UITextElement>(font, "grenade", 30);
 
-    hud->ammoCounter = hud->AddChild<UITextElement>(font, "5/8", glm::vec2(550, 100), 50);
+    hud->ammoCounter = hud->AddChild<UITextElement>(font, "6/6", glm::vec2(550, 100), 80);
     hud->ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    hud->scoreText = hud->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 50);
+    hud->scoreText = hud->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 100);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-    hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 50);
+    hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 100);
     hud->multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
+    hud->ultReadyText = hud->AddChild<UITextElement>(font, "", glm::vec2(0, 135), 50);
+    hud->ultReadyText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
 
     // common image data.
     CPUImage imageData;

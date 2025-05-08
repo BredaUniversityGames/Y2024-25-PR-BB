@@ -16,6 +16,7 @@
 #include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
+#include "components/transparency_component.hpp"
 #include "game_module.hpp"
 #include "systems/lifetime_component.hpp"
 
@@ -87,9 +88,29 @@ void PointLightComponentSetColor(WrenComponent<PointLightComponent>& component, 
     component.component->color = color;
 }
 
+void PointLightComponentSetRange(WrenComponent<PointLightComponent>& component, const float range)
+{
+    component.component->range = range;
+}
+
+void PointLightComponentSetIntensity(WrenComponent<PointLightComponent>& component, const float intensity)
+{
+    component.component->intensity = intensity;
+}
+
 glm::vec3 PointLightComponentGetColor(WrenComponent<PointLightComponent>& component)
 {
     return component.component->color;
+}
+
+float PointLightComponentGetRange(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->range;
+}
+
+float PointLightComponentGetIntensity(WrenComponent<PointLightComponent>& component)
+{
+    return component.component->intensity;
 }
 
 void DirectionalLightComponentSetColor(WrenComponent<DirectionalLightComponent>& component, const glm::vec3& color)
@@ -162,7 +183,30 @@ void CameraSetReversedZ(WrenComponent<CameraComponent>& component, const bool re
     component.component->reversedZ = reversedZ;
 }
 
-uint32_t GetEntity(WrenEntity& self) { return static_cast<uint32_t>(self.entity); }
+void TransparencySet(WrenComponent<TransparencyComponent>& component, float opacity)
+{
+    component.component->transparency = opacity;
+}
+
+float TransparencyGet(WrenComponent<TransparencyComponent>& component)
+{
+    return component.component->transparency;
+}
+
+uint32_t GetEntity(WrenEntity& self)
+{
+    return static_cast<uint32_t>(self.entity);
+}
+
+bool EntityEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity == other.entity;
+}
+
+bool EntityNotEquality(WrenEntity& self, WrenEntity& other)
+{
+    return self.entity != other.entity;
+}
 
 void AttachChild(WrenEntity& self, WrenEntity& child)
 {
@@ -221,6 +265,8 @@ void BindEntity(wren::ForeignModule& module)
     // Entity class
     auto& entityClass = module.klass<WrenEntity>("Entity");
     entityClass.funcExt<GetEntity>("GetEnttEntity");
+    entityClass.funcExt<EntityEquality>(wren::OPERATOR_EQUAL);
+    entityClass.funcExt<EntityNotEquality>(wren::OPERATOR_NOT_EQUAL);
     entityClass.func<&WrenEntity::IsValid>("IsValid");
 
     entityClass.funcExt<AttachChild>("AttachChild");
@@ -263,6 +309,8 @@ void BindEntity(wren::ForeignModule& module)
     entityClass.func<&WrenEntity::GetComponent<CameraComponent>>("GetCameraComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<CameraComponent>>("AddCameraComponent");
 
+    entityClass.func<&WrenEntity::GetComponent<TransparencyComponent>>("GetTransparencyComponent");
+    entityClass.func<&WrenEntity::AddDefaultComponent<TransparencyComponent>>("AddTransparencyComponent");
     entityClass.funcExt<AddRenderInForeground>("RenderInForeground");
 }
 
@@ -352,6 +400,8 @@ void BindEntityAPI(wren::ForeignModule& module)
 
         auto& pointLightClass = module.klass<WrenComponent<PointLightComponent>>("PointLightComponent");
         pointLightClass.propExt<bindings::PointLightComponentGetColor, bindings::PointLightComponentSetColor>("color");
+        pointLightClass.propExt<bindings::PointLightComponentGetRange, bindings::PointLightComponentSetRange>("range");
+        pointLightClass.propExt<bindings::PointLightComponentGetIntensity, bindings::PointLightComponentSetIntensity>("intensity");
 
         auto& directionalLightClass = module.klass<WrenComponent<DirectionalLightComponent>>("DirectionalLightComponent");
         directionalLightClass.propExt<bindings::DirectionalLightComponentGetColor, bindings::DirectionalLightComponentSetColor>("color");
@@ -381,5 +431,8 @@ void BindEntityAPI(wren::ForeignModule& module)
         cameraClass.propExt<bindings::CameraGetNearPlane, bindings::CameraSetNearPlane>("nearPlane");
         cameraClass.propExt<bindings::CameraGetFarPlane, bindings::CameraSetFarPlane>("farPlane");
         cameraClass.propExt<bindings::CameraGetReversedZ, bindings::CameraSetReversedZ>("reversedZ");
+
+        auto& transparencyClass = module.klass<WrenComponent<TransparencyComponent>>("TransparencyComponent");
+        transparencyClass.propExt<bindings::TransparencyGet, bindings::TransparencySet>("transparency");
     }
 }

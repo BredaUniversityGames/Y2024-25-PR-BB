@@ -23,6 +23,7 @@
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
 #include "time_module.hpp"
+#include "ui_module.hpp"
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
@@ -70,6 +71,25 @@ void ResetDecals(WrenEngine& engine)
     engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().ResetDecals();
 }
 
+void SetFog(WrenEngine& engine, float density)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity() = density;
+}
+
+float GetFog(WrenEngine& engine)
+{
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity();
+}
+
+bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
+{
+#if DISTRIBUTION
+    return true;
+#else
+    return false;
+#endif
+}
+
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -89,6 +109,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<GameModule>>("GetGame");
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
+        engineAPI.func<&WrenEngine::GetModule<UIModule>>("GetUI");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
@@ -96,6 +117,8 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SetExit>("SetExit");
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
+        engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
     }
 
     // Time Module

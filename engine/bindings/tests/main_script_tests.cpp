@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
+#include <spdlog/sinks/ostream_sink.h>
 #include <sstream>
 
 #include "file_io.hpp"
+#include "log.hpp"
 #include "main_script.hpp"
 #include "scripting_context.hpp"
 #include "time_module.hpp"
@@ -17,8 +19,12 @@ TEST(MainScriptTests, MainScript)
     ScriptingContext context { MEMORY_CONFIG };
     context.GetVM().module("Engine.wren").klass<WrenEngine>("Engine");
 
-    std::stringstream output;
-    context.SetScriptingOutputStream(&output);
+    std::ostringstream oss;
+    auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+    auto test_logger = std::make_shared<spdlog::logger>("test", ostream_sink);
+    test_logger->set_pattern("%v");
+
+    context.SetScriptingOutputStream(test_logger);
 
     auto result = context.RunScript("game/tests/wren_main.wren");
     ASSERT_TRUE(result.has_value());
@@ -27,5 +33,5 @@ TEST(MainScriptTests, MainScript)
     wrenMain.Update(DeltaMS { 10.0f }); // Safe, the script does not use the engine parameter
 
     EXPECT_TRUE(wrenMain.IsValid());
-    EXPECT_EQ(output.str(), "10\n");
+    EXPECT_NE(oss.str().find("[Script] 10"), std::string::npos);
 }

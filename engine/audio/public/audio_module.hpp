@@ -40,8 +40,6 @@ public:
     // Set paused or unpaused
     void SetPaused(ChannelID instance, bool paused);
 
-    // Set variables can be added in the future if needed
-
     // Stops looping sounds
     // Regular sounds will stop by themselves once they are done
     void StopSFX(SoundInstance instance);
@@ -60,13 +58,18 @@ public:
     EventInstance StartOneShotEvent(std::string_view name);
 
     // Start an event that should play at least once
-    // Store the returned id and later call StopEvent(id), it might not stop otherwise
+    // Store the returned id and later call StopEvent(id), it will not stop otherwise
     NO_DISCARD EventInstance StartLoopingEvent(std::string_view name);
 
     // Stops an event that is
     void StopEvent(EventInstance instance);
 
     bool IsEventPlaying(EventInstance instance);
+
+    // Set volume of an event, from 0.0 to 1.0
+    void SetEventVolume(EventInstance ev, float volume);
+
+    void SetEventFloatAttribute(EventInstance ev, const std::string& name, float val);
 
     void SetListener3DAttributes(const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up) const;
 

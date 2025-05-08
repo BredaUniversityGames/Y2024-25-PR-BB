@@ -1,7 +1,9 @@
 #pragma once
 
+#include "perlin_noise.hpp"
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
+
 #include <random>
 
 namespace bindings
@@ -17,6 +19,12 @@ public:
         std::uniform_int_distribution<std::mt19937::result_type> dist6(0, std::numeric_limits<uint32_t>::max());
 
         return dist6(rng);
+    }
+
+    static uint32_t RandomIndex(uint32_t start, uint32_t end)
+    {
+        uint32_t range = end - start;
+        return Random() % range + start;
     }
 
     static float RandomFloat()
@@ -46,6 +54,24 @@ public:
     }
 };
 
+class Perlin
+{
+public:
+    Perlin(uint32_t seed)
+        : perlin(seed)
+    {
+    }
+
+    siv::PerlinNoise perlin;
+
+    float Noise1D(float x)
+    {
+        return perlin.noise1D_01(x);
+    }
+};
+
+Perlin CreatePerlin(uint32_t seed) { return Perlin { seed }; }
+
 inline void BindRandom(wren::ForeignModule& module)
 {
     auto& randomUtilClass = module.klass<RandomUtil>("Random");
@@ -55,6 +81,11 @@ inline void BindRandom(wren::ForeignModule& module)
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3>("RandomVec3");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3Range>("RandomVec3Range");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3VectorRange>("RandomVec3VectorRange");
+    randomUtilClass.funcStatic<&RandomUtil::RandomIndex>("RandomIndex");
+
+    auto& perlinClass = module.klass<Perlin>("Perlin");
+    perlinClass.funcStaticExt<CreatePerlin>("new");
+    perlinClass.func<&Perlin::Noise1D>("Noise1D");
 }
 
 }

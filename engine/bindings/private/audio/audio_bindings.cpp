@@ -48,6 +48,11 @@ bool IsSFXPlaying(AudioModule& self, const SoundInstance instance)
     return self.IsSFXPlaying(instance);
 }
 
+bool IsEventPlaying(AudioModule& self, const EventInstance instance)
+{
+    return self.IsEventPlaying(instance);
+}
+
 EventInstance PlayEventOnce(AudioModule& self, const std::string& path)
 {
     return self.StartOneShotEvent(path);
@@ -63,6 +68,12 @@ void StopEvent(AudioModule& self, EventInstance instance)
     self.StopEvent(instance);
 }
 
+void SetEventVolume(AudioModule& self, EventInstance instance, float val)
+{
+    self.SetEventVolume(instance, val);
+}
+
+
 void AddSFX(WrenComponent<AudioEmitterComponent>& self, SoundInstance& instance)
 {
     self.component->_soundIds.emplace_back(instance);
@@ -72,6 +83,12 @@ void AddEvent(WrenComponent<AudioEmitterComponent>& self, EventInstance& instanc
 {
     self.component->_eventIds.emplace_back(instance);
 }
+
+void SetEventFloatAttribute(AudioModule& self, EventInstance audio, const std::string& name, float val)
+{
+    self.SetEventFloatAttribute(audio, name, val);
+}
+
 }
 
 void BindAudioAPI(wren::ForeignModule& module)
@@ -81,10 +98,13 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::LoadSFX>("LoadSFX", "Loads an audio file internally with path provided, bool is3D and bool isLooping");
     wren_class.funcExt<bindings::PlaySFX>("PlaySFX", "Plays a previously loaded sound with provided path and volume, returns a sound instance");
     wren_class.funcExt<bindings::IsSFXPlaying>("IsSFXPlaying", "Checks if a specific sound instance is still playing");
+    wren_class.funcExt<bindings::IsEventPlaying>("IsEventPlaying", "Checks if a specific event instance is still playing");
     wren_class.funcExt<bindings::PlayEventOnce>("PlayEventOnce", "Play FMOD event once, returns an event instance");
     wren_class.funcExt<bindings::PlayEventLoop>("PlayEventLoop", "Play FMOD event on loop, returns an event instance");
     wren_class.funcExt<bindings::StopEvent>("StopEvent", "Stop playing an event instance");
     wren_class.funcExt<bindings::StopSFX>("StopSFX", "Stop playing a sound effect instance");
+    wren_class.func<&AudioModule::SetEventFloatAttribute>("SetEventFloatAttribute", "Pass event instance, attribute name and float value");
+    wren_class.func<&AudioModule::SetEventVolume>("SetEventVolume", "Set event volume from 0.0 to 1.0");
 
     module.klass<WrenComponent<AudioListenerComponent>>("AudioListenerComponent");
     auto& audioEmitterComponentClass = module.klass<WrenComponent<AudioEmitterComponent>>("AudioEmitterComponent");
