@@ -173,6 +173,7 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 4, _localEmittersDescriptorSet, {});
 
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
+    _simulatePushConstant.localEmitterCount = _localEmitters.size();
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);

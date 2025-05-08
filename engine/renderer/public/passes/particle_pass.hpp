@@ -53,6 +53,7 @@ private:
     struct SimulatePushConstant
     {
         float deltaTime;
+        uint32_t localEmitterCount;
     } _simulatePushConstant;
     struct EmitPushConstant
     {
