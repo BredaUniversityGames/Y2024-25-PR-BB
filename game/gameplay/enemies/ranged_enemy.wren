@@ -303,10 +303,7 @@ class RangedEnemy {
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
-                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-100)
-                if(_deathTimerMax - _deathTimer > 100) {
-
-                }
+                transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-100)
             }
         }
     }
