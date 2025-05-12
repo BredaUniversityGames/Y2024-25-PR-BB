@@ -17,12 +17,21 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
     FT_Face fontFace;
     FT_New_Face(library, path.c_str(), 0, &fontFace);
 
-    FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
-
     std::shared_ptr<UIFont> font = std::make_shared<UIFont>();
-    font->characterHeight = characterHeight;
+
+    FT_Set_Pixel_Sizes(fontFace, 0, characterHeight);
+    font->metrics.resolutionY = characterHeight;
+
+    FT_Pos ascent = fontFace->size->metrics.ascender;
+    FT_Pos descent = fontFace->size->metrics.descender;
+    FT_Pos line_gap = fontFace->size->metrics.height - (fontFace->size->metrics.ascender - fontFace->size->metrics.descender);
+
+    font->metrics.ascent = (ascent >> 6);
+    font->metrics.descent = (descent >> 6);
+    font->metrics.lineGap = (line_gap >> 6);
 
     const uint8_t maxGlyphs = 128;
+
     std::array<stbrp_rect, maxGlyphs> rects;
     for (uint8_t c = 0; c < maxGlyphs; ++c)
     {
@@ -34,8 +43,8 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
         }
 
         rects[c].id = c;
-        rects[c].w = fontFace->glyph->bitmap.width + 1;
-        rects[c].h = fontFace->glyph->bitmap.rows + 1;
+        rects[c].w = fontFace->glyph->bitmap.width + 2; // Add margin
+        rects[c].h = fontFace->glyph->bitmap.rows + 2;
     }
 
     const uint16_t atlasWidth = 512;
@@ -62,23 +71,35 @@ std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t character
             }
 
             const FT_Bitmap& bitmap = fontFace->glyph->bitmap;
+
+            glm::uvec2 atlasStart = { rects[c].x + 1, rects[c].y + 1 };
             for (uint16_t y = 0; y < bitmap.rows; ++y)
             {
                 for (uint16_t x = 0; x < bitmap.width; ++x)
                 {
-                    atlasData[((rects[c].y + y) * atlasWidth) + (rects[c].x + x)] = std::byte(bitmap.buffer[y * bitmap.width + x]);
+                    glm::uvec2 atlasIndex = { atlasStart.x + x, atlasStart.y + y };
+                    atlasData[atlasIndex.y * atlasWidth + atlasIndex.x] = std::byte(bitmap.buffer[y * bitmap.width + x]);
                 }
             }
 
-            // Store Character and GlyphRegion
-            font->characters[c] = {
-                .size = glm::ivec2(bitmap.width, bitmap.rows),
-                .bearing = glm::ivec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
-                .advance = static_cast<uint16_t>(fontFace->glyph->advance.x),
-                .uvMin = glm::vec2(static_cast<float>(rects[c].x) / atlasWidth, static_cast<float>(rects[c].y) / atlasHeight),
-                .uvMax = glm::vec2(static_cast<float>(rects[c].x + bitmap.width) / atlasWidth,
-                    static_cast<float>(rects[c].y + bitmap.rows) / atlasHeight)
+            UIFont::Character cInfo {};
+            cInfo.size = { bitmap.width, bitmap.rows };
+            cInfo.bearing = { fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top };
+
+            cInfo.uvMin = {
+                static_cast<float>(rects[c].x + 1) / atlasWidth,
+                static_cast<float>(rects[c].y + 1) / atlasHeight
             };
+
+            cInfo.uvMax = {
+                static_cast<float>(rects[c].x + 1 + bitmap.width) / atlasWidth,
+                static_cast<float>(rects[c].y + 1 + bitmap.rows) / atlasHeight
+            };
+
+            cInfo.advance = fontFace->glyph->advance.x >> 6;
+
+            // Store Character and GlyphRegion
+            font->characters[c] = cInfo;
         }
     }
 
