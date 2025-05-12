@@ -251,13 +251,13 @@ class RangedEnemy {
             }
 
             if (_movingState) {
-                this.Wander(playerPos, engine, dt)
+                this.Move(playerPos, engine, dt)
                 _evaluateState = true
             }
 
             if(_hasTakenDamage){
                 _changeDirectionTimer = _changeDirectionTimerMax
-                this.Wander(playerPos, engine, dt)
+                this.Move(playerPos, engine, dt)
             }
 
             if (_evaluateState) {
@@ -308,7 +308,7 @@ class RangedEnemy {
         }
     }
 
-    Wander(playerPos, engine, dt) {
+    Move(playerPos, engine, dt) {
         _changeDirectionTimer = _changeDirectionTimer + dt
         
         var body = _rootEntity.GetRigidbodyComponent()

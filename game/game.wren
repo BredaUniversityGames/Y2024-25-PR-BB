@@ -362,6 +362,11 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
+            
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                // shit
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+            }
         }
 
         // Check if pause key was pressed
