@@ -75,13 +75,13 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize, buttonBaseSize);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-        openLinkButton->AddChild<UITextElement>(font, "CHECK OUT OUR DISCORD!", 50)->SetColor(glm::vec4(1, 1, 1, 1));
+        openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50)->SetColor(glm::vec4(1, 1, 1, 1));
 
         main->openLinkButton = openLinkButton;
 
         auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        playButton->AddChild<UITextElement>(font, "PLAY", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        auto text = playButton->AddChild<UITextElement>(font, "PLAY", textSize);
 
         buttonPos += increment;
 
@@ -121,9 +121,11 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         main->openLinkButton.lock()->navigationTargets.down = main->playButton;
         main->openLinkButton.lock()->navigationTargets.up = main->quitButton;
+
+        main->UpdateAllChildrenAbsoluteTransform();
+        void(0);
     }
 
-    main->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 
     return main;

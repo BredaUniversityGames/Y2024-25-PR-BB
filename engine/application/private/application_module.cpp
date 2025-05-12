@@ -53,14 +53,14 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     }
 
     int32_t width, height, nrChannels;
-    stbi_uc* pixels = stbi_load("assets/textures/icon.png", &width, &height, &nrChannels, 3);
+    stbi_uc* pixels = stbi_load("assets/textures/icon.png", &width, &height, &nrChannels, 4);
     if (pixels)
     {
         SDL_Surface* icon = SDL_CreateSurfaceFrom(
             width,
             height,
-            SDL_PIXELFORMAT_RGB24,
-            pixels, width * 3);
+            SDL_PIXELFORMAT_RGBA32,
+            pixels, width * 4);
         SDL_SetWindowIcon(_window, icon);
 
         SDL_DestroySurface(icon);

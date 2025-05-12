@@ -5,6 +5,7 @@
 #include "fonts.hpp"
 #include <glm/glm.hpp>
 #include <string>
+#include <ui_element.hpp>
 
 struct UIFont;
 
@@ -15,7 +16,7 @@ public:
         : _font(font)
     {
         SetLocation(glm::vec2(0));
-        SetScale(glm::vec2(0, font->characterHeight));
+        SetScale(glm::vec2(0.0f, _font->metrics.resolutionY));
         SetText(std::move(text));
     }
 
@@ -23,7 +24,7 @@ public:
         : _font(font)
     {
         SetLocation(glm::vec2(0));
-        SetScale(glm::vec2(0, textSize));
+        SetScale(glm::vec2 { 0.0f, textSize });
         SetText(std::move(text));
     }
 
@@ -31,7 +32,7 @@ public:
         : _font(font)
     {
         SetLocation(location);
-        SetScale(glm::vec2(0, textSize));
+        SetScale(glm::vec2 { 0.0f, textSize });
         SetText(std::move(text));
     }
 
