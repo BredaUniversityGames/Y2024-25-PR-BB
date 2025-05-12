@@ -108,13 +108,16 @@ public:
 class ControlsMenu : public Canvas
 {
 public:
-    static std::shared_ptr<ControlsMenu> Create(GraphicsContext& graphicsContext, ActionManager& actionManager, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
-    ControlsMenu(const glm::uvec2& screenResolution)
-        : Canvas(screenResolution)
+    ControlsMenu(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+        : Canvas(screenResolution), _graphicsContext(graphicsContext), _actionManager(actionManager), _font(font), _screenResolution(screenResolution)
     {
     }
 
+    void UpdateBindings();
+
+    std::shared_ptr<Canvas> actionsPanel;
     std::weak_ptr<UIButton> backButton;
 
     struct ActionControls
@@ -142,5 +145,14 @@ public:
     ResourceHandle<Sampler> sampler;
 
 private:
-    ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, GraphicsContext &graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font, const glm::uvec2& screenResolution, float positionY, bool isAnalogInput);
+    GraphicsContext& _graphicsContext;
+    ActionManager& _actionManager;
+    std::shared_ptr<UIFont> _font;
+    const glm::uvec2 _screenResolution;
+
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> _glyphsCache {};
+
+    ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, float positionY, bool isAnalogInput);
+    ResourceHandle<GPUImage> GetGlyphImage(const std::string& path);
+    void ClearBindings();
 };

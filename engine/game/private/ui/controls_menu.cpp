@@ -8,60 +8,9 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 
-ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::string& actionName, Canvas& parent, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font, const glm::uvec2& screenResolution, float positionY, bool isAnalogInput)
+std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2 &screenResolution, GraphicsContext &graphicsContext, ActionManager &actionManager, std::shared_ptr<UIFont> font)
 {
-    constexpr float actionTextSize = 50.0f;
-    constexpr float actionOriginBindingTextSize = 40.0f;
-    constexpr float glyphHorizontalMargin = 25.0f;
-    constexpr float originHorizontalMargin = 200.0f;
-    constexpr float actionOriginBindingTextMarginMultiplier = 12.0f;
-    constexpr float canvasScaleY = actionTextSize + 10.0f;
-
-    ActionControls action {};
-    action.canvas = parent.AddChild<Canvas>(glm::vec2 { screenResolution.x, canvasScaleY });
-    action.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    action.canvas->SetLocation(glm::vec2(0.0f, positionY));
-
-    action.nameText = action.canvas->AddChild<UITextElement>(font, actionName, actionTextSize);
-    action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-    action.nameText->SetLocation({ 0.0f, 0.0f });
-
-    const std::vector<GamepadOriginVisual> gamepadOrigins = isAnalogInput ? actionManager.GetAnalogActionGamepadOriginVisual(actionName) : actionManager.GetDigitalActionGamepadOriginVisual(actionName);
-    float horizontalOffset = screenResolution.x / 6.0f;
-
-    for (const GamepadOriginVisual& origin : gamepadOrigins)
-    {
-        ActionControls::Binding& binding = action.bindings.emplace_back();
-
-        // Create binding text
-        binding.originName = action.canvas->AddChild<UITextElement>(font, origin.bindingInputName, actionOriginBindingTextSize);
-        binding.originName->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-        binding.originName->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        binding.originName->SetLocation({ horizontalOffset, 0.0f });
-
-        horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
-
-        // Create glyph
-        CPUImage glyphCPUImage;
-        glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
-        glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-        glyphCPUImage.FromPNG(origin.glyphImagePath);
-        ResourceHandle<GPUImage> glyphImage = graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
-
-        glm::vec2 size = glm::vec2(glyphCPUImage.width, glyphCPUImage.height) * 0.15f;
-        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, size.y / 2.0f * -1.0f), size);
-        binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-
-        horizontalOffset += size.x + originHorizontalMargin;
-    }
-
-    return action;
-}
-
-std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsContext, ActionManager &actionManager, const glm::uvec2 &screenResolution, std::shared_ptr<UIFont> font)
-{
-    auto menu = std::make_shared<ControlsMenu>(screenResolution);
+    auto menu = std::make_shared<ControlsMenu>(screenResolution, graphicsContext, actionManager, font);
     menu->anchorPoint = UIElement::AnchorPoint::eMiddle;
     menu->SetAbsoluteTransform(menu->GetAbsoluteLocation(), screenResolution);
 
@@ -110,21 +59,30 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
     backButton->AddChild<UITextElement>(font, "Back", buttonTextSize)->SetColor(glm::vec4(1, 1, 1, 1));
     menu->backButton = backButton;
 
-    auto actionsPanel = menu->AddChild<Canvas>(screenResolution);
+    auto popupPanel = menu->AddChild<Canvas>(screenResolution);
+    popupPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
+    popupPanel->SetLocation(glm::vec2(0.0f, -80.0f));
 
     {
-        actionsPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        actionsPanel->SetLocation(glm::vec2(0.0f, -80.0f));
-
         CPUImage commonImageData;
         commonImageData.format = vk::Format::eR8G8B8A8Unorm;
         commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
         commonImageData.isHDR = false;
 
-        auto image = actionsPanel->AddChild<UIImage>(graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler), glm::vec2(0.0f), glm::vec2(0.0f));
+        auto image = popupPanel->AddChild<UIImage>(graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler), glm::vec2(0.0f), glm::vec2(0.0f));
         image->anchorPoint = UIElement::AnchorPoint::eMiddle;
         image->SetScale({screenResolution.x * 1.2f, screenResolution.y * 1.2f });
     }
+
+    menu->actionsPanel = popupPanel->AddChild<Canvas>(screenResolution);
+    menu->UpdateBindings();
+
+    return menu;
+}
+
+void ControlsMenu::UpdateBindings()
+{
+    ClearBindings();
 
     constexpr float actionSetTextSize = 60.0f;
     constexpr float actionHeightMarginY = actionSetTextSize + 10.0f;
@@ -135,27 +93,27 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
     for (const ActionSet& actionSet : GAME_ACTIONS)
     {
         // We need to change the active action set to be able to retrieve the wanted controller glyph
-        actionManager.SetActiveActionSet(actionSet.name);
+        _actionManager.SetActiveActionSet(actionSet.name);
 
-        ActionSetControls& set = menu->actionSetControls.emplace_back();
+        ActionSetControls& set = actionSetControls.emplace_back();
         set.canvas = actionsPanel->AddChild<Canvas>(glm::vec2{ 0.0f, 0.0f });
         set.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         set.canvas->SetLocation(glm::vec2(20.0f, actionSetheightLocation));
 
-        set.nameText = set.canvas->AddChild<UITextElement>(font, actionSet.name, actionSetTextSize);
+        set.nameText = set.canvas->AddChild<UITextElement>(_font, actionSet.name, actionSetTextSize);
         set.nameText->SetColor(glm::vec4(1, 1, 1, 1));
         set.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         set.nameText->SetLocation({ 0.0f, 0.0f });
 
         for (const AnalogAction& analogAction : actionSet.analogActions)
         {
-            set.actionControls.push_back(menu->AddActionVisualization(analogAction.name, *set.canvas, graphicsContext, actionManager, font, screenResolution, actionHeightLocation, true));
+            set.actionControls.push_back(AddActionVisualization(analogAction.name, *set.canvas, actionHeightLocation, true));
             actionHeightLocation += heightIncrement;
         }
 
         for (const DigitalAction& digitalAction : actionSet.digitalActions)
         {
-            set.actionControls.push_back(menu->AddActionVisualization(digitalAction.name, *set.canvas, graphicsContext, actionManager, font, screenResolution, actionHeightLocation, false));
+            set.actionControls.push_back(AddActionVisualization(digitalAction.name, *set.canvas, actionHeightLocation, false));
             actionHeightLocation += heightIncrement;
         }
 
@@ -164,10 +122,98 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(GraphicsContext &graphicsCont
     }
 
     // Make sure to go back to the user interface action set
-    actionManager.SetActiveActionSet("UserInterface");
+    _actionManager.SetActiveActionSet("UserInterface");
 
-    menu->UpdateAllChildrenAbsoluteTransform();
-    graphicsContext.UpdateBindlessSet();
+    UpdateAllChildrenAbsoluteTransform();
+    _graphicsContext.UpdateBindlessSet();
+}
 
-    return menu;
+ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::string& actionName, Canvas& parent, float positionY, bool isAnalogInput)
+{
+    constexpr float actionTextSize = 50.0f;
+    constexpr float actionOriginBindingTextSize = 40.0f;
+    constexpr float glyphHorizontalMargin = 25.0f;
+    constexpr float originHorizontalMargin = 200.0f;
+    constexpr float actionOriginBindingTextMarginMultiplier = 12.0f;
+    constexpr float canvasScaleY = actionTextSize + 10.0f;
+
+    ActionControls action {};
+    action.canvas = parent.AddChild<Canvas>(glm::vec2 { _screenResolution.x, canvasScaleY });
+    action.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    action.canvas->SetLocation(glm::vec2(0.0f, positionY));
+
+    action.nameText = action.canvas->AddChild<UITextElement>(_font, actionName, actionTextSize);
+    action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    action.nameText->SetLocation({ 0.0f, 0.0f });
+
+    const std::vector<GamepadOriginVisual> gamepadOrigins = isAnalogInput ? _actionManager.GetAnalogActionGamepadOriginVisual(actionName) : _actionManager.GetDigitalActionGamepadOriginVisual(actionName);
+    float horizontalOffset = _screenResolution.x / 6.0f;
+
+    for (const GamepadOriginVisual& origin : gamepadOrigins)
+    {
+        ActionControls::Binding& binding = action.bindings.emplace_back();
+
+        // Create binding text
+        binding.originName = action.canvas->AddChild<UITextElement>(_font, origin.bindingInputName, actionOriginBindingTextSize);
+        binding.originName->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+        binding.originName->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        binding.originName->SetLocation({ horizontalOffset, 0.0f });
+
+        horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
+
+        // Create glyph
+        ResourceHandle<GPUImage> glyphImage = GetGlyphImage(origin.glyphImagePath);
+        const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
+
+        glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
+        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, size.y / 2.0f * -1.0f), size);
+        binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
+        horizontalOffset += size.x + originHorizontalMargin;
+    }
+
+    return action;
+}
+
+ResourceHandle<GPUImage> ControlsMenu::GetGlyphImage(const std::string& path)
+{
+    auto it = _glyphsCache.find(path);
+    if (it != _glyphsCache.end())
+    {
+        return it->second;
+    }
+
+    CPUImage glyphCPUImage;
+    glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
+    glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
+    glyphCPUImage.FromPNG(path);
+
+    _glyphsCache[path] = _graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
+    return _glyphsCache[path];
+}
+
+void ControlsMenu::ClearBindings()
+{
+    // Manually clean up, as there is no remove child function yet
+    for (ActionSetControls& set : actionSetControls)
+    {
+        set.canvas.reset();
+        set.nameText.reset();
+
+        for (ActionControls& action : set.actionControls)
+        {
+            action.canvas.reset();
+            action.nameText.reset();
+
+            for (ActionControls::Binding& binding : action.bindings)
+            {
+                binding.originName.reset();
+                binding.originName.reset();
+            }
+        }
+    }
+
+    actionsPanel->GetChildren().clear();
+    actionSetControls.clear();
 }
