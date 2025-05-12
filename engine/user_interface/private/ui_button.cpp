@@ -55,6 +55,9 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
         else
         {
             state = ButtonState::eHovered;
+
+            // Check only input for this button
+            inputContext.ConsumeInput();
         }
 
         auto pressAction = inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName());
