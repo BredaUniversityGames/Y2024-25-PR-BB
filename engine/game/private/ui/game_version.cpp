@@ -9,7 +9,7 @@ std::shared_ptr<GameVersionVisualization> GameVersionVisualization::Create(Graph
 
     visualization->SetAbsoluteTransform(visualization->GetAbsoluteLocation(), screenResolution);
 
-    visualization->text = visualization->AddChild<UITextElement>(font, text, glm::vec2(5.0f, 20.0f), 50);
+    visualization->text = visualization->AddChild<UITextElement>(font, text, glm::vec2(10.0f, 50.0f), 50);
     visualization->text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
     visualization->text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
 
