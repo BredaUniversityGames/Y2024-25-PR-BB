@@ -64,9 +64,6 @@ class Main {
         var transform = __directionalLight.AddTransformComponent()
         transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(144), Math.Radians(63), Math.Radians(-178)))
 
-        var settings = engine.GetGame().GetMainMenu().settingsButton
-        settings.OnPress(Fn.new { System.print("Settings Opened!")})
-
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {
             // engine.GetGame().SetMainMenuEnabled(false) TODO: ADD LOADING SCREEN HERE

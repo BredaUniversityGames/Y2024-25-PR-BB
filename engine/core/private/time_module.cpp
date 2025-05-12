@@ -7,7 +7,7 @@ ModuleTickOrder TimeModule::Init(MAYBE_UNUSED Engine& e)
 
 void TimeModule::Tick(MAYBE_UNUSED Engine& e)
 {
-    _currentDeltaTime = _deltaTimer.GetElapsed() * _deltaTimeScale;
+    _currentDeltaTime = _deltaTimer.GetElapsed();
     _deltaTimer.Reset();
     _totalTime += _currentDeltaTime;
 }

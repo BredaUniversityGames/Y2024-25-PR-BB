@@ -63,11 +63,21 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
+    // TODO: Load settings from file first
+    _settings = viewport.AddElement(SettingsMenu::Create(*this, graphicsContext, viewportSize, font));
+
+    // Set all UI menus invisible
+
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settings.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
+
+    // Useful callbacks
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -84,6 +94,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     };
 
     _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
+
+    auto openSettings = [this]()
+    {
+        this->PushUIMenu(this->_settings);
+    };
+
+    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
+    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
@@ -190,10 +208,26 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settings.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!menuStack.empty())
     {
         menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+
+    // Frame counter
+
+    if (gameSettings.framerateCounter)
+    {
+        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
+
+        if (dt.count() != 0.0f)
+            _framerateCounter.lock()->SetVal(1000.0f / dt.count());
+    }
+    else
+    {
+        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 
 #if !DISTRBUTION

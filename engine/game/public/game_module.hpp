@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "engine.hpp"
+#include "game_settings.hpp"
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
@@ -34,6 +35,7 @@ public:
     void PushUIMenu(std::weak_ptr<Canvas> menu);
 
     void PopUIMenu();
+    GameSettings& GetSettings() { return gameSettings; };
 
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu();
     std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
@@ -57,8 +59,15 @@ private:
     std::weak_ptr<LoadingScreen> _loadingScreen;
     std::weak_ptr<PauseMenu> _pauseMenu;
     std::weak_ptr<GameOverMenu> _gameOver;
+    std::weak_ptr<SettingsMenu> _settings;
+
+    std::weak_ptr<FrameCounter> _framerateCounter {};
 
     // Scene
 
     std::string _nextSceneToExecute {};
+
+    // Settings
+
+    GameSettings gameSettings {};
 };

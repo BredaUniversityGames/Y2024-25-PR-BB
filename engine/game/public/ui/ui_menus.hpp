@@ -62,6 +62,22 @@ public:
     std::weak_ptr<UITextElement> text;
 };
 
+class FrameCounter : public Canvas
+{
+public:
+    static std::shared_ptr<FrameCounter> Create(const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    FrameCounter(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    void SetVal(float fps);
+
+    float runningAverage {};
+    std::weak_ptr<UITextElement> text;
+};
+
 class LoadingScreen : public Canvas
 {
 public:
@@ -100,4 +116,19 @@ public:
 
     std::weak_ptr<UIButton> continueButton;
     std::weak_ptr<UIButton> backToMainButton;
+};
+
+class GameModule;
+
+class SettingsMenu : public Canvas
+{
+public:
+    static std::shared_ptr<SettingsMenu> Create(GameModule& gameModule, GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    SettingsMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIElement> firstElement {};
 };
