@@ -9,35 +9,35 @@ class MusicPlayer {
 
         for (music in musicList) {
 
-      //      if (music.count > 0) {
-//                audio.LoadSFX(music, false, true)
+            if (music.count > 0) {
+                audio.LoadSFX(music, false, true)
             }
             
-     //       _musicList.insert(-1, music)
+            _musicList.insert(-1, music)
         }
 
-       _index = 0
+        _index = 0
 
-//        if (_musicList[_index].count > 0) {
-   //         _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
-     //   }
+        if (_musicList[_index].count > 0) {
+            _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
+        }
     }
 
     CycleMusic(audio) {
         _index = (_index + 1) % _musicList.count
 
         if (_currentSFX != null) {
-        //    audio.StopSFX(_currentSFX)
+            audio.StopSFX(_currentSFX)
         }
 
-    //    if (_musicList[_index].count  > 0) {
- //          _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
-    //    }
+        if (_musicList[_index].count > 0) {
+            _currentSFX = audio.PlaySFX(_musicList[_index], _volume)
+        }
     }
 
     Destroy(audio) {
         if (_currentSFX != null) {
-      //      audio.StopSFX(_currentSFX)
+            audio.StopSFX(_currentSFX)
         }
     }
 }

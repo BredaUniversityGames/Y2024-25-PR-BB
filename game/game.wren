@@ -25,9 +25,12 @@ class Main {
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
 
+        engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-
+        engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
+        
+       engine.GetAudio().LoadSFX("assets/sounds/metal.wav", false, false )
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
@@ -136,7 +139,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.05)
+            0.12)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -276,8 +279,10 @@ class Main {
 
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
         __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
-
-
+        
+        __cameraVariables.Shake(engine, __camera, dt)
+        __cameraVariables.Tilt(engine, __camera, dt)
+        __cameraVariables.ProcessRecoil(engine, __camera, dt)
         if (__playerVariables.multiplierTimer == 0 ) {
             __playerVariables.multiplier = 1.0
             __playerVariables.consecutiveHits = 0

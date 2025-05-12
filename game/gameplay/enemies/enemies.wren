@@ -109,8 +109,11 @@ class MeleeEnemy {
             body.SetStatic()
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            
+            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddSFX(hitmarkerSFX)
         } else {
             animations.Play("Hit", 1.0, false, 0.1, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -121,11 +124,11 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
+            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-
-           
+            audioEmitter.AddSFX(hitmarkerSFX)
         }
     }
 
@@ -160,6 +163,8 @@ class MeleeEnemy {
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                         engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                                                        
+                                                      
                         animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 

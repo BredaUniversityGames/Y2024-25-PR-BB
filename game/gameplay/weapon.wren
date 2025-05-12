@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.6 * 1000
+        _attackSpeed = 0.4 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -106,19 +106,21 @@ class Pistol {
 
     attack(engine, deltaTime, playerVariables, enemies) {
 
-        if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
-            _ammo = _ammo - 1
+        if ((_cooldown <= 0 || engine.GetInput().GetDigitalAction("Shoot").IsPressed()) && _ammo > 0 && _reloadTimer <= 0) {
+            _ammo = _ammo - 1s
 
             // Shake the camera
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
-
+            playerVariables.cameraVariables.AddRecoil(2)
+    
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
-
+            
+            
             // Play shooting audio
-            var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
+            var eventInstance = engine.GetAudio().PlaySFX("assets/sounds/shoot.wav",0.7)
             var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddSFX(eventInstance)
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()
@@ -161,8 +163,8 @@ class Pistol {
 
                                     playerVariables.hitmarkTimer = 100   
                                                  
+                                     engine.GetGame().GetHUD().ShowHitmarker(true)
                                    
-                                   engine.GetGame().GetHUD().ShowHitmarker(true)
     
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
