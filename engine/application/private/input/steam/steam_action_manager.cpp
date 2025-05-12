@@ -101,9 +101,9 @@ std::vector<GamepadOriginVisual> SteamActionManager::GetDigitalActionGamepadOrig
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
     uint32_t originsNum = SteamInput()->GetDigitalActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
+    // Action not bound to any input
     if (originsNum == 0)
     {
-        bblog::error("[Input] Digital action \"{}\" is not bound to any input, couldn't find any origin", actionName);
         return {};
     }
 
@@ -150,9 +150,9 @@ std::vector<GamepadOriginVisual> SteamActionManager::GetAnalogActionGamepadOrigi
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
     uint32_t originsNum = SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
-    if (origins[0] == k_EInputActionOrigin_None)
+    // Action not bound to any input
+    if (originsNum == 0)
     {
-        bblog::error("[Input] Analog action \"{}\" is not bound to any input, couldn't find any origin", actionName);
         return {};
     }
 
