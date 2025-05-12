@@ -13,6 +13,7 @@ void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
 std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
 std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton.lock(); }
 std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton.lock(); }
+std::shared_ptr<UIButton> ControlsButton(MainMenu& self) { return self.controlsButton.lock(); }
 
 std::shared_ptr<UIButton> ContinueButton(PauseMenu& self) { return self.continueButton.lock(); }
 std::shared_ptr<UIButton> BackButton(PauseMenu& self) { return self.backToMainButton.lock(); }
@@ -20,6 +21,8 @@ std::shared_ptr<UIButton> PauseSettingsButton(PauseMenu& self) { return self.set
 
 std::shared_ptr<UIButton> RetryButton(GameOverMenu& self) { return self.continueButton.lock(); }
 std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.backToMainButton.lock(); }
+
+std::shared_ptr<UIButton> ControlsMenuBackButton(ControlsMenu& self) { return self.backButton.lock(); }
 
 void UpdateHealthBar(HUD& self, const float health)
 {
@@ -118,6 +121,7 @@ void BindGameUI(wren::ForeignModule& module)
 
     auto& mainMenu = module.klass<MainMenu>("MainMenu");
     mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");
+    mainMenu.propReadonlyExt<bindings::ControlsButton>("controlsButton");
     mainMenu.propReadonlyExt<bindings::QuitButton>("quitButton");
     mainMenu.propReadonlyExt<bindings::PlayButton>("playButton");
 
@@ -141,4 +145,7 @@ void BindGameUI(wren::ForeignModule& module)
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
+
+    auto& controlsMenu = module.klass<ControlsMenu>("ControlsMenu");
+    controlsMenu.propReadonlyExt<bindings::ControlsMenuBackButton>("backButton");
 }

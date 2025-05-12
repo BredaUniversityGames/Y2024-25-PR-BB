@@ -46,6 +46,7 @@ public:
 
     std::weak_ptr<UIButton> playButton;
     std::weak_ptr<UIButton> settingsButton;
+    std::weak_ptr<UIButton> controlsButton;
     std::weak_ptr<UIButton> quitButton;
     std::weak_ptr<UIButton> openLinkButton;
 };

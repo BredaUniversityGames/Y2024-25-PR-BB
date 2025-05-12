@@ -33,6 +33,7 @@ public:
     void SetLoadingScreenEnabled(bool val);
     void SetPauseMenuEnabled(bool val);
     void SetGameOverMenuEnabled(bool val);
+    void SetControlsMenuEnabled(bool val);
 
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu()
     {
@@ -50,6 +51,16 @@ public:
         {
             return lock;
         }
+        return std::nullopt;
+    }
+
+    std::optional<std::shared_ptr<ControlsMenu>> GetControlsMenu()
+    {
+        if (auto lock = _controlsMenu.lock())
+        {
+            return lock;
+        }
+
         return std::nullopt;
     }
 

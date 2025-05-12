@@ -89,11 +89,13 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
+    game.func<&GameModule::GetControlsMenu>("GetControlsMenu");
 
     game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
     game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
     game.func<&GameModule::SetPauseMenuEnabled>("SetPauseMenuEnabled");
     game.func<&GameModule::SetGameOverMenuEnabled>("SetGameOverMenuEnabled");
+    game.func<&GameModule::SetControlsMenuEnabled>("SetControlsMenuEnabled");
 
     auto& ui = module.klass<UIModule>("UIModule");
     module.klass<UIElement>("UIElement");

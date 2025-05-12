@@ -83,6 +83,12 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         playButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         playButton->AddChild<UITextElement>(font, "PLAY", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
 
+        buttonPos += increment;
+
+        auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        controlsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        controlsButton->AddChild<UITextElement>(font, "CONTROLS", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+
         // buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
@@ -99,15 +105,19 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         main->playButton = playButton;
         main->quitButton = quitButton;
         main->settingsButton = settingsButton;
+        main->controlsButton = controlsButton;
 
-        playButton->navigationTargets.down = main->quitButton;
+        playButton->navigationTargets.down = main->controlsButton;
         playButton->navigationTargets.up = main->openLinkButton;
 
         // settingsButton->navigationTargets.down = main->quitButton;
         // settingsButton->navigationTargets.up = main->playButton;
 
+        controlsButton->navigationTargets.down = main->quitButton;
+        controlsButton->navigationTargets.up = main->playButton;
+
         quitButton->navigationTargets.down = main->openLinkButton;
-        quitButton->navigationTargets.up = main->playButton;
+        quitButton->navigationTargets.up = main->controlsButton;
 
         main->openLinkButton.lock()->navigationTargets.down = main->playButton;
         main->openLinkButton.lock()->navigationTargets.up = main->quitButton;
