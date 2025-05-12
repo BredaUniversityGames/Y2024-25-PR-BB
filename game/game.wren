@@ -421,6 +421,6 @@ class Main {
         }
 
         __soulManager.Update(engine, __playerVariables, dt)
-        //__waveSystem.Update(dt)
+        __waveSystem.Update(dt)
     }
 }

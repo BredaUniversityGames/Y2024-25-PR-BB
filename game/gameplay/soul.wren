@@ -27,6 +27,8 @@ class Soul {
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _soulSpeed = 0.005
+
+        _collectSoundEvent = "event:/Soul"
     }
 
     CheckRange(engine, playerPos, playerVariables, dt){
@@ -51,6 +53,14 @@ class Soul {
                 if(playerVariables.health < playerVariables.maxHealth){
                     playerVariables.IncreaseHealth(1) // Increase player health
                 }
+
+                 // Play audio
+                var player = engine.GetECS().GetEntityByName("Camera")
+                var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
+                engine.GetAudio().SetEventVolume(eventInstance, 5.0)
+                var audioEmitter = player.GetAudioEmitterComponent()
+                audioEmitter.AddEvent(eventInstance)
+
                 soulTransform.translation = Vec3.new(0.0, -100.0, 0.0) // Move the soul out of the way
                 // Add a lifetime component to the soul entity so it will get destroyed eventually
                 var lifetime = _rootEntity.AddLifetimeComponent()
