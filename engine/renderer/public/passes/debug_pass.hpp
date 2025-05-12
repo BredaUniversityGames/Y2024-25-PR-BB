@@ -18,25 +18,17 @@ public:
 
     void AddLines(const std::vector<glm::vec3>& linesData)
     {
-        if (!_isEnabled)
-            return;
         _linesData.insert(_linesData.end(), linesData.begin(), linesData.end());
     }
 
     void AddLine(const glm::vec3& start, const glm::vec3& end)
     {
-        if (!_isEnabled)
-            return;
         _linesData.push_back(start);
         _linesData.push_back(end);
     }
+
     void ClearLines() { _linesData.clear(); }
-
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
-
-    // enable or disable drawing debug lines
-    void SetState(const bool newState) { _isEnabled = newState; }
-    bool GetState() const { return _isEnabled; }
 
     NON_MOVABLE(DebugPass);
     NON_COPYABLE(DebugPass);
@@ -46,7 +38,6 @@ private:
     const SwapChain& _swapChain;
     const GBuffers& _gBuffers;
     ResourceHandle<GPUImage> _attachment;
-    bool _isEnabled = false;
 
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;

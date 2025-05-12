@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -36,7 +36,7 @@ class MeleeEnemy {
         _pointLight.range = 2
         _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
-        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
+        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(2.2)
 
