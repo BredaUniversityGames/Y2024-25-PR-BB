@@ -74,24 +74,6 @@ void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
 
 
 
-void ShowHitmarker(HUD& self, bool val)
-{
-
-    if (auto locked = self.hitmarker.lock(); locked != nullptr)
-    {
-        if (val)
-        {
-            locked->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-        }
-        else
-        {
-            locked->visibility = UIElement::VisibilityState::eUpdatedAndInvisble;
-        }
-    }
-}
-
-
-
 
 }
 
@@ -120,7 +102,6 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& ui = module.klass<UIModule>("UIModule");
     module.klass<UIElement>("UIElement");
  
-    hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "Show hit marker");
     ui.funcExt<bindings::SetGamepadActiveButton>("SetSelectedElement");
 
     BindGameUI(module);

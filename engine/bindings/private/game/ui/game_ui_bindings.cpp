@@ -106,6 +106,7 @@ std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 {
     return self;
 }
+
 void ShowHitmarker(HUD& self, bool val)
 {
 
