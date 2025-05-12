@@ -155,13 +155,16 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     auto resources { _context->Resources() };
 
     // make sure the copy buffer command is done before dispatching
-    vk::BufferMemoryBarrier barrier {};
-    barrier.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
-    barrier.size = _localEmitters.size() * sizeof(LocalEmitter);
-    barrier.offset = 0;
-    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
+    if (!_localEmitters.empty())
+    {
+        vk::BufferMemoryBarrier barrier {};
+        barrier.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
+        barrier.size = _localEmitters.size() * sizeof(LocalEmitter);
+        barrier.offset = 0;
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
+    }
 
     util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
 
@@ -796,7 +799,7 @@ void ParticlePass::UpdateLocalEmittersBuffersDescriptorSets()
     vk::DescriptorBufferInfo localEmitterBufferInfo {};
     localEmitterBufferInfo.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
     localEmitterBufferInfo.offset = 0;
-    localEmitterBufferInfo.range = sizeof(Emitter) * MAX_EMITTERS;
+    localEmitterBufferInfo.range = sizeof(LocalEmitter) * MAX_EMITTERS;
     vk::WriteDescriptorSet& localEmitterBufferWrite { descriptorWrites[0] };
     localEmitterBufferWrite.dstSet = _localEmittersDescriptorSet;
     localEmitterBufferWrite.dstBinding = 0;
