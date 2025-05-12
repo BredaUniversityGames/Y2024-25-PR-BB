@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
 import "gameplay/camera.wren" for CameraVariables
-//import "gameplay/music_player.wren" for MusicPlayer
+import "gameplay/music_player.wren" for MusicPlayer
 
 class Main {
 
@@ -25,6 +25,7 @@ class Main {
         __lightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
         __lightComponent.range = 35
         __lightComponent.intensity = 39
+        
         
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 

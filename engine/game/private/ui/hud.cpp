@@ -60,10 +60,12 @@ UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
 
 std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
-    UIProgressBar::BarStyle healtbarStyle
-        = LoadHealthBarStyle(graphicsContext);
-    UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
-    UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
+
+    std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
+    
+    const UIProgressBar::BarStyle healtbarStyle = LoadHealthBarStyle(graphicsContext);
+    const UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
+    const UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
 
     hud->SetAbsoluteTransform(hud->GetAbsoluteLocation(), screenResolution);
 
