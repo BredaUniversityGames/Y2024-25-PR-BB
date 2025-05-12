@@ -13,11 +13,12 @@ void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
 std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
 std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton.lock(); }
 std::shared_ptr<UIButton> SettingsButton(MainMenu& self) { return self.settingsButton.lock(); }
-std::shared_ptr<UIButton> ControlsButton(MainMenu& self) { return self.controlsButton.lock(); }
+std::shared_ptr<UIButton> MainControlsButton(MainMenu& self) { return self.controlsButton.lock(); }
 
 std::shared_ptr<UIButton> ContinueButton(PauseMenu& self) { return self.continueButton.lock(); }
 std::shared_ptr<UIButton> BackButton(PauseMenu& self) { return self.backToMainButton.lock(); }
 std::shared_ptr<UIButton> PauseSettingsButton(PauseMenu& self) { return self.settingsButton.lock(); }
+std::shared_ptr<UIButton> PauseControlsButton(PauseMenu& self) { return self.controlsButton.lock(); }
 
 std::shared_ptr<UIButton> RetryButton(GameOverMenu& self) { return self.continueButton.lock(); }
 std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.backToMainButton.lock(); }
@@ -121,7 +122,7 @@ void BindGameUI(wren::ForeignModule& module)
 
     auto& mainMenu = module.klass<MainMenu>("MainMenu");
     mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");
-    mainMenu.propReadonlyExt<bindings::ControlsButton>("controlsButton");
+    mainMenu.propReadonlyExt<bindings::MainControlsButton>("controlsButton");
     mainMenu.propReadonlyExt<bindings::QuitButton>("quitButton");
     mainMenu.propReadonlyExt<bindings::PlayButton>("playButton");
 
@@ -129,6 +130,7 @@ void BindGameUI(wren::ForeignModule& module)
     pauseMenu.propReadonlyExt<bindings::PauseSettingsButton>("settingsButton");
     pauseMenu.propReadonlyExt<bindings::BackButton>("backButton");
     pauseMenu.propReadonlyExt<bindings::ContinueButton>("continueButton");
+    pauseMenu.propReadonlyExt<bindings::PauseControlsButton>("controlsButton");
 
     auto& hud = module.klass<HUD>("HUD");
 

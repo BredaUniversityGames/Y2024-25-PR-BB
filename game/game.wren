@@ -122,6 +122,7 @@ class Main {
         __ultimateActive = false
 
         __pauseEnabled = false
+        __controlsMenuOpen = false
 
         // Music
 
@@ -214,6 +215,26 @@ class Main {
         var menuButton = engine.GetGame().GetPauseMenu().backButton
         menuButton.OnPress(backToMain)
 
+        __controlsBackHandler = Fn.new {
+            engine.GetGame().SetControlsMenuEnabled(false)
+            engine.GetGame().SetPauseMenuEnabled(true)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
+            __controlsMenuOpen = false
+        }
+
+        __pauseControlsHandler = Fn.new {
+            engine.GetGame().SetPauseMenuEnabled(false)
+            engine.GetGame().SetControlsMenuEnabled(true)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetControlsMenu().backButton)
+            __controlsMenuOpen = true
+        }
+
+        var controlsMenuBack = engine.GetGame().GetControlsMenu().backButton
+        controlsMenuBack.OnPress(__controlsBackHandler)
+
+        var pauseMenuControlsButton = engine.GetGame().GetPauseMenu().controlsButton
+        pauseMenuControlsButton.OnPress(__pauseControlsHandler)
+
         // Game over callbacks
         __alive = true
 
@@ -221,7 +242,7 @@ class Main {
         menuButton2.OnPress(backToMain)
 
         var retryButton = engine.GetGame().GetGameOverMenu().retryButton
-        
+
         var retryHandler = Fn.new {
             engine.GetGame().SetGameOverMenuEnabled(false)
             engine.TransitionToScript("game/game.wren")
@@ -356,12 +377,16 @@ class Main {
         // Check if pause key was pressed
         if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
-            __pauseEnabled = !__pauseEnabled
-
-            if (__pauseEnabled) {
-                __pauseHandler.call()
+            if (__controlsMenuOpen) {
+                __controlsBackHandler.call()
             } else {
-                __unpauseHandler.call()
+                __pauseEnabled = !__pauseEnabled
+
+                if (__pauseEnabled) {
+                    __pauseHandler.call()
+                } else {
+                    __unpauseHandler.call()
+                }
             }
         }
 

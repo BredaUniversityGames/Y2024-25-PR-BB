@@ -87,6 +87,7 @@ public:
 
     std::weak_ptr<UIButton> continueButton;
     std::weak_ptr<UIButton> settingsButton;
+    std::weak_ptr<UIButton> controlsButton;
     std::weak_ptr<UIButton> backToMainButton;
 };
 
