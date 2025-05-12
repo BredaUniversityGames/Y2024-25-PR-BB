@@ -5,14 +5,24 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/RegisterTypes.h>
-#include <cmath>
-#include <glm/gtx/rotate_vector.hpp>
+
+#include "physics/collision.hpp"
+#include "physics/constants.hpp"
+#include "physics/contact_listener.hpp"
+#include "physics/debug_renderer.hpp"
 
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
-#include "physics/jolt_to_glm.hpp"
+#include "passes/debug_pass.hpp"
+#include "renderer.hpp"
+#include "renderer_module.hpp"
 #include "systems/physics_system.hpp"
 #include "time_module.hpp"
+
+#include <glm/gtx/rotate_vector.hpp>
+
+PhysicsModule::PhysicsModule() { }
+PhysicsModule::~PhysicsModule() { }
 
 ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 {
@@ -47,13 +57,13 @@ ModuleTickOrder PhysicsModule::Init(MAYBE_UNUSED Engine& engine)
 
     _physicsSystem->SetGravity(JPH::Vec3(0, -PHYSICS_GRAVITATIONAL_CONSTANT, 0));
 
-    // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
-    // Note that this is called from a job so whatever you do here needs to be thread safe.
-    _contactListener = std::make_unique<PhysicsContactListener>();
-    _physicsSystem->SetContactListener(_contactListener.get());
-
     auto& ecs = engine.GetModule<ECSModule>();
     ecs.AddSystem<PhysicsSystem>(engine, ecs, *this);
+
+    // A contact listener gets notified when bodies (are about to) collide, and when they separate again.
+    // Note that this is called from a job so whatever you do here needs to be thread safe.
+    _contactListener = std::make_unique<PhysicsContactListener>(ecs.GetRegistry());
+    _physicsSystem->SetContactListener(_contactListener.get());
 
     RigidbodyComponent::SetupRegistryCallbacks(engine.GetModule<ECSModule>().GetRegistry());
 
@@ -88,12 +98,23 @@ void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
         }
     }
 
-    JPH::BodyManager::DrawSettings drawSettings;
+    if (!_debugLayersToRender.empty())
+    {
+        LayerBodyDrawFilter drawFilter {};
+        drawFilter.layersToDraw = _debugLayersToRender;
 
-    if (_debugRenderer->GetState())
-        _physicsSystem->DrawBodies(drawSettings, _debugRenderer.get());
+        JPH::BodyManager::DrawSettings drawSettings;
+        _physicsSystem->DrawBodies(drawSettings, _debugRenderer.get(), &drawFilter);
+        _debugRenderer->NextFrame();
+    }
 
-    _debugRenderer->NextFrame();
+    if (!_debugLayersToRender.empty() || _drawRays)
+    {
+        auto& debugDrawer = engine.GetModule<RendererModule>().GetRenderer()->GetDebugPipeline();
+        debugDrawer.AddLines(_debugRenderer->GetLinesData());
+        debugDrawer.AddLines(_debugRenderer->GetPersistentLinesData());
+        _debugRenderer->ClearLines();
+    }
 }
 
 std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const glm::vec3& direction, float distance) const
@@ -104,7 +125,9 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
     JPH::Vec3 dir(direction.x, direction.y, direction.z);
     dir = dir.Normalized();
     const JPH::RayCast ray(start, dir * distance);
-    _debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
+
+    if (_drawRays)
+        _debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
 
     // JPH::AllHitCollisionCollector<JPH::RayCastBodyCollector> collector;
     JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector2;
@@ -177,4 +200,14 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
     }
 
     return results;
+}
+
+void PhysicsModule::SetDebugCameraPosition(const glm::vec3& cameraPos) const
+{
+    _debugRenderer->SetCameraPos(ToJoltVec3(cameraPos));
+}
+
+void PhysicsModule::ResetPersistentDebugLines()
+{
+    _debugRenderer->ClearPersistentLines();
 }
