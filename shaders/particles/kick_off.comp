@@ -13,4 +13,5 @@ void main()
     particleCounters.aliveCount = particleCounters.aliveCountAfterSimulation;
     particleCounters.aliveCountAfterSimulation = 0;
     culledInstances.count = 0;
+    particleCounters.deadCount = max(0, particleCounters.deadCount);
 }
