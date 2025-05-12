@@ -96,43 +96,58 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
 
-void GameModule::SetMainMenuEnabled(bool val)
+std::optional<std::shared_ptr<MainMenu>> GameModule::GetMainMenu()
 {
     if (auto lock = _mainMenu.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetLoadingScreenEnabled(bool val)
+std::optional<std::shared_ptr<PauseMenu>> GameModule::GetPauseMenu()
 {
-    if (auto lock = _loadingScreen.lock())
+    if (auto lock = _pauseMenu.lock())
+
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetGameOverMenuEnabled(bool val)
-{
-    if (auto lock = _gameOver.lock())
-    {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    }
-}
-
-void GameModule::SetHUDEnabled(bool val)
+std::optional<std::shared_ptr<HUD>> GameModule::GetHUD()
 {
     if (auto lock = _hud.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetPauseMenuEnabled(bool val)
+std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 {
-    if (auto lock = _pauseMenu.lock())
+    if (auto lock = _gameOver.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
+    }
+    return std::nullopt;
+}
+
+void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
+{
+    menuStack = {};
+    menuStack.push(menu);
+}
+void GameModule::PushUIMenu(std::weak_ptr<Canvas> menu)
+{
+    menuStack.push(menu);
+}
+
+void GameModule::PopUIMenu()
+{
+    if (!menuStack.empty())
+    {
+        menuStack.pop();
     }
 }
 
@@ -166,6 +181,19 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(16ms);
         return;
+    }
+
+    // Handle UI stack
+
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    if (!menuStack.empty())
+    {
+        menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
     }
 
 #if !DISTRBUTION

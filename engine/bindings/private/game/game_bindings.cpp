@@ -71,6 +71,20 @@ void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
     self.uiInputContext.focusedUIElement = button;
 }
 
+void MenuStackPush(GameModule& self, std::shared_ptr<Canvas> menu)
+{
+    self.PushUIMenu(menu);
+}
+
+void MenuStackPop(GameModule& self)
+{
+    self.PopUIMenu();
+}
+
+void MenuStackSet(GameModule& self, std::shared_ptr<Canvas> menu)
+{
+    self.SetUIMenu(menu);
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -90,10 +104,9 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
 
-    game.func<&GameModule::SetMainMenuEnabled>("SetMainMenuEnabled");
-    game.func<&GameModule::SetHUDEnabled>("SetHUDEnabled");
-    game.func<&GameModule::SetPauseMenuEnabled>("SetPauseMenuEnabled");
-    game.func<&GameModule::SetGameOverMenuEnabled>("SetGameOverMenuEnabled");
+    game.funcExt<&bindings::MenuStackSet>("SetUIMenu");
+    game.funcExt<&bindings::MenuStackPush>("PushUIMenu");
+    game.funcExt<&bindings::MenuStackPop>("PopUIMenu");
 
     auto& ui = module.klass<UIModule>("UIModule");
     module.klass<UIElement>("UIElement");

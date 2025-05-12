@@ -11,7 +11,8 @@ class Main {
 
         engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)
-        engine.GetGame().SetMainMenuEnabled(true)
+
+        engine.GetGame().SetUIMenu(engine.GetGame().GetMainMenu())
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
         
         var helmet = engine.LoadModel("assets/models/plague_helmet.glb")
@@ -68,7 +69,7 @@ class Main {
 
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {
-            engine.GetGame().SetMainMenuEnabled(false)
+            // engine.GetGame().SetMainMenuEnabled(false) TODO: ADD LOADING SCREEN HERE
             engine.TransitionToScript("game/game.wren")
         })
 
