@@ -76,6 +76,7 @@ class Main {
         controls.OnPress(Fn.new {
             engine.GetGame().SetMainMenuEnabled(false)
             engine.GetGame().SetControlsMenuEnabled(true)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetControlsMenu().backButton)
         })
 
         var exit = engine.GetGame().GetMainMenu().quitButton
@@ -84,9 +85,10 @@ class Main {
         })
 
         var back = engine.GetGame().GetControlsMenu().backButton
-        exit.OnPress(Fn.new {
+        back.OnPress(Fn.new {
             engine.GetGame().SetControlsMenuEnabled(false)
             engine.GetGame().SetMainMenuEnabled(true)
+            engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
         })
 
         var musicList = [
