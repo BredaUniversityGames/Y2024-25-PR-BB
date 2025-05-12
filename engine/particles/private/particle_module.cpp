@@ -589,7 +589,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     ParticleEmitterComponent component;
     component.emitter = emitter;
     component.maxEmitDelay = preset.emitDelay;
-    component.currentEmitDelay = preset.emitDelay;
+    component.currentEmitDelay = 0.0f;
     component.emitOnce = emitOnce;
     component.count = emitter.count;
     std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
