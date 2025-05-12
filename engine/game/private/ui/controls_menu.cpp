@@ -167,7 +167,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
         const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
 
         glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
-        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, size.y / 2.0f * -1.0f), size);
+        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
         binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
         horizontalOffset += size.x + originHorizontalMargin;
