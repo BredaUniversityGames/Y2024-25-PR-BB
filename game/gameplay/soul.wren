@@ -20,6 +20,7 @@ class Soul {
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
         engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
+        _time = 0.0 // Time since the soul was spawned
         
         // New velocity-based arc system variables
         _hasStartedFollowing = false
@@ -55,12 +56,19 @@ class Soul {
                 var lifetime = _rootEntity.AddLifetimeComponent()
                 lifetime.lifetime = 50.0
             }
+        }else {
+            var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
+            System.print(bounce)
+            soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
     }
 
     entity {
         return _rootEntity
     }
+
+    time {_time}
+    time=(value) { _time  = value}
 }
 
 class SoulManager {
@@ -81,6 +89,7 @@ class SoulManager {
         for(soul in _soulList){
             if(soul.entity.IsValid()){
                 soul.CheckRange(engine, playerPos, playerVariables, dt) // Check if the soul is within range of the player
+                soul.time = soul.time + dt
             } else {
                 _soulList.removeAt(_soulList.indexOf(soul)) // Remove the soul from the list if it is no longer valid
             }
