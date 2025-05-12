@@ -9,6 +9,7 @@ import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/soul.wren" for Soul, SoulManager
 
 class Main {
 
@@ -187,6 +188,9 @@ class Main {
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
         )
         __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+
+        // Souls
+        __soulManager = SoulManager.new(engine, __player)
 
         // Pause Menu callbacks
 
@@ -401,6 +405,10 @@ class Main {
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
+        if(engine.GetInput().DebugGetKey(Keycode.eB())){
+           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+        }
+
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
@@ -412,6 +420,7 @@ class Main {
             }
         }
 
+        __soulManager.Update(engine, __playerVariables, dt)
         //__waveSystem.Update(dt)
     }
 }

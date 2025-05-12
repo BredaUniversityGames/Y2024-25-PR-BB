@@ -512,8 +512,8 @@ void ParticleModule::LoadEmitterPresets()
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY | ParticleRenderFlagBits::eIsLocal);
         preset.name = "SoulSheet";
         preset.startingVelocity = glm::vec3(0.0f);
-        SetEmitterPresetImage(preset, "soul-Sheet.png");
-        preset.size = glm::vec3(0.5f, 1.0, 0.0f);
+        SetEmitterPresetImage(preset, "Soul2.png");
+        preset.size = glm::vec3(0.4f, 0.9, 0.0f);
         preset.spriteDimensions = glm::ivec2(60, 1);
         preset.frameCount = 60;
 
