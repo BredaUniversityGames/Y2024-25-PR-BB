@@ -73,37 +73,6 @@ void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
 
 
 
-void UpdateHealthBar(HUD& self, const float health)
-{
-    if (auto locked = self.healthBar.lock(); locked != nullptr)
-    {
-        locked->SetFractionFilled(health);
-    }
-}
-
-void UpdateAmmoText(HUD& self, const int ammo, const int maxAmmo)
-{
-    if (auto locked = self.ammoCounter.lock(); locked != nullptr)
-    {
-        locked->SetText(std::to_string(ammo) + "/" + std::to_string(maxAmmo));
-    }
-}
-
-void UpdateUltBar(HUD& self, const float ult)
-{
-    if (auto locked = self.ultBar.lock(); locked != nullptr)
-    {
-        locked->SetFractionFilled(ult);
-    }
-}
-
-void UpdateScoreText(HUD& self, const int score)
-{
-    if (auto locked = self.scoreText.lock(); locked != nullptr)
-    {
-        locked->SetText(std::string("Score: ") + std::to_string(score));
-    }
-}
 
 void ShowHitmarker(HUD& self, bool val)
 {
@@ -120,39 +89,9 @@ void ShowHitmarker(HUD& self, bool val)
         }
     }
 }
-void UpdateMultiplierText(HUD& self, const float multiplier)
-{
-    if (auto locked = self.multiplierText.lock(); locked != nullptr)
-    {
-        locked->SetText(fmt::format("{:.1f}", multiplier).append("x"));
-    }
-}
 
-void UpdateGrenadeBar(HUD& self, const float charge)
-{
-    if (auto locked = self.grenadeBar.lock(); locked != nullptr)
-    {
-        locked->SetFractionFilled(charge);
-    }
-}
 
-void UpdateDashCharges(HUD& self, int charges)
-{
-    for (int32_t i = 0; i < static_cast<int32_t>(self.dashCharges.size()); i++)
-    {
-        if (auto locked = self.dashCharges[i].lock(); locked != nullptr)
-        {
-            if (i < charges) // Charge full
-            {
-                locked->display_color = glm::vec4(1);
-            }
-            else // Charge empty
-            {
-                locked->display_color = glm::vec4(1, 1, 1, 0.2);
-            }
-        }
-    }
-}
+
 
 }
 
