@@ -61,16 +61,22 @@ class Soul {
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
 
-                soulTransform.translation = Vec3.new(0.0, -100.0, 0.0) // Move the soul out of the way
-                // Add a lifetime component to the soul entity so it will get destroyed eventually
-                var lifetime = _rootEntity.AddLifetimeComponent()
-                lifetime.lifetime = 50.0
+                this.Destroy() // Destroy the soul after it is collected
+               
             }
         }else {
             var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
             System.print(bounce)
             soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
+    }
+
+    Destroy(){
+        var soulTransform = _rootEntity.GetTransformComponent()
+        soulTransform.translation = Vec3.new(0.0, -100.0, 0.0) // Move the soul out of the way
+        // Add a lifetime component to the soul entity so it will get destroyed eventually
+        var lifetime = _rootEntity.AddLifetimeComponent()
+        lifetime.lifetime = 50.0
     }
 
     entity {
@@ -85,6 +91,7 @@ class SoulManager {
     construct new(engine, player){
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
+        _maxLifeTimeOfSoul = 10000.0 // Maximum lifetime of a soul
     }
 
     SpawnSoul(engine, spawnPosition){
@@ -100,6 +107,10 @@ class SoulManager {
             if(soul.entity.IsValid()){
                 soul.CheckRange(engine, playerPos, playerVariables, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
+
+                if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
+                    soul.Destroy() // Destroy the soul if it has been around for too long
+                }
             } else {
                 _soulList.removeAt(_soulList.indexOf(soul)) // Remove the soul from the list if it is no longer valid
             }
