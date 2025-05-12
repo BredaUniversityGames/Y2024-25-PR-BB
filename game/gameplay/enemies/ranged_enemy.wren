@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "../player.wren" for PlayerVariables
 
 class RangedEnemy {
@@ -22,7 +22,7 @@ class RangedEnemy {
         _rootEntity.AttachChild(_meshEntity)
         _meshEntity.GetTransformComponent().translation = Vec3.new(0,0,0)
 
-        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, true)
+        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), true)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         //body.SetStatic()
         body.SetGravityFactor(0.0)
