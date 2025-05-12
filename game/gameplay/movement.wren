@@ -31,7 +31,7 @@ class PlayerMovement{
         currentDashRefillTime = 3000.0
 
         _lookSensitivity = 1.0
-        _freeCamSpeedMultiplier = 1.0
+        _freeCamSpeedMultiplier = 0.1
         _smoothedCameraDelta = Vec2.new(0.0,0.0)
         _lastMousePosition = Vec2.new(0.0 ,0.0)
 
