@@ -63,18 +63,9 @@ class Main {
         __playerController.AddNameComponent().name = "PlayerController"
         __playerController.AddCheatsComponent().noClip = false
 
-        // Physics callback with the two wren entities as parameters
-        var onEnterTest = Fn.new { |self, other|
-
-            if (other.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eENEMY()) {
-                engine.GetAudio().PlaySFX("assets/sounds/crows.wav", 1.0)
-            }
-            return
-        }
-
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
         var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, shape, layer, allowRotation
-        __playerController.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterTest)
+        __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
         __playerVariables.cameraVariables = __cameraVariables
