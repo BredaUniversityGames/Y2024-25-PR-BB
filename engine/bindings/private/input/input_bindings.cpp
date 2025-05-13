@@ -66,7 +66,7 @@ void BindInputAPI(wren::ForeignModule& module)
     wrenClass.funcExt<bindings::GetDigitalAction>("GetDigitalAction");
     wrenClass.funcExt<bindings::GetAnalogAction>("GetAnalogAction");
     wrenClass.funcExt<bindings::GetRawKeyOnce>("DebugGetKey");
-    
+
     wrenClass.func<&ApplicationModule::SetMouseHidden>("SetMouseHidden");
     wrenClass.func<&ApplicationModule::GetMouseHidden>("GetMouseHidden");
 

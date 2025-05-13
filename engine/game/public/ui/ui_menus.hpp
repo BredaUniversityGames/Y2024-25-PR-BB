@@ -111,7 +111,11 @@ public:
     static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
     ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
-        : Canvas(screenResolution), _graphicsContext(graphicsContext), _actionManager(actionManager), _font(font), _canvasResolution(canvasResolution)
+        : Canvas(screenResolution)
+        , _graphicsContext(graphicsContext)
+        , _actionManager(actionManager)
+        , _font(font)
+        , _canvasResolution(canvasResolution)
     {
     }
 

@@ -2,13 +2,13 @@
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
+#include "game_actions.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
-#include "game_actions.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 
-std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2 &screenResolution, GraphicsContext &graphicsContext, ActionManager &actionManager, std::shared_ptr<UIFont> font)
+std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
 {
     constexpr glm::ivec2 popupResolution(2300.0f, 1300.0f);
 
@@ -98,7 +98,7 @@ void ControlsMenu::UpdateBindings()
         _actionManager.SetActiveActionSet(actionSet.name);
 
         ActionSetControls& set = actionSetControls.emplace_back();
-        set.canvas = actionsPanel->AddChild<Canvas>(glm::vec2{ 0.0f, 0.0f });
+        set.canvas = actionsPanel->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
         set.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         set.canvas->SetLocation(glm::vec2(100.0f, actionSetHeightLocation));
 

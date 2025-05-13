@@ -99,8 +99,8 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         continueButton->navigationTargets.down = pause->controlsButton;
         continueButton->navigationTargets.up = pause->backToMainButton;
 
-        //settingsButton->navigationTargets.down = pause->backToMainButton;
-        //settingsButton->navigationTargets.up = pause->continueButton;
+        // settingsButton->navigationTargets.down = pause->backToMainButton;
+        // settingsButton->navigationTargets.up = pause->continueButton;
 
         controlsButton->navigationTargets.down = pause->backToMainButton;
         controlsButton->navigationTargets.up = pause->continueButton;
