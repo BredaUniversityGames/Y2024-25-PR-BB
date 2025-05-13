@@ -51,6 +51,8 @@ void ScriptingModule::Tick(Engine& engine)
     {
         _mainModule->Update(dt);
     }
+
+    _context->GetVM().gc();
 }
 
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
