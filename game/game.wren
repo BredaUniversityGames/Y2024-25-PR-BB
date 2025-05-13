@@ -199,7 +199,7 @@ class Main {
             __pauseEnabled = false
             engine.GetTime().SetScale(1.0)
 
-            engine.GetGame().PopUIMenu()
+            engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
 
@@ -244,6 +244,8 @@ class Main {
     }
 
     static Update(engine, dt) {
+
+        __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
 
         if (__enemyList.count != 0) {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)

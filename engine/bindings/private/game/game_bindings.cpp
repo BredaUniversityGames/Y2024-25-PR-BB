@@ -85,6 +85,11 @@ void MenuStackSet(GameModule& self, std::shared_ptr<Canvas> menu)
 {
     self.SetUIMenu(menu);
 }
+
+GameSettings* GetSettings(GameModule& self)
+{
+    return &self.GetSettings();
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -99,11 +104,16 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
 
+    auto& settings = module.klass<GameSettings>("GameSettings");
+    settings.var<&GameSettings::aimSensitivity>("Sensitivity");
+    settings.var<&GameSettings::aimSensitivity>("aimSensitivity");
+
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
 
+    game.funcExt<&bindings::GetSettings>("GetSettings");
     game.funcExt<&bindings::MenuStackSet>("SetUIMenu");
     game.funcExt<&bindings::MenuStackPush>("PushUIMenu");
     game.funcExt<&bindings::MenuStackPop>("PopUIMenu");

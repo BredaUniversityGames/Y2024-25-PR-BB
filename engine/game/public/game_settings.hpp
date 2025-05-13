@@ -7,11 +7,11 @@ struct GameSettings
     void SaveToFile(const std::string& path) const;
 
     bool framerateCounter = false;
-    float aimSensitivity = 1.0f;
-    float gammaSlider = 1.0f;
+    float aimSensitivity = 0.5f;
+    float gammaSlider = 0.5f;
     bool vsync = false;
     bool aimAssist = false;
-    float masterVolume = 1.0f;
+    float masterVolume = 0.5f;
     float sfxVolume = 1.0f;
     float musicVolume = 1.0f;
 };
