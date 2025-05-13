@@ -34,11 +34,8 @@ void UIToggle::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
         auto pressAction = inputManagers.actionManager.GetDigitalAction(inputContext.GetPressActionName());
 
-        if (pressAction.IsReleased())
+        if (pressAction.IsPressed())
         {
-            std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
-            inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
-
             state = !state;
             if (_callback)
                 _callback(state);
@@ -67,7 +64,7 @@ void UIToggle::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
-        constexpr glm::vec4 SELECTED = { 0.8f, 0.8f, 0.8f, 1.0f };
+        constexpr glm::vec4 SELECTED = { 0.7f, 0.7f, 0.7f, 1.0f };
         constexpr glm::vec4 NORMAL = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         glm::mat4 matrix = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));

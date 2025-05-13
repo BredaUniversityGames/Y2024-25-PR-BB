@@ -64,7 +64,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
     // TODO: Load settings from file first
-    _settings = viewport.AddElement(SettingsMenu::Create(*this, graphicsContext, viewportSize, font));
+    _settingsMenu = viewport.AddElement(SettingsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     // Set all UI menus invisible
 
@@ -73,7 +73,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    _settings.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
 
@@ -95,9 +95,10 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
-    auto openSettings = [this]()
+    auto openSettings = [this, &engine]()
     {
-        this->PushUIMenu(this->_settings);
+        this->PushUIMenu(this->_settingsMenu);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
     };
 
     _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
@@ -176,6 +177,11 @@ void GameModule::TransitionScene(const std::string& scriptFile)
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    if (engine.GetModule<UIModule>().uiInputContext.focusedUIElement.expired())
+    {
+        bblog::info("NO UI ELEMENT SELECTED!");
+    }
+
     if (!_nextSceneToExecute.empty())
     {
         engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
@@ -208,7 +214,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    _settings.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!menuStack.empty())
     {

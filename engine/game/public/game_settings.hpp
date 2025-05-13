@@ -19,7 +19,14 @@
 
 struct GameSettings
 {
-    bool framerateCounter = true;
+    bool framerateCounter = false;
+    float aimSensitivity = 1.0f;
+    float gammaSlider = 1.0f;
+    bool vsync = false;
+    bool aimAssist = false;
+    float masterVolume = 1.0f;
+    float sfxVolume = 1.0f;
+    float musicVolume = 1.0f;
 };
 
 VISITABLE_STRUCT(GameSettings);

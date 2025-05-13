@@ -35,6 +35,7 @@ public:
     void PushUIMenu(std::weak_ptr<Canvas> menu);
 
     void PopUIMenu();
+
     GameSettings& GetSettings() { return gameSettings; };
 
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu();
@@ -48,6 +49,7 @@ public:
     void TransitionScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};
+    std::weak_ptr<MainMenu> _mainMenu;
 
 private:
     // UI
@@ -55,12 +57,10 @@ private:
     std::stack<std::weak_ptr<Canvas>> menuStack {};
 
     std::weak_ptr<HUD> _hud;
-    std::weak_ptr<MainMenu> _mainMenu;
     std::weak_ptr<LoadingScreen> _loadingScreen;
     std::weak_ptr<PauseMenu> _pauseMenu;
     std::weak_ptr<GameOverMenu> _gameOver;
-    std::weak_ptr<SettingsMenu> _settings;
-
+    std::weak_ptr<SettingsMenu> _settingsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
 
     // Scene
