@@ -128,6 +128,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().aimSensitivity = val; };
 
+            slider->value = gameModule.GetSettings().aimSensitivity;
             slider->OnSlide(callback);
         }
 
@@ -147,6 +148,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](bool val)
             { gameModule.GetSettings().aimAssist = val; };
 
+            toggle->state = gameModule.GetSettings().aimAssist;
             toggle->OnToggle(callback);
         }
 
@@ -166,6 +168,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().gammaSlider = val; };
 
+            slider->value = gameModule.GetSettings().gammaSlider;
             slider->OnSlide(callback);
         }
 
@@ -185,6 +188,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](bool val)
             { gameModule.GetSettings().vsync = val; };
 
+            toggle->state = gameModule.GetSettings().vsync;
             toggle->OnToggle(callback);
         }
 
@@ -204,6 +208,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().masterVolume = val; };
 
+            slider->value = gameModule.GetSettings().masterVolume;
             slider->OnSlide(callback);
         }
 
@@ -223,6 +228,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().musicVolume = val; };
 
+            slider->value = gameModule.GetSettings().musicVolume;
             slider->OnSlide(callback);
         }
 
@@ -242,6 +248,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().sfxVolume = val; };
 
+            slider->value = gameModule.GetSettings().sfxVolume;
             slider->OnSlide(callback);
         }
 
@@ -262,6 +269,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&gameModule](bool val)
             { gameModule.GetSettings().framerateCounter = val; };
 
+            toggle->state = gameModule.GetSettings().framerateCounter;
             toggle->OnToggle(callback);
             settings->fpsToggle = toggle;
         }
@@ -277,6 +285,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             {
                 auto& gameModule = engine.GetModule<GameModule>();
                 engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule._mainMenu.lock()->settingsButton;
+                gameModule.GetSettings().SaveToFile(GAME_SETTINGS_FILE);
                 gameModule.PopUIMenu();
             };
 

@@ -94,22 +94,7 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             bblog::info("Hot reloaded environment!");
             engine.GetModule<ScriptingModule>().HotReload(engine);
         }
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Load Scene"))
-            {
-                // Todo: Load saved scene.
-            }
-            if (ImGui::MenuItem("Save Scene"))
-            {
-                // Serialization::SerialiseToJSON("assets/maps/scene.json", _ecs);
-            }
-            if (ImGui::MenuItem("Dump VMA stats to json"))
-            {
-                DumpVMAStats(engine);
-            }
-            ImGui::EndMenu();
-        }
+
         if (ImGui::BeginMenu("Renderer"))
         {
             ImGui::MenuItem("Performance Tracker", nullptr, &_openWindows["Performance"]);
