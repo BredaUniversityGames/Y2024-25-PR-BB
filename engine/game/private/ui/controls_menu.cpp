@@ -86,7 +86,7 @@ void ControlsMenu::UpdateBindings()
 
     constexpr float actionSetTextSize = 60.0f;
     constexpr float actionHeightMarginY = actionSetTextSize + 10.0f;
-    float actionSetheightLocation = 35.0f;
+    float actionSetHeightLocation = 15.0f;
     float actionHeightLocation = actionHeightMarginY;
     constexpr float heightIncrement = 60.0f;
 
@@ -98,7 +98,7 @@ void ControlsMenu::UpdateBindings()
         ActionSetControls& set = actionSetControls.emplace_back();
         set.canvas = actionsPanel->AddChild<Canvas>(glm::vec2{ 0.0f, 0.0f });
         set.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        set.canvas->SetLocation(glm::vec2(20.0f, actionSetheightLocation));
+        set.canvas->SetLocation(glm::vec2(20.0f, actionSetHeightLocation));
 
         set.nameText = set.canvas->AddChild<UITextElement>(_font, actionSet.name, actionSetTextSize);
         set.nameText->SetColor(glm::vec4(1, 1, 1, 1));
@@ -117,7 +117,7 @@ void ControlsMenu::UpdateBindings()
             actionHeightLocation += heightIncrement;
         }
 
-        actionSetheightLocation += actionHeightLocation + 20.0f;
+        actionSetHeightLocation += actionHeightLocation + 20.0f;
         actionHeightLocation = actionHeightMarginY;
     }
 
