@@ -327,6 +327,64 @@ void ParticleModule::LoadEmitterPresets()
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
         preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f);
+        preset.name = "RayEyeStart";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.06f, 0.06f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 5;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 5;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f, 0.0f, 0.0f, 30.0f);
+        preset.name = "RayEyeEnd";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 5;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 5;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 0.3f;
         preset.count = 20;
@@ -412,6 +470,36 @@ void ParticleModule::LoadEmitterPresets()
 
         SetEmitterPresetImage(preset, "health.png");
 
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // worms
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.02f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f, 0.2f, 0.5f);
+        preset.velocityRandomness = glm::vec3(0.5f, 0.2f, 0.5f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f);
+        preset.name = "Worms";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.3f, 0.3f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 15;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 15;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
         _emitterPresets.emplace_back(preset);
     }
 }
