@@ -139,7 +139,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.05)
+            0.025)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -211,7 +211,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -421,6 +421,6 @@ class Main {
         }
 
         __soulManager.Update(engine, __playerVariables, dt)
-        //__waveSystem.Update(dt)
+        __waveSystem.Update(dt)
     }
 }

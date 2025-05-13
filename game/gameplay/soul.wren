@@ -66,7 +66,6 @@ class Soul {
             }
         }else {
             var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
-            System.print(bounce)
             soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
     }
